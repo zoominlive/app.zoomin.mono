@@ -1,0 +1,33 @@
+{
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon --ignore path/to/file_v3.json --ignore path/to/file.json --exec \"sls offline start\""
+  },
+  "name": "zoomin",
+  "version": "1.0.0",
+  "description": "",
+  "dependencies": {
+    "aws-sdk": "^2.1220.0",
+    "bcryptjs": "^2.4.3",
+    "body-parser": "^1.20.0",
+    "cors": "^2.8.5",
+    "detect-file-type": "^0.2.8",
+    "express": "^4.17.1",
+    "express-oas-generator": "^1.0.45",
+    "handlebars": "^4.7.7",
+    "jsonwebtoken": "^8.5.1",
+    "lodash": "^4.17.21",
+    "mkdirp": "^1.0.4",
+    "mysql2": "^2.3.3",
+    "nodemailer": "^6.7.8",
+    "otp-generator": "^4.0.0",
+    "sequelize": "^6.23.0",
+    "sequelize-cli": "^6.5.1",
+    "serverless-http": "^2.7.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.23.1",
+    "nodemon": "^2.0.20",
+    "serverless-offline": "^10.1.0"
+  }
+}
