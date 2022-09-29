@@ -400,15 +400,21 @@
 
 .MuiTableContainer-root {
   box-shadow: none !important;
+  .MuiTableHead-root {
+    .MuiTableRow-root {
+      .MuiTableCell-root {
+        font-weight: 500;
+        line-height: 24px;
+      }
+    }
+  }
   .MuiTableCell-root {
     color: #000000de;
     padding: 8px;
-    font-size: 14px !important;
     font-weight: 400;
     font-size: 14px;
     line-height: 143%;
     letter-spacing: 0.17px;
-    color: rgba(0, 0, 0, 0.87);
     .MuiTypography-root {
       font-size: 14px !important;
     }
@@ -419,6 +425,25 @@
   .MuiAvatar-root {
     width: 32px;
     height: 32px;
+  }
+  .expandable-row {
+    a {
+      color: #1565c0;
+    }
+    &.border-bottom-none {
+      .MuiTableCell-root {
+        border-bottom: none !important;
+      }
+    }
+    .MuiTable-root {
+      .MuiTableBody-root {
+        .MuiTableRow-root {
+          .MuiTableCell-root {
+            padding: 16px;
+          }
+        }
+      }
+    }
   }
 }
 
