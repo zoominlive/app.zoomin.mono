@@ -39,7 +39,7 @@ const Row = (props) => {
 
   return (
     <React.Fragment>
-      <TableRow sx={{ '& > *': { borderBottom: 'unset' } }}>
+      <TableRow sx={{ '& > *': { borderBottom: 'unset' } }} hover>
         <TableCell>
           <IconButton aria-label="expand row" size="small" onClick={() => setOpen(!open)}>
             {open ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
@@ -47,7 +47,7 @@ const Row = (props) => {
         </TableCell>
         <TableCell>{row.room_name}</TableCell>
         <TableCell>{row.location}</TableCell>
-        <TableCell>{row.cams}</TableCell>
+        <TableCell>{row.number_of_cam}</TableCell>
         <TableCell align="right">
           <RoomActions />
         </TableCell>
@@ -56,7 +56,7 @@ const Row = (props) => {
         <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={6}>
           <Collapse in={open} timeout="auto" unmountOnExit>
             <Box sx={{ margin: 2 }}>
-              <Table size="small" aria-label="purchases">
+              <Table size="small" aria-label="cameras">
                 <TableHead>
                   <TableRow>
                     <TableCell>Camera Name</TableCell>
@@ -64,8 +64,8 @@ const Row = (props) => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {row.cam.map((camRow, index) => (
-                    <TableRow key={index}>
+                  {row.cams.map((camRow, index) => (
+                    <TableRow key={index} hover>
                       <TableCell>{camRow.cam_name}</TableCell>
                       <TableCell>
                         <a href={camRow.cam_url} target="_blank" rel="noreferrer">
@@ -88,8 +88,8 @@ Row.propTypes = {
   row: PropTypes.shape({
     room_name: PropTypes.string,
     location: PropTypes.string,
-    cams: PropTypes.number,
-    cam: PropTypes.arrayOf(
+    number_of_cam: PropTypes.number,
+    cams: PropTypes.arrayOf(
       PropTypes.shape({
         cam_name: PropTypes.string,
         cam_url: PropTypes.string
@@ -112,8 +112,8 @@ const Rooms = () => {
       id: 1,
       room_name: 'Room 1',
       location: 'Location 1',
-      cams: 4,
-      cam: [
+      number_of_cam: 4,
+      cams: [
         {
           cam_name: 'Cam 1',
           cam_url: 'https://zoomin.com/systems/en/room/zoomin-room-1/'
@@ -137,8 +137,8 @@ const Rooms = () => {
       id: 2,
       room_name: 'Room 2',
       location: 'Location 2',
-      cams: 4,
-      cam: [
+      number_of_cam: 4,
+      cams: [
         {
           cam_name: 'Cam 1',
           cam_url: 'https://zoomin.com/systems/en/room/zoomin-room-1/'

@@ -10,7 +10,7 @@ import {
   FormControl,
   FormHelperText,
   Grid,
-  IconButton,
+  // IconButton,
   InputLabel,
   MenuItem,
   Select,
@@ -23,7 +23,6 @@ import React, { useEffect, useState } from 'react';
 import { useContext } from 'react';
 import LayoutContext from '../../context/layoutcontext';
 import * as yup from 'yup';
-import base64 from 'base-64';
 import { LoadingButton } from '@mui/lab';
 import SaveIcon from '@mui/icons-material/Save';
 import DeleteUserDialog from './deleteuserdialog';
@@ -33,6 +32,7 @@ import { Notification } from '../../hoc/notification';
 import PropTypes from 'prop-types';
 import { useDropzone } from 'react-dropzone';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { toBase64 } from '../../utils/base64converter';
 
 const validationSchema = yup.object({
   first_name: yup.string('Enter first name').required('First name is required'),
@@ -47,16 +47,24 @@ const Profile = (props) => {
   const layoutCtx = useContext(LayoutContext);
   const authCtx = useContext(AuthContext);
   const [image, setImage] = useState();
-  const [imageS3URL, setImageS3URL] = useState();
   const [isImageUploading, setIsImageUploading] = useState(false);
+  const [isImageDeleting, setIsImageDeleting] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
   const [isDeleteUserDialogOpen, setIsDeleteUserDialogOpen] = useState(false);
-  const { acceptedFiles, fileRejections, getRootProps, getInputProps } = useDropzone({
+  const { getRootProps, getInputProps } = useDropzone({
     maxFiles: 1,
     accept: {
       'image/png': ['.png'],
       'image/jpeg': ['.jpeg'],
       'image/jpg': ['.jpg']
+    },
+    onDropAccepted: handleImageUpload,
+    onDropRejected: (fileRejections) => {
+      if (fileRejections.length > 1) {
+        props.snackbarShowMessage('Only one file is allowed to be uploaded', 'error');
+      } else {
+        props.snackbarShowMessage('Only image file is allowed to be uploaded', 'error');
+      }
     }
   });
 
@@ -71,39 +79,12 @@ const Profile = (props) => {
     }
   }, [authCtx.user]);
 
-  useEffect(() => {
-    if (fileRejections.length > 0) {
-      if (fileRejections.length > 1) {
-        props.snackbarShowMessage('Only one file is allowed to be uploaded', 'error');
-      } else {
-        props.snackbarShowMessage('Only image file is allowed to be uploaded', 'error');
-      }
-    }
-    if (acceptedFiles.length > 0) {
-      setImage(URL.createObjectURL(acceptedFiles[0]));
-      setIsImageUploading(true);
-      API.post('users/uploadImage', {
-        image: base64.encode(acceptedFiles[0])
-      }).then((response) => {
-        if (response.status === 200) {
-          setImageS3URL(response.data.uploadImage);
-          props.snackbarShowMessage(response.data.Message, 'success');
-        } else {
-          props.snackbarShowMessage(response?.response?.data?.Message, 'error');
-        }
-        setIsImageUploading(false);
-      });
-    }
-  }, [acceptedFiles, fileRejections]);
-
   // Method to update the user profile
   const handleSubmit = (data) => {
     setSubmitLoading(true);
-    API.put('users', {
-      ...data,
-      profile_image: imageS3URL ? imageS3URL : image ? data.profile_image : ''
-    }).then((response) => {
+    API.put('users', data).then((response) => {
       if (response.status === 200) {
+        authCtx.setUser({ ...response.data.Data });
         props.snackbarShowMessage(response?.data?.Message, 'success');
       } else {
         props.snackbarShowMessage(response?.response?.data?.Message, 'error');
@@ -114,9 +95,38 @@ const Profile = (props) => {
 
   // Method to remove profile photo
   const handlePhotoDelete = () => {
-    setImage();
-    setImageS3URL();
+    setIsImageDeleting(true);
+    API.delete('users/deleteImage').then((response) => {
+      if (response.status === 200) {
+        props.snackbarShowMessage(response?.data?.Message, 'success');
+        authCtx.setUser((prevUser) => ({ ...prevUser, profile_image: '' }));
+        setImage();
+      } else {
+        props.snackbarShowMessage(response?.response?.data?.Message, 'error');
+      }
+      setIsImageDeleting(false);
+    });
   };
+
+  async function handleImageUpload(acceptedFiles) {
+    setIsImageUploading(true);
+    setImage(URL.createObjectURL(acceptedFiles[0]));
+    const bas64Image = await toBase64(acceptedFiles[0]);
+    API.post('users/uploadImage', {
+      image: bas64Image.split(',')[1]
+    }).then((response) => {
+      if (response.status === 200) {
+        authCtx.setUser((prevUser) => ({
+          ...prevUser,
+          profile_image: response?.data?.Data?.uploadImage
+        }));
+        props.snackbarShowMessage(response?.data?.Message, 'success');
+      } else {
+        props.snackbarShowMessage(response?.response?.data?.Message, 'error');
+      }
+      setIsImageUploading(false);
+    });
+  }
 
   return (
     <Box sx={{ position: 'relative' }}>
@@ -126,23 +136,25 @@ const Profile = (props) => {
           <Stack direction="row" alignItems="center" spacing={3} mb={3}>
             <Avatar src={image} />
 
-            <Button
+            <LoadingButton
+              loading={isImageUploading}
               variant="contained"
               color="primary"
               component="span"
               {...getRootProps({ className: 'dropzone' })}>
               Upload
               <input {...getInputProps()} />
-            </Button>
-            {image && (
+            </LoadingButton>
+            {image && !isImageUploading && (
               <Tooltip title="Remove photo">
-                <IconButton
+                <LoadingButton
+                  variant="outlined"
+                  loading={isImageDeleting}
+                  className="image-delete-btn"
                   aria-label="delete"
-                  className="row-delete-btn"
-                  onClick={handlePhotoDelete}
-                  sx={{ color: 'red' }}>
+                  onClick={handlePhotoDelete}>
                   <DeleteIcon />
-                </IconButton>
+                </LoadingButton>
               </Tooltip>
             )}
           </Stack>
@@ -270,14 +282,14 @@ const Profile = (props) => {
                         alignItems="center"
                         spacing={3}>
                         <Button
-                          disabled={isImageUploading}
+                          disabled={isImageUploading || isImageDeleting}
                           variant="outlined"
                           className="disabled-btn"
                           onClick={() => setIsDeleteUserDialogOpen(true)}>
                           Delete User
                         </Button>
                         <LoadingButton
-                          disabled={isImageUploading}
+                          disabled={isImageUploading || isImageDeleting}
                           loading={submitLoading}
                           loadingPosition={submitLoading ? 'start' : undefined}
                           startIcon={submitLoading && <SaveIcon />}

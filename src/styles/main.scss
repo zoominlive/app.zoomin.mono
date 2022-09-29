@@ -582,3 +582,24 @@
     }
   }
 }
+
+.image-delete-btn {
+  &.MuiLoadingButton-loading {
+    color: transparent !important;
+    .MuiLoadingButton-loadingIndicator {
+      color: red;
+    }
+  }
+  color: red !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(211, 47, 47, 0.04) !important;
+  border: 1px solid rgba(211, 47, 47, 0.5) !important;
+  border-radius: 4px !important;
+  color: #d32f2f !important;
+  .MuiButton-startIcon {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+}

@@ -22,7 +22,7 @@ import { Notification } from '../../hoc/notification';
 import PropTypes from 'prop-types';
 
 const validationSchema = yup.object({
-  email: yup.string('Enter Username/email').required('Username / Email is required'),
+  username_email: yup.string('Enter Username/email').required('Username / Email is required'),
   password: yup
     .string('Enter your password')
     .min(6, 'Password should be of minimum 6 characters length')
@@ -49,11 +49,11 @@ const Login = (props) => {
           authCtx.setToken(response.data.Data.token);
           localStorage.setItem('token', response.data.Data.token);
           if (data.rememberMe) {
-            localStorage.setItem('email', data.email);
+            localStorage.setItem('username_email', data.username_email);
             localStorage.setItem('password', data.password);
             localStorage.setItem('rememberMe', data.rememberMe);
           } else {
-            localStorage.removeItem('email', data.email);
+            localStorage.removeItem('username_email', data.username_email);
             localStorage.removeItem('password', data.password);
             localStorage.removeItem('rememberMe', data.rememberMe);
           }
@@ -79,7 +79,9 @@ const Login = (props) => {
                 validateOnChange
                 validationSchema={validationSchema}
                 initialValues={{
-                  email: localStorage.getItem('rememberMe') ? localStorage.getItem('email') : '',
+                  username_email: localStorage.getItem('rememberMe')
+                    ? localStorage.getItem('username_email')
+                    : '',
                   password: localStorage.getItem('rememberMe')
                     ? localStorage.getItem('password')
                     : '',
@@ -92,13 +94,13 @@ const Login = (props) => {
                       <Stack spacing={3} mb={4}>
                         <TextField
                           label="Username/Email"
-                          name="Username/Email"
-                          value={values?.email || ''}
+                          name="username_email"
+                          value={values?.username_email || ''}
                           onChange={(e) => {
-                            setFieldValue('email', e.target.value || '');
+                            setFieldValue('username_email', e.target.value || '');
                           }}
-                          helperText={touched.email && errors.email}
-                          error={touched.email && Boolean(errors.email)}
+                          helperText={touched.username_email && errors.username_email}
+                          error={touched.username_email && Boolean(errors.username_email)}
                           fullWidth
                         />
                         <TextField
