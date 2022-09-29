@@ -1,0 +1,146 @@
+import {
+  Avatar,
+  Box,
+  Button,
+  Card,
+  CardContent,
+  FormControl,
+  Grid,
+  InputLabel,
+  MenuItem,
+  Paper,
+  Select,
+  Stack,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TablePagination,
+  TableRow,
+  TextField,
+  Typography
+} from '@mui/material';
+import React, { useEffect, useState } from 'react';
+import { useContext } from 'react';
+import { Plus } from 'react-feather';
+import LayoutContext from '../../context/layoutcontext';
+import AddUser from './adduser';
+import UserActions from './useractions';
+
+const Users = () => {
+  const layoutCtx = useContext(LayoutContext);
+  const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
+
+  useEffect(() => {
+    layoutCtx.setActive(3);
+    layoutCtx.setBreadcrumb(['Users']);
+  }, []);
+
+  const rows = [
+    {
+      id: 1,
+      user: 'Ralph Edwards',
+      location: 'Location 4',
+      email: 'debra.holt@example.com'
+    },
+    {
+      id: 2,
+      user: 'Ralph Edwards',
+      location: 'Location 4',
+      email: 'debra.holt@example.com'
+    }
+  ];
+
+  return (
+    <Box className="listing-wrapper">
+      <Card>
+        <CardContent>
+          <Box>
+            <Grid container spacing={2}>
+              <Grid item md={6} sm={12}>
+                <Box>
+                  <Grid container spacing={2}>
+                    <Grid item md={8} sm={12}>
+                      <TextField label="Search" value={'Location, Room, etc...'} />
+                    </Grid>
+                    <Grid item md={4} sm={12}>
+                      <FormControl fullWidth className="location-select">
+                        <InputLabel id="location">Location</InputLabel>
+                        <Select labelId="location" id="location" value={'All'} label="Location">
+                          <MenuItem value={'All'}>All</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </Grid>
+                  </Grid>
+                </Box>
+              </Grid>
+              <Grid
+                item
+                md={6}
+                sm={12}
+                sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
+                <Box>
+                  <Button
+                    className="add-btn"
+                    variant="contained"
+                    startIcon={<Plus />}
+                    onClick={() => setIsAddUserModalOpen(true)}>
+                    {' '}
+                    Add User
+                  </Button>
+                </Box>
+              </Grid>
+            </Grid>
+          </Box>
+
+          <Box mt={2}>
+            <TableContainer component={Paper}>
+              <Table sx={{ minWidth: 650 }} aria-label="simple table">
+                <TableHead>
+                  <TableRow>
+                    <TableCell style={{ minWidth: '150px' }}>User</TableCell>
+                    <TableCell style={{ minWidth: '100px' }} align="left">
+                      Location
+                    </TableCell>
+                    <TableCell align="left">Email</TableCell>
+                    <TableCell align="right"></TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {rows.map((row, index) => (
+                    <TableRow key={index} hover>
+                      <TableCell component="th" scope="row">
+                        <Stack direction="row" alignItems="center" spacing={3}>
+                          <Avatar>RE</Avatar>
+                          <Typography>{row.user}</Typography>
+                        </Stack>
+                      </TableCell>
+                      <TableCell align="left">{row.location}</TableCell>
+                      <TableCell align="left">{row.email}</TableCell>
+                      <TableCell align="right">
+                        <UserActions />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              <TablePagination
+                rowsPerPageOptions={[5, 10, 20, 25, 50]}
+                onPageChange={() => {}}
+                component="div"
+                count={1}
+                rowsPerPage={5}
+                page={0}
+                sx={{ flex: '1 1 auto' }}
+              />
+            </TableContainer>
+          </Box>
+        </CardContent>
+      </Card>
+      <AddUser open={isAddUserModalOpen} setOpen={setIsAddUserModalOpen} />
+    </Box>
+  );
+};
+
+export default Users;
