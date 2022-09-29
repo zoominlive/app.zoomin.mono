@@ -23,7 +23,7 @@ import React, { useEffect, useState } from 'react';
 import { useContext } from 'react';
 import LayoutContext from '../../context/layoutcontext';
 import * as yup from 'yup';
-// import base64 from 'base-64';
+import base64 from 'base-64';
 import { LoadingButton } from '@mui/lab';
 import SaveIcon from '@mui/icons-material/Save';
 import DeleteUserDialog from './deleteuserdialog';
@@ -46,9 +46,11 @@ const validationSchema = yup.object({
 const Profile = (props) => {
   const layoutCtx = useContext(LayoutContext);
   const authCtx = useContext(AuthContext);
+  const [image, setImage] = useState();
+  const [imageS3URL, setImageS3URL] = useState();
+  const [isImageUploading, setIsImageUploading] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
   const [isDeleteUserDialogOpen, setIsDeleteUserDialogOpen] = useState(false);
-
   const { acceptedFiles, fileRejections, getRootProps, getInputProps } = useDropzone({
     maxFiles: 1,
     accept: {
@@ -57,8 +59,6 @@ const Profile = (props) => {
       'image/jpg': ['.jpg']
     }
   });
-  const [isFileRejected, setIsFileRejected] = useState(false);
-  const [image, setImage] = useState();
 
   useEffect(() => {
     layoutCtx.setActive();
@@ -73,27 +73,36 @@ const Profile = (props) => {
 
   useEffect(() => {
     if (fileRejections.length > 0) {
-      setIsFileRejected(true);
-    }
-    if (acceptedFiles.length > 0) {
-      setImage(URL.createObjectURL(acceptedFiles[0]));
-    }
-  }, [acceptedFiles, fileRejections]);
-
-  useEffect(() => {
-    if (isFileRejected) {
       if (fileRejections.length > 1) {
         props.snackbarShowMessage('Only one file is allowed to be uploaded', 'error');
       } else {
         props.snackbarShowMessage('Only image file is allowed to be uploaded', 'error');
       }
-      setIsFileRejected(false);
     }
-  }, [isFileRejected]);
+    if (acceptedFiles.length > 0) {
+      setImage(URL.createObjectURL(acceptedFiles[0]));
+      setIsImageUploading(true);
+      API.post('users/uploadImage', {
+        image: base64.encode(acceptedFiles[0])
+      }).then((response) => {
+        if (response.status === 200) {
+          setImageS3URL(response.data.uploadImage);
+          props.snackbarShowMessage(response.data.Message, 'success');
+        } else {
+          props.snackbarShowMessage(response?.response?.data?.Message, 'error');
+        }
+        setIsImageUploading(false);
+      });
+    }
+  }, [acceptedFiles, fileRejections]);
 
+  // Method to update the user profile
   const handleSubmit = (data) => {
     setSubmitLoading(true);
-    API.put('users', data).then((response) => {
+    API.put('users', {
+      ...data,
+      profile_image: imageS3URL ? imageS3URL : image ? data.profile_image : ''
+    }).then((response) => {
       if (response.status === 200) {
         props.snackbarShowMessage(response?.data?.Message, 'success');
       } else {
@@ -103,8 +112,10 @@ const Profile = (props) => {
     });
   };
 
+  // Method to remove profile photo
   const handlePhotoDelete = () => {
     setImage();
+    setImageS3URL();
   };
 
   return (
@@ -259,12 +270,14 @@ const Profile = (props) => {
                         alignItems="center"
                         spacing={3}>
                         <Button
+                          disabled={isImageUploading}
                           variant="outlined"
                           className="disabled-btn"
                           onClick={() => setIsDeleteUserDialogOpen(true)}>
                           Delete User
                         </Button>
                         <LoadingButton
+                          disabled={isImageUploading}
                           loading={submitLoading}
                           loadingPosition={submitLoading ? 'start' : undefined}
                           startIcon={submitLoading && <SaveIcon />}

@@ -9,12 +9,14 @@ const UserActions = () => {
   const [anchorEl, setAnchorEl] = React.useState(null);
   const open = Boolean(anchorEl);
 
+  // Method to open the user actions on table
   const handleClick = (event) => {
     event.stopPropagation();
     event.preventDefault();
     setAnchorEl(event.currentTarget);
   };
 
+  // Method to close the user actions on table
   const handleClose = (event) => {
     event.stopPropagation();
     event.preventDefault();

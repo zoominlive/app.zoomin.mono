@@ -5,7 +5,6 @@ import {
   Stack,
   TextField,
   Typography,
-  Grid,
   FormControlLabel,
   Checkbox
 } from '@mui/material';
@@ -23,7 +22,7 @@ import { Notification } from '../../hoc/notification';
 import PropTypes from 'prop-types';
 
 const validationSchema = yup.object({
-  email: yup.string('Enter your email').email('Enter a valid email').required('Email is required'),
+  email: yup.string('Enter Username/email').required('Username / Email is required'),
   password: yup
     .string('Enter your password')
     .min(6, 'Password should be of minimum 6 characters length')
@@ -92,8 +91,8 @@ const Login = (props) => {
                     <Form>
                       <Stack spacing={3} mb={4}>
                         <TextField
-                          label="Email"
-                          name="email"
+                          label="Username/Email"
+                          name="Username/Email"
                           value={values?.email || ''}
                           onChange={(e) => {
                             setFieldValue('email', e.target.value || '');
@@ -140,18 +139,11 @@ const Login = (props) => {
                   );
                 }}
               </Formik>
-              <Grid container>
-                <Grid item xs>
-                  <Link href="#" variant="body2">
-                    Forgot password?
-                  </Link>
-                </Grid>
-                <Grid item>
-                  <Link href="#" variant="body2">
-                    {"Don't have an account? Sign Up"}
-                  </Link>
-                </Grid>
-              </Grid>
+              <Stack direction="row" justifyContent="center">
+                <Link href="#" variant="body2">
+                  Forgot password?
+                </Link>
+              </Stack>
             </Box>
           </Box>
         </CardContent>

@@ -486,6 +486,10 @@
 }
 
 .disabled-btn {
+  &.Mui-disabled {
+    color: rgba(0, 0, 0, 0.26) !important;
+    border: 1px solid rgba(0, 0, 0, 0.12) !important;
+  }
   background: rgba(211, 47, 47, 0.04) !important;
   border: 1px solid rgba(211, 47, 47, 0.5) !important;
   border-radius: 4px !important;
@@ -551,6 +555,30 @@
     }
     .action {
       order: 2;
+    }
+  }
+  .main-content {
+    header {
+      .header-left {
+        .breadcrumb {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-left: 20px;
+          h2 {
+            font-size: 16px;
+            margin-right: 16px;
+            line-height: 20px;
+          }
+          p {
+            font-size: 16px;
+            margin-right: 10px;
+          }
+          h4 {
+            font-size: 12px;
+          }
+        }
+      }
     }
   }
 }
