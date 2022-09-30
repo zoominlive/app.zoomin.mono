@@ -10,7 +10,6 @@ import {
   FormControl,
   FormHelperText,
   Grid,
-  // IconButton,
   InputLabel,
   MenuItem,
   Select,
@@ -40,7 +39,7 @@ const validationSchema = yup.object({
   username: yup.string('Enter username').required('Username is required'),
   email: yup.string('Enter your email').email('Enter a valid email').required('Email is required'),
   role: yup.string('Enter role').required('Role is required'),
-  location: yup.array().min(1, 'Select at least one location').required('Location is required')
+  locations: yup.array().min(1, 'Select at least one location').required('Location is required')
 });
 
 const Profile = (props) => {
@@ -50,6 +49,7 @@ const Profile = (props) => {
   const [isImageUploading, setIsImageUploading] = useState(false);
   const [isImageDeleting, setIsImageDeleting] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const [isDeleteUserDialogOpen, setIsDeleteUserDialogOpen] = useState(false);
   const { getRootProps, getInputProps } = useDropzone({
     maxFiles: 1,
@@ -81,8 +81,10 @@ const Profile = (props) => {
 
   // Method to update the user profile
   const handleSubmit = (data) => {
+    const payload = { ...data, location: { locations: data.locations } };
+    delete payload.locations;
     setSubmitLoading(true);
-    API.put('users', data).then((response) => {
+    API.put('users', payload).then((response) => {
       if (response.status === 200) {
         authCtx.setUser({ ...response.data.Data });
         props.snackbarShowMessage(response?.data?.Message, 'success');
@@ -108,6 +110,7 @@ const Profile = (props) => {
     });
   };
 
+  // Method to get image from input and upload it to BE
   async function handleImageUpload(acceptedFiles) {
     setIsImageUploading(true);
     setImage(URL.createObjectURL(acceptedFiles[0]));
@@ -138,6 +141,7 @@ const Profile = (props) => {
 
             <LoadingButton
               loading={isImageUploading}
+              disabled={isImageDeleting || submitLoading || deleteLoading}
               variant="contained"
               color="primary"
               component="span"
@@ -149,6 +153,7 @@ const Profile = (props) => {
               <Tooltip title="Remove photo">
                 <LoadingButton
                   variant="outlined"
+                  disabled={isImageUploading || submitLoading || deleteLoading}
                   loading={isImageDeleting}
                   className="image-delete-btn"
                   aria-label="delete"
@@ -168,7 +173,7 @@ const Profile = (props) => {
               username: authCtx.user.username || '',
               email: authCtx.user.email || '',
               role: authCtx.user.role || '',
-              location: authCtx.user.location ? [authCtx.user.location] : []
+              locations: authCtx.user.location ? authCtx.user.location.locations : []
             }}
             onSubmit={handleSubmit}>
             {({ values, setFieldValue, touched, errors }) => {
@@ -253,12 +258,12 @@ const Profile = (props) => {
                     <Grid item md={12}>
                       <Autocomplete
                         multiple
-                        id="location"
+                        id="locations"
                         options={['Location 1', 'Location 2', 'Location 3', 'surat']}
                         onChange={(_, value) => {
-                          setFieldValue('location', value);
+                          setFieldValue('locations', value);
                         }}
-                        value={values?.location}
+                        value={values?.locations}
                         renderTags={(value, getTagProps) =>
                           value.map((option, index) => (
                             <Chip key={index} label={option} {...getTagProps({ index })} />
@@ -269,8 +274,8 @@ const Profile = (props) => {
                             {...params}
                             label="Location"
                             placeholder="Location"
-                            helperText={touched.location && errors.location}
-                            error={touched.location && Boolean(errors.location)}
+                            helperText={touched.locations && errors.locations}
+                            error={touched.locations && Boolean(errors.locations)}
                           />
                         )}
                       />
@@ -282,14 +287,14 @@ const Profile = (props) => {
                         alignItems="center"
                         spacing={3}>
                         <Button
-                          disabled={isImageUploading || isImageDeleting}
+                          disabled={isImageUploading || isImageDeleting || submitLoading}
                           variant="outlined"
                           className="disabled-btn"
                           onClick={() => setIsDeleteUserDialogOpen(true)}>
                           Delete User
                         </Button>
                         <LoadingButton
-                          disabled={isImageUploading || isImageDeleting}
+                          disabled={isImageUploading || isImageDeleting || deleteLoading}
                           loading={submitLoading}
                           loadingPosition={submitLoading ? 'start' : undefined}
                           startIcon={submitLoading && <SaveIcon />}
@@ -306,7 +311,12 @@ const Profile = (props) => {
           </Formik>
         </CardContent>
       </Card>
-      <DeleteUserDialog open={isDeleteUserDialogOpen} setOpen={setIsDeleteUserDialogOpen} />
+      <DeleteUserDialog
+        open={isDeleteUserDialogOpen}
+        setOpen={setIsDeleteUserDialogOpen}
+        deleteLoading={deleteLoading}
+        setDeleteLoading={setDeleteLoading}
+      />
     </Box>
   );
 };

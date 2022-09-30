@@ -9,8 +9,26 @@ import {
 } from '@mui/material';
 import React from 'react';
 import PropTypes from 'prop-types';
+import API from '../../api';
+import { Notification } from '../../hoc/notification';
+import { LoadingButton } from '@mui/lab';
+import SaveIcon from '@mui/icons-material/Save';
 
 const DeleteUserDialog = (props) => {
+  // Method to delete user and redirect to login page
+  const handleUserDelete = () => {
+    props.setDeleteLoading(true);
+    API.delete('users').then((response) => {
+      if (response.status === 200) {
+        localStorage.clear();
+        window.location.reload('login');
+      } else {
+        props.setDeleteLoading(false);
+        props.snackbarShowMessage(response?.response?.data?.Message, 'error');
+      }
+    });
+  };
+
   return (
     <Dialog
       open={props.open}
@@ -27,22 +45,25 @@ const DeleteUserDialog = (props) => {
         <Button variant="text" onClick={() => props.setOpen(false)}>
           CANCEL
         </Button>
-        <Button
+        <LoadingButton
+          loading={props.deleteLoading}
+          loadingPosition={props.deleteLoading ? 'start' : undefined}
+          startIcon={props.deleteLoading && <SaveIcon />}
           variant="text"
-          onClick={() => {
-            localStorage.removeItem('token');
-            window.location.replace('/login');
-          }}>
-          YES
-        </Button>
+          onClick={handleUserDelete}>
+          Yes
+        </LoadingButton>
       </DialogActions>
     </Dialog>
   );
 };
 
-export default DeleteUserDialog;
+export default Notification(DeleteUserDialog);
 
 DeleteUserDialog.propTypes = {
   open: PropTypes.bool,
-  setOpen: PropTypes.func
+  deleteLoading: PropTypes.bool,
+  setOpen: PropTypes.func,
+  setDeleteLoading: PropTypes.func,
+  snackbarShowMessage: PropTypes.func
 };

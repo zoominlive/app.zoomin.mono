@@ -584,6 +584,10 @@
 }
 
 .image-delete-btn {
+  &.Mui-disabled {
+    color: rgba(0, 0, 0, 0.26) !important;
+    border: 1px solid rgba(0, 0, 0, 0.12) !important;
+  }
   &.MuiLoadingButton-loading {
     color: transparent !important;
     .MuiLoadingButton-loadingIndicator {
