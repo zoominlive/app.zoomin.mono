@@ -28,7 +28,7 @@ const Users = sequelize.define(
       required: [true, 'Password is mandatory field']
     },
     location: {
-      type: Sequelize.STRING(30),
+      type: Sequelize.JSON,
       allowNull: false,
       required: true
     },

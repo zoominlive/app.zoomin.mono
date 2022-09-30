@@ -15,6 +15,11 @@ const validateEmail = (emailAdress) => {
 module.exports = {
   /* Create new user */
   createUser: async (userObj) => {
+    CustomerLocations.sync();
+    Child.sync();
+    Customers.sync();
+    Family.sync();
+    Users.sync();
     let userCreated = await Users.create(userObj);
 
     return userCreated;
@@ -160,7 +165,7 @@ module.exports = {
     let update = {
       first_name: params?.first_name !== undefined ? params?.first_name : user.first_name,
       last_name: params?.last_name !== undefined ? params?.last_name : user.last_name,
-      location: params?.location !== undefined ? params?.location.toString() : user.location,
+      location: params?.location !== undefined ? params?.location : user.location,
       profile_image: params.image !== undefined ? params?.image : user.profile_image,
       username: params.username !== undefined ? params?.username : user.username,
       role: params.role !== undefined ? params?.role : user.role,
