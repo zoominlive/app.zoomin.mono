@@ -29,7 +29,7 @@ const Layout = (props) => {
   const layoutCtx = useContext(LayoutContext);
   const authCtx = useContext(AuthContext);
   const navigate = useNavigate();
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(window.innerWidth < 900 ? false : true);
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -46,6 +46,22 @@ const Layout = (props) => {
       setIsLoading(false);
     });
   }, []);
+
+  useEffect(() => {
+    window.addEventListener('resize', handleDrawerToggleOnResize);
+    return () => {
+      window.removeEventListener('resize', handleDrawerToggleOnResize);
+    };
+  }, []);
+
+  const handleDrawerToggleOnResize = () => {
+    if (window.innerWidth <= 900) {
+      setOpen(false);
+    }
+    if (window.innerWidth > 1200) {
+      setOpen(true);
+    }
+  };
 
   const topMenuItems = [
     {

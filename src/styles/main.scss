@@ -348,6 +348,7 @@
   }
   .row-add-btn {
     border-radius: 64px;
+    line-height: 20px;
     height: 50px;
     font-weight: 500;
     font-size: 14px;
@@ -432,7 +433,7 @@
     }
     &.border-bottom-none {
       .MuiTableCell-root {
-        border-bottom: none !important;
+        border-bottom-color: #fff !important;
       }
     }
     .MuiTable-root {
@@ -605,5 +606,13 @@
   .MuiButton-startIcon {
     margin-left: 0 !important;
     margin-right: 0 !important;
+  }
+}
+
+@media only screen and (min-width: 767px) and (max-width: 991px) {
+  .row-button-wrapper {
+    .row-add-btn {
+      font-size: 12px !important;
+    }
   }
 }

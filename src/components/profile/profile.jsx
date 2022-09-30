@@ -255,8 +255,9 @@ const Profile = (props) => {
                         )}
                       </FormControl>
                     </Grid>
-                    <Grid item md={12}>
+                    <Grid item xs={12} md={12}>
                       <Autocomplete
+                        fullWidth
                         multiple
                         id="locations"
                         options={['Location 1', 'Location 2', 'Location 3', 'surat']}
@@ -276,11 +277,12 @@ const Profile = (props) => {
                             placeholder="Location"
                             helperText={touched.locations && errors.locations}
                             error={touched.locations && Boolean(errors.locations)}
+                            fullWidth
                           />
                         )}
                       />
                     </Grid>
-                    <Grid item md={12}>
+                    <Grid item xs={12} md={12}>
                       <Stack
                         direction="row"
                         justifyContent="flex-end"

@@ -59,7 +59,7 @@ const Row = (props) => {
               <Table size="small" aria-label="cameras">
                 <TableHead>
                   <TableRow>
-                    <TableCell>Camera Name</TableCell>
+                    <TableCell sx={{ width: '120px' }}>Camera Name</TableCell>
                     <TableCell>URL</TableCell>
                   </TableRow>
                 </TableHead>
@@ -236,11 +236,11 @@ const Rooms = () => {
               <Table aria-label="collapsible table">
                 <TableHead>
                   <TableRow>
-                    <TableCell />
-                    <TableCell>Room Name</TableCell>
+                    <TableCell sx={{ width: '50px' }} />
+                    <TableCell sx={{ width: '200px' }}>Room Name</TableCell>
                     <TableCell>Location</TableCell>
-                    <TableCell>Cams</TableCell>
-                    <TableCell align="right" />
+                    <TableCell sx={{ width: '100px' }}>Cams</TableCell>
+                    <TableCell align="right" sx={{ width: '50px' }} />
                   </TableRow>
                 </TableHead>
                 <TableBody>
