@@ -57,12 +57,7 @@ const AddRoom = (props) => {
               </FormControl>
             </Grid>
           </Grid>
-          <Divider
-            textAlign="left"
-            sx={{
-              marginTop: '15px',
-              marginBottom: '15px'
-            }}>
+          <Divider textAlign="left" sx={{ mx: '-16px', my: '15px' }}>
             CAMERA
           </Divider>
           <Grid className="camera-fields" container spacing={3} sx={{ mb: 3 }}>
