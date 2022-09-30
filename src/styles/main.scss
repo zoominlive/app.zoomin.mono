@@ -433,6 +433,7 @@
     }
     &.border-bottom-none {
       .MuiTableCell-root {
+        border-bottom: none !important;
         border-bottom-color: #fff !important;
       }
     }
