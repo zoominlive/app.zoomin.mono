@@ -16,7 +16,7 @@ const Dashboard = () => {
   return (
     <Box className="dashboard">
       <Grid container rowSpacing={1} columnSpacing={{ xs: 3 }} className="dashboard-analytics">
-        <Grid item sm={6} md={6} lg={3}>
+        <Grid item xs={12} sm={6} md={6} lg={3}>
           <Card>
             <CardContent className="p-16">
               <Stack direction="row" alignItems="center" spacing={2}>
@@ -29,7 +29,7 @@ const Dashboard = () => {
             </CardContent>
           </Card>
         </Grid>
-        <Grid item sm={6} md={6} lg={3}>
+        <Grid item xs={12} sm={6} md={6} lg={3}>
           <Card>
             <CardContent>
               <Stack direction="row" alignItems="center" spacing={2}>
@@ -42,7 +42,7 @@ const Dashboard = () => {
             </CardContent>
           </Card>
         </Grid>
-        <Grid item sm={6} md={6} lg={3}>
+        <Grid item xs={12} sm={6} md={6} lg={3}>
           <Card>
             <CardContent>
               <Stack direction="row" alignItems="center" spacing={2}>
@@ -55,7 +55,7 @@ const Dashboard = () => {
             </CardContent>
           </Card>
         </Grid>
-        <Grid item sm={6} md={6} lg={3}>
+        <Grid item xs={12} sm={6} md={6} lg={3}>
           <Card>
             <CardContent>
               <Stack direction="row" alignItems="center" spacing={2}>
