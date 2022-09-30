@@ -1,4 +1,4 @@
-const { Users, CustomerLocations, Child, Customers, Family } = require('../models/index');
+const { Users } = require('../models/index');
 const Sequelize = require('sequelize');
 const jwt = require('jsonwebtoken');
 
@@ -15,11 +15,6 @@ const validateEmail = (emailAdress) => {
 module.exports = {
   /* Create new user */
   createUser: async (userObj) => {
-    CustomerLocations.sync();
-    Child.sync();
-    Customers.sync();
-    Family.sync();
-    Users.sync();
     let userCreated = await Users.create(userObj);
 
     return userCreated;
