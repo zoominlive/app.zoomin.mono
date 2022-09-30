@@ -14,8 +14,8 @@ import { Notification } from '../../hoc/notification';
 import { LoadingButton } from '@mui/lab';
 import SaveIcon from '@mui/icons-material/Save';
 
+// Method to delete user and redirect to login page
 const DeleteUserDialog = (props) => {
-  // Method to delete user and redirect to login page
   const handleUserDelete = () => {
     props.setDeleteLoading(true);
     API.delete('users').then((response) => {
@@ -29,10 +29,16 @@ const DeleteUserDialog = (props) => {
     });
   };
 
+  const handleDialogClose = () => {
+    if (!props.deleteLoading) {
+      props.setOpen(false);
+    }
+  };
+
   return (
     <Dialog
       open={props.open}
-      onClose={() => props.setOpen(false)}
+      onClose={handleDialogClose}
       fullWidth
       className="delete-user-dialog small-dialog">
       <DialogTitle>Delete User</DialogTitle>
@@ -42,7 +48,7 @@ const DeleteUserDialog = (props) => {
       </DialogContent>
       <Divider />
       <DialogActions>
-        <Button variant="text" onClick={() => props.setOpen(false)}>
+        <Button variant="text" onClick={handleDialogClose}>
           CANCEL
         </Button>
         <LoadingButton
