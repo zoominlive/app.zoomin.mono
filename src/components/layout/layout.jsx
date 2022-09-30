@@ -54,6 +54,7 @@ const Layout = (props) => {
     };
   }, []);
 
+  // Method to toggle drawer when the window size changes
   const handleDrawerToggleOnResize = () => {
     if (window.innerWidth <= 900) {
       setOpen(false);
