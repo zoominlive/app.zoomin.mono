@@ -44,7 +44,7 @@ const Families = () => {
   const [isFamilyDrawerOpen, setIsFamilyDrawerOpen] = useState(false);
 
   useEffect(() => {
-    layoutCtx.setActive(1);
+    layoutCtx.setActive(2);
     layoutCtx.setBreadcrumb(['Families', 'Manage Families and their camera autorization']);
   }, []);
 

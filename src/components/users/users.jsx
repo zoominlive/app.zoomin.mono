@@ -42,7 +42,7 @@ const Users = () => {
   });
 
   useEffect(() => {
-    layoutCtx.setActive(3);
+    layoutCtx.setActive(4);
     layoutCtx.setBreadcrumb(['Users']);
   }, []);
 

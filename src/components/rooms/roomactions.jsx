@@ -3,22 +3,40 @@ import React from 'react';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
+import PropTypes from 'prop-types';
 
-const RoomActions = () => {
+const RoomActions = (props) => {
   const [anchorEl, setAnchorEl] = React.useState(null);
   const open = Boolean(anchorEl);
 
+  // Method to open the actions on table
   const handleClick = (event) => {
     event.stopPropagation();
     event.preventDefault();
     setAnchorEl(event.currentTarget);
   };
 
+  // Method to close the actions on table
   const handleClose = (event) => {
     event.stopPropagation();
     event.preventDefault();
     setAnchorEl(null);
   };
+
+  // Method that sets the user for user form and opens the user form dialog
+  const handleRoomEdit = (event) => {
+    props.setRoom(props.room);
+    props.setIsRoomFormDialogOpen(true);
+    handleClose(event);
+  };
+
+  // Method that sets the user to be deleted and opens the delete dialog
+  const handleRoomDelete = (event) => {
+    props.setRoom(props.room);
+    props.setIsDeleteDialogOpen(true);
+    handleClose(event);
+  };
+
   return (
     <Box>
       <IconButton aria-controls="alpha-menu" aria-haspopup="true" onClick={handleClick}>
@@ -32,13 +50,13 @@ const RoomActions = () => {
         keepMounted
         anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
         TransitionComponent={Fade}>
-        <MenuItem>
+        <MenuItem onClick={handleRoomEdit}>
           <ListItemIcon>
             <EditIcon />
           </ListItemIcon>
           <ListItemText>Edit Room</ListItemText>
         </MenuItem>
-        <MenuItem>
+        <MenuItem onClick={handleRoomDelete}>
           <ListItemIcon>
             <DeleteForeverIcon />
           </ListItemIcon>
@@ -50,3 +68,10 @@ const RoomActions = () => {
 };
 
 export default RoomActions;
+
+RoomActions.propTypes = {
+  room: PropTypes.object,
+  setRoom: PropTypes.func,
+  setIsRoomFormDialogOpen: PropTypes.func,
+  setIsDeleteDialogOpen: PropTypes.func
+};

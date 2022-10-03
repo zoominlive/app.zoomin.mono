@@ -9,7 +9,7 @@ const Dashboard = () => {
   const layoutCtx = useContext(LayoutContext);
 
   useEffect(() => {
-    layoutCtx.setActive(0);
+    layoutCtx.setActive(1);
     layoutCtx.setBreadcrumb(['Welcome back, John', 'Monday, 29 April 2022']);
   }, []);
 

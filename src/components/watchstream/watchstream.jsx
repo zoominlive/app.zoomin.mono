@@ -6,7 +6,7 @@ import LayoutContext from '../../context/layoutcontext';
 const WatchStream = () => {
   const layoutCtx = useContext(LayoutContext);
   useEffect(() => {
-    layoutCtx.setActive(4);
+    layoutCtx.setActive(5);
     layoutCtx.setBreadcrumb(['Watch Stream']);
   }, []);
 

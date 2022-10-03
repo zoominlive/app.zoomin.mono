@@ -72,27 +72,32 @@ const Layout = (props) => {
       name: 'Dashboard',
       icon: <Monitor />,
       active: true,
-      link: '/dashboard'
+      link: '/dashboard',
+      key: 1
     },
     {
       name: 'Families',
       icon: <Users />,
-      link: '/families'
+      link: '/families',
+      key: 2
     },
     {
       name: 'Rooms',
       icon: <Copy />,
-      link: '/rooms'
+      link: '/rooms',
+      key: 3
     },
     {
       name: 'Users',
       icon: <User />,
-      link: '/users'
+      link: '/users',
+      key: 4
     },
     {
       name: 'Watch Stream',
       icon: <Video />,
-      link: '/watch-stream'
+      link: '/watch-stream',
+      key: 5
     }
   ];
 
@@ -122,7 +127,7 @@ const Layout = (props) => {
             {topMenuItems.map((item, index) => (
               <ListItem
                 key={index}
-                className={`${index === layoutCtx.active ? 'active' : ''} `}
+                className={`${item.key === layoutCtx.active ? 'active' : ''} `}
                 sx={{ px: 1 }}>
                 {' '}
                 <ListItemButton

@@ -1,4 +1,5 @@
 import {
+  Autocomplete,
   Box,
   Button,
   Card,
@@ -10,7 +11,7 @@ import {
   IconButton,
   InputLabel,
   MenuItem,
-  OutlinedInput,
+  // OutlinedInput,
   Paper,
   Select,
   Table,
@@ -27,11 +28,12 @@ import { useContext } from 'react';
 import { useState } from 'react';
 import { Plus } from 'react-feather';
 import LayoutContext from '../../context/layoutcontext';
-import AddRoom from './addroom';
+import RoomForm from './roomform';
 import RoomActions from './roomactions';
 import PropTypes from 'prop-types';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
+import DeleteDialog from '../common/deletedialog';
 
 const Row = (props) => {
   const { row } = props;
@@ -49,7 +51,12 @@ const Row = (props) => {
         <TableCell>{row.location}</TableCell>
         <TableCell>{row.number_of_cam}</TableCell>
         <TableCell align="right">
-          <RoomActions />
+          <RoomActions
+            room={row}
+            setRoom={props.setRoom}
+            setIsRoomFormDialogOpen={props.setIsRoomFormDialogOpen}
+            setIsDeleteDialogOpen={props.setIsDeleteDialogOpen}
+          />
         </TableCell>
       </TableRow>
       <TableRow className={`expandable-row ${!open ? 'border-bottom-none' : ''}`}>
@@ -95,17 +102,55 @@ Row.propTypes = {
         cam_url: PropTypes.string
       })
     )
-  })
+  }),
+  setRoom: PropTypes.func,
+  setIsRoomFormDialogOpen: PropTypes.func,
+  setIsDeleteDialogOpen: PropTypes.func
 };
 
 const Rooms = () => {
   const layoutCtx = useContext(LayoutContext);
-  const [isAddRoomDialogOpen, setIsAddRoomDialogOpen] = useState(false);
+  const [isRoomFormDialogOpen, setIsRoomFormDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [room, setRoom] = useState();
+  const [roomsPayload, setRoomsPayload] = useState({
+    page: 1,
+    limit: parseInt(process.env.REACT_APP_PAGINATION_LIMIT, 10),
+    search: '',
+    location: 'All',
+    rooms: []
+  });
 
   useEffect(() => {
-    layoutCtx.setActive(2);
+    layoutCtx.setActive(3);
     layoutCtx.setBreadcrumb(['Rooms']);
   }, []);
+
+  // Method to change the page in table
+  const handlePageChange = (_, newPage) => {
+    console.log(newPage);
+    setRoomsPayload((prevPayload) => ({ ...prevPayload, page: newPage }));
+  };
+
+  // Method to change the row per page in table
+  const handleChangeRowsPerPage = (event) => {
+    setRoomsPayload((prevPayload) => ({ ...prevPayload, limit: parseInt(event.target.value, 10) }));
+  };
+
+  // Method to handle Search for table
+  const handleSearch = (event) => {
+    setRoomsPayload((prevPayload) => ({ ...prevPayload, search: event.target.value }));
+  };
+
+  // Method to handle location change for table
+  const handleLocationChange = (event) => {
+    setRoomsPayload((prevPayload) => ({ ...prevPayload, location: event.target.value }));
+  };
+
+  // Method to handle room change for table
+  const handleRoomChange = (_, value) => {
+    setRoomsPayload((prevPayload) => ({ ...prevPayload, rooms: value }));
+  };
 
   const rows = [
     {
@@ -137,7 +182,7 @@ const Rooms = () => {
       id: 2,
       room_name: 'Room 2',
       location: 'Location 2',
-      number_of_cam: 4,
+      number_of_cam: 3,
       cams: [
         {
           cam_name: 'Cam 1',
@@ -151,10 +196,6 @@ const Rooms = () => {
         {
           cam_name: 'Cam 3',
           cam_url: 'https://zoomin.com/systems/en/room/zoomin-room-1/n/room/zoomin-room-1'
-        },
-        {
-          cam_name: 'Cam 4',
-          cam_url: 'https://zoomin.com/systems/en/room/zoomin-room-1/'
         }
       ]
     }
@@ -168,46 +209,44 @@ const Rooms = () => {
               <Grid item md={8} sm={12}>
                 <Box>
                   <Grid container spacing={2}>
-                    <Grid item md={6} sm={12}>
-                      <TextField label="Search" value={'Location, Room, etc...'} />
+                    <Grid item md={5} sm={12}>
+                      <TextField
+                        label="Search"
+                        value={roomsPayload?.search}
+                        onChange={handleSearch}
+                      />
                     </Grid>
-                    <Grid item md={3} sm={12}>
+                    <Grid item md={3.5} sm={12}>
                       <FormControl fullWidth className="location-select">
                         <InputLabel id="location">Location</InputLabel>
-                        <Select labelId="location" id="location" value={'All'} label="Location">
+                        <Select
+                          labelId="location"
+                          id="location"
+                          value={roomsPayload?.location}
+                          onChange={handleLocationChange}
+                          label="Location">
                           <MenuItem value={'All'}>All</MenuItem>
+                          <MenuItem value={'Location 1'}>Location 1</MenuItem>
                         </Select>
                       </FormControl>
                     </Grid>
-                    <Grid item md={3} sm={12}>
-                      <FormControl className="room-select">
-                        <InputLabel id="room-select">Room</InputLabel>
-                        <Select
-                          labelId="room-select"
-                          id="room-select"
-                          multiple
-                          value={['Room 1']}
-                          input={<OutlinedInput id="select-multiple-chip" label="Room" />}
-                          renderValue={(selected) => (
-                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                              {selected.map((value) => (
-                                <Chip key={value} label={value} onDelete={() => {}} />
-                              ))}
-                            </Box>
-                          )}>
-                          <MenuItem key={0} value={'Room 1'}>
-                            Room 1
-                          </MenuItem>
-
-                          <MenuItem key={1} value={'Room 2'}>
-                            Room 2
-                          </MenuItem>
-
-                          <MenuItem key={2} value={'Room 3'}>
-                            Room 3
-                          </MenuItem>
-                        </Select>
-                      </FormControl>
+                    <Grid item md={3.5} sm={12}>
+                      <Autocomplete
+                        fullWidth
+                        multiple
+                        id="rooms"
+                        options={['Room 1', 'Room 2', 'Room 3']}
+                        onChange={handleRoomChange}
+                        value={roomsPayload?.rooms}
+                        renderTags={(value, getTagProps) =>
+                          value.map((option, index) => (
+                            <Chip key={index} label={option} {...getTagProps({ index })} />
+                          ))
+                        }
+                        renderInput={(params) => (
+                          <TextField {...params} label="Room" fullWidth placeholder="Room" />
+                        )}
+                      />
                     </Grid>
                   </Grid>
                 </Box>
@@ -222,7 +261,7 @@ const Rooms = () => {
                     className="add-btn"
                     variant="contained"
                     startIcon={<Plus />}
-                    onClick={() => setIsAddRoomDialogOpen(true)}>
+                    onClick={() => setIsRoomFormDialogOpen(true)}>
                     {' '}
                     Add Room
                   </Button>
@@ -245,24 +284,43 @@ const Rooms = () => {
                 </TableHead>
                 <TableBody>
                   {rows.map((row) => (
-                    <Row key={row.id} row={row} />
+                    <Row
+                      setRoom={setRoom}
+                      setIsRoomFormDialogOpen={setIsRoomFormDialogOpen}
+                      setIsDeleteDialogOpen={setIsDeleteDialogOpen}
+                      key={row.id}
+                      row={row}
+                    />
                   ))}
                 </TableBody>
               </Table>
               <TablePagination
                 rowsPerPageOptions={[5, 10, 20, 25, 50]}
-                onPageChange={() => {}}
+                onPageChange={handlePageChange}
+                onRowsPerPageChange={handleChangeRowsPerPage}
                 component="div"
                 count={1}
-                rowsPerPage={5}
-                page={0}
+                rowsPerPage={roomsPayload?.limit}
+                page={roomsPayload?.page - 1}
                 sx={{ flex: '1 1 auto' }}
               />
             </TableContainer>
           </Box>
         </CardContent>
       </Card>
-      <AddRoom open={isAddRoomDialogOpen} setOpen={setIsAddRoomDialogOpen} />
+      <RoomForm
+        room={room}
+        setRoom={setRoom}
+        open={isRoomFormDialogOpen}
+        setOpen={setIsRoomFormDialogOpen}
+      />
+      <DeleteDialog
+        open={isDeleteDialogOpen}
+        title="Delete Room"
+        contentText="Are you sure you want to delete this room?"
+        handleDialogClose={() => setIsDeleteDialogOpen(false)}
+        handleDelete={() => setIsDeleteDialogOpen(false)}
+      />
     </Box>
   );
 };
