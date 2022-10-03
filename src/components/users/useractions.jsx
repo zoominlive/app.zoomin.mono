@@ -1,11 +1,11 @@
 import { Box, Fade, IconButton, ListItemIcon, ListItemText, Menu, MenuItem } from '@mui/material';
-
 import React from 'react';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
+import PropTypes from 'prop-types';
 
-const UserActions = () => {
+const UserActions = (props) => {
   const [anchorEl, setAnchorEl] = React.useState(null);
   const open = Boolean(anchorEl);
 
@@ -23,6 +23,19 @@ const UserActions = () => {
     setAnchorEl(null);
   };
 
+  // Method that sets the user id for user form and opens the user form dialog
+  const handleUserEdit = (event) => {
+    props.setUser({ ...props.user, first_name: props.user.user });
+    props.setIsUserFormDialogOpen(true);
+    handleClose(event);
+  };
+
+  const handleUserDelete = (event) => {
+    props.setUser({ ...props.user, first_name: props.user.user });
+    props.setIsDeleteDialogOpen(true);
+    handleClose(event);
+  };
+
   return (
     <Box>
       <IconButton aria-controls="alpha-menu" aria-haspopup="true" onClick={handleClick}>
@@ -36,13 +49,13 @@ const UserActions = () => {
         keepMounted
         anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
         TransitionComponent={Fade}>
-        <MenuItem>
+        <MenuItem onClick={handleUserEdit}>
           <ListItemIcon>
             <EditIcon />
           </ListItemIcon>
           <ListItemText>Edit User</ListItemText>
         </MenuItem>
-        <MenuItem>
+        <MenuItem onClick={handleUserDelete}>
           <ListItemIcon>
             <DeleteForeverIcon />
           </ListItemIcon>
@@ -54,3 +67,10 @@ const UserActions = () => {
 };
 
 export default UserActions;
+
+UserActions.propTypes = {
+  user: PropTypes.object,
+  setUser: PropTypes.func,
+  setIsUserFormDialogOpen: PropTypes.func,
+  setIsDeleteDialogOpen: PropTypes.func
+};

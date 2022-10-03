@@ -86,7 +86,10 @@ const Profile = (props) => {
     setSubmitLoading(true);
     API.put('users', payload).then((response) => {
       if (response.status === 200) {
-        authCtx.setUser({ ...response.data.Data });
+        authCtx.setUser({
+          ...response.data.Data,
+          location: JSON.parse(response.data.Data.location)
+        });
         props.snackbarShowMessage(response?.data?.Message, 'success');
       } else {
         props.snackbarShowMessage(response?.response?.data?.Message, 'error');
@@ -126,6 +129,7 @@ const Profile = (props) => {
         props.snackbarShowMessage(response?.data?.Message, 'success');
       } else {
         props.snackbarShowMessage(response?.response?.data?.Message, 'error');
+        setImage();
       }
       setIsImageUploading(false);
     });

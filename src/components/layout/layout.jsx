@@ -39,7 +39,10 @@ const Layout = (props) => {
     // API Call for Fetching Logged in user detail
     API.get('users').then((response) => {
       if (response.status === 200) {
-        authCtx.setUser(response.data.Data);
+        authCtx.setUser({
+          ...response.data.Data,
+          location: JSON.parse(response.data.Data.location)
+        });
       } else {
         props.snackbarShowMessage(response?.response?.data?.Message, 'error', 3000);
       }

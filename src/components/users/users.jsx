@@ -25,12 +25,21 @@ import React, { useEffect, useState } from 'react';
 import { useContext } from 'react';
 import { Plus } from 'react-feather';
 import LayoutContext from '../../context/layoutcontext';
-import AddUser from './adduser';
+import UserForm from './userform';
 import UserActions from './useractions';
+import DeleteDialog from '../common/deletedialog';
 
 const Users = () => {
   const layoutCtx = useContext(LayoutContext);
-  const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
+  const [isUserFormDialogOpen, setIsUserFormDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [user, setUser] = useState();
+  const [usersPayload, setUsersPayload] = useState({
+    page: 1,
+    limit: parseInt(process.env.REACT_APP_PAGINATION_LIMIT, 10),
+    search: '',
+    location: 'All'
+  });
 
   useEffect(() => {
     layoutCtx.setActive(3);
@@ -52,6 +61,27 @@ const Users = () => {
     }
   ];
 
+  // Method to change the page in table
+  const handlePageChange = (_, newPage) => {
+    console.log(newPage);
+    setUsersPayload((prevPayload) => ({ ...prevPayload, page: newPage }));
+  };
+
+  // Method to change the row per page in table
+  const handleChangeRowsPerPage = (event) => {
+    setUsersPayload((prevPayload) => ({ ...prevPayload, limit: parseInt(event.target.value, 10) }));
+  };
+
+  // Method to handle Search for table
+  const handleSearch = (event) => {
+    setUsersPayload((prevPayload) => ({ ...prevPayload, search: event.target.value }));
+  };
+
+  // Method to handle location change for table
+  const handleLocationChange = (event) => {
+    setUsersPayload((prevPayload) => ({ ...prevPayload, location: event.target.value }));
+  };
+
   return (
     <Box className="listing-wrapper">
       <Card>
@@ -62,13 +92,24 @@ const Users = () => {
                 <Box>
                   <Grid container spacing={2}>
                     <Grid item md={8} sm={12}>
-                      <TextField label="Search" value={'Location, Room, etc...'} />
+                      <TextField
+                        label="Search"
+                        value={usersPayload?.search}
+                        placeholder="Location, room, etc..."
+                        onChange={handleSearch}
+                      />
                     </Grid>
                     <Grid item md={4} sm={12}>
                       <FormControl fullWidth className="location-select">
                         <InputLabel id="location">Location</InputLabel>
-                        <Select labelId="location" id="location" value={'All'} label="Location">
+                        <Select
+                          labelId="location"
+                          id="location"
+                          value={usersPayload?.location}
+                          label="Location"
+                          onChange={handleLocationChange}>
                           <MenuItem value={'All'}>All</MenuItem>
+                          <MenuItem value={'Location 1'}>Location 1</MenuItem>
                         </Select>
                       </FormControl>
                     </Grid>
@@ -85,7 +126,7 @@ const Users = () => {
                     className="add-btn"
                     variant="contained"
                     startIcon={<Plus />}
-                    onClick={() => setIsAddUserModalOpen(true)}>
+                    onClick={() => setIsUserFormDialogOpen(true)}>
                     {' '}
                     Add User
                   </Button>
@@ -119,7 +160,12 @@ const Users = () => {
                       <TableCell align="left">{row.location}</TableCell>
                       <TableCell align="left">{row.email}</TableCell>
                       <TableCell align="right">
-                        <UserActions />
+                        <UserActions
+                          user={row}
+                          setUser={setUser}
+                          setIsUserFormDialogOpen={setIsUserFormDialogOpen}
+                          setIsDeleteDialogOpen={setIsDeleteDialogOpen}
+                        />
                       </TableCell>
                     </TableRow>
                   ))}
@@ -127,18 +173,31 @@ const Users = () => {
               </Table>
               <TablePagination
                 rowsPerPageOptions={[5, 10, 20, 25, 50]}
-                onPageChange={() => {}}
+                onPageChange={handlePageChange}
+                onRowsPerPageChange={handleChangeRowsPerPage}
                 component="div"
                 count={1}
-                rowsPerPage={5}
-                page={0}
+                rowsPerPage={usersPayload?.limit}
+                page={usersPayload?.page - 1}
                 sx={{ flex: '1 1 auto' }}
               />
             </TableContainer>
           </Box>
         </CardContent>
       </Card>
-      <AddUser open={isAddUserModalOpen} setOpen={setIsAddUserModalOpen} />
+      <UserForm
+        open={isUserFormDialogOpen}
+        setOpen={setIsUserFormDialogOpen}
+        user={user}
+        setUser={setUser}
+      />
+      <DeleteDialog
+        open={isDeleteDialogOpen}
+        handleDialogClose={() => setIsDeleteDialogOpen(false)}
+        handleDelete={() => setIsDeleteDialogOpen(false)}
+        title="Delete User"
+        contentText={'Are you sure you want to delete this user?'}
+      />
     </Box>
   );
 };
