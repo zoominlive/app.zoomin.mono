@@ -27,7 +27,7 @@ const DisableFamily = (props) => {
       open={props.open}
       onClose={() => props.setOpen(false)}
       fullWidth
-      className="disable-family-dialog smaill-dialog">
+      className="disable-family-dialog small-dialog">
       <DialogTitle>Disable Family</DialogTitle>
       <Divider />
       <DialogContent>
