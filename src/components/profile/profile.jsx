@@ -88,7 +88,7 @@ const Profile = (props) => {
       if (response.status === 200) {
         authCtx.setUser({
           ...response.data.Data,
-          location: JSON.parse(response.data.Data.location)
+          location: response.data.Data.location
         });
         props.snackbarShowMessage(response?.data?.Message, 'success');
       } else {

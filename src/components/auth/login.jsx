@@ -66,10 +66,10 @@ const Login = (props) => {
   };
 
   return (
-    <Box className="login-wrapper">
+    <Box className="auth-wrapper">
       <Card>
         <CardContent>
-          <Box className="login-container">
+          <Box className="auth-container">
             <Typography component="h1" variant="h5">
               LOG IN
             </Typography>
@@ -142,7 +142,7 @@ const Login = (props) => {
                 }}
               </Formik>
               <Stack direction="row" justifyContent="center">
-                <Link href="#" variant="body2">
+                <Link to="/forgot-password" variant="body2">
                   Forgot password?
                 </Link>
               </Stack>

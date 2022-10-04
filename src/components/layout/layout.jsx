@@ -41,7 +41,7 @@ const Layout = (props) => {
       if (response.status === 200) {
         authCtx.setUser({
           ...response.data.Data,
-          location: JSON.parse(response.data.Data.location)
+          location: response.data.Data.location
         });
       } else {
         props.snackbarShowMessage(response?.response?.data?.Message, 'error', 3000);
