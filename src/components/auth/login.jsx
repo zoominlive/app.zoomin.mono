@@ -6,7 +6,9 @@ import {
   TextField,
   Typography,
   FormControlLabel,
-  Checkbox
+  Checkbox,
+  InputAdornment,
+  IconButton
 } from '@mui/material';
 import { Form, Formik } from 'formik';
 import React, { useEffect } from 'react';
@@ -20,6 +22,8 @@ import SaveIcon from '@mui/icons-material/Save';
 import { useState } from 'react';
 import { Notification } from '../../hoc/notification';
 import PropTypes from 'prop-types';
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
 
 const validationSchema = yup.object({
   username_email: yup.string('Enter Username/email').required('Username / Email is required'),
@@ -33,6 +37,7 @@ const Login = (props) => {
   const authCtx = useContext(AuthContext);
   const navigate = useNavigate();
   const [submitLoading, setSubmitLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     if (authCtx.token) {
@@ -106,7 +111,7 @@ const Login = (props) => {
                         <TextField
                           autoComplete="current-password"
                           label="Password"
-                          type="password"
+                          type={showPassword ? 'text' : 'password'}
                           name="password"
                           onChange={(e) => {
                             setFieldValue('password', e.target.value || '');
@@ -115,6 +120,17 @@ const Login = (props) => {
                           helperText={touched.password && errors.password}
                           error={touched.password && Boolean(errors.password)}
                           fullWidth
+                          InputProps={{
+                            endAdornment: (
+                              <InputAdornment position="end">
+                                <IconButton
+                                  aria-label="toggle password visibility"
+                                  onClick={() => setShowPassword((prevState) => !prevState)}>
+                                  {showPassword ? <Visibility /> : <VisibilityOff />}
+                                </IconButton>
+                              </InputAdornment>
+                            )
+                          }}
                         />
                         <FormControlLabel
                           control={

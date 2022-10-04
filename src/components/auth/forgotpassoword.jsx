@@ -39,7 +39,7 @@ const ForgotPassword = () => {
               {({ values, setFieldValue, touched, errors }) => {
                 return (
                   <Form>
-                    <Stack spacing={3} mt={4} mb={4}>
+                    <Stack spacing={3} my={4}>
                       <TextField
                         name="email"
                         label="Email"
