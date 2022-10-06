@@ -75,37 +75,21 @@ module.exports = {
       }
     }
 
-    if (params.password === '' || params.password === undefined) {
-      validationResponse = {
-        isValid: false,
-        message: {
-          IsSuccess: true,
-          Data: [],
-          Message: 'Please provide valid password (Mandatory fields)'
-        }
-      };
-
-      return validationResponse;
-    }
-
     return validationResponse;
   },
 
   /* Get user via email */
-  getUser: async (username_email) => {
-    const isValidEmail = validateEmail(username_email);
+  getUser: async (email) => {
+    let user = await Users.findOne({
+      where: { email: email }
+    });
+    return user ? user.toJSON() : null;
+  },
 
-    let user;
-    if (isValidEmail) {
-      user = await Users.findOne({
-        where: { email: username_email }
-      });
-    } else {
-      user = await Users.findOne({
-        where: { username: username_email }
-      });
-    }
-
+  getUserById: async (userId) => {
+    let user = await Users.findOne({
+      where: { user_id: userId }
+    });
     return user ? user.toJSON() : null;
   },
 
@@ -120,6 +104,15 @@ module.exports = {
     });
 
     return { token, refreshToken };
+  },
+
+  /* Create user token */
+  createPasswordToken: async (userId) => {
+    const token = jwt.sign({ user_id: userId }, process.env.JWT_SECRET_KEY, {
+      expiresIn: process.env.ACCESS_TOKEN_EXPIRY
+    });
+
+    return token;
   },
 
   /* Reset user password */

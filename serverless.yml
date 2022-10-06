@@ -5,26 +5,29 @@ frameworkVersion: '3'
 
 provider:
   name: aws
+  deploymentMethod: direct
   timeout: 20
   tracing:
     lambda: true
   environment:
-    ACCESS_KEY_ID: AKIA4VZ2PIY6Y7GTEIRV
-    SECRET_ACCESS_KEY: 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
-    RDS_HOST: database-2.c1fkrr63gkbf.us-east-1.rds.amazonaws.com
-    RDS_PORT: 3307
-    RDS_USER: kashyap3344
-    RDS_PASSWORD: KAjivani
+    ACCESS_KEY_ID: AKIAYEUNNGGXZZWD3RES
+    SECRET_ACCESS_KEY: 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
+    # RDS_HOST: zoomin-1.crzgnnp8iqzv.us-west-2.rds.amazonaws.com
+    RDS_HOST: 127.0.0.1
+    RDS_PORT: 3306
+    # RDS_USER: zoomin_dbuser
+    RDS_USER: root
+    # RDS_PASSWORD: Wk8$b6!xR
     RDS_DB_NAME: zoomin
     JWT_SECRET_KEY: zoominlive
     JWT_REFRESH_SECRET_KEY: 2d
     ACCESS_TOKEN_EXPIRY: 1h
     REFRESH_TOKEN_EXPIRY: 1d
     NODE_ENV: production
-    AWS_BUCKET_NAME: zoomin-live-images
+    AWS_BUCKET_NAME: zoomin-dev-images
   runtime: nodejs14.x
   stage: dev
-  region: us-east-1
+  region: us-west-2
   iam:
     role:
       statements:
@@ -37,7 +40,13 @@ provider:
             - 's3:GetObject'
             - 's3:PutObject'
           Resource:
-            - 'arn:aws:cloudformation:us-east-1:871464126013:stack/Zoomin-dev/4f3ff9a0-3990-11ed-9596-0ead604b80fd'
+            - 'arn:aws:cloudformation:us-west-2:559716053423:stack/zoomin-dev/51663190-43ef-11ed-b517-0625b6019865'
+        - Effect: 'Allow'
+          Action:
+            - 'ses:SendEmail'
+            - 'ses:SendRawEmail'
+          Resource:
+            - 'arn:aws:ses:*'
 
 functions:
   api:
@@ -60,14 +69,11 @@ functions:
     handler: handler.handler
     events:
       - httpApi: 'PUT /api/users/changePassword'
-  authentication:
+
+  setPassword:
     handler: handler.handler
     events:
-      - httpApi: 'POST /api/users/authentication'
-  resendVerificationCode:
-    handler: handler.handler
-    events:
-      - httpApi: 'PUT /api/users/resendVerificationCode'
+      - httpApi: 'POST /api/users/setPassword'
   forgetPassword:
     handler: handler.handler
     events:

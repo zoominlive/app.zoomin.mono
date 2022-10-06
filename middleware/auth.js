@@ -2,7 +2,7 @@ const jwt = require('jsonwebtoken');
 const Users = require('../models/users');
 
 module.exports = async function (req, res, next) {
-  const token = req.header('Authorization').substring(7);
+  const token = req.header('Authorization')?.substring(7);
   if (!token) return res.status(401).json({ message: 'Auth Error' });
 
   try {

@@ -1,10 +1,11 @@
 var bcrypt = require('bcryptjs');
 const _ = require('lodash');
-const otpGenerator = require('otp-generator');
-const sendMailService = require('../lib/node-mailer');
+const { sendRegistrationMail } = require('../lib/node-mailer');
 const userServices = require('../services/users');
 const s3BucketImageUploader = require('../lib/aws-services');
 const { editUserProfile } = require('../services/users');
+const TinyURL = require('tinyurl');
+const jwt = require('jsonwebtoken');
 
 module.exports = {
   /* Get  user's details */
@@ -40,17 +41,20 @@ module.exports = {
 
       params.email = emailIs;
 
-      const salt = await bcrypt.genSaltSync(10);
-      let hashPassword = bcrypt.hashSync(params.password, salt);
-
-      params.password = hashPassword;
-
-      params.is_verified = true;
+      params.is_verified = false;
 
       let addUser = await userServices.createUser(_.omit(params, ['image']));
 
       if (addUser) {
         let userData = addUser?.toJSON();
+
+        const token = await userServices.createPasswordToken(userData.user_id);
+        const name = userData.first_name + ' ' + userData.last_name;
+        const originalUrl = req.get('Referrer') + 'set-password?' + token;
+        const short_url = await TinyURL.shorten(originalUrl);
+
+        await sendRegistrationMail(name, short_url);
+
         if (req.body?.image) {
           const imageUrl = await s3BucketImageUploader._upload(req.body.image, userData.user_id);
           userData = await editUserProfile(userData, { image: imageUrl });
@@ -58,7 +62,7 @@ module.exports = {
 
         res.status(201).json({
           IsSuccess: true,
-          Data: _.omit(userData, ['password', 'securityCode']),
+          Data: _.omit(userData, ['password']),
           Message: 'User Registration Successful , please check email to create new password'
         });
       } else {
@@ -74,15 +78,13 @@ module.exports = {
   /* Login user */
   loginUser: async (req, res, next) => {
     try {
-      let { username_email, password } = req.body;
+      let { email, password } = req.body;
 
-      let emailIs = username_email;
+      let emailIs = email;
 
       emailIs = emailIs.toLowerCase();
 
-      username_email = emailIs;
-
-      const user = await userServices.getUser(username_email);
+      const user = await userServices.getUser(emailIs);
 
       if (user === undefined || user === null) {
         res.status(400).json({ IsSuccess: true, Data: {}, Message: 'User not found' });
@@ -152,51 +154,22 @@ module.exports = {
   /* Check user OTP & verified */
   validateUser: async (req, res, next) => {
     try {
-      const { emailId, otp } = req.body;
+      const { token, password } = req.body;
 
-      let user = await userServices.getUser(emailId);
+      const decodeToken = jwt.verify(token, process.env.JWT_SECRET_KEY);
+
+      let user = await userServices.getUserById(decodeToken.user_id);
 
       if (user) {
-        if (Number(user.securityCode) === Number(otp)) {
-          let userIs = await userServices.verifyUser(user.user_id);
-          res.status(200).json({ IsSuccess: true, Data: userIs, Message: 'User verified' });
-        } else {
-          res.status(400).json({ IsSuccess: true, Data: {}, Message: 'Invalid OTP' });
-        }
+        const salt = await bcrypt.genSaltSync(10);
+        let hashPassword = bcrypt.hashSync(password, salt);
+
+        const setPassword = await userServices.resetPassword(decodeToken.user_id, hashPassword);
+        res
+          .status(200)
+          .json({ IsSuccess: true, Data: {}, Message: 'User password reset successful' });
       } else {
         res.status(400).json({ IsSuccess: true, Data: {}, Message: 'No user found' });
-      }
-      next();
-    } catch (error) {
-      res.status(500).json({ IsSuccess: false, Message: error.message });
-      next(error);
-    }
-  },
-
-  /* Resend security code for verification / activation of user */
-  resendSecurityCode: async (req, res, next) => {
-    try {
-      const { email } = req.body;
-
-      const otp = otpGenerator.generate(6, {
-        upperCaseAlphabets: false,
-        lowerCaseAlphabets: false,
-        specialChars: false
-      });
-
-      let newSecurityCode = await userServices.editNewSecurityCode(email, otp);
-
-      setTimeout(() => userServices.destroySecurityCode(email), 300000);
-
-      if (newSecurityCode) {
-        await sendMailService.sendOTPMail(email, otp);
-        res.status(200).json({
-          IsSuccess: true,
-          Data: 1,
-          Message: 'New security code sended please check your mail inbox'
-        });
-      } else {
-        res.status(400).json({ IsSuccess: true, Data: 0, Message: 'New security code not sended' });
       }
       next();
     } catch (error) {
@@ -208,24 +181,23 @@ module.exports = {
   /* Forget password */
   forgetPassword: async (req, res, next) => {
     try {
-      const { email, otp, newPassword } = req.body;
+      const { email } = req.body;
 
-      const user = await userServices.getUser(email);
+      const user = await userServices.getUser(email.toLowerCase());
 
       if (user) {
-        if (Number(user.securityCode) === Number(otp)) {
-          const salt = await bcrypt.genSaltSync(10);
-          let hashPassword = bcrypt.hashSync(newPassword, salt);
+        const userData = user.toJSON();
+        const token = await userServices.createPasswordToken(userData.user_id);
+        const name = userData.first_name + ' ' + userData.last_name;
+        const originalUrl = req.get('Referrer') + 'set-password?token=' + token.token;
+        const short_url = await TinyURL.shorten(originalUrl);
+        await sendRegistrationMail(name, short_url);
 
-          let changePassword = await userServices.resetPassword(user.user_id, hashPassword);
-          res.status(200).json({
-            IsSuccess: true,
-            Data: { changePassword },
-            Message: 'Password reset successfully'
-          });
-        } else {
-          res.status(400).json({ IsSuccess: true, Data: {}, Message: 'Invalid OTP' });
-        }
+        res.status(200).json({
+          IsSuccess: true,
+          Data: {},
+          Message: 'Password reset link sent to your email'
+        });
       } else {
         res.status(400).json({ IsSuccess: true, Data: {}, Message: 'No user found' });
       }

@@ -19,11 +19,10 @@
     "lodash": "^4.17.21",
     "mkdirp": "^1.0.4",
     "mysql2": "^2.3.3",
-    "nodemailer": "^6.7.8",
     "otp-generator": "^4.0.0",
     "sequelize": "^6.23.0",
-    "sequelize-cli": "^6.5.1",
-    "serverless-http": "^2.7.0"
+    "serverless-http": "^2.7.0",
+    "tinyurl": "^1.1.7"
   },
   "devDependencies": {
     "eslint": "^8.23.1",

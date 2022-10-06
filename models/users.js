@@ -24,22 +24,16 @@ const Users = sequelize.define(
       required: [true, 'Email is mandatory field']
     },
     password: {
-      type: Sequelize.STRING(200),
-      required: [true, 'Password is mandatory field']
+      type: Sequelize.STRING(200)
     },
     location: {
       type: Sequelize.JSON,
       allowNull: false,
       required: true
     },
-    username: {
-      type: Sequelize.STRING(30),
-      required: [true, 'Username is mandatory field'],
-      unique: true
-    },
     is_verified: {
       type: Sequelize.BOOLEAN,
-      defaultValue: true,
+      defaultValue: false,
       required: false
     },
     status: {
