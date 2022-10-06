@@ -79,9 +79,10 @@ const UserForm = (props) => {
       //   }
       //   setSubmitLoading(false);
       // });
+      handleFormDialogClose();
     } else {
       API.post('users/createUser', payload).then((response) => {
-        if (response.status === 200) {
+        if (response.status === 201) {
           enqueueSnackbar(response?.data?.Message, {
             variant: 'success'
           });

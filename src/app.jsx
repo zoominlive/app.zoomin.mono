@@ -14,9 +14,9 @@ const App = () => {
     <Routes>
       <Route element={<PublicRoute />}>
         <Route path="/login" element={<Login />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/set-password" element={<SetPassword />} />
       </Route>
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/set-password" element={<SetPassword />} />
       <Route path="/email-change" element={<EmailChange />} />
       <Route element={<ProtectedRoute />}>
         <Route element={<Layout />}>

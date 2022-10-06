@@ -15,6 +15,10 @@ import { useState } from 'react';
 import * as yup from 'yup';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
+import { useLocation } from 'react-router-dom';
+import API from '../../api';
+import { useSnackbar } from 'notistack';
+import SaveIcon from '@mui/icons-material/Save';
 
 const validationSchema = yup.object({
   password: yup
@@ -30,9 +34,26 @@ const validationSchema = yup.object({
 const SetPassword = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const { enqueueSnackbar } = useSnackbar();
+  const [submitLoading, setSubmitLoading] = useState(false);
+  const { search } = useLocation();
 
   const handleSubmit = (data) => {
-    console.log(data);
+    setSubmitLoading(true);
+    API.post('users/setPassword', { token: search.substring(1), password: data.password }).then(
+      (response) => {
+        if (response.status === 200) {
+          enqueueSnackbar(response?.data?.Message, {
+            variant: 'success'
+          });
+        } else {
+          enqueueSnackbar(response?.response?.data?.Message, {
+            variant: 'error'
+          });
+        }
+        setSubmitLoading(false);
+      }
+    );
   };
 
   return (
@@ -103,9 +124,9 @@ const SetPassword = () => {
                         }}
                       />
                       <LoadingButton
-                        //   loading={submitLoading}
+                        loading={submitLoading}
                         loadingPosition="center"
-                        //   startIcon={submitLoading && <SaveIcon />}
+                        startIcon={submitLoading && <SaveIcon />}
                         variant="contained"
                         type="submit">
                         Submit
