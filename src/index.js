@@ -7,6 +7,8 @@ import { BrowserRouter } from 'react-router-dom';
 import reportWebVitals from './reportWebVitals';
 import { LayoutContextProvider } from './context/layoutcontext';
 import { AuthContextProvider } from './context/authcontext';
+import { SnackbarProvider } from 'notistack';
+import SnackbarCloseButton from './components/common/snackbarclosrbutton';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
@@ -14,7 +16,16 @@ root.render(
     <LayoutContextProvider>
       <BrowserRouter>
         <React.StrictMode>
-          <App />
+          <SnackbarProvider
+            autoHideDuration={3000}
+            maxSnack={5}
+            action={(snackbarKey) => <SnackbarCloseButton snackbarKey={snackbarKey} />}
+            anchorOrigin={{
+              vertical: 'top',
+              horizontal: 'right'
+            }}>
+            <App />
+          </SnackbarProvider>
         </React.StrictMode>
       </BrowserRouter>
     </LayoutContextProvider>

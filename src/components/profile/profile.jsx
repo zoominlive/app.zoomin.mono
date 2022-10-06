@@ -27,23 +27,22 @@ import SaveIcon from '@mui/icons-material/Save';
 import DeleteUserDialog from './deleteuserdialog';
 import AuthContext from '../../context/authcontext';
 import API from '../../api';
-import { Notification } from '../../hoc/notification';
-import PropTypes from 'prop-types';
 import { useDropzone } from 'react-dropzone';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { toBase64 } from '../../utils/base64converter';
+import { useSnackbar } from 'notistack';
 
 const validationSchema = yup.object({
   first_name: yup.string('Enter first name').required('First name is required'),
   last_name: yup.string('Enter last name').required('Last name is required'),
-  username: yup.string('Enter username').required('Username is required'),
   email: yup.string('Enter your email').email('Enter a valid email').required('Email is required'),
   role: yup.string('Enter role').required('Role is required'),
   locations: yup.array().min(1, 'Select at least one location').required('Location is required')
 });
 
-const Profile = (props) => {
+const Profile = () => {
   const layoutCtx = useContext(LayoutContext);
+  const { enqueueSnackbar } = useSnackbar();
   const authCtx = useContext(AuthContext);
   const [image, setImage] = useState();
   const [isImageUploading, setIsImageUploading] = useState(false);
@@ -61,9 +60,13 @@ const Profile = (props) => {
     onDropAccepted: handleImageUpload,
     onDropRejected: (fileRejections) => {
       if (fileRejections.length > 1) {
-        props.snackbarShowMessage('Only one file is allowed to be uploaded', 'error');
+        enqueueSnackbar('Only one file is allowed to be uploaded', {
+          variant: 'error'
+        });
       } else {
-        props.snackbarShowMessage('Only image file is allowed to be uploaded', 'error');
+        enqueueSnackbar('Only image file is allowed to be uploaded', {
+          variant: 'error'
+        });
       }
     }
   });
@@ -90,9 +93,13 @@ const Profile = (props) => {
           ...response.data.Data,
           location: response.data.Data.location
         });
-        props.snackbarShowMessage(response?.data?.Message, 'success');
+        enqueueSnackbar(response?.data?.Message, {
+          variant: 'success'
+        });
       } else {
-        props.snackbarShowMessage(response?.response?.data?.Message, 'error');
+        enqueueSnackbar(response?.response?.data?.Message, {
+          variant: 'error'
+        });
       }
       setSubmitLoading(false);
     });
@@ -103,11 +110,15 @@ const Profile = (props) => {
     setIsImageDeleting(true);
     API.delete('users/deleteImage').then((response) => {
       if (response.status === 200) {
-        props.snackbarShowMessage(response?.data?.Message, 'success');
+        enqueueSnackbar(response?.data?.Message, {
+          variant: 'success'
+        });
         authCtx.setUser((prevUser) => ({ ...prevUser, profile_image: '' }));
         setImage();
       } else {
-        props.snackbarShowMessage(response?.response?.data?.Message, 'error');
+        enqueueSnackbar(response?.response?.data?.Message, {
+          variant: 'error'
+        });
       }
       setIsImageDeleting(false);
     });
@@ -126,9 +137,13 @@ const Profile = (props) => {
           ...prevUser,
           profile_image: response?.data?.Data?.uploadImage
         }));
-        props.snackbarShowMessage(response?.data?.Message, 'success');
+        enqueueSnackbar(response?.data?.Message, {
+          variant: 'success'
+        });
       } else {
-        props.snackbarShowMessage(response?.response?.data?.Message, 'error');
+        enqueueSnackbar(response?.response?.data?.Message, {
+          variant: 'error'
+        });
         setImage();
       }
       setIsImageUploading(false);
@@ -174,7 +189,6 @@ const Profile = (props) => {
             initialValues={{
               first_name: authCtx.user.first_name || '',
               last_name: authCtx.user.last_name || '',
-              username: authCtx.user.username || '',
               email: authCtx.user.email || '',
               role: authCtx.user.role || '',
               locations: authCtx.user.location ? authCtx.user.location.locations : []
@@ -184,7 +198,7 @@ const Profile = (props) => {
               return (
                 <Form>
                   <Grid container spacing={2}>
-                    <Grid item md={4} xs={12}>
+                    <Grid item md={6} xs={12}>
                       <TextField
                         label="First Name"
                         name="first_name"
@@ -197,7 +211,7 @@ const Profile = (props) => {
                         fullWidth
                       />
                     </Grid>
-                    <Grid item md={4} xs={12}>
+                    <Grid item md={6} xs={12}>
                       <TextField
                         label="Last Name"
                         name="last_name"
@@ -207,19 +221,6 @@ const Profile = (props) => {
                         }}
                         helperText={touched.last_name && errors.last_name}
                         error={touched.last_name && Boolean(errors.last_name)}
-                        fullWidth
-                      />
-                    </Grid>
-                    <Grid item md={4} xs={12}>
-                      <TextField
-                        label="Username"
-                        name="username"
-                        value={values?.username}
-                        onChange={(event) => {
-                          setFieldValue('username', event.target.value);
-                        }}
-                        helperText={touched.username && errors.username}
-                        error={touched.username && Boolean(errors.username)}
                         fullWidth
                       />
                     </Grid>
@@ -327,8 +328,4 @@ const Profile = (props) => {
   );
 };
 
-export default Notification(Profile);
-
-Profile.propTypes = {
-  snackbarShowMessage: PropTypes.func
-};
+export default Profile;

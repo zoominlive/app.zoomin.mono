@@ -20,24 +20,28 @@ import AuthContext from '../../context/authcontext';
 import { LoadingButton } from '@mui/lab';
 import SaveIcon from '@mui/icons-material/Save';
 import { useState } from 'react';
-import { Notification } from '../../hoc/notification';
 import PropTypes from 'prop-types';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
+import { useSnackbar } from 'notistack';
 
 const validationSchema = yup.object({
-  username_email: yup.string('Enter Username/email').required('Username / Email is required'),
+  email: yup
+    .string('Enter Username/email')
+    .email('Enter valid username/email')
+    .required('Username/Email is required'),
   password: yup
     .string('Enter your password')
     .min(6, 'Password should be of minimum 6 characters length')
     .required('Password is required')
 });
 
-const Login = (props) => {
+const Login = () => {
   const authCtx = useContext(AuthContext);
   const navigate = useNavigate();
   const [submitLoading, setSubmitLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const { enqueueSnackbar } = useSnackbar();
 
   useEffect(() => {
     if (authCtx.token) {
@@ -54,16 +58,18 @@ const Login = (props) => {
           authCtx.setToken(response.data.Data.token);
           localStorage.setItem('token', response.data.Data.token);
           if (data.rememberMe) {
-            localStorage.setItem('username_email', data.username_email);
+            localStorage.setItem('email', data.email);
             localStorage.setItem('password', data.password);
             localStorage.setItem('rememberMe', data.rememberMe);
           } else {
-            localStorage.removeItem('username_email', data.username_email);
+            localStorage.removeItem('email', data.email);
             localStorage.removeItem('password', data.password);
             localStorage.removeItem('rememberMe', data.rememberMe);
           }
         } else {
-          props.snackbarShowMessage(response?.response?.data?.Message, 'error', 3000);
+          enqueueSnackbar(response?.response?.data?.Message, {
+            variant: 'error'
+          });
         }
         setSubmitLoading(false);
       })
@@ -84,9 +90,7 @@ const Login = (props) => {
                 validateOnChange
                 validationSchema={validationSchema}
                 initialValues={{
-                  username_email: localStorage.getItem('rememberMe')
-                    ? localStorage.getItem('username_email')
-                    : '',
+                  email: localStorage.getItem('rememberMe') ? localStorage.getItem('email') : '',
                   password: localStorage.getItem('rememberMe')
                     ? localStorage.getItem('password')
                     : '',
@@ -99,13 +103,13 @@ const Login = (props) => {
                       <Stack spacing={3} mb={4}>
                         <TextField
                           label="Username/Email"
-                          name="username_email"
-                          value={values?.username_email || ''}
+                          name="email"
+                          value={values?.email || ''}
                           onChange={(e) => {
-                            setFieldValue('username_email', e.target.value || '');
+                            setFieldValue('email', e.target.value || '');
                           }}
-                          helperText={touched.username_email && errors.username_email}
-                          error={touched.username_email && Boolean(errors.username_email)}
+                          helperText={touched.email && errors.email}
+                          error={touched.email && Boolean(errors.email)}
                           fullWidth
                         />
                         <TextField
@@ -170,7 +174,7 @@ const Login = (props) => {
   );
 };
 
-export default Notification(Login);
+export default Login;
 
 Login.propTypes = {
   snackbarShowMessage: PropTypes.func

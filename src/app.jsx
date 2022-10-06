@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { Route, Routes } from 'react-router-dom';
+import EmailChange from './components/auth/emailchange';
 import ForgotPassword from './components/auth/forgotpassoword';
 import Login from './components/auth/login';
 import SetPassword from './components/auth/setpassword';
@@ -16,6 +17,7 @@ const App = () => {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/set-password" element={<SetPassword />} />
       </Route>
+      <Route path="/email-change" element={<EmailChange />} />
       <Route element={<ProtectedRoute />}>
         <Route element={<Layout />}>
           <Route path="/*" element={<AppRoutes />} />

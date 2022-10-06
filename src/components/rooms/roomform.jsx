@@ -13,7 +13,8 @@ import {
   InputLabel,
   MenuItem,
   Select,
-  TextField
+  TextField,
+  Tooltip
 } from '@mui/material';
 import React from 'react';
 import PropTypes from 'prop-types';
@@ -21,28 +22,29 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import * as yup from 'yup';
 import { FieldArray, Form, Formik } from 'formik';
+import { useSnackbar } from 'notistack';
 
 const validationSchema = yup.object({
   room_name: yup.string('Enter Room name').required('Room name is required'),
   location: yup.string('Select Location').required('Location is required'),
   cams: yup.array().of(
-    yup
-      .object()
-      .shape({
-        cam_name: yup.string('Enter Camera name').required('Camera name is required'),
-        cam_url: yup
-          .string()
-          .matches(
-            /(http(s)?:\/\/.)?(www\.)?[-a-zA-Z0-9@:%._+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_+.~#?&//=]*)/g,
-            'Enter correct url'
-          )
-          .required('Camera url is required')
-      })
-      .required('Must have camera')
+    yup.object().shape({
+      cam_name: yup.string('Enter Camera name').required('Camera name is required'),
+      cam_url: yup
+        .string()
+        .matches(
+          /(http(s)?:\/\/.)?(www\.)?[-a-zA-Z0-9@:%._+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_+.~#?&//=]*)/g,
+          'Enter correct url'
+        )
+        .required('Camera url is required')
+    })
   )
 });
 
 const RoomForm = (props) => {
+  const { enqueueSnackbar } = useSnackbar();
+  const maximumCams = 5;
+
   const handleSubmit = (data) => {
     console.log(data);
   };
@@ -57,7 +59,10 @@ const RoomForm = (props) => {
       open={props.open}
       onClose={handleFormDialogClose}
       fullWidth
-      className="edit-family-dialog">
+      // maxWidth={'lg'}
+      className="edit-family-dialog"
+      // className=""
+    >
       <DialogTitle>Add Room</DialogTitle>
       <Divider />
       <Formik
@@ -67,15 +72,7 @@ const RoomForm = (props) => {
         initialValues={{
           room_name: props?.room?.room_name ? props?.room?.room_name : '',
           location: props?.room?.location ? props?.room?.location : '',
-          cams:
-            props?.room?.cams && props?.room?.cams.length > 0
-              ? props?.room?.cams
-              : [
-                  {
-                    cam_name: '',
-                    cam_url: ''
-                  }
-                ]
+          cams: props?.room?.cams && props?.room?.cams.length > 0 ? props?.room?.cams : []
         }}
         onSubmit={handleSubmit}>
         {({ values, setFieldValue, touched, errors }) => {
@@ -136,110 +133,118 @@ const RoomForm = (props) => {
                     name="cams"
                     render={(arrayHelpers) => (
                       <>
-                        {/* {values.cams && values.cams.length > 0 ? ( */}
-                        {values.cams.map((_, index) => (
-                          <Grid
-                            key={index}
-                            className="camera-fields"
-                            container
-                            spacing={3}
-                            sx={{ mb: index !== values.cams.length - 1 && 3 }}>
-                            <Grid className="name" item xs={6} sm={3} md={3}>
-                              <TextField
-                                name={`cams.${index}_cam_name`}
-                                label="Camera Name"
-                                value={values?.cams[index]?.cam_name}
-                                onChange={(event) => {
-                                  setFieldValue(`cams[${index}].cam_name`, event.target.value);
-                                }}
-                                helperText={
-                                  touched.cams &&
-                                  touched.cams[index] &&
-                                  touched.cams[index].cam_name &&
-                                  errors.cams &&
-                                  errors.cams[index] &&
-                                  errors.cams[index].cam_name
-                                }
-                                error={
-                                  touched.cams &&
-                                  touched.cams[index] &&
-                                  touched.cams[index].cam_name &&
-                                  errors.cams &&
-                                  errors.cams[index] &&
-                                  Boolean(errors.cams[index].cam_name)
-                                }
-                                fullWidth
-                              />
-                            </Grid>
-                            <Grid className="url" item xs={12} sm={6} md={7}>
-                              <TextField
-                                name={`cams.${index}_cam_url`}
-                                label="Cam URL"
-                                value={values?.cams[index]?.cam_url}
-                                onChange={(event) => {
-                                  setFieldValue(`cams[${index}].cam_url`, event.target.value);
-                                }}
-                                fullWidth
-                                helperText={
-                                  touched.cams &&
-                                  touched.cams[index] &&
-                                  touched.cams[index].cam_url &&
-                                  errors.cams &&
-                                  errors.cams[index] &&
-                                  errors.cams[index].cam_url
-                                }
-                                error={
-                                  touched.cams &&
-                                  touched.cams[index] &&
-                                  touched.cams[index].cam_url &&
-                                  errors.cams &&
-                                  errors.cams[index] &&
-                                  Boolean(errors.cams[index].cam_url)
-                                }
-                              />
-                            </Grid>
-                            <Grid className="action" item xs={6} sm={3} md={2}>
-                              <Box className="row-button-wrapper">
-                                {values.cams.length > 1 && (
+                        {values.cams &&
+                          values.cams.length > 0 &&
+                          values.cams.map((_, index) => (
+                            <Grid
+                              key={index}
+                              className="camera-fields"
+                              container
+                              spacing={3}
+                              sx={{ mb: index !== values.cams.length - 1 && 3 }}>
+                              <Grid className="name" item xs={6} sm={3} md={3}>
+                                <TextField
+                                  name={`cams.${index}_cam_name`}
+                                  label="Camera Name"
+                                  value={values?.cams[index]?.cam_name}
+                                  onChange={(event) => {
+                                    setFieldValue(`cams[${index}].cam_name`, event.target.value);
+                                  }}
+                                  helperText={
+                                    touched.cams &&
+                                    touched.cams[index] &&
+                                    touched.cams[index].cam_name &&
+                                    errors.cams &&
+                                    errors.cams[index] &&
+                                    errors.cams[index].cam_name
+                                  }
+                                  error={
+                                    touched.cams &&
+                                    touched.cams[index] &&
+                                    touched.cams[index].cam_name &&
+                                    errors.cams &&
+                                    errors.cams[index] &&
+                                    Boolean(errors.cams[index].cam_name)
+                                  }
+                                  fullWidth
+                                />
+                              </Grid>
+                              <Grid className="url" item xs={12} sm={6} md={7}>
+                                <TextField
+                                  name={`cams.${index}_cam_url`}
+                                  label="Cam URL"
+                                  value={values?.cams[index]?.cam_url}
+                                  onChange={(event) => {
+                                    setFieldValue(`cams[${index}].cam_url`, event.target.value);
+                                  }}
+                                  fullWidth
+                                  helperText={
+                                    touched.cams &&
+                                    touched.cams[index] &&
+                                    touched.cams[index].cam_url &&
+                                    errors.cams &&
+                                    errors.cams[index] &&
+                                    errors.cams[index].cam_url
+                                  }
+                                  error={
+                                    touched.cams &&
+                                    touched.cams[index] &&
+                                    touched.cams[index].cam_url &&
+                                    errors.cams &&
+                                    errors.cams[index] &&
+                                    Boolean(errors.cams[index].cam_url)
+                                  }
+                                />
+                              </Grid>
+                              <Grid className="action" item xs={6} sm={3} md={2}>
+                                <Box className="row-button-wrapper">
                                   <IconButton
                                     aria-label="delete"
                                     className="row-delete-btn"
-                                    onClick={() => arrayHelpers.remove(index)}>
+                                    onClick={() => {
+                                      arrayHelpers.remove(index);
+                                    }}>
                                     <DeleteIcon />
                                   </IconButton>
-                                )}
-
-                                {values.cams.length === 1 && (
-                                  <Button
-                                    variant="contained"
-                                    endIcon={<AddIcon />}
-                                    onClick={() =>
-                                      arrayHelpers.insert(index + 1, {
-                                        cam_name: '',
-                                        cam_url: ''
-                                      })
-                                    }
-                                    className="row-add-btn">
-                                    Add CAM
-                                  </Button>
-                                )}
-                              </Box>
+                                </Box>
+                              </Grid>
                             </Grid>
-                          </Grid>
-                        ))}
-                        {/* ) : ( */}
-                        {values.cams.length > 1 && (
-                          <Box className="row-button-wrapper" justifyContent="flex-end" mt={2}>
+                          ))}
+                        <Box className="row-button-wrapper" justifyContent="flex-end" mt={2}>
+                          {values.cams.length !== maximumCams ? (
                             <Button
+                              disabled={values.cams.length === maximumCams}
                               variant="contained"
                               endIcon={<AddIcon />}
-                              onClick={() => arrayHelpers.push('')}
+                              sx={{ mt: 1, mr: 4 }}
+                              onClick={() => {
+                                if (values.cams.length === 4) {
+                                  enqueueSnackbar('Maximum 5 cameras are allowed.', {
+                                    variant: 'warning'
+                                  });
+                                }
+                                arrayHelpers.push({
+                                  cam_name: '',
+                                  cam_url: ''
+                                });
+                              }}
                               className="row-add-btn">
                               Add CAM
                             </Button>
-                          </Box>
-                        )}
-                        {/* )} */}
+                          ) : (
+                            <Tooltip title="Maximum 5 cameras are allowed" placement="top" arrow>
+                              <Box component="span" mt={1} mr={4}>
+                                <Button
+                                  disabled={values.cams.length === maximumCams}
+                                  variant="contained"
+                                  endIcon={<AddIcon />}
+                                  className="row-add-btn">
+                                  Add CAM
+                                </Button>
+                              </Box>
+                            </Tooltip>
+                          )}
+                        </Box>
                       </>
                     )}
                   />

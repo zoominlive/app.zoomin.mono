@@ -19,14 +19,14 @@ import { Outlet, useNavigate } from 'react-router-dom';
 import { useContext } from 'react';
 import LayoutContext from '../../context/layoutcontext';
 import LogoutDialog from './logoutdialog';
+import { useSnackbar } from 'notistack';
 import API from '../../api';
 import AuthContext from '../../context/authcontext';
 import Loader from '../common/loader';
-import { Notification } from '../../hoc/notification';
-import PropTypes from 'prop-types';
 
-const Layout = (props) => {
+const Layout = () => {
   const layoutCtx = useContext(LayoutContext);
+  const { enqueueSnackbar } = useSnackbar();
   const authCtx = useContext(AuthContext);
   const navigate = useNavigate();
   const [open, setOpen] = useState(window.innerWidth < 900 ? false : true);
@@ -35,7 +35,6 @@ const Layout = (props) => {
 
   useEffect(() => {
     setIsLoading(true);
-
     // API Call for Fetching Logged in user detail
     API.get('users').then((response) => {
       if (response.status === 200) {
@@ -44,7 +43,9 @@ const Layout = (props) => {
           location: response.data.Data.location
         });
       } else {
-        props.snackbarShowMessage(response?.response?.data?.Message, 'error', 3000);
+        enqueueSnackbar(response?.response?.data?.Message, {
+          variant: 'error'
+        });
       }
       setIsLoading(false);
     });
@@ -205,8 +206,4 @@ const Layout = (props) => {
   );
 };
 
-export default Notification(Layout);
-
-Layout.propTypes = {
-  snackbarShowMessage: PropTypes.func
-};
+export default Layout;

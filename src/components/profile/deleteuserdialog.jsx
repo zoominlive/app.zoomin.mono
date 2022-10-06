@@ -10,12 +10,14 @@ import {
 import React from 'react';
 import PropTypes from 'prop-types';
 import API from '../../api';
-import { Notification } from '../../hoc/notification';
 import { LoadingButton } from '@mui/lab';
 import SaveIcon from '@mui/icons-material/Save';
+import { useSnackbar } from 'notistack';
 
 // Method to delete user and redirect to login page
 const DeleteUserDialog = (props) => {
+  const { enqueueSnackbar } = useSnackbar();
+
   const handleUserDelete = () => {
     props.setDeleteLoading(true);
     API.delete('users').then((response) => {
@@ -24,7 +26,7 @@ const DeleteUserDialog = (props) => {
         window.location.reload('login');
       } else {
         props.setDeleteLoading(false);
-        props.snackbarShowMessage(response?.response?.data?.Message, 'error');
+        enqueueSnackbar(response?.response?.data?.Message, 'error');
       }
     });
   };
@@ -64,12 +66,11 @@ const DeleteUserDialog = (props) => {
   );
 };
 
-export default Notification(DeleteUserDialog);
+export default DeleteUserDialog;
 
 DeleteUserDialog.propTypes = {
   open: PropTypes.bool,
   deleteLoading: PropTypes.bool,
   setOpen: PropTypes.func,
-  setDeleteLoading: PropTypes.func,
-  snackbarShowMessage: PropTypes.func
+  setDeleteLoading: PropTypes.func
 };

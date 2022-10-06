@@ -26,20 +26,20 @@ import { Form, Formik } from 'formik';
 import * as yup from 'yup';
 import { LoadingButton } from '@mui/lab';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { Notification } from '../../hoc/notification';
 import API from '../../api';
 import SaveIcon from '@mui/icons-material/Save';
+import { useSnackbar } from 'notistack';
 
 const validationSchema = yup.object({
   first_name: yup.string('Enter first name').required('First name is required'),
   last_name: yup.string('Enter last name').required('Last name is required'),
-  username: yup.string('Enter username').required('Username is required'),
   email: yup.string('Enter your email').email('Enter a valid email').required('Email is required'),
   role: yup.string('Enter role').required('Role is required'),
   locations: yup.array().min(1, 'Select at least one location').required('Location is required')
 });
 
 const UserForm = (props) => {
+  const { enqueueSnackbar } = useSnackbar();
   const [image, setImage] = useState();
   const [isImageUploading, setIsImageUploading] = useState(false);
   const [isImageDeleting, setIsImageDeleting] = useState(false);
@@ -54,9 +54,13 @@ const UserForm = (props) => {
     onDropAccepted: handleImageUpload,
     onDropRejected: (fileRejections) => {
       if (fileRejections.length > 1) {
-        props.snackbarShowMessage('Only one file is allowed to be uploaded', 'error');
+        enqueueSnackbar('Only one file is allowed to be uploaded', {
+          variant: 'error'
+        });
       } else {
-        props.snackbarShowMessage('Only image file is allowed to be uploaded', 'error');
+        enqueueSnackbar('Only image file is allowed to be uploaded', {
+          variant: 'error'
+        });
       }
     }
   });
@@ -78,10 +82,14 @@ const UserForm = (props) => {
     } else {
       API.post('users/createUser', payload).then((response) => {
         if (response.status === 200) {
-          props.snackbarShowMessage(response?.data?.Message, 'success');
+          enqueueSnackbar(response?.data?.Message, {
+            variant: 'success'
+          });
           handleFormDialogClose();
         } else {
-          props.snackbarShowMessage(response?.response?.data?.Message, 'error');
+          enqueueSnackbar(response?.response?.data?.Message, {
+            variant: 'error'
+          });
         }
         setSubmitLoading(false);
       });
@@ -93,10 +101,14 @@ const UserForm = (props) => {
     setIsImageDeleting(true);
     API.delete('users/deleteImage').then((response) => {
       if (response.status === 200) {
-        props.snackbarShowMessage(response?.data?.Message, 'success');
+        enqueueSnackbar(response?.data?.Message, {
+          variant: 'success'
+        });
         setImage();
       } else {
-        props.snackbarShowMessage(response?.response?.data?.Message, 'error');
+        enqueueSnackbar(response?.response?.data?.Message, {
+          variant: 'error'
+        });
       }
       setIsImageDeleting(false);
     });
@@ -111,9 +123,13 @@ const UserForm = (props) => {
       image: bas64Image.split(',')[1]
     }).then((response) => {
       if (response.status === 200) {
-        props.snackbarShowMessage(response?.data?.Message, 'success');
+        enqueueSnackbar(response?.data?.Message, {
+          variant: 'success'
+        });
       } else {
-        props.snackbarShowMessage(response?.response?.data?.Message, 'error');
+        enqueueSnackbar(response?.response?.data?.Message, {
+          variant: 'error'
+        });
         setImage();
       }
       setIsImageUploading(false);
@@ -140,7 +156,6 @@ const UserForm = (props) => {
         initialValues={{
           first_name: props?.user?.first_name || '',
           last_name: props?.user?.last_name || '',
-          username: props?.user?.username || '',
           email: props?.user?.email || '',
           role: props?.user?.role || '',
           locations: props?.user?.location ? props?.user?.location.locations : []
@@ -178,7 +193,7 @@ const UserForm = (props) => {
                   )}
                 </Stack>
                 <Grid container spacing={2}>
-                  <Grid item md={4} xs={12}>
+                  <Grid item md={6} xs={12}>
                     <TextField
                       label="First Name"
                       name="first_name"
@@ -191,7 +206,7 @@ const UserForm = (props) => {
                       fullWidth
                     />
                   </Grid>
-                  <Grid item md={4} xs={12}>
+                  <Grid item md={6} xs={12}>
                     <TextField
                       label="Last Name"
                       name="last_name"
@@ -201,19 +216,6 @@ const UserForm = (props) => {
                       }}
                       helperText={touched.last_name && errors.last_name}
                       error={touched.last_name && Boolean(errors.last_name)}
-                      fullWidth
-                    />
-                  </Grid>
-                  <Grid item md={4} xs={12}>
-                    <TextField
-                      label="Username"
-                      name="username"
-                      value={values?.username}
-                      onChange={(event) => {
-                        setFieldValue('username', event.target.value);
-                      }}
-                      helperText={touched.username && errors.username}
-                      error={touched.username && Boolean(errors.username)}
                       fullWidth
                     />
                   </Grid>
@@ -308,12 +310,11 @@ const UserForm = (props) => {
   );
 };
 
-export default Notification(UserForm);
+export default UserForm;
 
 UserForm.propTypes = {
   open: PropTypes.bool,
   setOpen: PropTypes.func,
   user: PropTypes.object,
-  snackbarShowMessage: PropTypes.func,
   setUser: PropTypes.func
 };
