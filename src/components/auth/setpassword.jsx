@@ -2,6 +2,7 @@ import { LoadingButton } from '@mui/lab';
 import {
   Avatar,
   Box,
+  Button,
   Card,
   CardContent,
   IconButton,
@@ -16,7 +17,7 @@ import { useState } from 'react';
 import * as yup from 'yup';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import API from '../../api';
 import { useSnackbar } from 'notistack';
 import SaveIcon from '@mui/icons-material/Save';
@@ -35,11 +36,12 @@ const validationSchema = yup.object({
 });
 
 const SetPassword = () => {
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { enqueueSnackbar } = useSnackbar();
   const [submitLoading, setSubmitLoading] = useState(false);
-  const [isPasswordSetSuccesful, setIsPasswordSetSuccesful] = useState(false);
+  const [isPasswordSetSuccesful, setIsPasswordSetSuccesful] = useState(true);
   const { search } = useLocation();
 
   const handleSubmit = (data) => {
@@ -150,16 +152,16 @@ const SetPassword = () => {
                 </Formik>
               </>
             ) : (
-              <Stack
-                direction="row"
-                spacing={3}
-                alignItems="center"
-                justifyContent="center"
-                height={300}>
-                <Avatar sx={{ color: 'green', background: '#1976D20A' }}>
-                  <CheckIcon />
-                </Avatar>
-                <Typography>Password Successfully Changed.</Typography>
+              <Stack spacing={4} height={300} alignItems="center" justifyContent="center">
+                <Stack direction="row" spacing={3} alignItems="center" justifyContent="center">
+                  <Avatar sx={{ color: 'green', background: '#1976D20A' }}>
+                    <CheckIcon />
+                  </Avatar>
+                  <Typography>Password Successfully Changed.</Typography>
+                </Stack>
+                <Button onClick={() => navigate('login')} variant="contained">
+                  Go Back To Login
+                </Button>
               </Stack>
             )}
           </Box>
