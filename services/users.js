@@ -1,6 +1,8 @@
 const { Users } = require('../models/index');
 const Sequelize = require('sequelize');
 const jwt = require('jsonwebtoken');
+const encrypter = require('object-encrypter');
+const engine = encrypter(process.env.JWT_SECRET_KEY, { ttl: true });
 
 /* Validate email */
 const validateEmail = (emailAdress) => {
@@ -107,10 +109,8 @@ module.exports = {
   },
 
   /* Create user token */
-  createPasswordToken: async (userId) => {
-    const token = jwt.sign({ user_id: userId }, process.env.JWT_SECRET_KEY, {
-      expiresIn: process.env.ACCESS_TOKEN_EXPIRY
-    });
+  createPasswordToken: async (user) => {
+    const token = engine.encrypt({ userId: user.user_id, password: user.password }, 600000);
 
     return token;
   },

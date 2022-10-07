@@ -20,7 +20,10 @@ const Users = sequelize.define(
     },
     email: {
       type: Sequelize.STRING(50),
-      unique: true,
+      unique: {
+        args: true,
+        msg: 'Email address already in use!'
+      },
       required: [true, 'Email is mandatory field']
     },
     password: {
@@ -29,7 +32,7 @@ const Users = sequelize.define(
     location: {
       type: Sequelize.JSON,
       allowNull: false,
-      required: true
+      required: [true, 'Atleast one location is required']
     },
     is_verified: {
       type: Sequelize.BOOLEAN,

@@ -3,13 +3,13 @@ const Users = require('../models/users');
 
 module.exports = async function (req, res, next) {
   const token = req.header('Authorization')?.substring(7);
-  if (!token) return res.status(401).json({ message: 'Auth Error' });
+  if (!token) return res.status(401).json({ IsSuccess: true, Data: {}, Message: 'Auth Error' });
 
   try {
     const decodeToken = jwt.verify(token, process.env.JWT_SECRET_KEY);
     const user = await Users.findOne({ where: { user_id: decodeToken.user_id } });
     if (!user) {
-      return res.status(401).json({ message: 'Auth Error' });
+      res.status(401).json({ IsSuccess: true, Data: {}, Message: 'Auth Error' });
     }
 
     req.userToken = decodeToken.decodeToken;
@@ -17,6 +17,12 @@ module.exports = async function (req, res, next) {
 
     next();
   } catch (e) {
-    res.status(401).send({ message: 'Invalid Token' });
+    res
+      .status(401)
+      .json({
+        IsSuccess: true,
+        Data: {},
+        Message: 'Invalid Token or Token Expired, please Login again'
+      });
   }
 };

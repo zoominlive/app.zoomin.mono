@@ -10,7 +10,10 @@ var indexRouter = require('./routes/index');
 const sequelize = require('./lib/database');
 var bodyParser = require('body-parser');
 const cors = require('cors');
+// const { deleteNotVerifiedUsers } = require('./lib/cron-services');
 
+// deleteNotVerifiedUsers();
+app.use(cors());
 // To create DB tables from modules and sync DB
 sequelize.sync();
 
@@ -37,7 +40,6 @@ if (process.env.NODE_ENV !== 'production') {
   });
 }
 
-app.use(cors());
 app.use('/', indexRouter);
 
 /** handle the requests to add openapi specs*/

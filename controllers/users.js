@@ -6,6 +6,8 @@ const s3BucketImageUploader = require('../lib/aws-services');
 const { editUserProfile } = require('../services/users');
 const TinyURL = require('tinyurl');
 const jwt = require('jsonwebtoken');
+const encrypter = require('object-encrypter');
+const engine = encrypter(process.env.JWT_SECRET_KEY, { ttl: true });
 
 module.exports = {
   /* Get  user's details */
@@ -48,12 +50,12 @@ module.exports = {
       if (addUser) {
         let userData = addUser?.toJSON();
 
-        const token = await userServices.createPasswordToken(userData.user_id);
+        const token = await userServices.createPasswordToken(userData);
         const name = userData.first_name + ' ' + userData.last_name;
         const originalUrl = req.get('Referrer') + 'set-password?' + token;
         const short_url = await TinyURL.shorten(originalUrl);
 
-        await sendRegistrationMail(name, short_url);
+        await sendRegistrationMail(name, userData.email, short_url);
 
         if (req.body?.image) {
           const imageUrl = await s3BucketImageUploader._upload(req.body.image, userData.user_id);
@@ -70,7 +72,10 @@ module.exports = {
       }
       next();
     } catch (error) {
-      res.status(500).json({ IsSuccess: false, Message: error.message });
+      res.status(500).json({
+        IsSuccess: false,
+        Message: error.errors ? error.errors[0].message : error.message
+      });
       next(error);
     }
   },
@@ -85,10 +90,6 @@ module.exports = {
       emailIs = emailIs.toLowerCase();
 
       const user = await userServices.getUser(emailIs);
-
-      if (user === undefined || user === null) {
-        res.status(400).json({ IsSuccess: true, Data: {}, Message: 'User not found' });
-      }
 
       if (user) {
         if (!user.is_verified || user.status == 'inactive') {
@@ -155,19 +156,42 @@ module.exports = {
   validateUser: async (req, res, next) => {
     try {
       const { token, password } = req.body;
+      const decodeToken = engine.decrypt(token);
+      let user;
 
-      const decodeToken = jwt.verify(token, process.env.JWT_SECRET_KEY);
-
-      let user = await userServices.getUserById(decodeToken.user_id);
+      user = await userServices.getUserById(decodeToken.userId);
 
       if (user) {
-        const salt = await bcrypt.genSaltSync(10);
-        let hashPassword = bcrypt.hashSync(password, salt);
+        if (!user?.password) {
+          const salt = await bcrypt.genSaltSync(10);
+          let hashPassword = bcrypt.hashSync(password, salt);
 
-        const setPassword = await userServices.resetPassword(decodeToken.user_id, hashPassword);
-        res
-          .status(200)
-          .json({ IsSuccess: true, Data: {}, Message: 'User password reset successful' });
+          const setPassword = await userServices.resetPassword(decodeToken.userId, hashPassword);
+          res
+            .status(200)
+            .json({ IsSuccess: true, Data: {}, Message: 'User password reset successful' });
+        } else if (user?.password) {
+          if (user.password === decodeToken?.password) {
+            const salt = await bcrypt.genSaltSync(10);
+            let hashPassword = bcrypt.hashSync(password, salt);
+            const setPassword = await userServices.resetPassword(decodeToken.userId, hashPassword);
+            res
+              .status(200)
+              .json({ IsSuccess: true, Data: {}, Message: 'User password reset successful' });
+          } else {
+            res.status(400).json({
+              IsSuccess: false,
+              Data: {},
+              Message: 'password is already changed, please verify again to change password'
+            });
+          }
+        } else {
+          res.status(400).json({
+            IsSuccess: false,
+            Data: {},
+            Message: 'Invalid token '
+          });
+        }
       } else {
         res.status(400).json({ IsSuccess: true, Data: {}, Message: 'No user found' });
       }
@@ -181,17 +205,17 @@ module.exports = {
   /* Forget password */
   forgetPassword: async (req, res, next) => {
     try {
-      const { email } = req.body;
-
-      const user = await userServices.getUser(email.toLowerCase());
+      let { email } = req.body;
+      email = email.toLowerCase();
+      const user = await userServices.getUser(email);
 
       if (user) {
-        const userData = user.toJSON();
-        const token = await userServices.createPasswordToken(userData.user_id);
+        const userData = user;
+        const token = await userServices.createPasswordToken(userData);
         const name = userData.first_name + ' ' + userData.last_name;
-        const originalUrl = req.get('Referrer') + 'set-password?token=' + token.token;
+        const originalUrl = req.get('Referrer') + 'set-password?' + token;
         const short_url = await TinyURL.shorten(originalUrl);
-        await sendRegistrationMail(name, short_url);
+        await sendRegistrationMail(name, email, short_url);
 
         res.status(200).json({
           IsSuccess: true,
