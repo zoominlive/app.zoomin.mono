@@ -1,5 +1,6 @@
 import { LoadingButton } from '@mui/lab';
 import {
+  Avatar,
   Box,
   Card,
   CardContent,
@@ -20,6 +21,7 @@ import API from '../../api';
 import { useSnackbar } from 'notistack';
 import SaveIcon from '@mui/icons-material/Save';
 import { errorMessageHandler } from '../../utils/errormessagehandler';
+import CheckIcon from '@mui/icons-material/Check';
 
 const validationSchema = yup.object({
   password: yup
@@ -37,6 +39,7 @@ const SetPassword = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { enqueueSnackbar } = useSnackbar();
   const [submitLoading, setSubmitLoading] = useState(false);
+  const [isPasswordSetSuccesful, setIsPasswordSetSuccesful] = useState(false);
   const { search } = useLocation();
 
   const handleSubmit = (data) => {
@@ -47,6 +50,7 @@ const SetPassword = () => {
           enqueueSnackbar(response?.data?.Message, {
             variant: 'success'
           });
+          setIsPasswordSetSuccesful(true);
         } else {
           errorMessageHandler(
             enqueueSnackbar,
@@ -64,81 +68,100 @@ const SetPassword = () => {
       <Card>
         <CardContent>
           <Box className="auth-container">
-            <Typography component="h1" variant="h5">
-              SET PASSWORD
-            </Typography>
-            <Formik
-              enableReinitialize
-              validateOnChange
-              validationSchema={validationSchema}
-              initialValues={{
-                password: '',
-                confirm_password: ''
-              }}
-              onSubmit={handleSubmit}>
-              {({ values, setFieldValue, touched, errors }) => {
-                return (
-                  <Form>
-                    <Stack spacing={3} my={4}>
-                      <TextField
-                        name="password"
-                        label="Password"
-                        type={showPassword ? 'text' : 'password'}
-                        value={values?.password}
-                        onChange={(event) => {
-                          setFieldValue('password', event.target.value);
-                        }}
-                        helperText={touched.password && errors.password}
-                        error={touched.password && Boolean(errors.password)}
-                        fullWidth
-                        InputProps={{
-                          endAdornment: (
-                            <InputAdornment position="end">
-                              <IconButton
-                                aria-label="toggle password visibility"
-                                onClick={() => setShowPassword((prevState) => !prevState)}>
-                                {showPassword ? <Visibility /> : <VisibilityOff />}
-                              </IconButton>
-                            </InputAdornment>
-                          )
-                        }}
-                      />
-                      <TextField
-                        name="confirm_password"
-                        label="Confirm Password"
-                        type={showConfirmPassword ? 'text' : 'password'}
-                        value={values?.confirm_password}
-                        onChange={(event) => {
-                          setFieldValue('confirm_password', event.target.value);
-                        }}
-                        helperText={touched.confirm_password && errors.confirm_password}
-                        error={touched.confirm_password && Boolean(errors.confirm_password)}
-                        fullWidth
-                        InputProps={{
-                          endAdornment: (
-                            <InputAdornment position="end">
-                              <IconButton
-                                aria-label="toggle password visibility"
-                                onClick={() => setShowConfirmPassword((prevState) => !prevState)}>
-                                {showConfirmPassword ? <Visibility /> : <VisibilityOff />}
-                              </IconButton>
-                            </InputAdornment>
-                          )
-                        }}
-                      />
-                      <LoadingButton
-                        loading={submitLoading}
-                        loadingPosition="center"
-                        startIcon={submitLoading && <SaveIcon />}
-                        variant="contained"
-                        type="submit">
-                        Submit
-                      </LoadingButton>
-                    </Stack>
-                  </Form>
-                );
-              }}
-            </Formik>
+            {!isPasswordSetSuccesful ? (
+              <>
+                {' '}
+                <Typography component="h1" variant="h5">
+                  SET PASSWORD
+                </Typography>
+                <Formik
+                  enableReinitialize
+                  validateOnChange
+                  validationSchema={validationSchema}
+                  initialValues={{
+                    password: '',
+                    confirm_password: ''
+                  }}
+                  onSubmit={handleSubmit}>
+                  {({ values, setFieldValue, touched, errors }) => {
+                    return (
+                      <Form>
+                        <Stack spacing={3} my={4}>
+                          <TextField
+                            name="password"
+                            label="Password"
+                            type={showPassword ? 'text' : 'password'}
+                            value={values?.password}
+                            onChange={(event) => {
+                              setFieldValue('password', event.target.value);
+                            }}
+                            helperText={touched.password && errors.password}
+                            error={touched.password && Boolean(errors.password)}
+                            fullWidth
+                            InputProps={{
+                              endAdornment: (
+                                <InputAdornment position="end">
+                                  <IconButton
+                                    aria-label="toggle password visibility"
+                                    onClick={() => setShowPassword((prevState) => !prevState)}>
+                                    {showPassword ? <Visibility /> : <VisibilityOff />}
+                                  </IconButton>
+                                </InputAdornment>
+                              )
+                            }}
+                          />
+                          <TextField
+                            name="confirm_password"
+                            label="Confirm Password"
+                            type={showConfirmPassword ? 'text' : 'password'}
+                            value={values?.confirm_password}
+                            onChange={(event) => {
+                              setFieldValue('confirm_password', event.target.value);
+                            }}
+                            helperText={touched.confirm_password && errors.confirm_password}
+                            error={touched.confirm_password && Boolean(errors.confirm_password)}
+                            fullWidth
+                            InputProps={{
+                              endAdornment: (
+                                <InputAdornment position="end">
+                                  <IconButton
+                                    aria-label="toggle password visibility"
+                                    onClick={() =>
+                                      setShowConfirmPassword((prevState) => !prevState)
+                                    }>
+                                    {showConfirmPassword ? <Visibility /> : <VisibilityOff />}
+                                  </IconButton>
+                                </InputAdornment>
+                              )
+                            }}
+                          />
+                          <LoadingButton
+                            loading={submitLoading}
+                            loadingPosition="center"
+                            startIcon={submitLoading && <SaveIcon />}
+                            variant="contained"
+                            type="submit">
+                            Submit
+                          </LoadingButton>
+                        </Stack>
+                      </Form>
+                    );
+                  }}
+                </Formik>
+              </>
+            ) : (
+              <Stack
+                direction="row"
+                spacing={3}
+                alignItems="center"
+                justifyContent="center"
+                height={300}>
+                <Avatar sx={{ color: 'green', background: '#1976D20A' }}>
+                  <CheckIcon />
+                </Avatar>
+                <Typography>Password Successfully Changed.</Typography>
+              </Stack>
+            )}
           </Box>
         </CardContent>
       </Card>

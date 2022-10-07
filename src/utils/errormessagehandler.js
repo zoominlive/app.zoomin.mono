@@ -1,9 +1,7 @@
-export const errorMessageHandler = (enqueueSnackbar, message, statusCode, navigate, setToken) => {
+export const errorMessageHandler = (enqueueSnackbar, message, statusCode, setAuthError) => {
   if (statusCode === 401) {
-    enqueueSnackbar(message, { variant: 'error' });
+    setAuthError(true);
     localStorage.removeItem('token');
-    navigate('/login');
-    setToken();
     return;
   } else {
     enqueueSnackbar(message, { variant: 'error' });

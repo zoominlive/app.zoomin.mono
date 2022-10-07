@@ -48,8 +48,7 @@ const Layout = () => {
           enqueueSnackbar,
           response?.response?.data?.Message || 'Something Went Wrong.',
           response?.response?.status,
-          navigate,
-          authCtx.setToken
+          authCtx.setAuthError
         );
       }
       setIsLoading(false);

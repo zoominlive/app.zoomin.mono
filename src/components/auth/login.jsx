@@ -5,8 +5,6 @@ import {
   Stack,
   TextField,
   Typography,
-  FormControlLabel,
-  Checkbox,
   InputAdornment,
   IconButton
 } from '@mui/material';
@@ -56,16 +54,10 @@ const Login = () => {
     API.post('users/login', data)
       .then((response) => {
         if (response.status === 200) {
-          authCtx.setToken(response.data.Data.token);
           localStorage.setItem('token', response.data.Data.token);
-          if (data.rememberMe) {
-            localStorage.setItem('email', data.email);
-            localStorage.setItem('password', data.password);
-            localStorage.setItem('rememberMe', data.rememberMe);
-          } else {
-            localStorage.removeItem('email', data.email);
-            localStorage.removeItem('password', data.password);
-            localStorage.removeItem('rememberMe', data.rememberMe);
+          authCtx.setToken(response.data.Data.token);
+          if (authCtx.authError) {
+            authCtx.setAuthError(false);
           }
         } else {
           errorMessageHandler(
@@ -93,11 +85,8 @@ const Login = () => {
                 validateOnChange
                 validationSchema={validationSchema}
                 initialValues={{
-                  email: localStorage.getItem('rememberMe') ? localStorage.getItem('email') : '',
-                  password: localStorage.getItem('rememberMe')
-                    ? localStorage.getItem('password')
-                    : '',
-                  rememberMe: localStorage.getItem('rememberMe') ? true : false
+                  email: '',
+                  password: ''
                 }}
                 onSubmit={handleSubmit}>
                 {({ values, setFieldValue, touched, errors }) => {
@@ -138,18 +127,6 @@ const Login = () => {
                               </InputAdornment>
                             )
                           }}
-                        />
-                        <FormControlLabel
-                          control={
-                            <Checkbox
-                              name="rememberMe"
-                              checked={values.rememberMe}
-                              onChange={(event) =>
-                                setFieldValue('rememberMe', event.target.checked)
-                              }
-                            />
-                          }
-                          label="Remember me"
                         />
                         <LoadingButton
                           loading={submitLoading}

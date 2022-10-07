@@ -32,7 +32,6 @@ import { useSnackbar } from 'notistack';
 import { errorMessageHandler } from '../../utils/errormessagehandler';
 import { useContext } from 'react';
 import AuthContext from '../../context/authcontext';
-import { useNavigate } from 'react-router-dom';
 
 const validationSchema = yup.object({
   first_name: yup.string('Enter first name').required('First name is required'),
@@ -49,7 +48,6 @@ const UserForm = (props) => {
   const [isImageDeleting, setIsImageDeleting] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
   const authCtx = useContext(AuthContext);
-  const navigate = useNavigate();
   const { getRootProps, getInputProps } = useDropzone({
     maxFiles: 1,
     accept: {
@@ -98,8 +96,7 @@ const UserForm = (props) => {
             enqueueSnackbar,
             response?.response?.data?.Message || 'Something Went Wrong.',
             response?.response?.status,
-            navigate,
-            authCtx.setToken
+            authCtx.setAuthError
           );
         }
         setSubmitLoading(false);
@@ -121,8 +118,7 @@ const UserForm = (props) => {
           enqueueSnackbar,
           response?.response?.data?.Message || 'Something Went Wrong.',
           response?.response?.status,
-          navigate,
-          authCtx.setToken
+          authCtx.setAuthError
         );
       }
       setIsImageDeleting(false);
@@ -146,8 +142,7 @@ const UserForm = (props) => {
           enqueueSnackbar,
           response?.response?.data?.Message || 'Something Went Wrong.',
           response?.response?.status,
-          navigate,
-          authCtx.setToken
+          authCtx.setAuthError
         );
         setImage();
       }

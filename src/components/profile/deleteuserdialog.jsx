@@ -13,7 +13,6 @@ import API from '../../api';
 import { LoadingButton } from '@mui/lab';
 import SaveIcon from '@mui/icons-material/Save';
 import { useSnackbar } from 'notistack';
-import { useNavigate } from 'react-router-dom';
 import { useContext } from 'react';
 import AuthContext from '../../context/authcontext';
 import { errorMessageHandler } from '../../utils/errormessagehandler';
@@ -22,7 +21,6 @@ import { errorMessageHandler } from '../../utils/errormessagehandler';
 const DeleteUserDialog = (props) => {
   const { enqueueSnackbar } = useSnackbar();
   const authCtx = useContext(AuthContext);
-  const navigate = useNavigate();
 
   const handleUserDelete = () => {
     props.setDeleteLoading(true);
@@ -36,8 +34,7 @@ const DeleteUserDialog = (props) => {
           enqueueSnackbar,
           response?.response?.data?.Message || 'Something Went Wrong.',
           response?.response?.status,
-          navigate,
-          authCtx.setToken
+          authCtx.setAuthError
         );
       }
     });
