@@ -63,7 +63,6 @@ const Users = () => {
 
   // Method to change the page in table
   const handlePageChange = (_, newPage) => {
-    console.log(newPage);
     setUsersPayload((prevPayload) => ({ ...prevPayload, page: newPage }));
   };
 

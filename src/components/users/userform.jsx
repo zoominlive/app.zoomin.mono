@@ -29,6 +29,10 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import API from '../../api';
 import SaveIcon from '@mui/icons-material/Save';
 import { useSnackbar } from 'notistack';
+import { errorMessageHandler } from '../../utils/errormessagehandler';
+import { useContext } from 'react';
+import AuthContext from '../../context/authcontext';
+import { useNavigate } from 'react-router-dom';
 
 const validationSchema = yup.object({
   first_name: yup.string('Enter first name').required('First name is required'),
@@ -44,6 +48,8 @@ const UserForm = (props) => {
   const [isImageUploading, setIsImageUploading] = useState(false);
   const [isImageDeleting, setIsImageDeleting] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
+  const authCtx = useContext(AuthContext);
+  const navigate = useNavigate();
   const { getRootProps, getInputProps } = useDropzone({
     maxFiles: 1,
     accept: {
@@ -88,9 +94,13 @@ const UserForm = (props) => {
           });
           handleFormDialogClose();
         } else {
-          enqueueSnackbar(response?.response?.data?.Message, {
-            variant: 'error'
-          });
+          errorMessageHandler(
+            enqueueSnackbar,
+            response?.response?.data?.Message || 'Something Went Wrong.',
+            response?.response?.status,
+            navigate,
+            authCtx.setToken
+          );
         }
         setSubmitLoading(false);
       });
@@ -107,9 +117,13 @@ const UserForm = (props) => {
         });
         setImage();
       } else {
-        enqueueSnackbar(response?.response?.data?.Message, {
-          variant: 'error'
-        });
+        errorMessageHandler(
+          enqueueSnackbar,
+          response?.response?.data?.Message || 'Something Went Wrong.',
+          response?.response?.status,
+          navigate,
+          authCtx.setToken
+        );
       }
       setIsImageDeleting(false);
     });
@@ -128,9 +142,13 @@ const UserForm = (props) => {
           variant: 'success'
         });
       } else {
-        enqueueSnackbar(response?.response?.data?.Message, {
-          variant: 'error'
-        });
+        errorMessageHandler(
+          enqueueSnackbar,
+          response?.response?.data?.Message || 'Something Went Wrong.',
+          response?.response?.status,
+          navigate,
+          authCtx.setToken
+        );
         setImage();
       }
       setIsImageUploading(false);

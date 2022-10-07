@@ -23,6 +23,7 @@ import { useSnackbar } from 'notistack';
 import API from '../../api';
 import AuthContext from '../../context/authcontext';
 import Loader from '../common/loader';
+import { errorMessageHandler } from '../../utils/errormessagehandler';
 
 const Layout = () => {
   const layoutCtx = useContext(LayoutContext);
@@ -43,9 +44,13 @@ const Layout = () => {
           location: response.data.Data.location
         });
       } else {
-        enqueueSnackbar(response?.response?.data?.Message, {
-          variant: 'error'
-        });
+        errorMessageHandler(
+          enqueueSnackbar,
+          response?.response?.data?.Message || 'Something Went Wrong.',
+          response?.response?.status,
+          navigate,
+          authCtx.setToken
+        );
       }
       setIsLoading(false);
     });

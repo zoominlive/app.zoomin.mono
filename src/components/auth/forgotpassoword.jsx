@@ -8,6 +8,9 @@ import { useNavigate } from 'react-router-dom';
 import * as yup from 'yup';
 import API from '../../api';
 import SaveIcon from '@mui/icons-material/Save';
+import { errorMessageHandler } from '../../utils/errormessagehandler';
+import { useContext } from 'react';
+import AuthContext from '../../context/authcontext';
 
 const validationSchema = yup.object({
   email: yup.string('Enter your email').email('Enter a valid email').required('Email is required')
@@ -16,6 +19,7 @@ const validationSchema = yup.object({
 const ForgotPassword = () => {
   const navigate = useNavigate();
   const { enqueueSnackbar } = useSnackbar();
+  const authCtx = useContext(AuthContext);
   const [submitLoading, setSubmitLoading] = useState(false);
 
   const handleSubmit = (data) => {
@@ -26,9 +30,13 @@ const ForgotPassword = () => {
           variant: 'success'
         });
       } else {
-        enqueueSnackbar(response?.response?.data?.Message, {
-          variant: 'error'
-        });
+        errorMessageHandler(
+          enqueueSnackbar,
+          response?.response?.data?.Message || 'Something Went Wrong.',
+          response?.response?.status,
+          navigate,
+          authCtx.setToken
+        );
       }
       setSubmitLoading(false);
     });
@@ -77,7 +85,10 @@ const ForgotPassword = () => {
                         type="submit">
                         Submit
                       </LoadingButton>
-                      <Button variant="contained" onClick={handleLoginBack}>
+                      <Button
+                        variant="contained"
+                        onClick={handleLoginBack}
+                        disabled={submitLoading}>
                         Go Back To Login
                       </Button>
                     </Stack>

@@ -19,6 +19,7 @@ import { useLocation } from 'react-router-dom';
 import API from '../../api';
 import { useSnackbar } from 'notistack';
 import SaveIcon from '@mui/icons-material/Save';
+import { errorMessageHandler } from '../../utils/errormessagehandler';
 
 const validationSchema = yup.object({
   password: yup
@@ -47,9 +48,11 @@ const SetPassword = () => {
             variant: 'success'
           });
         } else {
-          enqueueSnackbar(response?.response?.data?.Message, {
-            variant: 'error'
-          });
+          errorMessageHandler(
+            enqueueSnackbar,
+            response?.response?.data?.Message || 'Something Went Wrong.',
+            response?.response?.status
+          );
         }
         setSubmitLoading(false);
       }

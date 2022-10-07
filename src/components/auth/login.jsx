@@ -24,6 +24,7 @@ import PropTypes from 'prop-types';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import { useSnackbar } from 'notistack';
+import { errorMessageHandler } from '../../utils/errormessagehandler';
 
 const validationSchema = yup.object({
   email: yup
@@ -67,9 +68,11 @@ const Login = () => {
             localStorage.removeItem('rememberMe', data.rememberMe);
           }
         } else {
-          enqueueSnackbar(response?.response?.data?.Message, {
-            variant: 'error'
-          });
+          errorMessageHandler(
+            enqueueSnackbar,
+            response?.response?.data?.Message || 'Something Went Wrong.',
+            response?.response?.status
+          );
         }
         setSubmitLoading(false);
       })
