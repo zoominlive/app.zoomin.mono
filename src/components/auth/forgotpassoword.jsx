@@ -22,12 +22,17 @@ const ForgotPassword = () => {
   const authCtx = useContext(AuthContext);
   const [submitLoading, setSubmitLoading] = useState(false);
 
-  const handleSubmit = (data) => {
+  const handleSubmit = (data, actions) => {
     setSubmitLoading(true);
     API.put('users/forgetPassword', data).then((response) => {
       if (response.status === 200) {
         enqueueSnackbar(response?.data?.Message, {
           variant: 'success'
+        });
+        actions.resetForm({
+          values: {
+            email: ''
+          }
         });
       } else {
         errorMessageHandler(

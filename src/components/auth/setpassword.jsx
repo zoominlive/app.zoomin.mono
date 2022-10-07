@@ -41,7 +41,7 @@ const SetPassword = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { enqueueSnackbar } = useSnackbar();
   const [submitLoading, setSubmitLoading] = useState(false);
-  const [isPasswordSetSuccesful, setIsPasswordSetSuccesful] = useState(true);
+  const [isPasswordSetSuccesful, setIsPasswordSetSuccesful] = useState(false);
   const { search } = useLocation();
 
   const handleSubmit = (data) => {
