@@ -44,9 +44,8 @@ const validationSchema = yup.object({
 const UserForm = (props) => {
   const { enqueueSnackbar } = useSnackbar();
   const [image, setImage] = useState();
-  const [isImageUploading, setIsImageUploading] = useState(false);
-  const [isImageDeleting, setIsImageDeleting] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
+  const [base64Image, setBase64Image] = useState();
   const authCtx = useContext(AuthContext);
   const { getRootProps, getInputProps } = useDropzone({
     maxFiles: 1,
@@ -71,7 +70,11 @@ const UserForm = (props) => {
 
   // Method to update the user profile
   const handleSubmit = (data) => {
-    const payload = { ...data, location: { locations: data.locations } };
+    const payload = {
+      ...data,
+      location: { locations: data.locations },
+      image: base64Image
+    };
     delete payload.locations;
     setSubmitLoading(true);
     if (props.user) {
@@ -106,56 +109,24 @@ const UserForm = (props) => {
 
   // Method to remove profile photo
   const handlePhotoDelete = () => {
-    setIsImageDeleting(true);
-    API.delete('users/deleteImage').then((response) => {
-      if (response.status === 200) {
-        enqueueSnackbar(response?.data?.Message, {
-          variant: 'success'
-        });
-        setImage();
-      } else {
-        errorMessageHandler(
-          enqueueSnackbar,
-          response?.response?.data?.Message || 'Something Went Wrong.',
-          response?.response?.status,
-          authCtx.setAuthError
-        );
-      }
-      setIsImageDeleting(false);
-    });
+    setBase64Image();
+    setImage();
   };
 
   // Method to get image from input and upload it to BE
   async function handleImageUpload(acceptedFiles) {
-    setIsImageUploading(true);
     setImage(URL.createObjectURL(acceptedFiles[0]));
     const bas64Image = await toBase64(acceptedFiles[0]);
-    API.post('users/uploadImage', {
-      image: bas64Image.split(',')[1]
-    }).then((response) => {
-      if (response.status === 200) {
-        enqueueSnackbar(response?.data?.Message, {
-          variant: 'success'
-        });
-      } else {
-        errorMessageHandler(
-          enqueueSnackbar,
-          response?.response?.data?.Message || 'Something Went Wrong.',
-          response?.response?.status,
-          authCtx.setAuthError
-        );
-        setImage();
-      }
-      setIsImageUploading(false);
-    });
+    setBase64Image(bas64Image.split(',')[1]);
   }
 
   // Method to close the form dialog
   const handleFormDialogClose = () => {
-    if (!submitLoading && !isImageUploading && !isImageDeleting) {
+    if (!submitLoading) {
       props.setOpen(false);
       props.setUser();
       setImage();
+      setBase64Image();
     }
   };
 
@@ -182,22 +153,22 @@ const UserForm = (props) => {
                 <Stack spacing={3} mb={3} mt={2} direction="row" alignItems="center">
                   <Avatar src={image} />
 
-                  <LoadingButton
-                    loading={isImageUploading}
-                    disabled={isImageDeleting || submitLoading}
-                    variant="contained"
-                    color="primary"
-                    component="span"
-                    {...getRootProps({ className: 'dropzone' })}>
-                    Upload
-                    <input {...getInputProps()} />
-                  </LoadingButton>
-                  {image && !isImageUploading && (
+                  {!image && (
+                    <LoadingButton
+                      disabled={submitLoading}
+                      variant="contained"
+                      color="primary"
+                      component="span"
+                      {...getRootProps({ className: 'dropzone' })}>
+                      Upload
+                      <input {...getInputProps()} />
+                    </LoadingButton>
+                  )}
+                  {image && (
                     <Tooltip title="Remove photo">
                       <LoadingButton
                         variant="outlined"
-                        disabled={isImageUploading || submitLoading}
-                        loading={isImageDeleting}
+                        disabled={submitLoading}
                         className="image-delete-btn"
                         aria-label="delete"
                         onClick={handlePhotoDelete}>
@@ -300,14 +271,10 @@ const UserForm = (props) => {
               </DialogContent>
               <Divider />
               <DialogActions>
-                <Button
-                  disabled={isImageDeleting || isImageUploading || submitLoading}
-                  variant="text"
-                  onClick={handleFormDialogClose}>
+                <Button disabled={submitLoading} variant="text" onClick={handleFormDialogClose}>
                   CANCEL
                 </Button>
                 <LoadingButton
-                  disabled={isImageDeleting || isImageUploading}
                   loading={submitLoading}
                   loadingPosition={submitLoading ? 'start' : undefined}
                   startIcon={submitLoading && <SaveIcon />}
