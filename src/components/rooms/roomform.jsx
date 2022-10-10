@@ -69,13 +69,15 @@ const RoomForm = (props) => {
     setIsDeleteCamDialogOpen(false);
   };
 
+  console.log(props.room);
+
   return (
     <Dialog
       open={props.open}
       onClose={handleFormDialogClose}
       fullWidth
       className="edit-family-dialog">
-      <DialogTitle>Add Room</DialogTitle>
+      <DialogTitle>{props.room ? 'Edit Room' : 'Add Room'}</DialogTitle>
       <Divider />
       <Formik
         enableReinitialize
