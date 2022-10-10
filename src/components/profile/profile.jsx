@@ -93,7 +93,13 @@ const Profile = () => {
           ...response.data.Data,
           location: response.data.Data.location
         });
-        localStorage.setItem('user', JSON.parse(response.data.Data));
+        localStorage.setItem(
+          'user',
+          JSON.stringify({
+            ...response.data.Data,
+            location: response.data.Data.location
+          })
+        );
         enqueueSnackbar(response?.data?.Message, {
           variant: 'success'
         });
