@@ -55,6 +55,7 @@ const Login = () => {
       .then((response) => {
         if (response.status === 200) {
           localStorage.setItem('token', response.data.Data.token);
+          localStorage.setItem('user', JSON.stringify(response.data.Data.userData));
           authCtx.setToken(response.data.Data.token);
           if (authCtx.authError) {
             authCtx.setAuthError(false);

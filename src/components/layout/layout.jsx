@@ -43,6 +43,10 @@ const Layout = () => {
           ...response.data.Data,
           location: response.data.Data.location
         });
+        localStorage.setItem(
+          'user',
+          JSON.stringify({ ...response.data.Data, location: response.data.Data.location })
+        );
       } else {
         errorMessageHandler(
           enqueueSnackbar,

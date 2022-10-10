@@ -11,6 +11,7 @@ import AuthContext from './context/authcontext';
 
 const AppRoutes = () => {
   const authCtx = useContext(AuthContext);
+
   return (
     <Routes>
       <Route path="/dashboard" element={<Dashboard />} />
