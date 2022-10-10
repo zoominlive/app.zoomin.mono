@@ -128,7 +128,7 @@ const Layout = () => {
           <div className="header">
             <img src={open ? logo : smallLogo} />
           </div>
-          {Object.keys(authCtx.user).length !== 0 && (
+          {authCtx.user && Object?.keys(authCtx?.user)?.length !== 0 && (
             <List>
               {topMenuItems
                 .filter((item) => {

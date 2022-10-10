@@ -14,7 +14,7 @@ const AppRoutes = () => {
   return (
     <Routes>
       <Route path="/dashboard" element={<Dashboard />} />
-      {authCtx.user.role === 'Admin' && <Route path="/users" element={<Users />} />}
+      {authCtx.user && authCtx.user.role === 'Admin' && <Route path="/users" element={<Users />} />}
       <Route path="/families" element={<Families />} />
       <Route path="/rooms" element={<Rooms />} />
       <Route path="/watch-stream" element={<WatchStream />} />
