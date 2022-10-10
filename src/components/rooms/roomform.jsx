@@ -69,8 +69,6 @@ const RoomForm = (props) => {
     setIsDeleteCamDialogOpen(false);
   };
 
-  console.log(props.room);
-
   return (
     <Dialog
       open={props.open}
@@ -212,7 +210,26 @@ const RoomForm = (props) => {
                                     }
                                   />
                                 </Grid>
-                                <Grid className="action" item xs={6} sm={3} md={2}>
+                                {console.log('first', errors)}
+                                <Grid
+                                  className="action"
+                                  item
+                                  xs={6}
+                                  sm={3}
+                                  md={2}
+                                  sx={{
+                                    mt:
+                                      touched.cams &&
+                                      touched.cams[index] &&
+                                      (touched.cams[index].cam_url ||
+                                        touched.cams[index].cam_name) &&
+                                      errors &&
+                                      errors.cams &&
+                                      errors?.cams[index] &&
+                                      (errors.cams[index].cam_name || errors.cams[index].cam_name)
+                                        ? -3
+                                        : 0
+                                  }}>
                                   <Box className="row-button-wrapper">
                                     <IconButton
                                       aria-label="delete"
