@@ -16,7 +16,7 @@ const PhoneNumberInput = React.forwardRef(function PhoneNumberInput(props, ref) 
         onChange({
           target: {
             name: props.name,
-            value: values.value
+            value: values.floatValue
           }
         });
       }}
@@ -27,6 +27,6 @@ const PhoneNumberInput = React.forwardRef(function PhoneNumberInput(props, ref) 
 export default PhoneNumberInput;
 
 PhoneNumberInput.propTypes = {
-  name: PropTypes.string.isRequired,
-  onChange: PropTypes.func.isRequired
+  name: PropTypes.string,
+  onChange: PropTypes.func
 };

@@ -29,7 +29,7 @@ import { useState } from 'react';
 import { Plus } from 'react-feather';
 import LayoutContext from '../../context/layoutcontext';
 import AddChild from './addchild';
-import AddFamily from './addfamily';
+import FamilyForm from './familyform';
 import DisableFamily from './disablefamily';
 import EditFamily from './editfamily';
 import FamilyAction from './familyactions';
@@ -242,7 +242,7 @@ const Families = () => {
       <EditFamily open={isEditFamilyDialogOpen} setOpen={setIsEditFamilyDialogOpen} />
       <AddChild open={isAddChildDialogOpen} setOpen={setIsChildDialogOpen} />
       <DisableFamily open={isDisableFamilyDialogOpen} setOpen={setIsDisableFamilyDialogOpen} />
-      <AddFamily open={isAddFamilyDialogOpen} setOpen={setIsAddFamilyDialogOpen} />
+      <FamilyForm open={isAddFamilyDialogOpen} setOpen={setIsAddFamilyDialogOpen} />
       <FamilyDrawer open={isFamilyDrawerOpen} setOpen={setIsFamilyDrawerOpen} />
     </Box>
   );
