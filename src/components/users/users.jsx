@@ -87,10 +87,10 @@ const Users = () => {
         <CardContent>
           <Box>
             <Grid container spacing={2}>
-              <Grid item md={6} sm={12}>
+              <Grid item md={8} sm={12}>
                 <Box>
                   <Grid container spacing={2}>
-                    <Grid item md={8} sm={12}>
+                    <Grid item md={5} sm={12}>
                       <TextField
                         label="Search"
                         value={usersPayload?.search}
@@ -98,7 +98,7 @@ const Users = () => {
                         onChange={handleSearch}
                       />
                     </Grid>
-                    <Grid item md={4} sm={12}>
+                    <Grid item md={3} sm={12}>
                       <FormControl fullWidth className="location-select">
                         <InputLabel id="location">Location</InputLabel>
                         <Select
@@ -117,7 +117,7 @@ const Users = () => {
               </Grid>
               <Grid
                 item
-                md={6}
+                md={4}
                 sm={12}
                 sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
                 <Box>

@@ -19,10 +19,10 @@ import {
   Stack,
   Box,
   Table,
-  OutlinedInput,
   Chip,
   AvatarGroup,
-  Grid
+  Grid,
+  Autocomplete
 } from '@mui/material';
 import React, { useContext, useEffect } from 'react';
 import { useState } from 'react';
@@ -42,6 +42,13 @@ const Families = () => {
   const [isDisableFamilyDialogOpen, setIsDisableFamilyDialogOpen] = useState(false);
   const [isAddFamilyDialogOpen, setIsAddFamilyDialogOpen] = useState(false);
   const [isFamilyDrawerOpen, setIsFamilyDrawerOpen] = useState(false);
+  const [familiesPayload, setFamiliesPayload] = useState({
+    page: 1,
+    limit: parseInt(process.env.REACT_APP_PAGINATION_LIMIT, 10),
+    search: '',
+    location: 'All',
+    rooms: []
+  });
 
   useEffect(() => {
     layoutCtx.setActive(2);
@@ -67,6 +74,37 @@ const Families = () => {
     }
   ];
 
+  // Method to change the page in table
+  const handlePageChange = (_, newPage) => {
+    setFamiliesPayload((prevPayload) => ({ ...prevPayload, page: newPage }));
+  };
+
+  // Method to change the row per page in table
+  const handleChangeRowsPerPage = (event) => {
+    setFamiliesPayload((prevPayload) => ({
+      ...prevPayload,
+      limit: parseInt(event.target.value, 10)
+    }));
+  };
+
+  // Method to handle Search for table
+  const handleSearch = (event) => {
+    setFamiliesPayload((prevPayload) => ({ ...prevPayload, search: event.target.value }));
+  };
+
+  // Method to handle location change for table
+  const handleLocationChange = (event) => {
+    setFamiliesPayload((prevPayload) => ({ ...prevPayload, location: event.target.value }));
+  };
+
+  // Method to handle room change for table
+  const handleRoomChange = (_, value) => {
+    console.log(value);
+    setFamiliesPayload((prevPayload) => ({ ...prevPayload, rooms: value }));
+  };
+
+  console.log(familiesPayload);
+
   return (
     <Box className="listing-wrapper">
       <Card>
@@ -75,46 +113,45 @@ const Families = () => {
             <Grid item md={8} sm={12}>
               <Box>
                 <Grid container spacing={2}>
-                  <Grid item md={6} sm={12}>
-                    <TextField label="Search" value={'Location, Room, etc...'} />
+                  <Grid item md={5} sm={12}>
+                    <TextField
+                      label="Search"
+                      placeholder={'Location, Room, etc...'}
+                      value={familiesPayload?.search}
+                      onChange={handleSearch}
+                    />
                   </Grid>
-                  <Grid item md={3} sm={12}>
+                  <Grid item md={3.5} sm={12}>
                     <FormControl fullWidth className="location-select">
                       <InputLabel id="location">Location</InputLabel>
-                      <Select labelId="location" id="location" value={'All'} label="Location">
+                      <Select
+                        labelId="location"
+                        id="location"
+                        value={familiesPayload?.location}
+                        label="Location"
+                        onChange={handleLocationChange}>
                         <MenuItem value={'All'}>All</MenuItem>
+                        <MenuItem value={'Location 1'}>Location 1</MenuItem>
                       </Select>
                     </FormControl>
                   </Grid>
-                  <Grid item md={3} sm={12}>
-                    <FormControl className="room-select">
-                      <InputLabel id="room-select">Room</InputLabel>
-                      <Select
-                        labelId="room-select"
-                        id="room-select"
-                        multiple
-                        value={['Room 1']}
-                        input={<OutlinedInput id="select-multiple-chip" label="Room" />}
-                        renderValue={(selected) => (
-                          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                            {selected.map((value) => (
-                              <Chip key={value} label={value} onDelete={() => {}} />
-                            ))}
-                          </Box>
-                        )}>
-                        <MenuItem key={0} value={'Room 1'}>
-                          Room 1
-                        </MenuItem>
-
-                        <MenuItem key={1} value={'Room 2'}>
-                          Room 2
-                        </MenuItem>
-
-                        <MenuItem key={2} value={'Room 3'}>
-                          Room 3
-                        </MenuItem>
-                      </Select>
-                    </FormControl>
+                  <Grid item md={3.5} sm={12}>
+                    <Autocomplete
+                      fullWidth
+                      multiple
+                      id="rooms"
+                      options={['Room 1', 'Room 2', 'Room 3']}
+                      onChange={handleRoomChange}
+                      value={familiesPayload?.rooms}
+                      renderTags={(value, getTagProps) =>
+                        value.map((option, index) => (
+                          <Chip key={index} label={option} {...getTagProps({ index })} />
+                        ))
+                      }
+                      renderInput={(params) => (
+                        <TextField {...params} label="Room" fullWidth placeholder="Room" />
+                      )}
+                    />
                   </Grid>
                 </Grid>
               </Box>
@@ -190,11 +227,12 @@ const Families = () => {
               </Table>
               <TablePagination
                 rowsPerPageOptions={[5, 10, 20, 25, 50]}
-                onPageChange={() => {}}
+                onPageChange={handlePageChange}
+                onRowsPerPageChange={handleChangeRowsPerPage}
                 component="div"
                 count={1}
-                rowsPerPage={5}
-                page={0}
+                rowsPerPage={familiesPayload?.limit}
+                page={familiesPayload?.page - 1}
                 sx={{ flex: '1 1 auto' }}
               />
             </TableContainer>
