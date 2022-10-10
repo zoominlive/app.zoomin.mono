@@ -108,9 +108,15 @@ module.exports = {
     return { token, refreshToken };
   },
 
-  /* Create user token */
+  /* Create user token to reset password */
   createPasswordToken: async (user) => {
     const token = engine.encrypt({ userId: user.user_id, password: user.password }, 600000);
+
+    return token;
+  },
+  /* Create user token to change email*/
+  createEmailToken: async (user) => {
+    const token = engine.encrypt({ userId: user.user_id, email: user.email }, 600000);
 
     return token;
   },
@@ -157,6 +163,7 @@ module.exports = {
       profile_image: params.image !== undefined ? params?.image : user.profile_image,
       username: params.username !== undefined ? params?.username : user.username,
       role: params.role !== undefined ? params?.role : user.role,
+      email: params?.email !== undefined ? params?.email : user.email,
       updated_at: Sequelize.literal('CURRENT_TIMESTAMP')
     };
 

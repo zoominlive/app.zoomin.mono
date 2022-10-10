@@ -1,6 +1,6 @@
 var bcrypt = require('bcryptjs');
 const _ = require('lodash');
-const { sendRegistrationMail } = require('../lib/node-mailer');
+const { sendRegistrationMail, sendEmailChangeMail } = require('../lib/node-mailer');
 const userServices = require('../services/users');
 const s3BucketImageUploader = require('../lib/aws-services');
 const { editUserProfile } = require('../services/users');
@@ -100,17 +100,18 @@ module.exports = {
               ? 'You are not verified to logged in'
               : 'User is deactivated please contact Administrator'
           });
-        }
-        const validPassword = await bcrypt.compare(password, user.password);
-
-        if (validPassword) {
-          const token = await userServices.createUserToken(user.user_id);
-          const userData = _.omit(user, ['password']);
-          res
-            .status(200)
-            .json({ IsSuccess: true, Data: { userData, ...token }, Message: 'User logged in' });
         } else {
-          res.status(400).json({ IsSuccess: true, Data: {}, Message: 'Invalid Password' });
+          const validPassword = await bcrypt.compare(password, user.password);
+
+          if (validPassword) {
+            const token = await userServices.createUserToken(user.user_id);
+            const userData = _.omit(user, ['password']);
+            res
+              .status(200)
+              .json({ IsSuccess: true, Data: { userData, ...token }, Message: 'User logged in' });
+          } else {
+            res.status(400).json({ IsSuccess: true, Data: {}, Message: 'Invalid Password' });
+          }
         }
       } else {
         res.status(400).json({
@@ -215,7 +216,7 @@ module.exports = {
         const name = userData.first_name + ' ' + userData.last_name;
         const originalUrl = req.get('Referrer') + 'set-password?' + token;
         const short_url = await TinyURL.shorten(originalUrl);
-        await sendRegistrationMail(name, email, short_url);
+        await sendForgetPasswordMail(name, email, short_url);
 
         res.status(200).json({
           IsSuccess: true,
@@ -272,14 +273,38 @@ module.exports = {
       const params = req.body;
       const user = req.user;
 
-      let editedProfile = await userServices.editUserProfile(user, params);
+      let editedProfile = await userServices.editUserProfile(user, _.omit(params, ['email'])); // user should not be allowed to edit email directly.
 
       if (editedProfile) {
-        res.status(200).json({
-          IsSuccess: true,
-          Data: _.omit(editedProfile, ['password']),
-          Message: 'User profile edited'
-        });
+        if (params?.email) {
+          const newEmail = params.email;
+          const emailExist = await userServices.getUser(newEmail);
+          if (emailExist) {
+            res.status(409).json({
+              IsSuccess: true,
+              Data: {},
+              Message: 'User profile edited ,email already exist plese use different email'
+            });
+          } else {
+            const token = await userServices.createEmailToken(user);
+            const name = user.first_name + ' ' + user.last_name;
+            const originalUrl = req.get('Referrer') + 'email-change?' + token;
+            const short_url = await TinyURL.shorten(originalUrl);
+
+            const response = await sendEmailChangeMail(name, params?.email, short_url);
+            res.status(200).json({
+              IsSuccess: true,
+              Data: _.omit(editedProfile, ['password']),
+              Message: 'User profile edited ,please verify new email address'
+            });
+          }
+        } else {
+          res.status(200).json({
+            IsSuccess: true,
+            Data: _.omit(editedProfile, ['password']),
+            Message: 'User profile edited'
+          });
+        }
       } else {
         res.status(400).json({ IsSuccess: true, Data: {}, Message: 'No user profile found' });
       }
@@ -302,6 +327,25 @@ module.exports = {
       } else {
         res.status(400).json({ IsSuccess: true, Data: {}, Message: 'No user profile found' });
       }
+      next();
+    } catch (error) {
+      res.status(500).json({ IsSuccess: false, Message: error.message });
+      next(error);
+    }
+  },
+
+  changeRegisteredEmail: async (req, res, next) => {
+    try {
+      const { token } = req.body;
+      const decodeToken = engine.decrypt(token);
+
+      const emailChanged = await userServices.editUserProfile(
+        { user_id: decodeToken.userId },
+        { email: decodeToken.email }
+      );
+
+      res.status(200).json({ IsSuccess: true, Data: {}, Message: 'Email successfully changed ' });
+
       next();
     } catch (error) {
       res.status(500).json({ IsSuccess: false, Message: error.message });

@@ -10,22 +10,24 @@ provider:
   tracing:
     lambda: true
   environment:
+    AWS_BUCKET_NAME: zoomin-dev-images
     ACCESS_KEY_ID: AKIAYEUNNGGXZZWD3RES
     SECRET_ACCESS_KEY: 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
-    RDS_HOST: zoomin-1.crzgnnp8iqzv.us-west-2.rds.amazonaws.com
     EMAIL_SOURCE_ACCOUNT: 'kashyap.j@crestinfosystems.net'
+    # RDS_HOST: zoomin-1.crzgnnp8iqzv.us-west-2.rds.amazonaws.com
     # RDS_HOST: 127.0.0.1
     RDS_PORT: 3306
-    RDS_USER: zoomin_dbuser
-    # RDS_USER: root
-    RDS_PASSWORD: Wk8$b6!xR
+    # RDS_USER: zoomin_dbuser
+    RDS_USER: root
+    # RDS_PASSWORD: Wk8$b6!xR
     RDS_DB_NAME: zoomin
     JWT_SECRET_KEY: zoominlive
     JWT_REFRESH_SECRET_KEY: 2d
     ACCESS_TOKEN_EXPIRY: 1h
     REFRESH_TOKEN_EXPIRY: 1d
     NODE_ENV: production
-    AWS_BUCKET_NAME: zoomin-dev-images
+    RTSP_STREAM_BASE_URL: http://video.zoominlive.com:8080
+
   runtime: nodejs14.x
   stage: dev
   region: us-west-2
@@ -98,7 +100,7 @@ functions:
   deleteNotVerifiedUsers:
     handler: handler.handler
     events:
-      - schedule: rate(5 second)
+      - schedule: rate(1 minute)
 
 plugins:
   - serverless-offline
