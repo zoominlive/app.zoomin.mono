@@ -16,18 +16,25 @@ import { useSnackbar } from 'notistack';
 import { useContext } from 'react';
 import AuthContext from '../../context/authcontext';
 import { errorMessageHandler } from '../../utils/errormessagehandler';
+import { useNavigate } from 'react-router-dom';
 
 // Method to delete user and redirect to login page
 const DeleteUserDialog = (props) => {
   const { enqueueSnackbar } = useSnackbar();
   const authCtx = useContext(AuthContext);
+  const navigate = useNavigate();
 
   const handleUserDelete = () => {
     props.setDeleteLoading(true);
     API.delete('users').then((response) => {
       if (response.status === 200) {
+        enqueueSnackbar(response.data.Message, {
+          variant: 'success'
+        });
         localStorage.clear();
-        window.location.reload('login');
+        authCtx.setToken();
+        authCtx.setUser();
+        navigate('login');
       } else {
         props.setDeleteLoading(false);
         errorMessageHandler(
@@ -59,7 +66,7 @@ const DeleteUserDialog = (props) => {
       </DialogContent>
       <Divider />
       <DialogActions>
-        <Button variant="text" onClick={handleDialogClose}>
+        <Button variant="text" onClick={handleDialogClose} disabled={props.deleteLoading}>
           CANCEL
         </Button>
         <LoadingButton

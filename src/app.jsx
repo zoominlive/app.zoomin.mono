@@ -20,7 +20,7 @@ const App = () => {
 
   useEffect(() => {
     if (authCtx.authError) {
-      enqueueSnackbar('Invalid Token or Token Expired, please Login again', {
+      enqueueSnackbar('Invalid Token or Token Expired, Please Login again', {
         variant: 'error'
       });
       authCtx.setToken();
