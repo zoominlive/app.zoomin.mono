@@ -249,7 +249,7 @@ const Profile = () => {
                       />
                     </Grid>
                     <Grid item md={6} xs={12}>
-                      <FormControl fullWidth>
+                      <FormControl fullWidth disabled>
                         <InputLabel id="user-role">Role</InputLabel>
                         <Select
                           labelId="user-role"

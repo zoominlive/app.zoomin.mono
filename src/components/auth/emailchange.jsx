@@ -4,12 +4,32 @@ import CheckIcon from '@mui/icons-material/Check';
 import { useState } from 'react';
 import { useEffect } from 'react';
 import Loader from '../common/loader';
+import API from '../../api';
+import { useLocation } from 'react-router-dom';
+import { useSnackbar } from 'notistack';
+import { errorMessageHandler } from '../../utils/errormessagehandler';
 
 const EmailChange = () => {
+  const { search } = useLocation();
   const [isLoading, setIsLoading] = useState(true);
+  const { enqueueSnackbar } = useSnackbar();
 
   useEffect(() => {
-    setTimeout(() => setIsLoading(false), 3000);
+    setIsLoading(true);
+    API.post('users/emailChange', { token: search.substring(1) }).then((response) => {
+      if (response.status === 200) {
+        enqueueSnackbar(response.data.Message, {
+          variant: 'success'
+        });
+      } else {
+        errorMessageHandler(
+          enqueueSnackbar,
+          response?.response?.data?.Message || 'Something Went Wrong.',
+          response?.response?.status
+        );
+      }
+    });
+    setIsLoading(false);
   }, []);
 
   return (
