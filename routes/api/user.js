@@ -9,6 +9,7 @@ const userController = require('../../controllers/users');
 /* User end points */
 router.get('/', authController, userController.getUserDetails);
 router.post('/createUser', userController.createUser);
+router.get('/all', authController, userController.getAllUserDetails);
 router.post('/login', userController.loginUser);
 router.put('/changePassword', authController, userController.changePassword);
 router.post('/setPassword', userController.validateUser);

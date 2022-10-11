@@ -356,5 +356,23 @@ module.exports = {
       res.status(500).json({ IsSuccess: false, Message: error.message });
       next(error);
     }
+  },
+
+  /* Get  user's details */
+  getAllUserDetails: async (req, res, next) => {
+    try {
+      const user = req.user;
+
+      const usersDetails = await userServices.getAllUsers(user);
+      res.status(200).json({
+        IsSuccess: true,
+        Data: usersDetails,
+        Message: 'Users found'
+      });
+      next();
+    } catch (error) {
+      res.status(500).json({ IsSuccess: false, Message: error.message });
+      next(error);
+    }
   }
 };

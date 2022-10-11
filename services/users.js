@@ -189,8 +189,13 @@ module.exports = {
   },
 
   /* Fetch all the user's details */
-  getUserDetails: async () => {
-    let users = await Users.findAll();
+  getAllUsers: async (user) => {
+    let users = await Users.findAll({
+      where: { cust_id: user.cust_id, user_id: { [Sequelize.Op.ne]: user.user_id } },
+      attributes: { exclude: ['password'] }
+    });
+
+    console.log(users);
     return users;
   }
 };
