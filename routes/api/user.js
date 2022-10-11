@@ -18,6 +18,5 @@ router.delete('/deleteImage', authController, userController.deleteImage);
 router.put('/', authController, userController.updateUserProfile);
 router.delete('/', authController, userController.deleteUserProfile);
 router.post('/emailChange', userController.changeRegisteredEmail);
-changeRegisteredEmail;
 
 module.exports = router;

@@ -40,8 +40,14 @@ const Customers = sequelize.define(
     max_cameras: {
       type: Sequelize.INTEGER(3)
     },
+    available_cameras: {
+      type: Sequelize.INTEGER(3)
+    },
     max_locations: {
       type: Sequelize.INTEGER(3)
+    },
+    transcoder_endpoint: {
+      type: Sequelize.STRING(155)
     },
     created_at: {
       type: 'TIMESTAMP',

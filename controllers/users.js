@@ -3,7 +3,6 @@ const _ = require('lodash');
 const { sendRegistrationMail, sendEmailChangeMail } = require('../lib/node-mailer');
 const userServices = require('../services/users');
 const s3BucketImageUploader = require('../lib/aws-services');
-const { editUserProfile } = require('../services/users');
 const TinyURL = require('tinyurl');
 const jwt = require('jsonwebtoken');
 const encrypter = require('object-encrypter');
@@ -59,7 +58,7 @@ module.exports = {
 
         if (req.body?.image) {
           const imageUrl = await s3BucketImageUploader._upload(req.body.image, userData.user_id);
-          userData = await editUserProfile(userData, { image: imageUrl });
+          userData = await userServices.editUserProfile(userData, { image: imageUrl });
         }
 
         res.status(201).json({
@@ -276,7 +275,7 @@ module.exports = {
       let editedProfile = await userServices.editUserProfile(user, _.omit(params, ['email'])); // user should not be allowed to edit email directly.
 
       if (editedProfile) {
-        if (params?.email) {
+        if (params?.email && params?.email !== user.email) {
           const newEmail = params.email;
           const emailExist = await userServices.getUser(newEmail);
           if (emailExist) {
@@ -286,7 +285,7 @@ module.exports = {
               Message: 'User profile edited ,email already exist plese use different email'
             });
           } else {
-            const token = await userServices.createEmailToken(user);
+            const token = await userServices.createEmailToken(user, newEmail);
             const name = user.first_name + ' ' + user.last_name;
             const originalUrl = req.get('Referrer') + 'email-change?' + token;
             const short_url = await TinyURL.shorten(originalUrl);
@@ -295,7 +294,7 @@ module.exports = {
             res.status(200).json({
               IsSuccess: true,
               Data: _.omit(editedProfile, ['password']),
-              Message: 'User profile edited ,please verify new email address'
+              Message: 'User profile edited , please verify new email address'
             });
           }
         } else {
@@ -339,12 +338,18 @@ module.exports = {
       const { token } = req.body;
       const decodeToken = engine.decrypt(token);
 
-      const emailChanged = await userServices.editUserProfile(
-        { user_id: decodeToken.userId },
-        { email: decodeToken.email }
-      );
+      const user = await userServices.getUserById(decodeToken.userId);
 
-      res.status(200).json({ IsSuccess: true, Data: {}, Message: 'Email successfully changed ' });
+      if (user.email !== decodeToken.email) {
+        const emailChanged = await userServices.editUserProfile(
+          { user_id: decodeToken.userId },
+          { email: decodeToken.email }
+        );
+
+        res.status(200).json({ IsSuccess: true, Data: {}, Message: 'Email successfully changed ' });
+      } else {
+        res.status(400).json({ IsSuccess: true, Data: {}, Message: 'Email is already changed' });
+      }
 
       next();
     } catch (error) {
