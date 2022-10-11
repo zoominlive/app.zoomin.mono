@@ -11,7 +11,6 @@ import {
   IconButton,
   InputLabel,
   MenuItem,
-  // OutlinedInput,
   Paper,
   Select,
   Table,
@@ -34,6 +33,11 @@ import PropTypes from 'prop-types';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import DeleteDialog from '../common/deletedialog';
+import Loader from '../common/loader';
+import API from '../../api';
+import AuthContext from '../../context/authcontext';
+import { useSnackbar } from 'notistack';
+import { errorMessageHandler } from '../../utils/errormessagehandler';
 
 const Row = (props) => {
   const { row } = props;
@@ -49,7 +53,7 @@ const Row = (props) => {
         </TableCell>
         <TableCell>{row.room_name}</TableCell>
         <TableCell>{row.location}</TableCell>
-        <TableCell>{row.number_of_cam}</TableCell>
+        <TableCell>{row.camDetails.length}</TableCell>
         <TableCell align="right">
           <RoomActions
             room={row}
@@ -71,12 +75,12 @@ const Row = (props) => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {row.cams.map((camRow, index) => (
+                  {row?.camDetails?.map((camRow, index) => (
                     <TableRow key={index} hover>
                       <TableCell>{camRow.cam_name}</TableCell>
                       <TableCell>
                         <a href={camRow.cam_url} target="_blank" rel="noreferrer">
-                          {camRow.cam_url}
+                          {camRow.cam_uri}
                         </a>
                       </TableCell>
                     </TableRow>
@@ -96,7 +100,7 @@ Row.propTypes = {
     room_name: PropTypes.string,
     location: PropTypes.string,
     number_of_cam: PropTypes.number,
-    cams: PropTypes.arrayOf(
+    camDetails: PropTypes.arrayOf(
       PropTypes.shape({
         cam_name: PropTypes.string,
         cam_url: PropTypes.string
@@ -110,8 +114,13 @@ Row.propTypes = {
 
 const Rooms = () => {
   const layoutCtx = useContext(LayoutContext);
+  const authCtx = useContext(AuthContext);
+  const { enqueueSnackbar } = useSnackbar();
   const [isRoomFormDialogOpen, setIsRoomFormDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [roomsList, setRoomList] = useState([]);
   const [room, setRoom] = useState();
   const [roomsPayload, setRoomsPayload] = useState({
     page: 1,
@@ -125,6 +134,49 @@ const Rooms = () => {
     layoutCtx.setActive(3);
     layoutCtx.setBreadcrumb(['Rooms']);
   }, []);
+
+  useEffect(() => {
+    getRoomsList();
+  }, [roomsPayload]);
+
+  // Method to fetch the rooms list for table
+  const getRoomsList = () => {
+    setIsLoading(true);
+    API.get('rooms').then((response) => {
+      if (response.status === 200) {
+        setRoomList(response.data.Data);
+      } else {
+        errorMessageHandler(
+          enqueueSnackbar,
+          response?.response?.data?.Message || 'Something Went Wrong.',
+          response?.response?.status,
+          authCtx.setAuthError
+        );
+      }
+      setIsLoading(false);
+    });
+  };
+
+  const handleRoomDelete = () => {
+    setDeleteLoading(true);
+    API.delete('rooms/delete', { data: { room_id: room.room_id } }).then((response) => {
+      if (response.status === 200) {
+        getRoomsList();
+        enqueueSnackbar(response.data.Message, {
+          variant: 'success'
+        });
+      } else {
+        errorMessageHandler(
+          enqueueSnackbar,
+          response?.response?.data?.Message || 'Something Went Wrong.',
+          response?.response?.status,
+          authCtx.setAuthError
+        );
+      }
+      setDeleteLoading(false);
+      setIsDeleteDialogOpen(false);
+    });
+  };
 
   // Method to change the page in table
   const handlePageChange = (_, newPage) => {
@@ -151,54 +203,54 @@ const Rooms = () => {
     setRoomsPayload((prevPayload) => ({ ...prevPayload, rooms: value }));
   };
 
-  const rows = [
-    {
-      id: 1,
-      room_name: 'Room 1',
-      location: 'Location 1',
-      number_of_cam: 4,
-      cams: [
-        {
-          cam_name: 'Cam 1',
-          cam_url: 'https://zoomin.com/systems/en/room/zoomin-room-1/'
-        },
-        {
-          cam_name: 'Cam 2',
-          cam_url:
-            'https://zoomin.com/systems/en/room/zoomin-room-1/room/zoomin-room-1/room/zoomin-room-1/'
-        },
-        {
-          cam_name: 'Cam 3',
-          cam_url: 'https://zoomin.com/systems/en/room/zoomin-room-1/n/room/zoomin-room-1'
-        },
-        {
-          cam_name: 'Cam 4',
-          cam_url: 'https://zoomin.com/systems/en/room/zoomin-room-1/'
-        }
-      ]
-    },
-    {
-      id: 2,
-      room_name: 'Room 2',
-      location: 'Location 2',
-      number_of_cam: 3,
-      cams: [
-        {
-          cam_name: 'Cam 1',
-          cam_url: 'https://zoomin.com/systems/en/room/zoomin-room-1/'
-        },
-        {
-          cam_name: 'Cam 2',
-          cam_url:
-            'https://zoomin.com/systems/en/room/zoomin-room-1/room/zoomin-room-1/room/zoomin-room-1/'
-        },
-        {
-          cam_name: 'Cam 3',
-          cam_url: 'https://zoomin.com/systems/en/room/zoomin-room-1/n/room/zoomin-room-1'
-        }
-      ]
-    }
-  ];
+  // const rows = [
+  //   {
+  //     id: 1,
+  //     room_name: 'Room 1',
+  //     location: 'Location 1',
+  //     number_of_cam: 4,
+  //     cams: [
+  //       {
+  //         cam_name: 'Cam 1',
+  //         cam_url: 'https://zoomin.com/systems/en/room/zoomin-room-1/'
+  //       },
+  //       {
+  //         cam_name: 'Cam 2',
+  //         cam_url:
+  //           'https://zoomin.com/systems/en/room/zoomin-room-1/room/zoomin-room-1/room/zoomin-room-1/'
+  //       },
+  //       {
+  //         cam_name: 'Cam 3',
+  //         cam_url: 'https://zoomin.com/systems/en/room/zoomin-room-1/n/room/zoomin-room-1'
+  //       },
+  //       {
+  //         cam_name: 'Cam 4',
+  //         cam_url: 'https://zoomin.com/systems/en/room/zoomin-room-1/'
+  //       }
+  //     ]
+  //   },
+  //   {
+  //     id: 2,
+  //     room_name: 'Room 2',
+  //     location: 'Location 2',
+  //     number_of_cam: 3,
+  //     cams: [
+  //       {
+  //         cam_name: 'Cam 1',
+  //         cam_url: 'https://zoomin.com/systems/en/room/zoomin-room-1/'
+  //       },
+  //       {
+  //         cam_name: 'Cam 2',
+  //         cam_url:
+  //           'https://zoomin.com/systems/en/room/zoomin-room-1/room/zoomin-room-1/room/zoomin-room-1/'
+  //       },
+  //       {
+  //         cam_name: 'Cam 3',
+  //         cam_url: 'https://zoomin.com/systems/en/room/zoomin-room-1/n/room/zoomin-room-1'
+  //       }
+  //     ]
+  //   }
+  // ];
   return (
     <Box className="listing-wrapper">
       <Card>
@@ -211,6 +263,7 @@ const Rooms = () => {
                     <Grid item md={5} sm={12}>
                       <TextField
                         label="Search"
+                        placeholder="Location, room, etc..."
                         value={roomsPayload?.search}
                         onChange={handleSearch}
                       />
@@ -269,7 +322,8 @@ const Rooms = () => {
             </Grid>
           </Box>
 
-          <Box mt={2}>
+          <Box mt={2} sx={{ position: 'relative' }}>
+            <Loader loading={isLoading} />
             <TableContainer component={Paper}>
               <Table aria-label="collapsible table">
                 <TableHead>
@@ -282,13 +336,13 @@ const Rooms = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {rows.map((row) => (
+                  {roomsList.map((room) => (
                     <Row
                       setRoom={setRoom}
                       setIsRoomFormDialogOpen={setIsRoomFormDialogOpen}
                       setIsDeleteDialogOpen={setIsDeleteDialogOpen}
-                      key={row.id}
-                      row={row}
+                      key={room.room_id}
+                      row={room}
                     />
                   ))}
                 </TableBody>
@@ -307,18 +361,22 @@ const Rooms = () => {
           </Box>
         </CardContent>
       </Card>
-      <RoomForm
-        room={room}
-        setRoom={setRoom}
-        open={isRoomFormDialogOpen}
-        setOpen={setIsRoomFormDialogOpen}
-      />
+      {isRoomFormDialogOpen && (
+        <RoomForm
+          room={room}
+          setRoom={setRoom}
+          open={isRoomFormDialogOpen}
+          setOpen={setIsRoomFormDialogOpen}
+          getRoomsList={getRoomsList}
+        />
+      )}
       <DeleteDialog
         open={isDeleteDialogOpen}
         title="Delete Room"
         contentText="Are you sure you want to delete this room?"
+        loading={deleteLoading}
         handleDialogClose={() => setIsDeleteDialogOpen(false)}
-        handleDelete={() => setIsDeleteDialogOpen(false)}
+        handleDelete={handleRoomDelete}
       />
     </Box>
   );

@@ -68,8 +68,6 @@ const UserForm = (props) => {
     }
   });
 
-  console.log(props.user);
-
   // Method to update the user profile
   const handleSubmit = (data) => {
     const payload = {
