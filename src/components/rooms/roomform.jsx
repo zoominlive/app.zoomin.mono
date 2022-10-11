@@ -61,6 +61,7 @@ const RoomForm = (props) => {
   const [camDeleteLoading, setCamDeleteLoading] = useState(false);
   const [disableActions, setDisableActions] = useState(false);
   const arrayHelpersRef = useRef(null);
+  const formikRef = useRef(null);
   const [cameraIndex, setCameraIndex] = useState();
   const maximumCams = 15;
 
@@ -155,8 +156,11 @@ const RoomForm = (props) => {
     setCamDeleteLoading(true);
     API.delete('cams/delete', {
       data: {
-        cam_id: props.room.camDetails[cameraIndex].cam_id,
-        streamId: props.room.camDetails[cameraIndex].stream_uuid,
+        cam_id: formikRef.current.values.cams[cameraIndex].cam_id,
+        // cam_id: props.room.camDetails[cameraIndex].cam_id,
+        streamId: formikRef.current.values.cams[cameraIndex].stream_uuid,
+
+        // streamId: props.room.camDetails[cameraIndex].stream_uuid,
         wait
       }
     }).then((response) => {
@@ -191,7 +195,11 @@ const RoomForm = (props) => {
   return (
     <Dialog
       open={props.open}
-      onClose={handleFormDialogClose}
+      onClose={() => {
+        if (!submitLoading && !disableActions && !camDeleteLoading) {
+          handleFormDialogClose();
+        }
+      }}
       fullWidth
       className="edit-family-dialog">
       <DialogTitle>{props.room ? 'Edit Room' : 'Add Room'}</DialogTitle>
@@ -200,6 +208,7 @@ const RoomForm = (props) => {
         enableReinitialize
         validateOnChange
         validationSchema={validationSchema}
+        innerRef={formikRef}
         initialValues={{
           room_name: props?.room?.room_name ? props?.room?.room_name : '',
           location: props?.room?.location ? props?.room?.location : '',
@@ -210,6 +219,7 @@ const RoomForm = (props) => {
         }}
         onSubmit={handleSubmit}>
         {({ values, setFieldValue, touched, errors, validateField, setFieldTouched }) => {
+          console.log(values);
           return (
             <Form>
               <DialogContent>
@@ -463,7 +473,14 @@ const RoomForm = (props) => {
 
               <Divider />
               <DialogActions>
-                <Button disabled={disableActions} variant="text" onClick={handleFormDialogClose}>
+                <Button
+                  disabled={disableActions}
+                  variant="text"
+                  onClick={() => {
+                    if (!submitLoading && !disableActions && !camDeleteLoading) {
+                      handleFormDialogClose();
+                    }
+                  }}>
                   CANCEL
                 </Button>
                 <LoadingButton

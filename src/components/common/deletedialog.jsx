@@ -10,6 +10,7 @@ import {
 import React from 'react';
 import PropTypes from 'prop-types';
 import { LoadingButton } from '@mui/lab';
+import SaveIcon from '@mui/icons-material/Save';
 
 const DeleteDialog = (props) => {
   return (
@@ -39,7 +40,12 @@ const DeleteDialog = (props) => {
           disabled={props.loading}>
           CANCEL
         </Button>
-        <LoadingButton loading={props.loading} onClick={props.handleDelete} variant="text">
+        <LoadingButton
+          loading={props.loading}
+          loadingPosition={props.loading ? 'start' : undefined}
+          startIcon={props.loading && <SaveIcon />}
+          variant="text"
+          onClick={props.handleDelete}>
           YES
         </LoadingButton>
       </DialogActions>

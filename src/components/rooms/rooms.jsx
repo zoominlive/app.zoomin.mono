@@ -173,6 +173,7 @@ const Rooms = () => {
           authCtx.setAuthError
         );
       }
+      setRoom();
       setDeleteLoading(false);
       setIsDeleteDialogOpen(false);
     });
