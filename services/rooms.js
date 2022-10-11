@@ -1,6 +1,6 @@
-const { Room } = require('../models/index');
+const { Room, Camera } = require('../models/index');
 const Sequelize = require('sequelize');
-const rooms = require('../controllers/rooms');
+const { getAllCamera, getAllCameraForRoom } = require('./cameras');
 
 module.exports = {
   /* Create new room */
@@ -46,6 +46,18 @@ module.exports = {
   /* Fetch all the user's details */
   getAllRoomsDetails: async (userId) => {
     let rooms = await Room.findAll({ where: { user_id: userId } });
-    return rooms !== undefined ? rooms : null;
+
+    let roomDetails = Promise.all(
+      rooms.map(async (room) => {
+        const roomId = room.dataValues.room_id;
+        const camDetails = await getAllCameraForRoom(roomId);
+        return { ...room, ...camDetails };
+      })
+    );
+
+    const finalRoomDetails = await roomDetails;
+    console.log(finalRoomDetails);
+    return finalRoomDetails !== undefined ? finalRoomDetails : null;
   }
 };
+// rooms[0].room.dataValues

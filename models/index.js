@@ -19,7 +19,7 @@ module.exports = {
   CustomerLocations,
   Family,
   Child,
-  CustomerLocations,
   RecentViewers,
-  Room
+  Room,
+  Camera
 };

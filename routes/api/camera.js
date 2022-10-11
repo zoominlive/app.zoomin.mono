@@ -1,0 +1,14 @@
+const express = require('express');
+
+const router = express.Router();
+
+/* Required Controllers */
+const authController = require('../../middleware/auth');
+const cameraController = require('../../controllers/cameras');
+
+/* User end points */
+router.get('/', authController, cameraController.getAllCameras);
+router.post('/add', authController, cameraController.createCamera);
+router.delete('/delete', authController, cameraController.deleteCamera);
+
+module.exports = router;

@@ -41,7 +41,7 @@ const Camera = sequelize.define(
       comment: 'trascoder stream uuid'
     },
     cam_alias: {
-      type: Sequelize.STRING(25),
+      type: Sequelize.STRING(36),
       allowNull: false,
       required: true,
       comment: 'Unless specified by the user use the stream_uuid here'
