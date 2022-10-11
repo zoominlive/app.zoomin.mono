@@ -1,5 +1,5 @@
 const cameraServices = require('../services/cameras');
-const { startEncodingStream } = require('../lib/rtsp-stream');
+const { startEncodingStream, deleteEncodingStream } = require('../lib/rtsp-stream');
 const _ = require('lodash');
 module.exports = {
   createCamera: async (req, res, next) => {
@@ -35,13 +35,22 @@ module.exports = {
   deleteCamera: async (req, res, next) => {
     try {
       const params = req.body;
-      const room = await roomServices.deleteRoom(params.room_id);
-
-      res.status(200).json({
-        IsSuccess: true,
-        Data: {},
-        Message: 'Room Deleted'
-      });
+      const cameraDeleted = await cameraServices.deleteCamera(params.cam_id);
+      const camEncodedDeleted = await deleteEncodingStream(params.streamId, params.wait);
+      if (camEncodedDeleted.status === 200) {
+        res.status(200).json({
+          IsSuccess: true,
+          Data: {},
+          Message: 'Camera Deleted'
+        });
+      } else {
+        const cameraDeleted = await cameraServices.deleteCamera(params.cam_id);
+        res.status(404).json({
+          IsSuccess: true,
+          Data: {},
+          Message: 'Camera not found'
+        });
+      }
 
       next();
     } catch (error) {
@@ -60,7 +69,7 @@ module.exports = {
       res.status(200).json({
         IsSuccess: true,
         Data: rooms,
-        Message: `All the room's details for user:${req.user.first_name}`
+        Message: `All the cam's Details`
       });
 
       next();

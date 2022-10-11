@@ -14,13 +14,13 @@ module.exports = {
     // return camCreated !== undefined ? camCreated.toJSON() : null;
   },
 
-  /* Delete Existing room */
-  deleteRoom: async (roomId) => {
-    let deletedRoom = await Room.destroy({
-      where: { room_id: roomId }
+  /* Delete Existing camera */
+  deleteCamera: async (camId) => {
+    let deletedCam = await Camera.destroy({
+      where: { cam_id: camId }
     });
 
-    return deletedRoom;
+    return deletedCam;
   },
 
   /* Fetch all the user's details */
