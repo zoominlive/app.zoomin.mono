@@ -68,12 +68,15 @@ const UserForm = (props) => {
     }
   });
 
+  console.log(props.user);
+
   // Method to update the user profile
   const handleSubmit = (data) => {
     const payload = {
       ...data,
-      location: { locations: data.locations },
-      image: base64Image
+      location: { selected_locations: data.locations, accessable_locations: data.locations },
+      image: base64Image,
+      cust_id: authCtx.user.cust_id
     };
     delete payload.locations;
     setSubmitLoading(true);
@@ -143,7 +146,7 @@ const UserForm = (props) => {
           last_name: props?.user?.last_name || '',
           email: props?.user?.email || '',
           role: props?.user?.role || '',
-          locations: props?.user?.location ? props?.user?.location.locations : []
+          locations: props?.user?.location ? props?.user?.location.selected_locations : []
         }}
         onSubmit={handleSubmit}>
         {({ values, setFieldValue, touched, errors }) => {
@@ -244,7 +247,7 @@ const UserForm = (props) => {
                       fullWidth
                       multiple
                       id="locations"
-                      options={['Location 1', 'Location 2', 'Location 3', 'surat']}
+                      options={authCtx?.user?.location?.accessable_locations}
                       onChange={(_, value) => {
                         setFieldValue('locations', value);
                       }}

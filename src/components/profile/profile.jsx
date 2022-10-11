@@ -84,7 +84,13 @@ const Profile = () => {
 
   // Method to update the user profile
   const handleSubmit = (data) => {
-    const payload = { ...data, location: { locations: data.locations } };
+    const payload = {
+      ...data,
+      location: {
+        selected_locations: data.locations,
+        accessable_locations: authCtx.user.location.accessable_locations
+      }
+    };
     delete payload.locations;
     setSubmitLoading(true);
     API.put('users', payload).then((response) => {
@@ -208,7 +214,7 @@ const Profile = () => {
               last_name: authCtx.user.last_name || '',
               email: authCtx.user.email || '',
               role: authCtx.user.role || '',
-              locations: authCtx.user.location ? authCtx.user.location.locations : []
+              locations: authCtx.user.location ? authCtx.user.location.selected_locations : []
             }}
             onSubmit={handleSubmit}>
             {({ values, setFieldValue, touched, errors }) => {
@@ -282,7 +288,7 @@ const Profile = () => {
                         fullWidth
                         multiple
                         id="locations"
-                        options={['Location 1', 'Location 2', 'Location 3', 'surat']}
+                        options={authCtx?.user?.location?.accessable_locations}
                         onChange={(_, value) => {
                           setFieldValue('locations', value);
                         }}
