@@ -174,18 +174,17 @@ const Profile = () => {
           <Stack direction="row" alignItems="center" spacing={3} mb={3}>
             <Avatar src={image} />
 
-            {(!image || isImageUploading) && (
-              <LoadingButton
-                loading={isImageUploading}
-                disabled={isImageDeleting || submitLoading || deleteLoading}
-                variant="contained"
-                color="primary"
-                component="span"
-                {...getRootProps({ className: 'dropzone' })}>
-                Upload
-                <input {...getInputProps()} />
-              </LoadingButton>
-            )}
+            <LoadingButton
+              loading={isImageUploading}
+              disabled={isImageDeleting || submitLoading || deleteLoading}
+              variant="contained"
+              color="primary"
+              component="span"
+              {...getRootProps({ className: 'dropzone' })}>
+              Upload
+              <input {...getInputProps()} />
+            </LoadingButton>
+
             {image && !isImageUploading && (
               <Tooltip title="Remove photo">
                 <LoadingButton

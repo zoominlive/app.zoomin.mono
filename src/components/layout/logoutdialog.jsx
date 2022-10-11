@@ -21,7 +21,7 @@ const LogoutDialog = (props) => {
   const [isDeleteLoading, setIsDeleteLoading] = useState(false);
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
+    localStorage.clear();
     authCtx.setToken();
     navigate('login');
   };

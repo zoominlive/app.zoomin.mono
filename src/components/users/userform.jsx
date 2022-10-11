@@ -153,17 +153,16 @@ const UserForm = (props) => {
                 <Stack spacing={3} mb={3} mt={2} direction="row" alignItems="center">
                   <Avatar src={image} />
 
-                  {!image && (
-                    <LoadingButton
-                      disabled={submitLoading}
-                      variant="contained"
-                      color="primary"
-                      component="span"
-                      {...getRootProps({ className: 'dropzone' })}>
-                      Upload
-                      <input {...getInputProps()} />
-                    </LoadingButton>
-                  )}
+                  <LoadingButton
+                    disabled={submitLoading}
+                    variant="contained"
+                    color="primary"
+                    component="span"
+                    {...getRootProps({ className: 'dropzone' })}>
+                    Upload
+                    <input {...getInputProps()} />
+                  </LoadingButton>
+
                   {image && (
                     <Tooltip title="Remove photo">
                       <LoadingButton
