@@ -153,7 +153,7 @@ const Users = () => {
                     <Grid item md={8} sm={12}>
                       <TextField
                         label="Search"
-                        placeholder="Name,Email"
+                        placeholder="User Name,Email"
                         onChange={debouncedResults}
                       />
                     </Grid>

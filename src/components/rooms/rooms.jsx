@@ -305,7 +305,7 @@ const Rooms = () => {
                     <Grid item md={5} sm={12}>
                       <TextField
                         label="Search"
-                        placeholder="Room Name,Cam Name"
+                        placeholder="Room Name,etc"
                         onChange={roomsListDebounce}
                       />
                     </Grid>
