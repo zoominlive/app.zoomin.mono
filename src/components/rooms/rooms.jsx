@@ -376,7 +376,10 @@ const Rooms = () => {
         title="Delete Room"
         contentText="Are you sure you want to delete this room?"
         loading={deleteLoading}
-        handleDialogClose={() => setIsDeleteDialogOpen(false)}
+        handleDialogClose={() => {
+          setRoom();
+          setIsDeleteDialogOpen(false);
+        }}
         handleDelete={handleRoomDelete}
       />
     </Box>

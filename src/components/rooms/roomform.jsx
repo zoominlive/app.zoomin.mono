@@ -44,7 +44,7 @@ const validationSchema = yup.object({
       cam_uri: yup
         .string()
         .matches(
-          /(http(s)?:\/\/.)?(www\.)?[-a-zA-Z0-9@:%._+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_+.~#?&//=]*)/g,
+          /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=+$,\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=+$,\w]+@)[A-Za-z0-9.-]+)((?:\/[+~%/.\w-_]*)?\??(?:[-+=&;%@.\w_]*)#?(?:[\w]*))?)/,
           'Enter correct url'
         )
         .required('Camera url is required')
@@ -402,7 +402,7 @@ const RoomForm = (props) => {
                                               if (
                                                 values.cams[index].cam_name &&
                                                 values.cams[index].cam_uri &&
-                                                /(http(s)?:\/\/.)?(www\.)?[-a-zA-Z0-9@:%._+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_+.~#?&//=]*)/g.test(
+                                                /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=+$,\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=+$,\w]+@)[A-Za-z0-9.-]+)((?:\/[+~%/.\w-_]*)?\??(?:[-+=&;%@.\w_]*)#?(?:[\w]*))?)/.test(
                                                   values.cams[index].cam_uri
                                                 )
                                               ) {
@@ -474,7 +474,7 @@ const RoomForm = (props) => {
               <Divider />
               <DialogActions>
                 <Button
-                  disabled={disableActions}
+                  disabled={disableActions || submitLoading}
                   variant="text"
                   onClick={() => {
                     if (!submitLoading && !disableActions && !camDeleteLoading) {
