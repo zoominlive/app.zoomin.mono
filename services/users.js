@@ -192,7 +192,7 @@ module.exports = {
 
   /* Fetch all the user's details */
   getAllUsers: async (user, filter) => {
-    let { pageNumber = 1, pageSize, searchBy, location } = filter;
+    let { pageNumber = 0, pageSize, searchBy, location } = filter;
 
     // const defaultParams = {
     //   order: [[orderBy]],
@@ -230,7 +230,7 @@ module.exports = {
 
       users = await Users.findAll({
         limit: parseInt(pageSize),
-        offset: parseInt((pageNumber - 1) * pageSize),
+        offset: parseInt(pageNumber * pageSize),
         where: {
           cust_id: user.cust_id,
           [Sequelize.Op.or]: [
@@ -262,7 +262,7 @@ module.exports = {
 
       users = await sequelize.query(
         `SELECT DISTINCT * FROM users WHERE location LIKE '%${location}%' AND (first_name LIKE '%${searchBy}%' OR last_name LIKE '%${searchBy}%' OR email LIKE '%${searchBy}%') LIMIT ${pageSize} OFFSET ${
-          (pageNumber - 1) * pageSize
+          pageNumber * pageSize
         }`
       );
 
