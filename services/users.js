@@ -207,6 +207,9 @@ module.exports = {
       const userdata = await Users.findAll({
         where: {
           cust_id: user.cust_id,
+          user_id: {
+            [Sequelize.Op.not]: user.user_id
+          },
           [Sequelize.Op.or]: [
             {
               first_name: {
@@ -225,7 +228,6 @@ module.exports = {
             }
           ]
         },
-
         attributes: { exclude: ['password'] }
       });
 
@@ -234,6 +236,9 @@ module.exports = {
         offset: parseInt(pageNumber * pageSize),
         where: {
           cust_id: user.cust_id,
+          user_id: {
+            [Sequelize.Op.not]: user.user_id
+          },
           [Sequelize.Op.or]: [
             {
               first_name: {
@@ -259,7 +264,7 @@ module.exports = {
     } else {
       count = (
         await sequelize.query(
-          `SELECT DISTINCT COUNT(user_id) AS count FROM users WHERE location LIKE '%${location}%' AND (first_name LIKE '%${searchBy}%' OR last_name LIKE '%${searchBy}%' OR email LIKE '%${searchBy}%')`,
+          `SELECT DISTINCT COUNT(user_id) AS count FROM users WHERE location LIKE '%${location}%' AND user_id != ${user.user_id} AND (first_name LIKE '%${searchBy}%' OR last_name LIKE '%${searchBy}%' OR email LIKE '%${searchBy}%')`,
           {
             model: Users,
             mapToModel: true
@@ -270,7 +275,9 @@ module.exports = {
       console.log(count);
 
       users = await sequelize.query(
-        `SELECT DISTINCT * FROM users WHERE location LIKE '%${location}%' AND (first_name LIKE '%${searchBy}%' OR last_name LIKE '%${searchBy}%' OR email LIKE '%${searchBy}%') LIMIT ${pageSize} OFFSET ${
+        `SELECT DISTINCT * FROM users WHERE location LIKE '%${location}%' AND user_id != ${
+          user.user_id
+        } AND (first_name LIKE '%${searchBy}%' OR last_name LIKE '%${searchBy}%' OR email LIKE '%${searchBy}%') LIMIT ${pageSize} OFFSET ${
           pageNumber * pageSize
         }`,
         {

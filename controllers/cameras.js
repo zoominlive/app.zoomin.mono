@@ -54,10 +54,10 @@ module.exports = {
       //   });
       // }
       else {
-        res.status(404).json({
+        res.status(200).json({
           IsSuccess: false,
           Data: {},
-          Message: 'encoded Camera is already deleted for given camera_url'
+          Message: 'Camera deleted'
         });
       }
 

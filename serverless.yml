@@ -14,19 +14,19 @@ provider:
     ACCESS_KEY_ID: AKIAYEUNNGGXZZWD3RES
     SECRET_ACCESS_KEY: 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
     EMAIL_SOURCE_ACCOUNT: 'kashyap.j@crestinfosystems.net'
-    # RDS_HOST: zoomin-1.crzgnnp8iqzv.us-west-2.rds.amazonaws.com
-    RDS_HOST: 127.0.0.1
+    RDS_HOST: zoomin-1.crzgnnp8iqzv.us-west-2.rds.amazonaws.com
+    # RDS_HOST: 127.0.0.1
     RDS_PORT: 3306
-    # RDS_USER: zoomin_dbuser
-    RDS_USER: root
-    # RDS_PASSWORD: Wk8$b6!xR
+    RDS_USER: zoomin_dbuser
+    # RDS_USER: root
+    RDS_PASSWORD: Wk8$b6!xR
     RDS_DB_NAME: zoomin
     JWT_SECRET_KEY: zoominlivesecretkey
     JWT_REFRESH_SECRET_KEY: 2d
     ACCESS_TOKEN_EXPIRY: 1h
     REFRESH_TOKEN_EXPIRY: 1d
     NODE_ENV: production
-    RTSP_STREAM_BASE_URL: http://127.0.0.1:80
+    RTSP_STREAM_BASE_URL: http://35.93.41.200:80
 
   runtime: nodejs14.x
   stage: dev
