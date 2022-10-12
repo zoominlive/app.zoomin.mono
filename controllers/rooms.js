@@ -68,7 +68,35 @@ module.exports = {
 
   getAllRoomsDetails: async (req, res, next) => {
     try {
-      const rooms = await roomServices.getAllRoomsDetails(req.user.user_id);
+      const filter = {
+        pageNumber: req.query?.pageNumber,
+        pageSize: req.query?.pageSize,
+        searchBy: req.query?.searchBy,
+        location: req.query?.location,
+        pageCount: req.query?.pageCount,
+        orderBy: req.query?.orderBy
+      };
+      const rooms = await roomServices.getAllRoomsDetails(req.user.user_id, filter);
+
+      res.status(200).json({
+        IsSuccess: true,
+        Data: rooms,
+        Message: `All the room's details for user:${req.user.first_name}`
+      });
+
+      next();
+    } catch (error) {
+      res.status(500).json({
+        IsSuccess: false,
+        Message: error.message
+      });
+      next(error);
+    }
+  },
+
+  getAllRoomsList: async (req, res, next) => {
+    try {
+      const rooms = await roomServices.getAllRoomsList(req.user.user_id);
 
       res.status(200).json({
         IsSuccess: true,
