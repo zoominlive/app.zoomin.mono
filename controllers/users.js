@@ -1,6 +1,10 @@
 var bcrypt = require('bcryptjs');
 const _ = require('lodash');
-const { sendRegistrationMail, sendEmailChangeMail } = require('../lib/node-mailer');
+const {
+  sendRegistrationMail,
+  sendEmailChangeMail,
+  sendForgetPasswordMail
+} = require('../lib/node-mailer');
 const userServices = require('../services/users');
 const s3BucketImageUploader = require('../lib/aws-services');
 const TinyURL = require('tinyurl');
@@ -363,7 +367,16 @@ module.exports = {
     try {
       const user = req.user;
 
-      const usersDetails = await userServices.getAllUsers(user);
+      const filter = {
+        pageNumber: req.query?.pageNumber,
+        pageSize: req.query?.pageSize,
+        searchBy: req.query?.searchBy,
+        location: req.query?.location,
+        pageCount: req.query?.pageCount,
+        orderBy: req.query?.orderBy
+      };
+
+      const usersDetails = await userServices.getAllUsers(user, filter);
       res.status(200).json({
         IsSuccess: true,
         Data: usersDetails,

@@ -6,7 +6,7 @@ const router = express.Router();
 const authController = require('../../middleware/auth');
 const cameraController = require('../../controllers/cameras');
 
-/* User end points */
+/* Camera end points */
 router.get('/', authController, cameraController.getAllCameras);
 router.post('/add', authController, cameraController.createCamera);
 router.delete('/delete', authController, cameraController.deleteCamera);

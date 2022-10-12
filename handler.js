@@ -10,6 +10,7 @@ var indexRouter = require('./routes/index');
 const sequelize = require('./lib/database');
 var bodyParser = require('body-parser');
 const cors = require('cors');
+
 // const { deleteNotVerifiedUsers } = require('./lib/cron-services');
 
 // deleteNotVerifiedUsers();

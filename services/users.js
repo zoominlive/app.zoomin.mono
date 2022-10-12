@@ -1,8 +1,10 @@
 const { Users } = require('../models/index');
 const Sequelize = require('sequelize');
+const sequelize = require('../lib/database');
 const jwt = require('jsonwebtoken');
 const encrypter = require('object-encrypter');
 const engine = encrypter(process.env.JWT_SECRET_KEY, { ttl: true });
+const _ = require('lodash');
 
 /* Validate email */
 const validateEmail = (emailAdress) => {
@@ -124,7 +126,7 @@ module.exports = {
   /* Reset user password */
   resetPassword: async (userId, password) => {
     let setNewPassword = await Users.update(
-      { password: password },
+      { password: password, isVerified: true },
       { returning: true, where: { user_id: userId } }
     );
 
@@ -189,13 +191,97 @@ module.exports = {
   },
 
   /* Fetch all the user's details */
-  getAllUsers: async (user) => {
-    let users = await Users.findAll({
-      where: { cust_id: user.cust_id, user_id: { [Sequelize.Op.ne]: user.user_id } },
-      attributes: { exclude: ['password'] }
-    });
+  getAllUsers: async (user, filter) => {
+    let { pageNumber, pageSize, searchBy, location } = filter;
 
-    console.log(users);
-    return users;
+    // const defaultParams = {
+    //   order: [[orderBy]],
+    //   likeOperatorSearch: `%${searchBy}%`,
+    //   caseInsensitive: true,
+    //   limit: pageSize,
+    //   page: pageNumber
+    // };
+
+    let users;
+    let count = 0;
+    if (location === 'All') {
+      const userdata = await Users.findAll({
+        where: {
+          cust_id: user.cust_id,
+          [Sequelize.Op.or]: [
+            {
+              first_name: {
+                [Sequelize.Op.like]: `%${searchBy}%`
+              }
+            },
+            {
+              last_name: {
+                [Sequelize.Op.like]: `%${searchBy}%`
+              }
+            }
+          ]
+          // first_name: {
+          //   [Sequelize.Op.like]: `%${searchBy}%`
+          // }
+        },
+
+        attributes: { exclude: ['password'] }
+      });
+
+      users = await Users.findAll({
+        limit: parseInt(pageSize),
+        offset: parseInt(pageNumber * pageSize),
+        where: {
+          cust_id: user.cust_id,
+          [Sequelize.Op.or]: [
+            {
+              first_name: {
+                [Sequelize.Op.like]: `%${searchBy}%`
+              }
+            },
+            {
+              last_name: {
+                [Sequelize.Op.like]: `%${searchBy}%`
+              }
+            },
+            {
+              email: {
+                [Sequelize.Op.like]: `%${searchBy}%`
+              }
+            }
+          ]
+        },
+
+        attributes: { exclude: ['password'] }
+      });
+      count = userdata.length;
+    } else {
+      const userData = await sequelize.query(
+        `SELECT DISTINCT * FROM users WHERE location LIKE '%${location}%' AND (first_name LIKE '%${searchBy}%' OR last_name LIKE '%${searchBy}%' OR email LIKE '%${searchBy}%')`
+      );
+
+      users = await sequelize.query(
+        `SELECT DISTINCT * FROM users WHERE location LIKE '%${location}%' AND (first_name LIKE '%${searchBy}%' OR last_name LIKE '%${searchBy}%' OR email LIKE '%${searchBy}%') LIMIT ${pageSize} OFFSET ${
+          pageNumber * pageSize
+        }`
+      );
+
+      count = userData[0].length;
+
+      // users = await Users.findAll({
+      //   limit: parseInt(pageSize),
+      //   offset: parseInt(pageNumber * pageSize),
+      //   where: {
+      //     cust_id: user.cust_id ,
+      //   },
+      //   attributes: { exclude: ['password'] }
+      // });
+
+      // users = users.filter((user) =>
+      //   user.dataValues.location.selected_locations.find((loc) => loc === location)
+      // );
+    }
+
+    return { users, count };
   }
 };

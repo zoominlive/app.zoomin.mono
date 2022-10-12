@@ -54,7 +54,7 @@ module.exports = {
 
         let camDetails = await getAllCameraForRoom(roomId);
         if (_.isEmpty(camDetails)) {
-          camDetails = {};
+          camDetails = [];
         }
 
         return { ...roomDetails, camDetails };

@@ -7,18 +7,18 @@ module.exports = {
       params = req.body;
       params.cust_id = req.user.cust_id;
 
-      const { data: encodedCamDetails } = await startEncodingStream(params.cam_uri);
-
-      params.stream_uri = encodedCamDetails.uri;
-      params.stream_uuid = encodedCamDetails.id;
-      params.cam_alias = _.isEmpty(encodedCamDetails.alias)
-        ? encodedCamDetails.id
-        : encodedCamDetails.alias;
-      const camera = await cameraServices.createCamera(params);
+      const details = await startEncodingStream(params.cam_uri);
+      console.log(details);
+      // params.stream_uri = encodedCamDetails.uri;
+      // params.stream_uuid = encodedCamDetails.id;
+      // params.cam_alias = _.isEmpty(encodedCamDetails.alias)
+      //   ? encodedCamDetails.id
+      //   : encodedCamDetails.alias;
+      // const camera = await cameraServices.createCamera(params);
 
       res.status(201).json({
         IsSuccess: true,
-        Data: camera,
+        Data: {},
         Message: 'Camera created'
       });
 
@@ -55,7 +55,7 @@ module.exports = {
         res.status(404).json({
           IsSuccess: false,
           Data: {},
-          Message: 'Camera not found'
+          Message: 'encoded Camera is already deleted for given camera_url'
         });
       }
 
