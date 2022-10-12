@@ -199,15 +199,7 @@ module.exports = {
 
   /* Fetch all the user's details */
   getAllUsers: async (user, filter) => {
-    let { pageNumber = 0, pageSize, searchBy, location } = filter;
-
-    // const defaultParams = {
-    //   order: [[orderBy]],
-    //   likeOperatorSearch: `%${searchBy}%`,
-    //   caseInsensitive: true,
-    //   limit: pageSize,
-    //   page: pageNumber
-    // };
+    let { pageNumber = 0, pageSize = 10, searchBy = '', location = 'All' } = filter;
 
     let users;
     let count = 0;
@@ -265,30 +257,27 @@ module.exports = {
       });
       count = userdata.length;
     } else {
-      const userData = await sequelize.query(
-        `SELECT DISTINCT * FROM users WHERE location LIKE '%${location}%' AND (first_name LIKE '%${searchBy}%' OR last_name LIKE '%${searchBy}%' OR email LIKE '%${searchBy}%')`
-      );
+      count = (
+        await sequelize.query(
+          `SELECT DISTINCT COUNT(user_id) AS count FROM users WHERE location LIKE '%${location}%' AND (first_name LIKE '%${searchBy}%' OR last_name LIKE '%${searchBy}%' OR email LIKE '%${searchBy}%')`,
+          {
+            model: Users,
+            mapToModel: true
+          }
+        )
+      )[0].dataValues.count;
+
+      console.log(count);
 
       users = await sequelize.query(
         `SELECT DISTINCT * FROM users WHERE location LIKE '%${location}%' AND (first_name LIKE '%${searchBy}%' OR last_name LIKE '%${searchBy}%' OR email LIKE '%${searchBy}%') LIMIT ${pageSize} OFFSET ${
           pageNumber * pageSize
-        }`
+        }`,
+        {
+          model: Users,
+          mapToModel: true
+        }
       );
-
-      count = userData[0].length;
-
-      // users = await Users.findAll({
-      //   limit: parseInt(pageSize),
-      //   offset: parseInt(pageNumber * pageSize),
-      //   where: {
-      //     cust_id: user.cust_id ,
-      //   },
-      //   attributes: { exclude: ['password'] }
-      // });
-
-      // users = users.filter((user) =>
-      //   user.dataValues.location.selected_locations.find((loc) => loc === location)
-      // );
     }
 
     return { users, count };

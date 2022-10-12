@@ -325,6 +325,11 @@ module.exports = {
 
       const user = await userServices.getUserById(params.userId);
 
+      if (params?.image) {
+        const imageUrl = await s3BucketImageUploader._upload(req.body.image, user.user_id);
+        params.image = imageUrl;
+      }
+
       let editedProfile = await userServices.editUserProfile(user, _.omit(params, ['email'])); // user should not be allowed to edit email directly.
 
       if (editedProfile) {
