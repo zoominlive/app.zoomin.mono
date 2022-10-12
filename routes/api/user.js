@@ -17,6 +17,8 @@ router.put('/forgetPassword', userController.forgetPassword);
 router.post('/uploadImage', authController, userController.uploadImage);
 router.delete('/deleteImage', authController, userController.deleteImage);
 router.put('/', authController, userController.updateUserProfile);
+router.delete('/delete', authController, userController.deleteUser);
+router.put('/edit', authController, userController.editUser);
 router.delete('/', authController, userController.deleteUserProfile);
 router.post('/emailChange', userController.changeRegisteredEmail);
 

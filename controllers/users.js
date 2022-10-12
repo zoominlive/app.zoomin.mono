@@ -319,6 +319,55 @@ module.exports = {
   },
 
   /* Edit user profile details */
+  editUser: async (req, res, next) => {
+    try {
+      const params = req.body;
+
+      const user = await userServices.getUserById(params.userId);
+
+      let editedProfile = await userServices.editUserProfile(user, _.omit(params, ['email'])); // user should not be allowed to edit email directly.
+
+      if (editedProfile) {
+        if (params?.email && params?.email !== user.email) {
+          const newEmail = params.email;
+          const emailExist = await userServices.getUser(newEmail);
+          if (emailExist) {
+            res.status(409).json({
+              IsSuccess: true,
+              Data: {},
+              Message: 'User details edited ,email already exist plese use different email'
+            });
+          } else {
+            const token = await userServices.createEmailToken(user, newEmail);
+            const name = user.first_name + ' ' + user.last_name;
+            const originalUrl = req.get('Referrer') + 'email-change?' + token;
+            const short_url = await TinyURL.shorten(originalUrl);
+
+            const response = await sendEmailChangeMail(name, params?.email, short_url);
+            res.status(200).json({
+              IsSuccess: true,
+              Data: _.omit(editedProfile, ['password']),
+              Message: 'User details edited , please verify new email address'
+            });
+          }
+        } else {
+          res.status(200).json({
+            IsSuccess: true,
+            Data: _.omit(editedProfile, ['password']),
+            Message: 'User details edited'
+          });
+        }
+      } else {
+        res.status(400).json({ IsSuccess: true, Data: {}, Message: 'No user found' });
+      }
+      next();
+    } catch (error) {
+      res.status(500).json({ IsSuccess: false, Message: error.message });
+      next(error);
+    }
+  },
+
+  /* Edit user profile details */
   deleteUserProfile: async (req, res, next) => {
     try {
       const user = req.user;
@@ -329,6 +378,25 @@ module.exports = {
         res.status(200).json({ IsSuccess: true, Data: deleted, Message: 'User profile deleted' });
       } else {
         res.status(400).json({ IsSuccess: true, Data: {}, Message: 'No user profile found' });
+      }
+      next();
+    } catch (error) {
+      res.status(500).json({ IsSuccess: false, Message: error.message });
+      next(error);
+    }
+  },
+
+  /* Edit user profile details */
+  deleteUser: async (req, res, next) => {
+    try {
+      const { userId } = req.body;
+
+      let deleted = await userServices.deleteUser(userId);
+
+      if (deleted) {
+        res.status(200).json({ IsSuccess: true, Data: deleted, Message: 'User deleted' });
+      } else {
+        res.status(400).json({ IsSuccess: true, Data: {}, Message: 'No user found' });
       }
       next();
     } catch (error) {

@@ -180,6 +180,13 @@ module.exports = {
     return updateUserProfile.toJSON();
   },
 
+  /* Delete user profile details */
+  deleteUser: async (userId) => {
+    let deletedUser = await Users.destroy({ where: { user_id: userId } });
+
+    return deletedUser;
+  },
+
   /* Edit user profile details */
   deleteUserProfile: async (userId) => {
     let deletedUserProfile = await Users.update(
