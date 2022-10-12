@@ -28,10 +28,26 @@ const Secondary = () => {
         <Grid item md={4} sm={12}>
           <FormControl fullWidth>
             <InputLabel id="role">Role</InputLabel>
-            <Select labelId="role" id="role" value={'Grandfather'} label="Role">
-              <MenuItem value={'Grandfather'}>Grandfather</MenuItem>
+            <Select
+              labelId="role"
+              id="role"
+              value={'Grandfather'}
+              label="Role"
+              MenuProps={{
+                anchorOrigin: {
+                  horizontal: 'right'
+                },
+                transformOrigin: {
+                  vertical: 'top'
+                }
+              }}>
               <MenuItem value={'Mother'}>Mother</MenuItem>
               <MenuItem value={'Father'}>Father</MenuItem>
+              <MenuItem value={'Aunt'}>Aunt</MenuItem>
+              <MenuItem value={'Uncle'}>Uncle</MenuItem>
+              <MenuItem value={'Grandmother'}>Grandmother</MenuItem>
+              <MenuItem value={'Grandfather'}>Grandfather</MenuItem>
+              <MenuItem value={'Other'}>Other</MenuItem>
             </Select>
           </FormControl>
         </Grid>
@@ -71,10 +87,26 @@ const Secondary = () => {
         <Grid item md={4} sm={12}>
           <FormControl fullWidth>
             <InputLabel id="role">Role</InputLabel>
-            <Select labelId="role" id="role" value={'Grandfather'} label="Role">
-              <MenuItem value={'Grandfather'}>Grandfather</MenuItem>
+            <Select
+              labelId="role"
+              id="role"
+              value={'Grandfather'}
+              label="Role"
+              MenuProps={{
+                anchorOrigin: {
+                  horizontal: 'right'
+                },
+                transformOrigin: {
+                  vertical: 'top'
+                }
+              }}>
               <MenuItem value={'Mother'}>Mother</MenuItem>
               <MenuItem value={'Father'}>Father</MenuItem>
+              <MenuItem value={'Aunt'}>Aunt</MenuItem>
+              <MenuItem value={'Uncle'}>Uncle</MenuItem>
+              <MenuItem value={'Grandmother'}>Grandmother</MenuItem>
+              <MenuItem value={'Grandfather'}>Grandfather</MenuItem>
+              <MenuItem value={'Other'}>Other</MenuItem>
             </Select>
           </FormControl>
         </Grid>

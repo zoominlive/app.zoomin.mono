@@ -25,7 +25,7 @@ const UserActions = (props) => {
 
   // Method that sets the user id for user form and opens the user form dialog
   const handleUserEdit = (event) => {
-    props.setUser({ ...props.user, first_name: props.user.user });
+    props.setUser({ ...props.user });
     props.setIsUserFormDialogOpen(true);
     handleClose(event);
   };

@@ -5,6 +5,7 @@ import {
   Card,
   CardContent,
   Chip,
+  CircularProgress,
   Collapse,
   FormControl,
   Grid,
@@ -22,7 +23,7 @@ import {
   TableRow,
   TextField
 } from '@mui/material';
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useContext } from 'react';
 import { useState } from 'react';
 import { Plus } from 'react-feather';
@@ -38,6 +39,7 @@ import API from '../../api';
 import AuthContext from '../../context/authcontext';
 import { useSnackbar } from 'notistack';
 import { errorMessageHandler } from '../../utils/errormessagehandler';
+import debounce from 'lodash.debounce';
 
 const Row = (props) => {
   const { row } = props;
@@ -119,13 +121,16 @@ const Rooms = () => {
   const [isRoomFormDialogOpen, setIsRoomFormDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [roomsDropdownLoading, setRoomsDropdownLoading] = useState(false);
+  const [dropdownList, setDropdownList] = useState([]);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [roomsList, setRoomList] = useState([]);
+  const [totalRooms, setTotalRooms] = useState(0);
   const [room, setRoom] = useState();
   const [roomsPayload, setRoomsPayload] = useState({
-    page: 1,
-    limit: parseInt(process.env.REACT_APP_PAGINATION_LIMIT, 10),
-    search: '',
+    pageNumber: 0,
+    pageSize: parseInt(process.env.REACT_APP_PAGINATION_LIMIT, 10),
+    searchBy: '',
     location: 'All',
     rooms: []
   });
@@ -136,15 +141,39 @@ const Rooms = () => {
   }, []);
 
   useEffect(() => {
+    setRoomsDropdownLoading(true);
+    API.get('rooms/list').then((response) => {
+      if (response.status === 200) {
+        setDropdownList(response.data.Data);
+      } else {
+        errorMessageHandler(
+          enqueueSnackbar,
+          response?.response?.data?.Message || 'Something Went Wrong.',
+          response?.response?.status,
+          authCtx.setAuthError
+        );
+      }
+      setRoomsDropdownLoading(false);
+    });
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      roomsListDebounce.cancel();
+    };
+  });
+
+  useEffect(() => {
     getRoomsList();
   }, [roomsPayload]);
 
   // Method to fetch the rooms list for table
   const getRoomsList = () => {
     setIsLoading(true);
-    API.get('rooms').then((response) => {
+    API.get('rooms', { params: roomsPayload }).then((response) => {
       if (response.status === 200) {
-        setRoomList(response.data.Data);
+        setRoomList(response.data.Data.finalRoomDetails);
+        setTotalRooms(response.data.Data.count);
       } else {
         errorMessageHandler(
           enqueueSnackbar,
@@ -181,17 +210,20 @@ const Rooms = () => {
 
   // Method to change the page in table
   const handlePageChange = (_, newPage) => {
-    setRoomsPayload((prevPayload) => ({ ...prevPayload, page: newPage }));
+    setRoomsPayload((prevPayload) => ({ ...prevPayload, pageNumber: newPage }));
   };
 
   // Method to change the row per page in table
   const handleChangeRowsPerPage = (event) => {
-    setRoomsPayload((prevPayload) => ({ ...prevPayload, limit: parseInt(event.target.value, 10) }));
+    setRoomsPayload((prevPayload) => ({
+      ...prevPayload,
+      pageSize: parseInt(event.target.value, 10)
+    }));
   };
 
   // Method to handle Search for table
   const handleSearch = (event) => {
-    setRoomsPayload((prevPayload) => ({ ...prevPayload, search: event.target.value }));
+    setRoomsPayload((prevPayload) => ({ ...prevPayload, searchBy: event.target.value }));
   };
 
   // Method to handle location change for table
@@ -201,8 +233,17 @@ const Rooms = () => {
 
   // Method to handle room change for table
   const handleRoomChange = (_, value) => {
-    setRoomsPayload((prevPayload) => ({ ...prevPayload, rooms: value }));
+    const temp = [];
+    value.forEach((val) => {
+      temp.push(val.room_name);
+    });
+    setRoomsPayload((prevPayload) => ({ ...prevPayload, rooms: temp }));
   };
+
+  // Calls the search handler after 500ms
+  const roomsListDebounce = useMemo(() => {
+    return debounce(handleSearch, 500);
+  }, []);
 
   // const rows = [
   //   {
@@ -265,8 +306,7 @@ const Rooms = () => {
                       <TextField
                         label="Search"
                         placeholder="Location, room, etc..."
-                        value={roomsPayload?.search}
-                        onChange={handleSearch}
+                        onChange={roomsListDebounce}
                       />
                     </Grid>
                     <Grid item md={3.5} sm={12}>
@@ -279,25 +319,48 @@ const Rooms = () => {
                           onChange={handleLocationChange}
                           label="Location">
                           <MenuItem value={'All'}>All</MenuItem>
-                          <MenuItem value={'Location 1'}>Location 1</MenuItem>
+                          {authCtx.user.location.accessable_locations.map((location, index) => (
+                            <MenuItem key={index} value={location}>
+                              {location}
+                            </MenuItem>
+                          ))}
                         </Select>
                       </FormControl>
                     </Grid>
                     <Grid item md={3.5} sm={12}>
                       <Autocomplete
+                        loading={roomsDropdownLoading}
                         fullWidth
                         multiple
                         id="rooms"
-                        options={['Room 1', 'Room 2', 'Room 3']}
-                        onChange={handleRoomChange}
                         value={roomsPayload?.rooms}
+                        // options={['Room 1', 'Room 2', 'Room 3']}
+                        options={dropdownList}
+                        isOptionEqualToValue={(option, value) => option.room_id === value.room_id}
+                        getOptionLabel={(option) => option.room_name}
+                        onChange={handleRoomChange}
                         renderTags={(value, getTagProps) =>
                           value.map((option, index) => (
                             <Chip key={index} label={option} {...getTagProps({ index })} />
                           ))
                         }
                         renderInput={(params) => (
-                          <TextField {...params} label="Room" fullWidth placeholder="Room" />
+                          <TextField
+                            {...params}
+                            label="Room"
+                            fullWidth
+                            InputProps={{
+                              ...params.InputProps,
+                              endAdornment: (
+                                <React.Fragment>
+                                  {roomsDropdownLoading ? (
+                                    <CircularProgress color="inherit" size={20} />
+                                  ) : null}
+                                  {params.InputProps.endAdornment}
+                                </React.Fragment>
+                              )
+                            }}
+                          />
                         )}
                       />
                     </Grid>
@@ -353,9 +416,9 @@ const Rooms = () => {
                 onPageChange={handlePageChange}
                 onRowsPerPageChange={handleChangeRowsPerPage}
                 component="div"
-                count={1}
-                rowsPerPage={roomsPayload?.limit}
-                page={roomsPayload?.page - 1}
+                count={totalRooms}
+                rowsPerPage={roomsPayload?.pageSize}
+                page={roomsPayload?.pageNumber}
                 sx={{ flex: '1 1 auto' }}
               />
             </TableContainer>

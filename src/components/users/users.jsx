@@ -4,6 +4,7 @@ import {
   Button,
   Card,
   CardContent,
+  Chip,
   FormControl,
   Grid,
   InputLabel,
@@ -21,23 +22,35 @@ import {
   TextField,
   Typography
 } from '@mui/material';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useContext } from 'react';
 import { Plus } from 'react-feather';
 import LayoutContext from '../../context/layoutcontext';
 import UserForm from './userform';
 import UserActions from './useractions';
 import DeleteDialog from '../common/deletedialog';
+import API from '../../api';
+import { errorMessageHandler } from '../../utils/errormessagehandler';
+import AuthContext from '../../context/authcontext';
+import { useSnackbar } from 'notistack';
+import Loader from '../common/loader';
+import debounce from 'lodash.debounce';
 
 const Users = () => {
   const layoutCtx = useContext(LayoutContext);
+  const authCtx = useContext(AuthContext);
+  const { enqueueSnackbar } = useSnackbar();
   const [isUserFormDialogOpen, setIsUserFormDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [usersList, setUsersList] = useState([]);
+  const [totalUsers, setTotalUsers] = useState(0);
   const [user, setUser] = useState();
   const [usersPayload, setUsersPayload] = useState({
-    page: 1,
-    limit: parseInt(process.env.REACT_APP_PAGINATION_LIMIT, 10),
-    search: '',
+    pageNumber: 0,
+    pageSize: parseInt(process.env.REACT_APP_PAGINATION_LIMIT, 10),
+    searchBy: '',
     location: 'All'
   });
 
@@ -46,40 +59,87 @@ const Users = () => {
     layoutCtx.setBreadcrumb(['Users']);
   }, []);
 
-  const rows = [
-    {
-      id: 1,
-      user: 'Ralph Edwards',
-      location: 'Location 4',
-      email: 'debra.holt@example.com'
-    },
-    {
-      id: 2,
-      user: 'Ralph Edwards',
-      location: 'Location 4',
-      email: 'debra.holt@example.com'
-    }
-  ];
+  useEffect(() => {
+    return () => {
+      debouncedResults.cancel();
+    };
+  });
+
+  useEffect(() => {
+    getUsersList();
+  }, [usersPayload]);
+
+  const getUsersList = () => {
+    setIsLoading(true);
+    API.get('users/all', { params: usersPayload }).then((response) => {
+      if (response.status === 200) {
+        setUsersList(response.data.Data.users);
+        setTotalUsers(response.data.Data.count);
+      } else {
+        errorMessageHandler(
+          enqueueSnackbar,
+          response?.response?.data?.Message || 'Something Went Wrong.',
+          response?.response?.status,
+          authCtx.setAuthError
+        );
+      }
+      setIsLoading(false);
+    });
+  };
+
+  const handleUserDelete = () => {
+    setDeleteLoading(true);
+    API.delete('users/delete', { data: { userId: user.user_id } }).then((response) => {
+      if (response.status === 200) {
+        getUsersList();
+        enqueueSnackbar(response.data.Message, {
+          variant: 'success'
+        });
+      } else {
+        errorMessageHandler(
+          enqueueSnackbar,
+          response?.response?.data?.Message || 'Something Went Wrong.',
+          response?.response?.status,
+          authCtx.setAuthError
+        );
+      }
+      setUser();
+      setDeleteLoading(false);
+      setIsDeleteDialogOpen(false);
+    });
+  };
 
   // Method to change the page in table
   const handlePageChange = (_, newPage) => {
-    setUsersPayload((prevPayload) => ({ ...prevPayload, page: newPage }));
+    setUsersPayload((prevPayload) => ({ ...prevPayload, pageNumber: newPage }));
   };
 
   // Method to change the row per page in table
   const handleChangeRowsPerPage = (event) => {
-    setUsersPayload((prevPayload) => ({ ...prevPayload, limit: parseInt(event.target.value, 10) }));
+    setUsersPayload((prevPayload) => ({
+      ...prevPayload,
+      pageSize: parseInt(event.target.value, 10)
+    }));
   };
 
   // Method to handle Search for table
   const handleSearch = (event) => {
-    setUsersPayload((prevPayload) => ({ ...prevPayload, search: event.target.value }));
+    setUsersPayload((prevPayload) => ({
+      ...prevPayload,
+      pageNumber: 0,
+      searchBy: event.target.value ? event.target.value : ''
+    }));
   };
 
   // Method to handle location change for table
   const handleLocationChange = (event) => {
     setUsersPayload((prevPayload) => ({ ...prevPayload, location: event.target.value }));
   };
+
+  // Calls the search handler after 500ms
+  const debouncedResults = useMemo(() => {
+    return debounce(handleSearch, 500);
+  }, []);
 
   return (
     <Box className="listing-wrapper">
@@ -93,9 +153,8 @@ const Users = () => {
                     <Grid item md={8} sm={12}>
                       <TextField
                         label="Search"
-                        value={usersPayload?.search}
                         placeholder="Location, room, etc..."
-                        onChange={handleSearch}
+                        onChange={debouncedResults}
                       />
                     </Grid>
                     <Grid item md={4} sm={12}>
@@ -108,7 +167,11 @@ const Users = () => {
                           label="Location"
                           onChange={handleLocationChange}>
                           <MenuItem value={'All'}>All</MenuItem>
-                          <MenuItem value={'Location 1'}>Location 1</MenuItem>
+                          {authCtx.user.location.accessable_locations.map((location, index) => (
+                            <MenuItem key={index} value={location}>
+                              {location}
+                            </MenuItem>
+                          ))}
                         </Select>
                       </FormControl>
                     </Grid>
@@ -134,7 +197,8 @@ const Users = () => {
             </Grid>
           </Box>
 
-          <Box mt={2}>
+          <Box mt={2} position="relative">
+            <Loader loading={isLoading} />
             <TableContainer component={Paper}>
               <Table sx={{ minWidth: 650 }} aria-label="simple table">
                 <TableHead>
@@ -148,15 +212,29 @@ const Users = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {rows.map((row, index) => (
+                  {usersList.map((row, index) => (
                     <TableRow key={index} hover>
                       <TableCell component="th" scope="row">
                         <Stack direction="row" alignItems="center" spacing={3}>
-                          <Avatar>RE</Avatar>
-                          <Typography>{row.user}</Typography>
+                          {row.profile_image ? (
+                            <Avatar src={row.profile_image} />
+                          ) : (
+                            <Avatar>{`${row.first_name[0].toUpperCase()}${row.last_name[0].toUpperCase()}`}</Avatar>
+                          )}
+                          <Typography>{`${row.first_name[0].toUpperCase()}${row.first_name.slice(
+                            1
+                          )} ${row.last_name[0].toUpperCase()}${row.last_name.slice(
+                            1
+                          )}`}</Typography>
                         </Stack>
                       </TableCell>
-                      <TableCell align="left">{row.location}</TableCell>
+                      <TableCell align="left">
+                        <Stack direction="row">
+                          {row.location.accessable_locations.map((location, index) => (
+                            <Chip key={index} label={location} color="primary" />
+                          ))}
+                        </Stack>
+                      </TableCell>
                       <TableCell align="left">{row.email}</TableCell>
                       <TableCell align="right">
                         <UserActions
@@ -175,27 +253,34 @@ const Users = () => {
                 onPageChange={handlePageChange}
                 onRowsPerPageChange={handleChangeRowsPerPage}
                 component="div"
-                count={1}
-                rowsPerPage={usersPayload?.limit}
-                page={usersPayload?.page - 1}
+                count={totalUsers}
+                rowsPerPage={usersPayload?.pageSize}
+                page={usersPayload?.pageNumber}
                 sx={{ flex: '1 1 auto' }}
               />
             </TableContainer>
           </Box>
         </CardContent>
       </Card>
-      <UserForm
-        open={isUserFormDialogOpen}
-        setOpen={setIsUserFormDialogOpen}
-        user={user}
-        setUser={setUser}
-      />
+      {isUserFormDialogOpen && (
+        <UserForm
+          open={isUserFormDialogOpen}
+          setOpen={setIsUserFormDialogOpen}
+          user={user}
+          setUser={setUser}
+          getUsersList={getUsersList}
+        />
+      )}
       <DeleteDialog
         open={isDeleteDialogOpen}
-        handleDialogClose={() => setIsDeleteDialogOpen(false)}
-        handleDelete={() => setIsDeleteDialogOpen(false)}
         title="Delete User"
         contentText={'Are you sure you want to delete this user?'}
+        loading={deleteLoading}
+        handleDialogClose={() => {
+          setUser();
+          setIsDeleteDialogOpen(false);
+        }}
+        handleDelete={handleUserDelete}
       />
     </Box>
   );

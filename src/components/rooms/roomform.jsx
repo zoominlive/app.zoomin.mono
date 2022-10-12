@@ -219,7 +219,6 @@ const RoomForm = (props) => {
         }}
         onSubmit={handleSubmit}>
         {({ values, setFieldValue, touched, errors, validateField, setFieldTouched }) => {
-          console.log(values);
           return (
             <Form>
               <DialogContent>
