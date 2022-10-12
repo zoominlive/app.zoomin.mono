@@ -218,11 +218,13 @@ module.exports = {
               last_name: {
                 [Sequelize.Op.like]: `%${searchBy}%`
               }
+            },
+            {
+              email: {
+                [Sequelize.Op.like]: `%${searchBy}%`
+              }
             }
           ]
-          // first_name: {
-          //   [Sequelize.Op.like]: `%${searchBy}%`
-          // }
         },
 
         attributes: { exclude: ['password'] }
