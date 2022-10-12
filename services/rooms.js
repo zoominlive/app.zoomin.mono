@@ -115,14 +115,24 @@ module.exports = {
 
     let roomDetails = Promise.all(
       rooms.map(async (room) => {
-        const roomId = room.room_id;
+        let roomId;
+        let roomDetails = room;
+        if (room.dataValues) {
+          roomId = room.dataValues.room_id;
+        } else {
+          roomId = room.room_id;
+        }
+
+        if (room.dataValues) {
+          roomDetails = room.dataValues;
+        }
 
         let camDetails = await getAllCameraForRoom(roomId);
         if (_.isEmpty(camDetails)) {
           camDetails = [];
         }
 
-        return { ...room, camDetails };
+        return { ...roomDetails, camDetails };
       })
     );
 

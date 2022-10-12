@@ -1,6 +1,5 @@
 const { Camera, CustomerLocations } = require('../models/index');
 const Sequelize = require('sequelize');
-const { startEncodingStream } = require('../lib/rtsp-stream');
 
 module.exports = {
   /* Create new room */
@@ -23,11 +22,11 @@ module.exports = {
     return deletedCam;
   },
 
-  /* Fetch all the user's details */
-  getAllCamera: async (userId) => {
-    let rooms = await Room.findAll({ where: { user_id: userId } });
-    return rooms !== undefined ? rooms : null;
-  },
+  // /* Fetch all the user's details */
+  // getAllCamera: async (userId) => {
+  //   let rooms = await Room.findAll({ where: { user_id: userId } });
+  //   return rooms !== undefined ? rooms : null;
+  // },
 
   /* Fetch all the user's details */
   getAllCameraForRoom: async (roomId) => {
