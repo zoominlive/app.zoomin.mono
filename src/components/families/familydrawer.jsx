@@ -11,9 +11,10 @@ import {
 } from '@mui/material';
 import React from 'react';
 import PropTypes from 'prop-types';
-import EditIcon from '@mui/icons-material/Edit';
-import LocationOnIcon from '@mui/icons-material/LocationOn';
+// import EditIcon from '@mui/icons-material/Edit';
+// import LocationOnIcon from '@mui/icons-material/LocationOn';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+import EditIcon from '@mui/icons-material/Edit';
 
 const FamilyDrawer = (props) => {
   return (
@@ -24,16 +25,21 @@ const FamilyDrawer = (props) => {
       onClose={() => props.setOpen(false)}>
       <Stack direction="row" justifyContent="space-between" alignItems="center" p={2}>
         <Typography variant="h5">Family</Typography>
-        <IconButton className="edit-btn">
+        {/* <IconButton className="edit-btn">
           <EditIcon />
-        </IconButton>
+        </IconButton> */}
       </Stack>
       <Divider sx={{ marginBottom: '30px' }} />
-      <Stack spacing={2.5}>
-        <Stack spacing={1.5} px={2.5} direction="row" alignItems="center">
+      <Stack
+        spacing={1.5}
+        px={2.5}
+        direction="row"
+        alignItems="center"
+        justifyContent="space-between">
+        <Stack spacing={1.5} direction="row" alignItems="center">
           <Avatar>DC</Avatar>
           <Stack>
-            <Stack direction="row" spacing={1}>
+            <Stack direction="row" spacing={1.5}>
               <Typography variant="body2">Dolores Chambers</Typography>
               <Divider orientation="vertical" variant="middle" flexItem />
               <Typography variant="body2" className="blue-text">
@@ -43,12 +49,16 @@ const FamilyDrawer = (props) => {
             <Typography variant="caption">dolores.chambers@example.com</Typography>
           </Stack>
         </Stack>
-        <Stack spacing={1.5} px={2.5} direction="row" alignItems="center">
+
+        <IconButton className="edit-btn" onClick={() => props.setIsParentFormDialogOpen(true)}>
+          <EditIcon />
+        </IconButton>
+        {/* <Stack spacing={1.5} px={2.5} direction="row" alignItems="center">
           <Avatar sx={{ color: '#1976d2', background: '#1976D20A' }}>
             <LocationOnIcon />
           </Avatar>
           <Typography variant="body2">Location 1</Typography>
-        </Stack>
+        </Stack> */}
       </Stack>
       <Divider textAlign="left" className="title-divider">
         OTHER FAMILY
@@ -72,9 +82,14 @@ const FamilyDrawer = (props) => {
             <Typography variant="caption">tim.jennings@example.com</Typography>
           </Stack>
         </Stack>
-        <Button variant="outlined" className="disabled-btn">
-          Disable
-        </Button>
+        <Stack direction="row" spacing={1.5} alignItems="center" justifyContent="center">
+          <Button variant="outlined" className="disabled-btn">
+            Disable
+          </Button>
+          <IconButton className="edit-btn" onClick={() => props.setIsParentFormDialogOpen(true)}>
+            <EditIcon />
+          </IconButton>
+        </Stack>
       </Stack>
       <Divider variant="middle" sx={{ marginTop: '15px', marginBottom: '15px' }} />
       <Stack
@@ -96,9 +111,14 @@ const FamilyDrawer = (props) => {
             <Typography variant="caption">tim.jennings@example.com</Typography>
           </Stack>
         </Stack>
-        <Button variant="outlined" className="disabled-btn">
-          Disable
-        </Button>
+        <Stack direction="row" spacing={1.5} alignItems="center" justifyContent="center">
+          <Button variant="outlined" className="disabled-btn">
+            Disable
+          </Button>
+          <IconButton className="edit-btn" onClick={() => props.setIsParentFormDialogOpen(true)}>
+            <EditIcon />
+          </IconButton>
+        </Stack>
       </Stack>
       <Divider variant="middle" sx={{ marginTop: '15px', marginBottom: '15px' }} />
       <Divider textAlign="left" className="title-divider">
@@ -111,9 +131,16 @@ const FamilyDrawer = (props) => {
               <Avatar>D</Avatar>
               <Typography variant="body2">David</Typography>
             </Stack>
-            <Button variant="outlined" className="disabled-btn">
-              Disable
-            </Button>
+            <Stack direction="row" spacing={1.5} alignItems="center" justifyContent="center">
+              <Button variant="outlined" className="disabled-btn">
+                Disable
+              </Button>
+              <IconButton
+                className="edit-btn"
+                onClick={() => props.setIsParentFormDialogOpen(true)}>
+                <EditIcon />
+              </IconButton>
+            </Stack>
           </Stack>
           <Box className="rooms">
             <Chip label="Room 1" />
@@ -133,9 +160,16 @@ const FamilyDrawer = (props) => {
               <Avatar>D</Avatar>
               <Typography variant="body2">David</Typography>
             </Stack>
-            <Button variant="outlined" className="disabled-btn">
-              Disable
-            </Button>
+            <Stack direction="row" spacing={1.5} alignItems="center" justifyContent="center">
+              <Button variant="outlined" className="disabled-btn">
+                Disable
+              </Button>
+              <IconButton
+                className="edit-btn"
+                onClick={() => props.setIsParentFormDialogOpen(true)}>
+                <EditIcon />
+              </IconButton>
+            </Stack>
           </Stack>
           <Box className="rooms">
             <Chip label="Room 1" />
@@ -145,7 +179,17 @@ const FamilyDrawer = (props) => {
           </Box>
         </Stack>
       </Stack>
-
+      <Divider textAlign="left" className="title-divider">
+        DISABLE FAMILY
+      </Divider>
+      <Stack direction="row" px={2.5} mt={2}>
+        <Button
+          variant="outlined"
+          className="disabled-btn"
+          onClick={() => props.setIsDisableFamilyDialogOpen(true)}>
+          Disable FAMILY
+        </Button>
+      </Stack>
       <Divider textAlign="left" className="title-divider">
         SCHECULE END DATE
       </Divider>
@@ -163,5 +207,7 @@ export default FamilyDrawer;
 
 FamilyDrawer.propTypes = {
   open: PropTypes.bool,
-  setOpen: PropTypes.func
+  setOpen: PropTypes.func,
+  setIsParentFormDialogOpen: PropTypes.func,
+  setIsDisableFamilyDialogOpen: PropTypes.func
 };

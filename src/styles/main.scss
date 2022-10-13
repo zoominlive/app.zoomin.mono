@@ -457,8 +457,8 @@
 .family-drawer {
   .MuiDrawer-paper {
     display: block !important;
-    max-width: 500px;
-    width: 500px;
+    max-width: 550px;
+    width: 550px;
     h5 {
       font-size: 20px !important;
       font-weight: 500;
@@ -483,6 +483,8 @@
     }
     .disabled-btn {
       height: 30px;
+      min-width: 70px;
+      padding: 5px 10px;
     }
     .rooms {
       .MuiChip-root {

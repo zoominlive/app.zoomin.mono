@@ -233,11 +233,7 @@ const Rooms = () => {
 
   // Method to handle room change for table
   const handleRoomChange = (_, value) => {
-    const temp = [];
-    value.forEach((val) => {
-      temp.push(val.room_name);
-    });
-    setRoomsPayload((prevPayload) => ({ ...prevPayload, rooms: temp }));
+    setRoomsPayload((prevPayload) => ({ ...prevPayload, rooms: value }));
   };
 
   // Calls the search handler after 500ms
@@ -333,15 +329,19 @@ const Rooms = () => {
                         fullWidth
                         multiple
                         id="rooms"
-                        value={roomsPayload?.rooms}
-                        // options={['Room 1', 'Room 2', 'Room 3']}
                         options={dropdownList}
                         isOptionEqualToValue={(option, value) => option.room_id === value.room_id}
-                        getOptionLabel={(option) => option.room_name}
+                        getOptionLabel={(option) => {
+                          return option.room_name;
+                        }}
                         onChange={handleRoomChange}
                         renderTags={(value, getTagProps) =>
                           value.map((option, index) => (
-                            <Chip key={index} label={option} {...getTagProps({ index })} />
+                            <Chip
+                              key={index}
+                              label={option.room_name}
+                              {...getTagProps({ index })}
+                            />
                           ))
                         }
                         renderInput={(params) => (
@@ -349,6 +349,7 @@ const Rooms = () => {
                             {...params}
                             label="Room"
                             fullWidth
+                            placeholder="Room"
                             InputProps={{
                               ...params.InputProps,
                               endAdornment: (

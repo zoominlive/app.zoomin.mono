@@ -46,7 +46,15 @@ const AddFamily = (props) => {
           />
         );
       case 2:
-        return <Children />;
+        return (
+          <Children
+            setFieldValue={setFieldValue}
+            values={values}
+            touched={touched}
+            errors={errors}
+            roomsList={props.roomsList}
+          />
+        );
       default:
         return <div>Not Found</div>;
     }
@@ -60,16 +68,20 @@ const AddFamily = (props) => {
   // Method to next to previous step
   const handleSubmit = (data) => {
     if (activeStep === STEPS.length - 1) {
-      console.log(data);
+      console.log('Data', data);
     } else {
       setActiveStep(activeStep + 1);
     }
   };
 
+  const handleFormDialogClose = () => {
+    props.setOpen(false);
+  };
+
   return (
     <Dialog
       open={props.open}
-      onClose={() => props.setOpen(false)}
+      onClose={handleFormDialogClose}
       fullWidth
       className="add-family-dialog">
       <DialogTitle>Add Family</DialogTitle>
@@ -80,21 +92,14 @@ const AddFamily = (props) => {
         enableReinitialize
         initialValues={{
           primary: {
-            first_name: 'Dolores',
-            last_name: 'Chambers',
+            first_name: '',
+            last_name: '',
             role: '',
-            phone: 6715550110,
-            email: 'dolores.chamber@example.com'
+            phone: '',
+            email: ''
           },
-          secondary: [
-            {
-              first_name: 'Dolores',
-              last_name: 'Chambers',
-              role: '',
-              phone: 6715550110,
-              email: 'dolores.chamber@example.com'
-            }
-          ]
+          secondary: [],
+          children: []
         }}
         onSubmit={handleSubmit}>
         {({ values, setFieldValue, touched, errors }) => (
@@ -125,7 +130,7 @@ const AddFamily = (props) => {
                   </Button>
                 )}
                 <Stack direction="row" justifyContent="flex-end" width="100%">
-                  <Button variant="text" onClick={() => props.setOpen(false)}>
+                  <Button variant="text" onClick={handleFormDialogClose}>
                     CANCEL
                   </Button>
                   <Button variant="text" type="submit">
@@ -145,5 +150,6 @@ export default AddFamily;
 
 AddFamily.propTypes = {
   open: PropTypes.bool,
-  setOpen: PropTypes.func
+  setOpen: PropTypes.func,
+  roomsList: PropTypes.array
 };

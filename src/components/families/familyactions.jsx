@@ -32,15 +32,21 @@ const FamilyActions = (props) => {
     handleClose(event);
   };
 
-  // Method to open edit family dialog
+  // Method to open edit family drawer
   const handleOpenEditDialog = (event) => {
-    props.openEditFamilyDialog(true);
+    props.openFamilyDrawer(true);
     handleClose(event);
   };
 
   // Method to open disable family dialog
   const handleOpenDisableFamilyDialog = (event) => {
     props.openDisableFamilyDialog(true);
+    handleClose(event);
+  };
+
+  // Method to open disable family dialog
+  const handleOpenParentDialog = (event) => {
+    props.openParentFormDialog(true);
     handleClose(event);
   };
 
@@ -70,11 +76,11 @@ const FamilyActions = (props) => {
           </ListItemIcon>
           <ListItemText>Add Child</ListItemText>
         </MenuItem>
-        <MenuItem>
+        <MenuItem onClick={handleOpenParentDialog}>
           <ListItemIcon>
             <GroupAddIcon />
           </ListItemIcon>
-          <ListItemText>Add Parents</ListItemText>
+          <ListItemText>Add Parent</ListItemText>
         </MenuItem>
         <MenuItem onClick={handleOpenDisableFamilyDialog}>
           <ListItemIcon>
@@ -97,6 +103,9 @@ export default FamilyActions;
 
 FamilyActions.propTypes = {
   openAddChildDialog: PropTypes.func,
-  openEditFamilyDialog: PropTypes.func,
-  openDisableFamilyDialog: PropTypes.func
+  openDisableFamilyDialog: PropTypes.func,
+  openFamilyDrawer: PropTypes.func,
+  family: PropTypes.object,
+  setFamily: PropTypes.func,
+  openParentFormDialog: PropTypes.func
 };

@@ -22,26 +22,37 @@ import {
   Chip,
   AvatarGroup,
   Grid,
-  Autocomplete
+  Autocomplete,
+  CircularProgress
 } from '@mui/material';
 import React, { useContext, useEffect } from 'react';
 import { useState } from 'react';
 import { Plus } from 'react-feather';
 import LayoutContext from '../../context/layoutcontext';
-import AddChild from './addchild';
+import ChildForm from './childform';
 import FamilyForm from './familyform';
 import DisableFamily from './disablefamily';
-import EditFamily from './editfamily';
+// import EditFamily from './editfamily';
 import FamilyAction from './familyactions';
 import FamilyDrawer from './familydrawer';
+import API from '../../api';
+import AuthContext from '../../context/authcontext';
+import { useSnackbar } from 'notistack';
+import { errorMessageHandler } from '../../utils/errormessagehandler';
+import ParentForm from './parentform';
 
 const Families = () => {
   const layoutCtx = useContext(LayoutContext);
+  const authCtx = useContext(AuthContext);
+  const { enqueueSnackbar } = useSnackbar();
   const [isAddChildDialogOpen, setIsChildDialogOpen] = useState(false);
-  const [isEditFamilyDialogOpen, setIsEditFamilyDialogOpen] = useState(false);
   const [isDisableFamilyDialogOpen, setIsDisableFamilyDialogOpen] = useState(false);
+  const [isParentFormDialogOpen, setIsParentFormDialogOpen] = useState(false);
   const [isAddFamilyDialogOpen, setIsAddFamilyDialogOpen] = useState(false);
   const [isFamilyDrawerOpen, setIsFamilyDrawerOpen] = useState(false);
+  const [roomsList, setRoomsList] = useState([]);
+  const [roomsDropdownLoading, setRoomsDropdownLoading] = useState(false);
+  const [family, setFamily] = useState();
   const [familiesPayload, setFamiliesPayload] = useState({
     page: 1,
     limit: parseInt(process.env.REACT_APP_PAGINATION_LIMIT, 10),
@@ -53,6 +64,23 @@ const Families = () => {
   useEffect(() => {
     layoutCtx.setActive(2);
     layoutCtx.setBreadcrumb(['Families', 'Manage Families and their camera autorization']);
+  }, []);
+
+  useEffect(() => {
+    setRoomsDropdownLoading(true);
+    API.get('rooms/list').then((response) => {
+      if (response.status === 200) {
+        setRoomsList(response.data.Data);
+      } else {
+        errorMessageHandler(
+          enqueueSnackbar,
+          response?.response?.data?.Message || 'Something Went Wrong.',
+          response?.response?.status,
+          authCtx.setAuthError
+        );
+      }
+      setRoomsDropdownLoading(false);
+    });
   }, []);
 
   const rows = [
@@ -99,11 +127,8 @@ const Families = () => {
 
   // Method to handle room change for table
   const handleRoomChange = (_, value) => {
-    console.log(value);
     setFamiliesPayload((prevPayload) => ({ ...prevPayload, rooms: value }));
   };
-
-  console.log(familiesPayload);
 
   return (
     <Box className="listing-wrapper">
@@ -140,16 +165,35 @@ const Families = () => {
                       fullWidth
                       multiple
                       id="rooms"
-                      options={['Room 1', 'Room 2', 'Room 3']}
+                      options={roomsList}
+                      isOptionEqualToValue={(option, value) => option.room_id === value.room_id}
+                      getOptionLabel={(option) => {
+                        return option.room_name;
+                      }}
                       onChange={handleRoomChange}
-                      value={familiesPayload?.rooms}
                       renderTags={(value, getTagProps) =>
                         value.map((option, index) => (
-                          <Chip key={index} label={option} {...getTagProps({ index })} />
+                          <Chip key={index} label={option.room_name} {...getTagProps({ index })} />
                         ))
                       }
                       renderInput={(params) => (
-                        <TextField {...params} label="Room" fullWidth placeholder="Room" />
+                        <TextField
+                          {...params}
+                          label="Room"
+                          fullWidth
+                          placeholder="Room"
+                          InputProps={{
+                            ...params.InputProps,
+                            endAdornment: (
+                              <React.Fragment>
+                                {roomsDropdownLoading ? (
+                                  <CircularProgress color="inherit" size={20} />
+                                ) : null}
+                                {params.InputProps.endAdornment}
+                              </React.Fragment>
+                            )
+                          }}
+                        />
                       )}
                     />
                   </Grid>
@@ -190,7 +234,7 @@ const Families = () => {
                 </TableHead>
                 <TableBody>
                   {rows.map((row, index) => (
-                    <TableRow key={index} hover onClick={() => setIsFamilyDrawerOpen(true)}>
+                    <TableRow key={index} hover>
                       <TableCell component="th" scope="row">
                         <Stack direction="row" alignItems="center" spacing={3}>
                           <Avatar>RE</Avatar>
@@ -217,8 +261,11 @@ const Families = () => {
                       <TableCell align="right">
                         <FamilyAction
                           openAddChildDialog={setIsChildDialogOpen}
-                          openEditFamilyDialog={setIsEditFamilyDialogOpen}
+                          openFamilyDrawer={setIsFamilyDrawerOpen}
                           openDisableFamilyDialog={setIsDisableFamilyDialogOpen}
+                          openParentFormDialog={setIsParentFormDialogOpen}
+                          family={row}
+                          setFamily={setFamily}
                         />
                       </TableCell>
                     </TableRow>
@@ -239,11 +286,26 @@ const Families = () => {
           </Box>
         </CardContent>
       </Card>
-      <EditFamily open={isEditFamilyDialogOpen} setOpen={setIsEditFamilyDialogOpen} />
-      <AddChild open={isAddChildDialogOpen} setOpen={setIsChildDialogOpen} />
+      {/* <EditFamily open={isEditFamilyDialogOpen} setOpen={setIsEditFamilyDialogOpen} /> */}
+      <ChildForm open={isAddChildDialogOpen} setOpen={setIsChildDialogOpen} roomsList={roomsList} />
       <DisableFamily open={isDisableFamilyDialogOpen} setOpen={setIsDisableFamilyDialogOpen} />
-      <FamilyForm open={isAddFamilyDialogOpen} setOpen={setIsAddFamilyDialogOpen} />
-      <FamilyDrawer open={isFamilyDrawerOpen} setOpen={setIsFamilyDrawerOpen} />
+      {isAddFamilyDialogOpen && (
+        <FamilyForm
+          open={isAddFamilyDialogOpen}
+          setOpen={setIsAddFamilyDialogOpen}
+          roomsList={roomsList}
+        />
+      )}
+      {isParentFormDialogOpen && (
+        <ParentForm open={isParentFormDialogOpen} setOpen={setIsParentFormDialogOpen} />
+      )}
+      <FamilyDrawer
+        open={isFamilyDrawerOpen}
+        setOpen={setIsFamilyDrawerOpen}
+        family={family}
+        setIsParentFormDialogOpen={setIsParentFormDialogOpen}
+        setIsDisableFamilyDialogOpen={setIsDisableFamilyDialogOpen}
+      />
     </Box>
   );
 };

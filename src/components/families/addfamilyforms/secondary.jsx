@@ -19,7 +19,6 @@ import PropTypes from 'prop-types';
 import AddIcon from '@mui/icons-material/Add';
 
 const Secondary = (props) => {
-  console.log(props.values);
   return (
     <FieldArray
       name="secondary"
@@ -233,7 +232,7 @@ const Secondary = (props) => {
                     last_name: '',
                     role: '',
                     email: '',
-                    phone: undefined
+                    phone: ''
                   })
                 }>
                 Add Parent

@@ -26,5 +26,13 @@ export default [
         email: yup.string().email('Enter valid email').required('Email is required')
       })
     )
+  }),
+  yup.object().shape({
+    children: yup.array().of(
+      yup.object().shape({
+        first_name: yup.string().required('First Name is required'),
+        rooms: yup.array()
+      })
+    )
   })
 ];
