@@ -87,8 +87,25 @@ const RoomForm = (props) => {
       API.put('rooms/edit', { ...data, room_id: props.room.room_id }).then((response) => {
         if (response.status === 200) {
           enqueueSnackbar(response.data.Message, { variant: 'success' });
-          props.getRoomsList();
-          props.getDropDownRoomList();
+          const index = props.roomsPayload.rooms.findIndex(
+            (room) => room.room_id === props.room.room_id
+          );
+          if (index !== -1) {
+            props.getDropDownRoomList();
+            props.setRoomsPayload((prev) => {
+              const tempPayload = { ...prev };
+              const index = tempPayload.rooms.findIndex(
+                (item) => item.room_id === props.room.room_id
+              );
+              if (index !== -1) {
+                tempPayload.rooms[index].room_name = data.room_name;
+              }
+              return tempPayload;
+            });
+          } else {
+            props.getRoomsList();
+            props.getDropDownRoomList();
+          }
         } else {
           errorMessageHandler(
             enqueueSnackbar,
@@ -516,5 +533,8 @@ RoomForm.propTypes = {
   room: PropTypes.object,
   setRoom: PropTypes.func,
   getRoomsList: PropTypes.func,
-  getDropDownRoomList: PropTypes.func
+  getDropDownRoomList: PropTypes.func,
+  setRoomsPayload: PropTypes.func,
+  setDropdownList: PropTypes.func,
+  roomsPayload: PropTypes.object
 };

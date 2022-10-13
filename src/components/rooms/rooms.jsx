@@ -81,7 +81,7 @@ const Row = (props) => {
                     <TableRow key={index} hover>
                       <TableCell>{camRow.cam_name}</TableCell>
                       <TableCell>
-                        <a href={camRow.cam_url} target="_blank" rel="noreferrer">
+                        <a href={camRow.cam_uri} target="_blank" rel="noreferrer">
                           {camRow.cam_uri}
                         </a>
                       </TableCell>
@@ -194,8 +194,16 @@ const Rooms = () => {
     setDeleteLoading(true);
     API.delete('rooms/delete', { data: { room_id: room.room_id } }).then((response) => {
       if (response.status === 200) {
-        getRoomsList();
-        getDropDownRoomList();
+        setDropdownList((prevList) => {
+          let tempList = [...prevList];
+          tempList = tempList.filter((item) => item.room_id !== room.room_id);
+          return tempList;
+        });
+        setRoomsPayload((prev) => {
+          let temp = { ...prev };
+          temp.rooms = temp.rooms.filter((item) => item.room_id !== room.room_id);
+          return temp;
+        });
         enqueueSnackbar(response.data.Message, {
           variant: 'success'
         });
@@ -330,6 +338,7 @@ const Rooms = () => {
                     </Grid>
                     <Grid item md={3.5} sm={12}>
                       <Autocomplete
+                        value={roomsPayload?.rooms}
                         loading={roomsDropdownLoading}
                         fullWidth
                         multiple
@@ -439,6 +448,9 @@ const Rooms = () => {
           setOpen={setIsRoomFormDialogOpen}
           getRoomsList={getRoomsList}
           getDropDownRoomList={getDropDownRoomList}
+          roomsPayload={roomsPayload}
+          setRoomsPayload={setRoomsPayload}
+          setDropdownList={setDropdownList}
         />
       )}
       <DeleteDialog
