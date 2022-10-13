@@ -43,6 +43,10 @@ const Layout = () => {
           ...response.data.Data,
           location: response.data.Data.location
         });
+        localStorage.setItem(
+          'user',
+          JSON.stringify({ ...response.data.Data, location: response.data.Data.location })
+        );
       } else {
         errorMessageHandler(
           enqueueSnackbar,
@@ -128,33 +132,43 @@ const Layout = () => {
           <div className="header">
             <img src={open ? logo : smallLogo} />
           </div>
-          <List>
-            {topMenuItems.map((item, index) => (
-              <ListItem
-                key={index}
-                className={`${item.key === layoutCtx.active ? 'active' : ''} `}
-                sx={{ px: 1 }}>
-                {' '}
-                <ListItemButton
-                  sx={{
-                    minHeight: 48,
-                    justifyContent: open ? 'initial' : 'center',
-                    px: 2.5
-                  }}
-                  onClick={() => navigate(item.link)}>
-                  <ListItemIcon
-                    sx={{
-                      minWidth: 0,
-                      mr: open ? 3 : 'auto',
-                      justifyContent: 'center'
-                    }}>
-                    {item.icon}
-                  </ListItemIcon>
-                  <ListItemText primary={item.name} sx={{ display: open ? 'block' : 'none' }} />
-                </ListItemButton>
-              </ListItem>
-            ))}
-          </List>
+          {authCtx.user && Object?.keys(authCtx?.user)?.length !== 0 && (
+            <List>
+              {topMenuItems
+                .filter((item) => {
+                  if (authCtx.user.role === 'User' && item.key === 4) {
+                    return false;
+                  } else {
+                    return true;
+                  }
+                })
+                .map((item, index) => (
+                  <ListItem
+                    key={index}
+                    className={`${item.key === layoutCtx.active ? 'active' : ''} `}
+                    sx={{ px: 1 }}>
+                    {' '}
+                    <ListItemButton
+                      sx={{
+                        minHeight: 48,
+                        justifyContent: open ? 'initial' : 'center',
+                        px: 2.5
+                      }}
+                      onClick={() => navigate(item.link)}>
+                      <ListItemIcon
+                        sx={{
+                          minWidth: 0,
+                          mr: open ? 3 : 'auto',
+                          justifyContent: 'center'
+                        }}>
+                        {item.icon}
+                      </ListItemIcon>
+                      <ListItemText primary={item.name} sx={{ display: open ? 'block' : 'none' }} />
+                    </ListItemButton>
+                  </ListItem>
+                ))}
+            </List>
+          )}
 
           <Box className="bottom-list-items">
             <List>

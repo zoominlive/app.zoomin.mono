@@ -84,7 +84,13 @@ const Profile = () => {
 
   // Method to update the user profile
   const handleSubmit = (data) => {
-    const payload = { ...data, location: { locations: data.locations } };
+    const payload = {
+      ...data,
+      location: {
+        selected_locations: data.locations,
+        accessable_locations: authCtx.user.location.accessable_locations
+      }
+    };
     delete payload.locations;
     setSubmitLoading(true);
     API.put('users', payload).then((response) => {
@@ -93,6 +99,13 @@ const Profile = () => {
           ...response.data.Data,
           location: response.data.Data.location
         });
+        localStorage.setItem(
+          'user',
+          JSON.stringify({
+            ...response.data.Data,
+            location: response.data.Data.location
+          })
+        );
         enqueueSnackbar(response?.data?.Message, {
           variant: 'success'
         });
@@ -167,18 +180,17 @@ const Profile = () => {
           <Stack direction="row" alignItems="center" spacing={3} mb={3}>
             <Avatar src={image} />
 
-            {(!image || isImageUploading) && (
-              <LoadingButton
-                loading={isImageUploading}
-                disabled={isImageDeleting || submitLoading || deleteLoading}
-                variant="contained"
-                color="primary"
-                component="span"
-                {...getRootProps({ className: 'dropzone' })}>
-                Upload
-                <input {...getInputProps()} />
-              </LoadingButton>
-            )}
+            <LoadingButton
+              loading={isImageUploading}
+              disabled={isImageDeleting || submitLoading || deleteLoading}
+              variant="contained"
+              color="primary"
+              component="span"
+              {...getRootProps({ className: 'dropzone' })}>
+              Upload
+              <input {...getInputProps()} />
+            </LoadingButton>
+
             {image && !isImageUploading && (
               <Tooltip title="Remove photo">
                 <LoadingButton
@@ -202,7 +214,7 @@ const Profile = () => {
               last_name: authCtx.user.last_name || '',
               email: authCtx.user.email || '',
               role: authCtx.user.role || '',
-              locations: authCtx.user.location ? authCtx.user.location.locations : []
+              locations: authCtx.user.location ? authCtx.user.location.selected_locations : []
             }}
             onSubmit={handleSubmit}>
             {({ values, setFieldValue, touched, errors }) => {
@@ -249,7 +261,7 @@ const Profile = () => {
                       />
                     </Grid>
                     <Grid item md={6} xs={12}>
-                      <FormControl fullWidth>
+                      <FormControl fullWidth disabled>
                         <InputLabel id="user-role">Role</InputLabel>
                         <Select
                           labelId="user-role"
@@ -276,7 +288,7 @@ const Profile = () => {
                         fullWidth
                         multiple
                         id="locations"
-                        options={['Location 1', 'Location 2', 'Location 3', 'surat']}
+                        options={authCtx?.user?.location?.accessable_locations}
                         onChange={(_, value) => {
                           setFieldValue('locations', value);
                         }}

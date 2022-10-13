@@ -55,6 +55,11 @@ const Primary = (props) => {
             label="Role">
             <MenuItem value={'Mother'}>Mother</MenuItem>
             <MenuItem value={'Father'}>Father</MenuItem>
+            <MenuItem value={'Aunt'}>Aunt</MenuItem>
+            <MenuItem value={'Uncle'}>Uncle</MenuItem>
+            <MenuItem value={'Grandmother'}>Grandmother</MenuItem>
+            <MenuItem value={'Grandfather'}>Grandfather</MenuItem>
+            <MenuItem value={'Other'}>Other</MenuItem>
           </Select>
           {props?.touched?.primary?.role && props?.errors?.primary?.role && (
             <FormHelperText sx={{ color: '#d32f2f' }}>

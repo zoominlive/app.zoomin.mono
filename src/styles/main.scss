@@ -335,6 +335,11 @@
   width: 100%;
 
   .row-delete-btn {
+    &.MuiLoadingButton-root {
+      background: transparent !important;
+      box-shadow: none !important;
+      min-width: 50px !important;
+    }
     background: #d21919;
     color: #ffffff;
     border-radius: 50%;

@@ -43,7 +43,7 @@ const validationSchema = yup.object({
 
 const UserForm = (props) => {
   const { enqueueSnackbar } = useSnackbar();
-  const [image, setImage] = useState();
+  const [image, setImage] = useState(props.user && props.user.profile_image);
   const [submitLoading, setSubmitLoading] = useState(false);
   const [base64Image, setBase64Image] = useState();
   const authCtx = useContext(AuthContext);
@@ -72,21 +72,34 @@ const UserForm = (props) => {
   const handleSubmit = (data) => {
     const payload = {
       ...data,
-      location: { locations: data.locations },
-      image: base64Image
+      userId: props.user && props.user.user_id,
+      location: {
+        selected_locations: data.locations,
+        accessable_locations: props.user ? props.user.location.accessable_locations : data.locations
+      },
+      image: !props.user ? base64Image : image ? (base64Image ? base64Image : image) : null,
+      cust_id: authCtx.user.cust_id
     };
     delete payload.locations;
     setSubmitLoading(true);
     if (props.user) {
-      // API.put('users', payload).then((response) => {
-      //   if (response.status === 200) {
-      //     props.snackbarShowMessage(response?.data?.Message, 'success');
-      //   } else {
-      //     props.snackbarShowMessage(response?.response?.data?.Message, 'error');
-      //   }
-      //   setSubmitLoading(false);
-      // });
-      handleFormDialogClose();
+      API.put('users/edit', payload).then((response) => {
+        if (response.status === 200) {
+          enqueueSnackbar(response?.data?.Message, {
+            variant: 'success'
+          });
+          props.getUsersList();
+          handleFormDialogClose();
+        } else {
+          errorMessageHandler(
+            enqueueSnackbar,
+            response?.response?.data?.Message || 'Something Went Wrong.',
+            response?.response?.status,
+            authCtx.setAuthError
+          );
+        }
+        setSubmitLoading(false);
+      });
     } else {
       API.post('users/createUser', payload).then((response) => {
         if (response.status === 201) {
@@ -94,6 +107,7 @@ const UserForm = (props) => {
             variant: 'success'
           });
           handleFormDialogClose();
+          props.getUsersList();
         } else {
           errorMessageHandler(
             enqueueSnackbar,
@@ -143,7 +157,7 @@ const UserForm = (props) => {
           last_name: props?.user?.last_name || '',
           email: props?.user?.email || '',
           role: props?.user?.role || '',
-          locations: props?.user?.location ? props?.user?.location.locations : []
+          locations: props?.user?.location ? props?.user?.location.selected_locations : []
         }}
         onSubmit={handleSubmit}>
         {({ values, setFieldValue, touched, errors }) => {
@@ -153,17 +167,16 @@ const UserForm = (props) => {
                 <Stack spacing={3} mb={3} mt={2} direction="row" alignItems="center">
                   <Avatar src={image} />
 
-                  {!image && (
-                    <LoadingButton
-                      disabled={submitLoading}
-                      variant="contained"
-                      color="primary"
-                      component="span"
-                      {...getRootProps({ className: 'dropzone' })}>
-                      Upload
-                      <input {...getInputProps()} />
-                    </LoadingButton>
-                  )}
+                  <LoadingButton
+                    disabled={submitLoading}
+                    variant="contained"
+                    color="primary"
+                    component="span"
+                    {...getRootProps({ className: 'dropzone' })}>
+                    Upload
+                    <input {...getInputProps()} />
+                  </LoadingButton>
+
                   {image && (
                     <Tooltip title="Remove photo">
                       <LoadingButton
@@ -218,7 +231,7 @@ const UserForm = (props) => {
                     />
                   </Grid>
                   <Grid item md={6} xs={12}>
-                    <FormControl fullWidth>
+                    <FormControl fullWidth error={touched.role && Boolean(errors.role)}>
                       <InputLabel id="user-role">Role</InputLabel>
                       <Select
                         labelId="user-role"
@@ -226,7 +239,6 @@ const UserForm = (props) => {
                         value={values?.role}
                         label="Role"
                         name="role"
-                        error={touched.role && Boolean(errors.role)}
                         onChange={(event) => {
                           setFieldValue('role', event.target.value);
                         }}>
@@ -245,7 +257,11 @@ const UserForm = (props) => {
                       fullWidth
                       multiple
                       id="locations"
-                      options={['Location 1', 'Location 2', 'Location 3', 'surat']}
+                      options={
+                        props?.user
+                          ? props?.user?.location?.accessable_locations
+                          : authCtx.user?.location?.accessable_locations
+                      }
                       onChange={(_, value) => {
                         setFieldValue('locations', value);
                       }}
@@ -297,5 +313,6 @@ UserForm.propTypes = {
   open: PropTypes.bool,
   setOpen: PropTypes.func,
   user: PropTypes.object,
-  setUser: PropTypes.func
+  setUser: PropTypes.func,
+  getUsersList: PropTypes.func
 };
