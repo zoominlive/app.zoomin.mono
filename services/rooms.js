@@ -50,57 +50,34 @@ module.exports = {
 
     let rooms;
     let count;
+    let countQuery;
+    let mainQuery;
 
     if (location === 'All') {
-      count = (
-        await sequelize.query(
-          `SELECT DISTINCT COUNT(room_id) AS count FROM room  WHERE user_id = ${userId}  AND (room_name LIKE '%${searchBy}%')`,
-          {
-            model: Room,
-            mapToModel: true
-          },
-          {
-            model: Camera,
-            mapToModel: true
-          },
-          { type: Sequelize.QueryTypes.SELECT }
-        )
-      )[0].dataValues.count;
+      location = '';
+    }
 
-      rooms = await sequelize.query(
-        `SELECT * FROM room  WHERE user_id = ${userId}  AND (room_name LIKE '%${searchBy}%' ) LIMIT ${pageSize} OFFSET ${
-          pageNumber * pageSize
-        }`,
-        { type: Sequelize.QueryTypes.SELECT },
-        {
-          model: Room,
-          mapToModel: true
-        },
-        {
-          model: Camera,
-          mapToModel: true
-        }
-      );
+    if (typeof searchBy === 'string') {
+      countQuery = `SELECT DISTINCT COUNT(room_id) AS count FROM room  WHERE user_id = ${userId} AND location LIKE '%${location}%' AND (room_name LIKE '%${searchBy}%')`;
+      mainQuery = `SELECT * FROM room  WHERE user_id = ${userId} AND location LIKE '%${location}%' AND (room_name LIKE '%${searchBy}%') LIMIT ${pageSize} OFFSET ${
+        pageNumber * pageSize
+      }`;
     } else {
-      count = (
-        await sequelize.query(
-          `SELECT DISTINCT COUNT(room_id) AS count FROM room  WHERE user_id = ${userId} AND room.location LIKE '%${location}%' AND (room_name LIKE '%${searchBy}%')`,
-          {
-            model: Room,
-            mapToModel: true
-          },
-          {
-            model: Camera,
-            mapToModel: true
-          },
-          { type: Sequelize.QueryTypes.SELECT }
-        )
-      )[0].dataValues.count;
-
-      rooms = await sequelize.query(
-        `SELECT * FROM room  WHERE room.user_id = ${userId} AND location LIKE '%${location}%' AND (room_name LIKE '%${searchBy}%') LIMIT ${pageSize} OFFSET ${
-          pageNumber * pageSize
-        }`,
+      let roomsToSearch = '';
+      searchBy.forEach(
+        (room) => (roomsToSearch = roomsToSearch + `room_name LIKE '%${room.room_name}%' OR `)
+      );
+      roomsToSearch = roomsToSearch.slice(0, -3);
+      countQuery = `SELECT DISTINCT COUNT(room_id) AS count FROM room  WHERE user_id = ${userId} AND location LIKE '%${location}%' AND (${roomsToSearch})`;
+      mainQuery = `SELECT * FROM room  WHERE user_id = ${userId} AND location LIKE '%${location}%' AND (${roomsToSearch}) LIMIT ${pageSize} OFFSET ${
+        pageNumber * pageSize
+      }`;
+    }
+    console.log('countQuery', countQuery);
+    console.log('mainQuery', mainQuery);
+    count = (
+      await sequelize.query(
+        countQuery,
         {
           model: Room,
           mapToModel: true
@@ -110,8 +87,21 @@ module.exports = {
           mapToModel: true
         },
         { type: Sequelize.QueryTypes.SELECT }
-      );
-    }
+      )
+    )[0].dataValues.count;
+
+    rooms = await sequelize.query(
+      mainQuery,
+      { type: Sequelize.QueryTypes.SELECT },
+      {
+        model: Room,
+        mapToModel: true
+      },
+      {
+        model: Camera,
+        mapToModel: true
+      }
+    );
 
     let roomDetails = Promise.all(
       rooms.map(async (room) => {

@@ -21,12 +21,12 @@ provider:
     # RDS_USER: root
     RDS_PASSWORD: Wk8$b6!xR
     RDS_DB_NAME: zoomin
-    JWT_SECRET_KEY: zoominlivesecretkey
+    JWT_SECRET_KEY: macilaci
     JWT_REFRESH_SECRET_KEY: 2d
-    ACCESS_TOKEN_EXPIRY: 1h
+    ACCESS_TOKEN_EXPIRY: 1d
     REFRESH_TOKEN_EXPIRY: 1d
     NODE_ENV: production
-    RTSP_STREAM_BASE_URL: http://35.93.41.200:80
+    RTSP_STREAM_BASE_URL: http://44.234.149.232
 
   runtime: nodejs14.x
   stage: dev

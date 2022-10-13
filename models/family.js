@@ -38,15 +38,9 @@ const Family = sequelize.define(
       unique: true,
       required: [true, 'Email is mandatory field']
     },
-    username: {
-      type: Sequelize.STRING(50),
-      unique: true,
-      required: [true, 'Username is mandatory field']
-    },
     location: {
-      type: Sequelize.STRING(30),
-      allowNull: false,
-      required: true
+      type: Sequelize.JSON,
+      defaultValue: null
     },
     created_at: {
       type: 'TIMESTAMP',
