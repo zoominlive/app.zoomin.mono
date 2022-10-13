@@ -95,7 +95,7 @@ const AddFamily = (props) => {
             first_name: '',
             last_name: '',
             role: '',
-            phone: '',
+            phone: undefined,
             email: ''
           },
           secondary: [],

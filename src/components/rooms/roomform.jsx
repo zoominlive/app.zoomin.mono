@@ -88,6 +88,7 @@ const RoomForm = (props) => {
         if (response.status === 200) {
           enqueueSnackbar(response.data.Message, { variant: 'success' });
           props.getRoomsList();
+          props.getDropDownRoomList();
         } else {
           errorMessageHandler(
             enqueueSnackbar,
@@ -105,6 +106,7 @@ const RoomForm = (props) => {
           props.setRoom(response.data.Data);
           enqueueSnackbar(response.data.Message, { variant: 'success' });
           props.getRoomsList();
+          props.getDropDownRoomList();
         } else {
           errorMessageHandler(
             enqueueSnackbar,
@@ -513,5 +515,6 @@ RoomForm.propTypes = {
   setOpen: PropTypes.func,
   room: PropTypes.object,
   setRoom: PropTypes.func,
-  getRoomsList: PropTypes.func
+  getRoomsList: PropTypes.func,
+  getDropDownRoomList: PropTypes.func
 };

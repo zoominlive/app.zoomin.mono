@@ -26,7 +26,8 @@ const validationSchema = yup.object().shape({
   phone: yup
     .string()
     .matches(/^(1\s?)?(\d{3}|\(\d{3}\))[\s-]?\d{3}[\s-]?\d{4}$/gm, 'Enter valid phone number')
-    .required('Phone is required'),
+    .required('Phone is required')
+    .nullable(),
   email: yup.string().email('Enter valid email').required('Email is required')
 });
 
@@ -51,11 +52,12 @@ const ParentsForm = (props) => {
           first_name: '',
           last_name: '',
           role: '',
-          phone: '',
+          phone: undefined,
           email: ''
         }}
         onSubmit={handleSubmit}>
         {({ values, setFieldValue, touched, errors }) => {
+          console.log(values);
           return (
             <Form>
               <DialogContent>
@@ -87,7 +89,7 @@ const ParentsForm = (props) => {
                     />
                   </Grid>
                   <Grid item md={4} sm={12}>
-                    <FormControl fullWidth>
+                    <FormControl fullWidth error={touched.role && Boolean(errors.role)}>
                       <InputLabel id="role">Role</InputLabel>
                       <Select
                         labelId="role"
@@ -130,9 +132,9 @@ const ParentsForm = (props) => {
                     <TextField
                       name={'phone'}
                       label="Phone"
-                      value={values?.phone}
+                      value={values?.phone || ''}
                       onChange={(event) => {
-                        setFieldValue('phone', event.target.value);
+                        setFieldValue('phone', event.target.value ? event.target.value : '');
                       }}
                       helperText={touched.phone && errors.phone}
                       error={touched.phone && Boolean(errors.phone)}

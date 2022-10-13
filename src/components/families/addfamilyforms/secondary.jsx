@@ -180,7 +180,11 @@ const Secondary = (props) => {
                       <TextField
                         name={`secondary.${index}.phone`}
                         label="Phone"
-                        value={props?.values?.secondary[index]?.phone}
+                        value={
+                          props?.values?.secondary[index]?.phone
+                            ? props?.values?.secondary[index]?.phone
+                            : ''
+                        }
                         onChange={(event) => {
                           props.setFieldValue(`secondary[${index}].phone`, event.target.value);
                         }}
@@ -232,7 +236,7 @@ const Secondary = (props) => {
                     last_name: '',
                     role: '',
                     email: '',
-                    phone: ''
+                    phone: undefined
                   })
                 }>
                 Add Parent

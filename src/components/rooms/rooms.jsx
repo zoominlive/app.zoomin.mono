@@ -141,20 +141,7 @@ const Rooms = () => {
   }, []);
 
   useEffect(() => {
-    setRoomsDropdownLoading(true);
-    API.get('rooms/list').then((response) => {
-      if (response.status === 200) {
-        setDropdownList(response.data.Data);
-      } else {
-        errorMessageHandler(
-          enqueueSnackbar,
-          response?.response?.data?.Message || 'Something Went Wrong.',
-          response?.response?.status,
-          authCtx.setAuthError
-        );
-      }
-      setRoomsDropdownLoading(false);
-    });
+    getDropDownRoomList();
   }, []);
 
   useEffect(() => {
@@ -170,7 +157,7 @@ const Rooms = () => {
   // Method to fetch the rooms list for table
   const getRoomsList = () => {
     setIsLoading(true);
-    API.get('rooms', { params: roomsPayload }).then((response) => {
+    API.post('rooms', roomsPayload).then((response) => {
       if (response.status === 200) {
         setRoomList(response.data.Data.finalRoomDetails);
         setTotalRooms(response.data.Data.count);
@@ -186,11 +173,29 @@ const Rooms = () => {
     });
   };
 
+  const getDropDownRoomList = () => {
+    setRoomsDropdownLoading(true);
+    API.get('rooms/list').then((response) => {
+      if (response.status === 200) {
+        setDropdownList(response.data.Data);
+      } else {
+        errorMessageHandler(
+          enqueueSnackbar,
+          response?.response?.data?.Message || 'Something Went Wrong.',
+          response?.response?.status,
+          authCtx.setAuthError
+        );
+      }
+      setRoomsDropdownLoading(false);
+    });
+  };
+
   const handleRoomDelete = () => {
     setDeleteLoading(true);
     API.delete('rooms/delete', { data: { room_id: room.room_id } }).then((response) => {
       if (response.status === 200) {
         getRoomsList();
+        getDropDownRoomList();
         enqueueSnackbar(response.data.Message, {
           variant: 'success'
         });
@@ -433,6 +438,7 @@ const Rooms = () => {
           open={isRoomFormDialogOpen}
           setOpen={setIsRoomFormDialogOpen}
           getRoomsList={getRoomsList}
+          getDropDownRoomList={getDropDownRoomList}
         />
       )}
       <DeleteDialog
