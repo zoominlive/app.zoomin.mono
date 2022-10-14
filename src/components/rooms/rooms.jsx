@@ -127,6 +127,7 @@ const Rooms = () => {
   const [roomsList, setRoomList] = useState([]);
   const [totalRooms, setTotalRooms] = useState(0);
   const [room, setRoom] = useState();
+  const [isSearchValid, setIsSearchValid] = useState(true);
   const [roomsPayload, setRoomsPayload] = useState({
     pageNumber: 0,
     pageSize: parseInt(process.env.REACT_APP_PAGINATION_LIMIT, 10),
@@ -314,8 +315,19 @@ const Rooms = () => {
                     <Grid item md={5} sm={12}>
                       <TextField
                         label="Search"
+                        error={!isSearchValid}
+                        helperText={!isSearchValid && 'Search cannot contain quote'}
                         placeholder="Room Name,etc"
-                        onChange={roomsListDebounce}
+                        onChange={(event) => {
+                          if (event.target.value.includes("'")) {
+                            setIsSearchValid(false);
+                          } else {
+                            if (!isSearchValid) {
+                              setIsSearchValid(true);
+                            }
+                            roomsListDebounce(event);
+                          }
+                        }}
                       />
                     </Grid>
                     <Grid item md={3.5} sm={12}>
@@ -386,7 +398,12 @@ const Rooms = () => {
                 item
                 md={4}
                 sm={12}
-                sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'flex-end',
+                  alignItems: 'center',
+                  marginTop: { md: !isSearchValid ? '-22px' : 0 }
+                }}>
                 <Box>
                   <Button
                     className="add-btn"

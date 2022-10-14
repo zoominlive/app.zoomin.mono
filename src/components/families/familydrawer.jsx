@@ -14,7 +14,7 @@ import PropTypes from 'prop-types';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import EditIcon from '@mui/icons-material/Edit';
 import { capitalizeFirstLetter } from '../../utils/capitalizefirstletter';
-import { LoadingButton } from '@mui/lab';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 const FamilyDrawer = (props) => {
   return (
@@ -92,9 +92,15 @@ const FamilyDrawer = (props) => {
                   </Stack>
                 </Stack>
                 <Stack direction="row" spacing={1.5} alignItems="center" justifyContent="center">
-                  <Button variant="outlined" className="disabled-btn">
-                    Disable
-                  </Button>
+                  {!parent.disabled ? (
+                    <Button variant="outlined" className="disabled-btn">
+                      Disable
+                    </Button>
+                  ) : (
+                    <Button variant="contained" className="enable-btn">
+                      ENABLE
+                    </Button>
+                  )}
                   <IconButton
                     className="edit-btn"
                     onClick={() => {
@@ -132,9 +138,16 @@ const FamilyDrawer = (props) => {
                       spacing={1.5}
                       alignItems="center"
                       justifyContent="center">
-                      <LoadingButton variant="outlined" className="disabled-btn">
-                        Disable
-                      </LoadingButton>
+                      {!child.disabled ? (
+                        <Button variant="outlined" className="disabled-btn">
+                          Disable
+                        </Button>
+                      ) : (
+                        <Button variant="contained" className="enable-btn">
+                          ENABLE
+                        </Button>
+                      )}
+
                       <IconButton
                         className="edit-btn"
                         onClick={() => {
@@ -142,6 +155,14 @@ const FamilyDrawer = (props) => {
                           props.setIsChildFormDialogOpen(true);
                         }}>
                         <EditIcon />
+                      </IconButton>
+                      <IconButton
+                        className="child-delete-btn"
+                        onClick={() => {
+                          props.setChild(child);
+                          props.setIsChildFormDialogOpen(true);
+                        }}>
+                        <DeleteIcon />
                       </IconButton>
                     </Stack>
                   </Stack>

@@ -51,6 +51,11 @@ const FamilyActions = (props) => {
     handleClose(event);
   };
 
+  const handleOpenDeleteDialog = (event) => {
+    props.openDeleteDialog(true);
+    handleClose(event);
+  };
+
   return (
     <Box>
       <IconButton aria-controls="alpha-menu" aria-haspopup="true" onClick={handleClick}>
@@ -89,7 +94,7 @@ const FamilyActions = (props) => {
           </ListItemIcon>
           <ListItemText>Disable Family</ListItemText>
         </MenuItem>
-        <MenuItem>
+        <MenuItem onClick={handleOpenDeleteDialog}>
           <ListItemIcon>
             <DeleteForeverIcon />
           </ListItemIcon>
@@ -109,5 +114,6 @@ FamilyActions.propTypes = {
   family: PropTypes.object,
   setFamily: PropTypes.func,
   openParentFormDialog: PropTypes.func,
+  openDeleteDialog: PropTypes.func,
   tempFamily: PropTypes.object
 };

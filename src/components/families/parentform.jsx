@@ -58,6 +58,8 @@ const ParentsForm = (props) => {
     props.setSecondaryParent();
   };
 
+  console.log(props.primaryParent);
+
   return (
     <Dialog open={props.open} onClose={handleDialogClose} fullWidth className="add-parentdialog">
       <DialogTitle>
@@ -71,27 +73,27 @@ const ParentsForm = (props) => {
         initialValues={{
           first_name: props.primaryParent
             ? props.primaryParent.first_name
-            : props.secondaryParent.first_name
+            : props.secondaryParent
             ? props.secondaryParent.first_name
             : '',
           last_name: props.primaryParent
             ? props.primaryParent.last_name
-            : props.secondaryParent.last_name
+            : props.secondaryParent
             ? props.secondaryParent.last_name
             : '',
           role: props.primaryParent
             ? props.primaryParent.role
-            : props.secondaryParent.role
+            : props.secondaryParent
             ? props.secondaryParent.role
             : '',
           phone: props.primaryParent
             ? props.primaryParent.phone
-            : props.secondaryParent.phone
+            : props.secondaryParent
             ? props.secondaryParent.phone
             : '',
           email: props.primaryParent
             ? props.primaryParent.email
-            : props.secondaryParent.email
+            : props.secondaryParent
             ? props.secondaryParent.email
             : ''
         }}

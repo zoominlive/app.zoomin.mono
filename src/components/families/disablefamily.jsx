@@ -19,13 +19,30 @@ import { DesktopDatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import ArrowDropUpIcon from '@mui/icons-material/ArrowDropUp';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+import moment from 'moment';
+import { useEffect } from 'react';
 
 const DisableFamily = (props) => {
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+  const [date, setDate] = useState('');
+  const [isDateValid, setIsDateValid] = useState(true);
+
+  useEffect(() => {
+    if (date) {
+      setIsDateValid(moment(date.toDate()).isValid());
+    }
+  }, [date]);
+
+  const handleDialogClose = () => {
+    props.setOpen(false);
+    setIsDateValid(true);
+    setDate('');
+  };
+
   return (
     <Dialog
       open={props.open}
-      onClose={() => props.setOpen(false)}
+      onClose={handleDialogClose}
       fullWidth
       className="disable-family-dialog small-dialog">
       <DialogTitle>Disable Family</DialogTitle>
@@ -50,15 +67,21 @@ const DisableFamily = (props) => {
                     <DesktopDatePicker
                       open={isDatePickerOpen}
                       label="Disable date"
+                      value={date}
                       inputFormat="MM/DD/YYYY"
                       onClose={() => setIsDatePickerOpen(false)}
                       renderInput={(params) => (
-                        <TextField onClick={() => setIsDatePickerOpen(true)} {...params} />
+                        <TextField
+                          onClick={() => setIsDatePickerOpen(true)}
+                          {...params}
+                          error={!isDateValid}
+                          helperText={!isDateValid && 'Enter Valid Date'}
+                        />
                       )}
                       components={{
                         OpenPickerIcon: !isDatePickerOpen ? ArrowDropDownIcon : ArrowDropUpIcon
                       }}
-                      onChange={() => {}}
+                      onChange={(value) => setDate(value)}
                     />
                   </LocalizationProvider>
                 </Stack>
@@ -69,7 +92,7 @@ const DisableFamily = (props) => {
       </DialogContent>
       <Divider />
       <DialogActions>
-        <Button variant="text" onClick={() => props.setOpen(false)}>
+        <Button variant="text" onClick={handleDialogClose}>
           CANCEL
         </Button>
         <Button variant="text" onClick={() => props.setOpen(false)}>

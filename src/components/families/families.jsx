@@ -40,6 +40,7 @@ import AuthContext from '../../context/authcontext';
 import { useSnackbar } from 'notistack';
 import { errorMessageHandler } from '../../utils/errormessagehandler';
 import ParentForm from './parentform';
+import DeleteDialog from '../common/deletedialog';
 
 const Families = () => {
   const layoutCtx = useContext(LayoutContext);
@@ -56,6 +57,8 @@ const Families = () => {
   const [secondaryParent, setSecondaryParent] = useState();
   const [child, setChild] = useState();
   const [family, setFamily] = useState();
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const tempFamily = {
     primary: {
       id: 1,
@@ -63,7 +66,7 @@ const Families = () => {
       last_name: '1',
       role: 'Father',
       phone: 5555555555,
-      email: 'a@b.com'
+      email: 'parent1@example.com'
     },
     secondary: [
       {
@@ -72,7 +75,8 @@ const Families = () => {
         last_name: '2',
         role: 'Father',
         phone: 5555555555,
-        email: 'a@b.com'
+        email: 'parent2@example.com',
+        disabled: false
       },
       {
         id: 2,
@@ -80,13 +84,15 @@ const Families = () => {
         last_name: '3',
         role: 'Grandfather',
         phone: 5555555555,
-        email: 'a@b.com'
+        email: 'parent2@example.com',
+        disabled: false
       }
     ],
     children: [
       {
         id: 1,
         first_name: 'Child 1',
+        disabled: false,
         rooms: [
           {
             room_name: 'Room 2',
@@ -97,6 +103,7 @@ const Families = () => {
       {
         id: 2,
         first_name: 'Child 2',
+        disabled: false,
         rooms: [
           {
             room_name: 'Room 2',
@@ -107,6 +114,7 @@ const Families = () => {
       {
         id: 3,
         first_name: 'Child 3',
+        disabled: false,
         rooms: [
           {
             room_name: 'Room 2',
@@ -193,6 +201,10 @@ const Families = () => {
     setFamiliesPayload((prevPayload) => ({ ...prevPayload, rooms: value }));
   };
 
+  const handleFamilyDelete = () => {
+    setDeleteLoading(false);
+  };
+
   return (
     <Box className="listing-wrapper">
       <Card>
@@ -205,7 +217,6 @@ const Families = () => {
                     <TextField
                       label="Search"
                       placeholder={'Location, Room, etc...'}
-                      value={familiesPayload?.search}
                       onChange={handleSearch}
                     />
                   </Grid>
@@ -228,6 +239,7 @@ const Families = () => {
                       fullWidth
                       multiple
                       id="rooms"
+                      value={familiesPayload?.rooms}
                       options={roomsList}
                       isOptionEqualToValue={(option, value) => option.room_id === value.room_id}
                       getOptionLabel={(option) => {
@@ -297,7 +309,13 @@ const Families = () => {
                 </TableHead>
                 <TableBody>
                   {rows.map((row, index) => (
-                    <TableRow key={index} hover>
+                    <TableRow
+                      key={index}
+                      hover
+                      onClick={() => {
+                        setIsFamilyDrawerOpen(true);
+                        setFamily(tempFamily);
+                      }}>
                       <TableCell component="th" scope="row">
                         <Stack direction="row" alignItems="center" spacing={3}>
                           <Avatar>RE</Avatar>
@@ -327,6 +345,7 @@ const Families = () => {
                           openFamilyDrawer={setIsFamilyDrawerOpen}
                           openDisableFamilyDialog={setIsDisableFamilyDialogOpen}
                           openParentFormDialog={setIsParentFormDialogOpen}
+                          openDeleteDialog={setIsDeleteDialogOpen}
                           family={row}
                           setFamily={setFamily}
                           tempFamily={tempFamily}
@@ -392,6 +411,17 @@ const Families = () => {
         setPrimaryParent={setPrimaryParent}
         setSecondaryParent={setSecondaryParent}
         setChild={setChild}
+      />
+      <DeleteDialog
+        open={isDeleteDialogOpen}
+        title="Delete Family"
+        contentText="Are you sure you want to delete this family?"
+        loading={deleteLoading}
+        handleDialogClose={() => {
+          setFamily();
+          setIsDeleteDialogOpen(false);
+        }}
+        handleDelete={handleFamilyDelete}
       />
     </Box>
   );

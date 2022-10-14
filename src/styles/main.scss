@@ -470,6 +470,11 @@
       color: #0000008a;
       background: #00000014;
     }
+    .child-delete-btn {
+      border-radius: 50%;
+      background: #d21919;
+      color: #ffffff;
+    }
     .blue-text {
       color: #1976d2 !important;
     }
@@ -481,7 +486,8 @@
         width: 17%;
       }
     }
-    .disabled-btn {
+    .disabled-btn,
+    .enable-btn {
       height: 30px;
       min-width: 70px;
       padding: 5px 10px;
