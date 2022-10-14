@@ -71,7 +71,7 @@ const Primary = (props) => {
           label="Phone"
           value={props?.values?.primary?.phone ? props?.values?.primary?.phone : ''}
           onChange={(event) => {
-            props.setFieldValue('primary.phone', event.target.value);
+            props.setFieldValue('primary.phone', event.target.value || '');
           }}
           helperText={props?.touched?.primary?.phone && props?.errors?.primary?.phone}
           error={props?.touched?.primary?.phone && Boolean(props?.errors?.primary?.phone)}

@@ -18,7 +18,6 @@ import PropTypes from 'prop-types';
 import { Form, Formik } from 'formik';
 import * as yup from 'yup';
 import PhoneNumberInput from '../common/phonenumberinput';
-
 const validationSchema = yup.object().shape({
   first_name: yup.string().required('First Name is required'),
   last_name: yup.string().required('Last Name is required'),
@@ -26,38 +25,78 @@ const validationSchema = yup.object().shape({
   phone: yup
     .string()
     .matches(/^(1\s?)?(\d{3}|\(\d{3}\))[\s-]?\d{3}[\s-]?\d{4}$/gm, 'Enter valid phone number')
-    .required('Phone is required')
-    .nullable(),
+    .required('Phone is required'),
   email: yup.string().email('Enter valid email').required('Email is required')
 });
 
 const ParentsForm = (props) => {
   const handleSubmit = (data) => {
+    if (props.primaryParent) {
+      props.setFamily((prevState) => {
+        const tempFamily = { ...prevState };
+        tempFamily.primary = { id: props.primaryParent.id, ...data };
+        return tempFamily;
+      });
+    }
+    if (props.secondaryParent) {
+      props.setFamily((prevState) => {
+        const tempFamily = { ...prevState };
+        const index = tempFamily.secondary.findIndex(
+          (parent) => parent.id === props.secondaryParent.id
+        );
+        tempFamily.secondary[index] = { id: props.secondaryParent.id, ...data };
+        return tempFamily;
+      });
+    }
+    handleDialogClose();
     console.log('Data', data);
   };
 
+  const handleDialogClose = () => {
+    props.setOpen(false);
+    props.setPrimaryParent();
+    props.setSecondaryParent();
+  };
+
   return (
-    <Dialog
-      open={props.open}
-      onClose={() => props.setOpen(false)}
-      fullWidth
-      className="add-parentdialog">
-      <DialogTitle>Add Parent</DialogTitle>
+    <Dialog open={props.open} onClose={handleDialogClose} fullWidth className="add-parentdialog">
+      <DialogTitle>
+        {props.primaryParent || props.secondaryParent ? 'Edit Parent' : 'Add Parent'}
+      </DialogTitle>
       <Divider />
       <Formik
         enableReinitialize
         validateOnChange
         validationSchema={validationSchema}
         initialValues={{
-          first_name: '',
-          last_name: '',
-          role: '',
-          phone: undefined,
-          email: ''
+          first_name: props.primaryParent
+            ? props.primaryParent.first_name
+            : props.secondaryParent.first_name
+            ? props.secondaryParent.first_name
+            : '',
+          last_name: props.primaryParent
+            ? props.primaryParent.last_name
+            : props.secondaryParent.last_name
+            ? props.secondaryParent.last_name
+            : '',
+          role: props.primaryParent
+            ? props.primaryParent.role
+            : props.secondaryParent.role
+            ? props.secondaryParent.role
+            : '',
+          phone: props.primaryParent
+            ? props.primaryParent.phone
+            : props.secondaryParent.phone
+            ? props.secondaryParent.phone
+            : '',
+          email: props.primaryParent
+            ? props.primaryParent.email
+            : props.secondaryParent.email
+            ? props.secondaryParent.email
+            : ''
         }}
         onSubmit={handleSubmit}>
         {({ values, setFieldValue, touched, errors }) => {
-          console.log(values);
           return (
             <Form>
               <DialogContent>
@@ -146,7 +185,7 @@ const ParentsForm = (props) => {
               </DialogContent>
               <Divider />
               <DialogActions>
-                <Button variant="text" onClick={() => props.setOpen(false)}>
+                <Button variant="text" onClick={handleDialogClose}>
                   CANCEL
                 </Button>
                 <Button variant="text" type="submit">
@@ -166,5 +205,11 @@ export default ParentsForm;
 
 ParentsForm.propTypes = {
   open: PropTypes.bool,
-  setOpen: PropTypes.func
+  setOpen: PropTypes.func,
+  family: PropTypes.object,
+  primaryParent: PropTypes.any,
+  setPrimaryParent: PropTypes.func,
+  secondaryParent: PropTypes.any,
+  setSecondaryParent: PropTypes.func,
+  setFamily: PropTypes.func
 };

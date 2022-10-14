@@ -21,25 +21,41 @@ const validationSchema = yup.object({
   rooms: yup.array().min(1, 'Atleast one room is required')
 });
 
-const AddChild = (props) => {
+const ChildForm = (props) => {
+  const handleDialogClose = () => {
+    props.setOpen(false);
+    props.setChild();
+  };
+
+  const handleSubmit = (data) => {
+    console.log(data);
+    if (props.child) {
+      props.setFamily((prevState) => {
+        const tempFamily = { ...prevState };
+        const index = tempFamily.children.findIndex((child) => child.id === props.child.id);
+        if (index !== -1) {
+          tempFamily.children[index] = { id: props.child.id, ...data };
+        }
+        return tempFamily;
+      });
+    }
+    handleDialogClose();
+  };
+
   return (
-    <Dialog
-      open={props.open}
-      onClose={() => props.setOpen(false)}
-      fullWidth
-      className="add-child-drawer">
-      <DialogTitle>Add Child</DialogTitle>
+    <Dialog open={props.open} onClose={handleDialogClose} fullWidth className="add-child-drawer">
+      <DialogTitle>{props.child ? 'Edit Child' : 'Add Child'}</DialogTitle>
       <Divider />
       <Formik
         enableReinitialize
         validateOnChange
         validationSchema={validationSchema}
         initialValues={{
-          first_name: '',
-          rooms: []
-        }}>
+          first_name: props.child ? props.child.first_name : '',
+          rooms: props.child ? props.child.rooms : []
+        }}
+        onSubmit={handleSubmit}>
         {({ values, setFieldValue, touched, errors }) => {
-          console.log(errors);
           return (
             <Form>
               <DialogContent>
@@ -92,7 +108,7 @@ const AddChild = (props) => {
               </DialogContent>
               <Divider />
               <DialogActions>
-                <Button variant="text" onClick={() => props.setOpen(false)}>
+                <Button variant="text" onClick={handleDialogClose}>
                   CANCEL
                 </Button>
                 <Button variant="text" type="submit">
@@ -107,10 +123,14 @@ const AddChild = (props) => {
   );
 };
 
-export default AddChild;
+export default ChildForm;
 
-AddChild.propTypes = {
+ChildForm.propTypes = {
   open: PropTypes.bool,
   setOpen: PropTypes.func,
-  roomsList: PropTypes.array
+  roomsList: PropTypes.array,
+  family: PropTypes.object,
+  child: PropTypes.any,
+  setChild: PropTypes.func,
+  setFamily: PropTypes.func
 };

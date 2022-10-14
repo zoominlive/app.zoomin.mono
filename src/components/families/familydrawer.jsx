@@ -11,10 +11,10 @@ import {
 } from '@mui/material';
 import React from 'react';
 import PropTypes from 'prop-types';
-// import EditIcon from '@mui/icons-material/Edit';
-// import LocationOnIcon from '@mui/icons-material/LocationOn';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import EditIcon from '@mui/icons-material/Edit';
+import { capitalizeFirstLetter } from '../../utils/capitalizefirstletter';
+import { LoadingButton } from '@mui/lab';
 
 const FamilyDrawer = (props) => {
   return (
@@ -25,9 +25,6 @@ const FamilyDrawer = (props) => {
       onClose={() => props.setOpen(false)}>
       <Stack direction="row" justifyContent="space-between" alignItems="center" p={2}>
         <Typography variant="h5">Family</Typography>
-        {/* <IconButton className="edit-btn">
-          <EditIcon />
-        </IconButton> */}
       </Stack>
       <Divider sx={{ marginBottom: '30px' }} />
       <Stack
@@ -37,148 +34,132 @@ const FamilyDrawer = (props) => {
         alignItems="center"
         justifyContent="space-between">
         <Stack spacing={1.5} direction="row" alignItems="center">
-          <Avatar>DC</Avatar>
+          <Avatar>{`${props?.family?.primary?.first_name[0]?.toUpperCase()}${props?.family?.primary?.last_name[0]?.toUpperCase()}`}</Avatar>
           <Stack>
             <Stack direction="row" spacing={1.5}>
-              <Typography variant="body2">Dolores Chambers</Typography>
+              <Typography variant="body2">
+                {props?.family?.primary?.first_name &&
+                  capitalizeFirstLetter(props?.family?.primary?.first_name)}{' '}
+                {props?.family?.primary?.last_name &&
+                  capitalizeFirstLetter(props?.family?.primary?.last_name)}
+              </Typography>
               <Divider orientation="vertical" variant="middle" flexItem />
               <Typography variant="body2" className="blue-text">
-                Mother
+                {props?.family?.primary?.role}
               </Typography>
             </Stack>
-            <Typography variant="caption">dolores.chambers@example.com</Typography>
+            <Typography variant="caption">{props?.family?.primary?.email}</Typography>
           </Stack>
         </Stack>
 
-        <IconButton className="edit-btn" onClick={() => props.setIsParentFormDialogOpen(true)}>
+        <IconButton
+          className="edit-btn"
+          onClick={() => {
+            props.setPrimaryParent(props?.family?.primary);
+            props.setIsParentFormDialogOpen(true);
+          }}>
           <EditIcon />
         </IconButton>
-        {/* <Stack spacing={1.5} px={2.5} direction="row" alignItems="center">
-          <Avatar sx={{ color: '#1976d2', background: '#1976D20A' }}>
-            <LocationOnIcon />
-          </Avatar>
-          <Typography variant="body2">Location 1</Typography>
-        </Stack> */}
       </Stack>
-      <Divider textAlign="left" className="title-divider">
-        OTHER FAMILY
-      </Divider>
-      <Stack
-        spacing={1.5}
-        px={2.5}
-        direction="row"
-        alignItems="center"
-        justifyContent="space-between">
-        <Stack direction="row" spacing={1.5}>
-          <Avatar>JC</Avatar>
-          <Stack>
-            <Stack direction="row" spacing={1}>
-              <Typography variant="body2">Cameron Williamson</Typography>
-              <Divider orientation="vertical" variant="middle" flexItem />
-              <Typography variant="body2" className="blue-text">
-                Dad
-              </Typography>
-            </Stack>
-            <Typography variant="caption">tim.jennings@example.com</Typography>
-          </Stack>
-        </Stack>
-        <Stack direction="row" spacing={1.5} alignItems="center" justifyContent="center">
-          <Button variant="outlined" className="disabled-btn">
-            Disable
-          </Button>
-          <IconButton className="edit-btn" onClick={() => props.setIsParentFormDialogOpen(true)}>
-            <EditIcon />
-          </IconButton>
-        </Stack>
-      </Stack>
-      <Divider variant="middle" sx={{ marginTop: '15px', marginBottom: '15px' }} />
-      <Stack
-        spacing={1.5}
-        px={2.5}
-        direction="row"
-        alignItems="center"
-        justifyContent="space-between">
-        <Stack direction="row" spacing={1.5}>
-          <Avatar>JW</Avatar>
-          <Stack>
-            <Stack direction="row" spacing={1}>
-              <Typography variant="body2">Jerry Williamson</Typography>
-              <Divider orientation="vertical" variant="middle" flexItem />
-              <Typography variant="body2" className="blue-text">
-                Grandmother
-              </Typography>
-            </Stack>
-            <Typography variant="caption">tim.jennings@example.com</Typography>
-          </Stack>
-        </Stack>
-        <Stack direction="row" spacing={1.5} alignItems="center" justifyContent="center">
-          <Button variant="outlined" className="disabled-btn">
-            Disable
-          </Button>
-          <IconButton className="edit-btn" onClick={() => props.setIsParentFormDialogOpen(true)}>
-            <EditIcon />
-          </IconButton>
-        </Stack>
-      </Stack>
-      <Divider variant="middle" sx={{ marginTop: '15px', marginBottom: '15px' }} />
-      <Divider textAlign="left" className="title-divider">
-        CHILDREN
-      </Divider>
-      <Stack spacing={2}>
-        <Stack spacing={1.5} px={2.5}>
-          <Stack direction="row" justifyContent="space-between">
-            <Stack direction="row" spacing={2} alignItems="center">
-              <Avatar>D</Avatar>
-              <Typography variant="body2">David</Typography>
-            </Stack>
-            <Stack direction="row" spacing={1.5} alignItems="center" justifyContent="center">
-              <Button variant="outlined" className="disabled-btn">
-                Disable
-              </Button>
-              <IconButton
-                className="edit-btn"
-                onClick={() => props.setIsParentFormDialogOpen(true)}>
-                <EditIcon />
-              </IconButton>
-            </Stack>
-          </Stack>
-          <Box className="rooms">
-            <Chip label="Room 1" />
-            <Chip label="Room 2" />
-            <Chip label="Room 3" />
-            <Chip label="Room 4" />
-            <Chip label="Room 5" />
-            <Chip label="Room 6" />
-            <Chip label="Room 7" />
-          </Box>
-          <Divider variant="middle" sx={{ marginTop: '15px', marginBottom: '15px' }} />
-        </Stack>
+      {props?.family?.secondary && props?.family?.secondary?.length > 0 && (
+        <>
+          <Divider textAlign="left" className="title-divider">
+            OTHER FAMILY
+          </Divider>
+          {props.family.secondary.map((parent, index) => (
+            <Box key={index}>
+              <Stack
+                spacing={1.5}
+                px={2.5}
+                direction="row"
+                alignItems="center"
+                justifyContent="space-between">
+                <Stack direction="row" spacing={1.5}>
+                  <Avatar>{`${parent.first_name[0].toUpperCase()}${parent.last_name[0].toUpperCase()}`}</Avatar>
+                  <Stack>
+                    <Stack direction="row" spacing={1.5}>
+                      <Typography variant="body2">
+                        {' '}
+                        {capitalizeFirstLetter(parent.first_name)}{' '}
+                        {capitalizeFirstLetter(parent.last_name)}
+                      </Typography>
+                      <Divider orientation="vertical" variant="middle" flexItem />
+                      <Typography variant="body2" className="blue-text">
+                        {parent.role}
+                      </Typography>
+                    </Stack>
+                    <Typography variant="caption">{parent.email}</Typography>
+                  </Stack>
+                </Stack>
+                <Stack direction="row" spacing={1.5} alignItems="center" justifyContent="center">
+                  <Button variant="outlined" className="disabled-btn">
+                    Disable
+                  </Button>
+                  <IconButton
+                    className="edit-btn"
+                    onClick={() => {
+                      props.setSecondaryParent(parent);
+                      props.setIsParentFormDialogOpen(true);
+                    }}>
+                    <EditIcon />
+                  </IconButton>
+                </Stack>
+              </Stack>
+              <Divider variant="middle" sx={{ marginTop: '15px', marginBottom: '15px' }} />{' '}
+            </Box>
+          ))}
+        </>
+      )}
 
-        <Stack spacing={1.5} px={2.5}>
-          <Stack direction="row" justifyContent="space-between">
-            <Stack direction="row" spacing={2} alignItems="center">
-              <Avatar>D</Avatar>
-              <Typography variant="body2">David</Typography>
-            </Stack>
-            <Stack direction="row" spacing={1.5} alignItems="center" justifyContent="center">
-              <Button variant="outlined" className="disabled-btn">
-                Disable
-              </Button>
-              <IconButton
-                className="edit-btn"
-                onClick={() => props.setIsParentFormDialogOpen(true)}>
-                <EditIcon />
-              </IconButton>
-            </Stack>
+      {props?.family?.children && props?.family?.children?.length > 0 && (
+        <>
+          <Divider textAlign="left" className="title-divider">
+            CHILDREN
+          </Divider>
+          <Stack spacing={2}>
+            {props.family.children.map((child, index) => (
+              <Stack key={index} spacing={2}>
+                <Stack spacing={1.5} px={2.5}>
+                  <Stack direction="row" justifyContent="space-between">
+                    <Stack direction="row" spacing={2} alignItems="center">
+                      <Avatar>{child.first_name[0].toUpperCase()}</Avatar>
+                      <Typography variant="body2">
+                        {capitalizeFirstLetter(child.first_name)}
+                      </Typography>
+                    </Stack>
+                    <Stack
+                      direction="row"
+                      spacing={1.5}
+                      alignItems="center"
+                      justifyContent="center">
+                      <LoadingButton variant="outlined" className="disabled-btn">
+                        Disable
+                      </LoadingButton>
+                      <IconButton
+                        className="edit-btn"
+                        onClick={() => {
+                          props.setChild(child);
+                          props.setIsChildFormDialogOpen(true);
+                        }}>
+                        <EditIcon />
+                      </IconButton>
+                    </Stack>
+                  </Stack>
+                  <Box className="rooms">
+                    {child.rooms.map((room, index) => (
+                      <Chip key={index} label={room.room_name} />
+                    ))}
+                  </Box>
+                  {index !== props.family.children.length - 1 && (
+                    <Divider variant="middle" sx={{ marginTop: '15px', marginBottom: '15px' }} />
+                  )}
+                </Stack>
+              </Stack>
+            ))}
           </Stack>
-          <Box className="rooms">
-            <Chip label="Room 1" />
-            <Chip label="Room 2" />
-            <Chip label="Room 3" />
-            <Chip label="Room 4" />
-          </Box>
-        </Stack>
-      </Stack>
+        </>
+      )}
+
       <Divider textAlign="left" className="title-divider">
         DISABLE FAMILY
       </Divider>
@@ -209,5 +190,10 @@ FamilyDrawer.propTypes = {
   open: PropTypes.bool,
   setOpen: PropTypes.func,
   setIsParentFormDialogOpen: PropTypes.func,
-  setIsDisableFamilyDialogOpen: PropTypes.func
+  setIsDisableFamilyDialogOpen: PropTypes.func,
+  setIsChildFormDialogOpen: PropTypes.func,
+  family: PropTypes.object,
+  setPrimaryParent: PropTypes.func,
+  setSecondaryParent: PropTypes.func,
+  setChild: PropTypes.func
 };

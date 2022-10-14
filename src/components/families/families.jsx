@@ -45,14 +45,77 @@ const Families = () => {
   const layoutCtx = useContext(LayoutContext);
   const authCtx = useContext(AuthContext);
   const { enqueueSnackbar } = useSnackbar();
-  const [isAddChildDialogOpen, setIsChildDialogOpen] = useState(false);
+  const [isChildFormDialogOpen, setIsChildFormDialogOpen] = useState(false);
   const [isDisableFamilyDialogOpen, setIsDisableFamilyDialogOpen] = useState(false);
   const [isParentFormDialogOpen, setIsParentFormDialogOpen] = useState(false);
   const [isAddFamilyDialogOpen, setIsAddFamilyDialogOpen] = useState(false);
   const [isFamilyDrawerOpen, setIsFamilyDrawerOpen] = useState(false);
   const [roomsList, setRoomsList] = useState([]);
   const [roomsDropdownLoading, setRoomsDropdownLoading] = useState(false);
+  const [primaryParent, setPrimaryParent] = useState();
+  const [secondaryParent, setSecondaryParent] = useState();
+  const [child, setChild] = useState();
   const [family, setFamily] = useState();
+  const tempFamily = {
+    primary: {
+      id: 1,
+      first_name: 'Parent',
+      last_name: '1',
+      role: 'Father',
+      phone: 5555555555,
+      email: 'a@b.com'
+    },
+    secondary: [
+      {
+        id: 1,
+        first_name: 'Parent',
+        last_name: '2',
+        role: 'Father',
+        phone: 5555555555,
+        email: 'a@b.com'
+      },
+      {
+        id: 2,
+        first_name: 'Parent',
+        last_name: '3',
+        role: 'Grandfather',
+        phone: 5555555555,
+        email: 'a@b.com'
+      }
+    ],
+    children: [
+      {
+        id: 1,
+        first_name: 'Child 1',
+        rooms: [
+          {
+            room_name: 'Room 2',
+            room_id: 1
+          }
+        ]
+      },
+      {
+        id: 2,
+        first_name: 'Child 2',
+        rooms: [
+          {
+            room_name: 'Room 2',
+            room_id: 1
+          }
+        ]
+      },
+      {
+        id: 3,
+        first_name: 'Child 3',
+        rooms: [
+          {
+            room_name: 'Room 2',
+            room_id: 1
+          }
+        ]
+      }
+    ]
+  };
   const [familiesPayload, setFamiliesPayload] = useState({
     page: 1,
     limit: parseInt(process.env.REACT_APP_PAGINATION_LIMIT, 10),
@@ -260,12 +323,13 @@ const Families = () => {
                       <TableCell>{row.end_date}</TableCell>
                       <TableCell align="right">
                         <FamilyAction
-                          openAddChildDialog={setIsChildDialogOpen}
+                          openChildFormDialog={setIsChildFormDialogOpen}
                           openFamilyDrawer={setIsFamilyDrawerOpen}
                           openDisableFamilyDialog={setIsDisableFamilyDialogOpen}
                           openParentFormDialog={setIsParentFormDialogOpen}
                           family={row}
                           setFamily={setFamily}
+                          tempFamily={tempFamily}
                         />
                       </TableCell>
                     </TableRow>
@@ -287,7 +351,17 @@ const Families = () => {
         </CardContent>
       </Card>
       {/* <EditFamily open={isEditFamilyDialogOpen} setOpen={setIsEditFamilyDialogOpen} /> */}
-      <ChildForm open={isAddChildDialogOpen} setOpen={setIsChildDialogOpen} roomsList={roomsList} />
+      {isChildFormDialogOpen && (
+        <ChildForm
+          open={isChildFormDialogOpen}
+          setOpen={setIsChildFormDialogOpen}
+          roomsList={roomsList}
+          family={family}
+          child={child}
+          setChild={setChild}
+          setFamily={setFamily}
+        />
+      )}
       <DisableFamily open={isDisableFamilyDialogOpen} setOpen={setIsDisableFamilyDialogOpen} />
       {isAddFamilyDialogOpen && (
         <FamilyForm
@@ -297,14 +371,27 @@ const Families = () => {
         />
       )}
       {isParentFormDialogOpen && (
-        <ParentForm open={isParentFormDialogOpen} setOpen={setIsParentFormDialogOpen} />
+        <ParentForm
+          open={isParentFormDialogOpen}
+          setOpen={setIsParentFormDialogOpen}
+          primaryParent={primaryParent}
+          setPrimaryParent={setPrimaryParent}
+          secondaryParent={secondaryParent}
+          setSecondaryParent={setSecondaryParent}
+          family={family}
+          setFamily={setFamily}
+        />
       )}
       <FamilyDrawer
         open={isFamilyDrawerOpen}
         setOpen={setIsFamilyDrawerOpen}
         family={family}
         setIsParentFormDialogOpen={setIsParentFormDialogOpen}
+        setIsChildFormDialogOpen={setIsChildFormDialogOpen}
         setIsDisableFamilyDialogOpen={setIsDisableFamilyDialogOpen}
+        setPrimaryParent={setPrimaryParent}
+        setSecondaryParent={setSecondaryParent}
+        setChild={setChild}
       />
     </Box>
   );
