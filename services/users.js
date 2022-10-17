@@ -100,7 +100,7 @@ module.exports = {
   /* Create user token */
   createUserToken: async (userId) => {
     console.log(process.env.JWT_SECRET_KEY);
-    const token = jwt.sign({ user_id: userId }, 'macilaci', {
+    const token = jwt.sign({ user_id: userId }, process.env.JWT_SECRET_KEY, {
       expiresIn: process.env.ACCESS_TOKEN_EXPIRY
     });
     return { token };

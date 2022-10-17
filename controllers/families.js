@@ -13,18 +13,22 @@ module.exports = {
         params.family_id = await familyServices.generateNewFamilyId(req.user.user_id);
       }
 
-      let createdFamily = [];
+      let createdFamily1 = '';
       if (params?.families) {
-        params.families.forEach(async (family) => {
-          const paramsObj = _.omit(params, ['families']);
-          const newFamily = await familyServices.createFamily({ ...paramsObj, ...family });
-          createdFamily.push(newFamily);
-        });
+        let createdFamily = Promise.all(
+          params.families.map(async (family) => {
+            const paramsObj = _.omit(params, ['families']);
+            const newFamily = await familyServices.createFamily({ ...paramsObj, ...family });
+
+            return newFamily;
+          })
+        );
+        createdFamily1 = await createdFamily;
       }
 
       res.status(201).json({
         IsSuccess: true,
-        Data: createdFamily,
+        Data: createdFamily1,
         Message: 'New  Family member Created'
       });
 
