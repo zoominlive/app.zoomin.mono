@@ -473,12 +473,14 @@ module.exports = {
           Data: {},
           Message: 'Email already exist'
         });
+      } else {
+        res.status(200).json({
+          IsSuccess: true,
+          Data: {},
+          Message: 'Email is available to use'
+        });
       }
-      res.status(200).json({
-        IsSuccess: true,
-        Data: {},
-        Message: 'Email is available to use'
-      });
+
       next();
     } catch (error) {
       res.status(500).json({ IsSuccess: false, Message: error.message });
