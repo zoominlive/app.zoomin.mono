@@ -467,19 +467,12 @@ module.exports = {
       const { email } = req.body;
 
       const emailExist = await userServices.checkEmailExist(email);
-      if (emailExist) {
-        res.status(409).json({
-          IsSuccess: false,
-          Data: {},
-          Message: 'Email already exist'
-        });
-      } else {
-        res.status(200).json({
-          IsSuccess: true,
-          Data: {},
-          Message: 'Email is available to use'
-        });
-      }
+
+      res.status(200).json({
+        IsSuccess: true,
+        Data: emailExist,
+        Message: emailExist ? 'Email already exist' : 'Email is available to use'
+      });
 
       next();
     } catch (error) {

@@ -48,7 +48,7 @@ module.exports = {
       params.cust_id = req.user.cust_id;
 
       let editedFamilies = '';
-      if (params?.families) {
+      if (params) {
         let editFamily = Promise.all(
           params.families.map(async (family) => {
             const newFamily = await familyServices.editFamily({ ...family });
