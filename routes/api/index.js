@@ -4,7 +4,8 @@ const router = express.Router();
 const userRoutes = require('./user');
 const roomRoutes = require('./room');
 const cameraRoutes = require('./camera');
-const familyroutes = require('./family');
+const familyRoutes = require('./family');
+const childRoutes = require('./children');
 /* user routes */
 router.use('/users', userRoutes);
 
@@ -14,6 +15,8 @@ router.use('/rooms', roomRoutes);
 /* camera routes */
 router.use('/cams', cameraRoutes);
 
-/* camera routes */
-router.use('/family', familyroutes);
+/* family routes */
+router.use('/family', familyRoutes);
+
+router.use('/family/child', childRoutes);
 module.exports = router;

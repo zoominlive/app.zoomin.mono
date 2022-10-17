@@ -64,7 +64,7 @@ module.exports = {
     } catch (error) {
       res.status(500).json({
         IsSuccess: false,
-        Message: error.message
+        Message: error.message === 'Validation error' ? 'Email already exist' : error.message
       });
       next(error);
     }
