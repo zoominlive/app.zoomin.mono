@@ -4,7 +4,6 @@ const familyServices = require('../services/families');
 module.exports = {
   createFamily: async (req, res, next) => {
     try {
-      console.log('hello');
       const params = req.body;
       params.user_id = req.user.user_id;
       params.cust_id = req.user.cust_id;
@@ -42,15 +41,28 @@ module.exports = {
     }
   },
 
-  editRoom: async (req, res, next) => {
+  editFamily: async (req, res, next) => {
     try {
       const params = req.body;
-      const room = await roomServices.editRoom(req.user, params);
+      params.user_id = req.user.user_id;
+      params.cust_id = req.user.cust_id;
+
+      let editedFamilies = '';
+      if (params?.families) {
+        let editFamily = Promise.all(
+          params.families.map(async (family) => {
+            const newFamily = await familyServices.editFamily({ ...family });
+
+            return newFamily;
+          })
+        );
+        editedFamilies = await editFamily;
+      }
 
       res.status(200).json({
         IsSuccess: true,
-        Data: room,
-        Message: 'Room details Updated'
+        Data: editedFamilies,
+        Message: 'family details updated'
       });
 
       next();

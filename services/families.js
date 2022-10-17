@@ -25,27 +25,24 @@ module.exports = {
   },
 
   /* Edit room details */
-  editRoom: async (user, params) => {
+  editFamily: async (params) => {
+    const familyObj = _.omit(params, ['family_member_id']);
     let update = {
-      updated_at: Sequelize.literal('CURRENT_TIMESTAMP')
+      updated_at: Sequelize.literal('CURRENT_TIMESTAMP'),
+      ...familyObj
     };
 
-    if (params?.room_name) {
-      update.room_name = params.room_name;
-    }
-    if (params?.location) {
-      update.location = params.location;
-    }
-
-    let updateRoomDetails = await Room.update(update, {
-      where: { room_id: params.room_id }
+    let updateFamilyDetails = await Family.update(update, {
+      where: { family_member_id: params.family_member_id }
     });
 
-    if (updateRoomDetails) {
-      updateRoomDetails = await Room.findOne({ where: { room_id: params.room_id } });
+    if (updateFamilyDetails) {
+      updateFamilyDetails = await Family.findOne({
+        where: { family_member_id: params.family_member_id }
+      });
     }
 
-    return updateRoomDetails.toJSON();
+    return updateFamilyDetails.toJSON();
   },
 
   /* Delete Existing room */
