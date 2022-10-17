@@ -76,10 +76,18 @@ module.exports = {
 
       const editedFamily = await familyServices.editFamily(params);
 
-      res.status(200).json({
-        IsSuccess: true,
-        Data: editedFamily,
-        Message: 'family details updated'
+      if (editedFamily) {
+        res.status(200).json({
+          IsSuccess: true,
+          Data: editedFamily,
+          Message: 'family details updated'
+        });
+      } else {
+      }
+      res.status(404).json({
+        IsSuccess: false,
+        Data: {},
+        Message: 'family member not found'
       });
 
       next();

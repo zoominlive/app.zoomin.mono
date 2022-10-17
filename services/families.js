@@ -42,7 +42,7 @@ module.exports = {
       });
     }
 
-    return updateFamilyDetails.toJSON();
+    return updateFamilyDetails;
   },
 
   /* Delete Existing room */
