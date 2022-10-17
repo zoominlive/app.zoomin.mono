@@ -460,5 +460,29 @@ module.exports = {
       res.status(500).json({ IsSuccess: false, Message: error.message });
       next(error);
     }
+  },
+
+  isEmailExist: async (req, res, next) => {
+    try {
+      const { email } = req.body;
+
+      const emailExist = await userServices.checkEmailExist(email);
+      if (emailExist) {
+        res.status(401).json({
+          IsSuccess: false,
+          Data: {},
+          Message: 'Email already exist'
+        });
+      }
+      res.status(200).json({
+        IsSuccess: true,
+        Data: {},
+        Message: 'Email is available to use'
+      });
+      next();
+    } catch (error) {
+      res.status(500).json({ IsSuccess: false, Message: error.message });
+      next(error);
+    }
   }
 };

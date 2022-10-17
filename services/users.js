@@ -1,4 +1,4 @@
-const { Users } = require('../models/index');
+const { Users, Family } = require('../models/index');
 const Sequelize = require('sequelize');
 const sequelize = require('../lib/database');
 const jwt = require('jsonwebtoken');
@@ -284,5 +284,17 @@ module.exports = {
     }
 
     return { users, count };
+  },
+
+  checkEmailExist: async (email) => {
+    const users = await Users.findOne({ where: { email: email } });
+
+    const families = await Family.findOne({ where: { email: email } });
+
+    if (users === null && families === null) {
+      return false;
+    } else {
+      return true;
+    }
   }
 };

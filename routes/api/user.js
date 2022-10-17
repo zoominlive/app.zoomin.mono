@@ -21,5 +21,6 @@ router.delete('/delete', authController, userController.deleteUser);
 router.put('/edit', authController, userController.editUser);
 router.delete('/', authController, userController.deleteUserProfile);
 router.post('/emailChange', userController.changeRegisteredEmail);
+router.post('/emailValidation', authController, userController.isEmailExist);
 
 module.exports = router;
