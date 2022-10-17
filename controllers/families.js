@@ -1,17 +1,29 @@
-const roomServices = require('../services/rooms');
+const { param } = require('../routes/api');
+const familyServices = require('../services/families');
 
 module.exports = {
-  createRoom: async (req, res, next) => {
+  createFamily: async (req, res, next) => {
     try {
+      console.log('hello');
       const params = req.body;
       params.user_id = req.user.user_id;
       params.cust_id = req.user.cust_id;
-      const room = await roomServices.createRoom(params);
+
+      if (params?.member_type === 'primary') {
+        params.family_id = await familyServices.generateNewFamilyId(req.user.user_id);
+      }
+
+      if (params?.families) {
+        params.families.forEach(async (family) => {
+          const paramsObj = _.omit(params, ['families']);
+          const newFamily = await familyServices.createFamily({ ...paramsObj, ...family });
+        });
+      }
 
       res.status(201).json({
         IsSuccess: true,
-        Data: room,
-        Message: 'New Room created'
+        Data: newFamily,
+        Message: 'New  Family member Created'
       });
 
       next();

@@ -4,11 +4,23 @@ const sequelize = require('../lib/database');
 const Family = sequelize.define(
   'family',
   {
-    family_id: {
+    family_member_id: {
       type: Sequelize.INTEGER,
       allowNull: false,
       primaryKey: true,
       autoIncrement: true
+    },
+    family_id: {
+      type: Sequelize.INTEGER,
+      allowNull: false
+    },
+    user_id: {
+      type: Sequelize.INTEGER,
+      allowNull: false
+    },
+    cust_id: {
+      type: Sequelize.INTEGER,
+      allowNull: false
     },
     first_name: {
       type: Sequelize.STRING(30),
@@ -28,6 +40,10 @@ const Family = sequelize.define(
         'Grandfather',
         'Other'
       ),
+      required: true
+    },
+    member_type: {
+      type: Sequelize.ENUM('primary', 'secondary'),
       required: true
     },
     phone: {

@@ -1,14 +1,27 @@
-const { Room, Camera } = require('../models/index');
+const { Family, Camera } = require('../models/index');
 const Sequelize = require('sequelize');
 const { getAllCameraForRoom } = require('./cameras');
 const _ = require('lodash');
 const sequelize = require('../lib/database');
 module.exports = {
   /* Create new room */
-  createRoom: async (roomObj) => {
-    let roomCreated = await Room.create(roomObj);
+  createFamily: async (familyObj) => {
+    let familyCreated = await Family.create(familyObj);
 
-    return roomCreated !== undefined ? roomCreated.toJSON() : null;
+    return familyCreated !== undefined ? familyCreated.toJSON() : null;
+  },
+
+  generateNewFamilyId: async (userId) => {
+    let newFamilyId = await Family.findOne({
+      where: { user_id: userId },
+      order: [['family_id', 'DESC']]
+    });
+
+    if (newFamilyId === null) {
+      return 1;
+    } else {
+      return newFamilyId.family_id + 1;
+    }
   },
 
   /* Edit room details */
