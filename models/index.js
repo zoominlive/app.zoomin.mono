@@ -11,7 +11,6 @@ CustomerLocations.belongsTo(Customers, { foreignKey: 'cust_id' });
 Camera.belongsTo(Room, { foreignKey: 'room_id' });
 Room.hasMany(Camera, { foreignKey: 'room_id' });
 Users.belongsTo(Customers, { foreignKey: 'cust_id' });
-Child.belongsTo(Family, { foreignKey: 'family_member_id' });
 Room.belongsTo(Customers, { foreignKey: 'cust_id' });
 // Room.belongsTo(CustomerLocations, { foreignKey: 'location' });
 module.exports = {

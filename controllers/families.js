@@ -1,34 +1,63 @@
 const _ = require('lodash');
 const familyServices = require('../services/families');
+const childServices = require('../services/children');
 
 module.exports = {
   createFamily: async (req, res, next) => {
     try {
-      const params = req.body;
-      params.user_id = req.user.user_id;
-      params.cust_id = req.user.cust_id;
+      let { primary, secondary, children } = req.body;
+      const userId = req.user.user_id;
+      const custId = req.user.cust_id;
 
-      if (params?.member_type === 'primary') {
-        params.family_id = await familyServices.generateNewFamilyId(req.user.user_id);
-      }
+      //add primary parent
 
-      let createdFamily1 = '';
-      if (params?.families) {
-        let createdFamily = Promise.all(
-          params.families.map(async (family) => {
-            const paramsObj = _.omit(params, ['families']);
-            const newFamily = await familyServices.createFamily({ ...paramsObj, ...family });
+      primary.family_id = await familyServices.generateNewFamilyId(req.user.user_id);
+      let primaryParent = await familyServices.createFamily({
+        ...primary,
+        user_id: userId,
+        cust_id: custId
+      });
 
-            return newFamily;
-          })
-        );
-        createdFamily1 = await createdFamily;
-      }
+      const familyId = primaryParent.family_id;
+
+      //add secondary parent
+
+      let secondaryParents = '';
+      let createdFamily = Promise.all(
+        secondary.map(async (family) => {
+          const newFamily = await familyServices.createFamily({
+            ...family,
+            user_id: userId,
+            cust_id: custId,
+            family_id: familyId
+          });
+
+          return newFamily;
+        })
+      );
+      secondaryParents = await createdFamily;
+
+      //add children
+
+      childServices;
+
+      let createdChildren = Promise.all(
+        children.map(async (child) => {
+          const newFamily = await childServices.createChild({
+            ...child,
+            rooms: { rooms: child.rooms },
+            family_id: familyId
+          });
+
+          return newFamily;
+        })
+      );
+      children = await createdChildren;
 
       res.status(201).json({
         IsSuccess: true,
-        Data: createdFamily1,
-        Message: 'New  Family member Created'
+        Data: { primaryParent, secondaryParents, children },
+        Message: 'New  Family Created'
       });
 
       next();
@@ -44,24 +73,12 @@ module.exports = {
   editFamily: async (req, res, next) => {
     try {
       const params = req.body;
-      params.user_id = req.user.user_id;
-      params.cust_id = req.user.cust_id;
 
-      let editedFamilies = '';
-      if (params) {
-        let editFamily = Promise.all(
-          params.families.map(async (family) => {
-            const newFamily = await familyServices.editFamily({ ...family });
-
-            return newFamily;
-          })
-        );
-        editedFamilies = await editFamily;
-      }
+      const editedFamily = await familyServices.editFamily(params);
 
       res.status(200).json({
         IsSuccess: true,
-        Data: editedFamilies,
+        Data: editedFamily,
         Message: 'family details updated'
       });
 
