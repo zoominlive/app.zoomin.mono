@@ -468,7 +468,7 @@ module.exports = {
 
       const emailExist = await userServices.checkEmailExist(email);
       if (emailExist) {
-        res.status(401).json({
+        res.status(409).json({
           IsSuccess: false,
           Data: {},
           Message: 'Email already exist'
