@@ -1,4 +1,4 @@
-const { param } = require('../routes/api');
+const _ = require('lodash');
 const familyServices = require('../services/families');
 
 module.exports = {
@@ -13,16 +13,18 @@ module.exports = {
         params.family_id = await familyServices.generateNewFamilyId(req.user.user_id);
       }
 
+      let createdFamily = [];
       if (params?.families) {
         params.families.forEach(async (family) => {
           const paramsObj = _.omit(params, ['families']);
           const newFamily = await familyServices.createFamily({ ...paramsObj, ...family });
+          createdFamily.push(newFamily);
         });
       }
 
       res.status(201).json({
         IsSuccess: true,
-        Data: newFamily,
+        Data: createdFamily,
         Message: 'New  Family member Created'
       });
 
