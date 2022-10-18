@@ -90,33 +90,31 @@ const DisableFamily = (props) => {
                           label="Schedule end date"
                           sx={{ whiteSpace: 'nowrap' }}
                         />
-                        {values.selectedOption === 'schedule' && (
-                          <LocalizationProvider dateAdapter={AdapterDayjs}>
-                            <DesktopDatePicker
-                              open={isDatePickerOpen}
-                              label="Disable date"
-                              value={values?.disableDate}
-                              inputFormat="MM/DD/YYYY"
-                              onClose={() => setIsDatePickerOpen(false)}
-                              renderInput={(params) => (
-                                <TextField
-                                  onClick={() => setIsDatePickerOpen(true)}
-                                  {...params}
-                                  helperText={touched.disableDate && errors.disableDate}
-                                  error={touched.disableDate && Boolean(errors.disableDate)}
-                                />
-                              )}
-                              components={{
-                                OpenPickerIcon: !isDatePickerOpen
-                                  ? ArrowDropDownIcon
-                                  : ArrowDropUpIcon
-                              }}
-                              onChange={(value) => {
-                                setFieldValue('disableDate', value ? value : '');
-                              }}
-                            />
-                          </LocalizationProvider>
-                        )}
+                        <LocalizationProvider dateAdapter={AdapterDayjs}>
+                          <DesktopDatePicker
+                            open={isDatePickerOpen}
+                            label="Disable date"
+                            value={values?.disableDate}
+                            inputFormat="MM/DD/YYYY"
+                            onClose={() => setIsDatePickerOpen(false)}
+                            renderInput={(params) => (
+                              <TextField
+                                onClick={() => setIsDatePickerOpen(true)}
+                                {...params}
+                                helperText={touched.disableDate && errors.disableDate}
+                                error={touched.disableDate && Boolean(errors.disableDate)}
+                              />
+                            )}
+                            components={{
+                              OpenPickerIcon: !isDatePickerOpen
+                                ? ArrowDropDownIcon
+                                : ArrowDropUpIcon
+                            }}
+                            onChange={(value) => {
+                              setFieldValue('disableDate', value ? value : '');
+                            }}
+                          />
+                        </LocalizationProvider>
                       </Stack>
                     </Stack>
                   </RadioGroup>

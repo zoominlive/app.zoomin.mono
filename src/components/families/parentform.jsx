@@ -13,15 +13,23 @@ import {
   Select,
   TextField
 } from '@mui/material';
-import React from 'react';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { Form, Formik } from 'formik';
 import * as yup from 'yup';
 import PhoneNumberInput from '../common/phonenumberinput';
+import { LoadingButton } from '@mui/lab';
+import SaveIcon from '@mui/icons-material/Save';
+// import { errorMessageHandler } from '../../utils/errormessagehandler';
+// import { useContext } from 'react';
+// import AuthContext from '../../context/authcontext';
+// import { useSnackbar } from 'notistack';
+// import API from '../../api';
+
 const validationSchema = yup.object().shape({
   first_name: yup.string().required('First Name is required'),
   last_name: yup.string().required('Last Name is required'),
-  role: yup.string().required('Role is required'),
+  relationship: yup.string().required('Role is required'),
   phone: yup
     .string()
     .matches(/^(1\s?)?(\d{3}|\(\d{3}\))[\s-]?\d{3}[\s-]?\d{4}$/gm, 'Enter valid phone number')
@@ -30,24 +38,64 @@ const validationSchema = yup.object().shape({
 });
 
 const ParentsForm = (props) => {
+  // const authCtx = useContext(AuthContext);
+  // const { enqueueSnackbar } = useSnackbar();
+  const [submitLoading, setSubmitLoading] = useState(false);
+
   const handleSubmit = (data) => {
-    if (props.primaryParent) {
-      props.setFamily((prevState) => {
-        const tempFamily = { ...prevState };
-        tempFamily.primary = { id: props.primaryParent.id, ...data };
-        return tempFamily;
-      });
-    }
-    if (props.secondaryParent) {
-      props.setFamily((prevState) => {
-        const tempFamily = { ...prevState };
-        const index = tempFamily.secondary.findIndex(
-          (parent) => parent.id === props.secondaryParent.id
-        );
-        tempFamily.secondary[index] = { id: props.secondaryParent.id, ...data };
-        return tempFamily;
-      });
-    }
+    setSubmitLoading(true);
+    // if (props.primaryParent || props.secondaryParent) {
+    //   const family_member_id = props.primaryParent
+    //     ? props.primaryParent.id
+    //     : props.secondaryParent.id;
+    //   API.put('family/edit', { ...data, family_member_id }).then((response) => {
+    //     if (response.status === 200) {
+    //       enqueueSnackbar(response.data.Message, { variant: 'success' });
+    //       props.getFamiliesList();
+    //       if (props.primaryParent) {
+    //         props.setFamily((prevState) => {
+    //           const tempFamily = { ...prevState };
+    //           tempFamily.primary = { id: props.primaryParent.id, ...data };
+    //           return tempFamily;
+    //         });
+    //       } else {
+    //         props.setFamily((prevState) => {
+    //           const tempFamily = { ...prevState };
+    //           const index = tempFamily.secondary.findIndex(
+    //             (parent) => parent.id === props.secondaryParent.id
+    //           );
+    //           tempFamily.secondary[index] = { id: props.secondaryParent.id, ...data };
+    //           return tempFamily;
+    //         });
+    //       }
+    //       handleDialogClose();
+    //     } else {
+    //       errorMessageHandler(
+    //         enqueueSnackbar,
+    //         response?.response?.data?.Message || 'Something Went Wrong.',
+    //         response?.response?.status,
+    //         authCtx.setAuthError
+    //       );
+    //     }
+    //     setSubmitLoading(false);
+    //   });
+    // } else {
+    //   API.post('family/parent/add').then((response) => {
+    //     if (response.status === 200) {
+    //       enqueueSnackbar.apply(response.data.Message,{variant:"success"});
+    //       props.getFamiliesList();
+    //       handleDialogClose();
+    //     } else {
+    //       errorMessageHandler(
+    //         enqueueSnackbar,
+    //         response?.response?.data?.Message || 'Something Went Wrong.',
+    //         response?.response?.status,
+    //         authCtx.setAuthError
+    //       );
+    //     }
+    //   });
+    //   setSubmitLoading(false);
+    // }
     handleDialogClose();
     console.log('Data', data);
   };
@@ -79,10 +127,10 @@ const ParentsForm = (props) => {
             : props.secondaryParent
             ? props.secondaryParent.last_name
             : '',
-          role: props.primaryParent
-            ? props.primaryParent.role
+          relationship: props.primaryParent
+            ? props.primaryParent.relationship
             : props.secondaryParent
-            ? props.secondaryParent.role
+            ? props.secondaryParent.relationship
             : '',
           phone: props.primaryParent
             ? props.primaryParent.phone
@@ -96,7 +144,7 @@ const ParentsForm = (props) => {
             : ''
         }}
         onSubmit={handleSubmit}>
-        {({ values, setFieldValue, touched, errors }) => {
+        {({ values, setFieldValue, touched, errors, isValidating }) => {
           return (
             <Form>
               <DialogContent>
@@ -128,16 +176,18 @@ const ParentsForm = (props) => {
                     />
                   </Grid>
                   <Grid item md={4} sm={12}>
-                    <FormControl fullWidth error={touched.role && Boolean(errors.role)}>
+                    <FormControl
+                      fullWidth
+                      error={touched.relationship && Boolean(errors.relationship)}>
                       <InputLabel id="role">Role</InputLabel>
                       <Select
                         labelId="role"
                         id="role"
                         label="Role"
-                        name={'role'}
-                        value={values?.role}
+                        name={'relationship'}
+                        value={values?.relationship}
                         onChange={(event) => {
-                          setFieldValue('role', event.target.value);
+                          setFieldValue('relationship', event.target.value);
                         }}>
                         <MenuItem value={'Mother'}>Mother</MenuItem>
                         <MenuItem value={'Father'}>Father</MenuItem>
@@ -147,9 +197,9 @@ const ParentsForm = (props) => {
                         <MenuItem value={'Grandfather'}>Grandfather</MenuItem>
                         <MenuItem value={'Other'}>Other</MenuItem>
                       </Select>
-                      {touched.role && Boolean(errors.role) && (
+                      {touched.relationship && Boolean(errors.relationship) && (
                         <FormHelperText sx={{ color: '#d32f2f' }}>
-                          {touched.role && errors.role}
+                          {touched.relationship && errors.relationship}
                         </FormHelperText>
                       )}
                     </FormControl>
@@ -185,12 +235,20 @@ const ParentsForm = (props) => {
               </DialogContent>
               <Divider />
               <DialogActions>
-                <Button variant="text" onClick={handleDialogClose}>
+                <Button
+                  disabled={submitLoading || isValidating}
+                  variant="text"
+                  onClick={handleDialogClose}>
                   CANCEL
                 </Button>
-                <Button variant="text" type="submit">
+                <LoadingButton
+                  loading={submitLoading || isValidating}
+                  loadingPosition={submitLoading || isValidating ? 'start' : undefined}
+                  startIcon={(submitLoading || isValidating) && <SaveIcon />}
+                  variant="text"
+                  type="submit">
                   SAVE CHANGES
-                </Button>
+                </LoadingButton>
               </DialogActions>
             </Form>
           );
@@ -211,5 +269,6 @@ ParentsForm.propTypes = {
   setPrimaryParent: PropTypes.func,
   secondaryParent: PropTypes.any,
   setSecondaryParent: PropTypes.func,
-  setFamily: PropTypes.func
+  setFamily: PropTypes.func,
+  getFamiliesList: PropTypes.func
 };

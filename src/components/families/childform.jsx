@@ -8,13 +8,20 @@ import {
   DialogContent,
   DialogTitle,
   Divider,
-  Stack,
   TextField,
   Grid,
   Autocomplete
 } from '@mui/material';
 import { Form, Formik } from 'formik';
 import * as yup from 'yup';
+// import API from '../../api';
+import { useState } from 'react';
+// import { useContext } from 'react';
+// import AuthContext from '../../context/authcontext';
+// import { useSnackbar } from 'notistack';
+// import { errorMessageHandler } from '../../utils/errormessagehandler';
+import { LoadingButton } from '@mui/lab';
+import SaveIcon from '@mui/icons-material/Save';
 
 const validationSchema = yup.object({
   first_name: yup.string().required('First Name is required'),
@@ -22,23 +29,61 @@ const validationSchema = yup.object({
 });
 
 const ChildForm = (props) => {
+  // const authCtx = useContext(AuthContext);
+  // const { enqueueSnackbar } = useSnackbar();
+  const [submitLoading, setSubmitLoading] = useState(false);
+
   const handleDialogClose = () => {
-    props.setOpen(false);
-    props.setChild();
+    if (!submitLoading) {
+      props.setOpen(false);
+      props.setChild();
+    }
   };
 
   const handleSubmit = (data) => {
-    if (props.child) {
-      props.setFamily((prevState) => {
-        const tempFamily = { ...prevState };
-        const index = tempFamily.children.findIndex((child) => child.id === props.child.id);
-        if (index !== -1) {
-          tempFamily.children[index] = { id: props.child.id, ...data };
-        }
-        return tempFamily;
-      });
-    }
-    handleDialogClose();
+    setSubmitLoading(true);
+    console.log(data);
+    // if (props.child) {
+    //   API.patch('family/child/edit', { ...data, child_id: props.child.id }).then((response) => {
+    //     if (response.status === 200) {
+    //       enqueueSnackbar(response.data.Message);
+    //       props.getFamiliesList()
+    //       props.setFamily((prevState) => {
+    //         const tempFamily = { ...prevState };
+    //         const index = tempFamily.children.findIndex((child) => child.id === props.child.id);
+    //         if (index !== -1) {
+    //           tempFamily.children[index] = { id: props.child.id, ...data };
+    //         }
+    //         return tempFamily;
+    //       });
+    //       handleDialogClose();
+    //     } else {
+    //       errorMessageHandler(
+    //         enqueueSnackbar,
+    //         response?.response?.data?.Message || 'Something Went Wrong.',
+    //         response?.response?.status,
+    //         authCtx.setAuthError
+    //       );
+    //     }
+    //     setSubmitLoading(false);
+    //   });
+    // } else {
+    //   API.post('family/child/add', data).then((response) => {
+    //     if (response.status === 201) {
+    //       enqueueSnackbar(response.data.Message);
+    //       props.getFamiliesList()
+    //       handleDialogClose();
+    //     } else {
+    //       errorMessageHandler(
+    //         enqueueSnackbar,
+    //         response?.response?.data?.Message || 'Something Went Wrong.',
+    //         response?.response?.status,
+    //         authCtx.setAuthError
+    //       );
+    //     }
+    //     setSubmitLoading(false);
+    //   });
+    // }
   };
 
   return (
@@ -54,7 +99,7 @@ const ChildForm = (props) => {
           rooms: props.child ? props.child.rooms : []
         }}
         onSubmit={handleSubmit}>
-        {({ values, setFieldValue, touched, errors }) => {
+        {({ values, setFieldValue, touched, errors, isValidating }) => {
           return (
             <Form>
               <DialogContent>
@@ -103,16 +148,23 @@ const ChildForm = (props) => {
                     />
                   </Grid>
                 </Grid>
-                <Stack direction="row" spacing={3}></Stack>
               </DialogContent>
               <Divider />
               <DialogActions>
-                <Button variant="text" onClick={handleDialogClose}>
+                <Button
+                  disabled={submitLoading || isValidating}
+                  variant="text"
+                  onClick={handleDialogClose}>
                   CANCEL
                 </Button>
-                <Button variant="text" type="submit">
+                <LoadingButton
+                  loading={submitLoading || isValidating}
+                  loadingPosition={submitLoading || isValidating ? 'start' : undefined}
+                  startIcon={(submitLoading || isValidating) && <SaveIcon />}
+                  variant="text"
+                  type="submit">
                   SAVE CHANGES
-                </Button>
+                </LoadingButton>
               </DialogActions>
             </Form>
           );
@@ -131,5 +183,6 @@ ChildForm.propTypes = {
   family: PropTypes.object,
   child: PropTypes.any,
   setChild: PropTypes.func,
-  setFamily: PropTypes.func
+  setFamily: PropTypes.func,
+  getFamiliesList: PropTypes.func
 };

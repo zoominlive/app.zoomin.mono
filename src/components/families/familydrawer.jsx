@@ -15,8 +15,51 @@ import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import EditIcon from '@mui/icons-material/Edit';
 import { capitalizeFirstLetter } from '../../utils/capitalizefirstletter';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { useState } from 'react';
+import DeleteDialog from '../common/deletedialog';
+// import API from '../../api';
+// import { useSnackbar } from 'notistack';
+// import { errorMessageHandler } from '../../utils/errormessagehandler';
+// import { useContext } from 'react';
+// import AuthContext from '../../context/authcontext';
 
 const FamilyDrawer = (props) => {
+  // const authCtx = useContext(AuthContext);
+  // const { enqueueSnackbar } = useSnackbar();
+  // const [childToDelete, setChildToDelete] = useState();
+  const [isDeleteChildDialogOpen, setIsDeleteChildDialogOpen] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState();
+
+  const handleChildDelete = () => {
+    setDeleteLoading(true);
+    // API.delete('family/child/delete', { family_member_id: childToDelete }).then((response) => {
+    //   if (response.status === 200) {
+    //     enqueueSnackbar(response.data.Message, { variant: 'success' });
+    //     props.getFamiliesList();
+    //     props.setFamily((prevState) => {
+    //       const tempFamily = { ...prevState };
+    //       tempFamily.children = tempFamily.children.filter((child) => child.id !== childToDelete);
+    //       return tempFamily;
+    //     });
+    //     handleDeleteDialogClose();
+    //   } else {
+    //     errorMessageHandler(
+    //       enqueueSnackbar,
+    //       response?.response?.data?.Message || 'Something Went Wrong.',
+    //       response?.response?.status,
+    //       authCtx.setAuthError
+    //     );
+    //   }
+    // });
+
+    handleDeleteDialogClose();
+  };
+
+  const handleDeleteDialogClose = () => {
+    setIsDeleteChildDialogOpen(false);
+    // setChildToDelete();
+  };
+
   return (
     <Drawer
       className="family-drawer"
@@ -45,7 +88,7 @@ const FamilyDrawer = (props) => {
               </Typography>
               <Divider orientation="vertical" variant="middle" flexItem />
               <Typography variant="body2" className="blue-text">
-                {props?.family?.primary?.role}
+                {props?.family?.primary?.relationship}
               </Typography>
             </Stack>
             <Typography variant="caption">{props?.family?.primary?.email}</Typography>
@@ -85,7 +128,7 @@ const FamilyDrawer = (props) => {
                       </Typography>
                       <Divider orientation="vertical" variant="middle" flexItem />
                       <Typography variant="body2" className="blue-text">
-                        {parent.role}
+                        {parent.relationship}
                       </Typography>
                     </Stack>
                     <Typography variant="caption">{parent.email}</Typography>
@@ -156,9 +199,16 @@ const FamilyDrawer = (props) => {
                         }}>
                         <EditIcon />
                       </IconButton>
-                      <IconButton className="child-delete-btn" onClick={() => {}}>
-                        <DeleteIcon />
-                      </IconButton>
+                      {props?.family?.children?.length !== 1 && (
+                        <IconButton
+                          className="child-delete-btn"
+                          onClick={() => {
+                            setIsDeleteChildDialogOpen(true);
+                            // setChildToDelete(child.id);
+                          }}>
+                          <DeleteIcon />
+                        </IconButton>
+                      )}
                     </Stack>
                   </Stack>
                   <Box className="rooms">
@@ -196,6 +246,14 @@ const FamilyDrawer = (props) => {
         </Avatar>
         <Typography variant="body2">12.09.2022</Typography>
       </Stack>
+      <DeleteDialog
+        title="Delete Child"
+        contentText="Are you sure you want to delete this child?"
+        loading={deleteLoading}
+        open={isDeleteChildDialogOpen}
+        handleDialogClose={handleDeleteDialogClose}
+        handleDelete={handleChildDelete}
+      />
     </Drawer>
   );
 };
@@ -209,7 +267,9 @@ FamilyDrawer.propTypes = {
   setIsDisableFamilyDialogOpen: PropTypes.func,
   setIsChildFormDialogOpen: PropTypes.func,
   family: PropTypes.object,
+  setFamily: PropTypes.func,
   setPrimaryParent: PropTypes.func,
   setSecondaryParent: PropTypes.func,
-  setChild: PropTypes.func
+  setChild: PropTypes.func,
+  getFamiliesList: PropTypes.func
 };

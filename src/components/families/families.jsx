@@ -25,7 +25,7 @@ import {
   Autocomplete,
   CircularProgress
 } from '@mui/material';
-import React, { useContext, useEffect } from 'react';
+import React, { useContext, useEffect, useMemo } from 'react';
 import { useState } from 'react';
 import { Plus } from 'react-feather';
 import LayoutContext from '../../context/layoutcontext';
@@ -41,6 +41,8 @@ import { useSnackbar } from 'notistack';
 import { errorMessageHandler } from '../../utils/errormessagehandler';
 import ParentForm from './parentform';
 import DeleteDialog from '../common/deletedialog';
+import debounce from 'lodash.debounce';
+import Loader from '../common/loader';
 
 const Families = () => {
   const layoutCtx = useContext(LayoutContext);
@@ -52,19 +54,23 @@ const Families = () => {
   const [isAddFamilyDialogOpen, setIsAddFamilyDialogOpen] = useState(false);
   const [isFamilyDrawerOpen, setIsFamilyDrawerOpen] = useState(false);
   const [roomsList, setRoomsList] = useState([]);
+  const [familiesList, setFamiliesList] = useState([]);
+  const [totalFamilies, setTotalFamilies] = useState(0);
   const [roomsDropdownLoading, setRoomsDropdownLoading] = useState(false);
   const [primaryParent, setPrimaryParent] = useState();
   const [secondaryParent, setSecondaryParent] = useState();
   const [child, setChild] = useState();
   const [family, setFamily] = useState();
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isSearchValid, setIsSearchValid] = useState(true);
   const tempFamily = {
     primary: {
-      id: 1,
+      id: 47,
       first_name: 'Parent',
       last_name: '1',
-      role: 'Father',
+      relationship: 'Father',
       phone: 5555555555,
       email: 'parent1@example.com'
     },
@@ -73,7 +79,7 @@ const Families = () => {
         id: 1,
         first_name: 'Parent',
         last_name: '2',
-        role: 'Father',
+        relationship: 'Father',
         phone: 5555555555,
         email: 'parent2@example.com',
         disabled: false
@@ -82,7 +88,7 @@ const Families = () => {
         id: 2,
         first_name: 'Parent',
         last_name: '3',
-        role: 'Grandfather',
+        relationship: 'Grandfather',
         phone: 5555555555,
         email: 'parent2@example.com',
         disabled: false
@@ -138,6 +144,10 @@ const Families = () => {
   }, []);
 
   useEffect(() => {
+    getFamiliesList();
+  }, [familiesPayload]);
+
+  useEffect(() => {
     setRoomsDropdownLoading(true);
     API.get('rooms/list').then((response) => {
       if (response.status === 200) {
@@ -173,6 +183,28 @@ const Families = () => {
     }
   ];
 
+  // Method to fetch families list
+  const getFamiliesList = () => {
+    setIsLoading(true);
+    setFamiliesList([]);
+    setTotalFamilies(0);
+    // API.post('rooms', familiesPayload).then((response) => {
+    //   if (response.status === 200) {
+    //     setFamiliesList(response.data.Data.finalRoomDetails);
+    //     setTotalFamilies(response.data.Data.count);
+    //   } else {
+    //     errorMessageHandler(
+    //       enqueueSnackbar,
+    //       response?.response?.data?.Message || 'Something Went Wrong.',
+    //       response?.response?.status,
+    //       authCtx.setAuthError
+    //     );
+    //   }
+    //   setIsLoading(false);
+    // });
+    setIsLoading(false);
+  };
+
   // Method to change the page in table
   const handlePageChange = (_, newPage) => {
     setFamiliesPayload((prevPayload) => ({ ...prevPayload, page: newPage }));
@@ -201,9 +233,17 @@ const Families = () => {
     setFamiliesPayload((prevPayload) => ({ ...prevPayload, rooms: value }));
   };
 
+  // Calls the search handler after 500ms
+  const familesListDebounce = useMemo(() => {
+    return debounce(handleSearch, 500);
+  }, []);
+
+  // Method to delete family
   const handleFamilyDelete = () => {
     setDeleteLoading(false);
   };
+
+  console.log(familiesList);
 
   return (
     <Box className="listing-wrapper">
@@ -216,8 +256,19 @@ const Families = () => {
                   <Grid item md={5} sm={12}>
                     <TextField
                       label="Search"
-                      placeholder={'Location, Room, etc...'}
-                      onChange={handleSearch}
+                      placeholder={'Parent Name, Child Name'}
+                      error={!isSearchValid}
+                      helperText={!isSearchValid && 'Search cannot contain quote'}
+                      onChange={(event) => {
+                        if (event.target.value.includes("'")) {
+                          setIsSearchValid(false);
+                        } else {
+                          if (!isSearchValid) {
+                            setIsSearchValid(true);
+                          }
+                          familesListDebounce(event);
+                        }
+                      }}
                     />
                   </Grid>
                   <Grid item md={3.5} sm={12}>
@@ -230,7 +281,11 @@ const Families = () => {
                         label="Location"
                         onChange={handleLocationChange}>
                         <MenuItem value={'All'}>All</MenuItem>
-                        <MenuItem value={'Location 1'}>Location 1</MenuItem>
+                        {authCtx.user.location.accessable_locations.map((location, index) => (
+                          <MenuItem key={index} value={location}>
+                            {location}
+                          </MenuItem>
+                        ))}
                       </Select>
                     </FormControl>
                   </Grid>
@@ -292,7 +347,8 @@ const Families = () => {
               </Box>
             </Grid>
           </Grid>
-          <Box mt={2}>
+          <Box mt={2} sx={{ position: 'relative' }}>
+            <Loader loading={isLoading} />
             <TableContainer component={Paper}>
               <Table sx={{ minWidth: 650 }} aria-label="simple table">
                 <TableHead>
@@ -360,7 +416,7 @@ const Families = () => {
                 onPageChange={handlePageChange}
                 onRowsPerPageChange={handleChangeRowsPerPage}
                 component="div"
-                count={1}
+                count={totalFamilies}
                 rowsPerPage={familiesPayload?.limit}
                 page={familiesPayload?.page - 1}
                 sx={{ flex: '1 1 auto' }}
@@ -379,6 +435,7 @@ const Families = () => {
           child={child}
           setChild={setChild}
           setFamily={setFamily}
+          getFamiliesList={getFamiliesList}
         />
       )}
       <DisableFamily open={isDisableFamilyDialogOpen} setOpen={setIsDisableFamilyDialogOpen} />
@@ -399,18 +456,21 @@ const Families = () => {
           setSecondaryParent={setSecondaryParent}
           family={family}
           setFamily={setFamily}
+          getFamiliesList={getFamiliesList}
         />
       )}
       <FamilyDrawer
         open={isFamilyDrawerOpen}
         setOpen={setIsFamilyDrawerOpen}
         family={family}
+        setFamily={setFamily}
         setIsParentFormDialogOpen={setIsParentFormDialogOpen}
         setIsChildFormDialogOpen={setIsChildFormDialogOpen}
         setIsDisableFamilyDialogOpen={setIsDisableFamilyDialogOpen}
         setPrimaryParent={setPrimaryParent}
         setSecondaryParent={setSecondaryParent}
         setChild={setChild}
+        getFamiliesList={getFamiliesList}
       />
       <DeleteDialog
         open={isDeleteDialogOpen}

@@ -101,7 +101,7 @@ const Children = (props) => {
                       />
                     </Grid>
                     <Grid item md={2} sm={12}>
-                      {index !== 0 && (
+                      {props.values.children.length !== 1 && (
                         <Box className="row-button-wrapper">
                           <IconButton
                             aria-label="delete"
