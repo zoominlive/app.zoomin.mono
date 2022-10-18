@@ -58,8 +58,6 @@ const ParentsForm = (props) => {
     props.setSecondaryParent();
   };
 
-  console.log(props.primaryParent);
-
   return (
     <Dialog open={props.open} onClose={handleDialogClose} fullWidth className="add-parentdialog">
       <DialogTitle>

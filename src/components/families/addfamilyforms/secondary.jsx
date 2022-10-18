@@ -19,6 +19,7 @@ import PropTypes from 'prop-types';
 import AddIcon from '@mui/icons-material/Add';
 
 const Secondary = (props) => {
+  console.log(props.errors);
   return (
     <FieldArray
       name="secondary"
@@ -28,14 +29,14 @@ const Secondary = (props) => {
             {props.values.secondary &&
               props.values.secondary.length > 0 &&
               props.values.secondary.map((_, index) => (
-                <>
+                <Box key={index}>
                   {index !== 0 && (
                     <Divider
                       textAlign="left"
                       sx={{
                         margin: '30px -48px'
                       }}>
-                      Parent {index + 1}
+                      FAMILY MEMBER {index + 1}
                     </Divider>
                   )}
                   <Grid container spacing={2}>
@@ -102,27 +103,31 @@ const Secondary = (props) => {
                       />
                     </Grid>
                     <Grid item md={4} sm={12}>
-                      <FormControl fullWidth>
+                      <FormControl
+                        fullWidth
+                        error={
+                          props.touched &&
+                          props.touched.secondary &&
+                          props.touched.secondary[index] &&
+                          props.touched.secondary[index].relationship &&
+                          props.errors &&
+                          props.errors.secondary &&
+                          props.errors.secondary[index] &&
+                          Boolean(props.errors.secondary[index].relationship)
+                        }>
                         <InputLabel id="role">Role</InputLabel>
                         <Select
                           labelId="role"
                           id="role"
-                          label="Role"
-                          name={`secondary.${index}.role`}
-                          value={props?.values?.secondary[index]?.role}
+                          label="role"
+                          name={`secondary.${index}.relationship`}
+                          value={props?.values?.secondary[index]?.relationship}
                           onChange={(event) => {
-                            props.setFieldValue(`secondary[${index}].role`, event.target.value);
-                          }}
-                          error={
-                            props.touched &&
-                            props.touched.secondary &&
-                            props.touched.secondary[index] &&
-                            props.touched.secondary[index].role &&
-                            props.errors &&
-                            props.errors.secondary &&
-                            props.errors.secondary[index] &&
-                            Boolean(props.errors.secondary[index].role)
-                          }>
+                            props.setFieldValue(
+                              `secondary[${index}].relationship`,
+                              event.target.value
+                            );
+                          }}>
                           <MenuItem value={'Mother'}>Mother</MenuItem>
                           <MenuItem value={'Father'}>Father</MenuItem>
                           <MenuItem value={'Aunt'}>Aunt</MenuItem>
@@ -134,13 +139,13 @@ const Secondary = (props) => {
                         {props.touched &&
                           props.touched.secondary &&
                           props.touched.secondary[index] &&
-                          props.touched.secondary[index].role &&
+                          props.touched.secondary[index].relationship &&
                           props.errors &&
                           props.errors.secondary &&
                           props.errors.secondary[index] &&
-                          Boolean(props.errors.secondary[index].role) && (
+                          Boolean(props.errors.secondary[index].relationship) && (
                             <FormHelperText sx={{ color: '#d32f2f' }}>
-                              {props.errors.secondary[index].role}
+                              {props.errors.secondary[index].relationship}
                             </FormHelperText>
                           )}
                       </FormControl>
@@ -186,7 +191,10 @@ const Secondary = (props) => {
                             : ''
                         }
                         onChange={(event) => {
-                          props.setFieldValue(`secondary[${index}].phone`, event.target.value);
+                          props.setFieldValue(
+                            `secondary[${index}].phone`,
+                            event.target.value || ''
+                          );
                         }}
                         helperText={
                           props.touched &&
@@ -223,7 +231,7 @@ const Secondary = (props) => {
                       </Box>
                     </Grid>
                   </Grid>
-                </>
+                </Box>
               ))}
             <Box className="row-button-wrapper" justifyContent="flex-end" mt={2}>
               <Button
@@ -234,12 +242,12 @@ const Secondary = (props) => {
                   arrayHelpers.push({
                     first_name: '',
                     last_name: '',
-                    role: '',
+                    relationship: '',
                     email: '',
-                    phone: undefined
+                    phone: ''
                   })
                 }>
-                Add Parent
+                Add Family Member
               </Button>
             </Box>
           </>

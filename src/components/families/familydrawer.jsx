@@ -156,12 +156,7 @@ const FamilyDrawer = (props) => {
                         }}>
                         <EditIcon />
                       </IconButton>
-                      <IconButton
-                        className="child-delete-btn"
-                        onClick={() => {
-                          props.setChild(child);
-                          props.setIsChildFormDialogOpen(true);
-                        }}>
+                      <IconButton className="child-delete-btn" onClick={() => {}}>
                         <DeleteIcon />
                       </IconButton>
                     </Stack>
@@ -193,7 +188,7 @@ const FamilyDrawer = (props) => {
         </Button>
       </Stack>
       <Divider textAlign="left" className="title-divider">
-        SCHECULE END DATE
+        SCHEDULE END DATE
       </Divider>
       <Stack spacing={1.5} px={2.5} mb={2} direction="row" alignItems="center">
         <Avatar sx={{ color: '#1976d2', background: '#1976D20A' }}>

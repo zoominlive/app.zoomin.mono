@@ -10,6 +10,7 @@ import {
   Divider,
   FormControl,
   FormControlLabel,
+  FormHelperText,
   Radio,
   RadioGroup,
   Stack,
@@ -19,24 +20,27 @@ import { DesktopDatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import ArrowDropUpIcon from '@mui/icons-material/ArrowDropUp';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
-import moment from 'moment';
-import { useEffect } from 'react';
+import { Form, Formik } from 'formik';
+import * as yup from 'yup';
+import dayjs from 'dayjs';
+
+const validationSchema = yup.object().shape({
+  selectedOption: yup.string().required('Please select atleast one option'),
+  disableDate: yup
+    .date()
+    .typeError('Please enter valid date!')
+    .nullable()
+    .when('selectedOption', {
+      is: (val) => val === 'schedule',
+      then: yup.date().typeError('Please enter valid date!').nullable().required('Date is required')
+    })
+});
 
 const DisableFamily = (props) => {
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
-  const [date, setDate] = useState('');
-  const [isDateValid, setIsDateValid] = useState(true);
-
-  useEffect(() => {
-    if (date) {
-      setIsDateValid(moment(date.toDate()).isValid());
-    }
-  }, [date]);
 
   const handleDialogClose = () => {
     props.setOpen(false);
-    setIsDateValid(true);
-    setDate('');
   };
 
   return (
@@ -47,58 +51,95 @@ const DisableFamily = (props) => {
       className="disable-family-dialog small-dialog">
       <DialogTitle>Disable Family</DialogTitle>
       <Divider />
-      <DialogContent>
-        <DialogContentText mb={4}>
-          This action will disable access for all children
-        </DialogContentText>
-        <Stack spacing={5}>
-          <FormControl>
-            <RadioGroup aria-labelledby="disable-group" name="disable-group">
-              <Stack spacing={2}>
-                <FormControlLabel value="disable" control={<Radio />} label="Disable immediately" />
-                <Stack direction="row" spacing={4}>
-                  <FormControlLabel
-                    value="schedule"
-                    control={<Radio />}
-                    label="Schedule end date"
-                    sx={{ whiteSpace: 'nowrap' }}
-                  />
-                  <LocalizationProvider dateAdapter={AdapterDayjs}>
-                    <DesktopDatePicker
-                      open={isDatePickerOpen}
-                      label="Disable date"
-                      value={date}
-                      inputFormat="MM/DD/YYYY"
-                      onClose={() => setIsDatePickerOpen(false)}
-                      renderInput={(params) => (
-                        <TextField
-                          onClick={() => setIsDatePickerOpen(true)}
-                          {...params}
-                          error={!isDateValid}
-                          helperText={!isDateValid && 'Enter Valid Date'}
+      <Formik
+        enableReinitialize
+        validationSchema={validationSchema}
+        initialValues={{
+          selectedOption: 'disable',
+          disableDate: ''
+        }}
+        onSubmit={(data) => {
+          console.log(data);
+          console.log(dayjs(data.disableDate).format('MM/DD/YYYY'));
+        }}>
+        {({ values, errors, setFieldValue, touched }) => (
+          <Form>
+            <DialogContent>
+              <DialogContentText mb={4}>
+                This action will disable access for all children
+              </DialogContentText>
+              <Stack spacing={5}>
+                <FormControl>
+                  <RadioGroup
+                    aria-labelledby="disable-group"
+                    name="selectedOptionn"
+                    value={values.selectedOption}
+                    onChange={(event) => {
+                      setFieldValue('selectedOption', event.currentTarget.value);
+                    }}>
+                    <Stack spacing={2}>
+                      <FormControlLabel
+                        value="disable"
+                        control={<Radio />}
+                        label="Disable immediately"
+                      />
+                      <Stack direction="row" spacing={4}>
+                        <FormControlLabel
+                          value="schedule"
+                          control={<Radio />}
+                          label="Schedule end date"
+                          sx={{ whiteSpace: 'nowrap' }}
                         />
-                      )}
-                      components={{
-                        OpenPickerIcon: !isDatePickerOpen ? ArrowDropDownIcon : ArrowDropUpIcon
-                      }}
-                      onChange={(value) => setDate(value)}
-                    />
-                  </LocalizationProvider>
-                </Stack>
+                        {values.selectedOption === 'schedule' && (
+                          <LocalizationProvider dateAdapter={AdapterDayjs}>
+                            <DesktopDatePicker
+                              open={isDatePickerOpen}
+                              label="Disable date"
+                              value={values?.disableDate}
+                              inputFormat="MM/DD/YYYY"
+                              onClose={() => setIsDatePickerOpen(false)}
+                              renderInput={(params) => (
+                                <TextField
+                                  onClick={() => setIsDatePickerOpen(true)}
+                                  {...params}
+                                  helperText={touched.disableDate && errors.disableDate}
+                                  error={touched.disableDate && Boolean(errors.disableDate)}
+                                />
+                              )}
+                              components={{
+                                OpenPickerIcon: !isDatePickerOpen
+                                  ? ArrowDropDownIcon
+                                  : ArrowDropUpIcon
+                              }}
+                              onChange={(value) => {
+                                setFieldValue('disableDate', value ? value : '');
+                              }}
+                            />
+                          </LocalizationProvider>
+                        )}
+                      </Stack>
+                    </Stack>
+                  </RadioGroup>
+                  {touched.selectedOption && Boolean(errors.selectedOption) && (
+                    <FormHelperText sx={{ color: '#d32f2f' }}>
+                      {touched.selectedOption && errors.selectedOption}
+                    </FormHelperText>
+                  )}
+                </FormControl>
               </Stack>
-            </RadioGroup>
-          </FormControl>
-        </Stack>
-      </DialogContent>
-      <Divider />
-      <DialogActions>
-        <Button variant="text" onClick={handleDialogClose}>
-          CANCEL
-        </Button>
-        <Button variant="text" onClick={() => props.setOpen(false)}>
-          YES, DISABLE
-        </Button>
-      </DialogActions>
+            </DialogContent>
+            <Divider />
+            <DialogActions>
+              <Button variant="text" onClick={handleDialogClose}>
+                CANCEL
+              </Button>
+              <Button type="submit" variant="text">
+                YES, DISABLE
+              </Button>
+            </DialogActions>
+          </Form>
+        )}
+      </Formik>
     </Dialog>
   );
 };

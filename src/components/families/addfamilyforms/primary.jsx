@@ -12,6 +12,7 @@ import PhoneNumberInput from '../../common/phonenumberinput';
 import PropTypes from 'prop-types';
 
 const Primary = (props) => {
+  // console.log(props.errors);
   return (
     <Grid container spacing={2}>
       <Grid item md={4} sm={12}>
@@ -40,16 +41,19 @@ const Primary = (props) => {
         />
       </Grid>
       <Grid item md={4} sm={12}>
-        <FormControl fullWidth>
+        <FormControl
+          fullWidth
+          error={
+            props?.touched?.primary?.relationship && Boolean(props?.errors?.primary?.relationship)
+          }>
           <InputLabel id="role">Role</InputLabel>
           <Select
             labelId="role"
             id="role"
-            value={props?.values?.primary?.role ? props?.values?.primary?.role : ''}
+            value={props?.values?.primary?.relationship ? props?.values?.primary?.relationship : ''}
             onChange={(event) => {
-              props.setFieldValue('primary.role', event.target.value);
+              props.setFieldValue('primary.relationship', event.target.value);
             }}
-            error={props?.touched?.primary?.role && Boolean(props?.errors?.primary?.role)}
             label="Role">
             <MenuItem value={'Mother'}>Mother</MenuItem>
             <MenuItem value={'Father'}>Father</MenuItem>
@@ -59,9 +63,9 @@ const Primary = (props) => {
             <MenuItem value={'Grandfather'}>Grandfather</MenuItem>
             <MenuItem value={'Other'}>Other</MenuItem>
           </Select>
-          {props?.touched?.primary?.role && props?.errors?.primary?.role && (
+          {props?.touched?.primary?.relationship && props?.errors?.primary?.relationship && (
             <FormHelperText sx={{ color: '#d32f2f' }}>
-              {props?.errors?.primary?.role}
+              {props?.errors?.primary?.relationship}
             </FormHelperText>
           )}
         </FormControl>

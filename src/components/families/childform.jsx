@@ -28,7 +28,6 @@ const ChildForm = (props) => {
   };
 
   const handleSubmit = (data) => {
-    console.log(data);
     if (props.child) {
       props.setFamily((prevState) => {
         const tempFamily = { ...prevState };
