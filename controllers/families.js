@@ -75,7 +75,7 @@ module.exports = {
       const params = req.body;
 
       const editedFamily = await familyServices.editFamily(params);
-
+      console.log(editedFamily);
       if (editedFamily) {
         res.status(200).json({
           IsSuccess: true,
@@ -83,18 +83,18 @@ module.exports = {
           Message: 'family details updated'
         });
       } else {
+        res.status(404).json({
+          IsSuccess: false,
+          Data: {},
+          Message: 'family member not found'
+        });
       }
-      res.status(404).json({
-        IsSuccess: false,
-        Data: {},
-        Message: 'family member not found'
-      });
 
       next();
     } catch (error) {
       res.status(500).json({
         IsSuccess: false,
-        Message: error.message
+        Message: error.message === 'Validation error' ? 'Email already exist' : error.message
       });
       next(error);
     }
