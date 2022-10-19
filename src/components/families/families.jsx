@@ -339,7 +339,7 @@ const Families = () => {
                       hover
                       onClick={() => {
                         setIsFamilyDrawerOpen(true);
-                        setFamily(tempFamily);
+                        setFamily(row);
                       }}>
                       <TableCell component="th" scope="row">
                         <Stack direction="row" alignItems="center" spacing={3}>

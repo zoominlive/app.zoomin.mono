@@ -145,20 +145,20 @@ const FamilyDrawer = (props) => {
                 alignItems="center"
                 justifyContent="space-between">
                 <Stack direction="row" spacing={1.5}>
-                  <Avatar>{`${parent.first_name[0].toUpperCase()}${parent.last_name[0].toUpperCase()}`}</Avatar>
+                  <Avatar>{`${parent?.first_name[0]?.toUpperCase()}${parent?.last_name[0]?.toUpperCase()}`}</Avatar>
                   <Stack>
                     <Stack direction="row" spacing={1.5}>
                       <Typography variant="body2">
                         {' '}
-                        {capitalizeFirstLetter(parent.first_name)}{' '}
-                        {capitalizeFirstLetter(parent.last_name)}
+                        {capitalizeFirstLetter(parent?.first_name)}{' '}
+                        {capitalizeFirstLetter(parent?.last_name)}
                       </Typography>
                       <Divider orientation="vertical" variant="middle" flexItem />
                       <Typography variant="body2" className="blue-text">
-                        {parent.relationship}
+                        {parent?.relationship}
                       </Typography>
                     </Stack>
-                    <Typography variant="caption">{parent.email}</Typography>
+                    <Typography variant="caption">{parent?.email}</Typography>
                   </Stack>
                 </Stack>
                 <Stack direction="row" spacing={1.5} alignItems="center" justifyContent="center">
@@ -200,14 +200,14 @@ const FamilyDrawer = (props) => {
             CHILDREN
           </Divider>
           <Stack spacing={2}>
-            {props.family.children.map((child, index) => (
+            {props?.family?.children.map((child, index) => (
               <Stack key={index} spacing={2}>
                 <Stack spacing={1.5} px={2.5}>
                   <Stack direction="row" justifyContent="space-between">
                     <Stack direction="row" spacing={2} alignItems="center">
-                      <Avatar>{child.first_name[0].toUpperCase()}</Avatar>
+                      <Avatar>{child?.first_name[0]?.toUpperCase()}</Avatar>
                       <Typography variant="body2">
-                        {capitalizeFirstLetter(child.first_name)}
+                        {capitalizeFirstLetter(child?.first_name)}
                       </Typography>
                     </Stack>
                     <Stack
@@ -251,7 +251,7 @@ const FamilyDrawer = (props) => {
                     </Stack>
                   </Stack>
                   <Box className="rooms">
-                    {child.rooms.map((room, index) => (
+                    {child.rooms.rooms.map((room, index) => (
                       <Chip key={index} label={room.room_name} />
                     ))}
                   </Box>
