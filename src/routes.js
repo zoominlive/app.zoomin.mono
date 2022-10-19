@@ -14,16 +14,30 @@ const AppRoutes = () => {
 
   return (
     <Routes>
-      <Route path="/dashboard" element={<Dashboard />} />
       {authCtx.user && authCtx.user.role === 'Admin' && <Route path="/users" element={<Users />} />}
-      <Route path="/families" element={<Families />} />
-      <Route path="/rooms" element={<Rooms />} />
+      {authCtx.user && authCtx.user.role !== 'Family' && (
+        <>
+          {' '}
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/families" element={<Families />} />
+          <Route path="/rooms" element={<Rooms />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/settings" element={<Settings />} />{' '}
+        </>
+      )}
       <Route path="/watch-stream" element={<WatchStream />} />
-      <Route path="/profile" element={<Profile />} />
-      <Route path="/settings" element={<Settings />} />
 
       {/* Default Route */}
-      <Route path="*" element={<Navigate to={'dashboard'} />} />
+      <Route
+        path="*"
+        element={
+          authCtx.user && authCtx.user.role === 'Family' ? (
+            <Navigate to={'watch-stream'} />
+          ) : (
+            <Navigate to={'dashboard'} />
+          )
+        }
+      />
     </Routes>
   );
 };

@@ -22,7 +22,8 @@ import ArrowDropUpIcon from '@mui/icons-material/ArrowDropUp';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import { Form, Formik } from 'formik';
 import * as yup from 'yup';
-import dayjs from 'dayjs';
+import { LoadingButton } from '@mui/lab';
+import SaveIcon from '@mui/icons-material/Save';
 
 const validationSchema = yup.object().shape({
   selectedOption: yup.string().required('Please select atleast one option'),
@@ -36,20 +37,20 @@ const validationSchema = yup.object().shape({
     })
 });
 
-const DisableFamily = (props) => {
+const DisableDialog = (props) => {
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
-
-  const handleDialogClose = () => {
-    props.setOpen(false);
-  };
 
   return (
     <Dialog
       open={props.open}
-      onClose={handleDialogClose}
+      onClose={() => {
+        if (!props.loading) {
+          props.handleDialogClose();
+        }
+      }}
       fullWidth
       className="disable-family-dialog small-dialog">
-      <DialogTitle>Disable Family</DialogTitle>
+      <DialogTitle>{props.title}</DialogTitle>
       <Divider />
       <Formik
         enableReinitialize
@@ -58,16 +59,13 @@ const DisableFamily = (props) => {
           selectedOption: 'disable',
           disableDate: ''
         }}
-        onSubmit={(data) => {
-          console.log(data);
-          console.log(dayjs(data.disableDate).format('MM/DD/YYYY'));
-        }}>
+        onSubmit={props.handleDisable}>
         {({ values, errors, setFieldValue, touched }) => (
           <Form>
             <DialogContent>
-              <DialogContentText mb={4}>
-                This action will disable access for all children
-              </DialogContentText>
+              {props.contentText && (
+                <DialogContentText mb={4}>{props.contentText}</DialogContentText>
+              )}
               <Stack spacing={5}>
                 <FormControl>
                   <RadioGroup
@@ -128,12 +126,23 @@ const DisableFamily = (props) => {
             </DialogContent>
             <Divider />
             <DialogActions>
-              <Button variant="text" onClick={handleDialogClose}>
+              <Button
+                variant="text"
+                onClick={() => {
+                  if (!props.loading) {
+                    props.handleDialogClose();
+                  }
+                }}>
                 CANCEL
               </Button>
-              <Button type="submit" variant="text">
+              <LoadingButton
+                loading={props.loading}
+                loadingPosition={props.loading ? 'start' : undefined}
+                startIcon={props.loading && <SaveIcon />}
+                variant="text"
+                type="submit">
                 YES, DISABLE
-              </Button>
+              </LoadingButton>
             </DialogActions>
           </Form>
         )}
@@ -142,9 +151,14 @@ const DisableFamily = (props) => {
   );
 };
 
-export default DisableFamily;
+export default DisableDialog;
 
-DisableFamily.propTypes = {
+DisableDialog.propTypes = {
   open: PropTypes.bool,
-  setOpen: PropTypes.func
+  setOpen: PropTypes.func,
+  title: PropTypes.string,
+  handleDisable: PropTypes.func,
+  contentText: PropTypes.string,
+  loading: PropTypes.bool,
+  handleDialogClose: PropTypes.func
 };

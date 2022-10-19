@@ -42,6 +42,8 @@ const ChildForm = (props) => {
 
   const handleSubmit = (data) => {
     setSubmitLoading(true);
+    setSubmitLoading(false);
+    handleDialogClose();
     console.log(data);
     // if (props.child) {
     //   API.patch('family/child/edit', { ...data, child_id: props.child.id }).then((response) => {

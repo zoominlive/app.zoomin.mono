@@ -17,6 +17,10 @@ import { capitalizeFirstLetter } from '../../utils/capitalizefirstletter';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useState } from 'react';
 import DeleteDialog from '../common/deletedialog';
+import DisableDialog from './disabledialog';
+import dayjs from 'dayjs';
+import { useEffect } from 'react';
+// import dayjs from 'dayjs';
 // import API from '../../api';
 // import { useSnackbar } from 'notistack';
 // import { errorMessageHandler } from '../../utils/errormessagehandler';
@@ -27,11 +31,23 @@ const FamilyDrawer = (props) => {
   // const authCtx = useContext(AuthContext);
   // const { enqueueSnackbar } = useSnackbar();
   // const [childToDelete, setChildToDelete] = useState();
+  const [childToDisable, setChildToDisable] = useState();
+  const [parentToDisable, setParentToDisable] = useState();
+  const [isDisableDialogOpen, setIsDisableDialogOpen] = useState(false);
   const [isDeleteChildDialogOpen, setIsDeleteChildDialogOpen] = useState(false);
+  const [disableDialogTitle, setDisableDialogTitle] = useState();
   const [deleteLoading, setDeleteLoading] = useState();
+
+  useEffect(() => {
+    if (!isDisableDialogOpen) {
+      setChildToDisable();
+      setParentToDisable();
+    }
+  }, [isDisableDialogOpen]);
 
   const handleChildDelete = () => {
     setDeleteLoading(true);
+    setDeleteLoading(false);
     // API.delete('family/child/delete', { family_member_id: childToDelete }).then((response) => {
     //   if (response.status === 200) {
     //     enqueueSnackbar(response.data.Message, { variant: 'success' });
@@ -59,6 +75,18 @@ const FamilyDrawer = (props) => {
     setIsDeleteChildDialogOpen(false);
     // setChildToDelete();
   };
+
+  const handleDisableDialogClose = () => {
+    setIsDisableDialogOpen(false);
+  };
+
+  const handleDisable = (data) => {
+    console.log({ ...data, disableDate: dayjs(data.disableDate).format('MM/DD/YYYY') });
+    handleDisableDialogClose();
+    console.log(parentToDisable);
+  };
+
+  console.log(childToDisable);
 
   return (
     <Drawer
@@ -136,7 +164,14 @@ const FamilyDrawer = (props) => {
                 </Stack>
                 <Stack direction="row" spacing={1.5} alignItems="center" justifyContent="center">
                   {!parent.disabled ? (
-                    <Button variant="outlined" className="disabled-btn">
+                    <Button
+                      variant="outlined"
+                      className="disabled-btn"
+                      onClick={() => {
+                        setDisableDialogTitle('Disable Parent');
+                        setIsDisableDialogOpen(true);
+                        setParentToDisable(parent.id);
+                      }}>
                       Disable
                     </Button>
                   ) : (
@@ -182,7 +217,14 @@ const FamilyDrawer = (props) => {
                       alignItems="center"
                       justifyContent="center">
                       {!child.disabled ? (
-                        <Button variant="outlined" className="disabled-btn">
+                        <Button
+                          variant="outlined"
+                          className="disabled-btn"
+                          onClick={() => {
+                            setIsDisableDialogOpen(true);
+                            setChildToDisable(child.id);
+                            setDisableDialogTitle('Disable Child');
+                          }}>
                           Disable
                         </Button>
                       ) : (
@@ -199,16 +241,14 @@ const FamilyDrawer = (props) => {
                         }}>
                         <EditIcon />
                       </IconButton>
-                      {props?.family?.children?.length !== 1 && (
-                        <IconButton
-                          className="child-delete-btn"
-                          onClick={() => {
-                            setIsDeleteChildDialogOpen(true);
-                            // setChildToDelete(child.id);
-                          }}>
-                          <DeleteIcon />
-                        </IconButton>
-                      )}
+                      <IconButton
+                        className="child-delete-btn"
+                        onClick={() => {
+                          setIsDeleteChildDialogOpen(true);
+                          // setChildToDelete(child.id);
+                        }}>
+                        <DeleteIcon />
+                      </IconButton>
                     </Stack>
                   </Stack>
                   <Box className="rooms">
@@ -253,6 +293,12 @@ const FamilyDrawer = (props) => {
         open={isDeleteChildDialogOpen}
         handleDialogClose={handleDeleteDialogClose}
         handleDelete={handleChildDelete}
+      />
+      <DisableDialog
+        title={disableDialogTitle}
+        open={isDisableDialogOpen}
+        handleDialogClose={handleDisableDialogClose}
+        handleDisable={handleDisable}
       />
     </Drawer>
   );

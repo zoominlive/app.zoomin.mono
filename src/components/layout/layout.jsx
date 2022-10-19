@@ -113,11 +113,13 @@ const Layout = () => {
   const bottomMenuItems = [
     {
       name: 'Knowledge Base',
-      icon: <Book />
+      icon: <Book />,
+      link: 'https://zoominlive.document360.io/'
     },
     {
       name: 'Support',
-      icon: <Shield />
+      icon: <Shield />,
+      link: '#'
     }
   ];
 
@@ -136,10 +138,14 @@ const Layout = () => {
             <List>
               {topMenuItems
                 .filter((item) => {
-                  if (authCtx.user.role === 'User' && item.key === 4) {
-                    return false;
-                  } else {
+                  if (authCtx.user.role === 'User' && item.key !== 4) {
                     return true;
+                  } else if (authCtx.user.role === 'Family' && item.key === 5) {
+                    return true;
+                  } else if (authCtx.user.role === 'Admin') {
+                    return true;
+                  } else {
+                    return false;
                   }
                 })
                 .map((item, index) => (
@@ -180,7 +186,8 @@ const Layout = () => {
                       minHeight: 48,
                       justifyContent: open ? 'initial' : 'center',
                       px: 2.5
-                    }}>
+                    }}
+                    onClick={() => window.open(item.link, '_blank', 'noopener,noreferrer')}>
                     <ListItemIcon
                       sx={{
                         minWidth: 0,

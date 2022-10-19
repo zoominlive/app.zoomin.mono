@@ -127,7 +127,6 @@ const Rooms = () => {
   const [roomsList, setRoomList] = useState([]);
   const [totalRooms, setTotalRooms] = useState(0);
   const [room, setRoom] = useState();
-  const [isSearchValid, setIsSearchValid] = useState(true);
   const [roomsPayload, setRoomsPayload] = useState({
     pageNumber: 0,
     pageSize: parseInt(process.env.REACT_APP_PAGINATION_LIMIT, 10),
@@ -158,7 +157,7 @@ const Rooms = () => {
   // Method to fetch the rooms list for table
   const getRoomsList = () => {
     setIsLoading(true);
-    API.post('rooms', roomsPayload).then((response) => {
+    API.get('rooms', { params: roomsPayload }).then((response) => {
       if (response.status === 200) {
         setRoomList(response.data.Data.finalRoomDetails);
         setTotalRooms(response.data.Data.count);
@@ -247,7 +246,9 @@ const Rooms = () => {
 
   // Method to handle room change for table
   const handleRoomChange = (_, value) => {
-    setRoomsPayload((prevPayload) => ({ ...prevPayload, rooms: value }));
+    const roomsArr = [];
+    value.forEach((room) => roomsArr.push(room.room_name));
+    setRoomsPayload((prevPayload) => ({ ...prevPayload, rooms: roomsArr }));
   };
 
   // Calls the search handler after 500ms
@@ -315,19 +316,8 @@ const Rooms = () => {
                     <Grid item md={5} sm={12}>
                       <TextField
                         label="Search"
-                        error={!isSearchValid}
-                        helperText={!isSearchValid && 'Search cannot contain quote'}
                         placeholder="Room Name,etc"
-                        onChange={(event) => {
-                          if (event.target.value.includes("'")) {
-                            setIsSearchValid(false);
-                          } else {
-                            if (!isSearchValid) {
-                              setIsSearchValid(true);
-                            }
-                            roomsListDebounce(event);
-                          }
-                        }}
+                        onChange={roomsListDebounce}
                       />
                     </Grid>
                     <Grid item md={3.5} sm={12}>
@@ -350,7 +340,6 @@ const Rooms = () => {
                     </Grid>
                     <Grid item md={3.5} sm={12}>
                       <Autocomplete
-                        value={roomsPayload?.rooms}
                         loading={roomsDropdownLoading}
                         fullWidth
                         multiple
@@ -401,8 +390,7 @@ const Rooms = () => {
                 sx={{
                   display: 'flex',
                   justifyContent: 'flex-end',
-                  alignItems: 'center',
-                  marginTop: { md: !isSearchValid ? '-22px' : 0 }
+                  alignItems: 'center'
                 }}>
                 <Box>
                   <Button

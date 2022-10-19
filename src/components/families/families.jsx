@@ -31,7 +31,7 @@ import { Plus } from 'react-feather';
 import LayoutContext from '../../context/layoutcontext';
 import ChildForm from './childform';
 import FamilyForm from './familyform';
-import DisableFamily from './disablefamily';
+import DisableDialog from './disabledialog';
 // import EditFamily from './editfamily';
 import FamilyAction from './familyactions';
 import FamilyDrawer from './familydrawer';
@@ -64,7 +64,6 @@ const Families = () => {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isSearchValid, setIsSearchValid] = useState(true);
   const tempFamily = {
     primary: {
       id: 47,
@@ -230,7 +229,9 @@ const Families = () => {
 
   // Method to handle room change for table
   const handleRoomChange = (_, value) => {
-    setFamiliesPayload((prevPayload) => ({ ...prevPayload, rooms: value }));
+    const roomsArr = [];
+    value.forEach((room) => roomsArr.push(room.room_name));
+    setFamiliesPayload((prevPayload) => ({ ...prevPayload, rooms: roomsArr }));
   };
 
   // Calls the search handler after 500ms
@@ -257,18 +258,7 @@ const Families = () => {
                     <TextField
                       label="Search"
                       placeholder={'Parent Name, Child Name'}
-                      error={!isSearchValid}
-                      helperText={!isSearchValid && 'Search cannot contain quote'}
-                      onChange={(event) => {
-                        if (event.target.value.includes("'")) {
-                          setIsSearchValid(false);
-                        } else {
-                          if (!isSearchValid) {
-                            setIsSearchValid(true);
-                          }
-                          familesListDebounce(event);
-                        }
-                      }}
+                      onChange={familesListDebounce}
                     />
                   </Grid>
                   <Grid item md={3.5} sm={12}>
@@ -294,7 +284,6 @@ const Families = () => {
                       fullWidth
                       multiple
                       id="rooms"
-                      value={familiesPayload?.rooms}
                       options={roomsList}
                       isOptionEqualToValue={(option, value) => option.room_id === value.room_id}
                       getOptionLabel={(option) => {
@@ -438,7 +427,16 @@ const Families = () => {
           getFamiliesList={getFamiliesList}
         />
       )}
-      <DisableFamily open={isDisableFamilyDialogOpen} setOpen={setIsDisableFamilyDialogOpen} />
+      <DisableDialog
+        open={isDisableFamilyDialogOpen}
+        setOpen={setIsDisableFamilyDialogOpen}
+        title="Disable Family"
+        contentText="This action will disable access for all children."
+        handleDisable={(data) => {
+          console.log(data);
+        }}
+        handleDialogClose={() => setIsDisableFamilyDialogOpen(false)}
+      />
       {isAddFamilyDialogOpen && (
         <FamilyForm
           open={isAddFamilyDialogOpen}
