@@ -65,10 +65,11 @@ module.exports = {
     } else {
       let roomsToSearch = '';
       roomsList.forEach(
-        (room) => (roomsToSearch = roomsToSearch + `room_name LIKE '%${room.room_name}%' OR `)
+        (room) =>
+          (roomsToSearch = roomsToSearch + `room_name LIKE '%${room.replace(/'/g, "\\'")}%' OR `)
       );
       roomsToSearch = roomsToSearch.slice(0, -3);
-      countQuery = `SELECT DISTINCT COUNT(room_id) AS count FROM room  WHERE user_id = ${userId} AND location LIKE '%${location}%' AND (${roomsToSearch}) AND room_name LIKE '%${searchBy}%'`;
+      countQuery = `SELECT DISTINCT COUNT(room_id) AS count FROM room  WHERE user_id = ${userId} AND location LIKE '%${location}%' AND room_name LIKE '%${searchBy}%' AND (${roomsToSearch}) `;
       mainQuery = `SELECT * FROM room  WHERE user_id = ${userId} AND location LIKE '%${location}%' AND (${roomsToSearch}) AND room_name LIKE '%${searchBy}%' LIMIT ${pageSize} OFFSET ${
         pageNumber * pageSize
       }`;

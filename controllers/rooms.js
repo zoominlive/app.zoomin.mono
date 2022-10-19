@@ -69,11 +69,11 @@ module.exports = {
   getAllRoomsDetails: async (req, res, next) => {
     try {
       const filter = {
-        pageNumber: req.body?.pageNumber,
-        pageSize: req.body?.pageSize,
-        roomsList: req.body?.rooms,
-        location: req.body?.location,
-        searchBy: req.body?.searchBy
+        pageNumber: req.query?.pageNumber,
+        pageSize: req.query?.pageSize,
+        roomsList: req.query?.rooms,
+        location: req.query?.location,
+        searchBy: req.query?.searchBy.replace(/'/g, "\\'")
       };
       const rooms = await roomServices.getAllRoomsDetails(req.user.user_id, filter);
 

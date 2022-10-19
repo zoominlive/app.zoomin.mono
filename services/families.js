@@ -1,8 +1,9 @@
-const { Family, Camera } = require('../models/index');
+const { Family, Camera, Room, Child } = require('../models/index');
 const Sequelize = require('sequelize');
-const { getAllCameraForRoom } = require('./cameras');
+const childServices = require('./children');
 const _ = require('lodash');
 const sequelize = require('../lib/database');
+
 module.exports = {
   /* Create new room */
   createFamily: async (familyObj) => {
@@ -55,10 +56,10 @@ module.exports = {
   },
 
   /* Fetch all the user's details */
-  getAllRoomsDetails: async (userId, filter) => {
-    let { pageNumber = 0, pageSize = 10, roomsList = [], location = 'All', searchBy = '' } = filter;
+  getAllFamilyDetails: async (userId, filter) => {
+    let { pageNumber = 0, pageSize = 10, location = 'All', searchBy = '', roomsList = [] } = filter;
 
-    let rooms;
+    let families;
     let count;
     let countQuery;
     let mainQuery;
@@ -67,76 +68,78 @@ module.exports = {
       location = '';
     }
 
+    // if (families.length === 0) {
+
     if (roomsList.length === 0) {
-      countQuery = `SELECT DISTINCT COUNT(room_id) AS count FROM room  WHERE user_id = ${userId} AND location LIKE '%${location}%' AND room_name LIKE '%${searchBy}%'`;
-      mainQuery = `SELECT * FROM room  WHERE user_id = ${userId} AND location LIKE '%${location}%' AND room_name LIKE '%${searchBy}%' LIMIT ${pageSize} OFFSET ${
+      countQuery = `SELECT COUNT(DISTINCT family.family_member_id) AS count FROM family INNER JOIN child WHERE family.user_id = ${userId} AND family.location LIKE '%${location}%' AND (family.first_name LIKE '%${searchBy}%' OR family.last_name LIKE '%${searchBy}%' OR child.first_name LIKE '%${searchBy}%')`;
+      mainQuery = `SELECT DISTINCT family.* FROM family INNER JOIN child WHERE family.user_id = ${userId} AND family.location LIKE '%${location}%' AND (family.first_name LIKE '%${searchBy}%' OR family.last_name LIKE '%${searchBy}%' OR child.first_name LIKE '%${searchBy}%') LIMIT ${pageSize} OFFSET ${
         pageNumber * pageSize
-      } `;
+      }`;
     } else {
       let roomsToSearch = '';
       roomsList.forEach(
-        (room) => (roomsToSearch = roomsToSearch + `room_name LIKE '%${room.room_name}%' OR `)
+        (room) =>
+          (roomsToSearch = roomsToSearch + `child.rooms LIKE '%${room.replace(/'/g, "\\'")}%' OR `)
       );
       roomsToSearch = roomsToSearch.slice(0, -3);
-      countQuery = `SELECT DISTINCT COUNT(room_id) AS count FROM room  WHERE user_id = ${userId} AND location LIKE '%${location}%' AND (${roomsToSearch}) AND room_name LIKE '%${searchBy}%'`;
-      mainQuery = `SELECT * FROM room  WHERE user_id = ${userId} AND location LIKE '%${location}%' AND (${roomsToSearch}) AND room_name LIKE '%${searchBy}%' LIMIT ${pageSize} OFFSET ${
+      countQuery = `SELECT DISTINCT COUNT(family.family_member_id) AS count FROM family INNER JOIN child WHERE family.user_id = ${userId} AND family.location LIKE '%${location}%' AND (family.first_name LIKE '%${searchBy}%' OR family.last_name LIKE '%${searchBy}%' OR child.first_name LIKE '%${searchBy}%') AND (${roomsToSearch})`;
+      mainQuery = `SELECT family.* FROM family INNER JOIN child WHERE family.user_id = ${userId} AND family.location LIKE '%${location}%' AND (family.first_name LIKE '%${searchBy}%' OR family.last_name LIKE '%${searchBy}%' OR child.first_name LIKE '%${searchBy}%') AND (${roomsToSearch}) LIMIT ${pageSize} OFFSET ${
         pageNumber * pageSize
       }`;
     }
+
     count = (
       await sequelize.query(
         countQuery,
         {
-          model: Room,
+          model: Family,
+          mapToModel: true
+        },
+        {
+          model: Child,
           mapToModel: true
         },
         { type: Sequelize.QueryTypes.SELECT }
       )
     )[0].dataValues.count;
 
-    rooms = await sequelize.query(
+    families = await sequelize.query(
       mainQuery,
       { type: Sequelize.QueryTypes.SELECT },
       {
-        model: Room,
+        model: Family,
+        mapToModel: true
+      },
+      {
+        model: Child,
         mapToModel: true
       }
     );
 
-    let roomDetails = Promise.all(
-      rooms.map(async (room) => {
-        let roomId;
-        let roomDetails = room;
-        if (room.dataValues) {
-          roomId = room.dataValues.room_id;
+    let filterFamilies = Promise.all(
+      families.map(async (family) => {
+        let familyDetails = family;
+        let familyId;
+        if (family.dataValues) {
+          familyId = family.dataValues.family_id;
         } else {
-          roomId = room.room_id;
+          familyId = family.family_id;
         }
 
-        if (room.dataValues) {
-          roomDetails = room.dataValues;
+        if (family.dataValues) {
+          familyDetails = family.dataValues;
         }
 
-        let camDetails = await getAllCameraForRoom(roomId);
-        if (_.isEmpty(camDetails)) {
-          camDetails = [];
+        let childDetails = await childServices.getAllchildren(familyId);
+        if (_.isEmpty(childDetails)) {
+          childDetails = [];
         }
-
-        return { ...roomDetails, camDetails };
+        return { ...familyDetails, childDetails };
       })
     );
 
-    const finalRoomDetails = await roomDetails;
+    const finalFamilyDetails = await filterFamilies;
 
-    return { finalRoomDetails, count };
-  },
-
-  getAllRoomsList: async (userId) => {
-    let roomList = await Room.findAll({
-      attributes: ['room_name', 'room_id'],
-      where: { user_id: userId }
-    });
-
-    return roomList;
+    return { finalFamilyDetails, count };
   }
 };

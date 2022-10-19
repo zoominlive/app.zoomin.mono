@@ -100,62 +100,21 @@ module.exports = {
     }
   },
 
-  deleteRoom: async (req, res, next) => {
-    try {
-      const params = req.body;
-      const room = await roomServices.deleteRoom(params.room_id);
-
-      res.status(200).json({
-        IsSuccess: true,
-        Data: {},
-        Message: 'Room Deleted'
-      });
-
-      next();
-    } catch (error) {
-      res.status(500).json({
-        IsSuccess: false,
-        Message: error.message
-      });
-      next(error);
-    }
-  },
-
-  getAllRoomsDetails: async (req, res, next) => {
+  getAllFamilyDetails: async (req, res, next) => {
     try {
       const filter = {
-        pageNumber: req.body?.pageNumber,
-        pageSize: req.body?.pageSize,
-        roomsList: req.body?.rooms,
-        location: req.body?.location,
-        searchBy: req.body?.searchBy
+        pageNumber: req.query?.pageNumber,
+        pageSize: req.query?.pageSize,
+        searchBy: req.query?.searchBy,
+        roomsList: req.query?.rooms,
+        location: req.query?.location
       };
-      const rooms = await roomServices.getAllRoomsDetails(req.user.user_id, filter);
+      const rooms = await familyServices.getAllFamilyDetails(req.user.user_id, filter);
 
       res.status(200).json({
         IsSuccess: true,
         Data: rooms,
-        Message: `All the room's details for user:${req.user.first_name}`
-      });
-
-      next();
-    } catch (error) {
-      res.status(500).json({
-        IsSuccess: false,
-        Message: error.message
-      });
-      next(error);
-    }
-  },
-
-  getAllRoomsList: async (req, res, next) => {
-    try {
-      const rooms = await roomServices.getAllRoomsList(req.user.user_id);
-
-      res.status(200).json({
-        IsSuccess: true,
-        Data: rooms,
-        Message: `All the room's details for user:${req.user.first_name}`
+        Message: `All the family's details for user:${req.user.first_name}`
       });
 
       next();

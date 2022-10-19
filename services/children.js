@@ -30,5 +30,14 @@ module.exports = {
     }
 
     return updateChildDetails.toJSON();
+  },
+
+  getAllchildren: async (familyId) => {
+    childDetails = await Child.findAll({
+      raw: true,
+      where: { family_id: familyId }
+    });
+
+    return childDetails;
   }
 };

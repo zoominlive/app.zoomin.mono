@@ -7,7 +7,7 @@ const authController = require('../../middleware/auth');
 const familyController = require('../../controllers/families');
 
 /* User end points */
-// router.post('/', authController, familyController.getFamilyDetails);
+router.get('/', authController, familyController.getAllFamilyDetails);
 router.post('/add', authController, familyController.createFamily);
 router.put('/edit', authController, familyController.editFamily);
 // router.delete('/delete', authController, familyController.deleteFamily);

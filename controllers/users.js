@@ -443,7 +443,7 @@ module.exports = {
       const filter = {
         pageNumber: req.query?.pageNumber,
         pageSize: req.query?.pageSize,
-        searchBy: req.query?.searchBy,
+        searchBy: req.query?.searchBy.replace(/'/g, "\\'"),
         location: req.query?.location,
         pageCount: req.query?.pageCount,
         orderBy: req.query?.orderBy
