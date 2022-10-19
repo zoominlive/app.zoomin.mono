@@ -21,7 +21,8 @@ import {
   TableHead,
   TablePagination,
   TableRow,
-  TextField
+  TextField,
+  Typography
 } from '@mui/material';
 import React, { useEffect, useMemo } from 'react';
 import { useContext } from 'react';
@@ -81,9 +82,7 @@ const Row = (props) => {
                     <TableRow key={index} hover>
                       <TableCell>{camRow.cam_name}</TableCell>
                       <TableCell>
-                        <a href={camRow.cam_uri} target="_blank" rel="noreferrer">
-                          {camRow.cam_uri}
-                        </a>
+                        <Typography color="#1565C0">{camRow.cam_uri}</Typography>
                       </TableCell>
                     </TableRow>
                   ))}

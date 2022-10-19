@@ -20,11 +20,11 @@ import * as yup from 'yup';
 import PhoneNumberInput from '../common/phonenumberinput';
 import { LoadingButton } from '@mui/lab';
 import SaveIcon from '@mui/icons-material/Save';
-// import { errorMessageHandler } from '../../utils/errormessagehandler';
-// import { useContext } from 'react';
-// import AuthContext from '../../context/authcontext';
-// import { useSnackbar } from 'notistack';
-// import API from '../../api';
+import { errorMessageHandler } from '../../utils/errormessagehandler';
+import { useContext } from 'react';
+import AuthContext from '../../context/authcontext';
+import { useSnackbar } from 'notistack';
+import API from '../../api';
 
 const validationSchema = yup.object().shape({
   first_name: yup.string().required('First Name is required'),
@@ -38,72 +38,83 @@ const validationSchema = yup.object().shape({
 });
 
 const ParentsForm = (props) => {
-  // const authCtx = useContext(AuthContext);
-  // const { enqueueSnackbar } = useSnackbar();
+  const authCtx = useContext(AuthContext);
+  const { enqueueSnackbar } = useSnackbar();
   const [submitLoading, setSubmitLoading] = useState(false);
 
   const handleSubmit = (data) => {
     setSubmitLoading(true);
-    // if (props.primaryParent || props.secondaryParent) {
-    //   const family_member_id = props.primaryParent
-    //     ? props.primaryParent.id
-    //     : props.secondaryParent.id;
-    //   API.put('family/edit', { ...data, family_member_id }).then((response) => {
-    //     if (response.status === 200) {
-    //       enqueueSnackbar(response.data.Message, { variant: 'success' });
-    //       props.getFamiliesList();
-    //       if (props.primaryParent) {
-    //         props.setFamily((prevState) => {
-    //           const tempFamily = { ...prevState };
-    //           tempFamily.primary = { id: props.primaryParent.id, ...data };
-    //           return tempFamily;
-    //         });
-    //       } else {
-    //         props.setFamily((prevState) => {
-    //           const tempFamily = { ...prevState };
-    //           const index = tempFamily.secondary.findIndex(
-    //             (parent) => parent.id === props.secondaryParent.id
-    //           );
-    //           tempFamily.secondary[index] = { id: props.secondaryParent.id, ...data };
-    //           return tempFamily;
-    //         });
-    //       }
-    //       handleDialogClose();
-    //     } else {
-    //       errorMessageHandler(
-    //         enqueueSnackbar,
-    //         response?.response?.data?.Message || 'Something Went Wrong.',
-    //         response?.response?.status,
-    //         authCtx.setAuthError
-    //       );
-    //     }
-    //     setSubmitLoading(false);
-    //   });
-    // } else {
-    //   API.post('family/parent/add').then((response) => {
-    //     if (response.status === 200) {
-    //       enqueueSnackbar.apply(response.data.Message,{variant:"success"});
-    //       props.getFamiliesList();
-    //       handleDialogClose();
-    //     } else {
-    //       errorMessageHandler(
-    //         enqueueSnackbar,
-    //         response?.response?.data?.Message || 'Something Went Wrong.',
-    //         response?.response?.status,
-    //         authCtx.setAuthError
-    //       );
-    //     }
-    //   });
-    //   setSubmitLoading(false);
-    // }
-    handleDialogClose();
-    console.log('Data', data);
+    if (props.primaryParent || props.secondaryParent) {
+      const family_member_id = props.primaryParent
+        ? props.primaryParent.family_member_id
+        : props.secondaryParent.family_member_id;
+      API.put('family/edit', { ...data, family_member_id }).then((response) => {
+        if (response.status === 200) {
+          enqueueSnackbar(response.data.Message, { variant: 'success' });
+          props.getFamiliesList();
+          if (props.primaryParent) {
+            props.setFamily((prevState) => {
+              const tempFamily = { ...prevState };
+              tempFamily.primary = {
+                family_member_id: props.primaryParent.family_member_id,
+                ...data
+              };
+              return tempFamily;
+            });
+          } else {
+            props.setFamily((prevState) => {
+              const tempFamily = { ...prevState };
+              const index = tempFamily.secondary.findIndex(
+                (parent) => parent.family_member_id === props.secondaryParent.family_member_id
+              );
+              tempFamily.secondary[index] = {
+                family_member_id: props.secondaryParent.family_member_id,
+                ...data
+              };
+              return tempFamily;
+            });
+          }
+          handleDialogClose();
+        } else {
+          errorMessageHandler(
+            enqueueSnackbar,
+            response?.response?.data?.Message || 'Something Went Wrong.',
+            response?.response?.status,
+            authCtx.setAuthError
+          );
+        }
+        setSubmitLoading(false);
+      });
+    } else {
+      API.post('family/addParent', {
+        ...data,
+        family_id: props.family.primary.family_id,
+        member_type: 'secondary',
+        location: authCtx.user.location
+      }).then((response) => {
+        if (response.status === 201) {
+          enqueueSnackbar(response.data.Message, { variant: 'success' });
+          props.getFamiliesList();
+          handleDialogClose();
+        } else {
+          errorMessageHandler(
+            enqueueSnackbar,
+            response?.response?.data?.Message || 'Something Went Wrong.',
+            response?.response?.status,
+            authCtx.setAuthError
+          );
+        }
+        setSubmitLoading(false);
+      });
+    }
   };
 
   const handleDialogClose = () => {
-    props.setOpen(false);
-    props.setPrimaryParent();
-    props.setSecondaryParent();
+    if (!submitLoading) {
+      props.setOpen(false);
+      props.setPrimaryParent();
+      props.setSecondaryParent();
+    }
   };
 
   return (

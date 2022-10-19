@@ -28,13 +28,14 @@ const FamilyActions = (props) => {
 
   // Method to open add child dialog
   const handleOpenChildDialog = (event) => {
+    props.setFamily(props.family);
     props.openChildFormDialog(true);
     handleClose(event);
   };
 
   // Method to open edit family drawer
   const handleOpenEditDialog = (event) => {
-    props.setFamily(props.tempFamily);
+    props.setFamily(props.family);
     props.openFamilyDrawer(true);
     handleClose(event);
   };
@@ -47,6 +48,7 @@ const FamilyActions = (props) => {
 
   // Method to open disable family dialog
   const handleOpenParentDialog = (event) => {
+    props.setFamily(props.family);
     props.openParentFormDialog(true);
     handleClose(event);
   };
@@ -114,6 +116,5 @@ FamilyActions.propTypes = {
   family: PropTypes.object,
   setFamily: PropTypes.func,
   openParentFormDialog: PropTypes.func,
-  openDeleteDialog: PropTypes.func,
-  tempFamily: PropTypes.object
+  openDeleteDialog: PropTypes.func
 };

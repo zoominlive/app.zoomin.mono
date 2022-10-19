@@ -12,7 +12,6 @@ import PhoneNumberInput from '../../common/phonenumberinput';
 import PropTypes from 'prop-types';
 
 const Primary = (props) => {
-  // console.log(props.errors);
   return (
     <Grid container spacing={2}>
       <Grid item md={4} sm={12}>

@@ -36,8 +36,6 @@ const WatchStream = () => {
     setCamerasPayload((prevPayload) => ({ ...prevPayload, room: value }));
   };
 
-  // console.log(camerasPayload);
-
   return (
     <Card className="empty-content-placeholder">
       <CardContent>
@@ -55,7 +53,7 @@ const WatchStream = () => {
             <Autocomplete
               disableClearable
               noOptionsText={!camerasPayload.location ? 'Select loaction first' : 'No Options'}
-              options={camerasPayload.location ? ['Room 1', 'Room 2'] : ''}
+              options={camerasPayload.location ? ['Room 1', 'Room 2'] : []}
               id="room"
               onChange={handleRoomChange}
               renderInput={(params) => <TextField {...params} label="Room" />}

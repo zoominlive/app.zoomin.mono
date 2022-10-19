@@ -283,7 +283,12 @@ const FamilyDrawer = (props) => {
         <Avatar sx={{ color: '#1976d2', background: '#1976D20A' }}>
           <VisibilityOffIcon />
         </Avatar>
-        <Typography variant="body2">12.09.2022</Typography>
+        <Typography variant="body2">
+          {' '}
+          {props?.family?.schedule_date
+            ? dayjs(props?.family?.schedule_date).format('MM.DD.YYYY')
+            : 'N/A'}
+        </Typography>
       </Stack>
       <DeleteDialog
         title="Delete Child"

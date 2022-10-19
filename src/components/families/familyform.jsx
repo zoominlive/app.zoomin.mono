@@ -180,6 +180,7 @@ const AddFamily = (props) => {
       API.post('family/add', payload).then((response) => {
         if (response.status === 201) {
           enqueueSnackbar(response.data.Message, { variant: 'success' });
+          props.getFamiliesList();
           handleFormDialogClose();
         } else {
           errorMessageHandler(
@@ -339,5 +340,6 @@ export default AddFamily;
 AddFamily.propTypes = {
   open: PropTypes.bool,
   setOpen: PropTypes.func,
-  roomsList: PropTypes.array
+  roomsList: PropTypes.array,
+  getFamiliesList: PropTypes.func
 };

@@ -66,75 +66,10 @@ const Families = () => {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const tempFamily = {
-    primary: {
-      id: 47,
-      first_name: 'Parent',
-      last_name: '1',
-      relationship: 'Father',
-      phone: 5555555555,
-      email: 'parent1@example.com'
-    },
-    secondary: [
-      {
-        id: 1,
-        first_name: 'Parent',
-        last_name: '2',
-        relationship: 'Father',
-        phone: 5555555555,
-        email: 'parent2@example.com',
-        disabled: false
-      },
-      {
-        id: 2,
-        first_name: 'Parent',
-        last_name: '3',
-        relationship: 'Grandfather',
-        phone: 5555555555,
-        email: 'parent2@example.com',
-        disabled: false
-      }
-    ],
-    children: [
-      {
-        id: 1,
-        first_name: 'Child 1',
-        disabled: false,
-        rooms: [
-          {
-            room_name: 'Room 2',
-            room_id: 1
-          }
-        ]
-      },
-      {
-        id: 2,
-        first_name: 'Child 2',
-        disabled: false,
-        rooms: [
-          {
-            room_name: 'Room 2',
-            room_id: 1
-          }
-        ]
-      },
-      {
-        id: 3,
-        first_name: 'Child 3',
-        disabled: false,
-        rooms: [
-          {
-            room_name: 'Room 2',
-            room_id: 1
-          }
-        ]
-      }
-    ]
-  };
   const [familiesPayload, setFamiliesPayload] = useState({
     page: 1,
     limit: parseInt(process.env.REACT_APP_PAGINATION_LIMIT, 10),
-    search: '',
+    searchBy: '',
     location: 'All',
     rooms: []
   });
@@ -199,7 +134,7 @@ const Families = () => {
 
   // Method to handle Search for table
   const handleSearch = (event) => {
-    setFamiliesPayload((prevPayload) => ({ ...prevPayload, search: event.target.value }));
+    setFamiliesPayload((prevPayload) => ({ ...prevPayload, searchBy: event.target.value }));
   };
 
   // Method to handle location change for table
@@ -223,8 +158,6 @@ const Families = () => {
   const handleFamilyDelete = () => {
     setDeleteLoading(false);
   };
-
-  console.log(familiesList);
 
   return (
     <Box className="listing-wrapper">
@@ -390,7 +323,6 @@ const Families = () => {
                           openDeleteDialog={setIsDeleteDialogOpen}
                           family={row}
                           setFamily={setFamily}
-                          tempFamily={tempFamily}
                         />
                       </TableCell>
                     </TableRow>
@@ -439,6 +371,7 @@ const Families = () => {
           open={isAddFamilyDialogOpen}
           setOpen={setIsAddFamilyDialogOpen}
           roomsList={roomsList}
+          getFamiliesList={getFamiliesList}
         />
       )}
       {isParentFormDialogOpen && (

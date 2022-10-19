@@ -14,12 +14,12 @@ import {
 } from '@mui/material';
 import { Form, Formik } from 'formik';
 import * as yup from 'yup';
-// import API from '../../api';
+import API from '../../api';
 import { useState } from 'react';
-// import { useContext } from 'react';
-// import AuthContext from '../../context/authcontext';
-// import { useSnackbar } from 'notistack';
-// import { errorMessageHandler } from '../../utils/errormessagehandler';
+import { useContext } from 'react';
+import AuthContext from '../../context/authcontext';
+import { useSnackbar } from 'notistack';
+import { errorMessageHandler } from '../../utils/errormessagehandler';
 import { LoadingButton } from '@mui/lab';
 import SaveIcon from '@mui/icons-material/Save';
 
@@ -29,8 +29,8 @@ const validationSchema = yup.object({
 });
 
 const ChildForm = (props) => {
-  // const authCtx = useContext(AuthContext);
-  // const { enqueueSnackbar } = useSnackbar();
+  const authCtx = useContext(AuthContext);
+  const { enqueueSnackbar } = useSnackbar();
   const [submitLoading, setSubmitLoading] = useState(false);
 
   const handleDialogClose = () => {
@@ -42,50 +42,61 @@ const ChildForm = (props) => {
 
   const handleSubmit = (data) => {
     setSubmitLoading(true);
-    setSubmitLoading(false);
-    handleDialogClose();
-    console.log(data);
-    // if (props.child) {
-    //   API.patch('family/child/edit', { ...data, child_id: props.child.id }).then((response) => {
-    //     if (response.status === 200) {
-    //       enqueueSnackbar(response.data.Message);
-    //       props.getFamiliesList()
-    //       props.setFamily((prevState) => {
-    //         const tempFamily = { ...prevState };
-    //         const index = tempFamily.children.findIndex((child) => child.id === props.child.id);
-    //         if (index !== -1) {
-    //           tempFamily.children[index] = { id: props.child.id, ...data };
-    //         }
-    //         return tempFamily;
-    //       });
-    //       handleDialogClose();
-    //     } else {
-    //       errorMessageHandler(
-    //         enqueueSnackbar,
-    //         response?.response?.data?.Message || 'Something Went Wrong.',
-    //         response?.response?.status,
-    //         authCtx.setAuthError
-    //       );
-    //     }
-    //     setSubmitLoading(false);
-    //   });
-    // } else {
-    //   API.post('family/child/add', data).then((response) => {
-    //     if (response.status === 201) {
-    //       enqueueSnackbar(response.data.Message);
-    //       props.getFamiliesList()
-    //       handleDialogClose();
-    //     } else {
-    //       errorMessageHandler(
-    //         enqueueSnackbar,
-    //         response?.response?.data?.Message || 'Something Went Wrong.',
-    //         response?.response?.status,
-    //         authCtx.setAuthError
-    //       );
-    //     }
-    //     setSubmitLoading(false);
-    //   });
-    // }
+    if (props.child) {
+      API.put('family/child/edit', {
+        first_name: data.first_name,
+        rooms: { rooms: data.rooms },
+        child_id: props.child.child_id
+      }).then((response) => {
+        if (response.status === 200) {
+          enqueueSnackbar(response.data.Message, { variant: 'success' });
+          props.getFamiliesList();
+          props.setFamily((prevState) => {
+            const tempFamily = { ...prevState };
+            const index = tempFamily.children.findIndex(
+              (child) => child.child_id === props.child.child_id
+            );
+            if (index !== -1) {
+              tempFamily.children[index] = {
+                child_id: props.child.child_id,
+                ...response.data.Data
+              };
+            }
+            return tempFamily;
+          });
+          handleDialogClose();
+        } else {
+          errorMessageHandler(
+            enqueueSnackbar,
+            response?.response?.data?.Message || 'Something Went Wrong.',
+            response?.response?.status,
+            authCtx.setAuthError
+          );
+        }
+        setSubmitLoading(false);
+      });
+    } else {
+      API.post('family/child/add', {
+        first_name: data.first_name,
+        rooms: { rooms: data.rooms },
+        family_id: props.family.primary.family_id
+      }).then((response) => {
+        if (response.status === 201) {
+          enqueueSnackbar(response.data.Message, { variant: 'success' });
+          props.setFamily();
+          props.getFamiliesList();
+          handleDialogClose();
+        } else {
+          errorMessageHandler(
+            enqueueSnackbar,
+            response?.response?.data?.Message || 'Something Went Wrong.',
+            response?.response?.status,
+            authCtx.setAuthError
+          );
+        }
+        setSubmitLoading(false);
+      });
+    }
   };
 
   return (
@@ -98,7 +109,7 @@ const ChildForm = (props) => {
         validationSchema={validationSchema}
         initialValues={{
           first_name: props.child ? props.child.first_name : '',
-          rooms: props.child ? props.child.rooms : []
+          rooms: props.child ? props.child.rooms.rooms : []
         }}
         onSubmit={handleSubmit}>
         {({ values, setFieldValue, touched, errors, isValidating }) => {

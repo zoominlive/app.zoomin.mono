@@ -8,7 +8,7 @@ const Loader = (props) => {
       sx={{
         position: 'absolute',
         color: 'rgb(245 112 35)',
-        zIndex: (theme) => theme.zIndex.drawer + 1,
+        zIndex: 1,
         filter: 'invert(1)'
       }}
       open={props.loading}>
