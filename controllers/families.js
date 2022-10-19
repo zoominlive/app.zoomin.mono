@@ -109,11 +109,11 @@ module.exports = {
         roomsList: req.query?.rooms,
         location: req.query?.location
       };
-      const rooms = await familyServices.getAllFamilyDetails(req.user.user_id, filter);
+      let familyDetails = await familyServices.getAllFamilyDetails(req.user.user_id, filter);
 
       res.status(200).json({
         IsSuccess: true,
-        Data: rooms,
+        Data: familyDetails,
         Message: `All the family's details for user:${req.user.first_name}`
       });
 

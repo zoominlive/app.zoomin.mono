@@ -71,7 +71,7 @@ module.exports = {
     // if (families.length === 0) {
 
     if (roomsList.length === 0) {
-      countQuery = `SELECT COUNT(DISTINCT family.family_member_id) AS count FROM family INNER JOIN child WHERE family.user_id = ${userId} AND family.location LIKE '%${location}%' AND (family.first_name LIKE '%${searchBy}%' OR family.last_name LIKE '%${searchBy}%' OR child.first_name LIKE '%${searchBy}%')`;
+      countQuery = `SELECT COUNT(DISTINCT family.family_id) AS count FROM family INNER JOIN child WHERE family.user_id = ${userId} AND family.location LIKE '%${location}%' AND (family.first_name LIKE '%${searchBy}%' OR family.last_name LIKE '%${searchBy}%' OR child.first_name LIKE '%${searchBy}%')`;
       mainQuery = `SELECT DISTINCT family.* FROM family INNER JOIN child WHERE family.user_id = ${userId} AND family.location LIKE '%${location}%' AND (family.first_name LIKE '%${searchBy}%' OR family.last_name LIKE '%${searchBy}%' OR child.first_name LIKE '%${searchBy}%') LIMIT ${pageSize} OFFSET ${
         pageNumber * pageSize
       }`;
@@ -82,7 +82,7 @@ module.exports = {
           (roomsToSearch = roomsToSearch + `child.rooms LIKE '%${room.replace(/'/g, "\\'")}%' OR `)
       );
       roomsToSearch = roomsToSearch.slice(0, -3);
-      countQuery = `SELECT DISTINCT COUNT(family.family_member_id) AS count FROM family INNER JOIN child WHERE family.user_id = ${userId} AND family.location LIKE '%${location}%' AND (family.first_name LIKE '%${searchBy}%' OR family.last_name LIKE '%${searchBy}%' OR child.first_name LIKE '%${searchBy}%') AND (${roomsToSearch})`;
+      countQuery = `SELECT DISTINCT COUNT(family.family_id) AS count FROM family INNER JOIN child WHERE family.user_id = ${userId} AND family.location LIKE '%${location}%' AND (family.first_name LIKE '%${searchBy}%' OR family.last_name LIKE '%${searchBy}%' OR child.first_name LIKE '%${searchBy}%') AND (${roomsToSearch})`;
       mainQuery = `SELECT family.* FROM family INNER JOIN child WHERE family.user_id = ${userId} AND family.location LIKE '%${location}%' AND (family.first_name LIKE '%${searchBy}%' OR family.last_name LIKE '%${searchBy}%' OR child.first_name LIKE '%${searchBy}%') AND (${roomsToSearch}) LIMIT ${pageSize} OFFSET ${
         pageNumber * pageSize
       }`;
@@ -140,6 +140,28 @@ module.exports = {
 
     const finalFamilyDetails = await filterFamilies;
 
-    return { finalFamilyDetails, count };
+    let familyArray = [];
+
+    finalFamilyDetails.forEach((familyMember) => {
+      if (familyMember.member_type == 'primary') {
+        familyArray.push({
+          primary: _.omit(familyMember, ['childDetails']),
+          secondary: [],
+          children: familyMember.childDetails
+        });
+      }
+    });
+
+    finalFamilyDetails.forEach((familyMember) => {
+      if (familyMember.member_type == 'secondary') {
+        familyArray.forEach((family, index) => {
+          if (familyMember.family_id === family.primary.family_id) {
+            familyArray[index].secondary.push(_.omit(familyMember, ['childDetails']));
+          }
+        });
+      }
+    });
+
+    return { familyArray, count };
   }
 };
