@@ -68,8 +68,6 @@ module.exports = {
       location = '';
     }
 
-    // if (families.length === 0) {
-
     if (roomsList.length === 0) {
       countQuery = `SELECT COUNT(DISTINCT family.family_id) AS count FROM family INNER JOIN child WHERE family.user_id = ${userId} AND family.location LIKE '%${location}%' AND (family.first_name LIKE '%${searchBy}%' OR family.last_name LIKE '%${searchBy}%' OR child.first_name LIKE '%${searchBy}%')`;
       mainQuery = `SELECT DISTINCT family.* FROM family INNER JOIN child WHERE family.user_id = ${userId} AND family.location LIKE '%${location}%' AND (family.first_name LIKE '%${searchBy}%' OR family.last_name LIKE '%${searchBy}%' OR child.first_name LIKE '%${searchBy}%') LIMIT ${pageSize} OFFSET ${

@@ -4,7 +4,7 @@ const _ = require('lodash');
 const sequelize = require('../lib/database');
 
 module.exports = {
-  /* Create new room */
+  /* Create new child */
   createChild: async (childObj) => {
     let childCreated = await Child.create(childObj);
 

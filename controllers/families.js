@@ -119,7 +119,7 @@ module.exports = {
       const filter = {
         pageNumber: req.query?.pageNumber,
         pageSize: req.query?.pageSize,
-        searchBy: req.query?.searchBy,
+        searchBy: req.query?.searchBy.replace(/'/g, "\\'"),
         roomsList: req.query?.rooms,
         location: req.query?.location
       };
