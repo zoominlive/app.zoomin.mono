@@ -43,6 +43,8 @@ import ParentForm from './parentform';
 import DeleteDialog from '../common/deletedialog';
 import debounce from 'lodash.debounce';
 import Loader from '../common/loader';
+import { capitalizeFirstLetter } from '../../utils/capitalizefirstletter';
+import dayjs from 'dayjs';
 
 const Families = () => {
   const layoutCtx = useContext(LayoutContext);
@@ -163,45 +165,23 @@ const Families = () => {
     });
   }, []);
 
-  const rows = [
-    {
-      id: 1,
-      primary_parent: 'Savannah Nguyen',
-      location: 'Location 4',
-      family: ['TY', 'RE', 'CA'],
-      children: ['B', 'D'],
-      end_date: '09.12.2022'
-    },
-    {
-      id: 2,
-      primary_parent: 'Savannah Nguyen',
-      location: 'Location 4',
-      family: ['TY', 'RE', 'CA'],
-      children: ['B', 'D'],
-      end_date: '09.12.2022'
-    }
-  ];
-
   // Method to fetch families list
   const getFamiliesList = () => {
     setIsLoading(true);
-    setFamiliesList([]);
-    setTotalFamilies(0);
-    // API.post('rooms', familiesPayload).then((response) => {
-    //   if (response.status === 200) {
-    //     setFamiliesList(response.data.Data.finalRoomDetails);
-    //     setTotalFamilies(response.data.Data.count);
-    //   } else {
-    //     errorMessageHandler(
-    //       enqueueSnackbar,
-    //       response?.response?.data?.Message || 'Something Went Wrong.',
-    //       response?.response?.status,
-    //       authCtx.setAuthError
-    //     );
-    //   }
-    //   setIsLoading(false);
-    // });
-    setIsLoading(false);
+    API.get('family', { params: familiesPayload }).then((response) => {
+      if (response.status === 200) {
+        setFamiliesList(response.data.Data.familyArray);
+        setTotalFamilies(response.data.Data.count);
+      } else {
+        errorMessageHandler(
+          enqueueSnackbar,
+          response?.response?.data?.Message || 'Something Went Wrong.',
+          response?.response?.status,
+          authCtx.setAuthError
+        );
+      }
+      setIsLoading(false);
+    });
   };
 
   // Method to change the page in table
@@ -353,7 +333,7 @@ const Families = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {rows.map((row, index) => (
+                  {familiesList.map((row, index) => (
                     <TableRow
                       key={index}
                       hover
@@ -363,27 +343,44 @@ const Families = () => {
                       }}>
                       <TableCell component="th" scope="row">
                         <Stack direction="row" alignItems="center" spacing={3}>
-                          <Avatar>RE</Avatar>
-                          <Typography>{row.primary_parent}</Typography>
+                          <Avatar>{`${row.primary?.first_name[0]?.toUpperCase()}${row.primary?.last_name[0]?.toUpperCase()}`}</Avatar>
+                          <Typography>
+                            {' '}
+                            {row?.primary?.first_name &&
+                              capitalizeFirstLetter(row?.primary?.first_name)}{' '}
+                            {row?.primary?.last_name &&
+                              capitalizeFirstLetter(row?.primary?.last_name)}
+                          </Typography>
                         </Stack>
                       </TableCell>
-                      <TableCell align="left">{row.location}</TableCell>
                       <TableCell align="left">
-                        <AvatarGroup max={5}>
-                          {row.family.map((person, index) => (
-                            <Avatar key={index}>{person}</Avatar>
+                        <Stack direction="row">
+                          {row.primary.location.selected_locations.map((location, index) => (
+                            <Chip key={index} label={location} color="primary" />
+                          ))}
+                        </Stack>
+                      </TableCell>
+                      <TableCell align="left">
+                        <AvatarGroup>
+                          {row.secondary.map((person, index) => (
+                            <Avatar
+                              key={
+                                index
+                              }>{`${person?.first_name[0]?.toUpperCase()}${person?.last_name[0]?.toUpperCase()}`}</Avatar>
                           ))}
                         </AvatarGroup>
                       </TableCell>
                       <TableCell align="left">
                         {' '}
-                        <AvatarGroup max={5}>
-                          {row.children.map((person, index) => (
-                            <Avatar key={index}>{person}</Avatar>
+                        <AvatarGroup>
+                          {row.children.map((child, index) => (
+                            <Avatar key={index}>{`${child?.first_name[0]?.toUpperCase()}`}</Avatar>
                           ))}
                         </AvatarGroup>
                       </TableCell>
-                      <TableCell>{row.end_date}</TableCell>
+                      <TableCell>
+                        {row.schedule_date ? dayjs(row.schedule_date).format('MM.DD.YYYY') : 'N/A'}
+                      </TableCell>
                       <TableCell align="right">
                         <FamilyAction
                           openChildFormDialog={setIsChildFormDialogOpen}

@@ -84,9 +84,8 @@ const FamilyDrawer = (props) => {
     console.log({ ...data, disableDate: dayjs(data.disableDate).format('MM/DD/YYYY') });
     handleDisableDialogClose();
     console.log(parentToDisable);
+    console.log(childToDisable);
   };
-
-  console.log(childToDisable);
 
   return (
     <Drawer
