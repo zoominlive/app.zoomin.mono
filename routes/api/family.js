@@ -10,6 +10,6 @@ const familyController = require('../../controllers/families');
 router.get('/', authController, familyController.getAllFamilyDetails);
 router.post('/add', authController, familyController.createFamily);
 router.put('/edit', authController, familyController.editFamily);
-// router.delete('/delete', authController, familyController.deleteFamily);
+router.post('/addParent', authController, familyController.addParent);
 // router.post('/validEmail', authController, familyController.isEmailValid);
 module.exports = router;

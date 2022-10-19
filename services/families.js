@@ -163,5 +163,13 @@ module.exports = {
     });
 
     return { familyArray, count };
+  },
+
+  getFamilyMember: async (familyMemberId) => {
+    let familyMember = await Family.findOne({
+      where: { family_member_id: familyMemberId },
+      raw: true
+    });
+    return familyMember;
   }
 };

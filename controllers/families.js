@@ -1,7 +1,7 @@
 const _ = require('lodash');
 const familyServices = require('../services/families');
 const childServices = require('../services/children');
-
+const userServices = require('../services/users');
 module.exports = {
   createFamily: async (req, res, next) => {
     try {
@@ -73,21 +73,35 @@ module.exports = {
   editFamily: async (req, res, next) => {
     try {
       const params = req.body;
+      let emailExist = false;
+      const familyMember = await familyServices.getFamilyMember(params.family_member_id);
 
-      const editedFamily = await familyServices.editFamily(params);
-      console.log(editedFamily);
-      if (editedFamily) {
-        res.status(200).json({
-          IsSuccess: true,
-          Data: editedFamily,
-          Message: 'family details updated'
-        });
-      } else {
-        res.status(404).json({
+      if (params.email !== familyMember.email) {
+        emailExist = await userServices.checkEmailExist(params.email);
+      }
+
+      if (emailExist) {
+        res.status(409).json({
           IsSuccess: false,
           Data: {},
-          Message: 'family member not found'
+          Message: 'Email already exist'
         });
+      } else {
+        const editedFamily = await familyServices.editFamily(params);
+
+        if (editedFamily) {
+          res.status(200).json({
+            IsSuccess: true,
+            Data: editedFamily,
+            Message: 'family details updated'
+          });
+        } else {
+          res.status(404).json({
+            IsSuccess: false,
+            Data: {},
+            Message: 'family member not found'
+          });
+        }
       }
 
       next();
@@ -116,6 +130,40 @@ module.exports = {
         Data: familyDetails,
         Message: `All the family's details for user:${req.user.first_name}`
       });
+
+      next();
+    } catch (error) {
+      res.status(500).json({
+        IsSuccess: false,
+        Message: error.message
+      });
+      next(error);
+    }
+  },
+
+  addParent: async (req, res, next) => {
+    try {
+      params = req.body;
+      params.cust_id = req.user.cust_id;
+      params.user_id = req.user.user_id;
+
+      let emailExist = await userServices.checkEmailExist(params.email);
+
+      if (emailExist) {
+        res.status(409).json({
+          IsSuccess: false,
+          Data: {},
+          Message: 'Email already exist'
+        });
+      } else {
+        const parent = await familyServices.createFamily(params);
+
+        res.status(201).json({
+          IsSuccess: true,
+          Data: parent,
+          Message: 'New parent added'
+        });
+      }
 
       next();
     } catch (error) {
