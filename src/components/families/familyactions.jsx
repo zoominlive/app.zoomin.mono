@@ -100,7 +100,7 @@ const FamilyActions = (props) => {
           <ListItemIcon>
             <DeleteForeverIcon />
           </ListItemIcon>
-          <ListItemText>Delete User</ListItemText>
+          <ListItemText>Delete Family</ListItemText>
         </MenuItem>
       </Menu>
     </Box>
