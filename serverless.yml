@@ -97,10 +97,10 @@ functions:
     handler: handler.handler
     events:
       - httpApi: 'DELETE /api/users/deleteImage'
-  # deleteNotVerifiedUsers:
-  #   handler: handler.handler
-  #   events:
-  #     - schedule: rate(1 minute)
+  disableScheduledMembers:
+    handler: cron.disableScheduledFamilyAndChild
+    events:
+      - schedule: rate(1 minute)
 
 plugins:
   - serverless-offline

@@ -248,7 +248,8 @@ module.exports = {
     } else {
       let update = {
         updated_at: Sequelize.literal('CURRENT_TIMESTAMP'),
-        status: 'Disabled'
+        status: 'Disabled',
+        scheduled_end_date: null
       };
 
       if (memberType == 'secondary') {

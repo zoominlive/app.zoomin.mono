@@ -51,7 +51,7 @@ module.exports = {
   deleteChild: async (req, res, next) => {
     try {
       const params = req.body;
-      const child = await roomServices.deleteChild(params.child_id);
+      const child = await childServices.deleteChild(params.child_id);
 
       res.status(200).json({
         IsSuccess: true,

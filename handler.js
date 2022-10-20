@@ -11,9 +11,6 @@ const sequelize = require('./lib/database');
 var bodyParser = require('body-parser');
 const cors = require('cors');
 
-// const { deleteNotVerifiedUsers } = require('./lib/cron-services');
-
-// deleteNotVerifiedUsers();
 app.use(cors());
 // To create DB tables from modules and sync DB
 sequelize.sync();

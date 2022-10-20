@@ -208,11 +208,19 @@ module.exports = {
         params?.scheduled_end_date
       );
 
-      res.status(200).json({
-        IsSuccess: true,
-        Data: {},
-        Message: 'Family disabled'
-      });
+      if (params?.scheduled_end_date) {
+        res.status(200).json({
+          IsSuccess: true,
+          Data: {},
+          Message: 'Family is schedlued to disable at selected date'
+        });
+      } else {
+        res.status(200).json({
+          IsSuccess: true,
+          Data: {},
+          Message: 'Family disabled'
+        });
+      }
 
       next();
     } catch (error) {
@@ -233,11 +241,19 @@ module.exports = {
         params.family_id
       );
 
-      res.status(200).json({
-        IsSuccess: true,
-        Data: {},
-        Message: 'Family disabled'
-      });
+      if (params.member_type === 'secondary') {
+        res.status(200).json({
+          IsSuccess: true,
+          Data: {},
+          Message: 'Family member enabled'
+        });
+      } else {
+        res.status(200).json({
+          IsSuccess: true,
+          Data: {},
+          Message: 'Family enabled'
+        });
+      }
 
       next();
     } catch (error) {
