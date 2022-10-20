@@ -6,37 +6,50 @@ const sequelize = require('../lib/database');
 
 const getSecondaryParents = async (familyIdArray) => {
   let ids = '';
-  familyIdArray.forEach((id) => (ids = ids + `family_id LIKE '%${id}%' OR `));
-  ids = ids.slice(0, -3);
-
-  let mainQuery = `SELECT DISTINCT * FROM family  WHERE (${ids}) AND member_type="secondary" `;
-
-  let secondaryParents = await sequelize.query(
-    mainQuery,
-    { type: Sequelize.QueryTypes.SELECT },
-    {
-      model: Family,
-      mapToModel: true
-    }
-  );
-  return secondaryParents;
+  let mainQuery;
+  if (!_.isEmpty(familyIdArray)) {
+    familyIdArray.forEach((id) => (ids = ids + `family_id LIKE '%${id}%' OR `));
+    ids = ids.slice(0, -3);
+    mainQuery = `SELECT * FROM family  WHERE (${ids}) AND member_type="secondary" `;
+    let secondaryParents = await sequelize.query(
+      mainQuery,
+      { type: Sequelize.QueryTypes.SELECT },
+      {
+        model: Family,
+        mapToModel: true
+      }
+    );
+    return secondaryParents;
+  } else {
+    return null;
+  }
 };
 const getChildren = async (familyIdArray) => {
   let ids = '';
-  familyIdArray.forEach((familyId) => (ids = ids + `family_id LIKE '%${familyId}%' OR `));
-  ids = ids.slice(0, -3);
-
-  let mainQuery = `SELECT DISTINCT * FROM child  WHERE (${ids})`;
-
-  let children = await sequelize.query(
-    mainQuery,
-    { type: Sequelize.QueryTypes.SELECT },
-    {
-      model: Child,
-      mapToModel: true
-    }
-  );
-  return children;
+  let mainQuery;
+  if (!_.isEmpty(familyIdArray)) {
+    familyIdArray.forEach((id) => (ids = ids + `family_id LIKE '%${id}%' OR `));
+    ids = ids.slice(0, -3);
+    mainQuery = `SELECT * FROM child  WHERE (${ids}) `;
+    let children = await sequelize.query(
+      mainQuery,
+      { type: Sequelize.QueryTypes.SELECT },
+      {
+        model: Child,
+        mapToModel: true
+      }
+    );
+    return children;
+  } else {
+    return null;
+  }
+};
+const getPrimaryMember = async (familyId) => {
+  let familyMember = await Family.findOne({
+    where: { family_id: familyId, member_type: 'primary' },
+    raw: true
+  });
+  return familyMember;
 };
 
 module.exports = {
@@ -102,12 +115,9 @@ module.exports = {
     if (location === 'All') {
       location = '';
     }
-
+    let query1;
     if (roomsList.length === 0) {
-      countQuery = `SELECT COUNT(DISTINCT family.family_id) AS count FROM family INNER JOIN child WHERE family.user_id = ${userId} AND family.location LIKE '%${location}%' AND (family.first_name LIKE '%${searchBy}%' OR family.last_name LIKE '%${searchBy}%' OR child.first_name LIKE '%${searchBy}%')`;
-      mainQuery = `SELECT DISTINCT family.* FROM family INNER JOIN child WHERE family.user_id = ${userId} AND family.location LIKE '%${location}%' AND (family.first_name LIKE '%${searchBy}%' OR family.last_name LIKE '%${searchBy}%' OR child.first_name LIKE '%${searchBy}%') LIMIT ${pageSize} OFFSET ${
-        pageNumber * pageSize
-      }`;
+      query1 = `SELECT family.* FROM family INNER JOIN child WHERE family.user_id = ${userId} AND child.location LIKE '%${location}%' AND (family.first_name LIKE '%${searchBy}%' OR family.last_name LIKE '%${searchBy}%' OR child.first_name LIKE '%${searchBy}%')`;
     } else {
       let roomsToSearch = '';
 
@@ -117,7 +127,7 @@ module.exports = {
       );
       roomsToSearch = roomsToSearch.slice(0, -3);
 
-      let query1 = `SELECT family.* FROM family INNER JOIN child WHERE family.user_id = ${userId} AND child.location LIKE '%${location}%' AND (family.first_name LIKE '%${searchBy}%' OR family.last_name LIKE '%${searchBy}%' OR child.first_name LIKE '%${searchBy}%') AND (${roomsToSearch})`;
+      query1 = `SELECT family.* FROM family INNER JOIN child WHERE family.user_id = ${userId} AND child.location LIKE '%${location}%' AND (family.first_name LIKE '%${searchBy}%' OR family.last_name LIKE '%${searchBy}%' OR child.first_name LIKE '%${searchBy}%') AND (${roomsToSearch})`;
 
       families = await sequelize.query(
         query1,
@@ -133,7 +143,6 @@ module.exports = {
       );
     }
 
-    // const finalFamilyDetails = await filterFamilies;
     let uniqueFamilies = _.uniqWith(families, _.isEqual);
     let familyArray = [];
 
@@ -147,25 +156,33 @@ module.exports = {
       }
     });
 
-    uniqueFamilies.forEach(async (familyMember) => {
-      if (familyMember.member_type == 'secondary') {
-        let isFound = 0;
-        familyArray.forEach((family) => {
-          if (family.primary.famiy_id === familyMember.family_id) {
-            isFound = 1;
-          }
-        });
-
-        if ((isFound = 0)) {
-          let primaryMember = await getPrimaryMember(familyMember.family_id);
-          familyArray.push({
-            primary: primaryMember,
-            secondary: [],
-            children: []
+    const waitforResult = Promise.all(
+      uniqueFamilies.map(async (familyMember) => {
+        if (familyMember.member_type == 'secondary') {
+          let isFound = 0;
+          familyArray.map((family) => {
+            if (family.primary.famiy_id === familyMember.family_id) {
+              isFound = 1;
+            }
           });
+
+          if (isFound === 0) {
+            let primaryMember = await getPrimaryMember(familyMember.family_id);
+            familyArray.push({
+              primary: primaryMember,
+              secondary: [],
+              children: []
+            });
+          }
         }
-      }
-    });
+      })
+    );
+
+    const result = await waitforResult;
+
+    familyArray = _.uniqWith(familyArray, _.isEqual);
+    count = familyArray.length;
+    familyArray = familyArray.slice(pageNumber * pageSize, (pageNumber + 1) * pageSize);
 
     let familyIdToSearch = familyArray.map((family) => family.primary.family_id);
 
@@ -192,14 +209,6 @@ module.exports = {
   getFamilyMember: async (familyMemberId) => {
     let familyMember = await Family.findOne({
       where: { family_member_id: familyMemberId },
-      raw: true
-    });
-    return familyMember;
-  },
-
-  getPrimaryMember: async (familyId) => {
-    let familyMember = await Family.findOne({
-      where: { family_id: familyId, member_type: 'primary' },
       raw: true
     });
     return familyMember;
