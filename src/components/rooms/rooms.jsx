@@ -329,11 +329,13 @@ const Rooms = () => {
                           onChange={handleLocationChange}
                           label="Location">
                           <MenuItem value={'All'}>All</MenuItem>
-                          {authCtx.user.location.accessable_locations.map((location, index) => (
-                            <MenuItem key={index} value={location}>
-                              {location}
-                            </MenuItem>
-                          ))}
+                          {authCtx.user.location.accessable_locations
+                            .sort((a, b) => (a > b ? 1 : -1))
+                            .map((location, index) => (
+                              <MenuItem key={index} value={location}>
+                                {location}
+                              </MenuItem>
+                            ))}
                         </Select>
                       </FormControl>
                     </Grid>
@@ -343,7 +345,7 @@ const Rooms = () => {
                         fullWidth
                         multiple
                         id="rooms"
-                        options={dropdownList}
+                        options={dropdownList.sort((a, b) => (a.room_name > b.room_name ? 1 : -1))}
                         isOptionEqualToValue={(option, value) => option.room_id === value.room_id}
                         getOptionLabel={(option) => {
                           return option.room_name;

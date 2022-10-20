@@ -272,13 +272,15 @@ const RoomForm = (props) => {
                             authCtx.user.location &&
                             authCtx.user.location.selected_locations &&
                             authCtx.user.location.selected_locations.length > 0 &&
-                            authCtx.user.location.selected_locations.map((location, index) => {
-                              return (
-                                <MenuItem key={index} value={location}>
-                                  {location}
-                                </MenuItem>
-                              );
-                            })}
+                            authCtx.user.location.selected_locations
+                              .sort((a, b) => (a > b ? 1 : -1))
+                              .map((location, index) => {
+                                return (
+                                  <MenuItem key={index} value={location}>
+                                    {location}
+                                  </MenuItem>
+                                );
+                              })}
                         </Select>
                         {touched.location && errors.location && (
                           <FormHelperText sx={{ color: '#d32f2f' }}>

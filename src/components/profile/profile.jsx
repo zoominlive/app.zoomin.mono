@@ -288,7 +288,9 @@ const Profile = () => {
                         fullWidth
                         multiple
                         id="locations"
-                        options={authCtx?.user?.location?.accessable_locations}
+                        options={authCtx?.user?.location?.accessable_locations.sort((a, b) =>
+                          a > b ? 1 : -1
+                        )}
                         onChange={(_, value) => {
                           setFieldValue('locations', value);
                         }}

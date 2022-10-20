@@ -4,8 +4,12 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import { FieldArray } from 'formik';
 import PropTypes from 'prop-types';
+import { useContext } from 'react';
+import AuthContext from '../../../context/authcontext';
 
 const Children = (props) => {
+  const authCtx = useContext(AuthContext);
+
   return (
     <FieldArray
       name="children"
@@ -17,7 +21,7 @@ const Children = (props) => {
                 props.values.children.length > 0 &&
                 props.values.children.map((_, index) => (
                   <>
-                    <Grid item md={3} sm={12}>
+                    <Grid item md={6} sm={12}>
                       <TextField
                         name={`children.${index}.first_name`}
                         label="First Name"
@@ -48,12 +52,45 @@ const Children = (props) => {
                         }
                       />
                     </Grid>
-                    <Grid item md={7} sm={12}>
+                    <Grid item md={6} sm={12}>
+                      <TextField
+                        name={`children.${index}.last_name`}
+                        label="Last Name"
+                        value={props?.values?.children[index]?.last_name}
+                        onChange={(event) => {
+                          props.setFieldValue(`children[${index}].last_name`, event.target.value);
+                        }}
+                        fullWidth
+                        helperText={
+                          props.touched &&
+                          props.touched.children &&
+                          props.touched.children[index] &&
+                          props.touched.children[index].last_name &&
+                          props.errors &&
+                          props.errors.children &&
+                          props.errors.children[index] &&
+                          props.errors.children[index].last_name
+                        }
+                        error={
+                          props.touched &&
+                          props.touched.children &&
+                          props.touched.children[index] &&
+                          props.touched.children[index].last_name &&
+                          props.errors &&
+                          props.errors.children &&
+                          props.errors.children[index] &&
+                          Boolean(props.errors.children[index].last_name)
+                        }
+                      />
+                    </Grid>
+                    <Grid item md={5} sm={12}>
                       <Autocomplete
                         fullWidth
                         multiple
                         id={`children.${index}.rooms`}
-                        options={props.roomsList}
+                        options={props.roomsList.sort((a, b) =>
+                          a.room_name > b.room_name ? 1 : -1
+                        )}
                         value={props?.values?.children[index]?.rooms}
                         isOptionEqualToValue={(option, value) => option.room_id === value.room_id}
                         getOptionLabel={(option) => {
@@ -74,7 +111,7 @@ const Children = (props) => {
                         renderInput={(params) => (
                           <TextField
                             {...params}
-                            label="Room"
+                            label="Rooms"
                             fullWidth
                             helperText={
                               props.touched &&
@@ -95,6 +132,52 @@ const Children = (props) => {
                               props.errors.children &&
                               props.errors.children[index] &&
                               Boolean(props.errors.children[index].rooms)
+                            }
+                          />
+                        )}
+                      />
+                    </Grid>
+                    <Grid item md={5} sm={12}>
+                      <Autocomplete
+                        fullWidth
+                        multiple
+                        id={`children.${index}.locations`}
+                        options={authCtx?.user?.location?.selected_locations.sort((a, b) =>
+                          a > b ? 1 : -1
+                        )}
+                        value={props?.values?.children[index]?.locations}
+                        onChange={(_, value) => {
+                          props.setFieldValue(`children[${index}].locations`, value);
+                        }}
+                        renderTags={(value, getTagProps) =>
+                          value.map((option, index) => (
+                            <Chip key={index} label={option} {...getTagProps({ index })} />
+                          ))
+                        }
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            label="Locations"
+                            fullWidth
+                            helperText={
+                              props.touched &&
+                              props.touched.children &&
+                              props.touched.children[index] &&
+                              props.touched.children[index].locations &&
+                              props.errors &&
+                              props.errors.children &&
+                              props.errors.children[index] &&
+                              props.errors.children[index].locations
+                            }
+                            error={
+                              props.touched &&
+                              props.touched.children &&
+                              props.touched.children[index] &&
+                              props.touched.children[index].locations &&
+                              props.errors &&
+                              props.errors.children &&
+                              props.errors.children[index] &&
+                              Boolean(props.errors.children[index].locations)
                             }
                           />
                         )}

@@ -184,11 +184,13 @@ const Families = () => {
                         label="Location"
                         onChange={handleLocationChange}>
                         <MenuItem value={'All'}>All</MenuItem>
-                        {authCtx.user.location.accessable_locations.map((location, index) => (
-                          <MenuItem key={index} value={location}>
-                            {location}
-                          </MenuItem>
-                        ))}
+                        {authCtx.user.location.accessable_locations
+                          .sort((a, b) => (a > b ? 1 : -1))
+                          .map((location, index) => (
+                            <MenuItem key={index} value={location}>
+                              {location}
+                            </MenuItem>
+                          ))}
                       </Select>
                     </FormControl>
                   </Grid>
@@ -197,7 +199,7 @@ const Families = () => {
                       fullWidth
                       multiple
                       id="rooms"
-                      options={roomsList}
+                      options={roomsList.sort((a, b) => (a.room_name > b.room_name ? 1 : -1))}
                       isOptionEqualToValue={(option, value) => option.room_id === value.room_id}
                       getOptionLabel={(option) => {
                         return option.room_name;
@@ -256,12 +258,12 @@ const Families = () => {
                 <TableHead>
                   <TableRow>
                     <TableCell style={{ minWidth: '150px' }}>Primary Parent</TableCell>
+                    <TableCell align="left">Children</TableCell>
                     <TableCell style={{ minWidth: '100px' }} align="left">
                       Location
                     </TableCell>
-                    <TableCell align="left">Family</TableCell>
-                    <TableCell align="left">Children</TableCell>
-                    <TableCell align="left">Schedule end date</TableCell>
+                    <TableCell align="left">Family Members</TableCell>
+                    <TableCell align="left">Schedule End Date</TableCell>
                     <TableCell align="right"></TableCell>
                   </TableRow>
                 </TableHead>
@@ -287,10 +289,20 @@ const Families = () => {
                         </Stack>
                       </TableCell>
                       <TableCell align="left">
-                        <Stack direction="row">
-                          {row.primary.location.selected_locations.map((location, index) => (
-                            <Chip key={index} label={location} color="primary" />
+                        {' '}
+                        <AvatarGroup>
+                          {row.children.map((child, index) => (
+                            <Avatar key={index}>{`${child?.first_name[0]?.toUpperCase()}`}</Avatar>
                           ))}
+                        </AvatarGroup>
+                      </TableCell>
+                      <TableCell align="left">
+                        <Stack direction="row">
+                          {row.primary.location.selected_locations
+                            .sort((a, b) => (a > b ? 1 : -1))
+                            .map((location, index) => (
+                              <Chip key={index} label={location} color="primary" />
+                            ))}
                         </Stack>
                       </TableCell>
                       <TableCell align="left">
@@ -300,14 +312,6 @@ const Families = () => {
                               key={
                                 index
                               }>{`${person?.first_name[0]?.toUpperCase()}${person?.last_name[0]?.toUpperCase()}`}</Avatar>
-                          ))}
-                        </AvatarGroup>
-                      </TableCell>
-                      <TableCell align="left">
-                        {' '}
-                        <AvatarGroup>
-                          {row.children.map((child, index) => (
-                            <Avatar key={index}>{`${child?.first_name[0]?.toUpperCase()}`}</Avatar>
                           ))}
                         </AvatarGroup>
                       </TableCell>

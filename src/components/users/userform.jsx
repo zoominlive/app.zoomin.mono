@@ -157,7 +157,9 @@ const UserForm = (props) => {
           last_name: props?.user?.last_name || '',
           email: props?.user?.email || '',
           role: props?.user?.role || '',
-          locations: props?.user?.location ? props?.user?.location.selected_locations : []
+          locations: props?.user?.location
+            ? props?.user?.location.selected_locations.sort((a, b) => (a > b ? 1 : -1))
+            : []
         }}
         onSubmit={handleSubmit}>
         {({ values, setFieldValue, touched, errors }) => {
@@ -259,8 +261,12 @@ const UserForm = (props) => {
                       id="locations"
                       options={
                         props?.user
-                          ? props?.user?.location?.accessable_locations
-                          : authCtx.user?.location?.accessable_locations
+                          ? props?.user?.location?.accessable_locations.sort((a, b) =>
+                              a > b ? 1 : -1
+                            )
+                          : authCtx.user?.location?.accessable_locations.sort((a, b) =>
+                              a > b ? 1 : -1
+                            )
                       }
                       onChange={(_, value) => {
                         setFieldValue('locations', value);

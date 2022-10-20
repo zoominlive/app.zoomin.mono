@@ -27,6 +27,7 @@ import API from '../../api';
 import { useSnackbar } from 'notistack';
 import { errorMessageHandler } from '../../utils/errormessagehandler';
 import * as yup from 'yup';
+// import { useEffect } from 'react';
 
 const STEPS = ['Primary', 'Secondary', 'Children'];
 
@@ -36,6 +37,21 @@ const AddFamily = (props) => {
   const [activeStep, setActiveStep] = useState(0);
   const [submitLoading, setSubmitLoading] = useState(false);
   const formikRef = useRef();
+
+  // useEffect(() => {
+  //   window.addEventListener('keydown', function (e) {
+  //     if (e.key === 'Enter') {
+  //       handleFormSubmit();
+  //     }
+  //   });
+  //   return () => {
+  //     window.removeEventListener('keydown', function (e) {
+  //       if (e.key === 'Enter') {
+  //         handleFormSubmit();
+  //       }
+  //     });
+  //   };
+  // }, []);
 
   function checkEmailUnique(value) {
     if (value) {
@@ -105,6 +121,7 @@ const AddFamily = (props) => {
         .of(
           yup.object().shape({
             first_name: yup.string().required('First Name is required'),
+            last_name: yup.string().required('Last Name is required'),
             rooms: yup
               .array()
               .of(
@@ -113,8 +130,9 @@ const AddFamily = (props) => {
                   room_name: yup.string()
                 })
               )
-              .min(1, 'Enter at least one room')
-              .required('required')
+              .min(1, 'Select at least one room')
+              .required('required'),
+            locations: yup.array().min(1, 'Select at least one location').required('required')
           })
         )
         .min(1, 'Add atleast one child')
@@ -205,6 +223,27 @@ const AddFamily = (props) => {
     }
   };
 
+  // const handleFormSubmit = () => {
+  //   console.log('first');
+  //   if (activeStep !== 1) {
+  //     formikRef.current.submitForm();
+  //   } else {
+  //     const secondary = formikRef.current.values.secondary;
+  //     const emptyIndexs = [];
+  //     secondary.forEach((parent, index) => {
+  //       const isEmpty = Object.values(parent).every((x) => x === null || x === '');
+  //       if (isEmpty) {
+  //         emptyIndexs.push(index);
+  //       }
+  //     });
+  //     emptyIndexs.forEach((index) => secondary.pop(index));
+  //     console.log(secondary);
+  //     formikRef.current.setFieldValue('secondary', secondary);
+  //     console.log(formikRef.current.values);
+  //     formikRef.current.submitForm();
+  //   }
+  // };
+
   return (
     <Dialog
       open={props.open}
@@ -227,11 +266,21 @@ const AddFamily = (props) => {
             phone: '',
             email: ''
           },
-          secondary: [],
+          secondary: [
+            // {
+            //   first_name: '',
+            //   last_name: '',
+            //   relationship: '',
+            //   phone: '',
+            //   email: ''
+            // }
+          ],
           children: [
             {
               first_name: '',
-              rooms: []
+              last_name: '',
+              rooms: [],
+              locations: []
             }
           ]
         }}
@@ -322,6 +371,7 @@ const AddFamily = (props) => {
                     loadingPosition={submitLoading || isValidating ? 'start' : undefined}
                     startIcon={(submitLoading || isValidating) && <SaveIcon />}
                     variant="text"
+                    // onClick={handleFormSubmit}
                     type="submit">
                     {activeStep === STEPS.length - 1 ? 'FINISH' : 'NEXT'}
                   </LoadingButton>

@@ -217,19 +217,6 @@ const ParentsForm = (props) => {
                   </Grid>
                   <Grid item md={6} sm={12}>
                     <TextField
-                      name={'email'}
-                      label="Email"
-                      value={values?.email}
-                      onChange={(event) => {
-                        setFieldValue('email', event.target.value);
-                      }}
-                      helperText={touched.email && errors.email}
-                      error={touched.email && Boolean(errors.email)}
-                      fullWidth
-                    />
-                  </Grid>
-                  <Grid item md={6} sm={12}>
-                    <TextField
                       name={'phone'}
                       label="Phone"
                       value={values?.phone || ''}
@@ -239,6 +226,19 @@ const ParentsForm = (props) => {
                       helperText={touched.phone && errors.phone}
                       error={touched.phone && Boolean(errors.phone)}
                       InputProps={{ inputComponent: PhoneNumberInput }}
+                      fullWidth
+                    />
+                  </Grid>
+                  <Grid item md={6} sm={12}>
+                    <TextField
+                      name={'email'}
+                      label="Email"
+                      value={values?.email}
+                      onChange={(event) => {
+                        setFieldValue('email', event.target.value);
+                      }}
+                      helperText={touched.email && errors.email}
+                      error={touched.email && Boolean(errors.email)}
                       fullWidth
                     />
                   </Grid>

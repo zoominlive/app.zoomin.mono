@@ -19,6 +19,19 @@ import PropTypes from 'prop-types';
 import AddIcon from '@mui/icons-material/Add';
 
 const Secondary = (props) => {
+  // useEffect(() => {
+  //   if (props.values.secondary.length === 0) {
+  //     props.setFieldValue('secondary', [
+  //       {
+  //         first_name: '',
+  //         last_name: '',
+  //         relationship: '',
+  //         phone: '',
+  //         email: ''
+  //       }
+  //     ]);
+  //   }
+  // }, []);
   return (
     <FieldArray
       name="secondary"
@@ -151,37 +164,6 @@ const Secondary = (props) => {
                     </Grid>
                     <Grid item md={5} sm={12}>
                       <TextField
-                        name={`secondary.${index}.email`}
-                        label="Email"
-                        value={props?.values?.secondary[index]?.email}
-                        onChange={(event) => {
-                          props.setFieldValue(`secondary[${index}].email`, event.target.value);
-                        }}
-                        helperText={
-                          props.touched &&
-                          props.touched.secondary &&
-                          props.touched.secondary[index] &&
-                          props.touched.secondary[index].email &&
-                          props.errors &&
-                          props.errors.secondary &&
-                          props.errors.secondary[index] &&
-                          props.errors.secondary[index].email
-                        }
-                        error={
-                          props.touched &&
-                          props.touched.secondary &&
-                          props.touched.secondary[index] &&
-                          props.touched.secondary[index].email &&
-                          props.errors &&
-                          props.errors.secondary &&
-                          props.errors.secondary[index] &&
-                          Boolean(props.errors.secondary[index].email)
-                        }
-                        fullWidth
-                      />
-                    </Grid>
-                    <Grid item md={4} sm={12}>
-                      <TextField
                         name={`secondary.${index}.phone`}
                         label="Phone"
                         value={
@@ -219,7 +201,38 @@ const Secondary = (props) => {
                         fullWidth
                       />
                     </Grid>
-                    <Grid item md={3} sm={12}>
+                    <Grid item md={5} sm={12}>
+                      <TextField
+                        name={`secondary.${index}.email`}
+                        label="Email"
+                        value={props?.values?.secondary[index]?.email}
+                        onChange={(event) => {
+                          props.setFieldValue(`secondary[${index}].email`, event.target.value);
+                        }}
+                        helperText={
+                          props.touched &&
+                          props.touched.secondary &&
+                          props.touched.secondary[index] &&
+                          props.touched.secondary[index].email &&
+                          props.errors &&
+                          props.errors.secondary &&
+                          props.errors.secondary[index] &&
+                          props.errors.secondary[index].email
+                        }
+                        error={
+                          props.touched &&
+                          props.touched.secondary &&
+                          props.touched.secondary[index] &&
+                          props.touched.secondary[index].email &&
+                          props.errors &&
+                          props.errors.secondary &&
+                          props.errors.secondary[index] &&
+                          Boolean(props.errors.secondary[index].email)
+                        }
+                        fullWidth
+                      />
+                    </Grid>
+                    <Grid item md={2} sm={12}>
                       <Box className="row-button-wrapper">
                         <IconButton
                           aria-label="delete"

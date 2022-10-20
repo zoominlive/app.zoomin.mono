@@ -20,7 +20,6 @@ import DeleteDialog from '../common/deletedialog';
 import DisableDialog from './disabledialog';
 import dayjs from 'dayjs';
 import { useEffect } from 'react';
-// import dayjs from 'dayjs';
 // import API from '../../api';
 // import { useSnackbar } from 'notistack';
 // import { errorMessageHandler } from '../../utils/errormessagehandler';
@@ -240,14 +239,16 @@ const FamilyDrawer = (props) => {
                         }}>
                         <EditIcon />
                       </IconButton>
-                      <IconButton
-                        className="child-delete-btn"
-                        onClick={() => {
-                          setIsDeleteChildDialogOpen(true);
-                          // setChildToDelete(child.id);
-                        }}>
-                        <DeleteIcon />
-                      </IconButton>
+                      {props?.family?.children.length !== 1 && (
+                        <IconButton
+                          className="child-delete-btn"
+                          onClick={() => {
+                            setIsDeleteChildDialogOpen(true);
+                            // setChildToDelete(child.child_id);
+                          }}>
+                          <DeleteIcon />
+                        </IconButton>
+                      )}
                     </Stack>
                   </Stack>
                   <Box className="rooms">
