@@ -47,5 +47,78 @@ module.exports = {
       });
       next(error);
     }
+  },
+  deleteChild: async (req, res, next) => {
+    try {
+      const params = req.body;
+      const child = await roomServices.deleteChild(params.child_id);
+
+      res.status(200).json({
+        IsSuccess: true,
+        Data: {},
+        Message: 'Child Deleted'
+      });
+
+      next();
+    } catch (error) {
+      res.status(500).json({
+        IsSuccess: false,
+        Message: error.message
+      });
+      next(error);
+    }
+  },
+  disableChild: async (req, res, next) => {
+    try {
+      const params = req.body;
+
+      const disableChild = await childServices.disableChild(
+        params?.child_id,
+        params?.scheduled_end_date
+      );
+
+      if (params?.scheduled_end_date) {
+        res.status(200).json({
+          IsSuccess: true,
+          Data: disableChild,
+          Message: 'Child is schedlued to disable on selected date'
+        });
+      } else {
+        res.status(200).json({
+          IsSuccess: true,
+          Data: disableChild,
+          Message: 'Child successfully disabled'
+        });
+      }
+
+      next();
+    } catch (error) {
+      res.status(500).json({
+        IsSuccess: false,
+        Message: error.message
+      });
+      next(error);
+    }
+  },
+  enableChild: async (req, res, next) => {
+    try {
+      const params = req.body;
+
+      const enableChild = await childServices.enableChild(params.child_id);
+
+      res.status(200).json({
+        IsSuccess: true,
+        Data: enableChild,
+        Message: 'Child successfully enabled'
+      });
+
+      next();
+    } catch (error) {
+      res.status(500).json({
+        IsSuccess: false,
+        Message: error.message
+      });
+      next(error);
+    }
   }
 };

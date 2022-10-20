@@ -39,5 +39,76 @@ module.exports = {
     });
 
     return childDetails;
+  },
+  deleteChild: async (childId) => {
+    let deletedChild = await Child.destroy({
+      where: { child_id: childId },
+      raw: true
+    });
+
+    return deletedChild;
+  },
+
+  disableChild: async (childId, schedluedEndDate = null) => {
+    let updateChildDetails;
+
+    if (schedluedEndDate != null && schedluedEndDate != '') {
+      let update = {
+        updated_at: Sequelize.literal('CURRENT_TIMESTAMP'),
+        scheduled_end_date: schedluedEndDate
+      };
+
+      updateChildDetails = await Child.update(update, {
+        where: { child_id: childId },
+        raw: true
+      });
+
+      if (updateChildDetails) {
+        updateChildDetails = await Child.findOne({
+          where: { child_id: childId },
+          raw: true
+        });
+      }
+    } else {
+      let update = {
+        updated_at: Sequelize.literal('CURRENT_TIMESTAMP'),
+        status: 'Disabled'
+      };
+
+      updateChildDetails = await Child.update(update, {
+        where: { child_id: childId },
+        raw: true
+      });
+
+      if (updateChildDetails) {
+        updateChildDetails = await Child.findOne({
+          where: { child_id: childId },
+          raw: true
+        });
+      }
+    }
+
+    return updateChildDetails;
+  },
+
+  enableChild: async (childId) => {
+    let update = {
+      updated_at: Sequelize.literal('CURRENT_TIMESTAMP'),
+      status: 'Enabled'
+    };
+
+    let updateChildDetails = await Child.update(update, {
+      where: { child_id: childId },
+      raw: true
+    });
+
+    if (updateChildDetails) {
+      updateChildDetails = await Child.findOne({
+        where: { child_id: childId },
+        raw: true
+      });
+    }
+
+    return updateChildDetails;
   }
 };

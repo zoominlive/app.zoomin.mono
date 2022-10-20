@@ -32,6 +32,16 @@ const Child = sequelize.define(
       type: Sequelize.INTEGER,
       comment: 'key used to assosiate child to family member'
     },
+    status: {
+      type: Sequelize.ENUM('Enabled', 'Disabled'),
+      defaultValue: 'active',
+      required: true
+    },
+    scheduled_end_date: {
+      type: Sequelize.DATEONLY,
+      allowNull: true,
+      defaultValue: null
+    },
     created_at: {
       type: 'TIMESTAMP',
       defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),

@@ -11,5 +11,8 @@ router.get('/', authController, familyController.getAllFamilyDetails);
 router.post('/add', authController, familyController.createFamily);
 router.put('/edit', authController, familyController.editFamily);
 router.post('/addParent', authController, familyController.addParent);
-// router.post('/validEmail', authController, familyController.isEmailValid);
+router.put('/disable', authController, familyController.disableFamily);
+router.put('/enable', authController, familyController.enableFamily);
+router.delete('/delete', authController, familyController.deleteFamily);
+
 module.exports = router;

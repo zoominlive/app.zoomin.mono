@@ -173,5 +173,79 @@ module.exports = {
       });
       next(error);
     }
+  },
+
+  deleteFamily: async (req, res, next) => {
+    try {
+      params = req.body;
+
+      let deleteFamily = await familyServices.deleteFamily(params.family_id);
+
+      res.status(200).json({
+        IsSuccess: true,
+        Data: {},
+        Message: 'Family Deleted'
+      });
+
+      next();
+    } catch (error) {
+      res.status(500).json({
+        IsSuccess: false,
+        Message: error.message
+      });
+      next(error);
+    }
+  },
+
+  disableFamily: async (req, res, next) => {
+    try {
+      params = req.body;
+
+      let disableFamily = await familyServices.disableFamily(
+        params.family_member_id,
+        params.member_type,
+        params.family_id,
+        params?.scheduled_end_date
+      );
+
+      res.status(200).json({
+        IsSuccess: true,
+        Data: {},
+        Message: 'Family disabled'
+      });
+
+      next();
+    } catch (error) {
+      res.status(500).json({
+        IsSuccess: false,
+        Message: error.message
+      });
+      next(error);
+    }
+  },
+  enableFamily: async (req, res, next) => {
+    try {
+      params = req.body;
+
+      let enableFamily = await familyServices.enableFamily(
+        params.family_member_id,
+        params.member_type,
+        params.family_id
+      );
+
+      res.status(200).json({
+        IsSuccess: true,
+        Data: {},
+        Message: 'Family disabled'
+      });
+
+      next();
+    } catch (error) {
+      res.status(500).json({
+        IsSuccess: false,
+        Message: error.message
+      });
+      next(error);
+    }
   }
 };

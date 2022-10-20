@@ -73,7 +73,7 @@ module.exports = {
     }
   },
 
-  /* Edit room details */
+  /* Edit family details */
   editFamily: async (params) => {
     const familyObj = _.omit(params, ['family_member_id']);
     let update = {
@@ -94,16 +94,22 @@ module.exports = {
     return updateFamilyDetails;
   },
 
-  // /* Delete Existing room */
-  // deleteRoom: async (roomId) => {
-  //   let deletedRoom = await Room.destroy({
-  //     where: { room_id: roomId }
-  //   });
+  /* Delete Existing family */
+  deleteFamily: async (familyId) => {
+    let deletedParents = await Family.destroy({
+      where: { family_id: familyId },
+      raw: true
+    });
 
-  //   return deletedRoom;
-  // },
+    let deletedChildren = await Child.destroy({
+      where: { family_id: familyId },
+      raw: true
+    });
 
-  /* Fetch all the user's details */
+    return deletedParents, deletedChildren;
+  },
+
+  /* Fetch all the family's details */
   getAllFamilyDetails: async (userId, filter) => {
     let { pageNumber = 0, pageSize = 10, location = 'All', searchBy = '', roomsList = [] } = filter;
 
@@ -211,5 +217,87 @@ module.exports = {
       raw: true
     });
     return familyMember;
+  },
+
+  disableFamily: async (familyMemberId, memberType, familyId, schedluedEndDate = null) => {
+    let updateFamilyDetails;
+    let updateChildDetails;
+
+    if (schedluedEndDate != null && schedluedEndDate != '') {
+      let update = {
+        updated_at: Sequelize.literal('CURRENT_TIMESTAMP'),
+        scheduled_end_date: schedluedEndDate
+      };
+
+      if (memberType == 'secondary') {
+        updateFamilyDetails = await Family.update(update, {
+          where: { family_member_id: familyMemberId },
+          raw: true
+        });
+      } else if (memberType == 'primary') {
+        updateFamilyDetails = await Family.update(update, {
+          where: { family_id: familyId },
+          raw: true
+        });
+
+        updateChildDetails = await Child.update(update, {
+          where: { family_id: familyId },
+          raw: true
+        });
+      }
+    } else {
+      let update = {
+        updated_at: Sequelize.literal('CURRENT_TIMESTAMP'),
+        status: 'Disabled'
+      };
+
+      if (memberType == 'secondary') {
+        updateFamilyDetails = await Family.update(update, {
+          where: { family_member_id: familyMemberId },
+          raw: true
+        });
+      } else if (memberType == 'primary') {
+        updateFamilyDetails = await Family.update(update, {
+          where: { family_id: familyId },
+          raw: true
+        });
+
+        updateChildDetails = await Child.update(update, {
+          where: { family_id: familyId },
+          raw: true
+        });
+      }
+    }
+
+    return updateFamilyDetails, updateChildDetails;
+  },
+
+  enableFamily: async (familyMemberId, memberType, familyId) => {
+    let updateFamilyDetails;
+    let updateChildDetails;
+
+    let update = {
+      updated_at: Sequelize.literal('CURRENT_TIMESTAMP'),
+      status: 'Enabled'
+    };
+
+    if (memberType == 'secondary') {
+      updateFamilyDetails = await Family.update(update, {
+        where: { family_member_id: familyMemberId },
+        raw: true
+      });
+    } else if (memberType == 'primary') {
+      updateFamilyDetails = await Family.update(update, {
+        where: { family_id: familyId },
+        raw: true
+      });
+
+      updateChildDetails = await Child.update(update, {
+        where: { family_id: familyId },
+        raw: true
+      });
+    }
+
+    return updateFamilyDetails, updateChildDetails;
   }
 };

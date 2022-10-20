@@ -58,6 +58,16 @@ const Family = sequelize.define(
       type: Sequelize.JSON,
       defaultValue: null
     },
+    status: {
+      type: Sequelize.ENUM('Enabled', 'Disabled'),
+      defaultValue: 'active',
+      required: true
+    },
+    scheduled_end_date: {
+      type: Sequelize.DATEONLY,
+      allowNull: true,
+      defaultValue: null
+    },
     created_at: {
       type: 'TIMESTAMP',
       defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
