@@ -100,7 +100,7 @@ functions:
   disableScheduledMembers:
     handler: cron.disableScheduledFamilyAndChild
     events:
-      - schedule: rate(1 minute)
+      - schedule: rate(1 day)
 
 plugins:
   - serverless-offline
