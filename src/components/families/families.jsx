@@ -119,6 +119,20 @@ const Families = () => {
     });
   };
 
+  const renderFamilyLocations = (children) => {
+    let locations = [];
+    children.forEach((child) => {
+      child.location.locations.forEach((location) => {
+        locations.push(location);
+      });
+    });
+    const uniqueLocations = locations.filter((item, index) => locations.indexOf(item) === index);
+    const locationsJSX = uniqueLocations.map((location, index) => (
+      <Chip key={index} label={location} color="primary" />
+    ));
+    return locationsJSX;
+  };
+
   // Method to change the page in table
   const handlePageChange = (_, newPage) => {
     setFamiliesPayload((prevPayload) => ({ ...prevPayload, page: newPage }));
@@ -297,13 +311,7 @@ const Families = () => {
                         </AvatarGroup>
                       </TableCell>
                       <TableCell align="left">
-                        <Stack direction="row">
-                          {row.primary.location.selected_locations
-                            .sort((a, b) => (a > b ? 1 : -1))
-                            .map((location, index) => (
-                              <Chip key={index} label={location} color="primary" />
-                            ))}
-                        </Stack>
+                        <Stack direction="row">{renderFamilyLocations(row.children)}</Stack>
                       </TableCell>
                       <TableCell align="left">
                         <AvatarGroup>

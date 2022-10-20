@@ -204,9 +204,11 @@ const FamilyDrawer = (props) => {
                 <Stack spacing={1.5} px={2.5}>
                   <Stack direction="row" justifyContent="space-between">
                     <Stack direction="row" spacing={2} alignItems="center">
-                      <Avatar>{child?.first_name[0]?.toUpperCase()}</Avatar>
+                      <Avatar>{`${child?.first_name[0]?.toUpperCase()}${child?.last_name[0]?.toUpperCase()}`}</Avatar>
                       <Typography variant="body2">
-                        {capitalizeFirstLetter(child?.first_name)}
+                        {' '}
+                        {capitalizeFirstLetter(child?.first_name)}{' '}
+                        {capitalizeFirstLetter(child?.last_name)}
                       </Typography>
                     </Stack>
                     <Stack

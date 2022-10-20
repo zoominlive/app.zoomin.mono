@@ -185,7 +185,7 @@ const AddFamily = (props) => {
     if (activeStep === STEPS.length - 1) {
       setSubmitLoading(true);
 
-      const payload = { ...data };
+      const payload = structuredClone(data);
 
       payload.primary.member_type = 'primary';
       payload.primary.location = authCtx.user.location;
@@ -193,6 +193,11 @@ const AddFamily = (props) => {
       payload.secondary.forEach((parent) => {
         parent.member_type = 'secondary';
         parent.location = authCtx.user.location;
+      });
+
+      payload.children.forEach((child) => {
+        child.location = { locations: child.locations };
+        delete child.locations;
       });
 
       API.post('family/add', payload).then((response) => {

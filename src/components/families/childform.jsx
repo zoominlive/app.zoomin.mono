@@ -25,7 +25,9 @@ import SaveIcon from '@mui/icons-material/Save';
 
 const validationSchema = yup.object({
   first_name: yup.string().required('First Name is required'),
-  rooms: yup.array().min(1, 'Atleast one room is required')
+  last_name: yup.string().required('Last Name is required'),
+  rooms: yup.array().min(1, 'Atleast one room is required'),
+  locations: yup.array().min(1, 'Select at least one location').required('required')
 });
 
 const ChildForm = (props) => {
@@ -45,7 +47,9 @@ const ChildForm = (props) => {
     if (props.child) {
       API.put('family/child/edit', {
         first_name: data.first_name,
+        last_name: data.last_name,
         rooms: { rooms: data.rooms },
+        location: { locations: data.locations },
         child_id: props.child.child_id
       }).then((response) => {
         if (response.status === 200) {
@@ -78,7 +82,9 @@ const ChildForm = (props) => {
     } else {
       API.post('family/child/add', {
         first_name: data.first_name,
+        last_name: data.last_name,
         rooms: { rooms: data.rooms },
+        location: { locations: data.locations },
         family_id: props.family.primary.family_id
       }).then((response) => {
         if (response.status === 201) {
@@ -109,7 +115,9 @@ const ChildForm = (props) => {
         validationSchema={validationSchema}
         initialValues={{
           first_name: props.child ? props.child.first_name : '',
-          rooms: props.child ? props.child.rooms.rooms : []
+          last_name: props.child ? props.child.last_name : '',
+          rooms: props.child ? props.child.rooms.rooms : [],
+          locations: props.child ? props.child.location.locations : []
         }}
         onSubmit={handleSubmit}>
         {({ values, setFieldValue, touched, errors, isValidating }) => {
@@ -117,7 +125,7 @@ const ChildForm = (props) => {
             <Form>
               <DialogContent>
                 <Grid container spacing={3}>
-                  <Grid item md={3} sm={12}>
+                  <Grid item md={6} sm={12}>
                     <TextField
                       name="first_name"
                       label="First Name"
@@ -130,12 +138,25 @@ const ChildForm = (props) => {
                       fullWidth
                     />
                   </Grid>
-                  <Grid item md={9} sm={12}>
+                  <Grid item md={6} sm={12}>
+                    <TextField
+                      name="last_name"
+                      label="Last Name"
+                      value={values.last_name}
+                      onChange={(event) => {
+                        setFieldValue('last_name', event.target.value);
+                      }}
+                      helperText={touched.last_name && errors.last_name}
+                      error={touched.last_name && Boolean(errors.last_name)}
+                      fullWidth
+                    />
+                  </Grid>
+                  <Grid item md={6} sm={12}>
                     <Autocomplete
                       fullWidth
                       multiple
                       id="rooms"
-                      options={props.roomsList}
+                      options={props.roomsList.sort((a, b) => (a.room_name > b.room_name ? 1 : -1))}
                       value={values?.rooms}
                       isOptionEqualToValue={(option, value) => option.room_id === value.room_id}
                       getOptionLabel={(option) => {
@@ -152,9 +173,37 @@ const ChildForm = (props) => {
                       renderInput={(params) => (
                         <TextField
                           {...params}
-                          label="Room"
+                          label="Rooms"
                           helperText={touched.rooms && errors.rooms}
                           error={touched.rooms && Boolean(errors.rooms)}
+                          fullWidth
+                        />
+                      )}
+                    />
+                  </Grid>
+                  <Grid item md={6} sm={12}>
+                    <Autocomplete
+                      fullWidth
+                      multiple
+                      id="rooms"
+                      options={authCtx?.user?.location?.selected_locations.sort((a, b) =>
+                        a > b ? 1 : -1
+                      )}
+                      value={values?.locations}
+                      onChange={(_, value) => {
+                        setFieldValue('locations', value);
+                      }}
+                      renderTags={(value, getTagProps) =>
+                        value.map((option, index) => (
+                          <Chip key={index} label={option} {...getTagProps({ index })} />
+                        ))
+                      }
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          label="Locations"
+                          helperText={touched.locations && errors.locations}
+                          error={touched.locations && Boolean(errors.locations)}
                           fullWidth
                         />
                       )}
