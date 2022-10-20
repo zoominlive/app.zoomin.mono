@@ -128,20 +128,19 @@ module.exports = {
       roomsToSearch = roomsToSearch.slice(0, -3);
 
       query1 = `SELECT family.* FROM family INNER JOIN child WHERE family.user_id = ${userId} AND child.location LIKE '%${location}%' AND (family.first_name LIKE '%${searchBy}%' OR family.last_name LIKE '%${searchBy}%' OR child.first_name LIKE '%${searchBy}%') AND (${roomsToSearch})`;
-
-      families = await sequelize.query(
-        query1,
-        { type: Sequelize.QueryTypes.SELECT },
-        {
-          model: Family,
-          mapToModel: true
-        },
-        {
-          model: Child,
-          mapToModel: true
-        }
-      );
     }
+    families = await sequelize.query(
+      query1,
+      { type: Sequelize.QueryTypes.SELECT },
+      {
+        model: Family,
+        mapToModel: true
+      },
+      {
+        model: Child,
+        mapToModel: true
+      }
+    );
 
     let uniqueFamilies = _.uniqWith(families, _.isEqual);
     let familyArray = [];
