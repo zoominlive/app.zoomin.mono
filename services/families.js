@@ -4,6 +4,41 @@ const childServices = require('./children');
 const _ = require('lodash');
 const sequelize = require('../lib/database');
 
+const getSecondaryParents = async (familyIdArray) => {
+  let ids = '';
+  familyIdArray.forEach((id) => (ids = ids + `family_id LIKE '%${id}%' OR `));
+  ids = ids.slice(0, -3);
+
+  let mainQuery = `SELECT DISTINCT * FROM family  WHERE (${ids}) AND member_type="secondary" `;
+
+  let secondaryParents = await sequelize.query(
+    mainQuery,
+    { type: Sequelize.QueryTypes.SELECT },
+    {
+      model: Family,
+      mapToModel: true
+    }
+  );
+  return secondaryParents;
+};
+const getChildren = async (familyIdArray) => {
+  let ids = '';
+  familyIdArray.forEach((familyId) => (ids = ids + `family_id LIKE '%${familyId}%' OR `));
+  ids = ids.slice(0, -3);
+
+  let mainQuery = `SELECT DISTINCT * FROM child  WHERE (${ids})`;
+
+  let children = await sequelize.query(
+    mainQuery,
+    { type: Sequelize.QueryTypes.SELECT },
+    {
+      model: Child,
+      mapToModel: true
+    }
+  );
+  return children;
+};
+
 module.exports = {
   /* Create new room */
   createFamily: async (familyObj) => {
@@ -46,14 +81,14 @@ module.exports = {
     return updateFamilyDetails;
   },
 
-  /* Delete Existing room */
-  deleteRoom: async (roomId) => {
-    let deletedRoom = await Room.destroy({
-      where: { room_id: roomId }
-    });
+  // /* Delete Existing room */
+  // deleteRoom: async (roomId) => {
+  //   let deletedRoom = await Room.destroy({
+  //     where: { room_id: roomId }
+  //   });
 
-    return deletedRoom;
-  },
+  //   return deletedRoom;
+  // },
 
   /* Fetch all the user's details */
   getAllFamilyDetails: async (userId, filter) => {
@@ -75,20 +110,18 @@ module.exports = {
       }`;
     } else {
       let roomsToSearch = '';
+
       roomsList.forEach(
         (room) =>
           (roomsToSearch = roomsToSearch + `child.rooms LIKE '%${room.replace(/'/g, "\\'")}%' OR `)
       );
       roomsToSearch = roomsToSearch.slice(0, -3);
-      countQuery = `SELECT DISTINCT COUNT(family.family_id) AS count FROM family INNER JOIN child WHERE family.user_id = ${userId} AND family.location LIKE '%${location}%' AND (family.first_name LIKE '%${searchBy}%' OR family.last_name LIKE '%${searchBy}%' OR child.first_name LIKE '%${searchBy}%') AND (${roomsToSearch})`;
-      mainQuery = `SELECT family.* FROM family INNER JOIN child WHERE family.user_id = ${userId} AND family.location LIKE '%${location}%' AND (family.first_name LIKE '%${searchBy}%' OR family.last_name LIKE '%${searchBy}%' OR child.first_name LIKE '%${searchBy}%') AND (${roomsToSearch}) LIMIT ${pageSize} OFFSET ${
-        pageNumber * pageSize
-      }`;
-    }
 
-    count = (
-      await sequelize.query(
-        countQuery,
+      let query1 = `SELECT family.* FROM family INNER JOIN child WHERE family.user_id = ${userId} AND child.location LIKE '%${location}%' AND (family.first_name LIKE '%${searchBy}%' OR family.last_name LIKE '%${searchBy}%' OR child.first_name LIKE '%${searchBy}%') AND (${roomsToSearch})`;
+
+      families = await sequelize.query(
+        query1,
+        { type: Sequelize.QueryTypes.SELECT },
         {
           model: Family,
           mapToModel: true
@@ -96,68 +129,61 @@ module.exports = {
         {
           model: Child,
           mapToModel: true
-        },
-        { type: Sequelize.QueryTypes.SELECT }
-      )
-    )[0].dataValues.count;
-
-    families = await sequelize.query(
-      mainQuery,
-      { type: Sequelize.QueryTypes.SELECT },
-      {
-        model: Family,
-        mapToModel: true
-      },
-      {
-        model: Child,
-        mapToModel: true
-      }
-    );
-
-    let filterFamilies = Promise.all(
-      families.map(async (family) => {
-        let familyDetails = family;
-        let familyId;
-        if (family.dataValues) {
-          familyId = family.dataValues.family_id;
-        } else {
-          familyId = family.family_id;
         }
+      );
+    }
 
-        if (family.dataValues) {
-          familyDetails = family.dataValues;
-        }
-
-        let childDetails = await childServices.getAllchildren(familyId);
-        if (_.isEmpty(childDetails)) {
-          childDetails = [];
-        }
-        return { ...familyDetails, childDetails };
-      })
-    );
-
-    const finalFamilyDetails = await filterFamilies;
-
+    // const finalFamilyDetails = await filterFamilies;
+    let uniqueFamilies = _.uniqWith(families, _.isEqual);
     let familyArray = [];
 
-    finalFamilyDetails.forEach((familyMember) => {
+    uniqueFamilies.forEach((familyMember) => {
       if (familyMember.member_type == 'primary') {
         familyArray.push({
-          primary: _.omit(familyMember, ['childDetails']),
+          primary: familyMember,
           secondary: [],
-          children: familyMember.childDetails
+          children: []
         });
       }
     });
 
-    finalFamilyDetails.forEach((familyMember) => {
+    uniqueFamilies.forEach(async (familyMember) => {
       if (familyMember.member_type == 'secondary') {
-        familyArray.forEach((family, index) => {
-          if (familyMember.family_id === family.primary.family_id) {
-            familyArray[index].secondary.push(_.omit(familyMember, ['childDetails']));
+        let isFound = 0;
+        familyArray.forEach((family) => {
+          if (family.primary.famiy_id === familyMember.family_id) {
+            isFound = 1;
           }
         });
+
+        if ((isFound = 0)) {
+          let primaryMember = await getPrimaryMember(familyMember.family_id);
+          familyArray.push({
+            primary: primaryMember,
+            secondary: [],
+            children: []
+          });
+        }
       }
+    });
+
+    let familyIdToSearch = familyArray.map((family) => family.primary.family_id);
+
+    let secondaryParents = await getSecondaryParents(familyIdToSearch);
+
+    let children = await getChildren(familyIdToSearch);
+
+    familyArray.forEach((family, index) => {
+      secondaryParents.forEach((secondary) => {
+        if (secondary.family_id === family.primary.family_id) {
+          familyArray[index].secondary.push(secondary);
+        }
+      });
+      children.forEach((child) => {
+        if (child.family_id === family.primary.family_id) {
+          familyArray[index].children.push(child);
+        }
+      });
     });
 
     return { familyArray, count };
@@ -166,6 +192,14 @@ module.exports = {
   getFamilyMember: async (familyMemberId) => {
     let familyMember = await Family.findOne({
       where: { family_member_id: familyMemberId },
+      raw: true
+    });
+    return familyMember;
+  },
+
+  getPrimaryMember: async (familyId) => {
+    let familyMember = await Family.findOne({
+      where: { family_id: familyId, member_type: 'primary' },
       raw: true
     });
     return familyMember;

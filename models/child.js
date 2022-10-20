@@ -23,6 +23,11 @@ const Child = sequelize.define(
       allowNull: false,
       required: true
     },
+    location: {
+      type: Sequelize.JSON,
+      allowNull: false,
+      required: true
+    },
     family_id: {
       type: Sequelize.INTEGER,
       comment: 'key used to assosiate child to family member'
