@@ -335,6 +335,7 @@ const FamilyDrawer = (props) => {
 
         <IconButton
           className="edit-btn"
+          disabled={props.family.primary.status === 'Disabled'}
           onClick={() => {
             props.setPrimaryParent(props?.family?.primary);
             props.setIsParentFormDialogOpen(true);
