@@ -64,6 +64,7 @@ const Families = () => {
   const [child, setChild] = useState();
   const [family, setFamily] = useState();
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [disableLoading, setDisableLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [familiesPayload, setFamiliesPayload] = useState({
@@ -170,7 +171,76 @@ const Families = () => {
 
   // Method to delete family
   const handleFamilyDelete = () => {
-    setDeleteLoading(false);
+    setDeleteLoading(true);
+    API.delete('family/delete', {
+      data: {
+        family_id: family.primary.family_id
+      }
+    }).then((response) => {
+      if (response.status === 200) {
+        enqueueSnackbar(response.data.Message, { variant: 'success' });
+        getFamiliesList();
+        setIsDeleteDialogOpen(false);
+        setFamily();
+      } else {
+        errorMessageHandler(
+          enqueueSnackbar,
+          response?.response?.data?.Message || 'Something Went Wrong.',
+          response?.response?.status,
+          authCtx.setAuthError
+        );
+      }
+      setDeleteLoading(false);
+    });
+  };
+
+  const handleFamilyDisable = (data) => {
+    setDisableLoading(true);
+    API.put('family/disable', {
+      family_member_id: family.primary.family_member_id,
+      member_type: 'primary',
+      family_id: family.primary.family_id,
+      scheduled_end_date:
+        data.selectedOption === 'schedule' && dayjs(data.disableDate).format('YYYY-MM-DD')
+    }).then((response) => {
+      if (response.status === 200) {
+        enqueueSnackbar(response.data.Message, { variant: 'success' });
+        getFamiliesList();
+        if (data.selectedOption === 'disable') {
+          setFamily((prevState) => {
+            let tempFamily = { ...prevState };
+            tempFamily.primary.status = 'Disabled';
+            tempFamily.secondary.length > 0 &&
+              tempFamily.secondary.forEach((parent) => {
+                parent.status = 'Disabled';
+              });
+
+            tempFamily.children.forEach((child) => {
+              child.status = 'Disabled';
+            });
+            if (tempFamily.primary.scheduled_end_date) {
+              tempFamily.primary.scheduled_end_date = null;
+            }
+            return tempFamily;
+          });
+        } else {
+          setFamily((prevState) => {
+            let tempFamily = { ...prevState };
+            tempFamily.primary.scheduled_end_date = data.disableDate;
+            return tempFamily;
+          });
+        }
+        setIsDisableFamilyDialogOpen(false);
+      } else {
+        errorMessageHandler(
+          enqueueSnackbar,
+          response?.response?.data?.Message || 'Something Went Wrong.',
+          response?.response?.status,
+          authCtx.setAuthError
+        );
+      }
+      setDisableLoading(false);
+    });
   };
 
   return (
@@ -324,7 +394,9 @@ const Families = () => {
                         </AvatarGroup>
                       </TableCell>
                       <TableCell>
-                        {row.schedule_date ? dayjs(row.schedule_date).format('MM.DD.YYYY') : 'N/A'}
+                        {row.primary.scheduled_end_date
+                          ? dayjs(row.primary.scheduled_end_date).format('MM.DD.YYYY')
+                          : 'N/A'}
                       </TableCell>
                       <TableCell align="right">
                         <FamilyAction
@@ -371,11 +443,10 @@ const Families = () => {
       <DisableDialog
         open={isDisableFamilyDialogOpen}
         setOpen={setIsDisableFamilyDialogOpen}
+        loading={disableLoading}
         title="Disable Family"
         contentText="This action will disable access for all children."
-        handleDisable={(data) => {
-          console.log(data);
-        }}
+        handleDisable={handleFamilyDisable}
         handleDialogClose={() => setIsDisableFamilyDialogOpen(false)}
       />
       {isAddFamilyDialogOpen && (

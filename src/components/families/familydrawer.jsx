@@ -20,22 +20,29 @@ import DeleteDialog from '../common/deletedialog';
 import DisableDialog from './disabledialog';
 import dayjs from 'dayjs';
 import { useEffect } from 'react';
-// import API from '../../api';
-// import { useSnackbar } from 'notistack';
-// import { errorMessageHandler } from '../../utils/errormessagehandler';
-// import { useContext } from 'react';
-// import AuthContext from '../../context/authcontext';
+import { LoadingButton } from '@mui/lab';
+import SaveIcon from '@mui/icons-material/Save';
+import API from '../../api';
+import { useSnackbar } from 'notistack';
+import { errorMessageHandler } from '../../utils/errormessagehandler';
+import { useContext } from 'react';
+import AuthContext from '../../context/authcontext';
 
 const FamilyDrawer = (props) => {
-  // const authCtx = useContext(AuthContext);
-  // const { enqueueSnackbar } = useSnackbar();
-  // const [childToDelete, setChildToDelete] = useState();
+  const authCtx = useContext(AuthContext);
+  const { enqueueSnackbar } = useSnackbar();
+  const [childToDelete, setChildToDelete] = useState();
   const [childToDisable, setChildToDisable] = useState();
   const [parentToDisable, setParentToDisable] = useState();
+  const [disableLoading, setDisableLoading] = useState(false);
   const [isDisableDialogOpen, setIsDisableDialogOpen] = useState(false);
   const [isDeleteChildDialogOpen, setIsDeleteChildDialogOpen] = useState(false);
   const [disableDialogTitle, setDisableDialogTitle] = useState();
   const [deleteLoading, setDeleteLoading] = useState();
+  const [enableFamilyLoading, setEnableFamilyLoading] = useState(false);
+  const [enableFamilyMembersLoading, setEnableFamilyMembersLoading] = useState([]);
+  const [enableChildrenLoading, setEnableChildrenLoading] = useState([]);
+  const [disableDrawerClose, setDisableDrawerClose] = useState(false);
 
   useEffect(() => {
     if (!isDisableDialogOpen) {
@@ -44,46 +51,247 @@ const FamilyDrawer = (props) => {
     }
   }, [isDisableDialogOpen]);
 
+  useEffect(() => {
+    if (props?.family?.secondary) {
+      const secondaryParentsLoading = props?.family?.secondary?.map(() => false);
+      setEnableFamilyMembersLoading(secondaryParentsLoading);
+    }
+  }, [props?.family?.secondary]);
+
+  useEffect(() => {
+    if (props?.family?.children) {
+      const childrenLoading = props?.family?.children?.map(() => false);
+      setEnableChildrenLoading(childrenLoading);
+    }
+  }, [props?.family?.children]);
+
+  useEffect(() => {
+    if (
+      enableFamilyLoading ||
+      enableFamilyMembersLoading.some((loading) => loading) ||
+      enableChildrenLoading.some((loading) => loading)
+    ) {
+      setDisableDrawerClose(true);
+    } else {
+      setDisableDrawerClose(false);
+    }
+  }, [enableFamilyLoading, enableFamilyMembersLoading, enableChildrenLoading]);
+
   const handleChildDelete = () => {
     setDeleteLoading(true);
-    setDeleteLoading(false);
-    // API.delete('family/child/delete', { family_member_id: childToDelete }).then((response) => {
-    //   if (response.status === 200) {
-    //     enqueueSnackbar(response.data.Message, { variant: 'success' });
-    //     props.getFamiliesList();
-    //     props.setFamily((prevState) => {
-    //       const tempFamily = { ...prevState };
-    //       tempFamily.children = tempFamily.children.filter((child) => child.id !== childToDelete);
-    //       return tempFamily;
-    //     });
-    //     handleDeleteDialogClose();
-    //   } else {
-    //     errorMessageHandler(
-    //       enqueueSnackbar,
-    //       response?.response?.data?.Message || 'Something Went Wrong.',
-    //       response?.response?.status,
-    //       authCtx.setAuthError
-    //     );
-    //   }
-    // });
+    API.delete('family/child/delete', {
+      data: {
+        child_id: childToDelete
+      }
+    }).then((response) => {
+      if (response.status === 200) {
+        enqueueSnackbar(response.data.Message, { variant: 'success' });
+        props.getFamiliesList();
+        props.setFamily((prevState) => {
+          const tempFamily = { ...prevState };
+          tempFamily.children = tempFamily.children.filter(
+            (child) => child.child_id !== childToDelete
+          );
+          return tempFamily;
+        });
+        handleDeleteDialogClose();
+      } else {
+        errorMessageHandler(
+          enqueueSnackbar,
+          response?.response?.data?.Message || 'Something Went Wrong.',
+          response?.response?.status,
+          authCtx.setAuthError
+        );
+      }
+      setDeleteLoading(false);
+    });
+  };
 
-    handleDeleteDialogClose();
+  const handleFamilyEnable = () => {
+    setEnableFamilyLoading(true);
+    API.put('family/enable', {
+      family_member_id: props.family.primary.family_member_id,
+      member_type: 'primary',
+      family_id: props.family.primary.family_id
+    }).then((response) => {
+      if (response.status === 200) {
+        enqueueSnackbar(response.data.Message, { variant: 'success' });
+        props.getFamiliesList();
+        props.setFamily((prevState) => {
+          let tempFamily = { ...prevState };
+          tempFamily.primary.status = 'Enabled';
+          tempFamily.secondary.length > 0 &&
+            tempFamily.secondary.forEach((parent) => {
+              parent.status = 'Enabled';
+            });
+
+          tempFamily.children.forEach((child) => {
+            child.status = 'Enabled';
+          });
+          return tempFamily;
+        });
+      } else {
+        errorMessageHandler(
+          enqueueSnackbar,
+          response?.response?.data?.Message || 'Something Went Wrong.',
+          response?.response?.status,
+          authCtx.setAuthError
+        );
+      }
+      setEnableFamilyLoading(false);
+    });
   };
 
   const handleDeleteDialogClose = () => {
     setIsDeleteChildDialogOpen(false);
-    // setChildToDelete();
+    setChildToDelete();
   };
 
   const handleDisableDialogClose = () => {
-    setIsDisableDialogOpen(false);
+    if (!disableLoading) {
+      setIsDisableDialogOpen(false);
+    }
   };
 
   const handleDisable = (data) => {
-    console.log({ ...data, disableDate: dayjs(data.disableDate).format('MM/DD/YYYY') });
-    handleDisableDialogClose();
-    console.log(parentToDisable);
-    console.log(childToDisable);
+    setDisableLoading(true);
+    if (parentToDisable) {
+      API.put('family/disable', {
+        family_member_id: parentToDisable,
+        member_type: 'secondary',
+        family_id: props.family.primary.family_id,
+        scheduled_end_date:
+          data.selectedOption === 'schedule' && dayjs(data.disableDate).format('YYYY-MM-DD')
+      }).then((response) => {
+        if (response.status === 200) {
+          enqueueSnackbar(response.data.Message, { variant: 'success' });
+          props.getFamiliesList();
+          if (data.selectedOption === 'disable') {
+            props.setFamily((prevState) => {
+              let tempFamily = { ...prevState };
+              const index = tempFamily.secondary.findIndex(
+                (parent) => parent.family_member_id === parentToDisable
+              );
+
+              tempFamily.secondary[index].status = 'Disabled';
+              return tempFamily;
+            });
+          }
+          handleDisableDialogClose();
+        } else {
+          errorMessageHandler(
+            enqueueSnackbar,
+            response?.response?.data?.Message || 'Something Went Wrong.',
+            response?.response?.status,
+            authCtx.setAuthError
+          );
+        }
+        setDisableLoading(false);
+      });
+    } else {
+      API.put('family/child/disable', {
+        child_id: childToDisable,
+        scheduled_end_date:
+          data.selectedOption === 'schedule' && dayjs(data.disableDate).format('YYYY-MM-DD')
+      }).then((response) => {
+        if (response.status === 200) {
+          enqueueSnackbar(response.data.Message, { variant: 'success' });
+          props.getFamiliesList();
+          if (data.selectedOption === 'disable') {
+            props.setFamily((prevState) => {
+              let tempFamily = { ...prevState };
+              const index = tempFamily.children.findIndex(
+                (child) => child.child_id === childToDisable
+              );
+
+              tempFamily.children[index].status = 'Disabled';
+              return tempFamily;
+            });
+          }
+          handleDisableDialogClose();
+        } else {
+          errorMessageHandler(
+            enqueueSnackbar,
+            response?.response?.data?.Message || 'Something Went Wrong.',
+            response?.response?.status,
+            authCtx.setAuthError
+          );
+        }
+        setDisableLoading(false);
+      });
+    }
+  };
+
+  const handleParentEnable = (parentToEnable, index) => {
+    setEnableFamilyMembersLoading((prevState) => {
+      const tempLoading = [...prevState];
+      tempLoading[index] = true;
+      return tempLoading;
+    });
+
+    API.put('family/enable', {
+      family_member_id: parentToEnable,
+      member_type: 'secondary',
+      family_id: props.family.primary.family_member_id
+    }).then((response) => {
+      if (response.status === 200) {
+        enqueueSnackbar(response.data.Message, { variant: 'success' });
+        props.getFamiliesList();
+        props.setFamily((prevState) => {
+          const tempFamily = { ...prevState };
+          tempFamily.secondary[index].status = 'Enabled';
+          tempFamily.secondary[index].scheduled_end_date = null;
+          return tempFamily;
+        });
+      } else {
+        errorMessageHandler(
+          enqueueSnackbar,
+          response?.response?.data?.Message || 'Something Went Wrong.',
+          response?.response?.status,
+          authCtx.setAuthError
+        );
+      }
+      setEnableFamilyMembersLoading((prevState) => {
+        const tempLoading = [...prevState];
+        tempLoading[index] = false;
+        return tempLoading;
+      });
+    });
+  };
+
+  const handleChildEnable = (childToEnable, index) => {
+    setEnableChildrenLoading((prevState) => {
+      const tempLoading = [...prevState];
+      tempLoading[index] = true;
+      return tempLoading;
+    });
+
+    API.put('family/child/enable', {
+      child_id: childToEnable
+    }).then((response) => {
+      if (response.status === 200) {
+        enqueueSnackbar(response.data.Message, { variant: 'success' });
+        props.getFamiliesList();
+        props.setFamily((prevState) => {
+          const tempFamily = { ...prevState };
+          tempFamily.children[index].status = 'Enabled';
+          tempFamily.children[index].scheduled_end_date = null;
+          return tempFamily;
+        });
+      } else {
+        errorMessageHandler(
+          enqueueSnackbar,
+          response?.response?.data?.Message || 'Something Went Wrong.',
+          response?.response?.status,
+          authCtx.setAuthError
+        );
+      }
+      setEnableChildrenLoading((prevState) => {
+        const tempLoading = [...prevState];
+        tempLoading[index] = false;
+        return tempLoading;
+      });
+    });
   };
 
   return (
@@ -91,7 +299,11 @@ const FamilyDrawer = (props) => {
       className="family-drawer"
       anchor={'right'}
       open={props.open}
-      onClose={() => props.setOpen(false)}>
+      onClose={() => {
+        if (!disableDrawerClose) {
+          props.setOpen(false);
+        }
+      }}>
       <Stack direction="row" justifyContent="space-between" alignItems="center" p={2}>
         <Typography variant="h5">Family</Typography>
       </Stack>
@@ -161,24 +373,32 @@ const FamilyDrawer = (props) => {
                   </Stack>
                 </Stack>
                 <Stack direction="row" spacing={1.5} alignItems="center" justifyContent="center">
-                  {!parent.disabled ? (
+                  {parent.status === 'Disabled' ? (
+                    <LoadingButton
+                      loading={enableFamilyMembersLoading[index]}
+                      disabled={props.family.primary.status === 'Disabled'}
+                      onClick={() => {
+                        handleParentEnable(parent.family_member_id, index);
+                      }}
+                      variant="contained"
+                      className="enable-btn">
+                      ENABLE
+                    </LoadingButton>
+                  ) : (
                     <Button
                       variant="outlined"
                       className="disabled-btn"
                       onClick={() => {
                         setDisableDialogTitle('Disable Parent');
                         setIsDisableDialogOpen(true);
-                        setParentToDisable(parent.id);
+                        setParentToDisable(parent.family_member_id);
                       }}>
                       Disable
-                    </Button>
-                  ) : (
-                    <Button variant="contained" className="enable-btn">
-                      ENABLE
                     </Button>
                   )}
                   <IconButton
                     className="edit-btn"
+                    disabled={props.family.primary.status === 'Disabled'}
                     onClick={() => {
                       props.setSecondaryParent(parent);
                       props.setIsParentFormDialogOpen(true);
@@ -216,25 +436,33 @@ const FamilyDrawer = (props) => {
                       spacing={1.5}
                       alignItems="center"
                       justifyContent="center">
-                      {!child.disabled ? (
+                      {child.status === 'Disabled' ? (
+                        <LoadingButton
+                          disabled={props.family.primary.status === 'Disabled'}
+                          loading={enableChildrenLoading[index]}
+                          onClick={() => {
+                            handleChildEnable(child.child_id, index);
+                          }}
+                          variant="contained"
+                          className="enable-btn">
+                          ENABLE
+                        </LoadingButton>
+                      ) : (
                         <Button
                           variant="outlined"
                           className="disabled-btn"
                           onClick={() => {
                             setIsDisableDialogOpen(true);
-                            setChildToDisable(child.id);
+                            setChildToDisable(child.child_id);
                             setDisableDialogTitle('Disable Child');
                           }}>
                           Disable
-                        </Button>
-                      ) : (
-                        <Button variant="contained" className="enable-btn">
-                          ENABLE
                         </Button>
                       )}
 
                       <IconButton
                         className="edit-btn"
+                        disabled={props.family.primary.status === 'Disabled'}
                         onClick={() => {
                           props.setChild(child);
                           props.setIsChildFormDialogOpen(true);
@@ -244,9 +472,10 @@ const FamilyDrawer = (props) => {
                       {props?.family?.children.length !== 1 && (
                         <IconButton
                           className="child-delete-btn"
+                          disabled={props.family.primary.status === 'Disabled'}
                           onClick={() => {
                             setIsDeleteChildDialogOpen(true);
-                            // setChildToDelete(child.child_id);
+                            setChildToDelete(child.child_id);
                           }}>
                           <DeleteIcon />
                         </IconButton>
@@ -269,15 +498,26 @@ const FamilyDrawer = (props) => {
       )}
 
       <Divider textAlign="left" className="title-divider">
-        DISABLE FAMILY
+        {props?.family?.primary?.status === 'Disabled' ? 'ENABLE FAMILY' : 'DISABLE FAMILY'}
       </Divider>
       <Stack direction="row" px={2.5} mt={2}>
-        <Button
-          variant="outlined"
-          className="disabled-btn"
-          onClick={() => props.setIsDisableFamilyDialogOpen(true)}>
-          Disable FAMILY
-        </Button>
+        {props?.family?.primary?.status === 'Disabled' ? (
+          <LoadingButton
+            loading={enableFamilyLoading}
+            loadingPosition={enableFamilyLoading ? 'start' : undefined}
+            startIcon={enableFamilyLoading && <SaveIcon />}
+            variant="contained"
+            onClick={handleFamilyEnable}>
+            ENABLE FAMILY
+          </LoadingButton>
+        ) : (
+          <Button
+            variant="outlined"
+            className="disabled-btn"
+            onClick={() => props.setIsDisableFamilyDialogOpen(true)}>
+            Disable FAMILY
+          </Button>
+        )}
       </Stack>
       <Divider textAlign="left" className="title-divider">
         SCHEDULE END DATE
@@ -288,8 +528,8 @@ const FamilyDrawer = (props) => {
         </Avatar>
         <Typography variant="body2">
           {' '}
-          {props?.family?.schedule_date
-            ? dayjs(props?.family?.schedule_date).format('MM.DD.YYYY')
+          {props?.family?.primary.scheduled_end_date
+            ? dayjs(props?.family?.primary.scheduled_end_date).format('MM.DD.YYYY')
             : 'N/A'}
         </Typography>
       </Stack>
@@ -304,6 +544,7 @@ const FamilyDrawer = (props) => {
       <DisableDialog
         title={disableDialogTitle}
         open={isDisableDialogOpen}
+        loading={disableLoading}
         handleDialogClose={handleDisableDialogClose}
         handleDisable={handleDisable}
       />

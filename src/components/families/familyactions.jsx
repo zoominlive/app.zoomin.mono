@@ -55,6 +55,7 @@ const FamilyActions = (props) => {
 
   const handleOpenDeleteDialog = (event) => {
     props.openDeleteDialog(true);
+    props.setFamily(props.family);
     handleClose(event);
   };
 
@@ -90,7 +91,9 @@ const FamilyActions = (props) => {
           </ListItemIcon>
           <ListItemText>Add Parent</ListItemText>
         </MenuItem>
-        <MenuItem onClick={handleOpenDisableFamilyDialog}>
+        <MenuItem
+          onClick={handleOpenDisableFamilyDialog}
+          disabled={props.family.primary.status === 'Disabled'}>
           <ListItemIcon>
             <VisibilityOffIcon />
           </ListItemIcon>

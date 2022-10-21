@@ -128,6 +128,7 @@ const DisableDialog = (props) => {
             <DialogActions>
               <Button
                 variant="text"
+                disabled={props.loading}
                 onClick={() => {
                   if (!props.loading) {
                     props.handleDialogClose();

@@ -471,6 +471,10 @@
       background: #00000014;
     }
     .child-delete-btn {
+      &.Mui-disabled {
+        background-color: #ebebeb !important;
+        color: rgba(0, 0, 0, 0.26) !important;
+      }
       border-radius: 50%;
       background: #d21919;
       color: #ffffff;

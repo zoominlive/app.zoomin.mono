@@ -51,8 +51,6 @@ const WatchStream = () => {
     [limitReached, camerasPayload]
   );
 
-  console.log(camerasPayload);
-
   return (
     <Box>
       <Card>
