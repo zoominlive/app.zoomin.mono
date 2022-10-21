@@ -46,6 +46,7 @@ module.exports = {
         })
       );
       secondaryParents = await createdFamily;
+
       if (primaryParent && secondaryParents) {
         const token = await familyServices.createPasswordToken(primaryParent);
         const name = primaryParent.first_name + ' ' + primaryParent.last_name;
@@ -56,7 +57,7 @@ module.exports = {
         await sendRegistrationMail(name, primaryParent.email, short_url);
 
         if (!_.isEmpty(secondaryParents)) {
-          secondaryParents.foreach(async (secondaryParent) => {
+          secondaryParents.forEach(async (secondaryParent) => {
             const token = await familyServices.createPasswordToken(secondaryParent);
             const name = secondaryParent.first_name + ' ' + secondaryParent.last_name;
             const originalUrl = req.get('Referrer') + 'set-password?' + token;
@@ -118,7 +119,22 @@ module.exports = {
         });
       } else {
         params.is_verified = familyMember.email != params.email ? false : true;
-        const editedFamily = await familyServices.editFamily(params);
+        let editedFamily;
+        if (params.is_verified) {
+          editedFamily = await familyServices.editFamily(params);
+        } else {
+          editedFamily = await familyServices.editFamily(_.omit(params, ['email']));
+        }
+
+        if (!params.is_verified) {
+          const token = await familyServices.createEmailToken(editedFamily, params.email);
+          const name = editedFamily.first_name + ' ' + editedFamily.last_name;
+          const originalUrl =
+            req.get('Referrer') + 'email-change?' + 'token=' + token + '&type=family';
+          const short_url = await TinyURL.shorten(originalUrl);
+
+          const response = await sendEmailChangeMail(name, params?.email, short_url);
+        }
 
         if (editedFamily) {
           res.status(200).json({
@@ -359,6 +375,31 @@ module.exports = {
       } else {
         res.status(400).json({ IsSuccess: true, Data: {}, Message: 'No user found' });
       }
+      next();
+    } catch (error) {
+      res.status(500).json({ IsSuccess: false, Message: error.message });
+      next(error);
+    }
+  },
+
+  changeRegisteredEmail: async (req, res, next) => {
+    try {
+      const { token } = req.body;
+      const decodeToken = engine.decrypt(token);
+
+      const user = await familyServices.getFamilyMemberById(decodeToken.familyMemberId);
+
+      if (user.email !== decodeToken.email) {
+        const emailChanged = await familyServices.editFamily(
+          { family_member_id: decodeToken.familyMemberId },
+          { email: decodeToken.email }
+        );
+
+        res.status(200).json({ IsSuccess: true, Data: {}, Message: 'Email successfully changed ' });
+      } else {
+        res.status(400).json({ IsSuccess: true, Data: {}, Message: 'Email is already changed' });
+      }
+
       next();
     } catch (error) {
       res.status(500).json({ IsSuccess: false, Message: error.message });

@@ -77,6 +77,7 @@ module.exports = {
 
   /* Edit family details */
   editFamily: async (params) => {
+    console.log(params);
     const familyObj = _.omit(params, ['family_member_id']);
     let update = {
       updated_at: Sequelize.literal('CURRENT_TIMESTAMP'),
@@ -198,7 +199,7 @@ module.exports = {
     let children = await getChildren(familyIdToSearch);
 
     familyArray.forEach((family, index) => {
-      secondaryParents.forEach((secondary) => {
+      secondaryParents?.forEach((secondary) => {
         if (secondary.family_id === family.primary.family_id) {
           familyArray[index].secondary.push(secondary);
         }
@@ -347,5 +348,14 @@ module.exports = {
     );
 
     return setNewPassword;
+  },
+  /* Create user token to change email*/
+  createEmailToken: async (user, newEmail) => {
+    const token = engine.encrypt(
+      { familyMemberId: user.family_member_id, email: newEmail },
+      900000
+    );
+
+    return token;
   }
 };

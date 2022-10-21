@@ -113,7 +113,7 @@ module.exports = {
   },
   /* Create user token to change email*/
   createEmailToken: async (user, newEmail) => {
-    const token = engine.encrypt({ userId: user.user_id, email: newEmail }, 600000);
+    const token = engine.encrypt({ userId: user.user_id, email: newEmail }, 900000);
 
     return token;
   },

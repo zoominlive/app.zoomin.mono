@@ -390,7 +390,8 @@ module.exports = {
           } else {
             const token = await userServices.createEmailToken(user, newEmail);
             const name = user.first_name + ' ' + user.last_name;
-            const originalUrl = req.get('Referrer') + 'email-change?' + token;
+            const originalUrl =
+              req.get('Referrer') + 'email-change?' + 'token=' + token + '&type=user';
             const short_url = await TinyURL.shorten(originalUrl);
 
             const response = await sendEmailChangeMail(name, params?.email, short_url);
