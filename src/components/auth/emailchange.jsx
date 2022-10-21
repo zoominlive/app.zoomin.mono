@@ -16,19 +16,24 @@ const EmailChange = () => {
 
   useEffect(() => {
     setIsLoading(true);
-    API.post('users/emailChange', { token: search.substring(1) }).then((response) => {
-      if (response.status === 200) {
-        enqueueSnackbar(response.data.Message, {
-          variant: 'success'
-        });
-      } else {
-        errorMessageHandler(
-          enqueueSnackbar,
-          response?.response?.data?.Message || 'Something Went Wrong.',
-          response?.response?.status
-        );
+    const queryParams = search.substring(1).split('&');
+    const token = queryParams[0].substring(6);
+    const type = queryParams[1].substring(5);
+    API.post(type === 'family' ? 'family/emailChange' : 'users/emailChange', { token: token }).then(
+      (response) => {
+        if (response.status === 200) {
+          enqueueSnackbar(response.data.Message, {
+            variant: 'success'
+          });
+        } else {
+          errorMessageHandler(
+            enqueueSnackbar,
+            response?.response?.data?.Message || 'Something Went Wrong.',
+            response?.response?.status
+          );
+        }
       }
-    });
+    );
     setIsLoading(false);
   }, []);
 
