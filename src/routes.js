@@ -21,11 +21,11 @@ const AppRoutes = () => {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/families" element={<Families />} />
           <Route path="/rooms" element={<Rooms />} />
-          <Route path="/profile" element={<Profile />} />
           <Route path="/settings" element={<Settings />} />{' '}
         </>
       )}
       <Route path="/watch-stream" element={<WatchStream />} />
+      <Route path="/profile" element={<Profile />} />
 
       {/* Default Route */}
       <Route

@@ -45,24 +45,30 @@ const SetPassword = () => {
   const { search } = useLocation();
 
   const handleSubmit = (data) => {
+    const queryParams = search.substring(1).split('&');
+    const token = queryParams[0].substring(6);
+    const type = queryParams[1].substring(5);
+
+    console.log(type);
     setSubmitLoading(true);
-    API.post('users/setPassword', { token: search.substring(1), password: data.password }).then(
-      (response) => {
-        if (response.status === 200) {
-          enqueueSnackbar(response?.data?.Message, {
-            variant: 'success'
-          });
-          setIsPasswordSetSuccesful(true);
-        } else {
-          errorMessageHandler(
-            enqueueSnackbar,
-            response?.response?.data?.Message || 'Something Went Wrong.',
-            response?.response?.status
-          );
-        }
-        setSubmitLoading(false);
+    API.post(type === 'family' ? 'family/setPassword' : 'users/setPassword', {
+      token: token,
+      password: data.password
+    }).then((response) => {
+      if (response.status === 200) {
+        enqueueSnackbar(response?.data?.Message, {
+          variant: 'success'
+        });
+        setIsPasswordSetSuccesful(true);
+      } else {
+        errorMessageHandler(
+          enqueueSnackbar,
+          response?.response?.data?.Message || 'Something Went Wrong.',
+          response?.response?.status
+        );
       }
-    );
+      setSubmitLoading(false);
+    });
   };
 
   return (

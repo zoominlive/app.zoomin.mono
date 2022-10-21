@@ -275,6 +275,7 @@ const Profile = () => {
                           }}>
                           <MenuItem value={'User'}>User</MenuItem>
                           <MenuItem value={'Admin'}>Admin</MenuItem>
+                          <MenuItem value={'Family'}>Family</MenuItem>
                         </Select>
                         {touched.role && Boolean(errors.role) && (
                           <FormHelperText sx={{ color: '#d32f2f' }}>
@@ -287,6 +288,7 @@ const Profile = () => {
                       <Autocomplete
                         fullWidth
                         multiple
+                        disabled={authCtx?.user?.role === 'Family'}
                         id="locations"
                         options={authCtx?.user?.location?.accessable_locations.sort((a, b) =>
                           a > b ? 1 : -1
