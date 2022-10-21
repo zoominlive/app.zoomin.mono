@@ -108,7 +108,7 @@ module.exports = {
 
   /* Create user token to reset password */
   createPasswordToken: async (user) => {
-    const token = engine.encrypt({ userId: user.user_id, password: user.password }, 600000);
+    const token = engine.encrypt({ userId: user.user_id, password: user.password }, 900000);
 
     return token;
   },
@@ -122,7 +122,7 @@ module.exports = {
   /* Reset user password */
   resetPassword: async (userId, password) => {
     let setNewPassword = await Users.update(
-      { password: password, isVerified: true },
+      { password: password, is_verified: true },
       { returning: true, where: { user_id: userId } }
     );
 

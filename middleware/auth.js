@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const { Family } = require('../models');
 const Users = require('../models/users');
 
 module.exports = async function (req, res, next) {
@@ -7,22 +8,32 @@ module.exports = async function (req, res, next) {
 
   try {
     const decodeToken = jwt.verify(token, process.env.JWT_SECRET_KEY);
-    const user = await Users.findOne({ where: { user_id: decodeToken.user_id } });
-    if (!user) {
-      res.status(401).json({ IsSuccess: true, Data: {}, Message: 'Auth Error' });
+    let familyUser;
+    let user;
+    if (decodeToken?.user_id) {
+      user = await Users.findOne({ where: { user_id: decodeToken.user_id } });
     }
-
-    req.userToken = decodeToken.decodeToken;
-    req.user = user.toJSON();
+    if (!user) {
+      const familyUser = await Family.findOne({
+        where: { family_member_id: decodeToken.family_member_id }
+      });
+      if (familyUser) {
+        req.userToken = decodeToken.decodeToken;
+        req.user = familyUser.toJSON();
+      } else {
+        res.status(401).json({ IsSuccess: true, Data: {}, Message: 'Auth Error' });
+      }
+    } else {
+      req.userToken = decodeToken.decodeToken;
+      req.user = user.toJSON();
+    }
 
     next();
   } catch (e) {
-    res
-      .status(401)
-      .json({
-        IsSuccess: true,
-        Data: {},
-        Message: 'Invalid Token or Token Expired, please Login again'
-      });
+    res.status(401).json({
+      IsSuccess: true,
+      Data: {},
+      Message: 'Invalid Token or Token Expired, please Login again'
+    });
   }
 };

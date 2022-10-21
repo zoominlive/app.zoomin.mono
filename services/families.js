@@ -1,8 +1,10 @@
 const { Family, Camera, Room, Child } = require('../models/index');
 const Sequelize = require('sequelize');
-const childServices = require('./children');
+const jwt = require('jsonwebtoken');
 const _ = require('lodash');
 const sequelize = require('../lib/database');
+const encrypter = require('object-encrypter');
+const engine = encrypter(process.env.JWT_SECRET_KEY, { ttl: true });
 
 const getSecondaryParents = async (familyIdArray) => {
   let ids = '';
@@ -211,7 +213,7 @@ module.exports = {
     return { familyArray, count };
   },
 
-  getFamilyMember: async (familyMemberId) => {
+  getFamilyMemberById: async (familyMemberId) => {
     let familyMember = await Family.findOne({
       where: { family_member_id: familyMemberId },
       raw: true
@@ -300,5 +302,50 @@ module.exports = {
     }
 
     return updateFamilyDetails, updateChildDetails;
+  },
+
+  /* Create family token to reset password */
+  createPasswordToken: async (familyMember) => {
+    const token = engine.encrypt(
+      { familyMemberId: familyMember.family_member_id, password: familyMember.password },
+      900000
+    );
+
+    return token;
+  },
+
+  /* Reset user password */
+  resetPassword: async (familyMemberId, password) => {
+    let setNewPassword = await Family.update(
+      { password: password, is_verified: true },
+      { returning: true, where: { family_member_id: familyMemberId } }
+    );
+
+    return setNewPassword;
+  },
+  /* Get user via email */
+  getFamilyMember: async (email) => {
+    let familyMember = await Family.findOne({
+      where: { email: email }
+    });
+    return familyMember ? familyMember.toJSON() : null;
+  },
+
+  /* Create family member token */
+  createFamilyMemberToken: async (familyMemberId) => {
+    const token = jwt.sign({ family_member_id: familyMemberId }, process.env.JWT_SECRET_KEY, {
+      expiresIn: process.env.ACCESS_TOKEN_EXPIRY
+    });
+    return { token };
+  },
+
+  /* Reset user password */
+  resetPassword: async (familyMemberId, password) => {
+    let setNewPassword = await Family.update(
+      { password: password, isVerified: true },
+      { returning: true, where: { family_member_id: familyMemberId } }
+    );
+
+    return setNewPassword;
   }
 };

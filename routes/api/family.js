@@ -14,5 +14,5 @@ router.post('/addParent', authController, familyController.addParent);
 router.put('/disable', authController, familyController.disableFamily);
 router.put('/enable', authController, familyController.enableFamily);
 router.delete('/delete', authController, familyController.deleteFamily);
-
+router.post('/setPassword', familyController.validateFamilyMember);
 module.exports = router;

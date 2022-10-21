@@ -2,6 +2,16 @@ const _ = require('lodash');
 const familyServices = require('../services/families');
 const childServices = require('../services/children');
 const userServices = require('../services/users');
+const TinyURL = require('tinyurl');
+const encrypter = require('object-encrypter');
+const engine = encrypter(process.env.JWT_SECRET_KEY, { ttl: true });
+var bcrypt = require('bcryptjs');
+const {
+  sendRegistrationMail,
+  sendEmailChangeMail,
+  sendForgetPasswordMail
+} = require('../lib/node-mailer');
+
 module.exports = {
   createFamily: async (req, res, next) => {
     try {
@@ -36,6 +46,26 @@ module.exports = {
         })
       );
       secondaryParents = await createdFamily;
+      if (primaryParent && secondaryParents) {
+        const token = await familyServices.createPasswordToken(primaryParent);
+        const name = primaryParent.first_name + ' ' + primaryParent.last_name;
+        const originalUrl =
+          req.get('Referrer') + 'set-password?' + 'token=' + token + '&type=family';
+        const short_url = await TinyURL.shorten(originalUrl);
+
+        await sendRegistrationMail(name, primaryParent.email, short_url);
+
+        if (!_.isEmpty(secondaryParents)) {
+          secondaryParents.foreach(async (secondaryParent) => {
+            const token = await familyServices.createPasswordToken(secondaryParent);
+            const name = secondaryParent.first_name + ' ' + secondaryParent.last_name;
+            const originalUrl = req.get('Referrer') + 'set-password?' + token;
+            const short_url = await TinyURL.shorten(originalUrl);
+
+            await sendRegistrationMail(name, secondaryParent.email, short_url);
+          });
+        }
+      }
 
       //add children
 
@@ -74,7 +104,7 @@ module.exports = {
     try {
       const params = req.body;
       let emailExist = false;
-      const familyMember = await familyServices.getFamilyMember(params.family_member_id);
+      const familyMember = await familyServices.getFamilyMemberById(params.family_member_id);
 
       if (params.email !== familyMember.email) {
         emailExist = await userServices.checkEmailExist(params.email);
@@ -261,6 +291,66 @@ module.exports = {
         IsSuccess: false,
         Message: error.message
       });
+      next(error);
+    }
+  },
+
+  /* verify email and set password */
+  validateFamilyMember: async (req, res, next) => {
+    try {
+      const { token, password } = req.body;
+      const decodeToken = engine.decrypt(token);
+      let familyMember;
+
+      familyMember = await familyServices.getFamilyMemberById(decodeToken.familyMemberId);
+
+      if (familyMember) {
+        if (!familyMember?.password) {
+          const salt = await bcrypt.genSaltSync(10);
+          let hashPassword = bcrypt.hashSync(password, salt);
+
+          const setPassword = await familyServices.resetPassword(
+            decodeToken.familyMemberId,
+            hashPassword
+          );
+          res.status(200).json({
+            IsSuccess: true,
+            Data: {},
+            Message: 'Family member password reset successful'
+          });
+        } else if (familyMember?.password) {
+          if (familyMember.password === decodeToken?.password) {
+            const salt = await bcrypt.genSaltSync(10);
+            let hashPassword = bcrypt.hashSync(password, salt);
+            const setPassword = await familyMember.resetPassword(
+              decodeToken.familyMemberId,
+              hashPassword
+            );
+            res.status(200).json({
+              IsSuccess: true,
+              Data: {},
+              Message: 'Family member password reset successful'
+            });
+          } else {
+            res.status(400).json({
+              IsSuccess: false,
+              Data: {},
+              Message: 'password is already changed, please verify again to change password'
+            });
+          }
+        } else {
+          res.status(400).json({
+            IsSuccess: false,
+            Data: {},
+            Message: 'Invalid token '
+          });
+        }
+      } else {
+        res.status(400).json({ IsSuccess: true, Data: {}, Message: 'No user found' });
+      }
+      next();
+    } catch (error) {
+      res.status(500).json({ IsSuccess: false, Message: error.message });
       next(error);
     }
   }

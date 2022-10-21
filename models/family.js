@@ -51,16 +51,32 @@ const Family = sequelize.define(
     },
     email: {
       type: Sequelize.STRING(50),
-      unique: true,
+      unique: {
+        args: true,
+        msg: 'Email address already in use!'
+      },
       required: [true, 'Email is mandatory field']
+    },
+    password: {
+      type: Sequelize.STRING(200)
+    },
+    is_verified: {
+      type: Sequelize.BOOLEAN,
+      defaultValue: false,
+      required: false
     },
     location: {
       type: Sequelize.JSON,
       defaultValue: null
     },
+    role: {
+      type: Sequelize.ENUM('Family'),
+      defaultValue: 'Family',
+      required: true
+    },
     status: {
       type: Sequelize.ENUM('Enabled', 'Disabled'),
-      defaultValue: 'active',
+      defaultValue: 'Enabled',
       required: true
     },
     scheduled_end_date: {

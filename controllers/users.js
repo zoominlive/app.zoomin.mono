@@ -6,6 +6,7 @@ const {
   sendForgetPasswordMail
 } = require('../lib/node-mailer');
 const userServices = require('../services/users');
+const familyServices = require('../services/families');
 const s3BucketImageUploader = require('../lib/aws-services');
 const TinyURL = require('tinyurl');
 const jwt = require('jsonwebtoken');
@@ -55,7 +56,7 @@ module.exports = {
 
         const token = await userServices.createPasswordToken(userData);
         const name = userData.first_name + ' ' + userData.last_name;
-        const originalUrl = req.get('Referrer') + 'set-password?' + token;
+        const originalUrl = req.get('Referrer') + 'set-password?' + 'token=' + token + '&type=user';
         const short_url = await TinyURL.shorten(originalUrl);
 
         await sendRegistrationMail(name, userData.email, short_url);
@@ -93,6 +94,10 @@ module.exports = {
       emailIs = emailIs.toLowerCase();
 
       const user = await userServices.getUser(emailIs);
+      let familyUser;
+      if (!user) {
+        familyUser = await familyServices.getFamilyMember(emailIs);
+      }
 
       if (user) {
         if (!user.is_verified || user.status == 'inactive') {
@@ -109,6 +114,28 @@ module.exports = {
           if (validPassword) {
             const token = await userServices.createUserToken(user.user_id);
             const userData = _.omit(user, ['password']);
+            res
+              .status(200)
+              .json({ IsSuccess: true, Data: { userData, ...token }, Message: 'User logged in' });
+          } else {
+            res.status(400).json({ IsSuccess: true, Data: {}, Message: 'Invalid Password' });
+          }
+        }
+      } else if (familyUser) {
+        if (!familyUser.is_verified || familyUser.status == 'Disabled') {
+          res.status(400).json({
+            IsSuccess: true,
+            Data: [],
+            Message: !familyUser.is_verified
+              ? 'You are not verified to logged in'
+              : 'User is deactivated please contact Administrator'
+          });
+        } else {
+          const validPassword = await bcrypt.compare(password, familyUser.password);
+
+          if (validPassword) {
+            const token = await familyServices.createFamilyMemberToken(familyUser.family_member_id);
+            const userData = _.omit(familyUser, ['password']);
             res
               .status(200)
               .json({ IsSuccess: true, Data: { userData, ...token }, Message: 'User logged in' });
@@ -141,7 +168,12 @@ module.exports = {
       if (validPassword) {
         const salt = await bcrypt.genSaltSync(10);
         let hashPassword = bcrypt.hashSync(newPassword, salt);
-        let changePassword = await userServices.resetPassword(user.user_id, hashPassword);
+        let changePassword;
+        if (user.role === 'User' || user.role === 'Admin') {
+          changePassword = await userServices.resetPassword(user.user_id, hashPassword);
+        } else {
+          changePassword = await familyServices.resetPassword(user.family_member_id, hashPassword);
+        }
         res.status(200).json({
           IsSuccess: true,
           Data: changePassword,
@@ -156,7 +188,7 @@ module.exports = {
       next(error);
     }
   },
-  /* Check user OTP & verified */
+  /* verify email and set password */
   validateUser: async (req, res, next) => {
     try {
       const { token, password } = req.body;
@@ -211,15 +243,28 @@ module.exports = {
     try {
       let { email } = req.body;
       email = email.toLowerCase();
-      const user = await userServices.getUser(email);
-
+      let user;
+      user = await userServices.getUser(email);
+      if (!user) {
+        user = await familyServices.getFamilyMember(email);
+      }
       if (user) {
         const userData = user;
-        const token = await userServices.createPasswordToken(userData);
-        const name = userData.first_name + ' ' + userData.last_name;
-        const originalUrl = req.get('Referrer') + 'set-password?' + token;
-        const short_url = await TinyURL.shorten(originalUrl);
-        await sendForgetPasswordMail(name, email, short_url);
+        if (userData.role === 'Admin' || userData.role === 'User') {
+          const token = await userServices.createPasswordToken(userData);
+          const name = userData.first_name + ' ' + userData.last_name;
+          const originalUrl =
+            req.get('Referrer') + 'set-password?' + 'token=' + token + '&type=user';
+          const short_url = await TinyURL.shorten(originalUrl);
+          await sendForgetPasswordMail(name, email, short_url);
+        } else {
+          const token = await familyServices.createPasswordToken(userData);
+          const name = userData.first_name + ' ' + userData.last_name;
+          const originalUrl =
+            req.get('Referrer') + 'set-password?' + 'token=' + token + '&type=family';
+          const short_url = await TinyURL.shorten(originalUrl);
+          await sendForgetPasswordMail(name, email, short_url);
+        }
 
         res.status(200).json({
           IsSuccess: true,

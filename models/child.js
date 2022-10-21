@@ -34,7 +34,7 @@ const Child = sequelize.define(
     },
     status: {
       type: Sequelize.ENUM('Enabled', 'Disabled'),
-      defaultValue: 'active',
+      defaultValue: 'Enabled',
       required: true
     },
     scheduled_end_date: {
