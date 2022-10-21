@@ -122,13 +122,13 @@ const Families = () => {
 
   const renderFamilyLocations = (children) => {
     let locations = [];
-    children.forEach((child) => {
-      child.location.locations.forEach((location) => {
-        locations.push(location);
+    children?.forEach((child) => {
+      child?.location?.locations?.forEach((location) => {
+        locations?.push(location);
       });
     });
-    const uniqueLocations = locations.filter((item, index) => locations.indexOf(item) === index);
-    const locationsJSX = uniqueLocations.map((location, index) => (
+    const uniqueLocations = locations?.filter((item, index) => locations?.indexOf(item) === index);
+    const locationsJSX = uniqueLocations?.map((location, index) => (
       <Chip key={index} label={location} color="primary" />
     ));
     return locationsJSX;

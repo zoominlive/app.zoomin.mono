@@ -43,6 +43,7 @@ const FamilyActions = (props) => {
   // Method to open disable family dialog
   const handleOpenDisableFamilyDialog = (event) => {
     props.openDisableFamilyDialog(true);
+    props.setFamily(props.family);
     handleClose(event);
   };
 
