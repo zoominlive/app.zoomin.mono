@@ -117,19 +117,22 @@ module.exports = {
           Message: 'Email already exist'
         });
       } else {
+        params.is_verified = familyMember.email != params.email ? false : true;
         const editedFamily = await familyServices.editFamily(params);
 
         if (editedFamily) {
           res.status(200).json({
             IsSuccess: true,
             Data: editedFamily,
-            Message: 'family details updated'
+            Message: `Family member details updated ${
+              params.is_verified ? '' : '. please verify updated email'
+            }`
           });
         } else {
           res.status(404).json({
             IsSuccess: false,
             Data: {},
-            Message: 'family member not found'
+            Message: 'Family member not found'
           });
         }
       }
@@ -187,6 +190,14 @@ module.exports = {
         });
       } else {
         const parent = await familyServices.createFamily(params);
+
+        const token = await familyServices.createPasswordToken(parent);
+        const name = parent.first_name + ' ' + parent.last_name;
+        const originalUrl =
+          req.get('Referrer') + 'set-password?' + 'token=' + token + '&type=family';
+        const short_url = await TinyURL.shorten(originalUrl);
+
+        await sendRegistrationMail(name, parent.email, short_url);
 
         res.status(201).json({
           IsSuccess: true,
@@ -322,7 +333,7 @@ module.exports = {
           if (familyMember.password === decodeToken?.password) {
             const salt = await bcrypt.genSaltSync(10);
             let hashPassword = bcrypt.hashSync(password, salt);
-            const setPassword = await familyMember.resetPassword(
+            const setPassword = await familyServices.resetPassword(
               decodeToken.familyMemberId,
               hashPassword
             );

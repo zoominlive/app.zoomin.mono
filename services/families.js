@@ -342,7 +342,7 @@ module.exports = {
   /* Reset user password */
   resetPassword: async (familyMemberId, password) => {
     let setNewPassword = await Family.update(
-      { password: password, isVerified: true },
+      { password: password, is_verified: true },
       { returning: true, where: { family_member_id: familyMemberId } }
     );
 

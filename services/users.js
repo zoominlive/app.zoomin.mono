@@ -99,7 +99,6 @@ module.exports = {
 
   /* Create user token */
   createUserToken: async (userId) => {
-    console.log(process.env.JWT_SECRET_KEY);
     const token = jwt.sign({ user_id: userId }, process.env.JWT_SECRET_KEY, {
       expiresIn: process.env.ACCESS_TOKEN_EXPIRY
     });
@@ -267,8 +266,6 @@ module.exports = {
           }
         )
       )[0].dataValues.count;
-
-      console.log(count);
 
       users = await sequelize.query(
         `SELECT DISTINCT * FROM users WHERE location LIKE '%${location}%' AND user_id != ${
