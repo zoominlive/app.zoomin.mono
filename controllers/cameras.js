@@ -4,16 +4,16 @@ const _ = require('lodash');
 var uuid = require('uuid');
 
 module.exports = {
+  // encode stream and create new camera
   createCamera: async (req, res, next) => {
     try {
       params = req.body;
       params.cust_id = req.user.cust_id;
-
-      // const details = await startEncodingStream(params.cam_uri);
-
-      params.stream_uri = uuid.v4();
-      params.stream_uuid = uuid.v4();
-      params.cam_alias = uuid.v4();
+      const token = req.userToken;
+      const transcodedDetails = await startEncodingStream(params.cam_uri, token);
+      params.stream_uri = transcodedDetails?.data ? transcodedDetails.data?.uri : '';
+      params.stream_uuid = transcodedDetails?.data ? transcodedDetails.data?.id : '';
+      params.cam_alias = transcodedDetails?.data ? transcodedDetails.data?.alias : '';
       const camera = await cameraServices.createCamera(params);
 
       res.status(201).json({
@@ -32,12 +32,15 @@ module.exports = {
     }
   },
 
+  // delete encoded stream and camera
   deleteCamera: async (req, res, next) => {
     try {
       const params = req.body;
-      const cameraDeleted = await cameraServices.deleteCamera(params.cam_id);
+      const token = req.userToken;
 
-      // const camEncodedDeleted = await deleteEncodingStream(params.streamId, params.wait);
+      const camEncodedDeleted = await deleteEncodingStream(params.streamId, params.wait, token);
+
+      const cameraDeleted = await cameraServices.deleteCamera(params.cam_id);
 
       if (cameraDeleted === 0) {
         res.status(404).json({
@@ -45,19 +48,17 @@ module.exports = {
           Data: {},
           Message: 'Camera not found'
         });
-      }
-      //  else if (camEncodedDeleted.status === 200) {
-      //   res.status(200).json({
-      //     IsSuccess: true,
-      //     Data: {},
-      //     Message: 'Camera Deleted'
-      //   });
-      // }
-      else {
+      } else if (camEncodedDeleted.status === 200) {
+        res.status(200).json({
+          IsSuccess: true,
+          Data: {},
+          Message: 'Camera Deleted'
+        });
+      } else {
         res.status(200).json({
           IsSuccess: false,
           Data: {},
-          Message: 'Camera deleted'
+          Message: 'Stream not found , Camera deleted'
         });
       }
 
@@ -71,6 +72,34 @@ module.exports = {
     }
   },
 
+  // edit camera details
+  editCamera: async (req, res, next) => {
+    try {
+      const params = req.body;
+      const token = req.userToken;
+
+      const cameraUpdated = await cameraServices.editCamera({
+        cam_id: params.camId,
+        cam_name: params.camName
+      });
+
+      res.status(200).json({
+        IsSuccess: false,
+        Data: {},
+        Message: 'camera details updated'
+      });
+
+      next();
+    } catch (error) {
+      res.status(500).json({
+        IsSuccess: false,
+        Message: error.message
+      });
+      next(error);
+    }
+  },
+
+  // get all camera's
   getAllCameras: async (req, res, next) => {
     try {
       const rooms = await roomServices.getAllRoomsDetails(req.user.user_id);

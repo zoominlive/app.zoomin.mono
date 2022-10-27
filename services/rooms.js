@@ -44,7 +44,7 @@ module.exports = {
     return deletedRoom;
   },
 
-  /* Fetch all the user's details */
+  /* Fetch all the room's details */
   getAllRoomsDetails: async (userId, filter) => {
     let { pageNumber = 0, pageSize = 10, roomsList = [], location = 'All', searchBy = '' } = filter;
 
@@ -122,6 +122,7 @@ module.exports = {
     return { finalRoomDetails, count };
   },
 
+  // get all room's list for loggedin user
   getAllRoomsList: async (userId) => {
     let roomList = await Room.findAll({
       attributes: ['room_name', 'room_id'],

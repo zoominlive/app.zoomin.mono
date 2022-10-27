@@ -3,6 +3,7 @@ const familyServices = require('../services/families');
 const childServices = require('../services/children');
 
 module.exports = {
+  // create new child
   createChild: async (req, res, next) => {
     try {
       let params = req.body;
@@ -27,6 +28,7 @@ module.exports = {
     }
   },
 
+  // edit existing child
   editChild: async (req, res, next) => {
     try {
       const params = req.body;
@@ -48,6 +50,8 @@ module.exports = {
       next(error);
     }
   },
+
+  // delete child by id
   deleteChild: async (req, res, next) => {
     try {
       const params = req.body;
@@ -68,6 +72,8 @@ module.exports = {
       next(error);
     }
   },
+
+  // disable selected child
   disableChild: async (req, res, next) => {
     try {
       const params = req.body;
@@ -100,6 +106,8 @@ module.exports = {
       next(error);
     }
   },
+
+  // enable selected child
   enableChild: async (req, res, next) => {
     try {
       const params = req.body;

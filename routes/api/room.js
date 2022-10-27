@@ -6,7 +6,7 @@ const router = express.Router();
 const authController = require('../../middleware/auth');
 const roomController = require('../../controllers/rooms');
 
-/* User end points */
+/* room end points */
 router.get('/', authController, roomController.getAllRoomsDetails);
 router.post('/add', authController, roomController.createRoom);
 router.put('/edit', authController, roomController.editRoom);

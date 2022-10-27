@@ -55,13 +55,14 @@ const getPrimaryMember = async (familyId) => {
 };
 
 module.exports = {
-  /* Create new room */
+  /* Create new family */
   createFamily: async (familyObj) => {
     let familyCreated = await Family.create(familyObj);
 
     return familyCreated !== undefined ? familyCreated.toJSON() : null;
   },
 
+  //generate new family Id
   generateNewFamilyId: async (userId) => {
     let newFamilyId = await Family.findOne({
       where: { user_id: userId },
@@ -77,7 +78,6 @@ module.exports = {
 
   /* Edit family details */
   editFamily: async (params) => {
-    console.log(params);
     const familyObj = _.omit(params, ['family_member_id']);
     let update = {
       updated_at: Sequelize.literal('CURRENT_TIMESTAMP'),
@@ -214,6 +214,7 @@ module.exports = {
     return { familyArray, count };
   },
 
+  //fetch family member details by ID
   getFamilyMemberById: async (familyMemberId) => {
     let familyMember = await Family.findOne({
       where: { family_member_id: familyMemberId },
@@ -222,6 +223,7 @@ module.exports = {
     return familyMember;
   },
 
+  //disable family member by ID
   disableFamily: async (familyMemberId, memberType, familyId, schedluedEndDate = null) => {
     let updateFamilyDetails;
     let updateChildDetails;
@@ -276,6 +278,7 @@ module.exports = {
     return updateFamilyDetails, updateChildDetails;
   },
 
+  // enable family member by ID
   enableFamily: async (familyMemberId, memberType, familyId) => {
     let updateFamilyDetails;
     let updateChildDetails;
@@ -315,16 +318,7 @@ module.exports = {
     return token;
   },
 
-  /* Reset user password */
-  resetPassword: async (familyMemberId, password) => {
-    let setNewPassword = await Family.update(
-      { password: password, is_verified: true },
-      { returning: true, where: { family_member_id: familyMemberId } }
-    );
-
-    return setNewPassword;
-  },
-  /* Get user via email */
+  /* Get family member by email */
   getFamilyMember: async (email) => {
     let familyMember = await Family.findOne({
       where: { email: email }
@@ -340,7 +334,7 @@ module.exports = {
     return { token };
   },
 
-  /* Reset user password */
+  /* Reset family member account password */
   resetPassword: async (familyMemberId, password) => {
     let setNewPassword = await Family.update(
       { password: password, is_verified: true },
@@ -349,7 +343,7 @@ module.exports = {
 
     return setNewPassword;
   },
-  /* Create user token to change email*/
+  /* Create family token to change email*/
   createEmailToken: async (user, newEmail) => {
     const token = engine.encrypt(
       { familyMemberId: user.family_member_id, email: newEmail },
@@ -357,5 +351,19 @@ module.exports = {
     );
 
     return token;
+  },
+
+  /* Get family's with scheduled to end access  */
+  getFamilyWithSEA: async (userId) => {
+    let familyMembers = await Family.findAll({
+      where: {
+        scheduled_end_date: {
+          [Sequelize.Op.ne]: null
+        },
+        member_type: 'primary',
+        user_id: userId
+      }
+    });
+    return familyMembers;
   }
 };

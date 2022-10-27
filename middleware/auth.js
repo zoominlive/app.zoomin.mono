@@ -2,6 +2,7 @@ const jwt = require('jsonwebtoken');
 const { Family } = require('../models');
 const Users = require('../models/users');
 
+// authentication middleware to check auth and give access based on user type
 module.exports = async function (req, res, next) {
   const token = req.header('Authorization')?.substring(7);
   if (!token) return res.status(401).json({ IsSuccess: true, Data: {}, Message: 'Auth Error' });
@@ -18,13 +19,13 @@ module.exports = async function (req, res, next) {
         where: { family_member_id: decodeToken.family_member_id }
       });
       if (familyUser) {
-        req.userToken = decodeToken.decodeToken;
+        req.userToken = token;
         req.user = familyUser.toJSON();
       } else {
         res.status(401).json({ IsSuccess: true, Data: {}, Message: 'Auth Error' });
       }
     } else {
-      req.userToken = decodeToken.decodeToken;
+      req.userToken = token;
       req.user = user.toJSON();
     }
 

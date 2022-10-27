@@ -13,6 +13,7 @@ const {
 } = require('../lib/node-mailer');
 
 module.exports = {
+  // create new family(primary parent, secondary parent ,child)
   createFamily: async (req, res, next) => {
     try {
       let { primary, secondary, children } = req.body;
@@ -101,6 +102,7 @@ module.exports = {
     }
   },
 
+  // edit family member details
   editFamily: async (req, res, next) => {
     try {
       const params = req.body;
@@ -132,7 +134,6 @@ module.exports = {
           const originalUrl =
             req.get('Referrer') + 'email-change?' + 'token=' + token + '&type=family';
           const short_url = await TinyURL.shorten(originalUrl);
-
           const response = await sendEmailChangeMail(name, params?.email, short_url);
         }
 
@@ -163,6 +164,7 @@ module.exports = {
     }
   },
 
+  // list family details for family list page.
   getAllFamilyDetails: async (req, res, next) => {
     try {
       const filter = {
@@ -190,6 +192,7 @@ module.exports = {
     }
   },
 
+  // add new parent to existing family
   addParent: async (req, res, next) => {
     try {
       params = req.body;
@@ -232,6 +235,7 @@ module.exports = {
     }
   },
 
+  // delete family
   deleteFamily: async (req, res, next) => {
     try {
       params = req.body;
@@ -254,6 +258,7 @@ module.exports = {
     }
   },
 
+  // disable family member
   disableFamily: async (req, res, next) => {
     try {
       params = req.body;
@@ -288,6 +293,8 @@ module.exports = {
       next(error);
     }
   },
+
+  // enable family member
   enableFamily: async (req, res, next) => {
     try {
       params = req.body;
@@ -382,6 +389,7 @@ module.exports = {
     }
   },
 
+  // change registered email and send verification mail
   changeRegisteredEmail: async (req, res, next) => {
     try {
       const { token } = req.body;
@@ -390,10 +398,11 @@ module.exports = {
       const user = await familyServices.getFamilyMemberById(decodeToken.familyMemberId);
 
       if (user.email !== decodeToken.email) {
-        const emailChanged = await familyServices.editFamily(
-          { family_member_id: decodeToken.familyMemberId },
-          { email: decodeToken.email }
-        );
+        const emailChanged = await familyServices.editFamily({
+          family_member_id: decodeToken.familyMemberId,
+          email: decodeToken.email,
+          is_verified: true
+        });
 
         res.status(200).json({ IsSuccess: true, Data: {}, Message: 'Email successfully changed ' });
       } else {

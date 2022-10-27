@@ -11,7 +11,7 @@ module.exports = {
     return childCreated !== undefined ? childCreated.toJSON() : null;
   },
 
-  /* Edit room details */
+  /* Edit child details */
   editChild: async (params) => {
     const childObj = _.omit(params, ['child_id']);
     let update = {
@@ -31,7 +31,7 @@ module.exports = {
 
     return updateChildDetails.toJSON();
   },
-
+  // get all children for given family Id
   getAllchildren: async (familyId) => {
     childDetails = await Child.findAll({
       raw: true,
@@ -40,6 +40,8 @@ module.exports = {
 
     return childDetails;
   },
+
+  // delete selected child
   deleteChild: async (childId) => {
     let deletedChild = await Child.destroy({
       where: { child_id: childId },
@@ -49,6 +51,7 @@ module.exports = {
     return deletedChild;
   },
 
+  //disable selected child
   disableChild: async (childId, schedluedEndDate = null) => {
     let updateChildDetails;
 
@@ -92,6 +95,7 @@ module.exports = {
     return updateChildDetails;
   },
 
+  //enable selected child
   enableChild: async (childId) => {
     let update = {
       updated_at: Sequelize.literal('CURRENT_TIMESTAMP'),

@@ -508,6 +508,7 @@ module.exports = {
     }
   },
 
+  // check if given email already exist or not
   isEmailExist: async (req, res, next) => {
     try {
       const { email } = req.body;

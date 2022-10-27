@@ -90,6 +90,7 @@ module.exports = {
     return user ? user.toJSON() : null;
   },
 
+  // get user by id
   getUserById: async (userId) => {
     let user = await Users.findOne({
       where: { user_id: userId }
@@ -136,19 +137,6 @@ module.exports = {
     );
 
     return verifiedUser;
-  },
-
-  /* Edit security OTP code */
-  editNewSecurityCode: async (email, otp) => {
-    let editCode = await Users.update({ securityCode: otp }, { where: { email: email } });
-
-    return editCode;
-  },
-  /* Destroy security OTP code */
-  destroySecurityCode: async (email) => {
-    let destroySecurityCode = await Users.update({ securityCode: '' }, { where: { email: email } });
-
-    return destroySecurityCode;
   },
 
   /* Edit user profile details */
@@ -283,6 +271,7 @@ module.exports = {
     return { users, count };
   },
 
+  // check if user already exist for given email
   checkEmailExist: async (email) => {
     const users = await Users.findOne({ where: { email: email } });
 

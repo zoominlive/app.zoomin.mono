@@ -4,6 +4,7 @@ const _ = require('lodash');
 const moment = require('moment');
 const sequelize = require('./lib/database');
 
+// cron to disable scheduled to end access members and children
 module.exports.disableScheduledFamilyAndChild = async (event, context, callback) => {
   const today = moment().format('YYYY-MM-DD');
 

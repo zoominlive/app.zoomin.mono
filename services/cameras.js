@@ -1,16 +1,11 @@
-const { Camera, CustomerLocations } = require('../models/index');
+const { Camera } = require('../models/index');
 const Sequelize = require('sequelize');
 
 module.exports = {
-  /* Create new room */
+  /* Create new camera */
   createCamera: async (camObj) => {
-    // const location_id = await CustomerLocations.findOne({ where: { loc_name: camObj.location } });
-
-    // camObj.location_id = location_id;
-
     let camCreated = await Camera.create(camObj);
     return camCreated;
-    // return camCreated !== undefined ? camCreated.toJSON() : null;
   },
 
   /* Delete Existing camera */
@@ -22,15 +17,28 @@ module.exports = {
     return deletedCam;
   },
 
-  // /* Fetch all the user's details */
-  // getAllCamera: async (userId) => {
-  //   let rooms = await Room.findAll({ where: { user_id: userId } });
-  //   return rooms !== undefined ? rooms : null;
-  // },
+  /* Edit Existing camera */
+  editCamera: async (camId, camObj) => {
+    let update = {
+      updated_at: Sequelize.literal('CURRENT_TIMESTAMP'),
+      ...camObj
+    };
+    let deletedCam = await Camera.update(update, {
+      where: { cam_id: camId }
+    });
 
-  /* Fetch all the user's details */
+    return deletedCam;
+  },
+
+  /* Fetch all the camera's details for given room */
   getAllCameraForRoom: async (roomId) => {
     let cameras = await Camera.findAll({ where: { room_id: roomId } });
+    return cameras !== undefined ? cameras : null;
+  },
+
+  /* Fetch all the camera's details for given customer */
+  getAllCameraForCustomer: async (custId) => {
+    let cameras = await Camera.findAll({ where: { cust_id: custId } });
     return cameras !== undefined ? cameras : null;
   }
 };

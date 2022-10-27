@@ -1,6 +1,7 @@
 const roomServices = require('../services/rooms');
 
 module.exports = {
+  // create new room
   createRoom: async (req, res, next) => {
     try {
       const params = req.body;
@@ -24,6 +25,7 @@ module.exports = {
     }
   },
 
+  // edit existing room
   editRoom: async (req, res, next) => {
     try {
       const params = req.body;
@@ -45,6 +47,7 @@ module.exports = {
     }
   },
 
+  // delete existing room
   deleteRoom: async (req, res, next) => {
     try {
       const params = req.body;
@@ -66,6 +69,7 @@ module.exports = {
     }
   },
 
+  // get room details for room list page
   getAllRoomsDetails: async (req, res, next) => {
     try {
       const filter = {
@@ -93,6 +97,7 @@ module.exports = {
     }
   },
 
+  // get room's list for loggedin user
   getAllRoomsList: async (req, res, next) => {
     try {
       const rooms = await roomServices.getAllRoomsList(req.user.user_id);

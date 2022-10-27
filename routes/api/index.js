@@ -6,6 +6,8 @@ const roomRoutes = require('./room');
 const cameraRoutes = require('./camera');
 const familyRoutes = require('./family');
 const childRoutes = require('./children');
+const dashboardRoutes = require('./dashboard');
+
 /* user routes */
 router.use('/users', userRoutes);
 
@@ -18,5 +20,11 @@ router.use('/cams', cameraRoutes);
 /* family routes */
 router.use('/family', familyRoutes);
 
+/* child routes */
 router.use('/family/child', childRoutes);
+
+/* dashboard routes */
+router.use('/dashboard', dashboardRoutes);
+
+/* family routes */
 module.exports = router;
