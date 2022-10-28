@@ -49,7 +49,6 @@ const SetPassword = () => {
     const token = queryParams[0].substring(6);
     const type = queryParams[1].substring(5);
 
-    console.log(type);
     setSubmitLoading(true);
     API.post(type === 'family' ? 'family/setPassword' : 'users/setPassword', {
       token: token,

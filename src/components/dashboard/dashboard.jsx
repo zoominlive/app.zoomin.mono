@@ -35,7 +35,7 @@ const Dashboard = () => {
               <Stack direction="row" alignItems="center" spacing={2}>
                 <Typography className="count">12</Typography>
                 <Stack className="name">
-                  <Typography>Current</Typography>
+                  <Typography>Recent</Typography>
                   <Typography>Viewers</Typography>
                 </Stack>
               </Stack>

@@ -661,3 +661,21 @@
     }
   }
 }
+
+.video-player-wrapper {
+  position: relative;
+  width: 100%;
+  video {
+    border-radius: 6px;
+  }
+  .controls-wrapper {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    svg {
+      height: 65px;
+      width: 65px;
+      color: #fff;
+    }
+  }
+}
