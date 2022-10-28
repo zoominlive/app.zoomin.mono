@@ -49,7 +49,7 @@ const CustomPlayer = (props) => {
     <Box className="video-player-wrapper" ref={playerContainerRef}>
       <Loader loading={!ready} />
       <ReactPlayer
-        url={`http://35.91.216.67/${props?.streamUri}`}
+        url={`http://35.91.216.67${props?.streamUri}`}
         height={'100%'}
         width={'100%'}
         controls={false}
