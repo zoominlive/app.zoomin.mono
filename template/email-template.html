@@ -1,37 +1,94 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<!DOCTYPE html>
+<html
+  lang="en"
+  xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:v="urn:schemas-microsoft-com:vml"
+  xmlns:o="urn:schemas-microsoft-com:office:office"
+>
   <head>
-    <meta charset="UTF-8" />
-    <meta content="width=device-width, initial-scale=1" name="viewport" />
-    <meta name="x-apple-disable-message-reformatting" />
+    <meta charset="utf-8" />
+    <!-- utf-8 works for most cases -->
+    <meta name="viewport" content="width=device-width" />
+    <!-- Forcing initial-scale shouldn't be necessary -->
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta content="telephone=no" name="format-detection" />
+    <!-- Use the latest (edge) version of IE rendering engine -->
+    <meta name="x-apple-disable-message-reformatting" />
+    <!-- Disable auto-scale in iOS 10 Mail entirely -->
     <title></title>
+    <!-- The title tag shows in email notifications, like Android 4.4. -->
 
-    <style type="text/css">
-      #outlook a {
-        padding: 0;
+    <link
+      href="https://fonts.googleapis.com/css?family=Playfair+Display:400,400i,700,700i"
+      rel="stylesheet"
+    />
+
+    <!-- CSS Reset : BEGIN -->
+    <style>
+      html,
+      body {
+        margin: 0 auto !important;
+        padding: 0 !important;
+        height: 100% !important;
+        width: 100% !important;
+        background: whitesmoke;
       }
 
-      .ExternalClass {
-        width: 100%;
+      /* What it does: Stops email clients resizing small text. */
+      * {
+        -ms-text-size-adjust: 100%;
+        -webkit-text-size-adjust: 100%;
       }
 
-      .ExternalClass,
-      .ExternalClass p,
-      .ExternalClass span,
-      .ExternalClass font,
-      .ExternalClass td,
-      .ExternalClass div {
-        line-height: 100%;
+      /* What it does: Centers email on Android 4.4 */
+      div[style*='margin: 16px 0'] {
+        margin: 0 !important;
       }
 
-      .es-button {
-        mso-style-priority: 100 !important;
-        text-decoration: none !important;
+      /* What it does: Stops Outlook from adding extra spacing to tables. */
+      table,
+      td {
+        mso-table-lspace: 0pt !important;
+        mso-table-rspace: 0pt !important;
       }
 
-      a[x-apple-data-detectors] {
+      /* What it does: Fixes webkit padding issue. */
+      table {
+        border-spacing: 0 !important;
+        border-collapse: collapse !important;
+        table-layout: fixed !important;
+        margin: 0 auto !important;
+      }
+
+      /* What it does: Uses a better rendering method when resizing images in IE. */
+      img {
+        -ms-interpolation-mode: bicubic;
+      }
+
+      /* What it does: Prevents Windows 10 Mail from underlining links despite inline CSS. Styles for underlined links should be inline. */
+      a {
+        text-decoration: none;
+      }
+
+      .button {
+        background-color: #1f9ed4; /* Green */
+        border: none;
+        color: white;
+        padding: 10px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 16px;
+        margin: 4px 4px;
+        cursor: pointer;
+        border-radius: 8px;
+      }
+
+      /* What it does: A work-around for email clients meddling in triggered links. */
+      *[x-apple-data-detectors],  /* iOS */
+.unstyle-auto-detected-links *,
+.aBn {
+        border-bottom: 0 !important;
+        cursor: default !important;
         color: inherit !important;
         text-decoration: none !important;
         font-size: inherit !important;
@@ -40,1127 +97,380 @@
         line-height: inherit !important;
       }
 
-      .es-desk-hidden {
-        display: none;
-        float: left;
-        overflow: hidden;
-        width: 0;
-        max-height: 0;
-        line-height: 0;
-        mso-hide: all;
+      /* What it does: Prevents Gmail from displaying a download button on large, non-linked images. */
+      .a6S {
+        display: none !important;
+        opacity: 0.01 !important;
       }
 
-      [data-ogsb] .es-button {
-        border-width: 0 !important;
-        padding: 15px 25px 15px 25px !important;
+      /* What it does: Prevents Gmail from changing the text color in conversation threads. */
+      .im {
+        color: inherit !important;
       }
 
-      [data-ogsb] .es-button.es-button-1658807283930 {
-        padding: 15px 30px !important;
+      /* If the above doesn't work, add a .g-img class to any image in question. */
+      img.g-img + div {
+        display: none !important;
       }
 
-      /*
-        END OF IMPORTANT
-        */
-      s {
-        text-decoration: line-through;
+      /* What it does: Removes right gutter in Gmail iOS app: https://github.com/TedGoas/Cerberus/issues/89  */
+      /* Create one of these media queries for each additional viewport size you'd like to fix */
+
+      /* iPhone 4, 4S, 5, 5S, 5C, and 5SE */
+      @media only screen and (min-device-width: 320px) and (max-device-width: 374px) {
+        u ~ div .email-container {
+          min-width: 320px !important;
+        }
+      }
+      /* iPhone 6, 6S, 7, 8, and X */
+      @media only screen and (min-device-width: 375px) and (max-device-width: 413px) {
+        u ~ div .email-container {
+          min-width: 375px !important;
+        }
+      }
+      /* iPhone 6+, 7+, and 8+ */
+      @media only screen and (min-device-width: 414px) {
+        u ~ div .email-container {
+          min-width: 414px !important;
+        }
+      }
+    </style>
+
+    <!-- CSS Reset : END -->
+
+    <!-- Progressive Enhancements : BEGIN -->
+    <style>
+      .primary {
+        background: #f3a333;
       }
 
-      html,
-      body {
-        width: 100%;
-        -webkit-text-size-adjust: 100%;
-        -ms-text-size-adjust: 100%;
+      .bg_white {
+        background: whitesmoke;
+      }
+      .bg_light {
+        background: whitesmoke;
+      }
+      .bg_black {
+        background: #000000;
+      }
+      .bg_dark {
+        background: rgba(0, 0, 0, 0.8);
+      }
+      .email-section {
+        padding: 2.5em;
       }
 
-      body {
-        font-family: lato, 'helvetica neue', helvetica, arial, sans-serif;
+      /*BUTTON*/
+      .btn {
+        padding: 10px 15px;
       }
-
-      table {
-        mso-table-lspace: 0pt;
-        mso-table-rspace: 0pt;
-        border-collapse: collapse;
-        border-spacing: 0px;
-      }
-
-      table td,
-      html,
-      body,
-      .es-wrapper {
-        padding: 0;
-        margin: 0;
-      }
-
-      .es-content,
-      .es-header,
-      .es-footer {
-        table-layout: fixed !important;
-        width: 100%;
-      }
-
-      img {
-        display: block;
-        border: 0;
-        outline: none;
-        text-decoration: none;
-        -ms-interpolation-mode: bicubic;
-      }
-
-      table tr {
-        border-collapse: collapse;
-      }
-
-      p,
-      hr {
-        margin: 0;
+      .btn.btn-primary {
+        border-radius: 30px;
+        background: #f3a333;
+        color: #ffffff;
       }
 
       h1,
       h2,
       h3,
       h4,
-      h5 {
+      h5,
+      h6 {
+        font-family: 'Playfair Display', serif;
+        color: #000000;
+        margin-top: 0;
+      }
+
+      body {
+        font-family: 'Montserrat', sans-serif;
+        font-weight: 400;
+        font-size: 15px;
+        line-height: 1.8;
+        color: black;
+      }
+
+      a {
+        color: #f3a333;
+      }
+      /*LOGO*/
+
+      .logo h1 {
         margin: 0;
-        line-height: 120%;
-        mso-line-height-rule: exactly;
-        font-family: lato, 'helvetica neue', helvetica, arial, sans-serif;
       }
-
-      p,
-      ul li,
-      ol li,
-      a {
-        -webkit-text-size-adjust: none;
-        -ms-text-size-adjust: none;
-        mso-line-height-rule: exactly;
-      }
-
-      .es-left {
-        float: left;
-      }
-
-      .es-right {
-        float: right;
-      }
-
-      .es-p5 {
-        padding: 5px;
-      }
-
-      .es-p5t {
-        padding-top: 5px;
-      }
-
-      .es-p5b {
-        padding-bottom: 5px;
-      }
-
-      .es-p5l {
-        padding-left: 5px;
-      }
-
-      .es-p5r {
-        padding-right: 5px;
-      }
-
-      .es-p10 {
-        padding: 10px;
-      }
-
-      .es-p10t {
-        padding-top: 10px;
-      }
-
-      .es-p10b {
-        padding-bottom: 10px;
-      }
-
-      .es-p10l {
-        padding-left: 10px;
-      }
-
-      .es-p10r {
-        padding-right: 10px;
-      }
-
-      .es-p15 {
-        padding: 15px;
-      }
-
-      .es-p15t {
-        padding-top: 15px;
-      }
-
-      .es-p15b {
-        padding-bottom: 15px;
-      }
-
-      .es-p15l {
-        padding-left: 15px;
-      }
-
-      .es-p15r {
-        padding-right: 15px;
-      }
-
-      .es-p20 {
-        padding: 20px;
-      }
-
-      .es-p20t {
-        padding-top: 20px;
-      }
-
-      .es-p20b {
-        padding-bottom: 20px;
-      }
-
-      .es-p20l {
-        padding-left: 20px;
-      }
-
-      .es-p20r {
-        padding-right: 20px;
-      }
-
-      .es-p25 {
-        padding: 25px;
-      }
-
-      .es-p25t {
-        padding-top: 25px;
-      }
-
-      .es-p25b {
-        padding-bottom: 25px;
-      }
-
-      .es-p25l {
-        padding-left: 25px;
-      }
-
-      .es-p25r {
-        padding-right: 25px;
-      }
-
-      .es-p30 {
-        padding: 30px;
-      }
-
-      .es-p30t {
-        padding-top: 30px;
-      }
-
-      .es-p30b {
-        padding-bottom: 30px;
-      }
-
-      .es-p30l {
-        padding-left: 30px;
-      }
-
-      .es-p30r {
-        padding-right: 30px;
-      }
-
-      .es-p35 {
-        padding: 35px;
-      }
-
-      .es-p35t {
-        padding-top: 35px;
-      }
-
-      .es-p35b {
-        padding-bottom: 35px;
-      }
-
-      .es-p35l {
-        padding-left: 35px;
-      }
-
-      .es-p35r {
-        padding-right: 35px;
-      }
-
-      .es-p40 {
-        padding: 40px;
-      }
-
-      .es-p40t {
-        padding-top: 40px;
-      }
-
-      .es-p40b {
-        padding-bottom: 40px;
-      }
-
-      .es-p40l {
-        padding-left: 40px;
-      }
-
-      .es-p40r {
-        padding-right: 40px;
-      }
-
-      .es-menu td {
-        border: 0;
-      }
-
-      .es-menu td a img {
-        display: inline-block !important;
-      }
-
-      /* END CONFIG STYLES */
-      a {
-        text-decoration: underline;
-      }
-
-      p,
-      ul li,
-      ol li {
-        font-family: lato, 'helvetica neue', helvetica, arial, sans-serif;
-        line-height: 150%;
-      }
-
-      ul li,
-      ol li {
-        margin-bottom: 15px;
-        margin-left: 0;
-      }
-
-      .es-menu td a {
-        text-decoration: none;
-        display: block;
-        font-family: lato, 'helvetica neue', helvetica, arial, sans-serif;
-      }
-
-      .es-wrapper {
-        width: 100%;
-        height: 100%;
-        background-repeat: repeat;
-        background-position: center top;
-      }
-
-      .es-wrapper-color {
-        background-color: #f4f4f4;
-      }
-
-      .es-header {
-        background-color: #ffa73b;
-        background-repeat: repeat;
-        background-position: center top;
-      }
-
-      .es-header-body {
-        background-color: transparent;
-      }
-
-      .es-header-body p,
-      .es-header-body ul li,
-      .es-header-body ol li {
-        color: #666666;
-        font-size: 14px;
-      }
-
-      .es-header-body a {
-        color: #111111;
-        font-size: 14px;
-      }
-
-      .es-content-body {
-        background-color: #ffffff;
-      }
-
-      .es-content-body p,
-      .es-content-body ul li,
-      .es-content-body ol li {
-        color: #666666;
-        font-size: 18px;
-      }
-
-      .es-content-body a {
-        color: #ffa73b;
-        font-size: 18px;
-      }
-
-      .es-footer {
-        background-color: transparent;
-        background-repeat: repeat;
-        background-position: center top;
-      }
-
-      .es-footer-body {
-        background-color: transparent;
-      }
-
-      .es-footer-body p,
-      .es-footer-body ul li,
-      .es-footer-body ol li {
-        color: #666666;
-        font-size: 14px;
-      }
-
-      .es-footer-body a {
-        color: #111111;
-        font-size: 14px;
-      }
-
-      .es-infoblock,
-      .es-infoblock p,
-      .es-infoblock ul li,
-      .es-infoblock ol li {
-        line-height: 120%;
-        font-size: 12px;
-        color: #cccccc;
-      }
-
-      .es-infoblock a {
-        font-size: 12px;
-        color: #cccccc;
-      }
-
-      h1 {
-        font-size: 48px;
-        font-style: normal;
-        font-weight: normal;
-        color: #111111;
-      }
-
-      h2 {
-        font-size: 24px;
-        font-style: normal;
-        font-weight: normal;
-        color: #111111;
-      }
-
-      h3 {
+      .logo h1 a {
+        color: #000;
         font-size: 20px;
-        font-style: normal;
-        font-weight: normal;
-        color: #111111;
+        font-weight: 700;
+        text-transform: uppercase;
+        font-family: 'Montserrat', sans-serif;
       }
 
-      .es-header-body h1 a,
-      .es-content-body h1 a,
-      .es-footer-body h1 a {
-        font-size: 48px;
+      /*HERO*/
+      .hero {
+        position: relative;
       }
 
-      .es-header-body h2 a,
-      .es-content-body h2 a,
-      .es-footer-body h2 a {
-        font-size: 24px;
+      .hero .text {
+        color: rgba(255, 255, 255, 0.8);
       }
-
-      .es-header-body h3 a,
-      .es-content-body h3 a,
-      .es-footer-body h3 a {
-        font-size: 20px;
-      }
-
-      a.es-button,
-      button.es-button {
-        border-style: solid;
-        border-color: #ffa73b;
-        border-width: 15px 25px 15px 25px;
-        display: inline-block;
-        background: #ffa73b;
-        border-radius: 2px;
-        font-size: 20px;
-        font-family: helvetica, 'helvetica neue', arial, verdana, sans-serif;
-        font-weight: normal;
-        font-style: normal;
-        line-height: 120%;
+      .hero .text h2 {
         color: #ffffff;
-        text-decoration: none;
-        width: auto;
+        font-size: 30px;
+        margin-bottom: 0;
+      }
+
+      /*HEADING SECTION*/
+      .heading-section h2 {
+        color: #000000;
+        font-size: 28px;
+        margin-top: 0;
+        line-height: 1.4;
+      }
+      .heading-section .subheading {
+        margin-bottom: 20px !important;
+        display: inline-block;
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        color: rgba(0, 0, 0, 0.4);
+        position: relative;
+      }
+      .heading-section .subheading::after {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: -10px;
+        content: '';
+        width: 100%;
+        height: 2px;
+        background: #f3a333;
+        margin: 0 auto;
+      }
+
+      .heading-section-white {
+        color: rgba(255, 255, 255, 0.8);
+      }
+      .heading-section-white h2 {
+        font-size: 28px;
+        line-height: 1;
+        padding-bottom: 0;
+      }
+      .heading-section-white h2 {
+        color: #ffffff;
+      }
+      .heading-section-white .subheading {
+        margin-bottom: 0;
+        display: inline-block;
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        color: rgba(255, 255, 255, 0.4);
+      }
+
+      .icon {
         text-align: center;
       }
 
-      .es-button-border {
-        border-style: solid solid solid solid;
-        border-color: #ffa73b #ffa73b #ffa73b #ffa73b;
-        background: 1px;
-        border-width: 1px 1px 1px 1px;
-        display: inline-block;
-        border-radius: 2px;
-        width: auto;
+      /*SERVICES*/
+      .text-services {
+        padding: 10px 10px 0;
+        text-align: center;
+      }
+      .text-services h3 {
+        font-size: 20px;
       }
 
-      /* RESPONSIVE STYLES Please do not delete and edit CSS styles below. If you don't need responsive layout, please delete this section. */
-      @media only screen and (max-width: 600px) {
-        p,
-        ul li,
-        ol li,
-        a {
-          line-height: 150% !important;
-        }
-
-        h1,
-        h2,
-        h3,
-        h1 a,
-        h2 a,
-        h3 a {
-          line-height: 120% !important;
-        }
-
-        h1 {
-          font-size: 30px !important;
-          text-align: center;
-        }
-
-        h2 {
-          font-size: 26px !important;
-          text-align: center;
-        }
-
-        h3 {
-          font-size: 20px !important;
-          text-align: center;
-        }
-
-        .es-header-body h1 a,
-        .es-content-body h1 a,
-        .es-footer-body h1 a {
-          font-size: 30px !important;
-        }
-
-        .es-header-body h2 a,
-        .es-content-body h2 a,
-        .es-footer-body h2 a {
-          font-size: 26px !important;
-        }
-
-        .es-header-body h3 a,
-        .es-content-body h3 a,
-        .es-footer-body h3 a {
-          font-size: 20px !important;
-        }
-
-        .es-menu td a {
-          font-size: 16px !important;
-        }
-
-        .es-header-body p,
-        .es-header-body ul li,
-        .es-header-body ol li,
-        .es-header-body a {
-          font-size: 16px !important;
-        }
-
-        .es-content-body p,
-        .es-content-body ul li,
-        .es-content-body ol li,
-        .es-content-body a {
-          font-size: 16px !important;
-        }
-
-        .es-footer-body p,
-        .es-footer-body ul li,
-        .es-footer-body ol li,
-        .es-footer-body a {
-          font-size: 16px !important;
-        }
-
-        .es-infoblock p,
-        .es-infoblock ul li,
-        .es-infoblock ol li,
-        .es-infoblock a {
-          font-size: 12px !important;
-        }
-
-        *[class='gmail-fix'] {
-          display: none !important;
-        }
-
-        .es-m-txt-c,
-        .es-m-txt-c h1,
-        .es-m-txt-c h2,
-        .es-m-txt-c h3 {
-          text-align: center !important;
-        }
-
-        .es-m-txt-r,
-        .es-m-txt-r h1,
-        .es-m-txt-r h2,
-        .es-m-txt-r h3 {
-          text-align: right !important;
-        }
-
-        .es-m-txt-l,
-        .es-m-txt-l h1,
-        .es-m-txt-l h2,
-        .es-m-txt-l h3 {
-          text-align: left !important;
-        }
-
-        .es-m-txt-r img,
-        .es-m-txt-c img,
-        .es-m-txt-l img {
-          display: inline !important;
-        }
-
-        .es-button-border {
-          display: block !important;
-        }
-
-        a.es-button,
-        button.es-button {
-          font-size: 20px !important;
-          display: block !important;
-          border-width: 15px 25px 15px 25px !important;
-        }
-
-        .es-btn-fw {
-          border-width: 10px 0px !important;
-          text-align: center !important;
-        }
-
-        .es-adaptive table,
-        .es-btn-fw,
-        .es-btn-fw-brdr,
-        .es-left,
-        .es-right {
-          width: 100% !important;
-        }
-
-        .es-content table,
-        .es-header table,
-        .es-footer table,
-        .es-content,
-        .es-footer,
-        .es-header {
-          width: 100% !important;
-          max-width: 600px !important;
-        }
-
-        .es-adapt-td {
-          display: block !important;
-          width: 100% !important;
-        }
-
-        .adapt-img {
-          width: 100% !important;
-          height: auto !important;
-        }
-
-        .es-m-p0 {
-          padding: 0px !important;
-        }
-
-        .es-m-p0r {
-          padding-right: 0px !important;
-        }
-
-        .es-m-p0l {
-          padding-left: 0px !important;
-        }
-
-        .es-m-p0t {
-          padding-top: 0px !important;
-        }
-
-        .es-m-p0b {
-          padding-bottom: 0 !important;
-        }
-
-        .es-m-p20b {
-          padding-bottom: 20px !important;
-        }
-
-        .es-mobile-hidden,
-        .es-hidden {
-          display: none !important;
-        }
-
-        tr.es-desk-hidden,
-        td.es-desk-hidden,
-        table.es-desk-hidden {
-          width: auto !important;
-          overflow: visible !important;
-          float: none !important;
-          max-height: inherit !important;
-          line-height: inherit !important;
-        }
-
-        tr.es-desk-hidden {
-          display: table-row !important;
-        }
-
-        table.es-desk-hidden {
-          display: table !important;
-        }
-
-        td.es-desk-menu-hidden {
-          display: table-cell !important;
-        }
-
-        .es-menu td {
-          width: 1% !important;
-        }
-
-        table.es-table-not-adapt,
-        .esd-block-html table {
-          width: auto !important;
-        }
-
-        table.es-social {
-          display: inline-block !important;
-        }
-
-        table.es-social td {
-          display: inline-block !important;
-        }
-
-        .es-desk-hidden {
-          display: table-row !important;
-          width: auto !important;
-          overflow: visible !important;
-          max-height: inherit !important;
-        }
+      /*BLOG*/
+      .text-services .meta {
+        text-transform: uppercase;
+        font-size: 14px;
       }
 
-      /* END RESPONSIVE STYLES */
-      .es-p-default {
-        padding-top: 20px;
-        padding-right: 30px;
-        padding-bottom: 0px;
-        padding-left: 30px;
+      /*TESTIMONY*/
+      .text-testimony .name {
+        margin: 0;
+      }
+      .text-testimony .position {
+        color: rgba(0, 0, 0, 0.3);
       }
 
-      .es-p-all-default {
-        padding: 0px;
+      /*VIDEO*/
+      .img {
+        width: 100%;
+        height: auto;
+        position: relative;
+      }
+      .img .icon {
+        position: absolute;
+        top: 50%;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        margin-top: -25px;
+      }
+      .img .icon a {
+        display: block;
+        width: 60px;
+        position: absolute;
+        top: 0;
+        left: 50%;
+        margin-left: -25px;
+      }
+
+      /*COUNTER*/
+      .counter-text {
+        text-align: center;
+      }
+      .counter-text .num {
+        display: block;
+        color: #ffffff;
+        font-size: 34px;
+        font-weight: 700;
+      }
+      .counter-text .name {
+        display: block;
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 13px;
+      }
+
+      /*FOOTER*/
+
+      .footer {
+        color: rgba(255, 255, 255, 0.5);
+      }
+      .footer .heading {
+        color: #ffffff;
+        font-size: 20px;
+      }
+      .footer ul {
+        margin: 0;
+        padding: 0;
+      }
+      .footer ul li {
+        list-style: none;
+        margin-bottom: 10px;
+      }
+      .footer ul li a {
+        color: rgba(255, 255, 255, 1);
+      }
+
+      @media screen and (max-width: 500px) {
+        .icon {
+          text-align: left;
+        }
+
+        .text-services {
+          padding-left: 0;
+          padding-right: 20px;
+          text-align: left;
+        }
       }
     </style>
   </head>
 
-  <body>
-    <div class="es-wrapper-color">
-      <table class="es-wrapper" width="100%" cellspacing="0" cellpadding="0">
-        <tbody>
-          <tr class="gmail-fix" height="0">
-            <td>
-            </td>
-          </tr>
-          <tr>
-            <td class="esd-email-paddings" valign="top">
-                            <tbody>
-                                <tr>
-                                    <td class="esd-stripe" esd-custom-block-id="7962" align="center">
-                                        <table class="es-content-body" style="background-color: transparent;" width="600" cellspacing="0" cellpadding="0" align="center">
-                                            <tbody>
-                                                <tr>
-                                                    <td class="esd-structure es-p15t es-p15b es-p10r es-p10l" align="left">
-                                                        <table class="es-left" cellspacing="0" cellpadding="0" align="left">
-                                                            <tbody>
-                                                                <tr>
-                                                                    <td class="esd-container-frame" width="282" align="left">
-                                                                        <table width="100%" cellspacing="0" cellpadding="0">
-                                                                            <tbody>
-                                                                                <tr>
-                                                                                    <td class="es-infoblock esd-block-text es-m-txt-c" align="left">
-                                                                                        <p style="font-family: arial, helvetica\ neue, helvetica, sans-serif;">Put your preheader text here<br></p>
-                                                                                    </td>
-                                                                                </tr>
-                                                                            </tbody>
-                                                                        </table>
-                                                                    </td>
-                                                                </tr>
-                                                            </tbody>
-                                                        </table>
-                                                        <table class="es-right" cellspacing="0" cellpadding="0" align="right">
-                                                            <tbody>
-                                                                <tr>
-                                                                    <td class="esd-container-frame" width="278" align="left">
-                                                                        <table width="100%" cellspacing="0" cellpadding="0">
-                                                                            <tbody>
-                                                                                <tr>
-                                                                                    <td align="right" class="es-infoblock esd-block-text es-m-txt-c">
-                                                                                        <p><a href="https://viewstripo.email" class="view" target="_blank" style="font-family: 'arial', 'helvetica neue', 'helvetica', 'sans-serif';">View in browser</a></p>
-                                                                                    </td>
-                                                                                </tr>
-                                                                            </tbody>
-                                                                        </table>
-                                                                    </td>
-                                                                </tr>
-                                                            </tbody>
-                                                        </table>
-                                                    </td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table> -->
-              <table class="es-header" cellspacing="0" cellpadding="0" align="center">
-                <tbody>
-                  <tr>
-                    <td class="esd-stripe" esd-custom-block-id="6339" align="center">
-                      <table
-                        class="es-header-body"
-                        width="600"
-                        cellspacing="0"
-                        cellpadding="0"
-                        align="center"
-                      >
-                        <tbody>
-                          <tr>
-                            <td class="esd-structure es-p20t es-p10b es-p10r es-p10l" align="left">
-                              <table width="100%" cellspacing="0" cellpadding="0">
-                                <tbody>
-                                  <tr>
-                                    <td
-                                      class="esd-container-frame"
-                                      width="580"
-                                      valign="top"
-                                      align="center"
-                                    ></td>
-                                  </tr>
-                                </tbody>
-                              </table>
-                            </td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-              <table class="es-content" cellspacing="0" cellpadding="0" align="center">
-                <tbody>
-                  <tr>
-                    <td
-                      class="esd-stripe"
-                      style="background-color: #5f96b2"
-                      esd-custom-block-id="6340"
-                      bgcolor="#ffa73b"
-                      align="center"
+  <body
+    width="100%"
+    style="
+      margin: 0;
+      padding: 0 !important;
+      mso-line-height-rule: exactly;
+      background-color: #222222;
+    "
+  >
+    <center style="width: 100%; background-color: whitesmoke">
+      <div
+        style="
+          display: none;
+          font-size: 1px;
+          max-height: 0px;
+          max-width: 0px;
+          opacity: 0;
+          overflow: hidden;
+          mso-hide: all;
+          font-family: sans-serif;
+        "
+      >
+        &zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;
+      </div>
+      <div style="max-width: 600px; margin: 0 auto" class="email-container">
+        <!-- BEGIN BODY -->
+        <table
+          align="center"
+          role="presentation"
+          cellspacing="0"
+          cellpadding="0"
+          border="0"
+          width="100%"
+          style="margin: auto; background-color: whitesmoke"
+        >
+          <!-- end tr -->
+          <!-- end tr -->
+          <tr style="background-color: whitesmoke">
+            <td class="bg_white">
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                <tr>
+                  <td class="bg_white email-section">
+                    <div
+                      class="heading-section"
+                      style="text-align: center; padding: 0 30px; background-color: whitesmoke"
                     >
-                      <table
-                        class="es-content-body"
-                        style="background-color: transparent"
-                        width="600"
-                        cellspacing="0"
-                        cellpadding="0"
-                        align="center"
-                      >
-                        <tbody>
-                          <tr>
-                            <td class="esd-structure" align="left">
-                              <table width="100%" cellspacing="0" cellpadding="0">
-                                <tbody>
-                                  <tr>
-                                    <td
-                                      class="esd-container-frame"
-                                      width="600"
-                                      valign="top"
-                                      align="center"
-                                    >
-                                      <table
-                                        style="
-                                          background-color: #ffffff;
-                                          border-radius: 4px;
-                                          border-collapse: separate;
-                                        "
-                                        width="100%"
-                                        cellspacing="0"
-                                        cellpadding="0"
-                                        bgcolor="#ffffff"
-                                      >
-                                        <tbody>
-                                          <tr>
-                                            <td
-                                              class="esd-block-text es-p35t es-p5b es-p30r es-p30l"
-                                              align="center"
-                                            >
-                                              <h1>Welcome!</h1>
-                                            </td>
-                                          </tr>
-                                          <tr>
-                                            <td
-                                              class="esd-block-spacer es-p5t es-p5b es-p20r es-p20l"
-                                              bgcolor="#ffffff"
-                                              align="center"
-                                              style="font-size: 0"
-                                            >
-                                              <table
-                                                width="100%"
-                                                height="100%"
-                                                cellspacing="0"
-                                                cellpadding="0"
-                                                border="0"
-                                              >
-                                                <tbody>
-                                                  <tr>
-                                                    <td
-                                                      style="
-                                                        border-bottom: 1px solid #ffffff;
-                                                        background: rgba(0, 0, 0, 0) none repeat
-                                                          scroll 0% 0%;
-                                                        height: 1px;
-                                                        width: 100%;
-                                                        margin: 0px;
-                                                      "
-                                                    ></td>
-                                                  </tr>
-                                                </tbody>
-                                              </table>
-                                            </td>
-                                          </tr>
-                                        </tbody>
-                                      </table>
-                                    </td>
-                                  </tr>
-                                </tbody>
-                              </table>
-                            </td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-              <table class="es-content" cellspacing="0" cellpadding="0" align="center">
-                <tbody>
-                  <tr>
-                    <td class="esd-stripe" align="center">
-                      <table
-                        class="es-content-body"
-                        style="background-color: transparent"
-                        width="600"
-                        cellspacing="0"
-                        cellpadding="0"
-                        align="center"
-                      >
-                        <tbody>
-                          <tr>
-                            <td class="esd-structure" align="left">
-                              <table width="100%" cellspacing="0" cellpadding="0">
-                                <tbody>
-                                  <tr>
-                                    <td
-                                      class="esd-container-frame"
-                                      width="600"
-                                      valign="top"
-                                      align="center"
-                                    >
-                                      <table
-                                        style="
-                                          border-radius: 4px;
-                                          border-collapse: separate;
-                                          background-color: #ffffff;
-                                        "
-                                        width="100%"
-                                        cellspacing="0"
-                                        cellpadding="0"
-                                        bgcolor="#ffffff"
-                                      >
-                                        <tbody>
-                                          <tr>
-                                            <td
-                                              class="esd-block-text es-p20t es-p20b es-p30r es-p30l es-m-txt-l"
-                                              bgcolor="#ffffff"
-                                              align="left"
-                                            >
-                                              <p>
-                                                Hello {{name}}. We're excited to have you at Zoomin
-                                                Live. Please use below link to verify your account
-                                                and generate new password
-                                              </p>
+                      <p style="display: inline-block; font-size: 30px; font-weight: bold">
+                        <img
+                          src="https://zoomin-dev-images.s3.us-west-2.amazonaws.com/zoomin-logo/1.png"
+                          alt=""
+                          style="
+                            width: 60px;
+                            max-width: 600px;
+                            height: auto;
+                            margin: auto;
+                            vertical-align: middle;
+                            display: inline-block;
+                            padding-bottom: 4px;
+                          "
+                        />
 
-                                              <p>Url : {{url}}</p>
-                                            </td>
-                                          </tr>
-                                          <tr>
-                                            <td></td>
-                                            <!-- <td class="esd-block-text es-p20t es-p30r es-p30l es-m-txt-l" align="left">
-                                                                                        <p>If that doesn't work, copy and paste the following link in your browser:</p>
-                                                                                    </td> -->
-                                          </tr>
-                                          <tr>
-                                            <td></td>
-                                            <!-- <td class="esd-block-text es-p20t es-p30r es-p30l es-m-txt-l" align="left"><a target="_blank" href="https://viewstripo.email/">XXX.XXXXXXX.XXX / XXXXXXXXXXXXX</a></td> -->
-                                          </tr>
-                                          <tr>
-                                            <td></td>
-                                            <!-- <td class="esd-block-text es-p20t es-p30r es-p30l es-m-txt-l" align="left">
-                                                                                        <p>If you have any questions, just reply to this email—we're always happy to help out.</p>
-                                                                                    </td> -->
-                                          </tr>
-                                          <tr>
-                                            <td
-                                              class="esd-block-text es-p20t es-p40b es-p30r es-p30l es-m-txt-l"
-                                              align="left"
-                                            >
-                                              <p>Cheers,</p>
-                                              <p>The Zoomin Live Team</p>
-                                            </td>
-                                          </tr>
-                                        </tbody>
-                                      </table>
-                                    </td>
-                                  </tr>
-                                </tbody>
-                              </table>
-                            </td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-              <table class="es-content" cellspacing="0" cellpadding="0" align="center">
-                <tbody>
-                  <tr>
-                    <td class="esd-stripe" align="center">
-                      <table
-                        class="es-content-body"
-                        style="background-color: transparent"
-                        width="600"
-                        cellspacing="0"
-                        cellpadding="0"
-                        align="center"
-                      >
-                        <tbody>
-                          <tr>
-                            <td class="esd-structure" align="left">
-                              <table width="100%" cellspacing="0" cellpadding="0">
-                                <tbody>
-                                  <tr>
-                                    <td
-                                      class="esd-container-frame"
-                                      width="600"
-                                      valign="top"
-                                      align="center"
-                                    >
-                                      <table width="100%" cellspacing="0" cellpadding="0">
-                                        <tbody>
-                                          <tr>
-                                            <td
-                                              class="esd-block-spacer es-p10t es-p20b es-p20r es-p20l"
-                                              align="center"
-                                              style="font-size: 0"
-                                            >
-                                              <table
-                                                width="100%"
-                                                height="100%"
-                                                cellspacing="0"
-                                                cellpadding="0"
-                                                border="0"
-                                              >
-                                                <tbody>
-                                                  <tr>
-                                                    <td
-                                                      style="
-                                                        border-bottom: 1px solid #f4f4f4;
-                                                        background: rgba(0, 0, 0, 0) none repeat
-                                                          scroll 0% 0%;
-                                                        height: 1px;
-                                                        width: 100%;
-                                                        margin: 0px;
-                                                      "
-                                                    ></td>
-                                                  </tr>
-                                                </tbody>
-                                              </table>
-                                            </td>
-                                          </tr>
-                                        </tbody>
-                                      </table>
-                                    </td>
-                                  </tr>
-                                </tbody>
-                              </table>
-                            </td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-              <table class="es-content" cellspacing="0" cellpadding="0" align="center">
-                <tbody>
-                  <tr>
-                    <td class="esd-stripe" esd-custom-block-id="6341" align="center">
-                      <table
-                        class="es-content-body"
-                        style="background-color: transparent"
-                        width="600"
-                        cellspacing="0"
-                        cellpadding="0"
-                        align="center"
-                      >
-                        <tbody>
-                          <tr>
-                            <td class="esd-structure" align="left">
-                              <table width="100%" cellspacing="0" cellpadding="0">
-                                <tbody>
-                                  <tr>
-                                    <td
-                                      class="esd-container-frame"
-                                      width="600"
-                                      valign="top"
-                                      align="center"
-                                    >
-                                      <table
-                                        style="
-                                          background-color: #ffecd1;
-                                          border-radius: 4px;
-                                          border-collapse: separate;
-                                        "
-                                        width="100%"
-                                        cellspacing="0"
-                                        cellpadding="0"
-                                        bgcolor="#ffecd1"
-                                      >
-                                        <tbody>
-                                          <tr>
-                                            <td
-                                              class="esd-block-text es-p30t es-p30r es-p30l"
-                                              align="center"
-                                            >
-                                              <h3 style="color: #111111">Need more help?</h3>
-                                            </td>
-                                          </tr>
-                                          <tr>
-                                            <td
-                                              class="esd-block-text es-p30b es-p30r es-p30l"
-                                              esdev-links-color="#ffa73b"
-                                              align="center"
-                                            >
-                                              <a
-                                                target="_blank"
-                                                href="http://35.87.96.64/login/"
-                                                style="color: #ffa73b"
-                                                >We’re here, ready to talk</a
-                                              >
-                                            </td>
-                                          </tr>
-                                        </tbody>
-                                      </table>
-                                    </td>
-                                  </tr>
-                                </tbody>
-                              </table>
-                            </td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </td>
-                  </tr>
-                </tbody>
+                        ZOOMiN LIVE
+                      </p>
+
+                      <div style="background-color: white; padding: 30px">
+                        <h2 style="text-align: left">Hi {{name}},</h2>
+                        <p style="text-align: left">
+                          You've been invited to watch the live stream from childFirstName's
+                          classroom. Click the button below to complete your registration and set
+                          your password. You can watch the stream from your computers browser or
+                          from a mobile device using our Android or ios apps
+                        </p>
+                        <form action="{{url}}" method="get" target="_blank">
+                          <button class="button button4" type="submit">SET MY PASSWORD</button>
+                        </form>
+                      </div>
+                    </div>
+                    <table
+                      role="presentation"
+                      border="0"
+                      cellpadding="0"
+                      cellspacing="0"
+                      width="100%"
+                    >
+                      <tr>
+                        <td valign="top" width="50%" style="padding-top: 20px">
+                          <table
+                            role="presentation"
+                            cellspacing="0"
+                            cellpadding="0"
+                            border="0"
+                            width="100%"
+                          ></table>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
               </table>
             </td>
           </tr>
-        </tbody>
-      </table>
-    </div>
+        </table>
+      </div>
+    </center>
   </body>
 </html>
