@@ -6,14 +6,17 @@ import screenfull from 'screenfull';
 import { useEffect } from 'react';
 import PropTypes from 'prop-types';
 import Loader from '../common/loader';
+import { useSnackbar } from 'notistack';
 
 const CustomPlayer = (props) => {
+  const { enqueueSnackbar } = useSnackbar();
   const [playing, setPlaying] = useState(false);
   const [inPIPMode, setInPIPMode] = useState(false);
   const [fullscreen, setFullScreen] = useState(false);
   const [ready, setReady] = useState(false);
   const playerContainerRef = useRef(null);
   const playerRef = useRef(null);
+  const [showErrorMessage, setShowErrorMessage] = useState(true);
 
   useEffect(() => {
     function exitHandler() {
@@ -54,13 +57,18 @@ const CustomPlayer = (props) => {
         onReady={() => setReady(true)}
         onPlay={() => {
           setPlaying(true);
+          setShowErrorMessage(true);
         }}
         onPause={() => {
           setPlaying(false);
         }}
         onError={() => {
-          //   enqueueSnackbar('Something went wrong while playing the video', { variant: 'error' });
-          //   playerRef.current.getInternalPlayer('hls').destroy();
+          if (showErrorMessage) {
+            enqueueSnackbar('Something went wrong while playing the video', { variant: 'error' });
+            setReady(true);
+            setShowErrorMessage(false);
+          }
+          // playerRef.current.getInternalPlayer('hls').destroy();
         }}
         playing={playing}
         pip={inPIPMode}

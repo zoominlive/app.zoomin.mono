@@ -63,7 +63,9 @@ const WatchStream = () => {
 
   useEffect(() => {
     if (selectedRoom) {
-      const cameras = rooms.find((room) => room.room_id === selectedRoom.room_id).cameras;
+      const cameras = rooms
+        .find((room) => room.room_id === selectedRoom.room_id)
+        .cameras.filter((camera) => camera.stream_uri);
       setCameras(cameras);
     }
   }, [selectedRoom]);
