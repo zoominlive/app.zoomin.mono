@@ -1,5 +1,4 @@
 const { Camera, Room } = require('../models/index');
-const Sequelize = require('sequelize');
 
 module.exports = {
   /* Create new camera */

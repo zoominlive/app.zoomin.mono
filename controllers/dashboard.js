@@ -12,25 +12,29 @@ module.exports = {
       userId = req.user.user_id;
       const token = req.userToken;
 
-      const statisticsData = {};
+      let statisticsData = {};
 
       let streams = await listAvailableStreams(token);
 
-      statisticsData.enroledStreams = streams?.data?.length;
+      const enroledStreams = streams?.data?.length;
 
-      const activeStreams = streams?.data?.filter((stream) => {
+      let activeStreams = streams?.data?.filter((stream) => {
         return stream.running === true;
       });
 
-      statisticsData.activeStreams = activeStreams?.length;
+      activeStreams = activeStreams?.length;
 
-      const SEAMembers = await familyServices.getFamilyWithSEA(userId);
+      let SEAMembers = await familyServices.getFamilyWithSEA(userId);
 
-      statisticsData.SEAMembers = SEAMembers?.length;
+      SEAMembers = SEAMembers?.length;
 
       res.status(200).json({
         IsSuccess: true,
-        Data: statisticsData,
+        Data: {
+          enroledStreams: enroledStreams ? enroledStreams : 0,
+          activeStreams: activeStreams ? activeStreams : 0,
+          SEAMembers: SEAMembers ? SEAMembers : 0
+        },
         Message: 'stream statistics data'
       });
 
