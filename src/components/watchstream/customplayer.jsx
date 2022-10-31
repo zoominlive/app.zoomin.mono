@@ -7,9 +7,12 @@ import { useEffect } from 'react';
 import PropTypes from 'prop-types';
 import Loader from '../common/loader';
 import { useSnackbar } from 'notistack';
+import { useContext } from 'react';
+import AuthContext from '../../context/authcontext';
 
 const CustomPlayer = (props) => {
   const { enqueueSnackbar } = useSnackbar();
+  const authCtx = useContext(AuthContext);
   const [playing, setPlaying] = useState(false);
   const [inPIPMode, setInPIPMode] = useState(false);
   const [fullscreen, setFullScreen] = useState(false);
@@ -49,7 +52,7 @@ const CustomPlayer = (props) => {
     <Box className="video-player-wrapper" ref={playerContainerRef}>
       <Loader loading={!ready} />
       <ReactPlayer
-        url={`http://35.91.216.67${props?.streamUri}`}
+        url={`${process.env.REACT_APP_RTSP_STREAM_BASE_URL}${props?.streamUri}`}
         height={'100%'}
         width={'100%'}
         controls={false}
@@ -78,10 +81,7 @@ const CustomPlayer = (props) => {
               forceHLS: true,
               debug: false,
               xhrSetup: function (xhr) {
-                xhr.setRequestHeader(
-                  'Authorization',
-                  'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjozMCwiaWF0IjoxNjY2OTI4MTU1LCJleHAiOjE2NjcwMTQ1NTV9.BE_5AgG4mtqSQhIOTTjfiU99SzNQQeWknoE-hEFy0VE'
-                );
+                xhr.setRequestHeader('Authorization', `Bearer ${authCtx.token}`);
               }
             }
           }

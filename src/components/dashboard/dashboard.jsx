@@ -1,14 +1,24 @@
-import { Box, Card, CardContent, CardMedia, Grid, Stack, Typography } from '@mui/material';
+import {
+  Box,
+  Card,
+  CardContent,
+  //  CardMedia,
+  Grid,
+  Stack,
+  Typography
+} from '@mui/material';
+import dayjs from 'dayjs';
 import { useSnackbar } from 'notistack';
 import React, { useState } from 'react';
 import { useEffect } from 'react';
 import { useContext } from 'react';
 import API from '../../api';
-import map from '../../assets/map.svg';
+// import map from '../../assets/map.svg';
 import AuthContext from '../../context/authcontext';
 import LayoutContext from '../../context/layoutcontext';
 import { errorMessageHandler } from '../../utils/errormessagehandler';
 import Loader from '../common/loader';
+import Map from './map';
 
 const Dashboard = () => {
   const layoutCtx = useContext(LayoutContext);
@@ -16,10 +26,14 @@ const Dashboard = () => {
   const { enqueueSnackbar } = useSnackbar();
   const [statisticsData, setStatisticsData] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
   useEffect(() => {
     layoutCtx.setActive(1);
-    layoutCtx.setBreadcrumb(['Welcome back, John', 'Monday, 29 April 2022']);
+    layoutCtx.setBreadcrumb([
+      `Welcome back, ${authCtx?.user?.first_name}`,
+      `${days[dayjs().day()]}, ${dayjs().format('DD MMMM YYYY')}`
+    ]);
   }, []);
 
   useEffect(() => {
@@ -112,7 +126,8 @@ const Dashboard = () => {
         <Card>
           <CardContent>
             <Typography>Location of Active Viewers</Typography>
-            <CardMedia component="img" src={map} />
+            {/* <CardMedia component="img" src={map} /> */}
+            <Map />
           </CardContent>
         </Card>
       </Box>
