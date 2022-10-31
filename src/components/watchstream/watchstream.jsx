@@ -37,8 +37,6 @@ const WatchStream = () => {
   const [selectedRoom, setSelectedRoom] = useState();
   // const [userInfoSent, setUserInfoSent] = useState(false);
 
-  console.log(camerasPayload);
-
   useEffect(() => {
     layoutCtx.setActive(5);
     layoutCtx.setBreadcrumb(['Watch Stream']);

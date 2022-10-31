@@ -70,12 +70,12 @@ const AddFamily = (props) => {
               response?.response?.status,
               authCtx.setAuthError
             );
+            setSubmitLoading(false);
           }
         });
       });
     }
   }
-
   // Validation schema for family form inside component beacause if async email validation
   const validationSchema = [
     yup.object().shape({
@@ -289,53 +289,58 @@ const AddFamily = (props) => {
             }
           ]
         }}
-        // validate={(values) => {
-        //   const errors = {};
+        validate={(values) => {
+          const errors = {};
 
-        //   const emails = [values.primary.email];
+          const emails = [values.primary.email];
 
-        //   values.secondary.forEach((parent) => {
-        //     emails.push(parent.email);
-        //   });
+          values.secondary.forEach((parent) => {
+            emails.push(parent.email);
+          });
 
-        //   const duplicateEmails = emails.filter((item, index) => emails.indexOf(item) !== index);
+          const duplicateEmails = emails.filter((item, index) => emails.indexOf(item) !== index);
 
-        //   // if (activeStep === 0) {
-        //   //   errors.primary = {};
-        //   //   if (duplicateEmails.includes(values.primary.email)) {
-        //   //     errors.primary.email = 'Email must be unique';
-        //   //   }
-        //   //   if (Object.keys(errors.primary).length === 0) {
-        //   //     delete errors.primary;
-        //   //   }
-        //   // }
-        //   if (activeStep === 1) {
-        //     errors.secondary = Array(values.secondary.length).fill({});
+          // if (activeStep === 0) {
+          //   errors.primary = {};
+          //   if (duplicateEmails.includes(values.primary.email)) {
+          //     errors.primary.email = 'Email must be unique';
+          //   }
+          //   if (Object.keys(errors.primary).length === 0) {
+          //     delete errors.primary;
+          //   }
+          // }
 
-        //     values.secondary.forEach((parent, index) => {
-        //       duplicateEmails.forEach((email) => {
-        //         if (parent.email === email) {
-        //           errors.secondary[index].email = 'Email must be unique';
-        //         }
-        //       });
-        //     });
+          if (activeStep === 1) {
+            const secondaryTemp = values.secondary.map(() => {
+              return {};
+            });
 
-        //     if (errors.secondary.length === 0) {
-        //       delete errors.secondary;
-        //     } else {
-        //       if (errors.secondary.length > 0) {
-        //         errors.secondary.forEach((parent, index) => {
-        //           if (Object.keys(parent).length === 0) {
-        //             errors.secondary[index] = undefined;
-        //           }
-        //         });
-        //       }
-        //     }
-        //   }
-        //   console.log(errors);
+            values.secondary.forEach((parent, idx) => {
+              duplicateEmails.forEach((email) => {
+                if (parent.email && parent.email === email) {
+                  secondaryTemp[idx].email = 'Email must be unique';
+                }
+              });
+            });
 
-        //   return errors;
-        // }}
+            errors.secondary = secondaryTemp;
+
+            if (errors.secondary.length === 0) {
+              delete errors.secondary;
+            } else {
+              if (errors.secondary.length > 0) {
+                errors.secondary = errors.secondary.filter(
+                  (value) => Object.keys(value).length !== 0
+                );
+                if (errors.secondary.length === 0) {
+                  delete errors.secondary;
+                }
+              }
+            }
+          }
+
+          return errors;
+        }}
         onSubmit={handleSubmit}>
         {({ values, setFieldValue, touched, errors, isValidating }) => (
           <Form>

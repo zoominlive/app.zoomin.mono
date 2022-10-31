@@ -79,7 +79,7 @@ const Dashboard = () => {
             <CardContent>
               <Stack direction="row" alignItems="center" spacing={2}>
                 <Typography className="count">
-                  {statisticsData?.activeStreams !== undefined ? 0 : 'N/A'}
+                  {statisticsData?.recentViewers !== undefined ? 0 : 'N/A'}
                 </Typography>
                 <Stack className="name">
                   <Typography>Recent</Typography>
