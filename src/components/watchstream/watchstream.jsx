@@ -115,7 +115,7 @@ const WatchStream = () => {
             <Grid item md={3} sm={12}>
               <Autocomplete
                 disableClearable
-                value={camerasPayload.room}
+                value={camerasPayload.room || ''}
                 noOptionsText={
                   !camerasPayload.location
                     ? 'Select loaction first'
@@ -125,7 +125,7 @@ const WatchStream = () => {
                 }
                 options={camerasPayload.location ? rooms : []}
                 getOptionLabel={(option) => (option?.room_name ? option.room_name : '')}
-                isOptionEqualToValue={(option, value) => option.room_id === value.room_id}
+                isOptionEqualToValue={(option, value) => option?.room_id === value?.room_id}
                 id="room"
                 onChange={handleRoomChange}
                 renderInput={(params) => (

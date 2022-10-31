@@ -12,7 +12,7 @@ const Map = () => {
   return (
     <Box height={'600px'}>
       <GoogleMapReact
-        bootstrapURLKeys={{ key: 'AIzaSyDn-DZI5-5xknrwgTGIhbFc2abDFXULWro' }}
+        bootstrapURLKeys={{ key: process.env.REACT_APP_GOOGLE_API_KEY }}
         defaultCenter={location}
         defaultZoom={17}>
         {/* <div className="pin">
