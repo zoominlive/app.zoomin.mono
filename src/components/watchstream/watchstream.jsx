@@ -19,6 +19,7 @@ import CustomPlayer from './customplayer';
 import API from '../../api';
 import { errorMessageHandler } from '../../utils/errormessagehandler';
 import { useSnackbar } from 'notistack';
+import { publicIpv4 } from 'public-ip';
 
 const WatchStream = () => {
   const layoutCtx = useContext(LayoutContext);
@@ -34,6 +35,7 @@ const WatchStream = () => {
   const [rooms, setRooms] = useState([]);
   const [cameras, setCameras] = useState([]);
   const [selectedRoom, setSelectedRoom] = useState();
+  // const [userInfoSent, setUserInfoSent] = useState(false);
 
   console.log(camerasPayload);
 
@@ -83,9 +85,14 @@ const WatchStream = () => {
     setSelectedRoom(value);
     setLimitReached(false);
   };
-  const onSelect = useCallback((_, values) => {
+  const onSelect = useCallback(async (_, values) => {
     setCamerasPayload((prevPayload) => ({ ...prevPayload, cameras: values }));
     setLimitReached(values.length >= 2);
+    if (values.length > 0) {
+      const ip = await publicIpv4();
+      // axios.get("")
+      console.log(ip);
+    }
   }, []);
 
   const checkDisable = useCallback(

@@ -9,7 +9,6 @@ const PhoneNumberInput = React.forwardRef(function PhoneNumberInput(props, ref) 
     <PatternFormat
       {...other}
       format="+1 (###) ###-####"
-      allowEmptyFormatting
       mask="_"
       getInputRef={ref}
       onValueChange={(values) => {
