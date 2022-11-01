@@ -77,7 +77,7 @@ const Families = () => {
 
   useEffect(() => {
     layoutCtx.setActive(2);
-    layoutCtx.setBreadcrumb(['Families', 'Manage Families and their camera autorization']);
+    layoutCtx.setBreadcrumb(['Families', 'Manage Families and their camera authorization']);
   }, []);
 
   useEffect(() => {

@@ -20,6 +20,7 @@ import API from '../../api';
 import { errorMessageHandler } from '../../utils/errormessagehandler';
 import { useSnackbar } from 'notistack';
 import { publicIpv4 } from 'public-ip';
+import axios from 'axios';
 
 const WatchStream = () => {
   const layoutCtx = useContext(LayoutContext);
@@ -35,7 +36,7 @@ const WatchStream = () => {
   const [rooms, setRooms] = useState([]);
   const [cameras, setCameras] = useState([]);
   const [selectedRoom, setSelectedRoom] = useState();
-  // const [userInfoSent, setUserInfoSent] = useState(false);
+  const [userInfoSent, setUserInfoSent] = useState(false);
 
   useEffect(() => {
     layoutCtx.setActive(5);
@@ -86,10 +87,28 @@ const WatchStream = () => {
   const onSelect = useCallback(async (_, values) => {
     setCamerasPayload((prevPayload) => ({ ...prevPayload, cameras: values }));
     setLimitReached(values.length >= 2);
-    if (values.length > 0) {
+    if (values.length > 0 && !userInfoSent) {
       const ip = await publicIpv4();
-      // axios.get("")
-      console.log(ip);
+      const response = await axios.post(
+        `https://www.googleapis.com/geolocation/v1/geolocate?key=${process.env.REACT_APP_GOOGLE_API_KEY}`
+      );
+      const location = response.data.location;
+      API.post('watchstream/addviewer', {
+        source_ip: ip,
+        lat: location.lat,
+        long: location.lng
+      }).then((response) => {
+        if (response.status === 200) {
+          setUserInfoSent(true);
+        } else {
+          errorMessageHandler(
+            enqueueSnackbar,
+            response?.response?.data?.Message || 'Something Went Wrong.',
+            response?.response?.status,
+            authCtx.setAuthError
+          );
+        }
+      });
     }
   }, []);
 

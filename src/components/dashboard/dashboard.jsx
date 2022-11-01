@@ -1,16 +1,15 @@
-import { Box, Card, CardContent, CardMedia, Grid, Stack, Typography } from '@mui/material';
+import { Box, Card, CardContent, Grid, Stack, Typography } from '@mui/material';
 import dayjs from 'dayjs';
 import { useSnackbar } from 'notistack';
 import React, { useState } from 'react';
 import { useEffect } from 'react';
 import { useContext } from 'react';
 import API from '../../api';
-import map from '../../assets/map.svg';
 import AuthContext from '../../context/authcontext';
 import LayoutContext from '../../context/layoutcontext';
 import { errorMessageHandler } from '../../utils/errormessagehandler';
 import Loader from '../common/loader';
-// import Map from './map';
+import Map from './map';
 
 const Dashboard = () => {
   const layoutCtx = useContext(LayoutContext);
@@ -19,6 +18,7 @@ const Dashboard = () => {
   const [statisticsData, setStatisticsData] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const [mapsData, setMapsData] = useState([]);
 
   useEffect(() => {
     layoutCtx.setActive(1);
@@ -33,6 +33,15 @@ const Dashboard = () => {
     API.get('dashboard').then((response) => {
       if (response.status === 200) {
         setStatisticsData(response.data.Data);
+        const points = response.data.Data.enroledStreamsDetails.map((point) => ({
+          type: 'Feature',
+          properties: { cluster: false, rv_id: point.rv_id },
+          geometry: {
+            type: 'Point',
+            coordinates: [parseFloat(point.long), parseFloat(point.lat)]
+          }
+        }));
+        setMapsData(points);
       } else {
         errorMessageHandler(
           enqueueSnackbar,
@@ -117,9 +126,8 @@ const Dashboard = () => {
       <Box mt={4} className="location">
         <Card>
           <CardContent>
-            <Typography>Location of Active Viewers</Typography>
-            <CardMedia component="img" src={map} />
-            {/* <Map /> */}
+            <Typography>Location of Recent Viewers</Typography>
+            <Map data={mapsData} />
           </CardContent>
         </Card>
       </Box>
