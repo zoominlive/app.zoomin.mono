@@ -30,8 +30,9 @@ const UserActions = (props) => {
     handleClose(event);
   };
 
+  // Method to set user for the delete action
   const handleUserDelete = (event) => {
-    props.setUser({ ...props.user, first_name: props.user.user });
+    props.setUser({ ...props.user });
     props.setIsDeleteDialogOpen(true);
     handleClose(event);
   };

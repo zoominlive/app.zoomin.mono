@@ -35,6 +35,7 @@ const ChildForm = (props) => {
   const { enqueueSnackbar } = useSnackbar();
   const [submitLoading, setSubmitLoading] = useState(false);
 
+  // Method to close the form dialog
   const handleDialogClose = () => {
     if (!submitLoading) {
       props.setOpen(false);
@@ -42,6 +43,7 @@ const ChildForm = (props) => {
     }
   };
 
+  // Method to create/edit the child
   const handleSubmit = (data) => {
     setSubmitLoading(true);
     if (props.child) {

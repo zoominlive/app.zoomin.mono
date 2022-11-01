@@ -22,6 +22,7 @@ const ForgotPassword = () => {
   const authCtx = useContext(AuthContext);
   const [submitLoading, setSubmitLoading] = useState(false);
 
+  // Method to sent the forgot password request
   const handleSubmit = (data, actions) => {
     setSubmitLoading(true);
     API.put('users/forgetPassword', data).then((response) => {

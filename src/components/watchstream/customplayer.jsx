@@ -71,7 +71,6 @@ const CustomPlayer = (props) => {
             setReady(true);
             setShowErrorMessage(false);
           }
-          // playerRef.current.getInternalPlayer('hls').destroy();
         }}
         playing={playing}
         pip={inPIPMode}

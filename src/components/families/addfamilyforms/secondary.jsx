@@ -19,19 +19,6 @@ import PropTypes from 'prop-types';
 import AddIcon from '@mui/icons-material/Add';
 
 const Secondary = (props) => {
-  // useEffect(() => {
-  //   if (props.values.secondary.length === 0) {
-  //     props.setFieldValue('secondary', [
-  //       {
-  //         first_name: '',
-  //         last_name: '',
-  //         relationship: '',
-  //         phone: '',
-  //         email: ''
-  //       }
-  //     ]);
-  //   }
-  // }, []);
   return (
     <FieldArray
       name="secondary"

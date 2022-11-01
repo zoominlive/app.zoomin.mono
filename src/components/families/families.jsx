@@ -120,6 +120,7 @@ const Families = () => {
     });
   };
 
+  // Method to render the family location in table(combines the location from each child and remove duplicates)
   const renderFamilyLocations = (children) => {
     let locations = [];
     children?.forEach((child) => {
@@ -194,6 +195,7 @@ const Families = () => {
     });
   };
 
+  // Method to disable family
   const handleFamilyDisable = (data) => {
     setDisableLoading(true);
     API.put('family/disable', {

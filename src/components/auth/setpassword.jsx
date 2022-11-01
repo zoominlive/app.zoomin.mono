@@ -44,10 +44,11 @@ const SetPassword = () => {
   const [isPasswordSetSuccesful, setIsPasswordSetSuccesful] = useState(false);
   const { search } = useLocation();
 
+  // Method to sent the set password request
   const handleSubmit = (data) => {
-    const queryParams = search.substring(1).split('&');
-    const token = queryParams[0].substring(6);
-    const type = queryParams[1].substring(5);
+    const queryParams = search?.substring(1)?.split('&');
+    const token = queryParams && queryParams[0].substring(6);
+    const type = queryParams && queryParams[1].substring(5);
 
     setSubmitLoading(true);
     API.post(type === 'family' ? 'family/setPassword' : 'users/setPassword', {

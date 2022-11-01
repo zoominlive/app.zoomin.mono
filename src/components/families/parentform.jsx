@@ -42,6 +42,7 @@ const ParentsForm = (props) => {
   const { enqueueSnackbar } = useSnackbar();
   const [submitLoading, setSubmitLoading] = useState(false);
 
+  // Method to create/edit parent
   const handleSubmit = (data) => {
     setSubmitLoading(true);
     if (props.primaryParent || props.secondaryParent) {

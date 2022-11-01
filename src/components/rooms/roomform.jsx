@@ -81,6 +81,7 @@ const RoomForm = (props) => {
     }
   }, [cameraSaveLoading]);
 
+  // Method to add/edit room
   const handleSubmit = (data) => {
     setSubmitLoading(true);
     if (props.room) {
@@ -137,11 +138,13 @@ const RoomForm = (props) => {
     }
   };
 
+  // Method to close form dialog
   const handleFormDialogClose = () => {
     props.setOpen(false);
     props.setRoom();
   };
 
+  // Method to add camera
   const handleCamAdd = (index, uri, name) => {
     setCameraSaveLoading((prevState) => {
       const temp = [...prevState];
@@ -171,15 +174,13 @@ const RoomForm = (props) => {
     );
   };
 
+  // Method to delete camera
   const handleCamDelete = (wait) => {
     setCamDeleteLoading(true);
     API.delete('cams/delete', {
       data: {
         cam_id: formikRef.current.values.cams[cameraIndex].cam_id,
-        // cam_id: props.room.camDetails[cameraIndex].cam_id,
         streamId: formikRef.current.values.cams[cameraIndex].stream_uuid,
-
-        // streamId: props.room.camDetails[cameraIndex].stream_uuid,
         wait
       }
     }).then((response) => {
@@ -207,6 +208,7 @@ const RoomForm = (props) => {
     });
   };
 
+  // Method for closing the delete cam dialog
   const handleDialogClose = () => {
     setIsDeleteCamDialogOpen(false);
   };

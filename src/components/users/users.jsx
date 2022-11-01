@@ -69,6 +69,7 @@ const Users = () => {
     getUsersList();
   }, [usersPayload]);
 
+  // Method to fetch user list for table
   const getUsersList = () => {
     setIsLoading(true);
     API.get('users/all', { params: usersPayload }).then((response) => {
@@ -87,6 +88,7 @@ const Users = () => {
     });
   };
 
+  // Method to delete user
   const handleUserDelete = () => {
     setDeleteLoading(true);
     API.delete('users/delete', { data: { userId: user.user_id } }).then((response) => {

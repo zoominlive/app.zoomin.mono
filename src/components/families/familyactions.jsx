@@ -54,6 +54,7 @@ const FamilyActions = (props) => {
     handleClose(event);
   };
 
+  // Method to open delete family dialog
   const handleOpenDeleteDialog = (event) => {
     props.openDeleteDialog(true);
     props.setFamily(props.family);

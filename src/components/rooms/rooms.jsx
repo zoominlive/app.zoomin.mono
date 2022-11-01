@@ -172,6 +172,7 @@ const Rooms = () => {
     });
   };
 
+  // Method to fetch the rooms list for dropdown
   const getDropDownRoomList = () => {
     setRoomsDropdownLoading(true);
     API.get('rooms/list').then((response) => {
@@ -189,6 +190,7 @@ const Rooms = () => {
     });
   };
 
+  // Method to delete room
   const handleRoomDelete = () => {
     setDeleteLoading(true);
     API.delete('rooms/delete', { data: { room_id: room.room_id } }).then((response) => {
@@ -255,54 +257,6 @@ const Rooms = () => {
     return debounce(handleSearch, 500);
   }, []);
 
-  // const rows = [
-  //   {
-  //     id: 1,
-  //     room_name: 'Room 1',
-  //     location: 'Location 1',
-  //     number_of_cam: 4,
-  //     cams: [
-  //       {
-  //         cam_name: 'Cam 1',
-  //         cam_url: 'https://zoomin.com/systems/en/room/zoomin-room-1/'
-  //       },
-  //       {
-  //         cam_name: 'Cam 2',
-  //         cam_url:
-  //           'https://zoomin.com/systems/en/room/zoomin-room-1/room/zoomin-room-1/room/zoomin-room-1/'
-  //       },
-  //       {
-  //         cam_name: 'Cam 3',
-  //         cam_url: 'https://zoomin.com/systems/en/room/zoomin-room-1/n/room/zoomin-room-1'
-  //       },
-  //       {
-  //         cam_name: 'Cam 4',
-  //         cam_url: 'https://zoomin.com/systems/en/room/zoomin-room-1/'
-  //       }
-  //     ]
-  //   },
-  //   {
-  //     id: 2,
-  //     room_name: 'Room 2',
-  //     location: 'Location 2',
-  //     number_of_cam: 3,
-  //     cams: [
-  //       {
-  //         cam_name: 'Cam 1',
-  //         cam_url: 'https://zoomin.com/systems/en/room/zoomin-room-1/'
-  //       },
-  //       {
-  //         cam_name: 'Cam 2',
-  //         cam_url:
-  //           'https://zoomin.com/systems/en/room/zoomin-room-1/room/zoomin-room-1/room/zoomin-room-1/'
-  //       },
-  //       {
-  //         cam_name: 'Cam 3',
-  //         cam_url: 'https://zoomin.com/systems/en/room/zoomin-room-1/n/room/zoomin-room-1'
-  //       }
-  //     ]
-  //   }
-  // ];
   return (
     <Box className="listing-wrapper">
       <Card>

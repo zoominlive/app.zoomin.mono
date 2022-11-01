@@ -77,6 +77,7 @@ const FamilyDrawer = (props) => {
     }
   }, [enableFamilyLoading, enableFamilyMembersLoading, enableChildrenLoading]);
 
+  // Method to delete child
   const handleChildDelete = () => {
     setDeleteLoading(true);
     API.delete('family/child/delete', {
@@ -107,6 +108,7 @@ const FamilyDrawer = (props) => {
     });
   };
 
+  // Method to delete family
   const handleFamilyEnable = () => {
     setEnableFamilyLoading(true);
     API.put('family/enable', {
@@ -142,17 +144,20 @@ const FamilyDrawer = (props) => {
     });
   };
 
+  // Method to close the delete child dialog
   const handleDeleteDialogClose = () => {
     setIsDeleteChildDialogOpen(false);
     setChildToDelete();
   };
 
+  // Method to close the disable dialog
   const handleDisableDialogClose = () => {
     if (!disableLoading) {
       setIsDisableDialogOpen(false);
     }
   };
 
+  // Method to disable the parent and child
   const handleDisable = (data) => {
     setDisableLoading(true);
     if (parentToDisable) {
@@ -222,6 +227,7 @@ const FamilyDrawer = (props) => {
     }
   };
 
+  // Method to enable the parent
   const handleParentEnable = (parentToEnable, index) => {
     setEnableFamilyMembersLoading((prevState) => {
       const tempLoading = [...prevState];
@@ -259,6 +265,7 @@ const FamilyDrawer = (props) => {
     });
   };
 
+  // Method to enable the child
   const handleChildEnable = (childToEnable, index) => {
     setEnableChildrenLoading((prevState) => {
       const tempLoading = [...prevState];

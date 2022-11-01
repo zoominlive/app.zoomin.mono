@@ -17,7 +17,6 @@ import Primary from './addfamilyforms/primary';
 import Secondary from './addfamilyforms/secondary';
 import Children from './addfamilyforms/children';
 import { Form, Formik } from 'formik';
-// import validationschema from './addfamilyforms/validationschema';
 import { LoadingButton } from '@mui/lab';
 import SaveIcon from '@mui/icons-material/Save';
 import { useRef } from 'react';
@@ -27,7 +26,6 @@ import API from '../../api';
 import { useSnackbar } from 'notistack';
 import { errorMessageHandler } from '../../utils/errormessagehandler';
 import * as yup from 'yup';
-// import { useEffect } from 'react';
 
 const STEPS = ['Primary', 'Secondary', 'Children'];
 
@@ -37,21 +35,6 @@ const AddFamily = (props) => {
   const [activeStep, setActiveStep] = useState(0);
   const [submitLoading, setSubmitLoading] = useState(false);
   const formikRef = useRef();
-
-  // useEffect(() => {
-  //   window.addEventListener('keydown', function (e) {
-  //     if (e.key === 'Enter') {
-  //       handleFormSubmit();
-  //     }
-  //   });
-  //   return () => {
-  //     window.removeEventListener('keydown', function (e) {
-  //       if (e.key === 'Enter') {
-  //         handleFormSubmit();
-  //       }
-  //     });
-  //   };
-  // }, []);
 
   function checkEmailUnique(value) {
     if (value) {
@@ -180,7 +163,7 @@ const AddFamily = (props) => {
     setActiveStep(activeStep - 1);
   };
 
-  // Method to next to previous step
+  // Method to next to previous step and creating the family
   const handleSubmit = (data, { setTouched, setSubmitting }) => {
     if (activeStep === STEPS.length - 1) {
       setSubmitLoading(true);
@@ -227,27 +210,6 @@ const AddFamily = (props) => {
       props.setOpen(false);
     }
   };
-
-  // const handleFormSubmit = () => {
-  //   console.log('first');
-  //   if (activeStep !== 1) {
-  //     formikRef.current.submitForm();
-  //   } else {
-  //     const secondary = formikRef.current.values.secondary;
-  //     const emptyIndexs = [];
-  //     secondary.forEach((parent, index) => {
-  //       const isEmpty = Object.values(parent).every((x) => x === null || x === '');
-  //       if (isEmpty) {
-  //         emptyIndexs.push(index);
-  //       }
-  //     });
-  //     emptyIndexs.forEach((index) => secondary.pop(index));
-  //     console.log(secondary);
-  //     formikRef.current.setFieldValue('secondary', secondary);
-  //     console.log(formikRef.current.values);
-  //     formikRef.current.submitForm();
-  //   }
-  // };
 
   return (
     <Dialog
