@@ -4,7 +4,6 @@ import GoogleMapReact from 'google-map-react';
 import PropTypes from 'prop-types';
 import { useState } from 'react';
 import useSupercluster from 'use-supercluster';
-// import RoomIcon from '@mui/icons-material/Room';
 
 const Marker = ({ children }) => children;
 
@@ -20,11 +19,14 @@ const Map = (props) => {
   });
 
   return (
-    <Box height={'600px'}>
+    <Box height={'600px'} className="map-wrapper">
       <GoogleMapReact
         bootstrapURLKeys={{ key: process.env.REACT_APP_GOOGLE_API_KEY }}
         defaultCenter={{ lat: 41.850033, lng: -87.6500523 }}
         defaultZoom={1}
+        options={{
+          fullscreenControl: false
+        }}
         onChange={({ zoom, bounds }) => {
           setZoom(zoom);
           setBounds([bounds.nw.lng, bounds.se.lat, bounds.se.lng, bounds.nw.lat]);
