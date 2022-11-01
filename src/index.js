@@ -1,5 +1,4 @@
 import React from 'react';
-// import ReactDOM from 'react-dom/client';
 import ReactDOM from 'react-dom';
 import './index.css';
 import App from './app';
@@ -32,28 +31,6 @@ ReactDOM.render(
   </AuthContextProvider>,
   document.getElementById('root')
 );
-
-// const root = ReactDOM.createRoot(document.getElementById('root'));
-// root.render(
-//   <AuthContextProvider>
-//     <LayoutContextProvider>
-//       <BrowserRouter>
-//         <SnackbarProvider
-//           autoHideDuration={3000}
-//           maxSnack={5}
-//           action={(snackbarKey) => <SnackbarCloseButton snackbarKey={snackbarKey} />}
-//           anchorOrigin={{
-//             vertical: 'top',
-//             horizontal: 'right'
-//           }}>
-//           {/* <React.StrictMode> */}
-//           <App />
-//           {/* </React.StrictMode> */}
-//         </SnackbarProvider>
-//       </BrowserRouter>
-//     </LayoutContextProvider>
-//   </AuthContextProvider>
-// );
 
 // If you want to start measuring performance in your app, pass a function
 // to log results (for example: reportWebVitals(console.log))
