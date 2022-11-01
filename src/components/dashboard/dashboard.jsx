@@ -86,8 +86,8 @@ const Dashboard = () => {
             <CardContent>
               <Stack direction="row" alignItems="center" spacing={2}>
                 <Typography className="count">
-                  {statisticsData?.enroledStreams !== undefined
-                    ? statisticsData?.enroledStreams
+                  {statisticsData?.enrolledStreams !== undefined
+                    ? statisticsData?.enrolledStreams
                     : 'N/A'}
                 </Typography>
                 <Stack className="name">
