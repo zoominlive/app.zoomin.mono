@@ -4,7 +4,7 @@ const {
   sendRegistrationMailforUser,
   sendEmailChangeMail,
   sendForgetPasswordMail
-} = require('../lib/node-mailer');
+} = require('../lib/ses-mail-sender');
 const userServices = require('../services/users');
 const familyServices = require('../services/families');
 const s3BucketImageUploader = require('../lib/aws-services');

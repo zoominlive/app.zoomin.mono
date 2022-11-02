@@ -72,7 +72,6 @@ functions:
     handler: handler.handler
     events:
       - httpApi: 'PUT /api/users/changePassword'
-
   setPassword:
     handler: handler.handler
     events:
@@ -97,6 +96,133 @@ functions:
     handler: handler.handler
     events:
       - httpApi: 'DELETE /api/users/deleteImage'
+  getAllUserDetails:
+    handler: handler.handler
+    events:
+      - httpApi: 'GET /api/users/all'
+  deleteUser:
+    handler: handler.handler
+    events:
+      - httpApi: 'DELETE /api/users/delete'
+  editUser:
+    handler: handler.handler
+    events:
+      - httpApi: 'PUT /api/users/edit'
+  changeRegisteredEmail:
+    handler: handler.handler
+    events:
+      - httpApi: 'POST /api/users/emailChange'
+  isEmailExist:
+    handler: handler.handler
+    events:
+      - httpApi: 'POST /api/users/emailValidation'
+
+  getAllCameras:
+    handler: handler.handler
+    events:
+      - httpApi: 'GET /api/cams'
+  createCamera:
+    handler: handler.handler
+    events:
+      - httpApi: 'POST /api/cams/add'
+  deleteCamera:
+    handler: handler.handler
+    events:
+      - httpApi: 'DELETE /api/cams/delete'
+
+  createChild:
+    handler: handler.handler
+    events:
+      - httpApi: 'POST /api/family/child/add'
+  editChild:
+    handler: handler.handler
+    events:
+      - httpApi: 'PUT /api/family/child/edit'
+  disableChild:
+    handler: handler.handler
+    events:
+      - httpApi: 'PUT /api/family/child/disable'
+  enableChild:
+    handler: handler.handler
+    events:
+      - httpApi: 'PUT /api/family/child/enable'
+  deleteChild:
+    handler: handler.handler
+    events:
+      - httpApi: 'DELETE /api/family/child/delete'
+
+  getStreamStatistics:
+    handler: handler.handler
+    events:
+      - httpApi: 'GET /api/dashboard'
+
+  getAllFamilyDetails:
+    handler: handler.handler
+    events:
+      - httpApi: 'GET /api/family'
+  createFamily:
+    handler: handler.handler
+    events:
+      - httpApi: 'POST /api/family/add'
+  editFamily:
+    handler: handler.handler
+    events:
+      - httpApi: 'PUT /api/family/edit'
+  addParent:
+    handler: handler.handler
+    events:
+      - httpApi: 'POST /api/family/addParent'
+  disableFamily:
+    handler: handler.handler
+    events:
+      - httpApi: 'PUT /api/family/disable'
+  enableFamily:
+    handler: handler.handler
+    events:
+      - httpApi: 'PUT /api/family/enable'
+  deleteFamily:
+    handler: handler.handler
+    events:
+      - httpApi: 'DELETE /api/family/delete'
+  validateFamilyMember:
+    handler: handler.handler
+    events:
+      - httpApi: 'POST /api/family/setPassword'
+  changeRegisteredEmailforFamilyMember:
+    handler: handler.handler
+    events:
+      - httpApi: 'POST /api/family/emailChange'
+
+  getAllRoomsDetails:
+    handler: handler.handler
+    events:
+      - httpApi: 'GET /api/rooms'
+  createRoom:
+    handler: handler.handler
+    events:
+      - httpApi: 'POST /api/rooms/add'
+  editRoom:
+    handler: handler.handler
+    events:
+      - httpApi: 'PUT /api/rooms/edit'
+  deleteRoom:
+    handler: handler.handler
+    events:
+      - httpApi: 'DELETE /api/rooms/delete'
+  getAllRoomsList:
+    handler: handler.handler
+    events:
+      - httpApi: 'GET /api/rooms/list'
+
+  getAllCamForLocation:
+    handler: handler.handler
+    events:
+      - httpApi: 'GET /api/watchstream'
+  addRecentViewers:
+    handler: handler.handler
+    events:
+      - httpApi: 'POST /api/watchstream/addviewer'
+
   disableScheduledMembers:
     handler: cron.disableScheduledFamilyAndChild
     events:

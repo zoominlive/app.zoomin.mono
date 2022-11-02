@@ -8,10 +8,8 @@ const engine = encrypter(process.env.JWT_SECRET_KEY, { ttl: true });
 var bcrypt = require('bcryptjs');
 const {
   sendRegistrationMailforFamilyMember,
-  sendRegistrationMailforUser,
-  sendEmailChangeMail,
-  sendForgetPasswordMail
-} = require('../lib/node-mailer');
+  sendEmailChangeMail
+} = require('../lib/ses-mail-sender');
 
 module.exports = {
   // create new family(primary parent, secondary parent ,child)

@@ -59,6 +59,9 @@ module.exports = {
       const params = req.body;
       const token = req.userToken;
 
+      const customer = await customerServices.getCustomerDetails(req.user.cust_id);
+      const availableCameras = customer?.available_cameras;
+
       const camEncodedDeleted = await deleteEncodingStream(
         params.streamId,
         params.wait,
@@ -75,12 +78,22 @@ module.exports = {
           Message: 'Camera not found'
         });
       } else if (camEncodedDeleted.status === 200) {
+        const resetAvailableCameras = await customerServices.setAvailableCameras(
+          req.user.cust_id,
+          availableCameras + 1
+        );
+
         res.status(200).json({
           IsSuccess: true,
           Data: {},
           Message: 'Camera Deleted'
         });
       } else {
+        const resetAvailableCameras = await customerServices.setAvailableCameras(
+          req.user.cust_id,
+          availableCameras + 1
+        );
+
         res.status(200).json({
           IsSuccess: false,
           Data: {},

@@ -9,7 +9,6 @@ module.exports = async function (req, res, next) {
 
   try {
     const decodeToken = jwt.verify(token, process.env.JWT_SECRET_KEY);
-    let familyUser;
     let user;
     if (decodeToken?.user_id) {
       user = await Users.findOne({ where: { user_id: decodeToken.user_id } });

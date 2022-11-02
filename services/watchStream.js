@@ -20,10 +20,15 @@ module.exports = {
 
   addRecentViewers: async (params) => {
     let recentViewerObj = { ...params, requested_at: Sequelize.literal('CURRENT_TIMESTAMP') };
-    let recentViewer = await RecentViewers.create(recentViewerObj);
+    let recentViewer;
+    let viewerAlreadyExist = await RecentViewers.count({ where: { user_id: params.user_id } });
+    if (viewerAlreadyExist === 0) {
+      recentViewer = await RecentViewers.create(recentViewerObj);
+    }
 
     return recentViewer;
   },
+
   getRecentViewers: async () => {
     let twoHoursBefore = new Date();
     twoHoursBefore.setHours(twoHoursBefore.getHours() - 2);
