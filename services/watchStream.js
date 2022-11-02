@@ -1,4 +1,6 @@
-const { Camera, Room } = require('../models/index');
+const { Camera, Room, RecentViewers, Customers } = require('../models/index');
+const moment = require('moment');
+const Sequelize = require('sequelize');
 
 module.exports = {
   /* Create new camera */
@@ -14,5 +16,45 @@ module.exports = {
     );
     const cameraDetails = await cameras;
     return cameraDetails;
+  },
+
+  addRecentViewers: async (params) => {
+    let recentViewerObj = { ...params, requested_at: Sequelize.literal('CURRENT_TIMESTAMP') };
+    let recentViewer = await RecentViewers.create(recentViewerObj);
+
+    return recentViewer;
+  },
+  getRecentViewers: async () => {
+    let twoHoursBefore = new Date();
+    twoHoursBefore.setHours(twoHoursBefore.getHours() - 2);
+
+    const currentTime = new Date();
+
+    let recentViewers = await RecentViewers.findAll({
+      raw: true,
+      where: {
+        requested_at: {
+          [Sequelize.Op.between]: [twoHoursBefore.toISOString(), currentTime.toISOString()]
+        }
+      }
+    });
+
+    return recentViewers;
+  },
+
+  getTranscoderUrl: async (custId) => {
+    let twoHoursBefore = new Date();
+    twoHoursBefore.setHours(twoHoursBefore.getHours() - 2);
+
+    const currentTime = new Date();
+    console.log(twoHoursBefore, currentTime);
+    let customer = await Customers.findOne({
+      raw: true,
+      where: {
+        cust_id: custId
+      }
+    });
+
+    return customer.transcoder_endpoint;
   }
 };

@@ -1,7 +1,7 @@
 var bcrypt = require('bcryptjs');
 const _ = require('lodash');
 const {
-  sendRegistrationMail,
+  sendRegistrationMailforUser,
   sendEmailChangeMail,
   sendForgetPasswordMail
 } = require('../lib/node-mailer');
@@ -12,12 +12,14 @@ const TinyURL = require('tinyurl');
 const jwt = require('jsonwebtoken');
 const encrypter = require('object-encrypter');
 const engine = encrypter(process.env.JWT_SECRET_KEY, { ttl: true });
+const watchStreamServices = require('../services/watchStream');
 
 module.exports = {
   /* Get  user's details */
   getUserDetails: async (req, res, next) => {
     try {
       const user = req.user;
+      user.transcoderBaseUrl = await watchStreamServices.getTranscoderUrl(req.user.cust_id);
       res.status(200).json({
         IsSuccess: true,
         Data: _.omit(user, ['password']),
@@ -59,7 +61,7 @@ module.exports = {
         const originalUrl = req.get('Referrer') + 'set-password?' + 'token=' + token + '&type=user';
         const short_url = await TinyURL.shorten(originalUrl);
 
-        await sendRegistrationMail(name, userData.email, short_url);
+        await sendRegistrationMailforUser(name, userData.email, short_url);
 
         if (req.body?.image) {
           const imageUrl = await s3BucketImageUploader._upload(req.body.image, userData.user_id);
@@ -376,7 +378,9 @@ module.exports = {
       }
 
       let editedProfile = await userServices.editUserProfile(user, _.omit(params, ['email'])); // user should not be allowed to edit email directly.
-
+      editedProfile.transcoderBaseUrl = await watchStreamServices.getTranscoderUrl(
+        req.user.cust_id
+      );
       if (editedProfile) {
         if (params?.email && params?.email !== user.email) {
           const newEmail = params.email;

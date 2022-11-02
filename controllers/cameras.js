@@ -10,7 +10,7 @@ module.exports = {
       params = req.body;
       params.cust_id = req.user.cust_id;
       const token = req.userToken;
-      const transcodedDetails = await startEncodingStream(params.cam_uri, token);
+      const transcodedDetails = await startEncodingStream(params.cam_uri, token, req.user.cust_id);
       params.stream_uri = transcodedDetails?.data ? transcodedDetails.data?.uri : '';
       params.stream_uuid = transcodedDetails?.data ? transcodedDetails.data?.id : '';
       params.cam_alias = transcodedDetails?.data ? transcodedDetails.data?.alias : '';
@@ -38,7 +38,12 @@ module.exports = {
       const params = req.body;
       const token = req.userToken;
 
-      const camEncodedDeleted = await deleteEncodingStream(params.streamId, params.wait, token);
+      const camEncodedDeleted = await deleteEncodingStream(
+        params.streamId,
+        params.wait,
+        token,
+        req.user.cust_id
+      );
 
       const cameraDeleted = await cameraServices.deleteCamera(params.cam_id);
 

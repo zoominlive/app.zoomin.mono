@@ -38,7 +38,7 @@ module.exports = {
 
   /* Fetch all the camera's details for given customer */
   getAllCameraForCustomer: async (custId) => {
-    let cameras = await Camera.findAll({ where: { cust_id: custId } });
+    let cameras = await Camera.findAll({ raw: true, where: { cust_id: custId } });
     return cameras !== undefined ? cameras : null;
   }
 };

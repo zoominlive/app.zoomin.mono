@@ -23,5 +23,26 @@ module.exports = {
       });
       next(error);
     }
+  },
+  addRecentViewers: async (req, res, next) => {
+    try {
+      const params = req.body;
+      params.user_id = req.user.user_id;
+      const recentViewer = await watchStreamServices.addRecentViewers(params);
+
+      res.status(200).json({
+        IsSuccess: true,
+        Data: recentViewer,
+        Message: 'recent viewer added'
+      });
+
+      next();
+    } catch (error) {
+      res.status(500).json({
+        IsSuccess: false,
+        Message: error.message
+      });
+      next(error);
+    }
   }
 };

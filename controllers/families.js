@@ -7,7 +7,8 @@ const encrypter = require('object-encrypter');
 const engine = encrypter(process.env.JWT_SECRET_KEY, { ttl: true });
 var bcrypt = require('bcryptjs');
 const {
-  sendRegistrationMail,
+  sendRegistrationMailforFamilyMember,
+  sendRegistrationMailforUser,
   sendEmailChangeMail,
   sendForgetPasswordMail
 } = require('../lib/node-mailer');
@@ -55,7 +56,7 @@ module.exports = {
           req.get('Referrer') + 'set-password?' + 'token=' + token + '&type=family';
         const short_url = await TinyURL.shorten(originalUrl);
 
-        await sendRegistrationMail(name, primaryParent.email, short_url);
+        await sendRegistrationMailforFamilyMember(name, primaryParent.email, short_url);
 
         if (!_.isEmpty(secondaryParents)) {
           secondaryParents.forEach(async (secondaryParent) => {
@@ -64,7 +65,7 @@ module.exports = {
             const originalUrl = req.get('Referrer') + 'set-password?' + token;
             const short_url = await TinyURL.shorten(originalUrl);
 
-            await sendRegistrationMail(name, secondaryParent.email, short_url);
+            await sendRegistrationMailforFamilyMember(name, secondaryParent.email, short_url);
           });
         }
       }
@@ -216,7 +217,7 @@ module.exports = {
           req.get('Referrer') + 'set-password?' + 'token=' + token + '&type=family';
         const short_url = await TinyURL.shorten(originalUrl);
 
-        await sendRegistrationMail(name, parent.email, short_url);
+        await sendRegistrationMailforFamilyMember(name, parent.email, short_url);
 
         res.status(201).json({
           IsSuccess: true,

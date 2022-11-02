@@ -15,7 +15,7 @@ const RecentViewers = sequelize.define(
       allowNull: false
     },
     source_ip: {
-      type: Sequelize.INTEGER,
+      type: Sequelize.STRING(20),
       allowNull: false
     },
     lat: {

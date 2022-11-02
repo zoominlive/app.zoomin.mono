@@ -8,5 +8,5 @@ const watchStreamController = require('../../controllers/watchStream');
 
 /* Camera end points */
 router.get('/', authController, watchStreamController.getAllCamForLocation);
-
+router.post('/addviewer', authController, watchStreamController.addRecentViewers);
 module.exports = router;
