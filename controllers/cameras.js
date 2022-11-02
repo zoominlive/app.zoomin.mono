@@ -27,7 +27,7 @@ module.exports = {
 
         const resetAvailableCameras = await customerServices.setAvailableCameras(
           req.user.cust_id,
-          customer.availableCameras - 1
+          availableCameras - 1
         );
 
         res.status(201).json({
