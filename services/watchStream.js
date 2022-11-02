@@ -40,21 +40,5 @@ module.exports = {
     });
 
     return recentViewers;
-  },
-
-  getTranscoderUrl: async (custId) => {
-    let twoHoursBefore = new Date();
-    twoHoursBefore.setHours(twoHoursBefore.getHours() - 2);
-
-    const currentTime = new Date();
-    console.log(twoHoursBefore, currentTime);
-    let customer = await Customers.findOne({
-      raw: true,
-      where: {
-        cust_id: custId
-      }
-    });
-
-    return customer.transcoder_endpoint;
   }
 };

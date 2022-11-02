@@ -1,7 +1,7 @@
 const cameraServices = require('../services/cameras');
 const { startEncodingStream, deleteEncodingStream } = require('../lib/rtsp-stream');
 const _ = require('lodash');
-var uuid = require('uuid');
+const customerServices = require('../services/customers');
 
 module.exports = {
   // encode stream and create new camera
@@ -9,18 +9,39 @@ module.exports = {
     try {
       params = req.body;
       params.cust_id = req.user.cust_id;
-      const token = req.userToken;
-      const transcodedDetails = await startEncodingStream(params.cam_uri, token, req.user.cust_id);
-      params.stream_uri = transcodedDetails?.data ? transcodedDetails.data?.uri : '';
-      params.stream_uuid = transcodedDetails?.data ? transcodedDetails.data?.id : '';
-      params.cam_alias = transcodedDetails?.data ? transcodedDetails.data?.alias : '';
-      const camera = await cameraServices.createCamera(params);
 
-      res.status(201).json({
-        IsSuccess: true,
-        Data: camera,
-        Message: 'Camera created'
-      });
+      const customer = await customerServices.getCustomerDetails(params.cust_id);
+      const availableCameras = customer?.available_cameras;
+
+      if (availableCameras > 0) {
+        const token = req.userToken;
+        const transcodedDetails = await startEncodingStream(
+          params.cam_uri,
+          token,
+          req.user.cust_id
+        );
+        params.stream_uri = transcodedDetails?.data ? transcodedDetails.data?.uri : '';
+        params.stream_uuid = transcodedDetails?.data ? transcodedDetails.data?.id : '';
+        params.cam_alias = transcodedDetails?.data ? transcodedDetails.data?.alias : '';
+        const camera = await cameraServices.createCamera(params);
+
+        const resetAvailableCameras = await customerServices.setAvailableCameras(
+          req.user.cust_id,
+          customer.availableCameras - 1
+        );
+
+        res.status(201).json({
+          IsSuccess: true,
+          Data: camera,
+          Message: 'Camera created'
+        });
+      } else {
+        res.status(400).json({
+          IsSuccess: false,
+          Data: {},
+          Message: `Maximum ${customer.max_cameras} cameras are allowed`
+        });
+      }
 
       next();
     } catch (error) {

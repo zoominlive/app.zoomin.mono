@@ -12,14 +12,14 @@ const TinyURL = require('tinyurl');
 const jwt = require('jsonwebtoken');
 const encrypter = require('object-encrypter');
 const engine = encrypter(process.env.JWT_SECRET_KEY, { ttl: true });
-const watchStreamServices = require('../services/watchStream');
+const customerServices = require('../services/customers');
 
 module.exports = {
   /* Get  user's details */
   getUserDetails: async (req, res, next) => {
     try {
       const user = req.user;
-      user.transcoderBaseUrl = await watchStreamServices.getTranscoderUrl(req.user.cust_id);
+      user.transcoderBaseUrl = await customerServices.getTranscoderUrl(req.user.cust_id);
       res.status(200).json({
         IsSuccess: true,
         Data: _.omit(user, ['password']),
@@ -378,9 +378,7 @@ module.exports = {
       }
 
       let editedProfile = await userServices.editUserProfile(user, _.omit(params, ['email'])); // user should not be allowed to edit email directly.
-      editedProfile.transcoderBaseUrl = await watchStreamServices.getTranscoderUrl(
-        req.user.cust_id
-      );
+      editedProfile.transcoderBaseUrl = await customerServices.getTranscoderUrl(req.user.cust_id);
       if (editedProfile) {
         if (params?.email && params?.email !== user.email) {
           const newEmail = params.email;

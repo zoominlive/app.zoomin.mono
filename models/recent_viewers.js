@@ -18,6 +18,10 @@ const RecentViewers = sequelize.define(
       type: Sequelize.STRING(20),
       allowNull: false
     },
+    location_name: {
+      type: Sequelize.STRING(20),
+      allowNull: false
+    },
     lat: {
       type: Sequelize.DECIMAL(10, 8),
       allowNull: false

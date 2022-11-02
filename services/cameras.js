@@ -1,4 +1,4 @@
-const { Camera } = require('../models/index');
+const { Camera, Customers } = require('../models/index');
 const Sequelize = require('sequelize');
 
 module.exports = {
