@@ -85,30 +85,45 @@ const WatchStream = () => {
     setLimitReached(false);
   };
   const onSelect = useCallback(async (_, values) => {
-    setCamerasPayload((prevPayload) => ({ ...prevPayload, cameras: values }));
-    setLimitReached(values.length >= 2);
-    if (values.length > 0 && !userInfoSent) {
-      const ip = await publicIpv4();
-      const response = await axios.post(
-        `https://www.googleapis.com/geolocation/v1/geolocate?key=${process.env.REACT_APP_GOOGLE_API_KEY}`
-      );
-      const location = response.data.location;
-      API.post('watchstream/addviewer', {
-        source_ip: ip,
-        lat: location.lat,
-        long: location.lng
-      }).then((response) => {
-        if (response.status === 200) {
-          setUserInfoSent(true);
-        } else {
-          errorMessageHandler(
-            enqueueSnackbar,
-            response?.response?.data?.Message || 'Something Went Wrong.',
-            response?.response?.status,
-            authCtx.setAuthError
-          );
-        }
-      });
+    try {
+      setCamerasPayload((prevPayload) => ({ ...prevPayload, cameras: values }));
+      setLimitReached(values.length >= 2);
+      if (values.length > 0 && !userInfoSent) {
+        const ip = await publicIpv4();
+        const response = await axios.post(
+          `https://www.googleapis.com/geolocation/v1/geolocate?key=${process.env.REACT_APP_GOOGLE_API_KEY}`
+        );
+        const location = response.data.location;
+        const locationResponse = await axios.get(
+          `https://maps.googleapis.com/maps/api/geocode/json?latlng=${location.lat},${location.lng}&sensor=false&key=AIzaSyDn-DZI5-5xknrwgTGIhbFc2abDFXULWro`
+        );
+        const locationComponents = locationResponse.data.results[0].address_components;
+        let location_name = '';
+        locationComponents.forEach((component) => {
+          if (component.types.includes('administrative_area_level_2')) {
+            location_name = component.long_name;
+          }
+        });
+        API.post('watchstream/addviewer', {
+          source_ip: ip,
+          lat: location.lat,
+          long: location.lng,
+          location_name
+        }).then((response) => {
+          if (response.status === 200) {
+            setUserInfoSent(true);
+          } else {
+            errorMessageHandler(
+              enqueueSnackbar,
+              response?.response?.data?.Message || 'Something Went Wrong.',
+              response?.response?.status,
+              authCtx.setAuthError
+            );
+          }
+        });
+      }
+    } catch (error) {
+      enqueueSnackbar('Something went wrong while fetching the location', { variant: 'error' });
     }
   }, []);
 

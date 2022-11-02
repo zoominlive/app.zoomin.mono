@@ -14,8 +14,7 @@ import {
   MenuItem,
   Select,
   Stack,
-  TextField,
-  Tooltip
+  TextField
 } from '@mui/material';
 import React from 'react';
 import PropTypes from 'prop-types';
@@ -63,7 +62,7 @@ const RoomForm = (props) => {
   const arrayHelpersRef = useRef(null);
   const formikRef = useRef(null);
   const [cameraIndex, setCameraIndex] = useState();
-  const maximumCams = 15;
+  // const maximumCams = 15;
 
   useEffect(() => {
     const tempCameraSaveLoading = props?.room?.camDetails?.map(() => false);
@@ -443,46 +442,20 @@ const RoomForm = (props) => {
                                   </Grid>
                                 ))}
                               <Box className="row-button-wrapper" justifyContent="flex-end" mt={2}>
-                                {values.cams.length !== maximumCams ? (
-                                  <Button
-                                    disabled={values.cams.length === maximumCams}
-                                    variant="contained"
-                                    endIcon={<AddIcon />}
-                                    sx={{ mt: 1, mr: 4 }}
-                                    onClick={() => {
-                                      if (values.cams.length === maximumCams - 1) {
-                                        enqueueSnackbar(
-                                          `Maximum ${maximumCams} cameras are allowed.`,
-                                          {
-                                            variant: 'warning'
-                                          }
-                                        );
-                                      }
-                                      arrayHelpers.push({
-                                        cam_name: '',
-                                        cam_uri: ''
-                                      });
-                                      setCameraSaveLoading((prevState) => [...prevState, false]);
-                                    }}
-                                    className="row-add-btn">
-                                    Add CAM
-                                  </Button>
-                                ) : (
-                                  <Tooltip
-                                    title={`Maximum ${maximumCams} cameras are allowed`}
-                                    placement="top"
-                                    arrow>
-                                    <Box component="span" mt={1} mr={4}>
-                                      <Button
-                                        disabled={values.cams.length === maximumCams}
-                                        variant="contained"
-                                        endIcon={<AddIcon />}
-                                        className="row-add-btn">
-                                        Add CAM
-                                      </Button>
-                                    </Box>
-                                  </Tooltip>
-                                )}
+                                <Button
+                                  variant="contained"
+                                  endIcon={<AddIcon />}
+                                  sx={{ mt: 1, mr: 4 }}
+                                  onClick={() => {
+                                    arrayHelpers.push({
+                                      cam_name: '',
+                                      cam_uri: ''
+                                    });
+                                    setCameraSaveLoading((prevState) => [...prevState, false]);
+                                  }}
+                                  className="row-add-btn">
+                                  Add CAM
+                                </Button>
                               </Box>
                             </>
                           );

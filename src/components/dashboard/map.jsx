@@ -58,7 +58,7 @@ const Map = (props) => {
           }
           return (
             <Marker key={`crime-${cluster.properties.rv_id}`} lat={latitude} lng={longitude}>
-              <Tooltip title="Location 1" placement="top" arrow>
+              <Tooltip title={`${cluster.properties.label}`} placement="top" arrow>
                 <div
                   className="cluster-marker"
                   style={{

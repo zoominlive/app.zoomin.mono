@@ -52,7 +52,7 @@ const CustomPlayer = (props) => {
     <Box className="video-player-wrapper" ref={playerContainerRef}>
       <Loader loading={!ready} />
       <ReactPlayer
-        url={`${process.env.REACT_APP_RTSP_STREAM_BASE_URL}${props?.streamUri}`}
+        url={`${authCtx.user.transcoderBaseUrl}${props?.streamUri}`}
         height={'100%'}
         width={'100%'}
         controls={false}

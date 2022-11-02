@@ -35,7 +35,7 @@ const Dashboard = () => {
         setStatisticsData(response.data.Data);
         const points = response.data.Data.enroledStreamsDetails.map((point) => ({
           type: 'Feature',
-          properties: { cluster: false, rv_id: point.rv_id },
+          properties: { cluster: false, rv_id: point.rv_id, label: point.location_name },
           geometry: {
             type: 'Point',
             coordinates: [parseFloat(point.long), parseFloat(point.lat)]
