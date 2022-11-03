@@ -26,6 +26,10 @@ const Dashboard = () => {
       `Welcome back, ${authCtx?.user?.first_name}`,
       `${days[dayjs().day()]}, ${dayjs().format('DD MMMM YYYY')}`
     ]);
+
+    return () => {
+      authCtx.setPreviosPagePath(window.location.pathname);
+    };
   }, []);
 
   useEffect(() => {

@@ -57,6 +57,9 @@ const Users = () => {
   useEffect(() => {
     layoutCtx.setActive(4);
     layoutCtx.setBreadcrumb(['Users']);
+    return () => {
+      authCtx.setPreviosPagePath(window.location.pathname);
+    };
   }, []);
 
   useEffect(() => {

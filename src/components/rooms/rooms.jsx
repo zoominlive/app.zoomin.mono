@@ -137,6 +137,10 @@ const Rooms = () => {
   useEffect(() => {
     layoutCtx.setActive(3);
     layoutCtx.setBreadcrumb(['Rooms']);
+
+    return () => {
+      authCtx.setPreviosPagePath(window.location.pathname);
+    };
   }, []);
 
   useEffect(() => {

@@ -78,6 +78,10 @@ const Families = () => {
   useEffect(() => {
     layoutCtx.setActive(2);
     layoutCtx.setBreadcrumb(['Families', 'Manage Families and their camera authorization']);
+
+    return () => {
+      authCtx.setPreviosPagePath(window.location.pathname);
+    };
   }, []);
 
   useEffect(() => {

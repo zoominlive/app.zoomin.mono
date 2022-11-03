@@ -41,6 +41,9 @@ const WatchStream = () => {
   useEffect(() => {
     layoutCtx.setActive(5);
     layoutCtx.setBreadcrumb(['Watch Stream']);
+    return () => {
+      authCtx.setPreviosPagePath(window.location.pathname);
+    };
   }, []);
 
   useEffect(() => {

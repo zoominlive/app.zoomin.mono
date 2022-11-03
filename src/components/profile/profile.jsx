@@ -74,6 +74,9 @@ const Profile = () => {
   useEffect(() => {
     layoutCtx.setActive();
     layoutCtx.setBreadcrumb(['Profile']);
+    return () => {
+      authCtx.setPreviosPagePath(window.location.pathname);
+    };
   }, []);
 
   useEffect(() => {
