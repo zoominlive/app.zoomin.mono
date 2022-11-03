@@ -246,7 +246,7 @@ const WatchStream = () => {
             {camerasPayload.cameras.length === 2 &&
               camerasPayload.cameras.map((camera, index) => (
                 <Grid key={index} item md={6} sm={12}>
-                  <CustomPlayer noOfCameras={2} streamUri={camera[index]?.stream_uri} />
+                  <CustomPlayer noOfCameras={2} streamUri={camera?.stream_uri} />
                 </Grid>
               ))}
           </Grid>
