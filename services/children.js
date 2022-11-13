@@ -11,6 +11,12 @@ module.exports = {
     return childCreated !== undefined ? childCreated.toJSON() : null;
   },
 
+  createChildren: async (childObj) => {
+    let childCreated = await Child.bulkCreate(childObj, { returning: true });
+
+    return childCreated;
+  },
+
   /* Edit child details */
   editChild: async (params) => {
     const childObj = _.omit(params, ['child_id']);

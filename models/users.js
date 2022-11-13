@@ -5,10 +5,9 @@ const Users = sequelize.define(
   'users',
   {
     user_id: {
-      type: Sequelize.INTEGER,
+      type: Sequelize.STRING(50),
       allowNull: false,
-      primaryKey: true,
-      autoIncrement: true
+      primaryKey: true
     },
     first_name: {
       type: Sequelize.STRING(30),
@@ -54,7 +53,7 @@ const Users = sequelize.define(
       default: ''
     },
     cust_id: {
-      type: Sequelize.INTEGER,
+      type: Sequelize.STRING(50),
       allowNull: false
     },
     created_at: {

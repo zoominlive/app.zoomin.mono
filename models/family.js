@@ -5,21 +5,20 @@ const Family = sequelize.define(
   'family',
   {
     family_member_id: {
-      type: Sequelize.INTEGER,
+      type: Sequelize.STRING(50),
       allowNull: false,
-      primaryKey: true,
-      autoIncrement: true
+      primaryKey: true
     },
     family_id: {
       type: Sequelize.INTEGER,
       allowNull: false
     },
     user_id: {
-      type: Sequelize.INTEGER,
+      type: Sequelize.STRING(50),
       allowNull: false
     },
     cust_id: {
-      type: Sequelize.INTEGER,
+      type: Sequelize.STRING(50),
       allowNull: false
     },
     first_name: {

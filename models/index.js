@@ -8,8 +8,6 @@ const RecentViewers = require('./recent_viewers');
 const Room = require('./room');
 
 CustomerLocations.belongsTo(Customers, { foreignKey: 'cust_id' });
-Camera.belongsTo(Room, { foreignKey: 'room_id' });
-Room.hasMany(Camera, { foreignKey: 'room_id' });
 Users.belongsTo(Customers, { foreignKey: 'cust_id' });
 Room.belongsTo(Customers, { foreignKey: 'cust_id' });
 // Room.belongsTo(CustomerLocations, { foreignKey: 'location' });

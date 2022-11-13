@@ -9,7 +9,6 @@ const userServices = require('../services/users');
 const familyServices = require('../services/families');
 const s3BucketImageUploader = require('../lib/aws-services');
 const TinyURL = require('tinyurl');
-const jwt = require('jsonwebtoken');
 const encrypter = require('object-encrypter');
 const engine = encrypter(process.env.JWT_SECRET_KEY, { ttl: true });
 const customerServices = require('../services/customers');

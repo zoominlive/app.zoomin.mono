@@ -6,8 +6,8 @@ module.exports = {
   getAllCamForLocation: async (req, res, next) => {
     try {
       const location = req.query?.location;
-      const userId = req.user.user_id;
-      const cameras = await watchStreamServices.getAllCamForLocation(userId, location);
+
+      const cameras = await watchStreamServices.getAllCamForLocation(req.user, location);
 
       res.status(200).json({
         IsSuccess: true,

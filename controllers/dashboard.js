@@ -15,15 +15,15 @@ module.exports = {
 
       let streams = await listAvailableStreams(token, custId);
 
-      const totalStreams = await cameraServices.getAllCameraForCustomer(custId);
+      const totalStreams = await cameraServices.getAllCameraForCustomerDashboard(custId);
 
       let totalActiveStreams = streams?.data?.filter((stream) => {
         return stream.running === true;
       });
 
       let activeStreams = [];
-      totalStreams.forEach((stream) => {
-        totalActiveStreams.forEach((obj) => {
+      totalStreams?.forEach((stream) => {
+        totalActiveStreams?.forEach((obj) => {
           if (obj.id === stream.stream_uuid) {
             activeStreams.push(stream);
           }

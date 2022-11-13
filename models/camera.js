@@ -11,12 +11,13 @@ const Camera = sequelize.define(
       autoIncrement: true
     },
     cust_id: {
-      type: Sequelize.INTEGER,
+      type: Sequelize.STRING(50),
       allowNull: false
     },
-    room_id: {
-      type: Sequelize.INTEGER,
-      allowNull: false
+    room_ids: {
+      type: Sequelize.JSON,
+      defaultValue: {},
+      allowNull: true
     },
     cam_name: {
       type: Sequelize.STRING(25),
@@ -27,6 +28,15 @@ const Camera = sequelize.define(
       allowNull: false,
       required: true,
       comment: 'RTSP Stream URL from customer system'
+    },
+    description: {
+      type: Sequelize.STRING(300),
+      allowNull: true,
+      comment: 'camera description'
+    },
+    location: {
+      type: Sequelize.STRING(50),
+      allowNull: false
     },
     stream_uri: {
       type: Sequelize.STRING(155),

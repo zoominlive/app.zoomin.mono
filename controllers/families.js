@@ -10,6 +10,7 @@ const {
   sendRegistrationMailforFamilyMember,
   sendEmailChangeMail
 } = require('../lib/ses-mail-sender');
+const { v4: uuidv4 } = require('uuid');
 
 module.exports = {
   // create new family(primary parent, secondary parent ,child)
@@ -21,9 +22,20 @@ module.exports = {
 
       //add primary parent
 
+      let allLocations = [];
+      children?.forEach((child) => {
+        child?.location?.locations?.forEach((loc) => {
+          allLocations.push(loc);
+        });
+      });
+
+      allLocations = _.uniq(allLocations);
+
+      primary.location = { selected_locations: allLocations, accessable_locations: allLocations };
       primary.family_id = await familyServices.generateNewFamilyId(req.user.user_id);
       let primaryParent = await familyServices.createFamily({
         ...primary,
+        family_member_id: uuidv4(),
         user_id: userId,
         cust_id: custId
       });
@@ -33,19 +45,23 @@ module.exports = {
       //add secondary parent
 
       let secondaryParents = '';
-      let createdFamily = Promise.all(
-        secondary.map(async (family) => {
-          const newFamily = await familyServices.createFamily({
-            ...family,
-            user_id: userId,
-            cust_id: custId,
-            family_id: familyId
-          });
+      let familyObj = [];
 
-          return newFamily;
-        })
-      );
-      secondaryParents = await createdFamily;
+      secondary?.forEach(async (family) => {
+        family.location = {
+          selected_locations: allLocations,
+          accessable_locations: allLocations
+        };
+
+        familyObj.push({
+          ...family,
+          family_member_id: uuidv4(),
+          user_id: userId,
+          cust_id: custId,
+          family_id: familyId
+        });
+      });
+      secondaryParents = await familyServices.createFamilies(familyObj);
 
       if (primaryParent && secondaryParents) {
         const token = await familyServices.createPasswordToken(primaryParent);
@@ -71,19 +87,17 @@ module.exports = {
       //add children
 
       childServices;
+      let childObjs = [];
 
-      let createdChildren = Promise.all(
-        children.map(async (child) => {
-          const newFamily = await childServices.createChild({
-            ...child,
-            rooms: { rooms: child.rooms },
-            family_id: familyId
-          });
+      children?.forEach(async (child) => {
+        childObjs.push({
+          ...child,
+          rooms: { rooms: child.rooms },
+          family_id: familyId
+        });
+      });
 
-          return newFamily;
-        })
-      );
-      children = await createdChildren;
+      children = await childServices.createChildren(childObjs);
 
       res.status(201).json({
         IsSuccess: true,

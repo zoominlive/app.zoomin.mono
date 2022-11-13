@@ -3,9 +3,11 @@ const Sequelize = require('sequelize');
 const { getAllCameraForRoom } = require('./cameras');
 const _ = require('lodash');
 const sequelize = require('../lib/database');
+const { v4: uuidv4 } = require('uuid');
 module.exports = {
   /* Create new room */
   createRoom: async (roomObj) => {
+    roomObj.room_id = uuidv4();
     let roomCreated = await Room.create(roomObj);
 
     return roomCreated !== undefined ? roomCreated.toJSON() : null;
@@ -58,8 +60,8 @@ module.exports = {
     }
 
     if (roomsList.length === 0) {
-      countQuery = `SELECT DISTINCT COUNT(room_id) AS count FROM room  WHERE user_id = ${userId} AND location LIKE '%${location}%' AND room_name LIKE '%${searchBy}%'`;
-      mainQuery = `SELECT * FROM room  WHERE user_id = ${userId} AND location LIKE '%${location}%' AND room_name LIKE '%${searchBy}%' LIMIT ${pageSize} OFFSET ${
+      countQuery = `SELECT DISTINCT COUNT(room_id) AS count FROM room  WHERE user_id LIKE '${userId.toString()}' AND location LIKE '%${location}%' AND room_name LIKE '%${searchBy}%'`;
+      mainQuery = `SELECT * FROM room  WHERE user_id LIKE '${userId.toString()}' AND location LIKE '%${location}%' AND room_name LIKE '%${searchBy}%' LIMIT ${pageSize} OFFSET ${
         pageNumber * pageSize
       } `;
     } else {
@@ -69,11 +71,12 @@ module.exports = {
           (roomsToSearch = roomsToSearch + `room_name LIKE '%${room.replace(/'/g, "\\'")}%' OR `)
       );
       roomsToSearch = roomsToSearch.slice(0, -3);
-      countQuery = `SELECT DISTINCT COUNT(room_id) AS count FROM room  WHERE user_id = ${userId} AND location LIKE '%${location}%' AND room_name LIKE '%${searchBy}%' AND (${roomsToSearch}) `;
-      mainQuery = `SELECT * FROM room  WHERE user_id = ${userId} AND location LIKE '%${location}%' AND (${roomsToSearch}) AND room_name LIKE '%${searchBy}%' LIMIT ${pageSize} OFFSET ${
+      countQuery = `SELECT DISTINCT COUNT(room_id) AS count FROM room  WHERE user_id LIKE '${userId.toString()}' AND location LIKE '%${location}%' AND room_name LIKE '%${searchBy}%' AND (${roomsToSearch}) `;
+      mainQuery = `SELECT * FROM room  WHERE user_id LIKE '${userId.toString()}' AND location LIKE '%${location}%' AND (${roomsToSearch}) AND room_name LIKE '%${searchBy}%' LIMIT ${pageSize} OFFSET ${
         pageNumber * pageSize
       }`;
     }
+
     count = (
       await sequelize.query(
         countQuery,
@@ -91,17 +94,24 @@ module.exports = {
       {
         model: Room,
         mapToModel: true
+      },
+      {
+        model: Camera,
+        mapToModel: true
       }
     );
 
     let roomDetails = Promise.all(
       rooms.map(async (room) => {
         let roomId;
+        let roomName;
         let roomDetails = room;
         if (room.dataValues) {
           roomId = room.dataValues.room_id;
+          roomName = room.dataValues.room_name;
         } else {
           roomId = room.room_id;
+          roomName = room.room_name;
         }
 
         if (room.dataValues) {
@@ -125,7 +135,7 @@ module.exports = {
   // get all room's list for loggedin user
   getAllRoomsList: async (userId) => {
     let roomList = await Room.findAll({
-      attributes: ['room_name', 'room_id'],
+      attributes: ['room_name', 'room_id', 'location'],
       where: { user_id: userId }
     });
 

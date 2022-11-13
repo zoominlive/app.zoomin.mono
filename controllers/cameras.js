@@ -141,11 +141,17 @@ module.exports = {
   // get all camera's
   getAllCameras: async (req, res, next) => {
     try {
-      const rooms = await roomServices.getAllRoomsDetails(req.user.user_id);
+      const filter = {
+        pageNumber: req.query?.pageNumber,
+        pageSize: req.query?.pageSize,
+        location: req.query?.location,
+        searchBy: req.query?.searchBy?.replace(/'/g, "\\'")
+      };
+      const cameras = await cameraServices.getAllCameraForCustomer(req.user.cust_id, filter);
 
       res.status(200).json({
         IsSuccess: true,
-        Data: rooms,
+        Data: cameras,
         Message: `All the cam's Details`
       });
 

@@ -1,15 +1,57 @@
 const { Camera, Room, RecentViewers, Customers } = require('../models/index');
-const moment = require('moment');
 const Sequelize = require('sequelize');
+const sequelize = require('../lib/database');
 
 module.exports = {
   /* Create new camera */
-  getAllCamForLocation: async (userId, location) => {
-    let rooms = await Room.findAll({ raw: true, where: { user_id: userId, location: location } });
+  getAllCamForLocation: async (user, location) => {
+    let rooms = [];
+    if (user?.family_id) {
+      let childDetails;
+      if (user?.family_id) {
+        childDetails = await Child.findAll({
+          raw: true,
+          where: { family_id: user.family_id }
+        });
+      }
+
+      let childDetailsForlocation = [];
+      childDetails?.forEach((child) => {
+        let count = 0;
+        child?.location?.locations?.forEach((loc) => {
+          if (loc === location) {
+            count = count + 1;
+          }
+        });
+
+        if (count > 0) {
+          childDetailsForlocation.push(child);
+        }
+      });
+
+      childDetailsForlocation?.forEach((child) => {
+        child?.rooms?.rooms.forEach((room) => rooms.push(room));
+      });
+
+      rooms = _.uniq(rooms);
+    } else {
+      rooms = await Room.findAll({
+        raw: true,
+        where: { user_id: user.user_id, location: location }
+      });
+    }
 
     let cameras = Promise.all(
       rooms.map(async (room) => {
-        const cams = await Camera.findAll({ raw: true, where: { room_id: room.room_id } });
+        const query = `SELECT * FROM camera WHERE room_ids LIKE '%${room.room_id}%'  `;
+        let cams = await sequelize.query(
+          query,
+          { type: Sequelize.QueryTypes.SELECT },
+          {
+            model: Camera,
+            mapToModel: true
+          }
+        );
 
         return { ...room, cameras: cams };
       })

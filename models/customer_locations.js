@@ -18,7 +18,7 @@ const CustomerLocations = sequelize.define(
       defaultValue: true
     },
     cust_id: {
-      type: Sequelize.INTEGER
+      type: Sequelize.STRING(50)
     },
     created_at: {
       type: 'TIMESTAMP',

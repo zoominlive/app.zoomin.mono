@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken');
 const encrypter = require('object-encrypter');
 const engine = encrypter(process.env.JWT_SECRET_KEY, { ttl: true });
 const _ = require('lodash');
+const { v4: uuidv4 } = require('uuid');
 
 /* Validate email */
 const validateEmail = (emailAdress) => {
@@ -19,6 +20,7 @@ const validateEmail = (emailAdress) => {
 module.exports = {
   /* Create new user */
   createUser: async (userObj) => {
+    userObj.user_id = uuidv4();
     let userCreated = await Users.create(userObj);
 
     return userCreated;

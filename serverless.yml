@@ -6,7 +6,9 @@ frameworkVersion: '3'
 provider:
   name: aws
   deploymentMethod: direct
-  timeout: 20
+  httpApi:
+    cors: true
+  timeout: 15
   tracing:
     lambda: true
   environment:
@@ -26,7 +28,6 @@ provider:
     ACCESS_TOKEN_EXPIRY: 1d
     REFRESH_TOKEN_EXPIRY: 1d
     NODE_ENV: production
-    RTSP_STREAM_BASE_URL: http://35.91.216.67
 
   runtime: nodejs14.x
   stage: dev
@@ -50,179 +51,59 @@ provider:
             - 'ses:SendRawEmail'
           Resource:
             - 'arn:aws:ses:*'
+        - Effect: 'Allow'
+          Action:
+            - 'lambda:InvokeFunction'
+          Resource: '*'
 
 functions:
-  api:
+  userFunction:
     handler: handler.handler
     events:
       - httpApi: '*'
-  getUserDetails:
-    handler: handler.handler
-    events:
-      - httpApi: 'GET /api/users'
-  createUser:
-    handler: handler.handler
-    events:
-      - httpApi: 'POST /api/users/createUser'
-  login:
-    handler: handler.handler
-    events:
-      - httpApi: 'POST /api/users/login'
-  changePassword:
-    handler: handler.handler
-    events:
-      - httpApi: 'PUT /api/users/changePassword'
-  setPassword:
-    handler: handler.handler
-    events:
-      - httpApi: 'POST /api/users/setPassword'
-  forgetPassword:
-    handler: handler.handler
-    events:
-      - httpApi: 'PUT /api/users/forgetPassword'
-  updateUserProfile:
-    handler: handler.handler
-    events:
-      - httpApi: 'PUT /api/users'
-  deleteUserProfile:
-    handler: handler.handler
-    events:
-      - httpApi: 'DELETE /api/users'
-  uploadImageToS3:
-    handler: handler.handler
-    events:
-      - httpApi: 'POST /api/users/uploadImage'
-  deleteImageFromS3:
-    handler: handler.handler
-    events:
-      - httpApi: 'DELETE /api/users/deleteImage'
-  getAllUserDetails:
-    handler: handler.handler
-    events:
-      - httpApi: 'GET /api/users/all'
-  deleteUser:
-    handler: handler.handler
-    events:
-      - httpApi: 'DELETE /api/users/delete'
-  editUser:
-    handler: handler.handler
-    events:
-      - httpApi: 'PUT /api/users/edit'
-  changeRegisteredEmail:
-    handler: handler.handler
-    events:
-      - httpApi: 'POST /api/users/emailChange'
-  isEmailExist:
-    handler: handler.handler
-    events:
-      - httpApi: 'POST /api/users/emailValidation'
+    provisionedConcurrency: 10
 
-  getAllCameras:
+  cameraFunction:
     handler: handler.handler
     events:
-      - httpApi: 'GET /api/cams'
-  createCamera:
-    handler: handler.handler
-    events:
-      - httpApi: 'POST /api/cams/add'
-  deleteCamera:
-    handler: handler.handler
-    events:
-      - httpApi: 'DELETE /api/cams/delete'
+      - httpApi:
+          method: '*'
+          path: /api/cams
+    provisionedConcurrency: 10
 
-  createChild:
+  childFunction:
     handler: handler.handler
     events:
-      - httpApi: 'POST /api/family/child/add'
-  editChild:
-    handler: handler.handler
-    events:
-      - httpApi: 'PUT /api/family/child/edit'
-  disableChild:
-    handler: handler.handler
-    events:
-      - httpApi: 'PUT /api/family/child/disable'
-  enableChild:
-    handler: handler.handler
-    events:
-      - httpApi: 'PUT /api/family/child/enable'
-  deleteChild:
-    handler: handler.handler
-    events:
-      - httpApi: 'DELETE /api/family/child/delete'
-
-  getStreamStatistics:
+      - httpApi:
+          method: '*'
+          path: /api/family/child
+    provisionedConcurrency: 10
+  streamStatisticsFunction:
     handler: handler.handler
     events:
       - httpApi: 'GET /api/dashboard'
-
-  getAllFamilyDetails:
+    provisionedConcurrency: 10
+  familyFunction:
     handler: handler.handler
     events:
-      - httpApi: 'GET /api/family'
-  createFamily:
+      - httpApi:
+          method: '*'
+          path: /api/family
+    provisionedConcurrency: 10
+  roomFunction:
     handler: handler.handler
     events:
-      - httpApi: 'POST /api/family/add'
-  editFamily:
+      - httpApi:
+          method: '*'
+          path: /api/rooms
+    provisionedConcurrency: 10
+  watchStreamFunction:
     handler: handler.handler
     events:
-      - httpApi: 'PUT /api/family/edit'
-  addParent:
-    handler: handler.handler
-    events:
-      - httpApi: 'POST /api/family/addParent'
-  disableFamily:
-    handler: handler.handler
-    events:
-      - httpApi: 'PUT /api/family/disable'
-  enableFamily:
-    handler: handler.handler
-    events:
-      - httpApi: 'PUT /api/family/enable'
-  deleteFamily:
-    handler: handler.handler
-    events:
-      - httpApi: 'DELETE /api/family/delete'
-  validateFamilyMember:
-    handler: handler.handler
-    events:
-      - httpApi: 'POST /api/family/setPassword'
-  changeRegisteredEmailforFamilyMember:
-    handler: handler.handler
-    events:
-      - httpApi: 'POST /api/family/emailChange'
-
-  getAllRoomsDetails:
-    handler: handler.handler
-    events:
-      - httpApi: 'GET /api/rooms'
-  createRoom:
-    handler: handler.handler
-    events:
-      - httpApi: 'POST /api/rooms/add'
-  editRoom:
-    handler: handler.handler
-    events:
-      - httpApi: 'PUT /api/rooms/edit'
-  deleteRoom:
-    handler: handler.handler
-    events:
-      - httpApi: 'DELETE /api/rooms/delete'
-  getAllRoomsList:
-    handler: handler.handler
-    events:
-      - httpApi: 'GET /api/rooms/list'
-
-  getAllCamForLocation:
-    handler: handler.handler
-    events:
-      - httpApi: 'GET /api/watchstream'
-  addRecentViewers:
-    handler: handler.handler
-    events:
-      - httpApi: 'POST /api/watchstream/addviewer'
-
+      - httpApi:
+          method: '*'
+          path: /api/watchstream
+    provisionedConcurrency: 10
   disableScheduledMembers:
     handler: cron.disableScheduledFamilyAndChild
     events:

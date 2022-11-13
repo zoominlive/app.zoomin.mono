@@ -1,5 +1,6 @@
 const roomServices = require('../services/rooms');
-
+const cameraServices = require('../services/cameras');
+const _ = require('lodash');
 module.exports = {
   // create new room
   createRoom: async (req, res, next) => {
@@ -8,6 +9,17 @@ module.exports = {
       params.user_id = req.user.user_id;
       params.cust_id = req.user.cust_id;
       const room = await roomServices.createRoom(params);
+
+      params?.cameras?.forEach(async (camera) => {
+        let rooms = [];
+
+        if (!_.isEmpty(camera.room_ids)) {
+          rooms = camera.room_ids.rooms;
+        }
+        rooms.push({ room_name: room.room_name, room_id: room.room_id });
+
+        await cameraServices.editCamera(camera.cam_id, { room_ids: { rooms: rooms } });
+      });
 
       res.status(201).json({
         IsSuccess: true,
@@ -30,6 +42,17 @@ module.exports = {
     try {
       const params = req.body;
       const room = await roomServices.editRoom(req.user, params);
+
+      params?.cameras?.forEach(async (camera) => {
+        let rooms = camera.room_ids.rooms.filter((room) => room.room_id !== params.room_id);
+        await cameraServices.editCamera(camera.cam_id, { room_ids: { rooms: rooms } });
+      });
+
+      params?.camerasToAdd?.forEach(async (cam) => {
+        let rooms = cam?.room_ids?.rooms;
+        rooms?.push({ room_id: params.room_id, room_name: room?.room_name });
+        await cameraServices.editCamera(cam.cam_id, { room_ids: { rooms: rooms } });
+      });
 
       res.status(200).json({
         IsSuccess: true,

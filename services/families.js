@@ -5,6 +5,7 @@ const _ = require('lodash');
 const sequelize = require('../lib/database');
 const encrypter = require('object-encrypter');
 const engine = encrypter(process.env.JWT_SECRET_KEY, { ttl: true });
+const { v4: uuidv4 } = require('uuid');
 
 const getSecondaryParents = async (familyIdArray) => {
   let ids = '';
@@ -57,9 +58,17 @@ const getPrimaryMember = async (familyId) => {
 module.exports = {
   /* Create new family */
   createFamily: async (familyObj) => {
+    familyObj.family_member_id = uuidv4();
     let familyCreated = await Family.create(familyObj);
 
     return familyCreated !== undefined ? familyCreated.toJSON() : null;
+  },
+
+  /* Create new family */
+  createFamilies: async (familyObj) => {
+    let familyCreated = await Family.bulkCreate(familyObj, { returning: true });
+
+    return familyCreated;
   },
 
   //generate new family Id
@@ -126,7 +135,7 @@ module.exports = {
     }
     let query1;
     if (roomsList.length === 0) {
-      query1 = `SELECT family.* FROM family INNER JOIN child WHERE family.user_id = ${userId} AND child.location LIKE '%${location}%' AND (family.first_name LIKE '%${searchBy}%' OR family.last_name LIKE '%${searchBy}%' OR child.first_name LIKE '%${searchBy}%')`;
+      query1 = `SELECT family.* FROM family INNER JOIN child WHERE family.user_id LIKE '${userId.toString()}' AND child.location LIKE '%${location}%' AND (family.first_name LIKE '%${searchBy}%' OR family.last_name LIKE '%${searchBy}%' OR child.first_name LIKE '%${searchBy}%')`;
     } else {
       let roomsToSearch = '';
 
@@ -136,7 +145,7 @@ module.exports = {
       );
       roomsToSearch = roomsToSearch.slice(0, -3);
 
-      query1 = `SELECT family.* FROM family INNER JOIN child WHERE family.user_id = ${userId} AND child.location LIKE '%${location}%' AND (family.first_name LIKE '%${searchBy}%' OR family.last_name LIKE '%${searchBy}%' OR child.first_name LIKE '%${searchBy}%') AND (${roomsToSearch})`;
+      query1 = `SELECT family.* FROM family INNER JOIN child WHERE family.user_id LIKE '${userId.toString()}' AND child.location LIKE '%${location}%' AND (family.first_name LIKE '%${searchBy}%' OR family.last_name LIKE '%${searchBy}%' OR child.first_name LIKE '%${searchBy}%') AND (${roomsToSearch})`;
     }
     families = await sequelize.query(
       query1,
