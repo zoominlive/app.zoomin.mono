@@ -68,8 +68,10 @@ const AddFamily = (props) => {
         relationship: yup.string().required('Role is required'),
         phone: yup
           .string()
-          .matches(/^(1\s?)?(\d{3}|\(\d{3}\))[\s-]?\d{3}[\s-]?\d{4}$/gm, 'Enter valid phone number')
-          .required('Phone is required'),
+          .matches(
+            /^(1\s?)?(\d{3}|\(\d{3}\))[\s-]?\d{3}[\s-]?\d{4}$/gm,
+            'Enter valid phone number'
+          ),
         email: yup
           .string()
           .email('Enter valid email')
@@ -88,8 +90,7 @@ const AddFamily = (props) => {
             .matches(
               /^(1\s?)?(\d{3}|\(\d{3}\))[\s-]?\d{3}[\s-]?\d{4}$/gm,
               'Enter valid phone number'
-            )
-            .required('Phone is required'),
+            ),
           email: yup
             .string()
             .email('Enter valid email')

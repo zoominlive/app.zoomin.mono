@@ -26,8 +26,9 @@ import {
 } from '@mui/material';
 import React, { useEffect, useMemo } from 'react';
 import { useContext } from 'react';
+// import { Video } from 'react-feather';
 import { useState } from 'react';
-import { Plus } from 'react-feather';
+import { Plus, Video } from 'react-feather';
 import LayoutContext from '../../context/layoutcontext';
 import RoomForm from './roomform';
 import RoomActions from './roomactions';
@@ -41,6 +42,7 @@ import AuthContext from '../../context/authcontext';
 import { useSnackbar } from 'notistack';
 import { errorMessageHandler } from '../../utils/errormessagehandler';
 import debounce from 'lodash.debounce';
+import { Link } from 'react-router-dom';
 
 const Row = (props) => {
   const { row } = props;
@@ -74,7 +76,8 @@ const Row = (props) => {
                 <TableHead>
                   <TableRow>
                     <TableCell sx={{ width: '120px' }}>Camera Name</TableCell>
-                    <TableCell>URL</TableCell>
+                    <TableCell sx={{ width: '360px' }}>Description</TableCell>
+                    <TableCell>Stream Link</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -82,7 +85,19 @@ const Row = (props) => {
                     <TableRow key={index} hover>
                       <TableCell>{camRow.cam_name}</TableCell>
                       <TableCell>
-                        <Typography color="#1565C0">{camRow.cam_uri}</Typography>
+                        <Typography>{camRow.description} </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Link
+                          to="/watch-stream"
+                          state={{
+                            roomName: row?.room_name,
+                            location: row?.location,
+                            camName: camRow?.cam_name,
+                            streamUrl: camRow?.stream_uri
+                          }}>
+                          <Video />
+                        </Link>
                       </TableCell>
                     </TableRow>
                   ))}

@@ -7,7 +7,8 @@ export const currentURL = baseURL;
 // Axios Instance
 const API = axios.create({
   baseURL,
-  responseType: 'json'
+  responseType: 'json',
+  timeout: 1000 * 10
 });
 
 export default API;

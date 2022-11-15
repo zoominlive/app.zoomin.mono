@@ -9,21 +9,20 @@ import {
   FormControl,
   FormHelperText,
   Grid,
-  IconButton,
   InputLabel,
   MenuItem,
+  CircularProgress,
   Select,
-  Stack,
-  TextField
+  Chip,
+  TextField,
+  Autocomplete
 } from '@mui/material';
 import React from 'react';
 import PropTypes from 'prop-types';
-import DeleteIcon from '@mui/icons-material/Delete';
-import AddIcon from '@mui/icons-material/Add';
 import * as yup from 'yup';
-import { FieldArray, Form, Formik } from 'formik';
+import { Form, Formik } from 'formik';
 import { useSnackbar } from 'notistack';
-import DeleteCamDialog from './deletecamdialog';
+
 import { useState } from 'react';
 import { useRef } from 'react';
 import API from '../../api';
@@ -34,39 +33,48 @@ import { LoadingButton } from '@mui/lab';
 import SaveIcon from '@mui/icons-material/Save';
 import { useEffect } from 'react';
 
+var camerasPayload = [];
+
 const validationSchema = yup.object({
   room_name: yup.string('Enter Room name').required('Room name is required'),
-  location: yup.string('Select Location').required('Location is required'),
-  cams: yup.array().of(
-    yup.object().shape({
-      cam_name: yup.string('Enter Camera name').required('Camera name is required'),
-      cam_uri: yup
-        .string()
-        .matches(
-          /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=+$,\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=+$,\w]+@)[A-Za-z0-9.-]+)((?:\/[+~%/.\w-_]*)?\??(?:[-+=&;%@.\w_]*)#?(?:[\w]*))?)/,
-          'Enter correct url'
-        )
-        .required('Camera url is required')
-    })
-  )
+  location: yup.string('Select Location').required('Location is required')
 });
 
 const RoomForm = (props) => {
   const { enqueueSnackbar } = useSnackbar();
   const authCtx = useContext(AuthContext);
-  const [isDeleteCamDialogOpen, setIsDeleteCamDialogOpen] = useState(false);
+  const [initialState, setInitialState] = useState({
+    room_name: props?.room?.room_name ? props?.room?.room_name : '',
+    location: props?.room?.location ? props?.room?.location : '',
+    cameras: camerasPayload ? camerasPayload : []
+  });
   const [submitLoading, setSubmitLoading] = useState(false);
   const [cameraSaveLoading, setCameraSaveLoading] = useState([]);
-  const [camDeleteLoading, setCamDeleteLoading] = useState(false);
   const [disableActions, setDisableActions] = useState(false);
-  const arrayHelpersRef = useRef(null);
   const formikRef = useRef(null);
-  const [cameraIndex, setCameraIndex] = useState();
+  const [dropdownLoading, setDropdownLoading] = useState(false);
   // const maximumCams = 15;
 
   useEffect(() => {
     const tempCameraSaveLoading = props?.room?.camDetails?.map(() => false);
     setCameraSaveLoading(tempCameraSaveLoading || []);
+
+    API.get(`cams/`).then((response) => {
+      setDropdownLoading(true);
+      if (response.status === 200) {
+        const cameras = response.data.Data.cams;
+        setInitialState({ ...initialState, cameras: cameras });
+        setDropdownLoading(false);
+      } else {
+        errorMessageHandler(
+          enqueueSnackbar,
+          response?.response?.data?.Message || 'Something Went Wrong.',
+          response?.response?.status,
+          authCtx.setAuthError
+        );
+        setDropdownLoading(false);
+      }
+    });
   }, []);
 
   useEffect(() => {
@@ -84,7 +92,37 @@ const RoomForm = (props) => {
   const handleSubmit = (data) => {
     setSubmitLoading(true);
     if (props.room) {
-      API.put('rooms/edit', { ...data, room_id: props.room.room_id }).then((response) => {
+      let cameras = [];
+      props.room.camDetails.map((cam) => {
+        let count = 0;
+        data.cameras.forEach((cam1) => {
+          if (cam1.cam_id === cam.cam_id) {
+            count = count + 1;
+          }
+        });
+        if (count === 0) {
+          cameras.push(cam);
+        }
+      });
+      let camerasToAdd = [];
+      data.cameras.forEach((cam) => {
+        let count = 0;
+        props.room.camDetails.forEach((cam1) => {
+          if (cam1.cam_id === cam.cam_id) {
+            count = count + 1;
+          }
+        });
+        if (count == 0) {
+          camerasToAdd.push(cam);
+        }
+      });
+
+      API.put('rooms/edit', {
+        ...data,
+        room_id: props.room.room_id,
+        cameras: cameras,
+        camerasToAdd: camerasToAdd
+      }).then((response) => {
         if (response.status === 200) {
           enqueueSnackbar(response.data.Message, { variant: 'success' });
           const index = props.roomsPayload.rooms.findIndex(
@@ -134,6 +172,7 @@ const RoomForm = (props) => {
         }
         setSubmitLoading(false);
       });
+      handleFormDialogClose();
     }
   };
 
@@ -143,57 +182,14 @@ const RoomForm = (props) => {
     props.setRoom();
   };
 
-  // Method to add camera
-  const handleCamAdd = (index, uri, name) => {
-    setCameraSaveLoading((prevState) => {
-      const temp = [...prevState];
-      temp[index] = true;
-      return temp;
-    });
-    API.post('cams/add', { cam_uri: uri, cam_name: name, room_id: props.room.room_id }).then(
-      (response) => {
-        if (response.status === 201) {
-          arrayHelpersRef.current.replace(index, response.data.Data);
-          props.getRoomsList();
-          enqueueSnackbar(response.data.Message, { variant: 'success' });
-        } else {
-          errorMessageHandler(
-            enqueueSnackbar,
-            response?.response?.data?.Message || 'Something Went Wrong.',
-            response?.response?.status,
-            authCtx.setAuthError
-          );
-        }
-        setCameraSaveLoading((prevState) => {
-          const temp = [...prevState];
-          temp[index] = false;
-          return temp;
-        });
-      }
-    );
-  };
-
-  // Method to delete camera
-  const handleCamDelete = (wait) => {
-    setCamDeleteLoading(true);
-    API.delete('cams/delete', {
-      data: {
-        cam_id: formikRef.current.values.cams[cameraIndex].cam_id,
-        streamId: formikRef.current.values.cams[cameraIndex].stream_uuid,
-        wait
-      }
-    }).then((response) => {
+  const handleGetCamerasForSelectedLocation = (location) => {
+    setDropdownLoading(true);
+    API.get(`cams?location=${location}`).then((response) => {
       if (response.status === 200) {
-        arrayHelpersRef.current.remove(cameraIndex);
-        setCameraSaveLoading((prevState) => {
-          const temp = [...prevState];
-          temp.splice(cameraIndex, 1);
-          return temp;
-        });
-        props.getRoomsList();
-        setIsDeleteCamDialogOpen(false);
-        setCameraIndex();
-        enqueueSnackbar(response.data.Message, { variant: 'success' });
+        const cameras = response.data.Data.cams;
+
+        setInitialState({ ...initialState, cameras: cameras, location: location });
+        setDropdownLoading(false);
       } else {
         errorMessageHandler(
           enqueueSnackbar,
@@ -201,22 +197,16 @@ const RoomForm = (props) => {
           response?.response?.status,
           authCtx.setAuthError
         );
+        setDropdownLoading(false);
       }
-      setCamDeleteLoading(false);
-      handleDialogClose();
     });
-  };
-
-  // Method for closing the delete cam dialog
-  const handleDialogClose = () => {
-    setIsDeleteCamDialogOpen(false);
   };
 
   return (
     <Dialog
       open={props.open}
       onClose={() => {
-        if (!submitLoading && !disableActions && !camDeleteLoading) {
+        if (!submitLoading && !disableActions) {
           handleFormDialogClose();
         }
       }}
@@ -229,16 +219,9 @@ const RoomForm = (props) => {
         validateOnChange
         validationSchema={validationSchema}
         innerRef={formikRef}
-        initialValues={{
-          room_name: props?.room?.room_name ? props?.room?.room_name : '',
-          location: props?.room?.location ? props?.room?.location : '',
-          cams:
-            props?.room?.camDetails && props?.room?.camDetails.length > 0
-              ? props?.room?.camDetails
-              : []
-        }}
+        initialValues={initialState}
         onSubmit={handleSubmit}>
-        {({ values, setFieldValue, touched, errors, validateField, setFieldTouched }) => {
+        {({ values, setFieldValue, touched, errors }) => {
           return (
             <Form>
               <DialogContent>
@@ -251,6 +234,7 @@ const RoomForm = (props) => {
                         value={values?.room_name}
                         onChange={(event) => {
                           setFieldValue('room_name', event.target.value);
+                          setInitialState({ ...initialState, room_name: event.target.value });
                         }}
                         helperText={touched.room_name && errors.room_name}
                         error={touched.room_name && Boolean(errors.room_name)}
@@ -268,6 +252,7 @@ const RoomForm = (props) => {
                           value={values?.location}
                           onChange={(event) => {
                             setFieldValue('location', event.target.value);
+                            handleGetCamerasForSelectedLocation(event.target.value);
                           }}>
                           {authCtx.user &&
                             authCtx.user.location &&
@@ -290,179 +275,48 @@ const RoomForm = (props) => {
                         )}
                       </FormControl>
                     </Grid>
-                  </Grid>
-                  {props?.room?.room_id && (
-                    <>
-                      <Divider textAlign="left" sx={{ mx: '-16px', my: '15px' }}>
-                        CAMERA
-                      </Divider>
-                      <FieldArray
-                        name="cams"
-                        render={(arrayHelpers) => {
-                          arrayHelpersRef.current = arrayHelpers;
-                          return (
-                            <>
-                              {values.cams &&
-                                values.cams.length > 0 &&
-                                values.cams.map((_, index) => (
-                                  <Grid
-                                    key={index}
-                                    className="camera-fields"
-                                    container
-                                    spacing={3}
-                                    sx={{ mb: index !== values.cams.length - 1 && 3 }}>
-                                    <Grid className="name" item xs={6} sm={3} md={3}>
-                                      <TextField
-                                        name={`cams.${index}_cam_name`}
-                                        label="Camera Name"
-                                        value={values?.cams[index]?.cam_name}
-                                        onChange={(event) => {
-                                          setFieldValue(
-                                            `cams[${index}].cam_name`,
-                                            event.target.value
-                                          );
-                                        }}
-                                        helperText={
-                                          touched.cams &&
-                                          touched.cams[index] &&
-                                          touched.cams[index].cam_name &&
-                                          errors.cams &&
-                                          errors.cams[index] &&
-                                          errors.cams[index].cam_name
-                                        }
-                                        error={
-                                          touched.cams &&
-                                          touched.cams[index] &&
-                                          touched.cams[index].cam_name &&
-                                          errors.cams &&
-                                          errors.cams[index] &&
-                                          Boolean(errors.cams[index].cam_name)
-                                        }
-                                        fullWidth
-                                      />
-                                    </Grid>
-                                    <Grid className="url" item xs={12} sm={6} md={6.5}>
-                                      <TextField
-                                        name={`cams.${index}_cam_uri`}
-                                        label="Cam URL"
-                                        value={values?.cams[index]?.cam_uri}
-                                        onChange={(event) => {
-                                          setFieldValue(
-                                            `cams[${index}].cam_uri`,
-                                            event.target.value
-                                          );
-                                        }}
-                                        fullWidth
-                                        helperText={
-                                          touched.cams &&
-                                          touched.cams[index] &&
-                                          touched.cams[index].cam_uri &&
-                                          errors.cams &&
-                                          errors.cams[index] &&
-                                          errors.cams[index].cam_uri
-                                        }
-                                        error={
-                                          touched.cams &&
-                                          touched.cams[index] &&
-                                          touched.cams[index].cam_uri &&
-                                          errors.cams &&
-                                          errors.cams[index] &&
-                                          Boolean(errors.cams[index].cam_uri)
-                                        }
-                                      />
-                                    </Grid>
-                                    <Grid
-                                      className="action"
-                                      item
-                                      xs={6}
-                                      sm={3}
-                                      md={2.5}
-                                      sx={{
-                                        mt:
-                                          touched.cams &&
-                                          touched.cams[index] &&
-                                          (touched.cams[index].cam_uri ||
-                                            touched.cams[index].cam_name) &&
-                                          errors &&
-                                          errors.cams &&
-                                          errors?.cams[index] &&
-                                          (errors.cams[index].cam_name ||
-                                            errors.cams[index].cam_name)
-                                            ? -3
-                                            : 0
-                                      }}>
-                                      <Stack
-                                        className="row-button-wrapper"
-                                        direction="row"
-                                        spacing={3}>
-                                        <IconButton
-                                          aria-label="delete"
-                                          className="row-delete-btn"
-                                          disabled={cameraSaveLoading[index]}
-                                          onClick={() => {
-                                            if (values.cams[index].cam_id) {
-                                              setCameraIndex(index);
-                                              setIsDeleteCamDialogOpen(true);
-                                            } else {
-                                              arrayHelpersRef.current.remove(index);
-                                            }
-                                          }}>
-                                          <DeleteIcon />
-                                        </IconButton>
-
-                                        {!values.cams[index].cam_id && (
-                                          <LoadingButton
-                                            variant="contained"
-                                            loading={cameraSaveLoading[index]}
-                                            onClick={() => {
-                                              validateField(`cams[${index}].cam_uri`);
-                                              setFieldTouched(`cams[${index}].cam_uri`);
-                                              validateField(`cams[${index}].cam_name`);
-                                              setFieldTouched(`cams[${index}].cam_name`);
-
-                                              if (
-                                                values.cams[index].cam_name &&
-                                                values.cams[index].cam_uri &&
-                                                /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=+$,\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=+$,\w]+@)[A-Za-z0-9.-]+)((?:\/[+~%/.\w-_]*)?\??(?:[-+=&;%@.\w_]*)#?(?:[\w]*))?)/.test(
-                                                  values.cams[index].cam_uri
-                                                )
-                                              ) {
-                                                handleCamAdd(
-                                                  index,
-                                                  values.cams[index].cam_uri,
-                                                  values.cams[index].cam_name
-                                                );
-                                              }
-                                            }}>
-                                            Save
-                                          </LoadingButton>
-                                        )}
-                                      </Stack>
-                                    </Grid>
-                                  </Grid>
-                                ))}
-                              <Box className="row-button-wrapper" justifyContent="flex-end" mt={2}>
-                                <Button
-                                  variant="contained"
-                                  endIcon={<AddIcon />}
-                                  sx={{ mt: 1, mr: 4 }}
-                                  onClick={() => {
-                                    arrayHelpers.push({
-                                      cam_name: '',
-                                      cam_uri: ''
-                                    });
-                                    setCameraSaveLoading((prevState) => [...prevState, false]);
-                                  }}
-                                  className="row-add-btn">
-                                  Add CAM
-                                </Button>
-                              </Box>
-                            </>
-                          );
+                    <Grid item xs={12} md={12}>
+                      <Autocomplete
+                        fullWidth
+                        multiple
+                        id="cameras"
+                        options={initialState.cameras ? initialState.cameras : []}
+                        isOptionEqualToValue={(option, value) => option.cam_id === value.cam_id}
+                        getOptionLabel={(option) => {
+                          return option.cam_name;
                         }}
+                        onChange={(_, value) => {
+                          setFieldValue('cameras', value);
+                        }}
+                        renderTags={(value, getTagProps) =>
+                          value.map((option, index) => (
+                            <Chip key={index} label={option.cam_name} {...getTagProps({ index })} />
+                          ))
+                        }
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            label="Camera"
+                            InputProps={{
+                              ...params.InputProps,
+                              endAdornment: (
+                                <React.Fragment>
+                                  {dropdownLoading ? (
+                                    <CircularProgress color="inherit" size={20} />
+                                  ) : null}
+                                  {params.InputProps.endAdornment}
+                                </React.Fragment>
+                              )
+                            }}
+                            placeholder="Camera"
+                            helperText={touched.cameras && errors.cameras}
+                            error={touched.cameras && Boolean(errors.cameras)}
+                            fullWidth
+                          />
+                        )}
                       />
-                    </>
-                  )}
+                    </Grid>
+                  </Grid>
                 </Box>
               </DialogContent>
 
@@ -472,7 +326,7 @@ const RoomForm = (props) => {
                   disabled={disableActions || submitLoading}
                   variant="text"
                   onClick={() => {
-                    if (!submitLoading && !disableActions && !camDeleteLoading) {
+                    if (!submitLoading && !disableActions) {
                       handleFormDialogClose();
                     }
                   }}>
@@ -485,19 +339,13 @@ const RoomForm = (props) => {
                   startIcon={submitLoading && <SaveIcon />}
                   variant="text"
                   type="submit">
-                  {props?.room?.room_id ? 'SAVE CHANGES' : 'SAVE ROOM & ADD CAMERA'}
+                  {props?.room?.room_id ? 'SAVE CHANGES' : 'SAVE ROOM'}
                 </LoadingButton>
               </DialogActions>
             </Form>
           );
         }}
       </Formik>
-      <DeleteCamDialog
-        open={isDeleteCamDialogOpen}
-        loading={camDeleteLoading}
-        handleCamDelete={handleCamDelete}
-        handleDialogClose={handleDialogClose}
-      />
     </Dialog>
   );
 };

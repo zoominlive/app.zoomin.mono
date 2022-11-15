@@ -6,12 +6,10 @@ import screenfull from 'screenfull';
 import { useEffect } from 'react';
 import PropTypes from 'prop-types';
 import Loader from '../common/loader';
-import { useSnackbar } from 'notistack';
 import { useContext } from 'react';
 import AuthContext from '../../context/authcontext';
 
 const CustomPlayer = (props) => {
-  const { enqueueSnackbar } = useSnackbar();
   const authCtx = useContext(AuthContext);
   const [playing, setPlaying] = useState(false);
   const [inPIPMode, setInPIPMode] = useState(false);
@@ -67,7 +65,6 @@ const CustomPlayer = (props) => {
         }}
         onError={() => {
           if (showErrorMessage) {
-            enqueueSnackbar('Something went wrong while playing the video', { variant: 'error' });
             setReady(true);
             setShowErrorMessage(false);
           }

@@ -21,10 +21,12 @@ import { errorMessageHandler } from '../../utils/errormessagehandler';
 import { useSnackbar } from 'notistack';
 import { publicIpv4 } from 'public-ip';
 import axios from 'axios';
+import { useLocation } from 'react-router-dom';
 
 const WatchStream = () => {
   const layoutCtx = useContext(LayoutContext);
   const authCtx = useContext(AuthContext);
+  const location = useLocation();
   const { enqueueSnackbar } = useSnackbar();
   const [camerasPayload, setCamerasPayload] = useState({
     location: '',
@@ -37,10 +39,13 @@ const WatchStream = () => {
   const [cameras, setCameras] = useState([]);
   const [selectedRoom, setSelectedRoom] = useState();
   const [userInfoSent, setUserInfoSent] = useState(false);
+  const [streamDetails, setStreamDetails] = useState();
+  const [textFocus, setTextFocus] = useState({ location: false, room: false, cameras: false });
 
   useEffect(() => {
     layoutCtx.setActive(5);
     layoutCtx.setBreadcrumb(['Watch Stream']);
+    setStreamDetails(location.state);
     return () => {
       authCtx.setPreviosPagePath(window.location.pathname);
     };
@@ -71,11 +76,13 @@ const WatchStream = () => {
         .find((room) => room.room_id === selectedRoom.room_id)
         .cameras.filter((camera) => camera.stream_uri);
       setCameras(cameras);
+      setStreamDetails('');
     }
   }, [selectedRoom]);
 
   const handleLocationChange = (_, value) => {
     setCamerasPayload({ cameras: [], location: value, room: '' });
+    setStreamDetails('');
     setLimitReached(false);
   };
   const handleRoomChange = (_, value) => {
@@ -146,7 +153,25 @@ const WatchStream = () => {
                 options={authCtx.user.location.accessable_locations}
                 id="location"
                 onChange={handleLocationChange}
-                renderInput={(params) => <TextField {...params} label="Location" />}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label={
+                      streamDetails?.location && !textFocus.location
+                        ? streamDetails?.location
+                        : 'Location'
+                    }
+                    InputLabelProps={{
+                      style: { color: streamDetails?.location ? 'black' : 'grey' }
+                    }}
+                    onClick={() => {
+                      setTextFocus({ ...textFocus, location: true });
+                    }}
+                    onBlur={() => {
+                      setTextFocus({ ...textFocus, location: false });
+                    }}
+                  />
+                )}
               />
             </Grid>
             <Grid item md={3} sm={12}>
@@ -168,7 +193,18 @@ const WatchStream = () => {
                 renderInput={(params) => (
                   <TextField
                     {...params}
-                    label="Room"
+                    label={
+                      streamDetails?.roomName && !textFocus.room ? streamDetails?.roomName : 'Room'
+                    }
+                    InputLabelProps={{
+                      style: { color: streamDetails?.roomName ? 'black' : 'grey' }
+                    }}
+                    onClick={() => {
+                      setTextFocus({ ...textFocus, room: true });
+                    }}
+                    onBlur={() => {
+                      setTextFocus({ ...textFocus, room: false });
+                    }}
                     InputProps={{
                       ...params.InputProps,
                       endAdornment: (
@@ -210,7 +246,20 @@ const WatchStream = () => {
                 renderInput={(params) => (
                   <TextField
                     {...params}
-                    label="Cameras"
+                    label={
+                      streamDetails?.camName && !textFocus.cameras
+                        ? streamDetails?.camName
+                        : 'Cameras'
+                    }
+                    InputLabelProps={{
+                      style: { color: streamDetails?.camName ? 'black' : 'grey' }
+                    }}
+                    onClick={() => {
+                      setTextFocus({ ...textFocus, cameras: true });
+                    }}
+                    onBlur={() => {
+                      setTextFocus({ ...textFocus, cameras: false });
+                    }}
                     fullWidth
                     placeholder="Cameras"
                     helperText={limitReached && 'Maxmimum two cameras can be selected'}
@@ -228,7 +277,7 @@ const WatchStream = () => {
               />
             </Grid>
           </Grid>
-          {camerasPayload.cameras.length === 0 && (
+          {camerasPayload.cameras.length === 0 && !streamDetails?.streamUrl && (
             <Box mt={2} sx={{ height: '600px' }} className="no-camera-wrapper">
               <Stack
                 className="no-camera-stack"
@@ -238,6 +287,11 @@ const WatchStream = () => {
                 <img src={VideoOff} />
                 <Typography>Camera not selected</Typography>
               </Stack>
+            </Box>
+          )}
+          {streamDetails?.streamUrl && camerasPayload.cameras.length === 0 && (
+            <Box mt={2}>
+              <CustomPlayer streamUri={streamDetails?.streamUrl} />
             </Box>
           )}
           {camerasPayload.cameras.length === 1 && (

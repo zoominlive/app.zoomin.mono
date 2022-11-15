@@ -93,7 +93,7 @@ const AccountMenu = (props) => {
               props.openLogoutDialog(true);
               handleClose(event);
             }}>
-            <ListItemText className="logout-text">LOG OUT</ListItemText>
+            <ListItemText className="logout-text">SIGN OUT</ListItemText>
           </MenuItem>
         </MenuList>
       </Menu>

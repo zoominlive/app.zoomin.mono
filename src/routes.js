@@ -4,6 +4,7 @@ import Dashboard from './components/dashboard/dashboard';
 import Families from './components/families/families';
 import Profile from './components/profile/profile';
 import Rooms from './components/rooms/rooms';
+import Cameras from './components/cameras/cameras';
 import Settings from './components/settings/settings';
 import Users from './components/users/users';
 import WatchStream from './components/watchstream/watchstream';
@@ -21,6 +22,7 @@ const AppRoutes = () => {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/families" element={<Families />} />
           <Route path="/rooms" element={<Rooms />} />
+          <Route path="/cameras" element={<Cameras />} />
           <Route path="/settings" element={<Settings />} />{' '}
         </>
       )}

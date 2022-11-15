@@ -314,7 +314,9 @@ const FamilyDrawer = (props) => {
       <Stack direction="row" justifyContent="space-between" alignItems="center" p={2}>
         <Typography variant="h5">Family</Typography>
       </Stack>
-      <Divider sx={{ marginBottom: '30px' }} />
+      <Divider textAlign="left" className="title-divider">
+        PRIMARY FAMILY MEMBER
+      </Divider>
       <Stack
         spacing={1.5}
         px={2.5}
@@ -353,7 +355,7 @@ const FamilyDrawer = (props) => {
       {props?.family?.secondary && props?.family?.secondary?.length > 0 && (
         <>
           <Divider textAlign="left" className="title-divider">
-            OTHER FAMILY
+            OTHER FAMILY MEMBERS
           </Divider>
           {props.family.secondary.map((parent, index) => (
             <Box key={index}>

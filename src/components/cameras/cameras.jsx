@@ -1,0 +1,294 @@
+import {
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Chip,
+  FormControl,
+  Grid,
+  InputLabel,
+  MenuItem,
+  Paper,
+  Select,
+  Stack,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TablePagination,
+  TableRow,
+  TextField,
+  Typography
+} from '@mui/material';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useContext } from 'react';
+import { Plus } from 'react-feather';
+import LayoutContext from '../../context/layoutcontext';
+import CameraForm from './cameraform';
+import CameraActions from './cameraactions';
+import DeleteDialog from '../common/deletedialog';
+import API from '../../api';
+import { errorMessageHandler } from '../../utils/errormessagehandler';
+import AuthContext from '../../context/authcontext';
+import { useSnackbar } from 'notistack';
+import Loader from '../common/loader';
+import debounce from 'lodash.debounce';
+
+const Cameras = () => {
+  const layoutCtx = useContext(LayoutContext);
+  const authCtx = useContext(AuthContext);
+  const { enqueueSnackbar } = useSnackbar();
+  const [isCameraFormDialogOpen, setIsCameraFormDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [camerasList, setCamerasList] = useState([]);
+  const [totalCameras, setTotalCameras] = useState(0);
+  const [camera, setCamera] = useState();
+  const [camerasPayload, setCamerasPayload] = useState({
+    pageNumber: 0,
+    pageSize: parseInt(process.env.REACT_APP_PAGINATION_LIMIT, 10),
+    searchBy: '',
+    location: 'All'
+  });
+
+  useEffect(() => {
+    layoutCtx.setActive(6);
+    layoutCtx.setBreadcrumb(['Cameras']);
+    return () => {
+      authCtx.setPreviosPagePath(window.location.pathname);
+    };
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      debouncedResults.cancel();
+    };
+  });
+
+  useEffect(() => {
+    getCamerasList();
+  }, [camerasPayload]);
+
+  // Method to fetch user list for table
+  const getCamerasList = () => {
+    setIsLoading(true);
+    API.get('cams/', { params: camerasPayload }).then((response) => {
+      if (response.status === 200) {
+        setCamerasList(response.data.Data.cams);
+        setTotalCameras(response.data.Data.count);
+      } else {
+        errorMessageHandler(
+          enqueueSnackbar,
+          response?.response?.data?.Message || 'Something Went Wrong.',
+          response?.response?.status,
+          authCtx.setAuthError
+        );
+      }
+      setIsLoading(false);
+    });
+  };
+
+  // Method to delete user
+  const handleCameraDelete = () => {
+    setDeleteLoading(true);
+    API.delete('cams/delete', { data: { cam_id: camera.cam_id } }).then((response) => {
+      if (response.status === 200) {
+        getCamerasList();
+        enqueueSnackbar(response.data.Message, {
+          variant: 'success'
+        });
+      } else {
+        errorMessageHandler(
+          enqueueSnackbar,
+          response?.response?.data?.Message || 'Something Went Wrong.',
+          response?.response?.status,
+          authCtx.setAuthError
+        );
+      }
+      setCamera();
+      setDeleteLoading(false);
+      setIsDeleteDialogOpen(false);
+    });
+  };
+
+  // Method to change the page in table
+  const handlePageChange = (_, newPage) => {
+    setCamerasPayload((prevPayload) => ({ ...prevPayload, pageNumber: newPage }));
+  };
+
+  // Method to change the row per page in table
+  const handleChangeRowsPerPage = (event) => {
+    setCamerasPayload((prevPayload) => ({
+      ...prevPayload,
+      pageSize: parseInt(event.target.value, 10)
+    }));
+  };
+
+  // Method to handle Search for table
+  const handleSearch = (event) => {
+    setCamerasPayload((prevPayload) => ({
+      ...prevPayload,
+      pageNumber: 0,
+      searchBy: event.target.value ? event.target.value : ''
+    }));
+  };
+
+  // Method to handle location change for table
+  const handleLocationChange = (event) => {
+    setCamerasPayload((prevPayload) => ({ ...prevPayload, location: event.target.value }));
+  };
+
+  // Calls the search handler after 500ms
+  const debouncedResults = useMemo(() => {
+    return debounce(handleSearch, 500);
+  }, []);
+
+  return (
+    <Box className="listing-wrapper">
+      <Card>
+        <CardContent>
+          <Box>
+            <Grid container spacing={2}>
+              <Grid item md={8} sm={12}>
+                <Box>
+                  <Grid container spacing={2}>
+                    <Grid item md={5} sm={12}>
+                      <TextField
+                        label="Search"
+                        placeholder="Cam Name,Description"
+                        onChange={debouncedResults}
+                      />
+                    </Grid>
+                    <Grid item md={3} sm={12}>
+                      <FormControl fullWidth className="location-select">
+                        <InputLabel id="location">Location</InputLabel>
+                        <Select
+                          labelId="location"
+                          id="location"
+                          value={camerasPayload?.location}
+                          label="Location"
+                          onChange={handleLocationChange}>
+                          <MenuItem value={'All'}>All</MenuItem>
+                          {authCtx.user.location.accessable_locations
+                            .sort((a, b) => (a > b ? 1 : -1))
+                            .map((location, index) => (
+                              <MenuItem key={index} value={location}>
+                                {location}
+                              </MenuItem>
+                            ))}
+                        </Select>
+                      </FormControl>
+                    </Grid>
+                  </Grid>
+                </Box>
+              </Grid>
+              <Grid
+                item
+                md={4}
+                sm={12}
+                sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
+                <Box>
+                  <Button
+                    className="add-btn"
+                    variant="contained"
+                    startIcon={<Plus />}
+                    onClick={() => setIsCameraFormDialogOpen(true)}>
+                    {' '}
+                    Add Camera
+                  </Button>
+                </Box>
+              </Grid>
+            </Grid>
+          </Box>
+
+          <Box mt={2} position="relative">
+            <Loader loading={isLoading} />
+            <TableContainer component={Paper}>
+              <Table sx={{ minWidth: 650 }} aria-label="simple table">
+                <TableHead>
+                  <TableRow>
+                    <TableCell style={{ minWidth: '100px' }}>Camera</TableCell>
+                    <TableCell style={{ minWidth: '100px' }} align="left">
+                      Location
+                    </TableCell>
+                    <TableCell align="left">Description</TableCell>
+                    <TableCell align="left">URL</TableCell>
+                    <TableCell align="right"></TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {camerasList.map((row, index) => (
+                    <TableRow key={index} hover>
+                      <TableCell component="th" scope="row">
+                        <Stack direction="row" alignItems="center" spacing={3}>
+                          <Typography>{`${row.cam_name.toUpperCase()}`}</Typography>
+                        </Stack>
+                      </TableCell>
+                      <TableCell align="left">
+                        <Stack direction="row">
+                          <Chip key={index} label={row.location} color="primary" />
+                        </Stack>
+                      </TableCell>
+                      <TableCell component="th" scope="row">
+                        <Stack direction="row" alignItems="center" spacing={3}>
+                          <Typography>{`${row.description}`}</Typography>
+                        </Stack>
+                      </TableCell>
+                      <TableCell component="th" scope="row">
+                        <Stack direction="row" alignItems="center" spacing={3}>
+                          <Typography>{`${row.cam_uri}`}</Typography>
+                        </Stack>
+                      </TableCell>
+                      <TableCell align="right">
+                        <CameraActions
+                          camera={row}
+                          setCamera={setCamera}
+                          setIsCameraFormDialogOpen={setIsCameraFormDialogOpen}
+                          setIsDeleteDialogOpen={setIsDeleteDialogOpen}
+                        />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              <TablePagination
+                rowsPerPageOptions={[5, 10, 20, 25, 50]}
+                onPageChange={handlePageChange}
+                onRowsPerPageChange={handleChangeRowsPerPage}
+                component="div"
+                count={totalCameras}
+                rowsPerPage={camerasPayload?.pageSize}
+                page={camerasPayload?.pageNumber}
+                sx={{ flex: '1 1 auto' }}
+              />
+            </TableContainer>
+          </Box>
+        </CardContent>
+      </Card>
+      {isCameraFormDialogOpen && (
+        <CameraForm
+          open={isCameraFormDialogOpen}
+          setOpen={setIsCameraFormDialogOpen}
+          camera={camera}
+          setCamera={setCamera}
+          getCamerasList={getCamerasList}
+        />
+      )}
+      <DeleteDialog
+        open={isDeleteDialogOpen}
+        title="Delete Camera"
+        contentText={'Are you sure you want to delete this camera?'}
+        loading={deleteLoading}
+        handleDialogClose={() => {
+          setCamera();
+          setIsDeleteDialogOpen(false);
+        }}
+        handleDelete={handleCameraDelete}
+      />
+    </Box>
+  );
+};
+
+export default Cameras;

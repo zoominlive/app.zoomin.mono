@@ -34,10 +34,10 @@ const LogoutDialog = (props) => {
       }}
       fullWidth
       className="logout-dialog">
-      <DialogTitle>Logout</DialogTitle>
+      <DialogTitle>Signout</DialogTitle>
       <Divider />
       <DialogContent>
-        <DialogContentText>Are you sure you want to logout?</DialogContentText>
+        <DialogContentText>Are you sure you want to signout?</DialogContentText>
       </DialogContent>
       <Divider />
       <DialogActions>
@@ -50,7 +50,7 @@ const LogoutDialog = (props) => {
           startIcon={isDeleteLoading && <SaveIcon />}
           variant="text"
           onClick={handleLogout}>
-          LOG OUT
+          SIGN OUT
         </LoadingButton>
       </DialogActions>
     </Dialog>

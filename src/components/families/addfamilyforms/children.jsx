@@ -6,10 +6,30 @@ import { FieldArray } from 'formik';
 import PropTypes from 'prop-types';
 import { useContext } from 'react';
 import AuthContext from '../../../context/authcontext';
+import { useState } from 'react';
+import { useEffect } from 'react';
 
 const Children = (props) => {
   const authCtx = useContext(AuthContext);
-
+  const [selectedLocation, setSelectedLocation] = useState([]);
+  const [roomList, setRoomList] = useState([]);
+  useEffect(() => {
+    let rooms = [];
+    props.roomsList?.map((room) => {
+      console.log(room, 'rooms');
+      let count = 0;
+      selectedLocation?.forEach((location) => {
+        if (room.location === location) {
+          count = count + 1;
+        }
+      });
+      if (count > 0) {
+        rooms.push(room);
+      }
+    });
+    setRoomList(rooms);
+    console.log(selectedLocation, rooms);
+  }, [selectedLocation]);
   return (
     <FieldArray
       name="children"
@@ -83,14 +103,61 @@ const Children = (props) => {
                         }
                       />
                     </Grid>
+
                     <Grid item md={5} sm={12}>
                       <Autocomplete
                         fullWidth
                         multiple
-                        id={`children.${index}.rooms`}
-                        options={props.roomsList.sort((a, b) =>
+                        id={`children.${index}.locations`}
+                        options={authCtx?.user?.location?.selected_locations.sort((a, b) =>
                           a.room_name > b.room_name ? 1 : -1
                         )}
+                        value={props?.values?.children[index]?.locations}
+                        onChange={(_, value) => {
+                          props.setFieldValue(`children[${index}].locations`, value);
+                          setSelectedLocation(value);
+                        }}
+                        renderTags={(value, getTagProps) =>
+                          value.map((option, index) => (
+                            <Chip key={index} label={option} {...getTagProps({ index })} />
+                          ))
+                        }
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            label="Locations"
+                            fullWidth
+                            helperText={
+                              props.touched &&
+                              props.touched.children &&
+                              props.touched.children[index] &&
+                              props.touched.children[index].locations &&
+                              props.errors &&
+                              props.errors.children &&
+                              props.errors.children[index] &&
+                              props.errors.children[index].locations
+                            }
+                            error={
+                              props.touched &&
+                              props.touched.children &&
+                              props.touched.children[index] &&
+                              props.touched.children[index].locations &&
+                              props.errors &&
+                              props.errors.children &&
+                              props.errors.children[index] &&
+                              Boolean(props.errors.children[index].locations)
+                            }
+                          />
+                        )}
+                      />
+                    </Grid>
+                    <Grid item md={5} sm={12}>
+                      <Autocomplete
+                        fullWidth
+                        multiple
+                        noOptionsText={'Select location first'}
+                        id={`children.${index}.rooms`}
+                        options={roomList ? roomList?.sort((a, b) => (a > b ? 1 : -1)) : []}
                         value={props?.values?.children[index]?.rooms}
                         isOptionEqualToValue={(option, value) => option.room_id === value.room_id}
                         getOptionLabel={(option) => {
@@ -132,52 +199,6 @@ const Children = (props) => {
                               props.errors.children &&
                               props.errors.children[index] &&
                               Boolean(props.errors.children[index].rooms)
-                            }
-                          />
-                        )}
-                      />
-                    </Grid>
-                    <Grid item md={5} sm={12}>
-                      <Autocomplete
-                        fullWidth
-                        multiple
-                        id={`children.${index}.locations`}
-                        options={authCtx?.user?.location?.selected_locations.sort((a, b) =>
-                          a > b ? 1 : -1
-                        )}
-                        value={props?.values?.children[index]?.locations}
-                        onChange={(_, value) => {
-                          props.setFieldValue(`children[${index}].locations`, value);
-                        }}
-                        renderTags={(value, getTagProps) =>
-                          value.map((option, index) => (
-                            <Chip key={index} label={option} {...getTagProps({ index })} />
-                          ))
-                        }
-                        renderInput={(params) => (
-                          <TextField
-                            {...params}
-                            label="Locations"
-                            fullWidth
-                            helperText={
-                              props.touched &&
-                              props.touched.children &&
-                              props.touched.children[index] &&
-                              props.touched.children[index].locations &&
-                              props.errors &&
-                              props.errors.children &&
-                              props.errors.children[index] &&
-                              props.errors.children[index].locations
-                            }
-                            error={
-                              props.touched &&
-                              props.touched.children &&
-                              props.touched.children[index] &&
-                              props.touched.children[index].locations &&
-                              props.errors &&
-                              props.errors.children &&
-                              props.errors.children[index] &&
-                              Boolean(props.errors.children[index].locations)
                             }
                           />
                         )}

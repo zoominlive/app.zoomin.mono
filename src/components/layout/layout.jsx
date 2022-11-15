@@ -13,7 +13,7 @@ import smallLogo from '../../assets/small-logo.svg';
 import collapseButton from '../../assets/collapse-button.svg';
 import openButton from '../../assets/open-button.svg';
 import React, { useEffect, useState } from 'react';
-import { Monitor, Users, Copy, User, Video, Book, Shield } from 'react-feather';
+import { Monitor, Users, Copy, User, Video, Book, Shield, Camera } from 'react-feather';
 import AccountMenu from '../common/accountmenu';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { useContext } from 'react';
@@ -95,6 +95,12 @@ const Layout = () => {
       icon: <Copy />,
       link: '/rooms',
       key: 3
+    },
+    {
+      name: 'Cameras',
+      icon: <Camera />,
+      link: '/cameras',
+      key: 6
     },
     {
       name: 'Users',
