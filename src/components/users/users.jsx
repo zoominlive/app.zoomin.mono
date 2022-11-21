@@ -172,7 +172,7 @@ const Users = () => {
                           label="Location"
                           onChange={handleLocationChange}>
                           <MenuItem value={'All'}>All</MenuItem>
-                          {authCtx.user.location.accessable_locations
+                          {authCtx?.user?.location?.accessable_locations
                             .sort((a, b) => (a > b ? 1 : -1))
                             .map((location, index) => (
                               <MenuItem key={index} value={location}>

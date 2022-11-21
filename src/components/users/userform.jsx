@@ -77,8 +77,7 @@ const UserForm = (props) => {
         selected_locations: data.locations,
         accessable_locations: props.user ? props.user.location.accessable_locations : data.locations
       },
-      image: !props.user ? base64Image : image ? (base64Image ? base64Image : image) : null,
-      cust_id: authCtx.user.cust_id
+      image: !props.user ? base64Image : image ? (base64Image ? base64Image : image) : null
     };
     delete payload.locations;
     setSubmitLoading(true);

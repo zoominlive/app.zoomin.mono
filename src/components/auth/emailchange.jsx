@@ -19,7 +19,7 @@ const EmailChange = () => {
   useEffect(() => {
     setIsLoading(true);
     const queryParams = search?.substring(1)?.split('&');
-    const token = queryParams && queryParams[0]?.substring(6);
+    const token = queryParams && queryParams[0];
     const type = queryParams && queryParams[1]?.substring(5);
     API.post(type === 'family' ? 'family/emailChange' : 'users/emailChange', { token: token }).then(
       (response) => {
@@ -27,8 +27,10 @@ const EmailChange = () => {
           enqueueSnackbar(response.data.Message, {
             variant: 'success'
           });
+          setIsLoading(false);
           setSuccess(true);
         } else {
+          setIsLoading(false);
           setSuccess(false);
           errorMessageHandler(
             enqueueSnackbar,
@@ -38,7 +40,6 @@ const EmailChange = () => {
         }
       }
     );
-    setIsLoading(false);
   }, []);
 
   return (
@@ -49,15 +50,21 @@ const EmailChange = () => {
           <CardContent>
             <Stack direction="row" spacing={3} alignItems="center" justifyContent="center">
               {success ? (
-                <Avatar sx={{ color: 'green', background: '#1976D20A' }}>
-                  <CheckIcon />
-                </Avatar>
+                <>
+                  <Avatar sx={{ color: 'green', background: '#1976D20A' }}>
+                    <CheckIcon />
+                  </Avatar>
+                  <Typography>Email Successfully Changed</Typography>
+                </>
               ) : (
-                <Avatar sx={{ color: 'red', background: '#1976D20A' }}>
-                  <ErrorIcon />
-                </Avatar>
+                <>
+                  {' '}
+                  <Avatar sx={{ color: 'red', background: '#1976D20A' }}>
+                    <ErrorIcon />
+                  </Avatar>
+                  <Typography>Something went wrong.</Typography>
+                </>
               )}
-              <Typography>Something went wrong.</Typography>
             </Stack>
           </CardContent>
         </Card>
