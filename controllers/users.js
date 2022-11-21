@@ -12,7 +12,7 @@ const TinyURL = require('tinyurl');
 const encrypter = require('object-encrypter');
 const engine = encrypter(process.env.JWT_SECRET_KEY, { ttl: true });
 const customerServices = require('../services/customers');
-
+const moment = require('moment');
 module.exports = {
   /* Get  user's details */
   getUserDetails: async (req, res, next) => {
@@ -35,6 +35,7 @@ module.exports = {
   createUser: async (req, res, next) => {
     try {
       const params = req.body;
+      params.cust_id = req.user.cust_id;
 
       let checkUserValidation = await userServices.userValidation(params);
 
@@ -89,7 +90,7 @@ module.exports = {
   loginUser: async (req, res, next) => {
     try {
       let { email, password } = req.body;
-
+      console.log(moment().format('HH:mm'));
       let emailIs = email;
 
       emailIs = emailIs.toLowerCase();
@@ -114,7 +115,7 @@ module.exports = {
 
           if (validPassword) {
             const token = await userServices.createUserToken(user.user_id);
-            const userData = _.omit(user, ['password']);
+            const userData = _.omit(user, ['password', 'cust_id']);
             res
               .status(200)
               .json({ IsSuccess: true, Data: { userData, ...token }, Message: 'User logged in' });
@@ -136,7 +137,7 @@ module.exports = {
 
           if (validPassword) {
             const token = await familyServices.createFamilyMemberToken(familyUser.family_member_id);
-            const userData = _.omit(familyUser, ['password']);
+            const userData = _.omit(familyUser, ['password', 'cust_id']);
             res
               .status(200)
               .json({ IsSuccess: true, Data: { userData, ...token }, Message: 'User logged in' });
@@ -194,43 +195,57 @@ module.exports = {
     try {
       const { token, password } = req.body;
       const decodeToken = engine.decrypt(token);
-      let user;
 
-      user = await userServices.getUserById(decodeToken.userId);
+      if (decodeToken?.userId) {
+        let user;
 
-      if (user) {
-        if (!user?.password) {
-          const salt = await bcrypt.genSaltSync(10);
-          let hashPassword = bcrypt.hashSync(password, salt);
+        user = await userServices.getUserById(decodeToken.userId);
 
-          const setPassword = await userServices.resetPassword(decodeToken.userId, hashPassword);
-          res
-            .status(200)
-            .json({ IsSuccess: true, Data: {}, Message: 'User password reset successful' });
-        } else if (user?.password) {
-          if (user.password === decodeToken?.password) {
+        if (user) {
+          if (!user?.password) {
             const salt = await bcrypt.genSaltSync(10);
             let hashPassword = bcrypt.hashSync(password, salt);
+
             const setPassword = await userServices.resetPassword(decodeToken.userId, hashPassword);
+
+            await userServices.editUserProfile(user, { password_link: 'inactive' });
             res
               .status(200)
               .json({ IsSuccess: true, Data: {}, Message: 'User password reset successful' });
+          } else if (user?.password) {
+            if (user.password === decodeToken?.password) {
+              const salt = await bcrypt.genSaltSync(10);
+              let hashPassword = bcrypt.hashSync(password, salt);
+              const setPassword = await userServices.resetPassword(
+                decodeToken.userId,
+                hashPassword
+              );
+
+              await userServices.editUserProfile(user, {
+                password_link: 'inactive'
+              });
+              res
+                .status(200)
+                .json({ IsSuccess: true, Data: {}, Message: 'User password reset successful' });
+            } else {
+              res.status(400).json({
+                IsSuccess: false,
+                Data: {},
+                Message: 'password is already changed, please verify again to change password'
+              });
+            }
           } else {
             res.status(400).json({
               IsSuccess: false,
               Data: {},
-              Message: 'password is already changed, please verify again to change password'
+              Message: 'Invalid token '
             });
           }
         } else {
-          res.status(400).json({
-            IsSuccess: false,
-            Data: {},
-            Message: 'Invalid token '
-          });
+          res.status(400).json({ IsSuccess: true, Data: {}, Message: 'No user found' });
         }
       } else {
-        res.status(400).json({ IsSuccess: true, Data: {}, Message: 'No user found' });
+        res.status(400).json({ IsSuccess: true, Data: {}, Message: 'Link Expired' });
       }
       next();
     } catch (error) {
@@ -258,6 +273,7 @@ module.exports = {
             req.get('Referrer') + 'set-password?' + 'token=' + token + '&type=user';
           const short_url = await TinyURL.shorten(originalUrl);
           await sendForgetPasswordMail(name, email, short_url);
+          await userServices.editUserProfile(user, { password_link: 'active' });
         } else {
           const token = await familyServices.createPasswordToken(userData);
           const name = userData.first_name + ' ' + userData.last_name;
@@ -265,6 +281,10 @@ module.exports = {
             req.get('Referrer') + 'set-password?' + 'token=' + token + '&type=family';
           const short_url = await TinyURL.shorten(originalUrl);
           await sendForgetPasswordMail(name, email, short_url);
+          await familyServices.editFamily({
+            family_member_id: user.family_member_id,
+            password_link: 'active'
+          });
         }
 
         res.status(200).json({
@@ -462,17 +482,23 @@ module.exports = {
       const { token } = req.body;
       const decodeToken = engine.decrypt(token);
 
-      const user = await userServices.getUserById(decodeToken.userId);
+      if (decodeToken?.userId) {
+        const user = await userServices.getUserById(decodeToken.userId);
 
-      if (user.email !== decodeToken.email) {
-        const emailChanged = await userServices.editUserProfile(
-          { user_id: decodeToken.userId },
-          { email: decodeToken.email }
-        );
+        if (user.email !== decodeToken.email) {
+          const emailChanged = await userServices.editUserProfile(
+            { user_id: decodeToken.userId },
+            { email: decodeToken.email }
+          );
 
-        res.status(200).json({ IsSuccess: true, Data: {}, Message: 'Email successfully changed ' });
+          res
+            .status(200)
+            .json({ IsSuccess: true, Data: {}, Message: 'Email successfully changed ' });
+        } else {
+          res.status(400).json({ IsSuccess: true, Data: {}, Message: 'Email is already changed' });
+        }
       } else {
-        res.status(400).json({ IsSuccess: true, Data: {}, Message: 'Email is already changed' });
+        res.status(400).json({ IsSuccess: true, Data: {}, Message: 'Link Expired' });
       }
 
       next();
@@ -522,6 +548,39 @@ module.exports = {
         Message: emailExist ? 'Email already exist' : 'Email is available to use'
       });
 
+      next();
+    } catch (error) {
+      res.status(500).json({ IsSuccess: false, Message: error.message });
+      next(error);
+    }
+  },
+
+  checkLinkValid: async (req, res, next) => {
+    try {
+      const { token, password } = req.body;
+      const decodeToken = engine.decrypt(token);
+
+      if (decodeToken?.userId) {
+        let user;
+
+        user = await userServices.getUserById(decodeToken.userId);
+
+        if (user) {
+          if (user?.password_link === 'active') {
+            res.status(200).json({ IsSuccess: true, Data: 'active', Message: 'Link is valid' });
+          } else {
+            res.status(400).json({
+              IsSuccess: false,
+              Data: 'inactive',
+              Message: 'Link expired'
+            });
+          }
+        } else {
+          res.status(400).json({ IsSuccess: true, Data: {}, Message: 'No user found' });
+        }
+      } else {
+        res.status(400).json({ IsSuccess: true, Data: {}, Message: 'Link Expired' });
+      }
       next();
     } catch (error) {
       res.status(500).json({ IsSuccess: false, Message: error.message });

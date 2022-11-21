@@ -33,6 +33,11 @@ const Users = sequelize.define(
       allowNull: false,
       required: [true, 'Atleast one location is required']
     },
+    password_link: {
+      type: Sequelize.ENUM('active', 'inactive'),
+      defaultValue: 'active',
+      required: true
+    },
     is_verified: {
       type: Sequelize.BOOLEAN,
       defaultValue: false,

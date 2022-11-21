@@ -44,5 +44,25 @@ module.exports = {
       });
       next(error);
     }
+  },
+
+  getAllCamForUser: async (req, res, next) => {
+    try {
+      const camDetails = await watchStreamServices.getAllCamForUser(req.user);
+
+      res.status(200).json({
+        IsSuccess: true,
+        Data: camDetails,
+        Message: 'recent viewer added'
+      });
+
+      next();
+    } catch (error) {
+      res.status(500).json({
+        IsSuccess: false,
+        Message: error.message
+      });
+      next(error);
+    }
   }
 };

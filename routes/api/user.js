@@ -8,7 +8,7 @@ const userController = require('../../controllers/users');
 
 /* User end points */
 router.get('/', authController, userController.getUserDetails);
-router.post('/createUser', userController.createUser);
+router.post('/createUser', authController, userController.createUser);
 router.get('/all', authController, userController.getAllUserDetails);
 router.post('/login', userController.loginUser);
 router.put('/changePassword', authController, userController.changePassword);
@@ -21,6 +21,7 @@ router.delete('/delete', authController, userController.deleteUser);
 router.put('/edit', authController, userController.editUser);
 router.delete('/', authController, userController.deleteUserProfile);
 router.post('/emailChange', userController.changeRegisteredEmail);
+router.post('/checkLinkValid', userController.checkLinkValid);
 router.post('/emailValidation', authController, userController.isEmailExist);
 
 module.exports = router;

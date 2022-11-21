@@ -21,6 +21,7 @@ module.exports = {
   /* Create new user */
   createUser: async (userObj) => {
     userObj.user_id = uuidv4();
+
     let userCreated = await Users.create(userObj);
 
     return userCreated;
@@ -147,10 +148,12 @@ module.exports = {
       first_name: params?.first_name !== undefined ? params?.first_name : user.first_name,
       last_name: params?.last_name !== undefined ? params?.last_name : user.last_name,
       location: params?.location !== undefined ? params?.location : user.location,
-      profile_image: params.image !== undefined ? params?.image : user.profile_image,
-      username: params.username !== undefined ? params?.username : user.username,
-      role: params.role !== undefined ? params?.role : user.role,
+      profile_image: params?.image !== undefined ? params?.image : user.profile_image,
+      username: params?.username !== undefined ? params?.username : user.username,
+      role: params?.role !== undefined ? params?.role : user.role,
       email: params?.email !== undefined ? params?.email : user.email,
+      password_link:
+        params?.password_link !== undefined ? params?.password_link : user.password_link,
       updated_at: Sequelize.literal('CURRENT_TIMESTAMP')
     };
 

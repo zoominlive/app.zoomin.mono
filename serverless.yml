@@ -61,7 +61,6 @@ functions:
     handler: handler.handler
     events:
       - httpApi: '*'
-    provisionedConcurrency: 10
 
   cameraFunction:
     handler: handler.handler
@@ -69,7 +68,6 @@ functions:
       - httpApi:
           method: '*'
           path: /api/cams
-    provisionedConcurrency: 10
 
   childFunction:
     handler: handler.handler
@@ -77,33 +75,33 @@ functions:
       - httpApi:
           method: '*'
           path: /api/family/child
-    provisionedConcurrency: 10
+
   streamStatisticsFunction:
     handler: handler.handler
     events:
       - httpApi: 'GET /api/dashboard'
-    provisionedConcurrency: 10
+
   familyFunction:
     handler: handler.handler
     events:
       - httpApi:
           method: '*'
           path: /api/family
-    provisionedConcurrency: 10
+
   roomFunction:
     handler: handler.handler
     events:
       - httpApi:
           method: '*'
           path: /api/rooms
-    provisionedConcurrency: 10
+
   watchStreamFunction:
     handler: handler.handler
     events:
       - httpApi:
           method: '*'
           path: /api/watchstream
-    provisionedConcurrency: 10
+
   disableScheduledMembers:
     handler: cron.disableScheduledFamilyAndChild
     events:
