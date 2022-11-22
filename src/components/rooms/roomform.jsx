@@ -33,8 +33,6 @@ import { LoadingButton } from '@mui/lab';
 import SaveIcon from '@mui/icons-material/Save';
 import { useEffect } from 'react';
 
-var camerasPayload = [];
-
 const validationSchema = yup.object({
   room_name: yup.string('Enter Room name').required('Room name is required'),
   location: yup.string('Select Location').required('Location is required')
@@ -46,35 +44,38 @@ const RoomForm = (props) => {
   const [initialState, setInitialState] = useState({
     room_name: props?.room?.room_name ? props?.room?.room_name : '',
     location: props?.room?.location ? props?.room?.location : '',
-    cameras: camerasPayload ? camerasPayload : []
+    cameras: props?.room?.camDetails ? props?.room?.camDetails : []
   });
   const [submitLoading, setSubmitLoading] = useState(false);
   const [cameraSaveLoading, setCameraSaveLoading] = useState([]);
   const [disableActions, setDisableActions] = useState(false);
   const formikRef = useRef(null);
   const [dropdownLoading, setDropdownLoading] = useState(false);
+  const [locationSelected, setLocationSelected] = useState(false);
   // const maximumCams = 15;
 
   useEffect(() => {
     const tempCameraSaveLoading = props?.room?.camDetails?.map(() => false);
     setCameraSaveLoading(tempCameraSaveLoading || []);
-
-    API.get(`cams/`).then((response) => {
-      setDropdownLoading(true);
-      if (response.status === 200) {
-        const cameras = response.data.Data.cams;
-        setInitialState({ ...initialState, cameras: cameras });
-        setDropdownLoading(false);
-      } else {
-        errorMessageHandler(
-          enqueueSnackbar,
-          response?.response?.data?.Message || 'Something Went Wrong.',
-          response?.response?.status,
-          authCtx.setAuthError
-        );
-        setDropdownLoading(false);
+    setDropdownLoading(true);
+    API.get(props?.room?.location ? `cams?location=${props?.room?.location}` : `cams/`).then(
+      (response) => {
+        setDropdownLoading(true);
+        if (response.status === 200) {
+          const cameras = response.data.Data.cams;
+          setInitialState({ ...initialState, cameras: cameras });
+          setDropdownLoading(false);
+        } else {
+          errorMessageHandler(
+            enqueueSnackbar,
+            response?.response?.data?.Message || 'Something Went Wrong.',
+            response?.response?.status,
+            authCtx.setAuthError
+          );
+          setDropdownLoading(false);
+        }
       }
-    });
+    );
   }, []);
 
   useEffect(() => {
@@ -252,6 +253,7 @@ const RoomForm = (props) => {
                           value={values?.location}
                           onChange={(event) => {
                             setFieldValue('location', event.target.value);
+                            setLocationSelected(true);
                             handleGetCamerasForSelectedLocation(event.target.value);
                           }}>
                           {authCtx.user &&
@@ -280,10 +282,18 @@ const RoomForm = (props) => {
                         fullWidth
                         multiple
                         id="cameras"
-                        options={initialState.cameras ? initialState.cameras : []}
+                        options={
+                          initialState.cameras && locationSelected ? initialState.cameras : []
+                        }
+                        noOptionsText={!locationSelected ? 'Select location first' : 'No Camera'}
                         isOptionEqualToValue={(option, value) => option.cam_id === value.cam_id}
                         getOptionLabel={(option) => {
                           return option.cam_name;
+                        }}
+                        onMouseEnter={() => {
+                          if (values?.location) {
+                            setLocationSelected(true);
+                          }
                         }}
                         onChange={(_, value) => {
                           setFieldValue('cameras', value);
@@ -296,6 +306,7 @@ const RoomForm = (props) => {
                         renderInput={(params) => (
                           <TextField
                             {...params}
+                            disabled={!locationSelected}
                             label="Camera"
                             InputProps={{
                               ...params.InputProps,

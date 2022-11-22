@@ -151,9 +151,13 @@ const CameraForm = (props) => {
                     <Autocomplete
                       fullWidth
                       id="location"
-                      options={authCtx.user?.location?.accessable_locations.sort((a, b) =>
-                        a > b ? 1 : -1
-                      )}
+                      options={
+                        authCtx?.user?.location?.accessable_locations
+                          ? authCtx?.user?.location?.accessable_locations?.sort((a, b) =>
+                              a > b ? 1 : -1
+                            )
+                          : []
+                      }
                       onChange={(_, value) => {
                         setFieldValue('location', value);
                       }}

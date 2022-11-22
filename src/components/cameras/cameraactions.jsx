@@ -3,7 +3,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import React from 'react';
 import PropTypes from 'prop-types';
 
-const UserActions = (props) => {
+const CameraActions = (props) => {
   // Method to close the user actions on table
   const handleClose = (event) => {
     event.stopPropagation();
@@ -30,9 +30,9 @@ const UserActions = (props) => {
   );
 };
 
-export default UserActions;
+export default CameraActions;
 
-UserActions.propTypes = {
+CameraActions.propTypes = {
   camera: PropTypes.object,
   setCamera: PropTypes.func,
   setIsCameraFormDialogOpen: PropTypes.func,

@@ -27,20 +27,20 @@ import { Plus } from 'react-feather';
 import LayoutContext from '../../context/layoutcontext';
 import CameraForm from './cameraform';
 import CameraActions from './cameraactions';
-import DeleteDialog from '../common/deletedialog';
 import API from '../../api';
 import { errorMessageHandler } from '../../utils/errormessagehandler';
 import AuthContext from '../../context/authcontext';
 import { useSnackbar } from 'notistack';
 import Loader from '../common/loader';
 import debounce from 'lodash.debounce';
+import DeleteCamDialog from './deletecamdialog';
 
 const Cameras = () => {
   const layoutCtx = useContext(LayoutContext);
   const authCtx = useContext(AuthContext);
   const { enqueueSnackbar } = useSnackbar();
   const [isCameraFormDialogOpen, setIsCameraFormDialogOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isCameraDeleteDialogOpen, setIsCameraDeleteDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [camerasList, setCamerasList] = useState([]);
@@ -91,9 +91,9 @@ const Cameras = () => {
   };
 
   // Method to delete user
-  const handleCameraDelete = () => {
+  const handleCameraDelete = (wait = false) => {
     setDeleteLoading(true);
-    API.delete('cams/delete', { data: { cam_id: camera.cam_id } }).then((response) => {
+    API.delete('cams/delete', { data: { cam_id: camera.cam_id, wait: wait } }).then((response) => {
       if (response.status === 200) {
         getCamerasList();
         enqueueSnackbar(response.data.Message, {
@@ -109,7 +109,7 @@ const Cameras = () => {
       }
       setCamera();
       setDeleteLoading(false);
-      setIsDeleteDialogOpen(false);
+      setIsCameraDeleteDialogOpen(false);
     });
   };
 
@@ -171,9 +171,9 @@ const Cameras = () => {
                           label="Location"
                           onChange={handleLocationChange}>
                           <MenuItem value={'All'}>All</MenuItem>
-                          {authCtx.user.location.accessable_locations
-                            .sort((a, b) => (a > b ? 1 : -1))
-                            .map((location, index) => (
+                          {authCtx?.user?.location?.accessable_locations
+                            ?.sort((a, b) => (a > b ? 1 : -1))
+                            ?.map((location, index) => (
                               <MenuItem key={index} value={location}>
                                 {location}
                               </MenuItem>
@@ -245,8 +245,9 @@ const Cameras = () => {
                         <CameraActions
                           camera={row}
                           setCamera={setCamera}
-                          setIsCameraFormDialogOpen={setIsCameraFormDialogOpen}
-                          setIsDeleteDialogOpen={setIsDeleteDialogOpen}
+                          setIsDeleteDialogOpen={(e) => {
+                            setIsCameraDeleteDialogOpen(e);
+                          }}
                         />
                       </TableCell>
                     </TableRow>
@@ -276,17 +277,15 @@ const Cameras = () => {
           getCamerasList={getCamerasList}
         />
       )}
-      <DeleteDialog
-        open={isDeleteDialogOpen}
-        title="Delete Camera"
-        contentText={'Are you sure you want to delete this camera?'}
+
+      <DeleteCamDialog
+        open={isCameraDeleteDialogOpen}
         loading={deleteLoading}
         handleDialogClose={() => {
           setCamera();
-          setIsDeleteDialogOpen(false);
+          setIsCameraDeleteDialogOpen(false);
         }}
-        handleDelete={handleCameraDelete}
-      />
+        handleCamDelete={(e) => handleCameraDelete(e)}></DeleteCamDialog>
     </Box>
   );
 };
