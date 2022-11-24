@@ -2,7 +2,7 @@ const _ = require('lodash');
 const familyServices = require('../services/families');
 const childServices = require('../services/children');
 const userServices = require('../services/users');
-const TinyURL = require('tinyurl');
+const CONSTANTS = require('../lib/constants');
 const encrypter = require('object-encrypter');
 const engine = encrypter(process.env.JWT_SECRET_KEY, { ttl: true });
 var bcrypt = require('bcryptjs');
@@ -68,18 +68,19 @@ module.exports = {
         const name = primaryParent.first_name + ' ' + primaryParent.last_name;
         const originalUrl =
           req.get('Referrer') + 'set-password?' + 'token=' + token + '&type=family';
-        const short_url = await TinyURL.shorten(originalUrl);
+        // const short_url = await TinyURL.shorten(originalUrl);
 
-        await sendRegistrationMailforFamilyMember(name, primaryParent.email, short_url);
+        await sendRegistrationMailforFamilyMember(name, primaryParent.email, originalUrl);
 
         if (!_.isEmpty(secondaryParents)) {
           secondaryParents.forEach(async (secondaryParent) => {
             const token = await familyServices.createPasswordToken(secondaryParent);
             const name = secondaryParent.first_name + ' ' + secondaryParent.last_name;
-            const originalUrl = req.get('Referrer') + 'set-password?' + token;
-            const short_url = await TinyURL.shorten(originalUrl);
+            const originalUrl =
+              req.get('Referrer') + 'set-password?' + 'token=' + token + '&type=family';
+            // const short_url = await TinyURL.shorten(originalUrl);
 
-            await sendRegistrationMailforFamilyMember(name, secondaryParent.email, short_url);
+            await sendRegistrationMailforFamilyMember(name, secondaryParent.email, originalUrl);
           });
         }
       }
@@ -102,14 +103,17 @@ module.exports = {
       res.status(201).json({
         IsSuccess: true,
         Data: { primaryParent, secondaryParents, children },
-        Message: 'New  Family Created'
+        Message: CONSTANTS.FAMILY_CREATED
       });
 
       next();
     } catch (error) {
       res.status(500).json({
         IsSuccess: false,
-        Message: error.message === 'Validation error' ? 'Email already exist' : error.message
+        Message:
+          error.message === 'Validation error'
+            ? CONSTANTS.EMAIL_EXIST
+            : CONSTANTS.INTERNAL_SERVER_ERROR
       });
       next(error);
     }
@@ -130,7 +134,7 @@ module.exports = {
         res.status(409).json({
           IsSuccess: false,
           Data: {},
-          Message: 'Email already exist'
+          Message: CONSTANTS.EMAIL_EXIST
         });
       } else {
         params.is_verified = familyMember.email != params.email ? false : true;
@@ -146,23 +150,24 @@ module.exports = {
           const name = editedFamily.first_name + ' ' + editedFamily.last_name;
           const originalUrl =
             req.get('Referrer') + 'email-change?' + 'token=' + token + '&type=family';
-          const short_url = await TinyURL.shorten(originalUrl);
-          const response = await sendEmailChangeMail(name, params?.email, short_url);
+          // const short_url = await TinyURL.shorten(originalUrl);
+          const response = await sendEmailChangeMail(name, params?.email, originalUrl);
         }
 
         if (editedFamily) {
           res.status(200).json({
             IsSuccess: true,
             Data: editedFamily,
-            Message: `Family member details updated ${
-              params.is_verified ? '' : '. please verify updated email'
-            }`
+            Message:
+              CONSTANTS.FAMILY_UPDATED +
+              '. ' +
+              ` ${params.is_verified ? '' : CONSTANTS.VEIRFY_UPDATED_EMAIL}`
           });
         } else {
           res.status(404).json({
             IsSuccess: false,
             Data: {},
-            Message: 'Family member not found'
+            Message: CONSTANTS.FAMILY_MEMBER_NOT_FOUND
           });
         }
       }
@@ -171,7 +176,10 @@ module.exports = {
     } catch (error) {
       res.status(500).json({
         IsSuccess: false,
-        Message: error.message === 'Validation error' ? 'Email already exist' : error.message
+        Message:
+          error.message === 'Validation error'
+            ? CONSTANTS.EMAIL_EXIST
+            : CONSTANTS.INTERNAL_SERVER_ERROR
       });
       next(error);
     }
@@ -192,14 +200,14 @@ module.exports = {
       res.status(200).json({
         IsSuccess: true,
         Data: familyDetails,
-        Message: `All the family's details for user:${req.user.first_name}`
+        Message: CONSTANTS.FAMILY_DETAILS + `${req.user.first_name}`
       });
 
       next();
     } catch (error) {
       res.status(500).json({
         IsSuccess: false,
-        Message: error.message
+        Message: CONSTANTS.INTERNAL_SERVER_ERROR
       });
       next(error);
     }
@@ -217,7 +225,7 @@ module.exports = {
         res.status(409).json({
           IsSuccess: false,
           Data: {},
-          Message: 'Email already exist'
+          Message: CONSTANTS.EMAIL_EXIST
         });
       } else {
         const parent = await familyServices.createFamily(params);
@@ -226,14 +234,14 @@ module.exports = {
         const name = parent.first_name + ' ' + parent.last_name;
         const originalUrl =
           req.get('Referrer') + 'set-password?' + 'token=' + token + '&type=family';
-        const short_url = await TinyURL.shorten(originalUrl);
+        // const short_url = await TinyURL.shorten(originalUrl);
 
-        await sendRegistrationMailforFamilyMember(name, parent.email, short_url);
+        await sendRegistrationMailforFamilyMember(name, parent.email, originalUrl);
 
         res.status(201).json({
           IsSuccess: true,
           Data: parent,
-          Message: 'New parent added'
+          Message: CONSTANTS.PARENT_ADDED
         });
       }
 
@@ -241,7 +249,7 @@ module.exports = {
     } catch (error) {
       res.status(500).json({
         IsSuccess: false,
-        Message: error.message
+        Message: CONSTANTS.INTERNAL_SERVER_ERROR
       });
       next(error);
     }
@@ -257,14 +265,14 @@ module.exports = {
       res.status(200).json({
         IsSuccess: true,
         Data: {},
-        Message: 'Family Deleted'
+        Message: CONSTANTS.FAMILY_DELETED
       });
 
       next();
     } catch (error) {
       res.status(500).json({
         IsSuccess: false,
-        Message: error.message
+        Message: CONSTANTS.INTERNAL_SERVER_ERROR
       });
       next(error);
     }
@@ -286,13 +294,13 @@ module.exports = {
         res.status(200).json({
           IsSuccess: true,
           Data: {},
-          Message: 'Family is schedlued to disable at selected date'
+          Message: CONSTANTS.FAMILY_SCHEDULED
         });
       } else {
         res.status(200).json({
           IsSuccess: true,
           Data: {},
-          Message: 'Family disabled'
+          Message: CONSTANTS.FAMILY_DISABLED
         });
       }
 
@@ -300,7 +308,7 @@ module.exports = {
     } catch (error) {
       res.status(500).json({
         IsSuccess: false,
-        Message: error.message
+        Message: CONSTANTS.INTERNAL_SERVER_ERROR
       });
       next(error);
     }
@@ -321,13 +329,13 @@ module.exports = {
         res.status(200).json({
           IsSuccess: true,
           Data: {},
-          Message: 'Family member enabled'
+          Message: CONSTANTS.FAMILY_MEMBER_ENABLED
         });
       } else {
         res.status(200).json({
           IsSuccess: true,
           Data: {},
-          Message: 'Family enabled'
+          Message: CONSTANTS.FAMILY_ENABLED
         });
       }
 
@@ -335,7 +343,7 @@ module.exports = {
     } catch (error) {
       res.status(500).json({
         IsSuccess: false,
-        Message: error.message
+        Message: CONSTANTS.INTERNAL_SERVER_ERROR
       });
       next(error);
     }
@@ -369,7 +377,7 @@ module.exports = {
             res.status(200).json({
               IsSuccess: true,
               Data: {},
-              Message: 'Family member password reset successful'
+              Message: CONSTANTS.FAMIY_MEMBER_PASS_RESET
             });
           } else if (familyMember?.password) {
             if (familyMember.password === decodeToken?.password) {
@@ -387,31 +395,31 @@ module.exports = {
               res.status(200).json({
                 IsSuccess: true,
                 Data: {},
-                Message: 'Family member password reset successful'
+                Message: CONSTANTS.FAMIY_MEMBER_PASS_RESET
               });
             } else {
               res.status(400).json({
                 IsSuccess: false,
                 Data: {},
-                Message: 'password is already changed, please verify again to change password'
+                Message: CONSTANTS.PASSWORD_ALREADY_CHANGED
               });
             }
           } else {
             res.status(400).json({
               IsSuccess: false,
               Data: {},
-              Message: 'Invalid token '
+              Message: CONSTANTS.INVALID_TOKEN
             });
           }
         } else {
-          res.status(400).json({ IsSuccess: true, Data: {}, Message: 'No user found' });
+          res.status(400).json({ IsSuccess: true, Data: {}, Message: CONSTANTS.USER_NOT_FOUND });
         }
       } else {
-        res.status(400).json({ IsSuccess: true, Data: {}, Message: 'Link Expired' });
+        res.status(400).json({ IsSuccess: true, Data: {}, Message: CONSTANTS.LINK_EXPIRED });
       }
       next();
     } catch (error) {
-      res.status(500).json({ IsSuccess: false, Message: error.message });
+      res.status(500).json({ IsSuccess: false, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
       next(error);
     }
   },
@@ -433,18 +441,18 @@ module.exports = {
             res.status(400).json({
               IsSuccess: false,
               Data: 'inactive',
-              Message: 'Link expired'
+              Message: CONSTANTS.LINK_EXPIRED
             });
           }
         } else {
-          res.status(400).json({ IsSuccess: true, Data: {}, Message: 'No user found' });
+          res.status(400).json({ IsSuccess: true, Data: {}, Message: CONSTANTS.USER_NOT_FOUND });
         }
       } else {
-        res.status(400).json({ IsSuccess: true, Data: {}, Message: 'Link Expired' });
+        res.status(400).json({ IsSuccess: true, Data: {}, Message: CONSTANTS.LINK_EXPIRED });
       }
       next();
     } catch (error) {
-      res.status(500).json({ IsSuccess: false, Message: error.message });
+      res.status(500).json({ IsSuccess: false, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
       next(error);
     }
   },
@@ -465,19 +473,19 @@ module.exports = {
             is_verified: true
           });
 
-          res
-            .status(200)
-            .json({ IsSuccess: true, Data: {}, Message: 'Email successfully changed ' });
+          res.status(200).json({ IsSuccess: true, Data: {}, Message: CONSTANTS.EMAIL_CHANGED });
         } else {
-          res.status(400).json({ IsSuccess: true, Data: {}, Message: 'Email is already changed' });
+          res
+            .status(400)
+            .json({ IsSuccess: true, Data: {}, Message: CONSTANTS.EMAIL_ALREADY_CHANGED });
         }
       } else {
-        res.status(400).json({ IsSuccess: true, Data: {}, Message: 'Link Expired' });
+        res.status(400).json({ IsSuccess: true, Data: {}, Message: CONSTANTS.LINK_EXPIRED });
       }
 
       next();
     } catch (error) {
-      res.status(500).json({ IsSuccess: false, Message: error.message });
+      res.status(500).json({ IsSuccess: false, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
       next(error);
     }
   }

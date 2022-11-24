@@ -1,7 +1,7 @@
 const _ = require('lodash');
 const familyServices = require('../services/families');
 const childServices = require('../services/children');
-
+const CONSTANTS = require('../lib/constants');
 module.exports = {
   // create new child
   createChild: async (req, res, next) => {
@@ -15,14 +15,14 @@ module.exports = {
       res.status(201).json({
         IsSuccess: true,
         Data: newChild,
-        Message: 'New Child Created'
+        Message: CONSTANTS.CHILD_CREATED
       });
 
       next();
     } catch (error) {
       res.status(500).json({
         IsSuccess: false,
-        Message: error.message
+        Message: CONSTANTS.INTERNAL_SERVER_ERROR
       });
       next(error);
     }
@@ -38,14 +38,14 @@ module.exports = {
       res.status(200).json({
         IsSuccess: true,
         Data: editedChild,
-        Message: 'family details updated'
+        Message: CONSTANTS.CHILD_DETAILS_UPDATED
       });
 
       next();
     } catch (error) {
       res.status(500).json({
         IsSuccess: false,
-        Message: error.message
+        Message: CONSTANTS.INTERNAL_SERVER_ERROR
       });
       next(error);
     }
@@ -60,14 +60,14 @@ module.exports = {
       res.status(200).json({
         IsSuccess: true,
         Data: {},
-        Message: 'Child Deleted'
+        Message: CONSTANTS.CHILD_DELETED
       });
 
       next();
     } catch (error) {
       res.status(500).json({
         IsSuccess: false,
-        Message: error.message
+        Message: CONSTANTS.INTERNAL_SERVER_ERROR
       });
       next(error);
     }
@@ -87,13 +87,13 @@ module.exports = {
         res.status(200).json({
           IsSuccess: true,
           Data: disableChild,
-          Message: 'Child is schedlued to disable on selected date'
+          Message: CONSTANTS.CHILD_SCHEDULED
         });
       } else {
         res.status(200).json({
           IsSuccess: true,
           Data: disableChild,
-          Message: 'Child successfully disabled'
+          Message: CONSTANTS.CHILD_DISABLED
         });
       }
 
@@ -101,7 +101,7 @@ module.exports = {
     } catch (error) {
       res.status(500).json({
         IsSuccess: false,
-        Message: error.message
+        Message: CONSTANTS.INTERNAL_SERVER_ERROR
       });
       next(error);
     }
@@ -117,14 +117,14 @@ module.exports = {
       res.status(200).json({
         IsSuccess: true,
         Data: enableChild,
-        Message: 'Child successfully enabled'
+        Message: CONSTANTS.CHILD_ENABLED
       });
 
       next();
     } catch (error) {
       res.status(500).json({
         IsSuccess: false,
-        Message: error.message
+        Message: CONSTANTS.INTERNAL_SERVER_ERROR
       });
       next(error);
     }

@@ -1,5 +1,6 @@
 const roomServices = require('../services/rooms');
 const cameraServices = require('../services/cameras');
+const CONSTANTS = require('../lib/constants');
 const _ = require('lodash');
 module.exports = {
   // create new room
@@ -24,14 +25,14 @@ module.exports = {
       res.status(201).json({
         IsSuccess: true,
         Data: room,
-        Message: 'New Room created'
+        Message: CONSTANTS.ROOM_CREATED
       });
 
       next();
     } catch (error) {
       res.status(500).json({
         IsSuccess: false,
-        Message: error.message
+        Message: CONSTANTS.INTERNAL_SERVER_ERROR
       });
       next(error);
     }
@@ -57,14 +58,14 @@ module.exports = {
       res.status(200).json({
         IsSuccess: true,
         Data: room,
-        Message: 'Room details Updated'
+        Message: CONSTANTS.ROOM_UPDATED
       });
 
       next();
     } catch (error) {
       res.status(500).json({
         IsSuccess: false,
-        Message: error.message
+        Message: CONSTANTS.INTERNAL_SERVER_ERROR
       });
       next(error);
     }
@@ -79,14 +80,14 @@ module.exports = {
       res.status(200).json({
         IsSuccess: true,
         Data: {},
-        Message: 'Room Deleted'
+        Message: CONSTANTS.ROOM_DELETED
       });
 
       next();
     } catch (error) {
       res.status(500).json({
         IsSuccess: false,
-        Message: error.message
+        Message: CONSTANTS.INTERNAL_SERVER_ERROR
       });
       next(error);
     }
@@ -107,14 +108,14 @@ module.exports = {
       res.status(200).json({
         IsSuccess: true,
         Data: rooms,
-        Message: `All the room's details for user:${req.user.first_name}`
+        Message: CONSTANTS.ROOM_DETAILS + `${req.user.first_name}`
       });
 
       next();
     } catch (error) {
       res.status(500).json({
         IsSuccess: false,
-        Message: error.message
+        Message: CONSTANTS.INTERNAL_SERVER_ERROR
       });
       next(error);
     }
@@ -128,14 +129,14 @@ module.exports = {
       res.status(200).json({
         IsSuccess: true,
         Data: rooms,
-        Message: `All the room's details for user:${req.user.first_name}`
+        Message: CONSTANTS.ROOM_DETAILS + `${req.user.first_name}`
       });
 
       next();
     } catch (error) {
       res.status(500).json({
         IsSuccess: false,
-        Message: error.message
+        Message: CONSTANTS.INTERNAL_SERVER_ERROR
       });
       next(error);
     }

@@ -252,7 +252,7 @@ module.exports = {
     } else {
       count = (
         await sequelize.query(
-          `SELECT DISTINCT COUNT(user_id) AS count FROM users WHERE location LIKE '%${location}%' AND user_id != ${user.user_id} AND (first_name LIKE '%${searchBy}%' OR last_name LIKE '%${searchBy}%' OR email LIKE '%${searchBy}%')`,
+          `SELECT DISTINCT COUNT(user_id) AS count FROM users WHERE location LIKE '%${location}%' AND user_id !='${user.user_id}' AND (first_name LIKE '%${searchBy}%' OR last_name LIKE '%${searchBy}%' OR email LIKE '%${searchBy}%')`,
           {
             model: Users,
             mapToModel: true
@@ -261,9 +261,9 @@ module.exports = {
       )[0].dataValues.count;
 
       users = await sequelize.query(
-        `SELECT DISTINCT * FROM users WHERE location LIKE '%${location}%' AND user_id != ${
+        `SELECT DISTINCT * FROM users WHERE location LIKE '%${location}%' AND user_id !='${
           user.user_id
-        } AND (first_name LIKE '%${searchBy}%' OR last_name LIKE '%${searchBy}%' OR email LIKE '%${searchBy}%') LIMIT ${pageSize} OFFSET ${
+        }' AND (first_name LIKE '%${searchBy}%' OR last_name LIKE '%${searchBy}%' OR email LIKE '%${searchBy}%') LIMIT ${pageSize} OFFSET ${
           pageNumber * pageSize
         }`,
         {

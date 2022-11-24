@@ -3,7 +3,7 @@ const familyServices = require('../services/families');
 const watchStreamServices = require('../services/watchStream');
 const { listAvailableStreams } = require('../lib/rtsp-stream');
 const _ = require('lodash');
-
+const CONSTANTS = require('../lib/constants');
 module.exports = {
   // get all stream statistics data to populate dashboard
   getStreamStatistics: async (req, res, next) => {
@@ -45,14 +45,14 @@ module.exports = {
           recentViewers: recentViewers ? recentViewers.length : 0,
           enroledStreamsDetails: recentViewers ? recentViewers : 0
         },
-        Message: 'stream statistics data'
+        Message: CONSTANTS.STREAM_DATA
       });
 
       next();
     } catch (error) {
       res.status(500).json({
         IsSuccess: false,
-        Message: error.message
+        Message: CONSTANTS.INTERNAL_SERVER_ERROR
       });
       next(error);
     }

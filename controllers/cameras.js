@@ -2,7 +2,7 @@ const cameraServices = require('../services/cameras');
 const { startEncodingStream, deleteEncodingStream } = require('../lib/rtsp-stream');
 const _ = require('lodash');
 const customerServices = require('../services/customers');
-
+const CONSTANTS = require('../lib/constants');
 module.exports = {
   // encode stream and create new camera
   createCamera: async (req, res, next) => {
@@ -33,13 +33,13 @@ module.exports = {
         res.status(201).json({
           IsSuccess: true,
           Data: camera,
-          Message: 'Camera created'
+          Message: CONSTANTS.CAMERA_CREATED
         });
       } else {
         res.status(400).json({
           IsSuccess: false,
           Data: {},
-          Message: `Maximum ${customer.max_cameras} cameras are allowed`
+          Message: `Maximum ${customer.max_cameras}` + CONSTANTS.MAX_CAMERA_ALLOWED
         });
       }
 
@@ -47,7 +47,7 @@ module.exports = {
     } catch (error) {
       res.status(500).json({
         IsSuccess: false,
-        Message: error.message
+        Message: CONSTANTS.INTERNAL_SERVER_ERROR
       });
       next(error);
     }
@@ -75,7 +75,7 @@ module.exports = {
         res.status(404).json({
           IsSuccess: false,
           Data: {},
-          Message: 'Camera not found'
+          Message: CONSTANTS.CAMERA_NOT_FOUND
         });
       } else if (camEncodedDeleted.status === 200) {
         const resetAvailableCameras = await customerServices.setAvailableCameras(
@@ -86,7 +86,7 @@ module.exports = {
         res.status(200).json({
           IsSuccess: true,
           Data: {},
-          Message: 'Camera Deleted'
+          Message: CONSTANTS.CAMERA_DELETED
         });
       } else {
         const resetAvailableCameras = await customerServices.setAvailableCameras(
@@ -97,7 +97,7 @@ module.exports = {
         res.status(200).json({
           IsSuccess: false,
           Data: {},
-          Message: 'Stream not found , Camera deleted'
+          Message: CONSTANTS.STREAM_NOT_FOUND
         });
       }
 
@@ -105,7 +105,7 @@ module.exports = {
     } catch (error) {
       res.status(500).json({
         IsSuccess: false,
-        Message: error.message
+        Message: CONSTANTS.INTERNAL_SERVER_ERROR
       });
       next(error);
     }
@@ -125,14 +125,14 @@ module.exports = {
       res.status(200).json({
         IsSuccess: false,
         Data: {},
-        Message: 'camera details updated'
+        Message: CONSTANTS.CAMERA_UPDATED
       });
 
       next();
     } catch (error) {
       res.status(500).json({
         IsSuccess: false,
-        Message: error.message
+        Message: CONSTANTS.INTERNAL_SERVER_ERROR
       });
       next(error);
     }
@@ -152,14 +152,14 @@ module.exports = {
       res.status(200).json({
         IsSuccess: true,
         Data: cameras,
-        Message: `All the cam's Details`
+        Message: CONSTANTS.CAMERA_DETAILS
       });
 
       next();
     } catch (error) {
       res.status(500).json({
         IsSuccess: false,
-        Message: error.message
+        Message: CONSTANTS.INTERNAL_SERVER_ERROR
       });
       next(error);
     }

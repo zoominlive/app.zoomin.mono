@@ -8,11 +8,13 @@ const {
 const userServices = require('../services/users');
 const familyServices = require('../services/families');
 const s3BucketImageUploader = require('../lib/aws-services');
-const TinyURL = require('tinyurl');
+// const TinyURL = require('tinyurl');
 const encrypter = require('object-encrypter');
 const engine = encrypter(process.env.JWT_SECRET_KEY, { ttl: true });
 const customerServices = require('../services/customers');
 const moment = require('moment');
+const CONSTANTS = require('../lib/constants');
+
 module.exports = {
   /* Get  user's details */
   getUserDetails: async (req, res, next) => {
@@ -22,11 +24,11 @@ module.exports = {
       res.status(200).json({
         IsSuccess: true,
         Data: _.omit(user, ['password']),
-        Message: 'User found'
+        Message: CONSTANTS.USER_FOUND
       });
       next();
     } catch (error) {
-      res.status(500).json({ IsSuccess: false, Message: error.message });
+      res.status(500).json({ IsSuccess: false, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
       next(error);
     }
   },
@@ -59,9 +61,9 @@ module.exports = {
         const token = await userServices.createPasswordToken(userData);
         const name = userData.first_name + ' ' + userData.last_name;
         const originalUrl = req.get('Referrer') + 'set-password?' + 'token=' + token + '&type=user';
-        const short_url = await TinyURL.shorten(originalUrl);
+        // const short_url = await TinyURL.shorten(originalUrl);
 
-        await sendRegistrationMailforUser(name, userData.email, short_url);
+        await sendRegistrationMailforUser(name, userData.email, originalUrl);
 
         if (req.body?.image) {
           const imageUrl = await s3BucketImageUploader._upload(req.body.image, userData.user_id);
@@ -71,16 +73,18 @@ module.exports = {
         res.status(201).json({
           IsSuccess: true,
           Data: _.omit(userData, ['password']),
-          Message: 'User Registration Successful , please check email to create new password'
+          Message: CONSTANTS.USER_REGISTERED
         });
       } else {
-        res.status(400).json({ IsSuccess: true, Data: {}, Message: 'User is not registered' });
+        res
+          .status(400)
+          .json({ IsSuccess: true, Data: {}, Message: CONSTANTS.USER_REGISRATION_FAILED });
       }
       next();
     } catch (error) {
       res.status(500).json({
         IsSuccess: false,
-        Message: error.errors ? error.errors[0].message : error.message
+        Message: CONSTANTS.INTERNAL_SERVER_ERROR
       });
       next(error);
     }
@@ -106,9 +110,7 @@ module.exports = {
           res.status(400).json({
             IsSuccess: true,
             Data: [],
-            Message: !user.is_verified
-              ? 'You are not verified to logged in'
-              : 'User is deactivated please contact Administrator'
+            Message: !user.is_verified ? CONSTANTS.USER_NOT_VERIFIED : CONSTANTS.USER_DEACTIVATED
           });
         } else {
           const validPassword = await bcrypt.compare(password, user.password);
@@ -116,11 +118,15 @@ module.exports = {
           if (validPassword) {
             const token = await userServices.createUserToken(user.user_id);
             const userData = _.omit(user, ['password', 'cust_id']);
-            res
-              .status(200)
-              .json({ IsSuccess: true, Data: { userData, ...token }, Message: 'User logged in' });
+            res.status(200).json({
+              IsSuccess: true,
+              Data: { userData, ...token },
+              Message: CONSTANTS.USER_LOGGED_IN
+            });
           } else {
-            res.status(400).json({ IsSuccess: true, Data: {}, Message: 'Invalid Password' });
+            res
+              .status(400)
+              .json({ IsSuccess: true, Data: {}, Message: CONSTANTS.INVALID_PASSWORD });
           }
         }
       } else if (familyUser) {
@@ -129,8 +135,8 @@ module.exports = {
             IsSuccess: true,
             Data: [],
             Message: !familyUser.is_verified
-              ? 'You are not verified to logged in'
-              : 'User is deactivated please contact Administrator'
+              ? CONSTANTS.USER_NOT_VERIFIED
+              : CONSTANTS.USER_DEACTIVATED
           });
         } else {
           const validPassword = await bcrypt.compare(password, familyUser.password);
@@ -138,23 +144,27 @@ module.exports = {
           if (validPassword) {
             const token = await familyServices.createFamilyMemberToken(familyUser.family_member_id);
             const userData = _.omit(familyUser, ['password', 'cust_id']);
-            res
-              .status(200)
-              .json({ IsSuccess: true, Data: { userData, ...token }, Message: 'User logged in' });
+            res.status(200).json({
+              IsSuccess: true,
+              Data: { userData, ...token },
+              Message: CONSTANTS.USER_LOGGED_IN
+            });
           } else {
-            res.status(400).json({ IsSuccess: true, Data: {}, Message: 'Invalid Password' });
+            res
+              .status(400)
+              .json({ IsSuccess: true, Data: {}, Message: CONSTANTS.INVALID_PASSWORD });
           }
         }
       } else {
         res.status(400).json({
           IsSuccess: true,
           Data: {},
-          Message: 'No user found for this email id / user name'
+          Message: CONSTANTS.USER_NOT_FOUND
         });
       }
       next();
     } catch (error) {
-      res.status(500).json({ IsSuccess: false, Message: error.message });
+      res.status(500).json({ IsSuccess: false, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
       next(error);
     }
   },
@@ -179,14 +189,14 @@ module.exports = {
         res.status(200).json({
           IsSuccess: true,
           Data: changePassword,
-          Message: 'Password reset successfully'
+          Message: CONSTANTS.PASSWORD_RESET
         });
       } else {
-        res.status(400).json({ IsSuccess: true, Data: {}, Message: 'Invalid password' });
+        res.status(400).json({ IsSuccess: true, Data: {}, Message: CONSTANTS.INVALID_PASSWORD });
       }
       next();
     } catch (error) {
-      res.status(500).json({ IsSuccess: false, Message: error.message });
+      res.status(500).json({ IsSuccess: false, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
       next(error);
     }
   },
@@ -209,9 +219,7 @@ module.exports = {
             const setPassword = await userServices.resetPassword(decodeToken.userId, hashPassword);
 
             await userServices.editUserProfile(user, { password_link: 'inactive' });
-            res
-              .status(200)
-              .json({ IsSuccess: true, Data: {}, Message: 'User password reset successful' });
+            res.status(200).json({ IsSuccess: true, Data: {}, Message: CONSTANTS.PASSWORD_RESET });
           } else if (user?.password) {
             if (user.password === decodeToken?.password) {
               const salt = await bcrypt.genSaltSync(10);
@@ -226,30 +234,30 @@ module.exports = {
               });
               res
                 .status(200)
-                .json({ IsSuccess: true, Data: {}, Message: 'User password reset successful' });
+                .json({ IsSuccess: true, Data: {}, Message: CONSTANTS.PASSWORD_RESET });
             } else {
               res.status(400).json({
                 IsSuccess: false,
                 Data: {},
-                Message: 'password is already changed, please verify again to change password'
+                Message: CONSTANTS.PASSWORD_ALREADY_CHANGED
               });
             }
           } else {
             res.status(400).json({
               IsSuccess: false,
               Data: {},
-              Message: 'Invalid token '
+              Message: CONSTANTS.INVALID_TOKEN
             });
           }
         } else {
-          res.status(400).json({ IsSuccess: true, Data: {}, Message: 'No user found' });
+          res.status(400).json({ IsSuccess: true, Data: {}, Message: CONSTANTS.USER_NOT_FOUND });
         }
       } else {
-        res.status(400).json({ IsSuccess: true, Data: {}, Message: 'Link Expired' });
+        res.status(400).json({ IsSuccess: true, Data: {}, Message: CONSTANTS.LINK_EXPIRED });
       }
       next();
     } catch (error) {
-      res.status(500).json({ IsSuccess: false, Message: error.message });
+      res.status(500).json({ IsSuccess: false, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
       next(error);
     }
   },
@@ -271,16 +279,16 @@ module.exports = {
           const name = userData.first_name + ' ' + userData.last_name;
           const originalUrl =
             req.get('Referrer') + 'set-password?' + 'token=' + token + '&type=user';
-          const short_url = await TinyURL.shorten(originalUrl);
-          await sendForgetPasswordMail(name, email, short_url);
+          // const short_url = await TinyURL.shorten(originalUrl);
+          await sendForgetPasswordMail(name, email, originalUrl);
           await userServices.editUserProfile(user, { password_link: 'active' });
         } else {
           const token = await familyServices.createPasswordToken(userData);
           const name = userData.first_name + ' ' + userData.last_name;
           const originalUrl =
             req.get('Referrer') + 'set-password?' + 'token=' + token + '&type=family';
-          const short_url = await TinyURL.shorten(originalUrl);
-          await sendForgetPasswordMail(name, email, short_url);
+          // const short_url = await TinyURL.shorten(originalUrl);
+          await sendForgetPasswordMail(name, email, originalUrl);
           await familyServices.editFamily({
             family_member_id: user.family_member_id,
             password_link: 'active'
@@ -290,14 +298,14 @@ module.exports = {
         res.status(200).json({
           IsSuccess: true,
           Data: {},
-          Message: 'Password reset link sent to your email'
+          Message: CONSTANTS.PASSWORD_RESET_LINK_SENT
         });
       } else {
-        res.status(400).json({ IsSuccess: true, Data: {}, Message: 'No user found' });
+        res.status(400).json({ IsSuccess: true, Data: {}, Message: CONSTANTS.USER_NOT_FOUND });
       }
       next();
     } catch (error) {
-      res.status(500).json({ IsSuccess: false, Message: error.message });
+      res.status(500).json({ IsSuccess: false, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
       next(error);
     }
     next();
@@ -312,12 +320,27 @@ module.exports = {
       if (!_.isEmpty(user.profile_image)) {
         let deletedImage = await s3BucketImageUploader.deleteObject(user);
       }
-      let uploadImage = await s3BucketImageUploader._upload(image, user.user_id);
-      await userServices.editUserProfile(user, { image: uploadImage });
-      res.status(200).json({ IsSuccess: true, Data: { uploadImage }, Message: 'Image uploaded' });
+
+      if (user?.family_member_id) {
+        let uploadImage = await s3BucketImageUploader._upload(image, user.family_member_id);
+        await familyServices.editFamily({
+          profile_image: uploadImage,
+          family_member_id: user.family_member_id
+        });
+        res
+          .status(200)
+          .json({ IsSuccess: true, Data: { uploadImage }, Message: CONSTANTS.IMAGE_UPLOADED });
+      } else {
+        let uploadImage = await s3BucketImageUploader._upload(image, user.user_id);
+        await userServices.editUserProfile(user, { image: uploadImage });
+        res
+          .status(200)
+          .json({ IsSuccess: true, Data: { uploadImage }, Message: CONSTANTS.IMAGE_UPLOADED });
+      }
+
       next();
     } catch (error) {
-      res.status(500).json({ IsSuccess: false, Message: error.message });
+      res.status(500).json({ IsSuccess: false, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
       next(error);
     }
   },
@@ -326,12 +349,27 @@ module.exports = {
   deleteImage: async (req, res, next) => {
     try {
       const user = req.user;
-      let deletedImage = await s3BucketImageUploader.deleteObject(user);
-      await userServices.editUserProfile(user, { image: '' });
-      res.status(200).json({ IsSuccess: true, Data: deletedImage, Message: 'Image deleted' });
+
+      if (user?.family_member_id) {
+        let deletedImage = await s3BucketImageUploader.deleteObject(user);
+        await familyServices.editFamily({
+          profile_image: '',
+          family_member_id: user.family_member_id
+        });
+        res
+          .status(200)
+          .json({ IsSuccess: true, Data: deletedImage, Message: CONSTANTS.IMAGE_DELETED });
+      } else {
+        let deletedImage = await s3BucketImageUploader.deleteObject(user);
+        await userServices.editUserProfile(user, { image: '' });
+        res
+          .status(200)
+          .json({ IsSuccess: true, Data: deletedImage, Message: CONSTANTS.IMAGE_DELETED });
+      }
+
       next();
     } catch (error) {
-      res.status(500).json({ IsSuccess: false, Message: error.message });
+      res.status(500).json({ IsSuccess: false, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
       next(error);
     }
   },
@@ -352,34 +390,35 @@ module.exports = {
             res.status(409).json({
               IsSuccess: true,
               Data: {},
-              Message: 'User profile edited ,email already exist plese use different email'
+              Message: CONSTANTS.PROFILE_UPDATED_EMAIL_ALREADY_EXIST
             });
           } else {
             const token = await userServices.createEmailToken(user, newEmail);
             const name = user.first_name + ' ' + user.last_name;
-            const originalUrl = req.get('Referrer') + 'email-change?' + token;
-            const short_url = await TinyURL.shorten(originalUrl);
+            const originalUrl =
+              req.get('Referrer') + 'email-change?' + 'token=' + token + '&type=user';
+            // const short_url = await TinyURL.shorten(originalUrl);
 
-            const response = await sendEmailChangeMail(name, params?.email, short_url);
+            const response = await sendEmailChangeMail(name, params?.email, originalUrl);
             res.status(200).json({
               IsSuccess: true,
               Data: _.omit(editedProfile, ['password']),
-              Message: 'User profile edited , please verify new email address'
+              Message: CONSTANTS.PROFILE_EDITED_VERIFY_EMAIL
             });
           }
         } else {
           res.status(200).json({
             IsSuccess: true,
             Data: _.omit(editedProfile, ['password']),
-            Message: 'User profile edited'
+            Message: CONSTANTS.PROFILE_EDITED
           });
         }
       } else {
-        res.status(400).json({ IsSuccess: true, Data: {}, Message: 'No user profile found' });
+        res.status(400).json({ IsSuccess: true, Data: {}, Message: CONSTANTS.USER_NOT_FOUND });
       }
       next();
     } catch (error) {
-      res.status(500).json({ IsSuccess: false, Message: error.message });
+      res.status(500).json({ IsSuccess: false, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
       next(error);
     }
   },
@@ -406,35 +445,35 @@ module.exports = {
             res.status(409).json({
               IsSuccess: true,
               Data: {},
-              Message: 'User details edited ,email already exist plese use different email'
+              Message: CONSTANTS.PROFILE_UPDATED_EMAIL_ALREADY_EXIST
             });
           } else {
             const token = await userServices.createEmailToken(user, newEmail);
             const name = user.first_name + ' ' + user.last_name;
             const originalUrl =
               req.get('Referrer') + 'email-change?' + 'token=' + token + '&type=user';
-            const short_url = await TinyURL.shorten(originalUrl);
+            // const short_url = await TinyURL.shorten(originalUrl);
 
-            const response = await sendEmailChangeMail(name, params?.email, short_url);
+            const response = await sendEmailChangeMail(name, params?.email, originalUrl);
             res.status(200).json({
               IsSuccess: true,
               Data: _.omit(editedProfile, ['password']),
-              Message: 'User details edited , please verify new email address'
+              Message: CONSTANTS.PROFILE_EDITED_VERIFY_EMAIL
             });
           }
         } else {
           res.status(200).json({
             IsSuccess: true,
             Data: _.omit(editedProfile, ['password']),
-            Message: 'User details edited'
+            Message: CONSTANTS.PROFILE_EDITED
           });
         }
       } else {
-        res.status(400).json({ IsSuccess: true, Data: {}, Message: 'No user found' });
+        res.status(400).json({ IsSuccess: true, Data: {}, Message: CONSTANTS.USER_NOT_FOUND });
       }
       next();
     } catch (error) {
-      res.status(500).json({ IsSuccess: false, Message: error.message });
+      res.status(500).json({ IsSuccess: false, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
       next(error);
     }
   },
@@ -447,13 +486,15 @@ module.exports = {
       let deleted = await userServices.deleteUserProfile(user.user_id);
 
       if (deleted) {
-        res.status(200).json({ IsSuccess: true, Data: deleted, Message: 'User profile deleted' });
+        res
+          .status(200)
+          .json({ IsSuccess: true, Data: deleted, Message: CONSTANTS.PROFILE_DELETED });
       } else {
-        res.status(400).json({ IsSuccess: true, Data: {}, Message: 'No user profile found' });
+        res.status(400).json({ IsSuccess: true, Data: {}, Message: CONSTANTS.USER_NOT_FOUND });
       }
       next();
     } catch (error) {
-      res.status(500).json({ IsSuccess: false, Message: error.message });
+      res.status(500).json({ IsSuccess: false, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
       next(error);
     }
   },
@@ -466,13 +507,15 @@ module.exports = {
       let deleted = await userServices.deleteUser(userId);
 
       if (deleted) {
-        res.status(200).json({ IsSuccess: true, Data: deleted, Message: 'User deleted' });
+        res
+          .status(200)
+          .json({ IsSuccess: true, Data: deleted, Message: CONSTANTS.PROFILE_DELETED });
       } else {
-        res.status(400).json({ IsSuccess: true, Data: {}, Message: 'No user found' });
+        res.status(400).json({ IsSuccess: true, Data: {}, Message: CONSTANTS.USER_NOT_FOUND });
       }
       next();
     } catch (error) {
-      res.status(500).json({ IsSuccess: false, Message: error.message });
+      res.status(500).json({ IsSuccess: false, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
       next(error);
     }
   },
@@ -491,19 +534,19 @@ module.exports = {
             { email: decodeToken.email }
           );
 
-          res
-            .status(200)
-            .json({ IsSuccess: true, Data: {}, Message: 'Email successfully changed ' });
+          res.status(200).json({ IsSuccess: true, Data: {}, Message: CONSTANTS.EMAIL_CHANGED });
         } else {
-          res.status(400).json({ IsSuccess: true, Data: {}, Message: 'Email is already changed' });
+          res
+            .status(400)
+            .json({ IsSuccess: true, Data: {}, Message: CONSTANTS.EMAIL_ALREADY_CHANGED });
         }
       } else {
-        res.status(400).json({ IsSuccess: true, Data: {}, Message: 'Link Expired' });
+        res.status(400).json({ IsSuccess: true, Data: {}, Message: CONSTANTS.LINK_EXPIRED });
       }
 
       next();
     } catch (error) {
-      res.status(500).json({ IsSuccess: false, Message: error.message });
+      res.status(500).json({ IsSuccess: false, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
       next(error);
     }
   },
@@ -526,11 +569,11 @@ module.exports = {
       res.status(200).json({
         IsSuccess: true,
         Data: usersDetails,
-        Message: 'Users found'
+        Message: CONSTANTS.USER_FOUND
       });
       next();
     } catch (error) {
-      res.status(500).json({ IsSuccess: false, Message: error.message });
+      res.status(500).json({ IsSuccess: false, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
       next(error);
     }
   },
@@ -545,12 +588,12 @@ module.exports = {
       res.status(200).json({
         IsSuccess: true,
         Data: emailExist,
-        Message: emailExist ? 'Email already exist' : 'Email is available to use'
+        Message: emailExist ? CONSTANTS.EMAIL_EXIST : CONSTANTS.EMAIL_IS_AVAILABLE
       });
 
       next();
     } catch (error) {
-      res.status(500).json({ IsSuccess: false, Message: error.message });
+      res.status(500).json({ IsSuccess: false, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
       next(error);
     }
   },
@@ -567,23 +610,25 @@ module.exports = {
 
         if (user) {
           if (user?.password_link === 'active') {
-            res.status(200).json({ IsSuccess: true, Data: 'active', Message: 'Link is valid' });
+            res
+              .status(200)
+              .json({ IsSuccess: true, Data: 'active', Message: CONSTANTS.VALID_LINK });
           } else {
             res.status(400).json({
               IsSuccess: false,
               Data: 'inactive',
-              Message: 'Link expired'
+              Message: CONSTANTS.LINK_EXPIRED
             });
           }
         } else {
-          res.status(400).json({ IsSuccess: true, Data: {}, Message: 'No user found' });
+          res.status(400).json({ IsSuccess: true, Data: {}, Message: CONSTANTS.USER_NOT_FOUND });
         }
       } else {
-        res.status(400).json({ IsSuccess: true, Data: {}, Message: 'Link Expired' });
+        res.status(400).json({ IsSuccess: true, Data: {}, Message: CONSTANTS.LINK_EXPIRED });
       }
       next();
     } catch (error) {
-      res.status(500).json({ IsSuccess: false, Message: error.message });
+      res.status(500).json({ IsSuccess: false, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
       next(error);
     }
   }

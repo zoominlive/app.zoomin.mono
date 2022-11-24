@@ -48,6 +48,9 @@ const Customers = sequelize.define(
     transcoder_endpoint: {
       type: Sequelize.STRING(155)
     },
+    timeout: {
+      type: Sequelize.INTEGER(3)
+    },
     created_at: {
       type: 'TIMESTAMP',
       defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),

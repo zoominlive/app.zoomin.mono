@@ -1,6 +1,7 @@
 const watchStreamServices = require('../services/watchStream');
+const customerServices = require('../services/customers');
 const _ = require('lodash');
-
+const CONSTANTS = require('../lib/constants');
 module.exports = {
   // encode stream and create new camera
   getAllCamForLocation: async (req, res, next) => {
@@ -12,14 +13,14 @@ module.exports = {
       res.status(200).json({
         IsSuccess: true,
         Data: cameras,
-        Message: 'Camera details'
+        Message: CONSTANTS.CAMERA_DETAILS
       });
 
       next();
     } catch (error) {
       res.status(500).json({
         IsSuccess: false,
-        Message: error.message
+        Message: CONSTANTS.INTERNAL_SERVER_ERROR
       });
       next(error);
     }
@@ -33,14 +34,14 @@ module.exports = {
       res.status(200).json({
         IsSuccess: true,
         Data: recentViewer,
-        Message: 'recent viewer added'
+        Message: CONSTANTS.RECENT_VIEWER_ADDED
       });
 
       next();
     } catch (error) {
       res.status(500).json({
         IsSuccess: false,
-        Message: error.message
+        Message: CONSTANTS.INTERNAL_SERVER_ERROR
       });
       next(error);
     }
@@ -50,17 +51,26 @@ module.exports = {
     try {
       const camDetails = await watchStreamServices.getAllCamForUser(req.user);
 
+      const customerDetails = await customerServices.getCustomerDetails(req.user.cust_id);
+
+      camDetails?.forEach((room, roomIndex) => {
+        camDetails[roomIndex].timeout = customerDetails.timeout;
+        room?.cameras?.forEach((cam, camIndex) => {
+          camDetails[roomIndex].cameras[camIndex].timeout = customerDetails.timeout;
+        });
+      });
+
       res.status(200).json({
         IsSuccess: true,
         Data: camDetails,
-        Message: 'recent viewer added'
+        Message: CONSTANTS.CAMERA_DETAILS
       });
 
       next();
     } catch (error) {
       res.status(500).json({
         IsSuccess: false,
-        Message: error.message
+        Message: CONSTANTS.INTERNAL_SERVER_ERROR
       });
       next(error);
     }

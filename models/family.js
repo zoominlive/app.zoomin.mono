@@ -61,8 +61,7 @@ const Family = sequelize.define(
     },
     password_link: {
       type: Sequelize.ENUM('active', 'inactive'),
-      defaultValue: 'Enabled',
-      required: true
+      defaultValue: 'active'
     },
     is_verified: {
       type: Sequelize.BOOLEAN,
@@ -77,6 +76,11 @@ const Family = sequelize.define(
       type: Sequelize.ENUM('Family'),
       defaultValue: 'Family',
       required: true
+    },
+    profile_image: {
+      type: Sequelize.STRING(100),
+      required: false,
+      default: ''
     },
     status: {
       type: Sequelize.ENUM('Enabled', 'Disabled'),

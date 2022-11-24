@@ -76,7 +76,7 @@ module.exports = {
 
       childDetailsForlocation?.forEach((child) => {
         let rooms = [];
-        child?.rooms?.rooms.forEach((room) =>
+        child?.rooms?.rooms?.forEach((room) =>
           rooms.push({
             room
           })
@@ -88,9 +88,9 @@ module.exports = {
       });
 
       let cameras = Promise.all(
-        children.map(async (child) => {
+        children?.map(async (child) => {
           const childObj = Promise.all(
-            child.rooms.map(async (room) => {
+            child?.rooms?.map(async (room) => {
               const query = `SELECT cam_id,cam_name , description, stream_uri FROM camera WHERE room_ids LIKE '%${room.room.room_id}%'  `;
               let cams = await sequelize.query(
                 query,
@@ -124,7 +124,7 @@ module.exports = {
       });
 
       let cameras = Promise.all(
-        children.map(async (room) => {
+        children?.map(async (room) => {
           const query = `SELECT cam_id,cam_name , description, stream_uri FROM camera WHERE room_ids LIKE '%${room.room_id}%'  `;
           let cams = await sequelize.query(
             query,
