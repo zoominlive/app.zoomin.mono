@@ -323,13 +323,15 @@ const Profile = () => {
                         justifyContent="flex-end"
                         alignItems="center"
                         spacing={3}>
-                        <Button
-                          disabled={isImageUploading || isImageDeleting || submitLoading}
-                          variant="outlined"
-                          className="disabled-btn"
-                          onClick={() => setIsDeleteUserDialogOpen(true)}>
-                          Delete User
-                        </Button>
+                        {authCtx.user.role !== 'Family' && (
+                          <Button
+                            disabled={isImageUploading || isImageDeleting || submitLoading}
+                            variant="outlined"
+                            className="disabled-btn"
+                            onClick={() => setIsDeleteUserDialogOpen(true)}>
+                            Delete User
+                          </Button>
+                        )}
                         <LoadingButton
                           disabled={isImageUploading || isImageDeleting || deleteLoading}
                           loading={submitLoading}

@@ -48,8 +48,8 @@ const SetPassword = () => {
 
   useEffect(() => {
     const queryParams = search?.substring(1)?.split('&');
-    const token = queryParams && queryParams[0].substring(6);
-    const type = queryParams && queryParams[1].substring(5);
+    const token = queryParams && queryParams[0]?.substring(6);
+    const type = queryParams && queryParams[1]?.substring(5);
 
     API.post(type === 'family' ? 'family/checkLinkValid' : 'users/checkLinkValid', {
       token: token

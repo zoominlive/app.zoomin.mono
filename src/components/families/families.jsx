@@ -210,6 +210,13 @@ const Families = () => {
         data.selectedOption === 'schedule' && dayjs(data.disableDate).format('YYYY-MM-DD')
     }).then((response) => {
       if (response.status === 200) {
+        if (response?.data?.Data?.scheduled === true) {
+          setFamily((prevState) => {
+            let tempFamily = { ...prevState };
+            tempFamily.primary.scheduled_end_date = true;
+            return tempFamily;
+          });
+        }
         enqueueSnackbar(response.data.Message, { variant: 'success' });
         getFamiliesList();
         if (data.selectedOption === 'disable') {
@@ -368,7 +375,15 @@ const Families = () => {
                       }}>
                       <TableCell component="th" scope="row">
                         <Stack direction="row" alignItems="center" spacing={3}>
-                          <Avatar>{`${row.primary?.first_name[0]?.toUpperCase()}${row.primary?.last_name[0]?.toUpperCase()}`}</Avatar>
+                          {row?.primary?.profile_image ? (
+                            <Avatar
+                              alt={`${row.primary?.first_name[0]?.toUpperCase()}${row.primary?.last_name[0]?.toUpperCase()}`}
+                              src={row?.primary?.profile_image}
+                            />
+                          ) : (
+                            <Avatar>{`${row.primary?.first_name[0]?.toUpperCase()}${row.primary?.last_name[0]?.toUpperCase()}`}</Avatar>
+                          )}
+
                           <Typography>
                             {' '}
                             {row?.primary?.first_name &&
@@ -393,8 +408,10 @@ const Families = () => {
                         <AvatarGroup>
                           {row.secondary.map((person, index) => (
                             <Avatar
-                              key={
-                                index
+                              key={index}
+                              title={`${person?.first_name[0]?.toUpperCase()}${person?.last_name[0]?.toUpperCase()}`}
+                              src={
+                                person?.profile_image
                               }>{`${person?.first_name[0]?.toUpperCase()}${person?.last_name[0]?.toUpperCase()}`}</Avatar>
                           ))}
                         </AvatarGroup>

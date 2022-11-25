@@ -69,7 +69,7 @@ const Dashboard = () => {
                 <Typography className="count">
                   {statisticsData?.activeStreams !== undefined
                     ? statisticsData?.activeStreams
-                    : 'N/A'}
+                    : '   '}
                 </Typography>
                 <Stack className="name">
                   <Typography>Active</Typography>
@@ -86,7 +86,7 @@ const Dashboard = () => {
                 <Typography className="count">
                   {statisticsData?.recentViewers !== undefined
                     ? statisticsData?.recentViewers
-                    : 'N/A'}
+                    : '   '}
                 </Typography>
                 <Stack className="name">
                   <Typography>Recent</Typography>
@@ -103,7 +103,7 @@ const Dashboard = () => {
                 <Typography className="count">
                   {statisticsData?.enrolledStreams !== undefined
                     ? statisticsData?.enrolledStreams
-                    : 'N/A'}
+                    : '   '}
                 </Typography>
                 <Stack className="name">
                   <Typography>Enrolled</Typography>
@@ -118,7 +118,7 @@ const Dashboard = () => {
             <CardContent>
               <Stack direction="row" alignItems="center" spacing={2}>
                 <Typography className="count">
-                  {statisticsData?.SEAMembers !== undefined ? statisticsData?.SEAMembers : 'N/A'}
+                  {statisticsData?.SEAMembers !== undefined ? statisticsData?.SEAMembers : '   '}
                 </Typography>
                 <Stack className="name">
                   <Typography>Scheduled To</Typography>

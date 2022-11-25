@@ -14,7 +14,7 @@ import {
 } from '@mui/material';
 import React, { useContext } from 'react';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
-import SettingsIcon from '@mui/icons-material/Settings';
+// import SettingsIcon from '@mui/icons-material/Settings';
 import { useNavigate } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import AuthContext from '../../context/authcontext';
@@ -67,7 +67,7 @@ const AccountMenu = (props) => {
             </ListItemText>
           </MenuItem>
           <Divider />
-          <MenuItem
+          {/* <MenuItem
             onClick={(event) => {
               navigate('/settings');
               handleClose(event);
@@ -76,7 +76,7 @@ const AccountMenu = (props) => {
               <SettingsIcon />
             </ListItemIcon>
             <ListItemText sx={{ ml: 2 }}>Settings</ListItemText>
-          </MenuItem>
+          </MenuItem> */}
           <MenuItem
             onClick={(event) => {
               navigate('/profile');

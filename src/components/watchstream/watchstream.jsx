@@ -294,11 +294,15 @@ const WatchStream = () => {
               <CustomPlayer streamUri={streamDetails?.streamUrl} />
             </Box>
           )}
-          {camerasPayload.cameras.length === 1 && (
-            <Box mt={2}>
-              <CustomPlayer streamUri={camerasPayload.cameras[0]?.stream_uri} />
-            </Box>
-          )}
+          <Grid container spacing={1}>
+            <Grid item md={12} sm={12} sx={{ display: 'flex', justifyContent: 'center' }}>
+              {camerasPayload.cameras.length === 1 && (
+                <Box mt={2} height={'75%'} width="75%">
+                  <CustomPlayer streamUri={camerasPayload.cameras[0]?.stream_uri} />
+                </Box>
+              )}
+            </Grid>
+          </Grid>
           <Grid container spacing={2}>
             {camerasPayload.cameras.length === 2 &&
               camerasPayload.cameras.map((camera, index) => (

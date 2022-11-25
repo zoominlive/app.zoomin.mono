@@ -19,7 +19,7 @@ const EmailChange = () => {
   useEffect(() => {
     setIsLoading(true);
     const queryParams = search?.substring(1)?.split('&');
-    const token = queryParams && queryParams[0];
+    const token = queryParams && queryParams[0]?.substring(6);
     const type = queryParams && queryParams[1]?.substring(5);
     API.post(type === 'family' ? 'family/emailChange' : 'users/emailChange', { token: token }).then(
       (response) => {

@@ -52,6 +52,7 @@ const RoomForm = (props) => {
   const formikRef = useRef(null);
   const [dropdownLoading, setDropdownLoading] = useState(false);
   const [locationSelected, setLocationSelected] = useState(false);
+  // const [isInitialLocation, setIsInitialLocation] = useState(false);
   // const maximumCams = 15;
 
   useEffect(() => {
@@ -298,6 +299,7 @@ const RoomForm = (props) => {
                         onChange={(_, value) => {
                           setFieldValue('cameras', value);
                         }}
+                        defaultValue={props?.room?.camDetails ? props?.room?.camDetails : []}
                         renderTags={(value, getTagProps) =>
                           value.map((option, index) => (
                             <Chip key={index} label={option.cam_name} {...getTagProps({ index })} />
