@@ -16,7 +16,6 @@ const Children = (props) => {
   useEffect(() => {
     let rooms = [];
     props.roomsList?.map((room) => {
-      console.log(room, 'rooms');
       let count = 0;
       selectedLocation?.forEach((location) => {
         if (room.location === location) {
@@ -28,7 +27,6 @@ const Children = (props) => {
       }
     });
     setRoomList(rooms);
-    console.log(selectedLocation, rooms);
   }, [selectedLocation]);
   return (
     <FieldArray

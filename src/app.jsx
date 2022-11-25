@@ -12,8 +12,11 @@ import AuthContext from './context/authcontext';
 import ProtectedRoute from './hoc/protectedroute';
 import PublicRoute from './hoc/publicroute';
 import AppRoutes from './routes';
+import { getBuildDate } from './utils/utils';
+import packageJson from '../package.json';
+import withClearCache from './ClearCache';
 
-const App = () => {
+const MainApp = () => {
   const authCtx = useContext(AuthContext);
   const { enqueueSnackbar } = useSnackbar();
   const navigate = useNavigate();
@@ -29,6 +32,10 @@ const App = () => {
       navigate('login');
     }
   }, [authCtx.authError]);
+
+  useEffect(() => {
+    console.log('build date:', getBuildDate(packageJson.buildDate));
+  }, []);
 
   return (
     <Routes>
@@ -46,5 +53,11 @@ const App = () => {
     </Routes>
   );
 };
+
+const ClearCacheComponent = withClearCache(MainApp);
+
+function App() {
+  return <ClearCacheComponent />;
+}
 
 export default App;
