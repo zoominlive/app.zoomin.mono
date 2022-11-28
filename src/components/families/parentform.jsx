@@ -25,6 +25,7 @@ import { useContext } from 'react';
 import AuthContext from '../../context/authcontext';
 import { useSnackbar } from 'notistack';
 import API from '../../api';
+import moment from 'moment-timezone';
 
 const validationSchema = yup.object().shape({
   first_name: yup.string().required('First Name is required'),
@@ -90,6 +91,7 @@ const ParentsForm = (props) => {
         ...data,
         family_id: props.family.primary.family_id,
         member_type: 'secondary',
+        time_zone: moment.tz.guess(),
         location: authCtx.user.location
       }).then((response) => {
         if (response.status === 201) {
@@ -120,7 +122,17 @@ const ParentsForm = (props) => {
   return (
     <Dialog open={props.open} onClose={handleDialogClose} fullWidth className="add-parentdialog">
       <DialogTitle>
-        {props.primaryParent || props.secondaryParent ? 'Edit Parent' : 'Add Parent'}
+        {props.primaryParent || props.secondaryParent
+          ? `${
+              props.parentType == 'primary'
+                ? 'Edit Primary Family Member'
+                : 'Edit Secondary Family Member'
+            }`
+          : `${
+              props.parentType == 'primary'
+                ? 'Add Primary Family Member'
+                : 'Add Secondary Family Member'
+            }`}
       </DialogTitle>
       <Divider />
       <Formik
@@ -281,5 +293,6 @@ ParentsForm.propTypes = {
   secondaryParent: PropTypes.any,
   setSecondaryParent: PropTypes.func,
   setFamily: PropTypes.func,
-  getFamiliesList: PropTypes.func
+  getFamiliesList: PropTypes.func,
+  parentType: PropTypes.string
 };

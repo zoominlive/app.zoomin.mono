@@ -30,16 +30,29 @@ const DeleteDialog = (props) => {
       </DialogContent>
       <Divider />
       <DialogActions>
-        <Button
-          variant="text"
-          onClick={() => {
-            if (!props.loading) {
-              props.handleDialogClose();
-            }
-          }}
-          disabled={props.loading}>
-          CANCEL
-        </Button>
+        {props.from === 'watchstream' ? (
+          <Button
+            variant="text"
+            onClick={() => {
+              if (!props.loading) {
+                props.handleDialogClose();
+              }
+            }}
+            disabled={props.loading}>
+            NO
+          </Button>
+        ) : (
+          <Button
+            variant="text"
+            onClick={() => {
+              if (!props.loading) {
+                props.handleDialogClose();
+              }
+            }}
+            disabled={props.loading}>
+            CANCEL
+          </Button>
+        )}
         <LoadingButton
           loading={props.loading}
           loadingPosition={props.loading ? 'start' : undefined}
@@ -61,5 +74,6 @@ DeleteDialog.propTypes = {
   title: PropTypes.string,
   contentText: PropTypes.string,
   loading: PropTypes.bool,
-  handleDelete: PropTypes.func
+  handleDelete: PropTypes.func,
+  from: PropTypes.string
 };

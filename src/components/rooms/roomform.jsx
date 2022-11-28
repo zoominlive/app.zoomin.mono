@@ -289,7 +289,7 @@ const RoomForm = (props) => {
                         noOptionsText={!locationSelected ? 'Select location first' : 'No Camera'}
                         isOptionEqualToValue={(option, value) => option.cam_id === value.cam_id}
                         getOptionLabel={(option) => {
-                          return option.cam_name;
+                          return option.cam_name + ' - ' + option?.description;
                         }}
                         onMouseEnter={() => {
                           if (values?.location) {

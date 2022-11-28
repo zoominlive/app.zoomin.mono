@@ -4,7 +4,6 @@ import {
   Card,
   CardContent,
   Chip,
-  CircularProgress,
   Grid,
   Stack,
   TextField,
@@ -37,25 +36,36 @@ const WatchStream = () => {
   const [dropdownLoading, setDropdownLoading] = useState(false);
   const [rooms, setRooms] = useState([]);
   const [cameras, setCameras] = useState([]);
+
   const [selectedRoom, setSelectedRoom] = useState();
   const [userInfoSent, setUserInfoSent] = useState(false);
   const [streamDetails, setStreamDetails] = useState();
   const [textFocus, setTextFocus] = useState({ location: false, room: false, cameras: false });
+  const [timeOut, setTimeOut] = useState(10);
 
   useEffect(() => {
     layoutCtx.setActive(5);
     layoutCtx.setBreadcrumb(['Watch Stream']);
     setStreamDetails(location.state);
-    return () => {
-      authCtx.setPreviosPagePath(window.location.pathname);
-    };
-  }, []);
 
-  useEffect(() => {
-    if (camerasPayload.location) {
+    if (!location.state) {
       setDropdownLoading(true);
-      API.get('watchstream', { params: { location: camerasPayload.location } }).then((response) => {
+      API.get('watchstream', {
+        params: { location: authCtx?.user?.location?.accessable_locations[0] }
+      }).then((response) => {
         if (response.status === 200) {
+          setTimeOut(response.data.Data[0].timeout);
+          setStreamDetails({
+            camName: response?.data?.Data[0]?.cameras[0]?.cam_name,
+            location: response?.data?.Data[0]?.location,
+            roomName: response?.data?.Data[0]?.room_name,
+            streamUrl: response?.data?.Data[0]?.cameras[0]?.stream_uri
+          });
+          setCamerasPayload({
+            cameras: response?.data?.Data[0]?.cameras,
+            location: response?.data?.Data[0].location,
+            room: response?.data?.Data[0]
+          });
           setRooms(response.data.Data);
         } else {
           errorMessageHandler(
@@ -68,7 +78,40 @@ const WatchStream = () => {
         setDropdownLoading(false);
       });
     }
+
+    return () => {
+      authCtx.setPreviosPagePath(window.location.pathname);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (camerasPayload.location) {
+      setDropdownLoading(true);
+      API.get('watchstream', { params: { location: camerasPayload.location } }).then((response) => {
+        if (response.status === 200) {
+          setDropdownLoading(false);
+          setTimeOut(response.data.Data[0].timeout);
+          setCamerasPayload({
+            cameras: [],
+            location: response?.data?.Data[0].location,
+            room: response?.data?.Data[0]
+          });
+          setRooms(response.data.Data);
+          setCameras(response?.data?.Data[0]?.cameras);
+        } else {
+          errorMessageHandler(
+            enqueueSnackbar,
+            response?.response?.data?.Message || 'Something Went Wrong.',
+            response?.response?.status,
+            authCtx.setAuthError
+          );
+        }
+        setDropdownLoading(false);
+      });
+    }
   }, [camerasPayload.location]);
+
+  useEffect(() => {});
 
   useEffect(() => {
     if (selectedRoom) {
@@ -83,6 +126,8 @@ const WatchStream = () => {
   const handleLocationChange = (_, value) => {
     setCamerasPayload({ cameras: [], location: value, room: '' });
     setStreamDetails('');
+    setCameras([]);
+    setRooms([]);
     setLimitReached(false);
   };
   const handleRoomChange = (_, value) => {
@@ -152,6 +197,7 @@ const WatchStream = () => {
                 disableClearable
                 options={authCtx.user.location.accessable_locations}
                 id="location"
+                defaultValue={authCtx.user.location.accessable_locations[0]}
                 onChange={handleLocationChange}
                 renderInput={(params) => (
                   <TextField
@@ -208,10 +254,7 @@ const WatchStream = () => {
                     InputProps={{
                       ...params.InputProps,
                       endAdornment: (
-                        <React.Fragment>
-                          {dropdownLoading ? <CircularProgress color="inherit" size={20} /> : null}
-                          {params.InputProps.endAdornment}
-                        </React.Fragment>
+                        <React.Fragment>{params.InputProps.endAdornment}</React.Fragment>
                       )
                     }}
                   />
@@ -220,10 +263,11 @@ const WatchStream = () => {
             </Grid>
             <Grid item md={3} sm={12}>
               <Autocomplete
+                disableClearable
                 fullWidth
                 multiple
+                disableCloseOnSelect
                 id="Camera"
-                value={camerasPayload.cameras}
                 noOptionsText={
                   !camerasPayload.room && !camerasPayload.location
                     ? 'Select location and room first'
@@ -235,12 +279,12 @@ const WatchStream = () => {
                 }
                 onChange={onSelect}
                 getOptionDisabled={checkDisable}
-                options={!camerasPayload.room ? [] : cameras}
+                options={!camerasPayload?.room ? [] : cameras}
                 getOptionLabel={(option) => (option?.cam_name ? option.cam_name : '')}
                 isOptionEqualToValue={(option, value) => option.cam_id === value.cam_id}
                 renderTags={(value, getTagProps) =>
                   value.map((option, index) => (
-                    <Chip key={index} label={option.cam_name} {...getTagProps({ index })} />
+                    <Chip key={index} label={option?.cam_name} {...getTagProps({ index })} />
                   ))
                 }
                 renderInput={(params) => (
@@ -260,16 +304,12 @@ const WatchStream = () => {
                     onBlur={() => {
                       setTextFocus({ ...textFocus, cameras: false });
                     }}
-                    fullWidth
                     placeholder="Cameras"
                     helperText={limitReached && 'Maxmimum two cameras can be selected'}
                     InputProps={{
                       ...params.InputProps,
                       endAdornment: (
-                        <React.Fragment>
-                          {dropdownLoading ? <CircularProgress color="inherit" size={20} /> : null}
-                          {params.InputProps.endAdornment}
-                        </React.Fragment>
+                        <React.Fragment>{params.InputProps.endAdornment}</React.Fragment>
                       )
                     }}
                   />
@@ -291,14 +331,22 @@ const WatchStream = () => {
           )}
           {streamDetails?.streamUrl && camerasPayload.cameras.length === 0 && (
             <Box mt={2}>
-              <CustomPlayer streamUri={streamDetails?.streamUrl} />
+              <CustomPlayer
+                streamUri={streamDetails?.streamUrl}
+                timeOut={timeOut}
+                setTimeOut={setTimeOut}
+              />
             </Box>
           )}
           <Grid container spacing={1}>
             <Grid item md={12} sm={12} sx={{ display: 'flex', justifyContent: 'center' }}>
               {camerasPayload.cameras.length === 1 && (
                 <Box mt={2} height={'75%'} width="75%">
-                  <CustomPlayer streamUri={camerasPayload.cameras[0]?.stream_uri} />
+                  <CustomPlayer
+                    streamUri={camerasPayload.cameras[0]?.stream_uri}
+                    timeOut={timeOut}
+                    setTimeOut={setTimeOut}
+                  />
                 </Box>
               )}
             </Grid>
@@ -307,7 +355,12 @@ const WatchStream = () => {
             {camerasPayload.cameras.length === 2 &&
               camerasPayload.cameras.map((camera, index) => (
                 <Grid key={index} item md={6} sm={12}>
-                  <CustomPlayer noOfCameras={2} streamUri={camera?.stream_uri} />
+                  <CustomPlayer
+                    noOfCameras={2}
+                    streamUri={camera?.stream_uri}
+                    timeOut={timeOut}
+                    setTimeOut={setTimeOut}
+                  />
                 </Grid>
               ))}
           </Grid>

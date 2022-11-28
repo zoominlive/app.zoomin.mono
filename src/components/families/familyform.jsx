@@ -26,7 +26,7 @@ import API from '../../api';
 import { useSnackbar } from 'notistack';
 import { errorMessageHandler } from '../../utils/errormessagehandler';
 import * as yup from 'yup';
-
+import moment from 'moment-timezone';
 const STEPS = ['Primary', 'Secondary', 'Children'];
 
 const AddFamily = (props) => {
@@ -172,10 +172,12 @@ const AddFamily = (props) => {
       const payload = structuredClone(data);
 
       payload.primary.member_type = 'primary';
+      payload.primary.time_zone = moment.tz.guess();
       payload.primary.location = authCtx.user.location;
 
       payload.secondary.forEach((parent) => {
         parent.member_type = 'secondary';
+        parent.time_zone = moment.tz.guess();
         parent.location = authCtx.user.location;
       });
 

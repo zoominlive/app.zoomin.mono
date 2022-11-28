@@ -384,6 +384,7 @@ const FamilyDrawer = (props) => {
           disabled={props?.family?.primary?.status === 'Disabled'}
           onClick={() => {
             props.setPrimaryParent(props?.family?.primary);
+            props.setParentType('primary');
             props.setIsParentFormDialogOpen(true);
           }}>
           <EditIcon />
@@ -440,7 +441,7 @@ const FamilyDrawer = (props) => {
                         variant="outlined"
                         className="disabled-btn"
                         onClick={() => {
-                          setDisableDialogTitle('Disable Parent');
+                          setDisableDialogTitle('Disable Secondary Family Member');
                           setIsDisableDialogOpen(true);
                           setParentToDisable(parent.family_member_id);
                         }}>
@@ -476,6 +477,7 @@ const FamilyDrawer = (props) => {
                     disabled={props.family.primary.status === 'Disabled'}
                     onClick={() => {
                       props.setSecondaryParent(parent);
+                      props.setParentType('secondary');
                       props.setIsParentFormDialogOpen(true);
                     }}>
                     <EditIcon />
@@ -687,6 +689,7 @@ FamilyDrawer.propTypes = {
   open: PropTypes.bool,
   setOpen: PropTypes.func,
   setIsParentFormDialogOpen: PropTypes.func,
+  setParentType: PropTypes.func,
   setIsDisableFamilyDialogOpen: PropTypes.func,
   setIsChildFormDialogOpen: PropTypes.func,
   family: PropTypes.object,

@@ -22,7 +22,7 @@ import { useSnackbar } from 'notistack';
 import { errorMessageHandler } from '../../utils/errormessagehandler';
 import { LoadingButton } from '@mui/lab';
 import SaveIcon from '@mui/icons-material/Save';
-
+import moment from 'moment-timezone';
 const validationSchema = yup.object({
   first_name: yup.string().required('First Name is required'),
   last_name: yup.string().required('Last Name is required'),
@@ -85,6 +85,7 @@ const ChildForm = (props) => {
       API.post('family/child/add', {
         first_name: data.first_name,
         last_name: data.last_name,
+        time_zone: moment.tz.guess(),
         rooms: { rooms: data.rooms },
         location: { locations: data.locations },
         family_id: props.family.primary.family_id

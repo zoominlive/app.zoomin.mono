@@ -8,7 +8,7 @@ import PropTypes from 'prop-types';
 import Loader from '../common/loader';
 import { useContext } from 'react';
 import AuthContext from '../../context/authcontext';
-
+import DeleteDialog from '../common/deletedialog';
 const CustomPlayer = (props) => {
   const authCtx = useContext(AuthContext);
   const [playing, setPlaying] = useState(false);
@@ -18,7 +18,7 @@ const CustomPlayer = (props) => {
   const playerContainerRef = useRef(null);
   const playerRef = useRef(null);
   const [showErrorMessage, setShowErrorMessage] = useState(true);
-
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   useEffect(() => {
     function exitHandler() {
       if (
@@ -41,6 +41,13 @@ const CustomPlayer = (props) => {
     };
   }, []);
 
+  const startTimer = () => {
+    setTimeout(() => {
+      setPlaying(false);
+      setIsDeleteDialogOpen(true);
+    }, props?.timeOut * 1000 * 60);
+  };
+
   const handleFullscreenToggle = () => {
     screenfull.toggle(playerContainerRef.current);
     setFullScreen((fullscreen) => !fullscreen);
@@ -55,9 +62,14 @@ const CustomPlayer = (props) => {
         width={'100%'}
         controls={false}
         ref={playerRef}
-        onReady={() => setReady(true)}
+        onReady={() => {
+          setPlaying(true);
+          startTimer();
+          setReady(true);
+        }}
         onPlay={() => {
           setPlaying(true);
+          startTimer();
           setShowErrorMessage(true);
         }}
         onPause={() => {
@@ -92,6 +104,19 @@ const CustomPlayer = (props) => {
         handleFullscreenToggle={handleFullscreenToggle}
         noOfCameras={props.noOfCameras}
       />
+      <DeleteDialog
+        open={isDeleteDialogOpen}
+        title="Are you still watching?"
+        from="watchstream"
+        contentText="Press Yes to continue watching "
+        handleDialogClose={() => {
+          setIsDeleteDialogOpen(false);
+        }}
+        handleDelete={() => {
+          setPlaying(true);
+          setIsDeleteDialogOpen(false);
+        }}
+      />
     </Box>
   );
 };
@@ -100,5 +125,7 @@ export default CustomPlayer;
 
 CustomPlayer.propTypes = {
   noOfCameras: PropTypes.number,
-  streamUri: PropTypes.string
+  streamUri: PropTypes.string,
+  setTimeOut: PropTypes.func,
+  timeOut: PropTypes.number
 };

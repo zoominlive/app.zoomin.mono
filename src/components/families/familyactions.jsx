@@ -91,7 +91,7 @@ const FamilyActions = (props) => {
           <ListItemIcon>
             <GroupAddIcon />
           </ListItemIcon>
-          <ListItemText>Add Parent</ListItemText>
+          <ListItemText>Add Family Member</ListItemText>
         </MenuItem>
         <MenuItem
           onClick={handleOpenDisableFamilyDialog}

@@ -45,7 +45,6 @@ import debounce from 'lodash.debounce';
 import Loader from '../common/loader';
 import { capitalizeFirstLetter } from '../../utils/capitalizefirstletter';
 import dayjs from 'dayjs';
-
 const Families = () => {
   const layoutCtx = useContext(LayoutContext);
   const authCtx = useContext(AuthContext);
@@ -67,6 +66,7 @@ const Families = () => {
   const [disableLoading, setDisableLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [parentType, setParentType] = useState('');
   const [familiesPayload, setFamiliesPayload] = useState({
     page: 1,
     limit: parseInt(process.env.REACT_APP_PAGINATION_LIMIT, 10),
@@ -78,7 +78,6 @@ const Families = () => {
   useEffect(() => {
     layoutCtx.setActive(2);
     layoutCtx.setBreadcrumb(['Families', 'Manage Families and their camera authorization']);
-
     return () => {
       authCtx.setPreviosPagePath(window.location.pathname);
     };
@@ -267,7 +266,7 @@ const Families = () => {
                   <Grid item md={5} sm={12}>
                     <TextField
                       label="Search"
-                      placeholder={'Parent Name, Child Name'}
+                      placeholder={'Family Member Name, Child Name'}
                       onChange={familesListDebounce}
                     />
                   </Grid>
@@ -354,7 +353,7 @@ const Families = () => {
               <Table sx={{ minWidth: 650 }} aria-label="simple table">
                 <TableHead>
                   <TableRow>
-                    <TableCell style={{ minWidth: '150px' }}>Primary Parent</TableCell>
+                    <TableCell style={{ minWidth: '150px' }}>Primary Family Member</TableCell>
                     <TableCell align="left">Children</TableCell>
                     <TableCell style={{ minWidth: '100px' }} align="left">
                       Location
@@ -491,6 +490,8 @@ const Families = () => {
           family={family}
           setFamily={setFamily}
           getFamiliesList={getFamiliesList}
+          setParentType={setParentType}
+          parentType={parentType}
         />
       )}
       <FamilyDrawer
@@ -505,6 +506,8 @@ const Families = () => {
         setSecondaryParent={setSecondaryParent}
         setChild={setChild}
         getFamiliesList={getFamiliesList}
+        setParentType={setParentType}
+        parentType={parentType}
       />
       <DeleteDialog
         open={isDeleteDialogOpen}
