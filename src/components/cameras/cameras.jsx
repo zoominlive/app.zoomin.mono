@@ -93,7 +93,9 @@ const Cameras = () => {
   // Method to delete user
   const handleCameraDelete = (wait = false) => {
     setDeleteLoading(true);
-    API.delete('cams/delete', { data: { cam_id: camera.cam_id, wait: wait } }).then((response) => {
+    API.delete('cams/delete', {
+      data: { cam_id: camera.cam_id, wait: wait, streamId: camera.stream_uuid }
+    }).then((response) => {
       if (response.status === 200) {
         getCamerasList();
         enqueueSnackbar(response.data.Message, {

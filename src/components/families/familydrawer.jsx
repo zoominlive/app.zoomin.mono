@@ -12,7 +12,6 @@ import {
 } from '@mui/material';
 import React from 'react';
 import PropTypes from 'prop-types';
-import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import EditIcon from '@mui/icons-material/Edit';
 import { capitalizeFirstLetter } from '../../utils/capitalizefirstletter';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -186,7 +185,9 @@ const FamilyDrawer = (props) => {
                 (parent) => parent.family_member_id === parentToDisable
               );
 
-              tempFamily.secondary[index].scheduled_end_date = true;
+              tempFamily.secondary[index].scheduled_end_date = dayjs(data.disableDate).format(
+                'YYYY-MM-DD'
+              );
 
               return tempFamily;
             });
@@ -228,7 +229,9 @@ const FamilyDrawer = (props) => {
                 (child) => child.child_id === childToDisable
               );
 
-              tempFamily.children[index].scheduled_end_date = true;
+              tempFamily.children[index].scheduled_end_date = dayjs(data.disableDate).format(
+                'YYYY-MM-DD'
+              );
               return tempFamily;
             });
           } else if (data.selectedOption === 'disable') {
@@ -437,38 +440,49 @@ const FamilyDrawer = (props) => {
                     </LoadingButton>
                   ) : (
                     <>
-                      <Button
-                        variant="outlined"
-                        className="disabled-btn"
-                        onClick={() => {
-                          setDisableDialogTitle('Disable Secondary Family Member');
-                          setIsDisableDialogOpen(true);
-                          setParentToDisable(parent.family_member_id);
-                        }}>
-                        Disable
-                      </Button>
-                      {parent?.scheduled_end_date !== null && (
-                        <Tooltip id="button-report" title="Delete scheduled disable">
-                          <IconButton
-                            aria-label="delete"
-                            className="row-delete-btn"
-                            color="error"
-                            onClick={() => {
-                              setScheduledLoading({ loading: true, index: index, type: 'member' });
-                              handleParentEnable(parent.family_member_id, index);
-                            }}>
-                            <Loader
-                              loading={
-                                scheduledLoading.loading &&
-                                scheduledLoading.index == index &&
-                                scheduledLoading.type == 'member'
-                                  ? true
-                                  : false
-                              }
-                            />
-                            <DeleteIcon />
-                          </IconButton>
-                        </Tooltip>
+                      {parent?.scheduled_end_date == null && (
+                        <Button
+                          variant="outlined"
+                          className="disabled-btn"
+                          onClick={() => {
+                            setDisableDialogTitle('Disable Secondary Family Member');
+                            setIsDisableDialogOpen(true);
+                            setParentToDisable(parent.family_member_id);
+                          }}>
+                          Disable
+                        </Button>
+                      )}
+                      {parent?.scheduled_end_date !== null && parent?.scheduled_end_date && (
+                        <>
+                          <Typography variant="caption">
+                            {`Disable Date:  ${parent?.scheduled_end_date}`}
+                          </Typography>
+                          <Tooltip id="button-report" title="Delete scheduled disable">
+                            <IconButton
+                              aria-label="delete"
+                              className="row-delete-btn"
+                              color="error"
+                              onClick={() => {
+                                setScheduledLoading({
+                                  loading: true,
+                                  index: index,
+                                  type: 'member'
+                                });
+                                handleParentEnable(parent.family_member_id, index);
+                              }}>
+                              <Loader
+                                loading={
+                                  scheduledLoading.loading &&
+                                  scheduledLoading.index == index &&
+                                  scheduledLoading.type == 'member'
+                                    ? true
+                                    : false
+                                }
+                              />
+                              <DeleteIcon />
+                            </IconButton>
+                          </Tooltip>
+                        </>
                       )}
                     </>
                   )}
@@ -526,42 +540,50 @@ const FamilyDrawer = (props) => {
                         </LoadingButton>
                       ) : (
                         <>
-                          <Button
-                            variant="outlined"
-                            className="disabled-btn"
-                            onClick={() => {
-                              setIsDisableDialogOpen(true);
-                              setChildToDisable(child.child_id);
-                              setDisableDialogTitle('Disable Child');
-                            }}>
-                            Disable
-                          </Button>
-                          {child?.scheduled_end_date !== null && (
-                            <Tooltip id="button-report" title="Delete scheduled disable">
-                              <IconButton
-                                aria-label="delete"
-                                className="row-delete-btn"
-                                color="error"
-                                onClick={() => {
-                                  setScheduledLoading({
-                                    loading: true,
-                                    index: index,
-                                    type: 'child'
-                                  });
-                                  handleChildEnable(child.child_id, index);
-                                }}>
-                                <Loader
-                                  loading={
-                                    scheduledLoading.loading &&
-                                    scheduledLoading.index == index &&
-                                    scheduledLoading.type == 'child'
-                                      ? true
-                                      : false
-                                  }
-                                />
-                                <DeleteIcon />
-                              </IconButton>
-                            </Tooltip>
+                          {child?.scheduled_end_date == null && (
+                            <Button
+                              variant="outlined"
+                              className="disabled-btn"
+                              onClick={() => {
+                                setIsDisableDialogOpen(true);
+                                setChildToDisable(child.child_id);
+                                setDisableDialogTitle('Disable Child');
+                              }}>
+                              Disable
+                            </Button>
+                          )}
+                          {child?.scheduled_end_date !== null && child?.scheduled_end_date && (
+                            <>
+                              {' '}
+                              <Typography variant="caption">
+                                {`Disable Date:  ${child?.scheduled_end_date}`}
+                              </Typography>
+                              <Tooltip id="button-report" title="Delete scheduled disable">
+                                <IconButton
+                                  aria-label="delete"
+                                  className="row-delete-btn"
+                                  color="error"
+                                  onClick={() => {
+                                    setScheduledLoading({
+                                      loading: true,
+                                      index: index,
+                                      type: 'child'
+                                    });
+                                    handleChildEnable(child.child_id, index);
+                                  }}>
+                                  <Loader
+                                    loading={
+                                      scheduledLoading.loading &&
+                                      scheduledLoading.index == index &&
+                                      scheduledLoading.type == 'child'
+                                        ? true
+                                        : false
+                                    }
+                                  />
+                                  <DeleteIcon />
+                                </IconButton>
+                              </Tooltip>
+                            </>
                           )}
                         </>
                       )}
@@ -618,52 +640,52 @@ const FamilyDrawer = (props) => {
           </LoadingButton>
         ) : (
           <>
-            <Button
-              variant="outlined"
-              className="disabled-btn"
-              onClick={() => props.setIsDisableFamilyDialogOpen(true)}>
-              Disable FAMILY
-            </Button>
-            {props?.family?.primary?.scheduled_end_date !== null && (
-              <Tooltip id="button-report" title="Delete scheduled disable">
-                <IconButton
-                  aria-label="delete"
-                  className="row-delete-btn"
-                  color="error"
-                  onClick={() => {
-                    setScheduledLoading({
-                      loading: true,
-                      index: -1,
-                      type: 'family'
-                    });
-                    handleFamilyEnable();
-                  }}>
-                  <Loader
-                    loading={
-                      scheduledLoading.loading && scheduledLoading.type == 'family' ? true : false
-                    }
-                  />
-                  <DeleteIcon />
-                </IconButton>
-              </Tooltip>
+            {props?.family?.primary?.scheduled_end_date == null && (
+              <Button
+                variant="outlined"
+                className="disabled-btn"
+                onClick={() => props.setIsDisableFamilyDialogOpen(true)}>
+                Disable FAMILY
+              </Button>
             )}
+            {props?.family?.primary?.scheduled_end_date != null &&
+              props?.family?.primary?.scheduled_end_date && (
+                <>
+                  {' '}
+                  <Typography variant="caption">
+                    {`Disable Date:  ${dayjs(props?.family?.primary?.scheduled_end_date).format(
+                      'YYYY-MM-DD'
+                    )}`}
+                  </Typography>
+                  <Tooltip id="button-report" title="Delete scheduled disable">
+                    <IconButton
+                      aria-label="delete"
+                      className="row-delete-btn"
+                      color="error"
+                      onClick={() => {
+                        setScheduledLoading({
+                          loading: true,
+                          index: -1,
+                          type: 'family'
+                        });
+                        handleFamilyEnable();
+                      }}>
+                      <Loader
+                        loading={
+                          scheduledLoading.loading && scheduledLoading.type == 'family'
+                            ? true
+                            : false
+                        }
+                      />
+                      <DeleteIcon />
+                    </IconButton>
+                  </Tooltip>
+                </>
+              )}
           </>
         )}
       </Stack>
-      <Divider textAlign="left" className="title-divider">
-        SCHEDULE END DATE
-      </Divider>
-      <Stack spacing={1.5} px={2.5} mb={2} direction="row" alignItems="center">
-        <Avatar sx={{ color: '#1976d2', background: '#1976D20A' }}>
-          <VisibilityOffIcon />
-        </Avatar>
-        <Typography variant="body2">
-          {' '}
-          {props?.family?.primary.scheduled_end_date
-            ? dayjs(props?.family?.primary.scheduled_end_date).format('MM.DD.YYYY')
-            : 'N/A'}
-        </Typography>
-      </Stack>
+
       <DeleteDialog
         title="Delete Child"
         contentText="Are you sure you want to delete this child?"

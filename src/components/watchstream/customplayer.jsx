@@ -8,17 +8,19 @@ import PropTypes from 'prop-types';
 import Loader from '../common/loader';
 import { useContext } from 'react';
 import AuthContext from '../../context/authcontext';
-import DeleteDialog from '../common/deletedialog';
+import _ from 'lodash';
+
 const CustomPlayer = (props) => {
   const authCtx = useContext(AuthContext);
-  const [playing, setPlaying] = useState(false);
   const [inPIPMode, setInPIPMode] = useState(false);
   const [fullscreen, setFullScreen] = useState(false);
   const [ready, setReady] = useState(false);
   const playerContainerRef = useRef(null);
   const playerRef = useRef(null);
   const [showErrorMessage, setShowErrorMessage] = useState(true);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [url, setUrl] = useState('');
+  const [playerPlaying, setPlayerPlaying] = useState(true);
+
   useEffect(() => {
     function exitHandler() {
       if (
@@ -41,10 +43,15 @@ const CustomPlayer = (props) => {
     };
   }, []);
 
+  useEffect(() => {
+    setUrl(props?.streamUri);
+  }, [props.streamUri]);
+
   const startTimer = () => {
     setTimeout(() => {
-      setPlaying(false);
-      setIsDeleteDialogOpen(true);
+      setPlayerPlaying(false);
+      props.setPlaying(false);
+      props.setIsDeleteDialogOpen(true);
     }, props?.timeOut * 1000 * 60);
   };
 
@@ -54,70 +61,62 @@ const CustomPlayer = (props) => {
   };
 
   return (
-    <Box className="video-player-wrapper" ref={playerContainerRef}>
-      <Loader loading={!ready} />
-      <ReactPlayer
-        url={`${authCtx.user.transcoderBaseUrl}${props?.streamUri}`}
-        height={'100%'}
-        width={'100%'}
-        controls={false}
-        ref={playerRef}
-        onReady={() => {
-          setPlaying(true);
-          startTimer();
-          setReady(true);
-        }}
-        onPlay={() => {
-          setPlaying(true);
-          startTimer();
-          setShowErrorMessage(true);
-        }}
-        onPause={() => {
-          setPlaying(false);
-        }}
-        onError={() => {
-          if (showErrorMessage) {
-            setReady(true);
-            setShowErrorMessage(false);
-          }
-        }}
-        playing={playing}
-        pip={inPIPMode}
-        config={{
-          file: {
-            hlsOptions: {
-              forceHLS: true,
-              debug: false,
-              xhrSetup: function (xhr) {
-                xhr.setRequestHeader('Authorization', `Bearer ${authCtx.token}`);
+    <>
+      {!_.isEmpty(url) && (
+        <Box className="video-player-wrapper" ref={playerContainerRef}>
+          <Loader loading={!ready} />
+          <ReactPlayer
+            url={`${authCtx.user.transcoderBaseUrl}${url}`}
+            height={'100%'}
+            width={'100%'}
+            controls={false}
+            ref={playerRef}
+            stopOnUnmount={true}
+            onReady={() => {
+              setPlayerPlaying(true);
+              startTimer();
+              setReady(true);
+            }}
+            onPlay={() => {
+              setPlayerPlaying(true);
+              startTimer();
+              setShowErrorMessage(true);
+            }}
+            onPause={() => {
+              setPlayerPlaying(false);
+            }}
+            onError={() => {
+              if (showErrorMessage) {
+                setReady(true);
+                setShowErrorMessage(false);
               }
-            }
-          }
-        }}
-      />
-      <PlayerControls
-        playing={playing}
-        setPlaying={setPlaying}
-        inPIPMode={inPIPMode}
-        setInPIPMode={setInPIPMode}
-        fullscreen={fullscreen}
-        handleFullscreenToggle={handleFullscreenToggle}
-        noOfCameras={props.noOfCameras}
-      />
-      <DeleteDialog
-        open={isDeleteDialogOpen}
-        title="Are you still watching?"
-        from="watchstream"
-        contentText="Press Yes to continue watching "
-        handleDialogClose={() => {
-          setIsDeleteDialogOpen(false);
-        }}
-        handleDelete={() => {
-          setPlaying(true);
-          setIsDeleteDialogOpen(false);
-        }}
-      />
-    </Box>
+            }}
+            playing={playerPlaying}
+            pip={inPIPMode}
+            config={{
+              file: {
+                hlsOptions: {
+                  forceHLS: true,
+                  debug: false,
+                  xhrSetup: function (xhr) {
+                    xhr.setRequestHeader('Authorization', `Bearer ${authCtx.token}`);
+                  }
+                }
+              }
+            }}
+          />
+          <PlayerControls
+            playing={playerPlaying}
+            setPlaying={setPlayerPlaying}
+            inPIPMode={inPIPMode}
+            setInPIPMode={setInPIPMode}
+            fullscreen={fullscreen}
+            handleFullscreenToggle={handleFullscreenToggle}
+            noOfCameras={props.noOfCameras}
+          />
+        </Box>
+      )}
+    </>
   );
 };
 
@@ -127,5 +126,7 @@ CustomPlayer.propTypes = {
   noOfCameras: PropTypes.number,
   streamUri: PropTypes.string,
   setTimeOut: PropTypes.func,
-  timeOut: PropTypes.number
+  timeOut: PropTypes.number,
+  setPlaying: PropTypes.func,
+  setIsDeleteDialogOpen: PropTypes.func
 };

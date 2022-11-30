@@ -45,6 +45,7 @@ import debounce from 'lodash.debounce';
 import Loader from '../common/loader';
 import { capitalizeFirstLetter } from '../../utils/capitalizefirstletter';
 import dayjs from 'dayjs';
+
 const Families = () => {
   const layoutCtx = useContext(LayoutContext);
   const authCtx = useContext(AuthContext);
@@ -140,32 +141,41 @@ const Families = () => {
 
   // Method to change the page in table
   const handlePageChange = (_, newPage) => {
-    setFamiliesPayload((prevPayload) => ({ ...prevPayload, page: newPage }));
+    setFamiliesPayload((prevPayload) => ({ ...prevPayload, page: newPage + 1 }));
   };
 
   // Method to change the row per page in table
   const handleChangeRowsPerPage = (event) => {
     setFamiliesPayload((prevPayload) => ({
       ...prevPayload,
-      limit: parseInt(event.target.value, 10)
+      limit: parseInt(event.target.value, 10),
+      page: 1
     }));
   };
 
   // Method to handle Search for table
   const handleSearch = (event) => {
-    setFamiliesPayload((prevPayload) => ({ ...prevPayload, searchBy: event.target.value }));
+    setFamiliesPayload((prevPayload) => ({
+      ...prevPayload,
+      searchBy: event.target.value,
+      page: 1
+    }));
   };
 
   // Method to handle location change for table
   const handleLocationChange = (event) => {
-    setFamiliesPayload((prevPayload) => ({ ...prevPayload, location: event.target.value }));
+    setFamiliesPayload((prevPayload) => ({
+      ...prevPayload,
+      location: event.target.value,
+      page: 1
+    }));
   };
 
   // Method to handle room change for table
   const handleRoomChange = (_, value) => {
     const roomsArr = [];
     value.forEach((room) => roomsArr.push(room.room_name));
-    setFamiliesPayload((prevPayload) => ({ ...prevPayload, rooms: roomsArr }));
+    setFamiliesPayload((prevPayload) => ({ ...prevPayload, rooms: roomsArr, page: 1 }));
   };
 
   // Calls the search handler after 500ms
@@ -212,7 +222,7 @@ const Families = () => {
         if (response?.data?.Data?.scheduled === true) {
           setFamily((prevState) => {
             let tempFamily = { ...prevState };
-            tempFamily.primary.scheduled_end_date = true;
+            tempFamily.primary.scheduled_end_date = dayjs(data.disableDate).format('YYYY-MM-DD');
             return tempFamily;
           });
         }

@@ -92,8 +92,11 @@ const Row = (props) => {
                           to="/watch-stream"
                           state={{
                             roomName: row?.room_name,
+                            // eslint-disable-next-line react/prop-types
+                            roomId: row?.room_id,
                             location: row?.location,
                             camName: camRow?.cam_name,
+                            camId: camRow.cam_id,
                             streamUrl: camRow?.stream_uri
                           }}>
                           <Video />
@@ -250,25 +253,34 @@ const Rooms = () => {
   const handleChangeRowsPerPage = (event) => {
     setRoomsPayload((prevPayload) => ({
       ...prevPayload,
-      pageSize: parseInt(event.target.value, 10)
+      pageSize: parseInt(event.target.value, 10),
+      pageNumber: 0
     }));
   };
 
   // Method to handle Search for table
   const handleSearch = (event) => {
-    setRoomsPayload((prevPayload) => ({ ...prevPayload, searchBy: event.target.value }));
+    setRoomsPayload((prevPayload) => ({
+      ...prevPayload,
+      searchBy: event.target.value,
+      pageNumber: 0
+    }));
   };
 
   // Method to handle location change for table
   const handleLocationChange = (event) => {
-    setRoomsPayload((prevPayload) => ({ ...prevPayload, location: event.target.value }));
+    setRoomsPayload((prevPayload) => ({
+      ...prevPayload,
+      location: event.target.value,
+      pageNumber: 0
+    }));
   };
 
   // Method to handle room change for table
   const handleRoomChange = (_, value) => {
     const roomsArr = [];
     value.forEach((room) => roomsArr.push(room.room_name));
-    setRoomsPayload((prevPayload) => ({ ...prevPayload, rooms: roomsArr }));
+    setRoomsPayload((prevPayload) => ({ ...prevPayload, rooms: roomsArr, pageNumber: 0 }));
   };
 
   // Calls the search handler after 500ms

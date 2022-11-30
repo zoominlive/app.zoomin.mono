@@ -91,6 +91,7 @@ const DisableDialog = (props) => {
                         <LocalizationProvider dateAdapter={AdapterDayjs}>
                           <DesktopDatePicker
                             open={isDatePickerOpen}
+                            minDate={new Date()}
                             label="Disable date"
                             value={values?.disableDate}
                             inputFormat="MM/DD/YYYY"
