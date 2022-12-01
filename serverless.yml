@@ -16,18 +16,19 @@ provider:
     ACCESS_KEY_ID: AKIAYEUNNGGXZZWD3RES
     SECRET_ACCESS_KEY: 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
     EMAIL_SOURCE_ACCOUNT: 'support@zoominlive.com'
-    RDS_HOST: zoomin-1.crzgnnp8iqzv.us-west-2.rds.amazonaws.com
-    # RDS_HOST: 127.0.0.1
+    # RDS_HOST: zoomin-1.crzgnnp8iqzv.us-west-2.rds.amazonaws.com
+    RDS_HOST: 127.0.0.1
     RDS_PORT: 3306
-    RDS_USER: zoomin_dbuser
-    # RDS_USER: root
-    RDS_PASSWORD: Wk8$b6!xR
+    # RDS_USER: zoomin_dbuser
+    RDS_USER: root
+    # RDS_PASSWORD: Wk8$b6!xR
     RDS_DB_NAME: zoomin
     JWT_SECRET_KEY: zoominlivesecretkey
     JWT_REFRESH_SECRET_KEY: 2d
     ACCESS_TOKEN_EXPIRY: 1d
     REFRESH_TOKEN_EXPIRY: 1d
     NODE_ENV: production
+    FE_SITE_BASE_URL: https://app2.zoominlive.com/
 
   runtime: nodejs14.x
   stage: dev
@@ -56,6 +57,16 @@ provider:
             - 'lambda:InvokeFunction'
           Resource: '*'
 
+# custom:
+#   warmup:
+#     zoominfunctionwarmer:
+#       enabled: true
+#       events:
+#         - schedule: rate(5 minutes)
+#       concurrency: 10
+#       verbose: true
+#       logRetentionInDays: 14
+
 functions:
   userFunction:
     handler: handler.handler
@@ -68,13 +79,31 @@ functions:
       - httpApi:
           method: '*'
           path: /api/cams
+      - httpApi:
+          method: '*'
+          path: /api/cams/add
+      - httpApi:
+          method: '*'
+          path: /api/cams/delete
 
   childFunction:
     handler: handler.handler
     events:
       - httpApi:
           method: '*'
-          path: /api/family/child
+          path: /api/family/child/add
+      - httpApi:
+          method: '*'
+          path: /api/family/child/edit
+      - httpApi:
+          method: '*'
+          path: /api/family/child/disable
+      - httpApi:
+          method: '*'
+          path: /api/family/child/enable
+      - httpApi:
+          method: '*'
+          path: /api/family/child/delete
 
   streamStatisticsFunction:
     handler: handler.handler
@@ -87,10 +116,49 @@ functions:
       - httpApi:
           method: '*'
           path: /api/family
+      - httpApi:
+          method: '*'
+          path: /api/family/add
+      - httpApi:
+          method: '*'
+          path: /api/family/edit
+      - httpApi:
+          method: '*'
+          path: /api/family/addParent
+      - httpApi:
+          method: '*'
+          path: /api/family/disable
+      - httpApi:
+          method: '*'
+          path: /api/family/enable
+      - httpApi:
+          method: '*'
+          path: /api/family/delete
+      - httpApi:
+          method: '*'
+          path: /api/family/setPassword
+      - httpApi:
+          method: '*'
+          path: /api/family/emailChange
+      - httpApi:
+          method: '*'
+          path: /api/family/checkLinkValid
 
   roomFunction:
     handler: handler.handler
     events:
+      - httpApi:
+          method: '*'
+          path: /api/rooms/add
+      - httpApi:
+          method: '*'
+          path: /api/rooms/edit
+      - httpApi:
+          method: '*'
+          path: /api/rooms/delete
+      - httpApi:
+          method: '*'
+          path: /api/rooms/list
       - httpApi:
           method: '*'
           path: /api/rooms
@@ -101,11 +169,23 @@ functions:
       - httpApi:
           method: '*'
           path: /api/watchstream
+      - httpApi:
+          method: '*'
+          path: /api/watchstream/userStreams
+      - httpApi:
+          method: '*'
+          path: /api/watchstream/addviewer
+
+      # - schedule: rate(1 minute)
+    # warmup:
+    #   default:
+    #     enabled: true
 
   disableScheduledMembers:
     handler: cron.disableScheduledFamilyAndChild
     events:
-      - schedule: rate(1 day)
+      - schedule: rate(1 hour)
 
 plugins:
   - serverless-offline
+  # - serverless-plugin-warmup

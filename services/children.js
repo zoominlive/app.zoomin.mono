@@ -1,4 +1,4 @@
-const { Child } = require('../models/index');
+const { Child, Family } = require('../models/index');
 const Sequelize = require('sequelize');
 const _ = require('lodash');
 const sequelize = require('../lib/database');
@@ -105,7 +105,8 @@ module.exports = {
   enableChild: async (childId) => {
     let update = {
       updated_at: Sequelize.literal('CURRENT_TIMESTAMP'),
-      status: 'Enabled'
+      status: 'Enabled',
+      scheduled_end_date: null
     };
 
     let updateChildDetails = await Child.update(update, {
@@ -121,5 +122,29 @@ module.exports = {
     }
 
     return updateChildDetails;
+  },
+  getChildrenWithSEA: async (userId) => {
+    let familyMembers = await Family.findAll({
+      attributes: ['family_id'],
+      where: {
+        member_type: 'primary',
+        user_id: userId
+      },
+      raw: true
+    });
+
+    familyMembers = familyMembers?.map((member) => member.family_id);
+
+    let children = await Child.findAll({
+      where: {
+        scheduled_end_date: {
+          [Sequelize.Op.ne]: null
+        },
+        family_id: familyMembers
+      },
+      raw: true
+    });
+
+    return children;
   }
 };

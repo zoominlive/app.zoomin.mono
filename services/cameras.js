@@ -20,14 +20,18 @@ module.exports = {
   },
 
   /* Edit Existing camera */
-  editCamera: async (camId, camObj) => {
+  editCamera: async (camId, camObj, t) => {
     let update = {
       updated_at: Sequelize.literal('CURRENT_TIMESTAMP'),
       ...camObj
     };
-    let deletedCam = await Camera.update(update, {
-      where: { cam_id: camId }
-    });
+    let deletedCam = await Camera.update(
+      update,
+      {
+        where: { cam_id: camId }
+      },
+      { transaction: t }
+    );
 
     return deletedCam;
   },
@@ -59,13 +63,14 @@ module.exports = {
 
   /* Fetch all the camera's details for given customer */
   getAllCameraForCustomer: async (custId, filter) => {
-    let { pageNumber = 0, pageSize = 10, searchBy = '', location = 'All' } = filter;
+    let { pageNumber, pageSize, searchBy = '', location = 'All' } = filter;
 
     let cams;
     let count = 0;
     if (location === 'All') {
       location = '';
     }
+
     count = await Camera.count({
       where: {
         cust_id: custId,
@@ -87,6 +92,10 @@ module.exports = {
       }
     });
 
+    if (!pageNumber || !pageSize) {
+      pageSize = count;
+      pageNumber = 0;
+    }
     cams = await Camera.findAll({
       limit: parseInt(pageSize),
       offset: parseInt(pageNumber * pageSize),

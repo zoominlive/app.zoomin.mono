@@ -14,7 +14,7 @@ module.exports = {
   },
 
   /* Edit room details */
-  editRoom: async (user, params) => {
+  editRoom: async (user, params, t) => {
     let update = {
       updated_at: Sequelize.literal('CURRENT_TIMESTAMP')
     };
@@ -26,12 +26,19 @@ module.exports = {
       update.location = params.location;
     }
 
-    let updateRoomDetails = await Room.update(update, {
-      where: { room_id: params.room_id }
-    });
+    let updateRoomDetails = await Room.update(
+      update,
+      {
+        where: { room_id: params.room_id }
+      },
+      { transaction: t }
+    );
 
     if (updateRoomDetails) {
-      updateRoomDetails = await Room.findOne({ where: { room_id: params.room_id } });
+      updateRoomDetails = await Room.findOne(
+        { where: { room_id: params.room_id } },
+        { transaction: t }
+      );
     }
 
     return updateRoomDetails.toJSON();
@@ -50,86 +57,73 @@ module.exports = {
   getAllRoomsDetails: async (userId, filter) => {
     let { pageNumber = 0, pageSize = 10, roomsList = [], location = 'All', searchBy = '' } = filter;
 
-    let rooms;
-    let count;
-    let countQuery;
-    let mainQuery;
-
-    if (location === 'All') {
+    if (location == 'All') {
       location = '';
     }
-
-    if (roomsList.length === 0) {
-      countQuery = `SELECT DISTINCT COUNT(room_id) AS count FROM room  WHERE user_id LIKE '${userId.toString()}' AND location LIKE '%${location}%' AND room_name LIKE '%${searchBy}%'`;
-      mainQuery = `SELECT * FROM room  WHERE user_id LIKE '${userId.toString()}' AND location LIKE '%${location}%' AND room_name LIKE '%${searchBy}%' LIMIT ${pageSize} OFFSET ${
-        pageNumber * pageSize
-      } `;
+    let rooms;
+    if (roomsList?.length !== 0) {
+      rooms = await Room.findAll({
+        where: {
+          user_id: userId,
+          location: {
+            [Sequelize.Op.substring]: location
+          },
+          room_name: {
+            [Sequelize.Op.and]: { [Sequelize.Op.substring]: searchBy }
+          },
+          room_name: roomsList
+        },
+        include: [
+          {
+            model: Camera
+          }
+        ]
+      });
     } else {
-      let roomsToSearch = '';
-      roomsList.forEach(
-        (room) =>
-          (roomsToSearch = roomsToSearch + `room_name LIKE '%${room.replace(/'/g, "\\'")}%' OR `)
-      );
-      roomsToSearch = roomsToSearch.slice(0, -3);
-      countQuery = `SELECT DISTINCT COUNT(room_id) AS count FROM room  WHERE user_id LIKE '${userId.toString()}' AND location LIKE '%${location}%' AND room_name LIKE '%${searchBy}%' AND (${roomsToSearch}) `;
-      mainQuery = `SELECT * FROM room  WHERE user_id LIKE '${userId.toString()}' AND location LIKE '%${location}%' AND (${roomsToSearch}) AND room_name LIKE '%${searchBy}%' LIMIT ${pageSize} OFFSET ${
-        pageNumber * pageSize
-      }`;
+      rooms = await Room.findAll({
+        where: {
+          user_id: userId,
+          location: {
+            [Sequelize.Op.substring]: location
+          },
+          room_name: {
+            [Sequelize.Op.substring]: searchBy
+          }
+        },
+        include: [
+          {
+            model: Camera
+          }
+        ]
+      });
     }
 
-    count = (
-      await sequelize.query(
-        countQuery,
-        {
-          model: Room,
-          mapToModel: true
-        },
-        { type: Sequelize.QueryTypes.SELECT }
-      )
-    )[0].dataValues.count;
+    let filteredrooms = [];
 
-    rooms = await sequelize.query(
-      mainQuery,
-      { type: Sequelize.QueryTypes.SELECT },
-      {
-        model: Room,
-        mapToModel: true
-      },
-      {
-        model: Camera,
-        mapToModel: true
+    rooms?.forEach((room) => {
+      const cameras = [];
+      room?.cameras?.forEach((cam) => {
+        cam?.room_ids?.rooms?.forEach((room1) => {
+          if (room1?.room_id === room?.room_id) {
+            cameras?.push(cam?.dataValues);
+          }
+        });
+      });
+
+      filteredrooms?.push({ ...room?.dataValues, camDetails: cameras });
+    });
+
+    let count = filteredrooms.length;
+
+    if (count > pageSize) {
+      if (filteredrooms?.length > (pageNumber - 1) * pageSize + pageSize) {
+        filteredrooms = filteredrooms?.slice((pageNumber - 1) * pageSize, pageNumber * pageSize);
+      } else if (filteredrooms?.length > (pageNumber - 1) * pageSize) {
+        filteredrooms = filteredrooms?.slice((pageNumber - 1) * pageSize);
       }
-    );
+    }
 
-    let roomDetails = Promise.all(
-      rooms.map(async (room) => {
-        let roomId;
-        let roomName;
-        let roomDetails = room;
-        if (room.dataValues) {
-          roomId = room.dataValues.room_id;
-          roomName = room.dataValues.room_name;
-        } else {
-          roomId = room.room_id;
-          roomName = room.room_name;
-        }
-
-        if (room.dataValues) {
-          roomDetails = room.dataValues;
-        }
-
-        let camDetails = await getAllCameraForRoom(roomId);
-        if (_.isEmpty(camDetails)) {
-          camDetails = [];
-        }
-
-        return { ...roomDetails, camDetails };
-      })
-    );
-
-    const finalRoomDetails = await roomDetails;
-
-    return { finalRoomDetails, count };
+    return { finalRoomDetails: filteredrooms, count };
   },
 
   // get all room's list for loggedin user

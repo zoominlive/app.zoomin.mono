@@ -2,13 +2,21 @@ const watchStreamServices = require('../services/watchStream');
 const customerServices = require('../services/customers');
 const _ = require('lodash');
 const CONSTANTS = require('../lib/constants');
+
 module.exports = {
   // encode stream and create new camera
   getAllCamForLocation: async (req, res, next) => {
     try {
       const location = req.query?.location;
 
-      const cameras = await watchStreamServices.getAllCamForLocation(req.user, location);
+      let cameras = await watchStreamServices.getAllCamForLocation(req.user, location);
+
+      const customerDetails = await customerServices.getCustomerDetails(req.user.cust_id);
+      cameras = _.uniqBy(cameras, 'room_id');
+
+      cameras?.forEach((cam, camIndex) => {
+        cameras[camIndex].timeout = customerDetails.timeout;
+      });
 
       res.status(200).json({
         IsSuccess: true,
@@ -18,6 +26,7 @@ module.exports = {
 
       next();
     } catch (error) {
+      console.log(error);
       res.status(500).json({
         IsSuccess: false,
         Message: CONSTANTS.INTERNAL_SERVER_ERROR
@@ -28,7 +37,7 @@ module.exports = {
   addRecentViewers: async (req, res, next) => {
     try {
       const params = req.body;
-      params.user_id = req.user.user_id;
+      params.user = req.user;
       const recentViewer = await watchStreamServices.addRecentViewers(params);
 
       res.status(200).json({

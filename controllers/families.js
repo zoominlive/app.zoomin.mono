@@ -32,7 +32,8 @@ module.exports = {
       allLocations = _.uniq(allLocations);
 
       primary.location = { selected_locations: allLocations, accessable_locations: allLocations };
-      primary.family_id = await familyServices.generateNewFamilyId(req.user.user_id);
+      const newFamilyId = await familyServices.generateNewFamilyId();
+      primary.family_id = newFamilyId;
       let primaryParent = await familyServices.createFamily({
         ...primary,
         family_member_id: uuidv4(),
@@ -67,7 +68,7 @@ module.exports = {
         const token = await familyServices.createPasswordToken(primaryParent);
         const name = primaryParent.first_name + ' ' + primaryParent.last_name;
         const originalUrl =
-          req.get('Referrer') + 'set-password?' + 'token=' + token + '&type=family';
+          process.env.FE_SITE_BASE_URL + 'set-password?' + 'token=' + token + '&type=family';
         // const short_url = await TinyURL.shorten(originalUrl);
 
         await sendRegistrationMailforFamilyMember(name, primaryParent.email, originalUrl);
@@ -77,7 +78,7 @@ module.exports = {
             const token = await familyServices.createPasswordToken(secondaryParent);
             const name = secondaryParent.first_name + ' ' + secondaryParent.last_name;
             const originalUrl =
-              req.get('Referrer') + 'set-password?' + 'token=' + token + '&type=family';
+              process.env.FE_SITE_BASE_URL + 'set-password?' + 'token=' + token + '&type=family';
             // const short_url = await TinyURL.shorten(originalUrl);
 
             await sendRegistrationMailforFamilyMember(name, secondaryParent.email, originalUrl);
@@ -149,7 +150,7 @@ module.exports = {
           const token = await familyServices.createEmailToken(editedFamily, params.email);
           const name = editedFamily.first_name + ' ' + editedFamily.last_name;
           const originalUrl =
-            req.get('Referrer') + 'email-change?' + 'token=' + token + '&type=family';
+            process.env.FE_SITE_BASE_URL + 'email-change?' + 'token=' + token + '&type=family';
           // const short_url = await TinyURL.shorten(originalUrl);
           const response = await sendEmailChangeMail(name, params?.email, originalUrl);
         }
@@ -189,8 +190,8 @@ module.exports = {
   getAllFamilyDetails: async (req, res, next) => {
     try {
       const filter = {
-        pageNumber: req.query?.pageNumber,
-        pageSize: req.query?.pageSize,
+        pageNumber: parseInt(req.query?.page),
+        pageSize: parseInt(req.query?.limit),
         searchBy: req.query?.searchBy.replace(/'/g, "\\'"),
         roomsList: req.query?.rooms,
         location: req.query?.location
@@ -233,7 +234,7 @@ module.exports = {
         const token = await familyServices.createPasswordToken(parent);
         const name = parent.first_name + ' ' + parent.last_name;
         const originalUrl =
-          req.get('Referrer') + 'set-password?' + 'token=' + token + '&type=family';
+          process.env.FE_SITE_BASE_URL + 'set-password?' + 'token=' + token + '&type=family';
         // const short_url = await TinyURL.shorten(originalUrl);
 
         await sendRegistrationMailforFamilyMember(name, parent.email, originalUrl);
@@ -293,7 +294,7 @@ module.exports = {
       if (params?.scheduled_end_date) {
         res.status(200).json({
           IsSuccess: true,
-          Data: {},
+          Data: { scheduled: true },
           Message: CONSTANTS.FAMILY_SCHEDULED
         });
       } else {

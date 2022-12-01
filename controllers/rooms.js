@@ -2,6 +2,8 @@ const roomServices = require('../services/rooms');
 const cameraServices = require('../services/cameras');
 const CONSTANTS = require('../lib/constants');
 const _ = require('lodash');
+const sequelize = require('../lib/database');
+
 module.exports = {
   // create new room
   createRoom: async (req, res, next) => {
@@ -41,19 +43,23 @@ module.exports = {
   // edit existing room
   editRoom: async (req, res, next) => {
     try {
+      const t = await sequelize.transaction();
+
       const params = req.body;
-      const room = await roomServices.editRoom(req.user, params);
+      const room = await roomServices.editRoom(req.user, params, t);
 
       params?.cameras?.forEach(async (camera) => {
         let rooms = camera.room_ids.rooms.filter((room) => room.room_id !== params.room_id);
-        await cameraServices.editCamera(camera.cam_id, { room_ids: { rooms: rooms } });
+        await cameraServices.editCamera(camera.cam_id, { room_ids: { rooms: rooms } }, t);
       });
 
       params?.camerasToAdd?.forEach(async (cam) => {
         let rooms = cam?.room_ids?.rooms;
         rooms?.push({ room_id: params.room_id, room_name: room?.room_name });
-        await cameraServices.editCamera(cam.cam_id, { room_ids: { rooms: rooms } });
+        await cameraServices.editCamera(cam.cam_id, { room_ids: { rooms: rooms } }, t);
       });
+
+      await t.commit();
 
       res.status(200).json({
         IsSuccess: true,
@@ -63,6 +69,7 @@ module.exports = {
 
       next();
     } catch (error) {
+      await t.rollback();
       res.status(500).json({
         IsSuccess: false,
         Message: CONSTANTS.INTERNAL_SERVER_ERROR
@@ -97,8 +104,8 @@ module.exports = {
   getAllRoomsDetails: async (req, res, next) => {
     try {
       const filter = {
-        pageNumber: req.query?.pageNumber,
-        pageSize: req.query?.pageSize,
+        pageNumber: parseInt(req.query?.pageNumber) + 1,
+        pageSize: parseInt(req.query?.pageSize),
         roomsList: req.query?.rooms,
         location: req.query?.location,
         searchBy: req.query?.searchBy.replace(/'/g, "\\'")

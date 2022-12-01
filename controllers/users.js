@@ -60,7 +60,8 @@ module.exports = {
 
         const token = await userServices.createPasswordToken(userData);
         const name = userData.first_name + ' ' + userData.last_name;
-        const originalUrl = req.get('Referrer') + 'set-password?' + 'token=' + token + '&type=user';
+        const originalUrl =
+          process.env.FE_SITE_BASE_URL + 'set-password?' + 'token=' + token + '&type=user';
         // const short_url = await TinyURL.shorten(originalUrl);
 
         await sendRegistrationMailforUser(name, userData.email, originalUrl);
@@ -82,6 +83,7 @@ module.exports = {
       }
       next();
     } catch (error) {
+      console.log(error);
       res.status(500).json({
         IsSuccess: false,
         Message: CONSTANTS.INTERNAL_SERVER_ERROR
@@ -94,7 +96,6 @@ module.exports = {
   loginUser: async (req, res, next) => {
     try {
       let { email, password } = req.body;
-      console.log(moment().format('HH:mm'));
       let emailIs = email;
 
       emailIs = emailIs.toLowerCase();
@@ -278,7 +279,7 @@ module.exports = {
           const token = await userServices.createPasswordToken(userData);
           const name = userData.first_name + ' ' + userData.last_name;
           const originalUrl =
-            req.get('Referrer') + 'set-password?' + 'token=' + token + '&type=user';
+            process.env.FE_SITE_BASE_URL + 'set-password?' + 'token=' + token + '&type=user';
           // const short_url = await TinyURL.shorten(originalUrl);
           await sendForgetPasswordMail(name, email, originalUrl);
           await userServices.editUserProfile(user, { password_link: 'active' });
@@ -286,7 +287,7 @@ module.exports = {
           const token = await familyServices.createPasswordToken(userData);
           const name = userData.first_name + ' ' + userData.last_name;
           const originalUrl =
-            req.get('Referrer') + 'set-password?' + 'token=' + token + '&type=family';
+            process.env.FE_SITE_BASE_URL + 'set-password?' + 'token=' + token + '&type=family';
           // const short_url = await TinyURL.shorten(originalUrl);
           await sendForgetPasswordMail(name, email, originalUrl);
           await familyServices.editFamily({
@@ -396,7 +397,7 @@ module.exports = {
             const token = await userServices.createEmailToken(user, newEmail);
             const name = user.first_name + ' ' + user.last_name;
             const originalUrl =
-              req.get('Referrer') + 'email-change?' + 'token=' + token + '&type=user';
+              process.env.FE_SITE_BASE_URL + 'email-change?' + 'token=' + token + '&type=user';
             // const short_url = await TinyURL.shorten(originalUrl);
 
             const response = await sendEmailChangeMail(name, params?.email, originalUrl);
@@ -451,7 +452,7 @@ module.exports = {
             const token = await userServices.createEmailToken(user, newEmail);
             const name = user.first_name + ' ' + user.last_name;
             const originalUrl =
-              req.get('Referrer') + 'email-change?' + 'token=' + token + '&type=user';
+              process.env.FE_SITE_BASE_URL + 'email-change?' + 'token=' + token + '&type=user';
             // const short_url = await TinyURL.shorten(originalUrl);
 
             const response = await sendEmailChangeMail(name, params?.email, originalUrl);

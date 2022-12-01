@@ -42,6 +42,9 @@ const Child = sequelize.define(
       allowNull: true,
       defaultValue: null
     },
+    time_zone: {
+      type: Sequelize.STRING(100)
+    },
     created_at: {
       type: 'TIMESTAMP',
       defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),

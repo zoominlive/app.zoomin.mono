@@ -5,32 +5,18 @@ const _ = require('lodash');
 
 module.exports = {
   /* Create new camera */
-  getAllCamForLocation: async (user, location) => {
+  getAllCamForLocation: async (user) => {
     let rooms = [];
     if (user?.family_id) {
       let childDetails;
       if (user?.family_id) {
         childDetails = await Child.findAll({
           raw: true,
-          where: { family_id: user.family_id }
+          where: { family_id: user.family_id, status: 'Enabled' }
         });
       }
 
-      let childDetailsForlocation = [];
       childDetails?.forEach((child) => {
-        let count = 0;
-        child?.location?.locations?.forEach((loc) => {
-          if (loc === location) {
-            count = count + 1;
-          }
-        });
-
-        if (count > 0) {
-          childDetailsForlocation.push(child);
-        }
-      });
-
-      childDetailsForlocation?.forEach((child) => {
         child?.rooms?.rooms.forEach((room) => rooms.push(room));
       });
 
@@ -38,27 +24,45 @@ module.exports = {
     } else {
       rooms = await Room.findAll({
         raw: true,
-        where: { user_id: user.user_id, location: location }
+        where: { user_id: user.user_id }
       });
     }
 
-    let cameras = Promise.all(
-      rooms.map(async (room) => {
-        const query = `SELECT cam_id,cam_name , description, stream_uri FROM camera WHERE room_ids LIKE '%${room.room_id}%'  `;
-        let cams = await sequelize.query(
-          query,
-          { type: Sequelize.QueryTypes.SELECT },
-          {
-            model: Camera,
-            mapToModel: true
-          }
-        );
+    const roomIds = rooms?.map((room) => room?.room_id);
 
-        return { ...room, cameras: cams };
-      })
-    );
-    const cameraDetails = await cameras;
-    return cameraDetails;
+    const searchQuery = roomIds;
+
+    let orArray = [];
+    searchQuery?.forEach((word) => {
+      orArray?.push({ room_ids: { [Sequelize.Op.substring]: word } });
+    });
+
+    const cameras = await Camera.findAll({
+      where: {
+        [Sequelize.Op.or]: orArray
+      },
+      raw: true
+    });
+
+    let newCameras = rooms?.map((room) => {
+      let camsToAdd = [];
+      cameras?.forEach((cam) => {
+        cam?.room_ids?.rooms?.forEach((room1) => {
+          if (room1?.room_id === room?.room_id) {
+            camsToAdd?.push({
+              cam_id: cam?.cam_id,
+              cam_name: cam?.cam_name,
+              description: cam?.description,
+              stream_uri: cam?.stream_uri
+            });
+          }
+        });
+      });
+
+      return { ...room, cameras: camsToAdd };
+    });
+
+    return newCameras;
   },
 
   getAllCamForUser: async (user) => {
@@ -68,7 +72,7 @@ module.exports = {
       if (user?.family_id) {
         childDetails = await Child.findAll({
           raw: true,
-          where: { family_id: user.family_id }
+          where: { family_id: user.family_id, status: 'Enabled' }
         });
       }
 
@@ -146,9 +150,29 @@ module.exports = {
   addRecentViewers: async (params) => {
     let recentViewerObj = { ...params, requested_at: Sequelize.literal('CURRENT_TIMESTAMP') };
     let recentViewer;
-    let viewerAlreadyExist = await RecentViewers.count({ where: { user_id: params.user_id } });
-    if (viewerAlreadyExist === 0) {
-      recentViewer = await RecentViewers.create(recentViewerObj);
+    let viewerAlreadyExist = await RecentViewers.findOne({
+      where: {
+        user_id: params?.user?.family_member_id
+          ? params?.user?.family_member_id
+          : params?.user?.user_id
+      },
+      raw: true
+    });
+    if (!viewerAlreadyExist) {
+      recentViewer = await RecentViewers.create({
+        ...recentViewerObj,
+        user_id: params?.user?.family_member_id
+          ? params?.user?.family_member_id
+          : params?.user?.user_id
+      });
+    } else {
+      recentViewer = await RecentViewers.update(recentViewerObj, {
+        where: {
+          user_id: params?.user?.family_member_id
+            ? params?.user?.family_member_id
+            : params?.user?.user_id
+        }
+      });
     }
 
     return recentViewer;

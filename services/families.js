@@ -1,7 +1,7 @@
 const { Family, Camera, Room, Child } = require('../models/index');
 const Sequelize = require('sequelize');
 const jwt = require('jsonwebtoken');
-const _ = require('lodash');
+const _ = require('lodash-contrib');
 const sequelize = require('../lib/database');
 const encrypter = require('object-encrypter');
 const engine = encrypter(process.env.JWT_SECRET_KEY, { ttl: true });
@@ -47,9 +47,9 @@ const getChildren = async (familyIdArray) => {
     return null;
   }
 };
-const getPrimaryMember = async (familyId) => {
-  let familyMember = await Family.findOne({
-    where: { family_id: familyId, member_type: 'primary' },
+const getPrimaryMember = async (familyIdArray) => {
+  let familyMember = await Family.findAll({
+    where: { family_id: familyIdArray, member_type: 'primary' },
     raw: true
   });
   return familyMember;
@@ -72,17 +72,14 @@ module.exports = {
   },
 
   //generate new family Id
-  generateNewFamilyId: async (userId) => {
-    let newFamilyId = await Family.findOne({
-      where: { user_id: userId },
-      order: [['family_id', 'DESC']]
+  generateNewFamilyId: async () => {
+    let newFamilyId = await Family.findAll({
+      order: [['family_id', 'DESC']],
+      raw: true
     });
 
-    if (newFamilyId === null) {
-      return 1;
-    } else {
-      return newFamilyId.family_id + 1;
-    }
+    newFamilyId = _.uniq(newFamilyId.map((family) => family.family_id));
+    return newFamilyId[0] ? newFamilyId[0] + 1 : 1;
   },
 
   /* Edit family details */
@@ -123,47 +120,27 @@ module.exports = {
 
   /* Fetch all the family's details */
   getAllFamilyDetails: async (userId, filter) => {
-    let { pageNumber = 0, pageSize = 10, location = 'All', searchBy = '', roomsList = [] } = filter;
+    let { pageNumber = 1, pageSize = 10, location = 'All', searchBy = '', roomsList = [] } = filter;
 
     let families;
-    let count;
-    let countQuery;
-    let mainQuery;
-
-    if (location === 'All') {
-      location = '';
-    }
-    let query1;
-    if (roomsList.length === 0) {
-      query1 = `SELECT family.* FROM family INNER JOIN child WHERE family.user_id LIKE '${userId.toString()}' AND child.location LIKE '%${location}%' AND (family.first_name LIKE '%${searchBy}%' OR family.last_name LIKE '%${searchBy}%' OR child.first_name LIKE '%${searchBy}%')`;
-    } else {
-      let roomsToSearch = '';
-
-      roomsList.forEach(
-        (room) =>
-          (roomsToSearch = roomsToSearch + `child.rooms LIKE '%${room.replace(/'/g, "\\'")}%' OR `)
-      );
-      roomsToSearch = roomsToSearch.slice(0, -3);
-
-      query1 = `SELECT family.* FROM family INNER JOIN child WHERE family.user_id LIKE '${userId.toString()}' AND child.location LIKE '%${location}%' AND (family.first_name LIKE '%${searchBy}%' OR family.last_name LIKE '%${searchBy}%' OR child.first_name LIKE '%${searchBy}%') AND (${roomsToSearch})`;
-    }
-    families = await sequelize.query(
-      query1,
-      { type: Sequelize.QueryTypes.SELECT },
-      {
-        model: Family,
-        mapToModel: true
-      },
-      {
-        model: Child,
-        mapToModel: true
-      }
-    );
-
-    let uniqueFamilies = _.uniqWith(families, _.isEqual);
     let familyArray = [];
+    families = await Family.findAll({
+      where: { user_id: userId },
+      include: [
+        {
+          model: Child,
+          where: {
+            [Sequelize.Op.and]: {
+              location: {
+                [Sequelize.Op.substring]: location === 'All' ? '' : location
+              }
+            }
+          }
+        }
+      ]
+    });
 
-    uniqueFamilies.forEach((familyMember) => {
+    families?.forEach((familyMember) => {
       if (familyMember.member_type == 'primary') {
         familyArray.push({
           primary: familyMember,
@@ -173,54 +150,80 @@ module.exports = {
       }
     });
 
-    const waitforResult = Promise.all(
-      uniqueFamilies.map(async (familyMember) => {
-        if (familyMember.member_type == 'secondary') {
-          let isFound = 0;
-          familyArray.map((family) => {
-            if (family.primary.famiy_id === familyMember.family_id) {
-              isFound = 1;
-            }
-          });
-
-          if (isFound === 0) {
-            let primaryMember = await getPrimaryMember(familyMember.family_id);
-            familyArray.push({
-              primary: primaryMember,
-              secondary: [],
-              children: []
-            });
+    families?.forEach((familyMember) => {
+      if (familyMember.member_type == 'secondary') {
+        familyArray.forEach((primaryMember, index) => {
+          if (primaryMember.primary.family_id === familyMember.family_id) {
+            familyArray[index].secondary.push(familyMember);
           }
-        }
-      })
-    );
-
-    const result = await waitforResult;
-
-    familyArray = _.uniqWith(familyArray, _.isEqual);
-    count = familyArray.length;
-    familyArray = familyArray.slice(pageNumber * pageSize, (pageNumber + 1) * pageSize);
-
-    let familyIdToSearch = familyArray.map((family) => family.primary.family_id);
-
-    let secondaryParents = await getSecondaryParents(familyIdToSearch);
-
-    let children = await getChildren(familyIdToSearch);
-
-    familyArray.forEach((family, index) => {
-      secondaryParents?.forEach((secondary) => {
-        if (secondary.family_id === family.primary.family_id) {
-          familyArray[index].secondary.push(secondary);
-        }
-      });
-      children.forEach((child) => {
-        if (child.family_id === family.primary.family_id) {
-          familyArray[index].children.push(child);
-        }
-      });
+        });
+      }
     });
 
-    return { familyArray, count };
+    familyArray.forEach((family, index) => {
+      familyArray[index].children = family.primary.children;
+    });
+
+    let filteredArray = [];
+
+    familyArray.forEach((family) => {
+      let found = 0;
+      const firstName = family.primary.first_name.toLowerCase();
+      const lastName = family.primary.last_name.toLowerCase();
+
+      if (firstName.includes(searchBy.toLowerCase()) || lastName.includes(searchBy.toLowerCase())) {
+        found = 1;
+      }
+      family.secondary.forEach((family) => {
+        const firstName = family.first_name.toLowerCase();
+        const lastName = family.last_name.toLowerCase();
+
+        if (
+          firstName.includes(searchBy.toLowerCase()) ||
+          lastName.includes(searchBy.toLowerCase())
+        ) {
+          found = 1;
+        }
+      });
+
+      if (roomsList.length !== 0) {
+        found = 0;
+        family.children.forEach((child) => {
+          const childRoom = JSON.stringify(child.rooms);
+          roomsList.forEach((room) => {
+            if (childRoom.includes(room)) {
+              found = 1;
+            }
+          });
+        });
+      } else {
+        family.children.forEach((child) => {
+          const firstName = child.first_name.toLowerCase();
+          const lastName = child.last_name.toLowerCase();
+          if (
+            firstName.includes(searchBy.toLowerCase()) ||
+            lastName.includes(searchBy.toLowerCase())
+          ) {
+            found = 1;
+          }
+        });
+      }
+
+      if (found === 1) {
+        filteredArray.push(family);
+      }
+    });
+    let count = filteredArray.length;
+
+    if (count > pageSize) {
+      if (filteredArray.length > (pageNumber - 1) * pageSize + pageSize) {
+        filteredArray = filteredArray.slice((pageNumber - 1) * pageSize, pageNumber * pageSize);
+      } else if (filteredArray.length > (pageNumber - 1) * pageSize) {
+        filteredArray = filteredArray.slice((pageNumber - 1) * pageSize);
+      }
+    }
+
+    return { familyArray: filteredArray, count };
   },
 
   //fetch family member details by ID
@@ -294,7 +297,8 @@ module.exports = {
 
     let update = {
       updated_at: Sequelize.literal('CURRENT_TIMESTAMP'),
-      status: 'Enabled'
+      status: 'Enabled',
+      scheduled_end_date: null
     };
 
     if (memberType == 'secondary') {

@@ -1,5 +1,6 @@
 const cameraServices = require('../services/cameras');
 const familyServices = require('../services/families');
+const childrenServices = require('../services/children');
 const watchStreamServices = require('../services/watchStream');
 const { listAvailableStreams } = require('../lib/rtsp-stream');
 const _ = require('lodash');
@@ -32,7 +33,9 @@ module.exports = {
 
       let SEAMembers = await familyServices.getFamilyWithSEA(userId);
 
-      SEAMembers = SEAMembers?.length;
+      let SEAChildren = await childrenServices.getChildrenWithSEA(userId);
+
+      SEAMembers = SEAMembers?.length + SEAChildren.length;
 
       const recentViewers = await watchStreamServices.getRecentViewers();
 

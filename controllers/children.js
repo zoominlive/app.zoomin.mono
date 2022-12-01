@@ -86,13 +86,13 @@ module.exports = {
       if (params?.scheduled_end_date) {
         res.status(200).json({
           IsSuccess: true,
-          Data: disableChild,
+          Data: { scheduled: true },
           Message: CONSTANTS.CHILD_SCHEDULED
         });
       } else {
         res.status(200).json({
           IsSuccess: true,
-          Data: disableChild,
+          Data: {},
           Message: CONSTANTS.CHILD_DISABLED
         });
       }
