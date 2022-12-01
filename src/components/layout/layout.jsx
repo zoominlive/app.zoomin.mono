@@ -79,38 +79,38 @@ const Layout = () => {
   const topMenuItems = [
     {
       name: 'Dashboard',
-      icon: <Monitor />,
+      icon: <Monitor style={{ color: 'black' }} />,
       active: true,
       link: '/dashboard',
       key: 1
     },
     {
       name: 'Families',
-      icon: <Users />,
+      icon: <Users style={{ color: 'black' }} />,
       link: '/families',
       key: 2
     },
     {
       name: 'Rooms',
-      icon: <Copy />,
+      icon: <Copy style={{ color: 'black' }} />,
       link: '/rooms',
       key: 3
     },
     {
       name: 'Cameras',
-      icon: <Camera />,
+      icon: <Camera style={{ color: 'black' }} />,
       link: '/cameras',
       key: 6
     },
     {
       name: 'Users',
-      icon: <User />,
+      icon: <User style={{ color: 'black' }} />,
       link: '/users',
       key: 4
     },
     {
       name: 'Watch Stream',
-      icon: <Video />,
+      icon: <Video style={{ color: 'black' }} />,
       link: '/watch-stream',
       key: 5
     }
@@ -119,13 +119,13 @@ const Layout = () => {
   const bottomMenuItems = [
     {
       name: 'Knowledge Base',
-      icon: <Book />,
+      icon: <Book style={{ color: 'black' }} />,
       link: 'https://zoominlive.document360.io/'
     },
     {
       name: 'Support',
-      icon: <Shield />,
-      link: '#'
+      icon: <Shield style={{ color: 'black' }} />,
+      link: 'https://www.zoominlive.com/support'
     }
   ];
 

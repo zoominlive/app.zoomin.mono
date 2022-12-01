@@ -38,7 +38,7 @@
         }
         a {
           text-decoration: none;
-          color: #1976d2;
+          color: #6a74dd !important;
         }
       }
     }
@@ -58,7 +58,7 @@
   transition: all 0.5s ease;
   .MuiDrawer-paper {
     transition: all 0.5s ease;
-    background: #232f3e;
+    background: #6a74dd;
     border-right: 1px solid rgba(0, 0, 0, 0.1);
     overflow: hidden;
     .header {
@@ -481,7 +481,7 @@
       color: #ffffff;
     }
     .blue-text {
-      color: #1976d2 !important;
+      color: #6a74dd !important;
     }
     .title-divider {
       font-size: 12px;
@@ -542,9 +542,17 @@
       font-size: 15px;
       line-height: 26px;
       letter-spacing: 0.46px;
-      color: #1976d2;
+      color: #6a74dd !important;
     }
   }
+}
+
+.MuiButton-contained {
+  background-color: #6a74dd !important;
+}
+
+.MuiChip-colorPrimary {
+  background-color: #6a74dd !important;
 }
 
 .MuiMenu-list {
@@ -639,7 +647,7 @@
 .MuiDialogActions-root {
   .MuiLoadingButton-loading {
     &.Mui-disabled {
-      color: #1976d2 !important;
+      color: #6a74dd !important;
     }
   }
   .Mui-disabled {

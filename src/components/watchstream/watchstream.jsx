@@ -2,7 +2,7 @@ import {
   Box,
   Card,
   CardContent,
-  Chip,
+  // Chip,
   Grid,
   Stack,
   Typography,
@@ -10,7 +10,11 @@ import {
   Select,
   FormControl,
   InputLabel,
-  FormHelperText
+  // FormHelperText,
+  Autocomplete,
+  TextField,
+  Chip,
+  CircularProgress
 } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 import { useContext, useCallback } from 'react';
@@ -49,8 +53,9 @@ const WatchStream = () => {
 
   const [timeOut, setTimeOut] = useState(10);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [limitReached, setLimitReached] = useState(false);
 
-  const [cameraUrls, setCameraUrls] = useState([]);
+  // const [cameraUrls, setCameraUrls] = useState([]);
   useEffect(() => {
     layoutCtx.setActive(5);
     layoutCtx.setBreadcrumb(['Watch Stream']);
@@ -75,7 +80,7 @@ const WatchStream = () => {
           setRooms(rooms);
           setSelectedRoom(rooms[0]?.room_name);
           setCameras(rooms[0]?.cameras);
-          setSelectedCameras([rooms[0]?.cameras[0]?.cam_name]);
+          setSelectedCameras([rooms[0]?.cameras[0]]);
         } else {
           setSelectedLocation(location?.state?.location);
           const rooms = response.data.Data.filter(
@@ -88,7 +93,7 @@ const WatchStream = () => {
           const selectedCamera = selectedRoom?.cameras?.find(
             (cam) => cam.cam_id === location.state.camId
           );
-          setSelectedCameras([selectedCamera?.cam_name]);
+          setSelectedCameras([selectedCamera]);
         }
       } else {
         errorMessageHandler(
@@ -113,21 +118,21 @@ const WatchStream = () => {
     setRooms(roomsToSet);
     setSelectedRoom(roomsToSet?.[0]?.room_name);
     setCameras(roomsToSet?.[0]?.cameras);
-    setSelectedCameras([roomsToSet?.[0]?.cameras[0].cam_name]);
+    setSelectedCameras([roomsToSet?.[0]?.cameras[0]]);
   }, [selectedLocation]);
 
   useEffect(() => {
     const room = camerasPayload?.room?.find((room) => room?.room_name == selectedRoom);
     setCameras(room?.cameras);
-    setSelectedCameras([room?.cameras[0]?.cam_name]);
+    setSelectedCameras([room?.cameras[0]]);
   }, [selectedRoom]);
 
-  useEffect(() => {
-    const urls = cameras?.map((cam) => {
-      return { camName: cam?.cam_name, url: cam?.stream_uri };
-    });
-    setCameraUrls(urls);
-  }, [cameras]);
+  // useEffect(() => {
+  //   const urls = cameras?.map((cam) => {
+  //     return { camName: cam?.cam_name, url: cam?.stream_uri };
+  //   });
+  //   // setCameraUrls(urls);
+  // }, [cameras]);
 
   const handleSetLocations = () => {
     return locations?.map((location) => {
@@ -149,17 +154,22 @@ const WatchStream = () => {
     });
   };
 
-  const handleSetLCameras = () => {
-    return rooms
-      ?.find((room) => room.room_name === selectedRoom)
-      ?.cameras?.map((cam) => {
-        return (
-          <MenuItem key={`${cam.cam_id}`} value={`${cam.cam_name}`}>
-            {cam.cam_name}
-          </MenuItem>
-        );
-      });
-  };
+  // const handleSetLCameras = () => {
+  //   return rooms
+  //     ?.find((room) => room.room_name === selectedRoom)
+  //     ?.cameras?.map((cam) => {
+  //       return (
+  //         <MenuItem
+  //           key={`${cam.cam_id}`}
+  //           value={`${cam.cam_name}`}
+  //           onclick={() => {
+  //             console.log(cam);
+  //           }}>
+  //           {cam.cam_name}
+  //         </MenuItem>
+  //       );
+  //     });
+  // };
 
   const onSelect = useCallback(async () => {
     try {
@@ -244,48 +254,53 @@ const WatchStream = () => {
                 </FormControl>
               </Grid>
               <Grid item md={3} sm={12}>
-                <FormControl fullWidth>
-                  <InputLabel id="cameraLabel">Camera</InputLabel>
-                  <Select
-                    multiple
-                    labelId="cameraLabel"
-                    id="cameras"
-                    label="Camera"
-                    name={'camera'}
-                    value={selectedCameras.length !== 0 ? [...selectedCameras] : []}
-                    renderValue={(selected) => (
-                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                        {selected.map((value) => (
-                          <Chip
-                            key={value}
-                            label={value}
-                            onDelete={() => {
-                              const cams = selectedCameras?.filter((name) => name != value);
-                              setSelectedCameras(cams);
-                            }}
-                            onMouseDown={(event) => {
-                              event.stopPropagation();
-                            }}
-                          />
-                        ))}
-                      </Box>
-                    )}
-                    onChange={(event) => {
-                      if (event.target.value?.length <= 2) {
-                        setSelectedCameras(event.target.value);
-                      }
-                    }}>
-                    {handleSetLCameras()}
-                  </Select>
-                  {selectedCameras?.length == 2 && (
-                    <FormHelperText sx={{ color: 'black' }}>
-                      {'Maximum two cameras can be selected'}
-                    </FormHelperText>
+                <Autocomplete
+                  multiple
+                  disableCloseOnSelect
+                  id="tags-standard"
+                  options={cameras ? cameras : []}
+                  value={selectedCameras}
+                  getOptionLabel={(option) => option?.cam_name}
+                  // defaultValue={selectedCameras ? [selectedCameras[0]] : []}
+                  isOptionEqualToValue={(option, value) => option?.cam_id === value?.cam_id}
+                  onChange={(_, values) => {
+                    if (values.length < 2) {
+                      setSelectedCameras(values);
+                      setLimitReached(false);
+                    }
+                    if (values.length == 2) {
+                      setLimitReached(true);
+                      setSelectedCameras(values);
+                    }
+                  }}
+                  renderTags={(value, getTagProps) =>
+                    value.map((option, index) => (
+                      <Chip key={index} label={option?.cam_name} {...getTagProps({ index })} />
+                    ))
+                  }
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Cameras"
+                      fullWidth
+                      helperText={limitReached && 'Maxmimum two cameras can be selected'}
+                      InputProps={{
+                        ...params.InputProps,
+                        endAdornment: (
+                          <React.Fragment>
+                            {dropdownLoading ? (
+                              <CircularProgress color="inherit" size={20} />
+                            ) : null}
+                            {params.InputProps.endAdornment}
+                          </React.Fragment>
+                        )
+                      }}
+                    />
                   )}
-                </FormControl>
+                />
               </Grid>
             </Grid>
-            {(selectedCameras.length === 0 || !playing) && (
+            {(selectedCameras.length == 0 || !playing) && (
               <Box mt={2} sx={{ height: '600px' }} className="no-camera-wrapper">
                 <Stack
                   className="no-camera-stack"
@@ -305,9 +320,7 @@ const WatchStream = () => {
                 {selectedCameras.length === 1 && playing && (
                   <Box mt={2} height={'75%'} width="75%">
                     <CustomPlayer
-                      streamUri={
-                        cameraUrls?.filter((cam) => cam?.camName === selectedCameras?.[0])?.[0]?.url
-                      }
+                      streamUri={selectedCameras[0]?.stream_uri}
                       timeOut={timeOut}
                       setTimeOut={setTimeOut}
                       setPlaying={setPlaying}
@@ -320,14 +333,11 @@ const WatchStream = () => {
             <Grid container spacing={2}>
               {selectedCameras.length === 2 &&
                 playing &&
-                selectedCameras?.map((url, index) => (
+                selectedCameras?.map((value, index) => (
                   <Grid key={index} item md={6} sm={12}>
                     <CustomPlayer
                       noOfCameras={2}
-                      streamUri={
-                        cameraUrls?.filter((cam) => cam?.camName === selectedCameras?.[index])?.[0]
-                          ?.url
-                      }
+                      streamUri={value?.stream_uri}
                       timeOut={timeOut}
                       setTimeOut={setTimeOut}
                       setPlaying={setPlaying}
