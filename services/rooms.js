@@ -1,6 +1,5 @@
-const { Room, Camera } = require('../models/index');
+const { Room, Camera, CamerasInRooms } = require('../models/index');
 const Sequelize = require('sequelize');
-const { getAllCameraForRoom } = require('./cameras');
 const _ = require('lodash');
 const sequelize = require('../lib/database');
 const { v4: uuidv4 } = require('uuid');
@@ -10,11 +9,21 @@ module.exports = {
     roomObj.room_id = uuidv4();
     let roomCreated = await Room.create(roomObj);
 
+    const camsToAdd = roomObj.cameras.map((cam) => {
+      return {
+        cam_id: cam.cam_id,
+        room_id: roomCreated.room_id
+      };
+    });
+
+    let camerasAssigned = await CamerasInRooms.bulkCreate(camsToAdd);
+
     return roomCreated !== undefined ? roomCreated.toJSON() : null;
   },
 
   /* Edit room details */
   editRoom: async (user, params, t) => {
+    console.log(params);
     let update = {
       updated_at: Sequelize.literal('CURRENT_TIMESTAMP')
     };
@@ -41,11 +50,31 @@ module.exports = {
       );
     }
 
+    const camsToAdd = params.camerasToAdd.map((cam) => {
+      return {
+        cam_id: cam.cam_id,
+        room_id: params.room_id
+      };
+    });
+
+    const camsToRemove = params.cameras.map((cam) => {
+      return cam.cam_id;
+    });
+
+    let camsRemoved = await CamerasInRooms.destroy({
+      where: { room_id: params.room_id, cam_id: camsToRemove },
+      raw: true
+    });
+
+    let camsAdded = await CamerasInRooms.bulkCreate(camsToAdd);
+
     return updateRoomDetails.toJSON();
   },
 
   /* Delete Existing room */
   deleteRoom: async (roomId) => {
+    let camsDeleted = await CamerasInRooms.destroy({ where: { room_id: roomId }, raw: true });
+
     let deletedRoom = await Room.destroy({
       where: { room_id: roomId }
     });

@@ -12,6 +12,11 @@ module.exports = {
 
       const newChild = await childServices.createChild(params);
 
+      const addRoomsToChild = await childServices.assignRoomsToChild(
+        newChild?.child_id,
+        params?.rooms?.rooms
+      );
+
       res.status(201).json({
         IsSuccess: true,
         Data: newChild,
@@ -35,6 +40,11 @@ module.exports = {
 
       const editedChild = await childServices.editChild(params);
 
+      const roomsEdited = await childServices.editAssignedRoomsToChild(
+        params.child_id,
+        params?.rooms?.rooms
+      );
+
       res.status(200).json({
         IsSuccess: true,
         Data: editedChild,
@@ -55,6 +65,9 @@ module.exports = {
   deleteChild: async (req, res, next) => {
     try {
       const params = req.body;
+
+      const roomsDeleted = await childServices.deleteAssignedRoomsToChild(params.child_id);
+
       const child = await childServices.deleteChild(params.child_id);
 
       res.status(200).json({
@@ -77,6 +90,31 @@ module.exports = {
   disableChild: async (req, res, next) => {
     try {
       const params = req.body;
+
+      const childDetails = await childServices.getChildById(params.child_id);
+
+      let roomsToAdd = childDetails?.rooms?.rooms?.filter((room) => {
+        const result = _.find(params?.locations_to_disable, function (n) {
+          if (n === room?.location) {
+            return true;
+          }
+        });
+
+        return result == undefined;
+      });
+
+      const roomIdsToDisable = roomsToAdd.map((room) => room.room_id);
+
+      const roomsDisabled = await childServices.disableSelectedRoomsForChild(
+        params.child_id,
+        roomIdsToDisable
+      );
+      if (!params.scheduled_end_date) {
+        const updateChild = await childServices.editChild({
+          child_id: params.child_id,
+          rooms: { rooms: roomsToAdd }
+        });
+      }
 
       const disableChild = await childServices.disableChild(
         params?.child_id,
@@ -112,7 +150,11 @@ module.exports = {
     try {
       const params = req.body;
 
-      const enableChild = await childServices.enableChild(params.child_id);
+      const roomsToAdd = await childServices.addRoomsToChild(params.child_id);
+
+      const enableChild = await childServices.enableChild(params.child_id, {
+        rooms: roomsToAdd.map((room) => room.rooms[0])
+      });
 
       res.status(200).json({
         IsSuccess: true,
@@ -122,6 +164,7 @@ module.exports = {
 
       next();
     } catch (error) {
+      console.log(error);
       res.status(500).json({
         IsSuccess: false,
         Message: CONSTANTS.INTERNAL_SERVER_ERROR

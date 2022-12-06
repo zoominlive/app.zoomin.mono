@@ -11,7 +11,12 @@ const CustomerLocations = sequelize.define(
       autoIncrement: true
     },
     loc_name: {
-      type: Sequelize.STRING(50)
+      type: Sequelize.STRING(50),
+      unique: {
+        args: true,
+        msg: 'Location name already in use!'
+      },
+      required: [true, 'Location is mandatory field']
     },
     status: {
       type: Sequelize.BOOLEAN,

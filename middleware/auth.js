@@ -34,6 +34,7 @@ module.exports = async function (req, res, next) {
         locations = locations?.filter((v, i, a) => a.indexOf(v) === i);
         req.userToken = token;
         req.user = familyUser.toJSON();
+        req.user.accessable_locations = req.user.location;
         req.user.location = { selected_locations: locations, accessable_locations: locations };
       } else {
         res.status(401).json({ IsSuccess: true, Data: {}, Message: CONSTANTS.AUTH_ERROR });

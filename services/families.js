@@ -7,54 +7,6 @@ const encrypter = require('object-encrypter');
 const engine = encrypter(process.env.JWT_SECRET_KEY, { ttl: true });
 const { v4: uuidv4 } = require('uuid');
 
-const getSecondaryParents = async (familyIdArray) => {
-  let ids = '';
-  let mainQuery;
-  if (!_.isEmpty(familyIdArray)) {
-    familyIdArray.forEach((id) => (ids = ids + `family_id LIKE '%${id}%' OR `));
-    ids = ids.slice(0, -3);
-    mainQuery = `SELECT * FROM family  WHERE (${ids}) AND member_type="secondary" `;
-    let secondaryParents = await sequelize.query(
-      mainQuery,
-      { type: Sequelize.QueryTypes.SELECT },
-      {
-        model: Family,
-        mapToModel: true
-      }
-    );
-    return secondaryParents;
-  } else {
-    return null;
-  }
-};
-const getChildren = async (familyIdArray) => {
-  let ids = '';
-  let mainQuery;
-  if (!_.isEmpty(familyIdArray)) {
-    familyIdArray.forEach((id) => (ids = ids + `family_id LIKE '%${id}%' OR `));
-    ids = ids.slice(0, -3);
-    mainQuery = `SELECT * FROM child  WHERE (${ids}) `;
-    let children = await sequelize.query(
-      mainQuery,
-      { type: Sequelize.QueryTypes.SELECT },
-      {
-        model: Child,
-        mapToModel: true
-      }
-    );
-    return children;
-  } else {
-    return null;
-  }
-};
-const getPrimaryMember = async (familyIdArray) => {
-  let familyMember = await Family.findAll({
-    where: { family_id: familyIdArray, member_type: 'primary' },
-    raw: true
-  });
-  return familyMember;
-};
-
 module.exports = {
   /* Create new family */
   createFamily: async (familyObj) => {
@@ -236,14 +188,22 @@ module.exports = {
   },
 
   //disable family member by ID
-  disableFamily: async (familyMemberId, memberType, familyId, schedluedEndDate = null) => {
+  disableFamily: async (
+    familyMemberId,
+    memberType,
+    familyId,
+    schedluedEndDate = null,
+    locations_to_disable = [],
+    user
+  ) => {
     let updateFamilyDetails;
     let updateChildDetails;
 
     if (schedluedEndDate != null && schedluedEndDate != '') {
       let update = {
         updated_at: Sequelize.literal('CURRENT_TIMESTAMP'),
-        scheduled_end_date: schedluedEndDate
+        scheduled_end_date: schedluedEndDate,
+        disabled_locations: { locations: locations_to_disable }
       };
 
       if (memberType == 'secondary') {
@@ -263,10 +223,35 @@ module.exports = {
         });
       }
     } else {
+      const location = await Family.findOne({
+        attributes: ['location'],
+        where: {
+          family_member_id: familyMemberId
+        },
+        raw: true
+      });
+
+      const locations = location?.location?.selected_locations?.filter((location) => {
+        let count = 0;
+
+        locations_to_disable.forEach((loc) => {
+          if (loc === location) {
+            count = 1;
+          }
+        });
+
+        return count === 0;
+      });
+
       let update = {
         updated_at: Sequelize.literal('CURRENT_TIMESTAMP'),
+        disabled_locations: { locations: locations_to_disable },
+        scheduled_end_date: null,
         status: 'Disabled',
-        scheduled_end_date: null
+        location: {
+          selected_locations: locations,
+          accessable_locations: locations
+        }
       };
 
       if (memberType == 'secondary') {
@@ -291,14 +276,33 @@ module.exports = {
   },
 
   // enable family member by ID
-  enableFamily: async (familyMemberId, memberType, familyId) => {
+  enableFamily: async (familyMemberId, memberType, familyId, user) => {
     let updateFamilyDetails;
     let updateChildDetails;
+
+    const location = await Family.findOne({
+      attributes: ['location', 'disabled_locations'],
+      where: {
+        family_member_id: familyMemberId
+      },
+      raw: true
+    });
+
+    let locations = location?.location?.selected_locations;
+    let disabledLocations = location?.disabled_locations?.locations;
+    if (disabledLocations?.length !== 0) {
+      locations.push(...disabledLocations);
+    }
 
     let update = {
       updated_at: Sequelize.literal('CURRENT_TIMESTAMP'),
       status: 'Enabled',
-      scheduled_end_date: null
+      scheduled_end_date: null,
+      location: {
+        selected_locations: locations,
+        accessable_locations: locations
+      },
+      disabled_locations: {}
     };
 
     if (memberType == 'secondary') {

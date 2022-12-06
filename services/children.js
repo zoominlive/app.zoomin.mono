@@ -1,4 +1,4 @@
-const { Child, Family } = require('../models/index');
+const { Child, Family, RoomsInChild, Room } = require('../models/index');
 const Sequelize = require('sequelize');
 const _ = require('lodash');
 const sequelize = require('../lib/database');
@@ -42,6 +42,16 @@ module.exports = {
     childDetails = await Child.findAll({
       raw: true,
       where: { family_id: familyId }
+    });
+
+    return childDetails;
+  },
+
+  // get all children for given family Id
+  getChildById: async (childId) => {
+    childDetails = await Child.findOne({
+      raw: true,
+      where: { child_id: childId }
     });
 
     return childDetails;
@@ -102,12 +112,18 @@ module.exports = {
   },
 
   //enable selected child
-  enableChild: async (childId) => {
+  enableChild: async (childId, rooms) => {
     let update = {
       updated_at: Sequelize.literal('CURRENT_TIMESTAMP'),
       status: 'Enabled',
+      rooms: rooms,
       scheduled_end_date: null
     };
+
+    let updateRoomStatus = await RoomsInChild.update(
+      { disabled: 'false' },
+      { where: { child_id: childId } }
+    );
 
     let updateChildDetails = await Child.update(update, {
       where: { child_id: childId },
@@ -146,5 +162,60 @@ module.exports = {
     });
 
     return children;
+  },
+
+  assignRoomsToChild: async (childId, rooms) => {
+    const roomsToadd = rooms.map((room) => {
+      return {
+        room_id: room.room_id,
+        child_id: childId
+      };
+    });
+
+    let roomsAdded = await RoomsInChild.bulkCreate(roomsToadd);
+
+    return roomsAdded;
+  },
+
+  editAssignedRoomsToChild: async (childId, rooms) => {
+    const roomsToadd = rooms.map((room) => {
+      return {
+        room_id: room.room_id,
+        child_id: childId
+      };
+    });
+
+    let roomsRemoved = await RoomsInChild.destroy({ where: { child_id: childId }, raw: true });
+
+    let roomsAdded = await RoomsInChild.bulkCreate(roomsToadd);
+
+    return roomsAdded;
+  },
+
+  deleteAssignedRoomsToChild: async (childId) => {
+    let roomsDeleted = await RoomsInChild.destroy({ where: { child_id: childId }, raw: true });
+
+    return roomsDeleted;
+  },
+
+  disableSelectedRoomsForChild: async (childId, roomIds) => {
+    let disabledRooms = await RoomsInChild.update(
+      { disabled: true },
+      {
+        where: { child_id: childId, room_id: roomIds },
+        raw: true
+      }
+    );
+
+    return disabledRooms;
+  },
+
+  addRoomsToChild: async (childId) => {
+    let disabledRooms = await RoomsInChild.findAll({
+      where: { child_id: childId },
+      include: [{ model: Room, attributes: ['room_id', 'location', 'room_name'] }]
+    });
+
+    return disabledRooms;
   }
 };

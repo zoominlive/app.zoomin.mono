@@ -288,7 +288,9 @@ module.exports = {
         params.family_member_id,
         params.member_type,
         params.family_id,
-        params?.scheduled_end_date
+        params?.scheduled_end_date,
+        params?.locations_to_disable,
+        req.user
       );
 
       if (params?.scheduled_end_date) {
@@ -323,7 +325,8 @@ module.exports = {
       let enableFamily = await familyServices.enableFamily(
         params.family_member_id,
         params.member_type,
-        params.family_id
+        params.family_id,
+        req.user
       );
 
       if (params.member_type === 'secondary') {

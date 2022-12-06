@@ -72,6 +72,10 @@ const Family = sequelize.define(
       type: Sequelize.JSON,
       defaultValue: null
     },
+    disabled_locations: {
+      type: Sequelize.JSON,
+      defaultValue: {}
+    },
     role: {
       type: Sequelize.ENUM('Family'),
       defaultValue: 'Family',

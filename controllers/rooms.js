@@ -42,19 +42,19 @@ module.exports = {
 
   // edit existing room
   editRoom: async (req, res, next) => {
+    const t = await sequelize.transaction();
     try {
-      const t = await sequelize.transaction();
-
       const params = req.body;
       const room = await roomServices.editRoom(req.user, params, t);
 
+      console.log(params);
       params?.cameras?.forEach(async (camera) => {
         let rooms = camera.room_ids.rooms.filter((room) => room.room_id !== params.room_id);
         await cameraServices.editCamera(camera.cam_id, { room_ids: { rooms: rooms } }, t);
       });
 
       params?.camerasToAdd?.forEach(async (cam) => {
-        let rooms = cam?.room_ids?.rooms;
+        let rooms = cam?.room_ids?.rooms ? cam?.room_ids?.rooms : [];
         rooms?.push({ room_id: params.room_id, room_name: room?.room_name });
         await cameraServices.editCamera(cam.cam_id, { room_ids: { rooms: rooms } }, t);
       });

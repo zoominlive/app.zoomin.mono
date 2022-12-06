@@ -1,7 +1,8 @@
-const { Camera, Room, RecentViewers, Child } = require('../models/index');
+const { Camera, Room, RecentViewers, Child, Family } = require('../models/index');
 const Sequelize = require('sequelize');
 const sequelize = require('../lib/database');
 const _ = require('lodash');
+const { cons } = require('lodash-contrib');
 
 module.exports = {
   /* Create new camera */
@@ -44,23 +45,35 @@ module.exports = {
       raw: true
     });
 
-    let newCameras = rooms?.map((room) => {
-      let camsToAdd = [];
-      cameras?.forEach((cam) => {
-        cam?.room_ids?.rooms?.forEach((room1) => {
-          if (room1?.room_id === room?.room_id) {
-            camsToAdd?.push({
-              cam_id: cam?.cam_id,
-              cam_name: cam?.cam_name,
-              description: cam?.description,
-              stream_uri: cam?.stream_uri
-            });
+    let newCameras = rooms
+      ?.map((room) => {
+        let camsToAdd = [];
+        cameras?.forEach((cam) => {
+          cam?.room_ids?.rooms?.forEach((room1) => {
+            if (room1?.room_id === room?.room_id) {
+              camsToAdd?.push({
+                cam_id: cam?.cam_id,
+                cam_name: cam?.cam_name,
+                description: cam?.description,
+                stream_uri: cam?.stream_uri
+              });
+            }
+          });
+        });
+
+        return { ...room, cameras: camsToAdd };
+      })
+      .filter((rooms) => {
+        let count = 0;
+
+        user.accessable_locations.selected_locations.forEach((location) => {
+          if (rooms.location === location) {
+            count = 1;
           }
         });
-      });
 
-      return { ...room, cameras: camsToAdd };
-    });
+        return count === 1;
+      });
 
     return newCameras;
   },
@@ -111,7 +124,20 @@ module.exports = {
               };
             })
           );
-          const finalChildData = await childObj;
+
+          let finalChildData = await childObj;
+          finalChildData = finalChildData.filter((room) => {
+            let count = 0;
+
+            user.accessable_locations.selected_locations.forEach((location) => {
+              if (room.location === location) {
+                count = 1;
+              }
+            });
+
+            return count == 1;
+          });
+
           return {
             childFirstName: child.childDetails.firstName,
             childLastName: child.childDetails.lastName,
@@ -125,6 +151,18 @@ module.exports = {
       children = await Room.findAll({
         raw: true,
         where: { user_id: user.user_id }
+      });
+
+      let families = await Family.findAll({
+        where: { member_type: 'primary', user_id: user.user_id },
+        raw: true
+      });
+
+      let familyIds = families.map((family) => family.family_id);
+
+      let children1 = await Child.findAll({
+        where: { family_Id: familyIds },
+        raw: true
       });
 
       let cameras = Promise.all(
@@ -143,7 +181,24 @@ module.exports = {
         })
       );
       const cameraDetails = await cameras;
-      return cameraDetails;
+
+      const childDetails = children1.map((child) => {
+        const rooms = child.rooms.rooms.map((room) => {
+          let cam = [];
+
+          cameraDetails.forEach((room1) => {
+            if (room.room_id === room.room_id) {
+              cam = room1.cameras;
+            }
+          });
+
+          return { ...room, cameras: cam };
+        });
+
+        return { childFirstName: null, childLastName: null, rooms: rooms };
+      });
+
+      return childDetails;
     }
   },
 
