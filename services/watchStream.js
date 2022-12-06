@@ -45,8 +45,39 @@ module.exports = {
       raw: true
     });
 
-    let newCameras = rooms
-      ?.map((room) => {
+    let newCameras;
+    if (user?.family_id) {
+      newCameras = rooms
+        ?.map((room) => {
+          let camsToAdd = [];
+          cameras?.forEach((cam) => {
+            cam?.room_ids?.rooms?.forEach((room1) => {
+              if (room1?.room_id === room?.room_id) {
+                camsToAdd?.push({
+                  cam_id: cam?.cam_id,
+                  cam_name: cam?.cam_name,
+                  description: cam?.description,
+                  stream_uri: cam?.stream_uri
+                });
+              }
+            });
+          });
+
+          return { ...room, cameras: camsToAdd };
+        })
+        .filter((rooms) => {
+          let count = 0;
+
+          user?.accessable_locations?.selected_locations?.forEach((location) => {
+            if (rooms?.location === location) {
+              count = 1;
+            }
+          });
+
+          return count === 1;
+        });
+    } else {
+      newCameras = rooms?.map((room) => {
         let camsToAdd = [];
         cameras?.forEach((cam) => {
           cam?.room_ids?.rooms?.forEach((room1) => {
@@ -62,18 +93,8 @@ module.exports = {
         });
 
         return { ...room, cameras: camsToAdd };
-      })
-      .filter((rooms) => {
-        let count = 0;
-
-        user.accessable_locations.selected_locations.forEach((location) => {
-          if (rooms.location === location) {
-            count = 1;
-          }
-        });
-
-        return count === 1;
       });
+    }
 
     return newCameras;
   },
@@ -181,7 +202,7 @@ module.exports = {
         })
       );
       const cameraDetails = await cameras;
-
+      let locations = [];
       const childDetails = children1.map((child) => {
         const rooms = child.rooms.rooms.map((room) => {
           let cam = [];
@@ -191,14 +212,30 @@ module.exports = {
               cam = room1.cameras;
             }
           });
-
+          locations.push(room.location);
           return { ...room, cameras: cam };
         });
 
         return { childFirstName: null, childLastName: null, rooms: rooms };
       });
 
-      return childDetails;
+      locations = _.uniq(locations);
+
+      const finalResponse = locations?.map((location) => {
+        let roomsObj = [];
+        childDetails.forEach((child) => {
+          child.rooms.forEach((room) => {
+            if (room.location === location) {
+              roomsObj.push(_.omit(room, ['location']));
+            }
+          });
+        });
+
+        roomsObj = _.uniqBy(roomsObj, 'room_id');
+        return { location: location, rooms: roomsObj };
+      });
+
+      return finalResponse;
     }
   },
 
