@@ -155,12 +155,11 @@ const RoomForm = (props) => {
           );
         }
         setSubmitLoading(false);
+        handleFormDialogClose();
       });
-      handleFormDialogClose();
     } else {
       API.post('rooms/add', data).then((response) => {
         if (response.status === 201) {
-          props.setRoom(response.data.Data);
           enqueueSnackbar(response.data.Message, { variant: 'success' });
           props.getRoomsList();
           props.getDropDownRoomList();
@@ -173,8 +172,8 @@ const RoomForm = (props) => {
           );
         }
         setSubmitLoading(false);
+        handleFormDialogClose();
       });
-      handleFormDialogClose();
     }
   };
 
