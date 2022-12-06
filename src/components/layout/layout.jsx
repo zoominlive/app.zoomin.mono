@@ -8,7 +8,7 @@ import {
   ListItemText,
   Typography
 } from '@mui/material';
-import logo from '../../assets/logo.svg';
+import logo from '../../assets/image2vector.svg';
 import smallLogo from '../../assets/small-logo.svg';
 import collapseButton from '../../assets/collapse-button.svg';
 import openButton from '../../assets/open-button.svg';
@@ -79,38 +79,38 @@ const Layout = () => {
   const topMenuItems = [
     {
       name: 'Dashboard',
-      icon: <Monitor style={{ color: 'black' }} />,
+      icon: <Monitor style={{ color: 'white' }} />,
       active: true,
       link: '/dashboard',
       key: 1
     },
     {
       name: 'Families',
-      icon: <Users style={{ color: 'black' }} />,
+      icon: <Users style={{ color: 'white' }} />,
       link: '/families',
       key: 2
     },
     {
       name: 'Rooms',
-      icon: <Copy style={{ color: 'black' }} />,
+      icon: <Copy style={{ color: 'white' }} />,
       link: '/rooms',
       key: 3
     },
     {
       name: 'Cameras',
-      icon: <Camera style={{ color: 'black' }} />,
+      icon: <Camera style={{ color: 'white' }} />,
       link: '/cameras',
       key: 6
     },
     {
       name: 'Users',
-      icon: <User style={{ color: 'black' }} />,
+      icon: <User style={{ color: 'white' }} />,
       link: '/users',
       key: 4
     },
     {
       name: 'Watch Stream',
-      icon: <Video style={{ color: 'black' }} />,
+      icon: <Video style={{ color: 'white' }} />,
       link: '/watch-stream',
       key: 5
     }
@@ -119,12 +119,12 @@ const Layout = () => {
   const bottomMenuItems = [
     {
       name: 'Knowledge Base',
-      icon: <Book style={{ color: 'black' }} />,
+      icon: <Book style={{ color: 'white' }} />,
       link: 'https://zoominlive.document360.io/'
     },
     {
       name: 'Support',
-      icon: <Shield style={{ color: 'black' }} />,
+      icon: <Shield style={{ color: 'white' }} />,
       link: 'https://www.zoominlive.com/support'
     }
   ];
@@ -138,7 +138,7 @@ const Layout = () => {
           className={`layout-drawer ${open ? 'open' : 'collapsed'}`}
           open={open}>
           <div className="header">
-            <img src={open ? logo : smallLogo} />
+            <img src={open ? logo : smallLogo} style={{ height: '4.5em' }} />
           </div>
           {authCtx.user && Object?.keys(authCtx?.user)?.length !== 0 && (
             <List>
@@ -212,7 +212,12 @@ const Layout = () => {
         <main className={`main-content ${open ? 'open' : 'collapsed'}`}>
           <header>
             <Box className="header-left">
-              <img onClick={() => setOpen(!open)} src={open ? collapseButton : openButton} />
+              <img
+                onClick={() => setOpen(!open)}
+                style={{ width: '46px', height: '46px', borderRadius: '50%' }}
+                src={open ? collapseButton : openButton}
+              />
+
               <Box className="breadcrumb">
                 <Typography variant="h2">{layoutCtx?.breadcrumb[0]}</Typography>
                 {layoutCtx?.breadcrumb?.length > 1 && (

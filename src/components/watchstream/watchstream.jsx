@@ -253,7 +253,7 @@ const WatchStream = () => {
                   </Select>
                 </FormControl>
               </Grid>
-              <Grid item md={3} sm={12}>
+              <Grid item md={6} sm={24}>
                 <Autocomplete
                   multiple
                   disableCloseOnSelect

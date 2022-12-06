@@ -38,7 +38,7 @@
         }
         a {
           text-decoration: none;
-          color: #6a74dd !important;
+          color: #6e66c7 !important;
         }
       }
     }
@@ -58,7 +58,7 @@
   transition: all 0.5s ease;
   .MuiDrawer-paper {
     transition: all 0.5s ease;
-    background: #6a74dd;
+    background: #6e66c7;
     border-right: 1px solid rgba(0, 0, 0, 0.1);
     overflow: hidden;
     .header {
@@ -146,7 +146,7 @@
           font-size: 24px;
           line-height: 29px;
           margin-right: 24px;
-          color: rgba(0, 0, 0, 0.87);
+          color: #6e66c7;
         }
         p {
           font-size: 24px;
@@ -481,7 +481,7 @@
       color: #ffffff;
     }
     .blue-text {
-      color: #6a74dd !important;
+      color: #6e66c7 !important;
     }
     .title-divider {
       font-size: 12px;
@@ -542,17 +542,17 @@
       font-size: 15px;
       line-height: 26px;
       letter-spacing: 0.46px;
-      color: #6a74dd !important;
+      color: #6e66c7 !important;
     }
   }
 }
 
 .MuiButton-contained {
-  background-color: #6a74dd !important;
+  background-color: #6e66c7 !important;
 }
 
 .MuiChip-colorPrimary {
-  background-color: #6a74dd !important;
+  background-color: #6e66c7 !important;
 }
 
 .MuiMenu-list {
@@ -647,7 +647,7 @@
 .MuiDialogActions-root {
   .MuiLoadingButton-loading {
     &.Mui-disabled {
-      color: #6a74dd !important;
+      color: #6e66c7 !important;
     }
   }
   .Mui-disabled {

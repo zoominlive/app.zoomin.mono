@@ -42,7 +42,12 @@ const AccountMenu = (props) => {
   return (
     <Box>
       <IconButton onClick={handleClick}>
-        <Avatar src={authCtx?.user?.profile_image} />
+        <Avatar
+          src={authCtx?.user?.profile_image}
+          style={{
+            border: '2px solid #6E66C7'
+          }}
+        />
       </IconButton>
       <Menu
         className="account-menu"

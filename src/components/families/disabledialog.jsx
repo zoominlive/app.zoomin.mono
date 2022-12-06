@@ -14,7 +14,9 @@ import {
   Radio,
   RadioGroup,
   Stack,
-  TextField
+  TextField,
+  Autocomplete,
+  Chip
 } from '@mui/material';
 import { DesktopDatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
@@ -24,7 +26,6 @@ import { Form, Formik } from 'formik';
 import * as yup from 'yup';
 import { LoadingButton } from '@mui/lab';
 import SaveIcon from '@mui/icons-material/Save';
-
 const validationSchema = yup.object().shape({
   selectedOption: yup.string().required('Please select atleast one option'),
   disableDate: yup
@@ -39,6 +40,7 @@ const validationSchema = yup.object().shape({
 
 const DisableDialog = (props) => {
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+  const [isSubmitClicked, setIsSubmitClicked] = useState(false);
 
   return (
     <Dialog
@@ -81,7 +83,7 @@ const DisableDialog = (props) => {
                         control={<Radio />}
                         label="Disable immediately"
                       />
-                      <Stack direction="row" spacing={4}>
+                      <Stack direction="row" spacing={10}>
                         <FormControlLabel
                           value="schedule"
                           control={<Radio />}
@@ -115,6 +117,37 @@ const DisableDialog = (props) => {
                           />
                         </LocalizationProvider>
                       </Stack>
+                      <Autocomplete
+                        fullWidth
+                        multiple
+                        id="rooms"
+                        options={props?.locationsToDisable?.sort((a, b) => (a > b ? 1 : -1))}
+                        value={values?.locations}
+                        onChange={(_, value) => {
+                          props.setSelectedLocationsToDisable(value);
+                          setFieldValue('locations', value);
+                        }}
+                        renderTags={(value, getTagProps) =>
+                          value.map((option, index) => (
+                            <Chip key={index} label={option} {...getTagProps({ index })} />
+                          ))
+                        }
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            label="Locations to end access"
+                            helperText={
+                              values?.locations?.length === 0 && isSubmitClicked
+                                ? 'Minimum one location is required'
+                                : ''
+                            }
+                            error={
+                              values?.locations?.length === 0 && isSubmitClicked ? true : false
+                            }
+                            fullWidth
+                          />
+                        )}
+                      />
                     </Stack>
                   </RadioGroup>
                   {touched.selectedOption && Boolean(errors.selectedOption) && (
@@ -132,6 +165,7 @@ const DisableDialog = (props) => {
                 disabled={props.loading}
                 onClick={() => {
                   if (!props.loading) {
+                    setIsSubmitClicked(true);
                     props.handleDialogClose();
                   }
                 }}>
@@ -142,7 +176,10 @@ const DisableDialog = (props) => {
                 loadingPosition={props.loading ? 'start' : undefined}
                 startIcon={props.loading && <SaveIcon />}
                 variant="text"
-                type="submit">
+                type="submit"
+                onClick={() => {
+                  setIsSubmitClicked(true);
+                }}>
                 YES, DISABLE
               </LoadingButton>
             </DialogActions>
@@ -162,5 +199,7 @@ DisableDialog.propTypes = {
   handleDisable: PropTypes.func,
   contentText: PropTypes.string,
   loading: PropTypes.bool,
-  handleDialogClose: PropTypes.func
+  locationsToDisable: PropTypes.array,
+  handleDialogClose: PropTypes.func,
+  setSelectedLocationsToDisable: PropTypes.func
 };

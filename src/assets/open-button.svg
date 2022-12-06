@@ -1,11 +1,19 @@
-<svg width="46" height="46" viewBox="0 0 46 46" fill="none" xmlns="http://www.w3.org/2000/svg">
-<circle cx="22.8235" cy="23.3847" r="22.6008" fill="white"/>
-<g clip-path="url(#clip0_64_14608)">
-<path d="M14.1567 21.6973C13.2576 21.6973 12.5317 22.451 12.5317 23.3848C12.5317 24.3185 13.2576 25.0723 14.1567 25.0723C15.0559 25.0723 15.7817 24.3185 15.7817 23.3848C15.7817 22.451 15.0559 21.6973 14.1567 21.6973ZM14.1567 14.9473C13.2576 14.9473 12.5317 15.701 12.5317 16.6348C12.5317 17.5685 13.2576 18.3223 14.1567 18.3223C15.0559 18.3223 15.7817 17.5685 15.7817 16.6348C15.7817 15.701 15.0559 14.9473 14.1567 14.9473ZM14.1567 28.4473C13.2522 28.4473 12.5317 29.2066 12.5317 30.1348C12.5317 31.0629 13.263 31.8223 14.1567 31.8223C15.0505 31.8223 15.7817 31.0629 15.7817 30.1348C15.7817 29.2066 15.0613 28.4473 14.1567 28.4473ZM17.4067 31.2598H32.5734V29.0098H17.4067V31.2598ZM17.4067 24.5098H32.5734V22.2598H17.4067V24.5098ZM17.4067 15.5098V17.7598H32.5734V15.5098H17.4067Z" fill="black" fill-opacity="0.54"/>
-</g>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="1000" height="1000" viewBox="0 0 1000 1000" xml:space="preserve">
+<desc>Created with Fabric.js 3.5.0</desc>
 <defs>
-<clipPath id="clip0_64_14608">
-<rect width="26" height="27" fill="white" transform="translate(9.82349 9.88477)"/>
-</clipPath>
 </defs>
+<rect x="0" y="0" width="100%" height="100%" fill="#ffffff"/>
+<g transform="matrix(19.7628 0 0 19.7628 499.9989 499.9989)" id="895244">
+<g style="" vector-effect="non-scaling-stroke">
+		<g transform="matrix(1 0 0 1 -0.1765 0.3847)">
+<circle style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; is-custom-font: none; font-file-url: none; fill: rgb(255,255,255); fill-rule: nonzero; opacity: 1;" cx="0" cy="0" r="22.6008"/>
+</g>
+		<g transform="matrix(1 0 0 1 -0.4474 0.3848)" clip-path="url(#CLIPPATH_1)">
+<clipPath id="CLIPPATH_1">
+	<rect transform="matrix(1 0 0 1 0.2709 0)" id="clip0_64_14608" x="-13" y="-13.5" rx="0" ry="0" width="26" height="27"/>
+</clipPath>
+<path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; is-custom-font: none; font-file-url: none; fill: rgb(97,64,178); fill-opacity: 0.54; fill-rule: nonzero; opacity: 1;" transform=" translate(-22.5526, -23.3848)" d="M 14.1567 21.6973 C 13.2576 21.6973 12.5317 22.451 12.5317 23.3848 C 12.5317 24.3185 13.2576 25.0723 14.1567 25.0723 C 15.0559 25.0723 15.7817 24.3185 15.7817 23.3848 C 15.7817 22.451 15.0559 21.6973 14.1567 21.6973 Z M 14.1567 14.9473 C 13.2576 14.9473 12.5317 15.701 12.5317 16.6348 C 12.5317 17.5685 13.2576 18.3223 14.1567 18.3223 C 15.0559 18.3223 15.7817 17.5685 15.7817 16.6348 C 15.7817 15.701 15.0559 14.9473 14.1567 14.9473 Z M 14.1567 28.4473 C 13.2522 28.4473 12.5317 29.2066 12.5317 30.1348 C 12.5317 31.0629 13.263 31.8223 14.1567 31.8223 C 15.0505 31.8223 15.7817 31.0629 15.7817 30.1348 C 15.7817 29.2066 15.0613 28.4473 14.1567 28.4473 Z M 17.4067 31.2598 H 32.5734 V 29.0098 H 17.4067 V 31.2598 Z M 17.4067 24.5098 H 32.5734 V 22.2598 H 17.4067 V 24.5098 Z M 17.4067 15.5098 V 17.7598 H 32.5734 V 15.5098 H 17.4067 Z" stroke-linecap="round"/>
+</g>
+</g>
+</g>
 </svg>

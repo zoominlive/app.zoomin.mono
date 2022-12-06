@@ -28,6 +28,7 @@ import { errorMessageHandler } from '../../utils/errormessagehandler';
 import { useContext } from 'react';
 import AuthContext from '../../context/authcontext';
 import Loader from '../common/loader';
+import _ from 'lodash';
 
 const FamilyDrawer = (props) => {
   const authCtx = useContext(AuthContext);
@@ -45,6 +46,8 @@ const FamilyDrawer = (props) => {
   const [enableChildrenLoading, setEnableChildrenLoading] = useState([]);
   const [disableDrawerClose, setDisableDrawerClose] = useState(false);
   const [scheduledLoading, setScheduledLoading] = useState({ loading: false, index: -1, type: '' });
+  const [locationsToDisable, setLocationsToDisable] = useState([]);
+  const [selectedLocationsToDisable, setSelectedLocationsToDisable] = useState([]);
 
   useEffect(() => {
     if (!isDisableDialogOpen) {
@@ -172,6 +175,7 @@ const FamilyDrawer = (props) => {
         family_member_id: parentToDisable,
         member_type: 'secondary',
         family_id: props.family.primary.family_id,
+        locations_to_disable: selectedLocationsToDisable,
         scheduled_end_date:
           data.selectedOption === 'schedule' && dayjs(data.disableDate).format('YYYY-MM-DD')
       }).then((response) => {
@@ -216,6 +220,7 @@ const FamilyDrawer = (props) => {
     } else {
       API.put('family/child/disable', {
         child_id: childToDisable,
+        locations_to_disable: selectedLocationsToDisable,
         scheduled_end_date:
           data.selectedOption === 'schedule' && dayjs(data.disableDate).format('YYYY-MM-DD')
       }).then((response) => {
@@ -447,6 +452,12 @@ const FamilyDrawer = (props) => {
                           onClick={() => {
                             setDisableDialogTitle('Disable Secondary Family Member');
                             setIsDisableDialogOpen(true);
+                            let locations = [];
+                            props?.family?.children.forEach((child) =>
+                              // eslint-disable-next-line no-unsafe-optional-chaining
+                              locations.push(...child?.location?.locations)
+                            );
+                            setLocationsToDisable(_.uniq(locations));
                             setParentToDisable(parent.family_member_id);
                           }}>
                           Disable
@@ -545,6 +556,7 @@ const FamilyDrawer = (props) => {
                               variant="outlined"
                               className="disabled-btn"
                               onClick={() => {
+                                setLocationsToDisable(child?.location?.locations);
                                 setIsDisableDialogOpen(true);
                                 setChildToDisable(child.child_id);
                                 setDisableDialogTitle('Disable Child');
@@ -611,7 +623,7 @@ const FamilyDrawer = (props) => {
                     </Stack>
                   </Stack>
                   <Box className="rooms">
-                    {child.rooms.rooms.map((room, index) => (
+                    {child?.rooms?.rooms?.map((room, index) => (
                       <Chip key={index} label={room.room_name} />
                     ))}
                   </Box>
@@ -698,6 +710,8 @@ const FamilyDrawer = (props) => {
         title={disableDialogTitle}
         open={isDisableDialogOpen}
         loading={disableLoading}
+        setSelectedLocationsToDisable={setSelectedLocationsToDisable}
+        locationsToDisable={locationsToDisable}
         handleDialogClose={handleDisableDialogClose}
         handleDisable={handleDisable}
       />
