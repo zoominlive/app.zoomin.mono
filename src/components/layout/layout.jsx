@@ -13,7 +13,7 @@ import smallLogo from '../../assets/small-logo.svg';
 import collapseButton from '../../assets/collapse-button.svg';
 import openButton from '../../assets/open-button.svg';
 import React, { useEffect, useState } from 'react';
-import { Monitor, Users, Copy, User, Video, Book, Shield, Camera } from 'react-feather';
+import { Monitor, Users, Copy, User, Video, Book, Shield, Camera, Film, Code } from 'react-feather';
 import AccountMenu from '../common/accountmenu';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { useContext } from 'react';
@@ -113,6 +113,18 @@ const Layout = () => {
       icon: <Video style={{ color: 'white' }} />,
       link: '/watch-stream',
       key: 5
+    },
+    {
+      name: 'Recordings',
+      icon: <Film style={{ color: 'white' }} />,
+      link: '/recordings',
+      key: 7
+    },
+    {
+      name: 'AI Alerts',
+      icon: <Code style={{ color: 'white' }} />,
+      link: '/alerts',
+      key: 8
     }
   ];
 
@@ -158,7 +170,7 @@ const Layout = () => {
                   <ListItem
                     key={index}
                     className={`${item.key === layoutCtx.active ? 'active' : ''} `}
-                    sx={{ px: 1 }}>
+                    sx={{ px: 1, paddingTop: 0.7, paddingBottom: 0.7 }}>
                     {' '}
                     <ListItemButton
                       sx={{
@@ -185,7 +197,7 @@ const Layout = () => {
           <Box className="bottom-list-items">
             <List>
               {bottomMenuItems.map((item, index) => (
-                <ListItem key={index} sx={{ px: 1 }}>
+                <ListItem key={index} sx={{ px: 1, paddingTop: 0.7, paddingBottom: 0.7 }}>
                   {' '}
                   <ListItemButton
                     sx={{
@@ -193,7 +205,13 @@ const Layout = () => {
                       justifyContent: open ? 'initial' : 'center',
                       px: 2.5
                     }}
-                    onClick={() => window.open(item.link, '_blank', 'noopener,noreferrer')}>
+                    onClick={() => {
+                      if (item?.key) {
+                        navigate(item.link);
+                      } else {
+                        window.open(item.link, '_blank', 'noopener,noreferrer');
+                      }
+                    }}>
                     <ListItemIcon
                       sx={{
                         minWidth: 0,

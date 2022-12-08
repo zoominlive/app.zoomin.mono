@@ -19,6 +19,7 @@ import { useState } from 'react';
 import DeleteDialog from '../common/deletedialog';
 import DisableDialog from './disabledialog';
 import dayjs from 'dayjs';
+import { Plus } from 'react-feather';
 import { useEffect } from 'react';
 import { LoadingButton } from '@mui/lab';
 import SaveIcon from '@mui/icons-material/Save';
@@ -622,10 +623,20 @@ const FamilyDrawer = (props) => {
                       )}
                     </Stack>
                   </Stack>
-                  <Box className="rooms">
+                  <Box
+                    className="rooms"
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center'
+                    }}>
                     {child?.rooms?.rooms?.map((room, index) => (
-                      <Chip key={index} label={room.room_name} />
+                      <Chip style={{ cursor: 'pointer' }} key={index} label={room.room_name} />
                     ))}
+                    <Plus
+                      style={{ cursor: 'pointer' }}
+                      onClick={() => {
+                        props.setIsRoomFormDialogOpen(true);
+                      }}></Plus>
                   </Box>
                   {index !== props.family.children.length - 1 && (
                     <Divider variant="middle" sx={{ marginTop: '15px', marginBottom: '15px' }} />
@@ -728,6 +739,7 @@ FamilyDrawer.propTypes = {
   setParentType: PropTypes.func,
   setIsDisableFamilyDialogOpen: PropTypes.func,
   setIsChildFormDialogOpen: PropTypes.func,
+  setIsRoomFormDialogOpen: PropTypes.func,
   family: PropTypes.object,
   setFamily: PropTypes.func,
   setPrimaryParent: PropTypes.func,

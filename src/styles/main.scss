@@ -281,6 +281,14 @@
   }
 }
 
+div {
+  .MuiDialog-container {
+    .MuiDialog-paper {
+      max-width: 1900px !important;
+    }
+  }
+}
+
 .add-user-drawer {
   .MuiDialog-paper {
     .avatar-btn {

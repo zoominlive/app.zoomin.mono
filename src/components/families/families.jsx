@@ -23,13 +23,15 @@ import {
   AvatarGroup,
   Grid,
   Autocomplete,
-  CircularProgress
+  CircularProgress,
+  Tooltip
 } from '@mui/material';
 import React, { useContext, useEffect, useMemo } from 'react';
 import { useState } from 'react';
 import { Plus } from 'react-feather';
 import LayoutContext from '../../context/layoutcontext';
 import ChildForm from './childform';
+import RoomAddForm from './roomaddform';
 import FamilyForm from './familyform';
 import DisableDialog from './disabledialog';
 // import EditFamily from './editfamily';
@@ -51,6 +53,7 @@ const Families = () => {
   const authCtx = useContext(AuthContext);
   const { enqueueSnackbar } = useSnackbar();
   const [isChildFormDialogOpen, setIsChildFormDialogOpen] = useState(false);
+  const [isRoomFormDialogOpen, setIsRoomFormDialogOpen] = useState(false);
   const [isDisableFamilyDialogOpen, setIsDisableFamilyDialogOpen] = useState(false);
   const [isParentFormDialogOpen, setIsParentFormDialogOpen] = useState(false);
   const [isAddFamilyDialogOpen, setIsAddFamilyDialogOpen] = useState(false);
@@ -406,7 +409,15 @@ const Families = () => {
                         {' '}
                         <AvatarGroup>
                           {row.children.map((child, index) => (
-                            <Avatar key={index}>{`${child?.first_name[0]?.toUpperCase()}`}</Avatar>
+                            <>
+                              <Tooltip
+                                id="button-report"
+                                placement="top"
+                                title={child?.first_name + ' ' + child?.last_name}>
+                                <Avatar
+                                  key={index}>{`${child?.first_name[0]?.toUpperCase()}`}</Avatar>
+                              </Tooltip>
+                            </>
                           ))}
                         </AvatarGroup>
                       </TableCell>
@@ -472,6 +483,18 @@ const Families = () => {
           getFamiliesList={getFamiliesList}
         />
       )}
+      {isRoomFormDialogOpen && (
+        <RoomAddForm
+          open={isRoomFormDialogOpen}
+          setOpen={setIsRoomFormDialogOpen}
+          roomsList={roomsList}
+          family={family}
+          child={child}
+          setChild={setChild}
+          setFamily={setFamily}
+          getFamiliesList={getFamiliesList}
+        />
+      )}
       <DisableDialog
         open={isDisableFamilyDialogOpen}
         setOpen={setIsDisableFamilyDialogOpen}
@@ -511,6 +534,7 @@ const Families = () => {
         setFamily={setFamily}
         setIsParentFormDialogOpen={setIsParentFormDialogOpen}
         setIsChildFormDialogOpen={setIsChildFormDialogOpen}
+        setIsRoomFormDialogOpen={setIsRoomFormDialogOpen}
         setIsDisableFamilyDialogOpen={setIsDisableFamilyDialogOpen}
         setPrimaryParent={setPrimaryParent}
         setSecondaryParent={setSecondaryParent}

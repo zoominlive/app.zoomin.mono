@@ -20,6 +20,9 @@ const CustomPlayer = (props) => {
   const [showErrorMessage, setShowErrorMessage] = useState(true);
   const [url, setUrl] = useState('');
   const [playerPlaying, setPlayerPlaying] = useState(true);
+  const timer = useRef({
+    timerId: 0
+  });
 
   useEffect(() => {
     function exitHandler() {
@@ -36,6 +39,7 @@ const CustomPlayer = (props) => {
     document.addEventListener('fullscreenchange', exitHandler, false);
     document.addEventListener('MSFullscreenChange', exitHandler, false);
     return () => {
+      clearTimeout(timer.current.timerId);
       document.removeEventListener('webkitfullscreenchange', exitHandler, false);
       document.removeEventListener('mozfullscreenchange', exitHandler, false);
       document.removeEventListener('fullscreenchange', exitHandler, false);
@@ -48,11 +52,14 @@ const CustomPlayer = (props) => {
   }, [props.streamUri]);
 
   const startTimer = () => {
-    setTimeout(() => {
-      setPlayerPlaying(false);
-      props.setPlaying(false);
-      props.setIsDeleteDialogOpen(true);
-    }, props?.timeOut * 1000 * 60);
+    if (timer.current.timerId == 0) {
+      const timer1 = setTimeout(() => {
+        setPlayerPlaying(false);
+        props.setPlaying(false);
+        props.setIsDeleteDialogOpen(true);
+      }, props?.timeOut * 1000 * 60);
+      timer.current.timerId = timer1;
+    }
   };
 
   const handleFullscreenToggle = () => {
@@ -65,46 +72,56 @@ const CustomPlayer = (props) => {
       {!_.isEmpty(url) && (
         <Box className="video-player-wrapper" ref={playerContainerRef}>
           <Loader loading={!ready} />
-          <ReactPlayer
-            url={`${authCtx.user.transcoderBaseUrl}${url}`}
-            height={'100%'}
-            width={'100%'}
-            controls={false}
-            ref={playerRef}
-            stopOnUnmount={true}
-            onReady={() => {
-              setPlayerPlaying(true);
-              startTimer();
-              setReady(true);
-            }}
-            onPlay={() => {
-              setPlayerPlaying(true);
-              startTimer();
-              setShowErrorMessage(true);
-            }}
-            onPause={() => {
-              setPlayerPlaying(false);
-            }}
-            onError={() => {
-              if (showErrorMessage) {
+          <div style={{ position: 'relative' }}>
+            <label style={{ position: 'absolute', color: 'white' }}>
+              {props?.camDetails?.location +
+                '/' +
+                props?.camDetails?.room_name +
+                ' - ' +
+                props?.camDetails?.cam_name}
+            </label>
+            <ReactPlayer
+              url={`${authCtx.user.transcoderBaseUrl}${url}`}
+              height={'100%'}
+              width={'100%'}
+              controls={false}
+              ref={playerRef}
+              stopOnUnmount={true}
+              onReady={() => {
+                setPlayerPlaying(true);
+                startTimer();
                 setReady(true);
-                setShowErrorMessage(false);
-              }
-            }}
-            playing={playerPlaying}
-            pip={inPIPMode}
-            config={{
-              file: {
-                hlsOptions: {
-                  forceHLS: true,
-                  debug: false,
-                  xhrSetup: function (xhr) {
-                    xhr.setRequestHeader('Authorization', `Bearer ${authCtx.token}`);
+              }}
+              onPlay={() => {
+                setPlayerPlaying(true);
+                startTimer();
+                setShowErrorMessage(true);
+              }}
+              onPause={() => {
+                setPlayerPlaying(false);
+              }}
+              onError={() => {
+                if (showErrorMessage) {
+                  setReady(true);
+                  setShowErrorMessage(false);
+                }
+              }}
+              playing={playerPlaying}
+              pip={inPIPMode}
+              config={{
+                file: {
+                  hlsOptions: {
+                    forceHLS: true,
+                    debug: false,
+                    xhrSetup: function (xhr) {
+                      xhr.setRequestHeader('Authorization', `Bearer ${authCtx.token}`);
+                    }
                   }
                 }
-              }
-            }}
-          />
+              }}
+            />
+          </div>
+
           <PlayerControls
             playing={playerPlaying}
             setPlaying={setPlayerPlaying}
@@ -128,5 +145,6 @@ CustomPlayer.propTypes = {
   setTimeOut: PropTypes.func,
   timeOut: PropTypes.number,
   setPlaying: PropTypes.func,
-  setIsDeleteDialogOpen: PropTypes.func
+  setIsDeleteDialogOpen: PropTypes.func,
+  camDetails: PropTypes.object
 };
