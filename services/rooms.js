@@ -1,4 +1,4 @@
-const { Room, Camera, CamerasInRooms } = require('../models/index');
+const { Room, Camera, CamerasInRooms, RoomsInChild } = require('../models/index');
 const Sequelize = require('sequelize');
 const _ = require('lodash');
 const sequelize = require('../lib/database');
@@ -163,5 +163,20 @@ module.exports = {
     });
 
     return roomList;
+  },
+  // get all room's list for loggedin user
+  enableRoom: async (params, t) => {
+    let roomObj = [];
+    params?.rooms.forEach((roomId) => {
+      roomObj.push({
+        child_id: params?.child_id,
+        room_id: roomId,
+        scheduled_enable_date: params.scheduled_enable_date,
+        disabled: 'true'
+      });
+    });
+    let assignRoomToChild = await RoomsInChild.bulkCreate(roomObj);
+
+    return assignRoomToChild;
   }
 };

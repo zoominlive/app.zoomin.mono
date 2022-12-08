@@ -205,14 +205,16 @@ module.exports = {
       let locations = [];
       const childDetails = children1.map((child) => {
         const rooms = child.rooms.rooms.map((room) => {
-          let cam = [];
+          let cam;
 
           cameraDetails.forEach((room1) => {
-            if (room.room_id === room.room_id) {
+            if (room1.room_id === room.room_id) {
               cam = room1.cameras;
             }
           });
+
           locations.push(room.location);
+
           return { ...room, cameras: cam };
         });
 
@@ -232,6 +234,7 @@ module.exports = {
         });
 
         roomsObj = _.uniqBy(roomsObj, 'room_id');
+
         return { location: location, rooms: roomsObj };
       });
 

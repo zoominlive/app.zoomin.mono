@@ -56,16 +56,6 @@ provider:
             - 'lambda:InvokeFunction'
           Resource: '*'
 
-# custom:
-#   warmup:
-#     zoominfunctionwarmer:
-#       enabled: true
-#       events:
-#         - schedule: rate(5 minutes)
-#       concurrency: 10
-#       verbose: true
-#       logRetentionInDays: 14
-
 functions:
   userFunction:
     handler: handler.handler
@@ -175,16 +165,10 @@ functions:
           method: '*'
           path: /api/watchstream/addviewer
 
-      # - schedule: rate(1 minute)
-    # warmup:
-    #   default:
-    #     enabled: true
-
   disableScheduledMembers:
-    handler: cron.disableScheduledFamilyAndChild
+    handler: child_family_cron.disableScheduledFamilyAndChild
     events:
       - schedule: rate(1 hour)
 
 plugins:
   - serverless-offline
-  # - serverless-plugin-warmup
