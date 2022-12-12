@@ -72,55 +72,55 @@ const CustomPlayer = (props) => {
       {!_.isEmpty(url) && (
         <Box className="video-player-wrapper" ref={playerContainerRef}>
           <Loader loading={!ready} />
-          <div style={{ position: 'relative' }}>
-            <label style={{ position: 'absolute', color: 'white' }}>
-              {props?.camDetails?.location +
-                '/' +
-                props?.camDetails?.room_name +
-                ' - ' +
-                props?.camDetails?.cam_name}
-            </label>
-            <ReactPlayer
-              url={`${authCtx.user.transcoderBaseUrl}${url}`}
-              height={'100%'}
-              width={'100%'}
-              controls={false}
-              ref={playerRef}
-              stopOnUnmount={true}
-              onReady={() => {
-                setPlayerPlaying(true);
-                startTimer();
+
+          <label style={{ position: 'absolute', color: 'white' }}>
+            {props?.camDetails?.location +
+              '/' +
+              props?.camDetails?.room_name +
+              ' - ' +
+              props?.camDetails?.cam_name}
+          </label>
+          <ReactPlayer
+            url={`${authCtx.user.transcoderBaseUrl}${url}`}
+            className="react-player"
+            height={'100%'}
+            width={'100%'}
+            controls={false}
+            ref={playerRef}
+            stopOnUnmount={true}
+            onReady={() => {
+              setPlayerPlaying(true);
+              startTimer();
+              setReady(true);
+            }}
+            onPlay={() => {
+              setPlayerPlaying(true);
+              startTimer();
+              setShowErrorMessage(true);
+            }}
+            onPause={() => {
+              setPlayerPlaying(false);
+            }}
+            onError={() => {
+              if (showErrorMessage) {
                 setReady(true);
-              }}
-              onPlay={() => {
-                setPlayerPlaying(true);
-                startTimer();
-                setShowErrorMessage(true);
-              }}
-              onPause={() => {
-                setPlayerPlaying(false);
-              }}
-              onError={() => {
-                if (showErrorMessage) {
-                  setReady(true);
-                  setShowErrorMessage(false);
-                }
-              }}
-              playing={playerPlaying}
-              pip={inPIPMode}
-              config={{
-                file: {
-                  hlsOptions: {
-                    forceHLS: true,
-                    debug: false,
-                    xhrSetup: function (xhr) {
-                      xhr.setRequestHeader('Authorization', `Bearer ${authCtx.token}`);
-                    }
+                setShowErrorMessage(false);
+              }
+            }}
+            playing={playerPlaying}
+            pip={inPIPMode}
+            config={{
+              file: {
+                hlsOptions: {
+                  forceHLS: true,
+                  debug: false,
+                  xhrSetup: function (xhr) {
+                    xhr.setRequestHeader('Authorization', `Bearer ${authCtx.token}`);
                   }
                 }
-              }}
-            />
-          </div>
+              }
+            }}
+          />
 
           <PlayerControls
             playing={playerPlaying}

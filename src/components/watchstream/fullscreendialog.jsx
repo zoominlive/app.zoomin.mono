@@ -1,109 +1,101 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Dialog, DialogContent, Grid, Box } from '@mui/material';
-import IconButton from '@mui/material/IconButton';
-import CloseIcon from '@mui/icons-material/Close';
+import { Grid, Box, Card } from '@mui/material';
 import CustomPlayer from './customplayer';
 const FullScreenDialog = (props) => {
   return (
-    <div>
-      <Dialog
-        fullScreen
-        open={props.open}
-        onClose={() => {
-          props.handleDialogClose();
-        }}>
-        <DialogContent>
-          <>
-            <IconButton
-              aria-label="close"
-              onClick={() => {
-                props.handleDialogClose();
-              }}
-              sx={{
-                position: 'absolute',
-                right: 8,
-                top: 8,
-                color: (theme) => theme.palette.grey[500]
-              }}>
-              <CloseIcon />
-            </IconButton>
-            <Grid container spacing={1} sx={{ marginTop: '2px' }}>
-              <Grid item md={12} sm={12} sx={{ display: 'flex', justifyContent: 'center' }}>
-                {props.selectedCameras.length === 1 && props.playing && props.submitted && (
-                  <Box mt={2} height={'75%'} width="75%">
-                    <CustomPlayer
-                      streamUri={props.selectedCameras[0]?.stream_uri}
-                      camDetails={props.camLabel[0]}
-                      timeOut={props.timeOut}
-                      setTimeOut={props.setTimeOut}
-                      setPlaying={props.setPlaying}
-                      setIsDeleteDialogOpen={props.setIsDeleteDialogOpen}
-                    />
-                  </Box>
-                )}
+    <Card
+      style={{
+        backgroundColor: props.isFullScreenDialogOpen ? 'black' : '',
+        borderTopLeftRadius: '0',
+        borderTopRightRadius: '0'
+      }}>
+      {props.selectedCameras.length === 1 && props.playing && props.submitted && (
+        <Grid
+          container
+          spacing={props.isFullScreenDialogOpen ? 0 : 1}
+          sx={{ border: props.isFullScreenDialogOpen ? '' : '16px solid white' }}>
+          <Grid item md={12} sm={12} sx={{ display: 'flex', justifyContent: 'center' }}>
+            <Box mt={2} height={'75%'} width="75%">
+              <CustomPlayer
+                streamUri={props.selectedCameras[0]?.stream_uri}
+                camDetails={props.camLabel[0]}
+                timeOut={props.timeOut}
+                setTimeOut={props.setTimeOut}
+                setPlaying={props.setPlaying}
+                setIsDeleteDialogOpen={props.setIsDeleteDialogOpen}
+              />
+            </Box>
+          </Grid>
+        </Grid>
+      )}
+      {props.selectedCameras.length === 2 && props.playing && props.submitted && (
+        <Grid
+          container
+          spacing={props.isFullScreenDialogOpen ? 0 : 2}
+          sx={{ border: props.isFullScreenDialogOpen ? '' : '16px solid white' }}>
+          {props.selectedCameras?.map((value, index) => (
+            <Grid key={index} item md={6} sm={12}>
+              <CustomPlayer
+                noOfCameras={2}
+                camDetails={props.camLabel[index]}
+                streamUri={value?.stream_uri}
+                timeOut={props.timeOut}
+                setTimeOut={props.setTimeOut}
+                setPlaying={props.setPlaying}
+                setIsDeleteDialogOpen={props.setIsDeleteDialogOpen}
+              />
+            </Grid>
+          ))}
+        </Grid>
+      )}
+      {props.selectedCameras.length > 2 &&
+        props.selectedCameras.length <= 4 &&
+        props.playing &&
+        props.submitted && (
+          <Grid
+            container
+            spacing={props.isFullScreenDialogOpen ? 0 : 2}
+            sx={{ border: props.isFullScreenDialogOpen ? '' : '16px solid white' }}>
+            {props.selectedCameras?.map((value, index) => (
+              <Grid key={index} item md={6} sm={12}>
+                <CustomPlayer
+                  noOfCameras={2}
+                  camDetails={props.camLabel[index]}
+                  streamUri={value?.stream_uri}
+                  timeOut={props.timeOut}
+                  setTimeOut={props.setTimeOut}
+                  setPlaying={props.setPlaying}
+                  setIsDeleteDialogOpen={props.setIsDeleteDialogOpen}
+                />
               </Grid>
-            </Grid>
-            <Grid container spacing={2} sx={{ marginTop: '2px' }}>
-              {props.selectedCameras.length === 2 &&
-                props.playing &&
-                props.submitted &&
-                props.selectedCameras?.map((value, index) => (
-                  <Grid key={index} item md={6} sm={12}>
-                    <CustomPlayer
-                      noOfCameras={2}
-                      camDetails={props.camLabel[index]}
-                      streamUri={value?.stream_uri}
-                      timeOut={props.timeOut}
-                      setTimeOut={props.setTimeOut}
-                      setPlaying={props.setPlaying}
-                      setIsDeleteDialogOpen={props.setIsDeleteDialogOpen}
-                    />
-                  </Grid>
-                ))}
-            </Grid>
-            <Grid container spacing={2} sx={{ marginTop: '2px' }}>
-              {props.selectedCameras.length > 2 &&
-                props.selectedCameras.length <= 4 &&
-                props.playing &&
-                props.submitted &&
-                props.selectedCameras?.map((value, index) => (
-                  <Grid key={index} item md={6} sm={12}>
-                    <CustomPlayer
-                      noOfCameras={2}
-                      camDetails={props.camLabel[index]}
-                      streamUri={value?.stream_uri}
-                      timeOut={props.timeOut}
-                      setTimeOut={props.setTimeOut}
-                      setPlaying={props.setPlaying}
-                      setIsDeleteDialogOpen={props.setIsDeleteDialogOpen}
-                    />
-                  </Grid>
-                ))}
-            </Grid>
-            <Grid container spacing={2} sx={{ marginTop: '2px' }}>
-              {props.selectedCameras.length > 4 &&
-                props.selectedCameras.length <= 16 &&
-                props.playing &&
-                props.submitted &&
-                props.selectedCameras?.map((value, index) => (
-                  <Grid key={index} item md={3} sm={6}>
-                    <CustomPlayer
-                      noOfCameras={2}
-                      camDetails={props.camLabel[index]}
-                      streamUri={value?.stream_uri}
-                      timeOut={props.timeOut}
-                      setTimeOut={props.setTimeOut}
-                      setPlaying={props.setPlaying}
-                      setIsDeleteDialogOpen={props.setIsDeleteDialogOpen}
-                    />
-                  </Grid>
-                ))}
-            </Grid>
-          </>
-        </DialogContent>
-      </Dialog>
-    </div>
+            ))}
+          </Grid>
+        )}
+      {props.selectedCameras.length > 4 &&
+        props.selectedCameras.length <= 16 &&
+        props.playing &&
+        props.submitted && (
+          <Grid
+            container
+            spacing={props.isFullScreenDialogOpen ? 0 : 2}
+            sx={{ border: props.isFullScreenDialogOpen ? '16px solid black' : '16px solid white' }}>
+            {props.selectedCameras?.map((value, index) => (
+              <Grid key={index} item md={3} sm={6}>
+                <CustomPlayer
+                  noOfCameras={2}
+                  camDetails={props.camLabel[index]}
+                  streamUri={value?.stream_uri}
+                  timeOut={props.timeOut}
+                  setTimeOut={props.setTimeOut}
+                  setPlaying={props.setPlaying}
+                  setIsDeleteDialogOpen={props.setIsDeleteDialogOpen}
+                />
+              </Grid>
+            ))}
+          </Grid>
+        )}
+    </Card>
   );
 };
 
@@ -115,7 +107,7 @@ FullScreenDialog.propTypes = {
   handleDialogClose: PropTypes.func,
   selectedCameras: PropTypes.array,
   playing: PropTypes.bool,
-
+  isFullScreenDialogOpen: PropTypes.bool,
   submitted: PropTypes.bool,
   camLabel: PropTypes.array,
   timeOut: PropTypes.number,

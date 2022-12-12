@@ -281,12 +281,9 @@
   }
 }
 
-div {
-  .MuiDialog-container {
-    .MuiDialog-paper {
-      max-width: 1900px !important;
-    }
-  }
+.full-screen {
+  width: 100vw;
+  height: 100vh;
 }
 
 .add-user-drawer {
@@ -682,9 +679,7 @@ div {
 .video-player-wrapper {
   position: relative;
   width: 100%;
-  video {
-    border-radius: 6px;
-  }
+
   .controls-wrapper {
     position: absolute;
     bottom: 0;

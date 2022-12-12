@@ -6,10 +6,7 @@ import {
   Grid,
   Stack,
   Typography,
-  MenuItem,
-  Select,
-  FormControl,
-  InputLabel,
+
   // FormHelperText,
   Autocomplete,
   TextField,
@@ -20,12 +17,12 @@ import {
 } from '@mui/material';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import CheckBoxIcon from '@mui/icons-material/CheckBox';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useContext, useCallback } from 'react';
 import LayoutContext from '../../context/layoutcontext';
 import AuthContext from '../../context/authcontext';
 import VideoOff from '../../assets/video-off.svg';
-import CustomPlayer from './customplayer';
+// import CustomPlayer from './customplayer';
 import API from '../../api';
 import { errorMessageHandler } from '../../utils/errormessagehandler';
 import { useSnackbar } from 'notistack';
@@ -39,7 +36,7 @@ import { Maximize } from 'react-feather';
 
 const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
 const checkedIcon = <CheckBoxIcon fontSize="small" />;
-
+import { FullScreen, useFullScreenHandle } from 'react-full-screen';
 const WatchStream = () => {
   const layoutCtx = useContext(LayoutContext);
   const authCtx = useContext(AuthContext);
@@ -51,7 +48,6 @@ const WatchStream = () => {
     cameras: []
   });
 
-  const [camLabel, setCamLabel] = useState([]);
   const [isFullScreenDialogOpen, setIsFullScreenDialogOpen] = useState(false);
   const [dropdownLoading, setDropdownLoading] = useState(false);
   const [rooms, setRooms] = useState([]);
@@ -59,69 +55,185 @@ const WatchStream = () => {
   const [selectedCameras, setSelectedCameras] = useState([]);
   const [locations, setLocations] = useState([]);
   const [selectedLocation, setSelectedLocation] = useState('');
-  const [selectedRoom, setSelectedRoom] = useState('');
+  const [selectedRoom, setSelectedRoom] = useState([]);
   const [playing, setPlaying] = useState(true);
   const [userInfoSent, setUserInfoSent] = useState(false);
   const [submitted, setSubmitted] = useState(true);
-
+  const [allLocationChecked, setAllLocationChecked] = useState(false);
+  const [allRoomChecked, setAllRoomChecked] = useState(false);
+  const [allCamsChecked, setAllCamsChecked] = useState(false);
   const [timeOut, setTimeOut] = useState(10);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [limitReached, setLimitReached] = useState(false);
+  const camLabel = useRef([]);
+  const userToken = localStorage.getItem('token');
+  const handle = useFullScreenHandle();
 
-  // const [cameraUrls, setCameraUrls] = useState([]);
   useEffect(() => {
     layoutCtx.setActive(5);
     layoutCtx.setBreadcrumb(['Watch Stream']);
-    setLocations(authCtx?.user?.location?.accessable_locations);
+    const locs = ['Select All'];
+    authCtx?.user?.location?.accessable_locations.forEach((loc) => locs.push(loc));
+    setLocations(locs);
     setDropdownLoading(true);
     onSelect();
+    getAvailableStreams();
+    window.addEventListener('pagehide', saveCameraPreference);
+    return () => {
+      window.removeEventListener('pagehide', saveCameraPreference);
+      API.post('watchstream/setPreference', {
+        cameras: camLabel.current
+      });
+      authCtx.setPreviosPagePath(window.location.pathname);
+    };
+  }, []);
+
+  const saveCameraPreference = () => {
+    fetch(process.env.REACT_APP_BE_ENDPOINT + `watchstream/setPreference`, {
+      keepalive: true,
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        Authorization: 'Bearer ' + userToken.replace(/^"|"$/g, '')
+      },
+      body: JSON.stringify({
+        cameras: camLabel.current
+      })
+    });
+  };
+
+  useEffect(() => {
+    const roomsToSet = camerasPayload?.room?.filter((room) => {
+      let count = 0;
+      selectedLocation?.forEach((loc) => {
+        if (loc == room?.location) {
+          count = 1;
+        }
+      });
+      return count == 1;
+    });
+    let roomsToAdd = [{ room_name: 'Select All', room_id: 'select-all' }];
+    roomsToSet?.forEach((room) => roomsToAdd.push(room));
+    setRooms(roomsToAdd);
+    setSelectedRoom([roomsToSet?.[0]]);
+    let camsToAdd = [
+      { cam_id: 'select-all', cam_name: 'Select All', room_id: 'roomid', room_name: 'room_name' }
+    ];
+    roomsToSet?.[0]?.cameras.forEach((cam) =>
+      camsToAdd.push({
+        ...cam,
+        room_id: roomsToSet?.[0]?.room_id,
+        room_name: roomsToSet?.[0]?.room_name
+      })
+    );
+    setCameras(camsToAdd);
+  }, [selectedLocation]);
+
+  useEffect(() => {
+    const rooms = camerasPayload?.room?.filter((room) => {
+      let count = 0;
+      selectedRoom?.forEach((room1) => {
+        if (room1?.room_id == room?.room_id) {
+          count = 1;
+        }
+      });
+
+      return count == 1;
+    });
+
+    let cameras1 = [{ cam_id: 'select-all', cam_name: 'Select All' }];
+    rooms?.forEach((room) => {
+      room?.cameras?.forEach((cam) => {
+        cameras1?.push({
+          ...cam,
+          room_name: room.room_name,
+          room_id: room.room_id,
+          location: room.location
+        });
+      });
+    });
+
+    setCameras(cameras1);
+  }, [selectedRoom]);
+
+  useEffect(() => {
+    camLabel.current = selectedCameras;
+    console.log(selectedCameras);
+  }, [selectedCameras]);
+
+  const getAvailableStreams = () => {
     API.get('watchstream').then((response) => {
       if (response.status === 200) {
-        setTimeOut(response.data.Data[0].timeout);
+        setTimeOut(response.data.Data.streamDetails[0].timeout);
 
         setCamerasPayload({
-          location: response?.data?.Data[0].location,
-          room: response?.data?.Data
+          location: response?.data?.Data.streamDetails[0].location,
+          room: response?.data?.Data.streamDetails
         });
 
         if (!location.state) {
-          setSelectedLocation(authCtx?.user?.location?.accessable_locations[0]);
-          const rooms = response.data.Data.filter(
+          setSelectedLocation([authCtx?.user?.location?.accessable_locations[0]]);
+          const rooms = response.data.Data.streamDetails.filter(
             (room) => room.location === authCtx?.user?.location?.accessable_locations[0]
           );
-          setRooms(rooms);
-          setSelectedRoom(rooms[0]?.room_name);
-          setCameras(rooms[0]?.cameras);
-          setSelectedCameras([rooms[0]?.cameras[0]]);
-          let label = camLabel;
-          label.push({
-            location: authCtx?.user?.location?.accessable_locations[0],
-            room_name: rooms[0]?.room_name,
-            cam_name: rooms[0]?.cameras[0]?.cam_name,
-            cam_id: rooms[0]?.cameras[0]?.cam_id
-          });
-          setCamLabel(label);
+          let roomsToAdd = [{ room_name: 'Select All', room_id: 'select-all' }];
+          rooms?.forEach((room) => roomsToAdd.push(room));
+          setRooms(roomsToAdd);
+          setSelectedRoom([rooms[0]]);
+          let camsToAdd = [{ cam_id: 'select-all', cam_name: 'Select All' }];
+          rooms[0]?.cameras?.forEach((cam) =>
+            camsToAdd.push({
+              ...cam,
+              room_id: rooms[0].room_id,
+              room_name: rooms[0].room_name,
+              location: rooms[0].location
+            })
+          );
+          setCameras(camsToAdd);
+          if (response?.data?.Data?.defaultCams?.cameras) {
+            const camsToAdd = response?.data?.Data?.defaultCams?.cameras.map((cam) => cam);
+            setSelectedCameras(camsToAdd);
+          } else {
+            setSelectedCameras([
+              {
+                ...rooms[0]?.cameras[0],
+                room_id: rooms[0].room_id,
+                room_name: rooms[0].room_name,
+                location: rooms[0].location
+              }
+            ]);
+          }
         } else {
-          setSelectedLocation(location?.state?.location);
-          const rooms = response.data.Data.filter(
+          setSelectedLocation([location?.state?.location]);
+          const rooms = response.data.Data.streamDetails.filter(
             (room) => room.location === location?.state?.location
           );
-          setRooms(rooms);
-          const selectedRoom = rooms.find((room) => room.room_id === location.state.roomId);
-          setSelectedRoom(selectedRoom?.room_name);
-          setCameras(selectedRoom?.cameras);
-          const selectedCamera = selectedRoom?.cameras?.find(
+          let roomsToAdd = [{ room_name: 'Select All', room_id: 'select-all' }];
+          rooms?.forEach((room) => roomsToAdd.push(room));
+          setRooms(roomsToAdd);
+          const selectedRoom1 = rooms.find((room) => room.room_id === location.state.roomId);
+          setSelectedRoom([selectedRoom1]);
+          let camsToAdd = [{ cam_id: 'select-all', cam_name: 'Select All' }];
+          selectedRoom1?.cameras?.forEach((cam) =>
+            camsToAdd.push({
+              ...cam,
+              room_name: selectedRoom1.room_name,
+              room_id: selectedRoom1.room_id,
+              location: selectedRoom1.location
+            })
+          );
+          setCameras(camsToAdd);
+          const selectedCamera1 = selectedRoom1?.cameras?.find(
             (cam) => cam.cam_id === location.state.camId
           );
-          setSelectedCameras([selectedCamera]);
-          let label = camLabel;
-          label.push({
-            location: location?.state?.location,
-            room_name: selectedRoom?.room_name,
-            cam_name: selectedCamera?.cam_name,
-            cam_id: selectedCamera?.cam_id
-          });
-          setCamLabel(label);
+          setSelectedCameras([
+            {
+              ...selectedCamera1,
+              room_name: selectedRoom1.room_name,
+              room_id: selectedRoom1.room_id,
+              location: selectedRoom1.location
+            }
+          ]);
         }
       } else {
         errorMessageHandler(
@@ -133,44 +245,71 @@ const WatchStream = () => {
       }
       setDropdownLoading(false);
     });
-
-    return () => {
-      authCtx.setPreviosPagePath(window.location.pathname);
-    };
-  }, []);
-
-  useEffect(() => {
-    const roomsToSet = camerasPayload?.room?.filter((room) => {
-      return room.location === selectedLocation;
-    });
-    setRooms(roomsToSet);
-    setSelectedRoom(roomsToSet?.[0]?.room_name);
-    setCameras(roomsToSet?.[0]?.cameras);
-  }, [selectedLocation]);
-
-  useEffect(() => {
-    const room = camerasPayload?.room?.find((room) => room?.room_name == selectedRoom);
-    setCameras(room?.cameras);
-  }, [selectedRoom]);
-
-  const handleSetLocations = () => {
-    return locations?.map((location) => {
-      return (
-        <MenuItem key={`${location}`} value={`${location}`}>
-          {location}
-        </MenuItem>
-      );
-    });
   };
 
-  const handleSetRooms = () => {
-    return rooms?.map((room) => {
-      return (
-        <MenuItem key={`${room.room_id}`} value={`${room.room_name}`}>
-          {room.room_name}
-        </MenuItem>
+  const handleSetLocations = (_, value, reason, option) => {
+    if (reason == 'selectOption' && option.option == 'Select All' && !allLocationChecked) {
+      setSelectedLocation(reason === 'selectOption' ? locations.slice(1, locations.length) : []);
+      setAllLocationChecked(true);
+    } else if (option.option == 'Select All' && reason === 'removeOption') {
+      setSelectedLocation([]);
+      setAllLocationChecked(false);
+    } else if (
+      reason === 'selectOption' &&
+      option.option == 'Select All' &&
+      allLocationChecked == true
+    ) {
+      setAllLocationChecked(false);
+      setSelectedLocation([]);
+    } else {
+      setAllLocationChecked(false);
+      setSelectedLocation(value);
+    }
+  };
+
+  const handleSetRooms = (_, value, reason, option) => {
+    const rooms2 = camerasPayload?.room?.filter((room) => {
+      let count = 0;
+      selectedRoom?.forEach((room1) => {
+        if (room1?.room_id == room?.room_id) {
+          count = 1;
+        }
+      });
+
+      return count == 1;
+    });
+
+    let cameras = [{ cam_id: 'select-all', cam_name: 'Select All' }];
+    rooms2?.forEach((room) => {
+      room?.cameras?.forEach((cam) =>
+        cameras?.push({
+          ...cam,
+          room_id: room.room_id,
+          room_name: room.room_name,
+          location: room.location
+        })
       );
     });
+
+    setCameras(cameras);
+
+    if (reason == 'selectOption' && option.option.room_name == 'Select All' && !allRoomChecked) {
+      setSelectedRoom(reason === 'selectOption' ? rooms.slice(1, rooms.length) : []);
+      setAllRoomChecked(true);
+    } else if (option.option.room_name == 'Select All' && reason === 'removeOption') {
+      setSelectedRoom([]);
+      setAllRoomChecked(false);
+    } else if (
+      reason === 'selectOption' &&
+      option.option.room_name == 'Select All' &&
+      allRoomChecked == true
+    ) {
+      setAllRoomChecked(false);
+      setSelectedRoom([]);
+    } else {
+      setAllRoomChecked(false);
+      setSelectedRoom(value);
+    }
   };
 
   const onSelect = useCallback(async () => {
@@ -214,88 +353,151 @@ const WatchStream = () => {
     }
   }, []);
 
-  const handleChangeCameras = (_, values) => {
-    if (values.length < 2) {
-      setPlaying(true);
-      setSubmitted(false);
-      setSelectedCameras(values);
-      setLimitReached(false);
-    }
-    if (values.length == 2 && authCtx.user.role !== 'Admin') {
-      setPlaying(true);
-      setSubmitted(false);
-      setLimitReached(true);
-      setSelectedCameras(values);
-    } else if (values.length == 16) {
-      setPlaying(true);
-      setSubmitted(false);
-      setLimitReached(true);
-      setSelectedCameras(values);
+  const handleChangeCameras = (_, values, reason, option) => {
+    if (authCtx.user.role !== 'Admin') {
+      if (values.length < 2) {
+        setPlaying(true);
+        setSubmitted(false);
+        setLimitReached(false);
+      } else if (values.length == 2) {
+        setPlaying(true);
+        setSubmitted(false);
+        setLimitReached(true);
+      }
     } else {
-      setPlaying(true);
-      setSubmitted(false);
-      setSelectedCameras(values);
-      setLimitReached(false);
+      if (values.length < 16) {
+        setPlaying(true);
+        setSubmitted(false);
+        setLimitReached(false);
+      } else if (values.length == 16) {
+        setPlaying(true);
+        setSubmitted(false);
+        setLimitReached(true);
+      }
     }
-  };
 
-  const handleLabelSet = (_, values, situation, option) => {
-    if (situation == 'removeOption') {
-      const label = camLabel.filter((cam) => cam.cam_id != option.option.cam_id);
-      setCamLabel(label);
-    } else if (situation == 'selectOption') {
-      const label = camLabel;
-      label.push({
-        location: selectedLocation,
-        room_name: selectedRoom,
-        cam_name: option.option.cam_name,
-        cam_id: option.option.cam_id
-      });
-      setCamLabel(label);
-    } else if (situation == 'clear') {
-      setCamLabel([]);
+    console.log(reason, option.option.cam_name);
+    if (reason == 'selectOption' && option.option.cam_name == 'Select All' && !allCamsChecked) {
+      setSelectedCameras(reason === 'selectOption' ? cameras.slice(1, cameras.length) : []);
+      setAllCamsChecked(true);
+    } else if (option.option.cam_name == 'Select All' && reason === 'removeOption') {
+      setSelectedCameras([]);
+      setAllCamsChecked(false);
+    } else if (
+      reason === 'selectOption' &&
+      option.option.cam_name == 'Select All' &&
+      allCamsChecked == true
+    ) {
+      setAllCamsChecked(false);
+      setSelectedCameras([]);
+    } else {
+      setAllCamsChecked(false);
+      setSelectedCameras(values);
     }
   };
 
   return (
     <>
       <Box>
-        <Card>
+        <Card
+          style={{
+            borderBottomLeftRadius: '0',
+            borderBottomRightRadius: '0'
+          }}>
           <CardContent>
             <Grid container spacing={2}>
               <Grid item md={3} sm={12}>
-                <FormControl fullWidth>
-                  <InputLabel id="locationLabel">Location</InputLabel>
-                  <Select
-                    labelId="locationLabel"
-                    id="location"
-                    name={'location'}
-                    label={'Location'}
-                    value={selectedLocation ? selectedLocation : ''}
-                    onChange={(event) => {
-                      setSelectedLocation(event.target.value);
-                    }}>
-                    {handleSetLocations()}
-                  </Select>
-                </FormControl>
+                <Autocomplete
+                  multiple
+                  id="tags-standard"
+                  options={locations?.length !== 0 ? locations : []}
+                  value={selectedLocation ? selectedLocation : []}
+                  getOptionLabel={(option) => option}
+                  onChange={(_, value, reason, option) => {
+                    handleSetLocations(_, value, reason, option);
+                  }}
+                  renderTags={(value, getTagProps) =>
+                    value?.map((option, index) => (
+                      <Chip key={index} label={option} {...getTagProps({ index })} />
+                    ))
+                  }
+                  renderOption={(props, option, { selected }) => (
+                    <li {...props}>
+                      <Checkbox
+                        icon={icon}
+                        checkedIcon={checkedIcon}
+                        style={{ marginRight: 8 }}
+                        checked={allLocationChecked ? allLocationChecked : selected}
+                      />
+                      {option}
+                    </li>
+                  )}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="location"
+                      fullWidth
+                      InputProps={{
+                        ...params.InputProps,
+                        endAdornment: (
+                          <React.Fragment>
+                            {dropdownLoading ? (
+                              <CircularProgress color="inherit" size={20} />
+                            ) : null}
+                            {params.InputProps.endAdornment}
+                          </React.Fragment>
+                        )
+                      }}
+                    />
+                  )}
+                />
               </Grid>
               <Grid item md={3} sm={12}>
-                <FormControl fullWidth loading={dropdownLoading}>
-                  <InputLabel id="roomLabel">Room</InputLabel>
-                  <Select
-                    labelId="roomLabel"
-                    id="room"
-                    label="Room"
-                    name={'room'}
-                    value={selectedRoom ? selectedRoom : ''}
-                    onChange={(event) => {
-                      const cameras = rooms?.find((room) => room.room_name === selectedRoom);
-                      setCameras(cameras.cameras);
-                      setSelectedRoom(event.target.value);
-                    }}>
-                    {handleSetRooms()}
-                  </Select>
-                </FormControl>
+                <Autocomplete
+                  multiple
+                  id="tags-standard"
+                  options={rooms ? rooms : []}
+                  value={selectedRoom}
+                  getOptionLabel={(option) => option?.room_name}
+                  isOptionEqualToValue={(option, value) => option?.room_id === value?.room_id}
+                  onChange={(_, value, reason, option) => {
+                    handleSetRooms(_, value, reason, option);
+                  }}
+                  renderTags={(value, getTagProps) =>
+                    value?.map((option, index) => (
+                      <Chip key={index} label={option?.room_name} {...getTagProps({ index })} />
+                    ))
+                  }
+                  renderOption={(props, option, { selected }) => (
+                    <li {...props}>
+                      <Checkbox
+                        icon={icon}
+                        checkedIcon={checkedIcon}
+                        style={{ marginRight: 8 }}
+                        checked={allRoomChecked ? allRoomChecked : selected}
+                      />
+                      {option?.room_name}
+                    </li>
+                  )}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="room"
+                      fullWidth
+                      InputProps={{
+                        ...params.InputProps,
+                        endAdornment: (
+                          <React.Fragment>
+                            {dropdownLoading ? (
+                              <CircularProgress color="inherit" size={20} />
+                            ) : null}
+                            {params.InputProps.endAdornment}
+                          </React.Fragment>
+                        )
+                      }}
+                    />
+                  )}
+                />
               </Grid>
               <Grid item md={4.7} sm={20}>
                 <Autocomplete
@@ -308,13 +510,20 @@ const WatchStream = () => {
                   getOptionLabel={(option) => option?.cam_name}
                   isOptionEqualToValue={(option, value) => option?.cam_id === value?.cam_id}
                   onChange={(_, values, situation, option) => {
-                    handleLabelSet(_, values, situation, option);
                     handleChangeCameras(_, values, situation, option);
                   }}
                   onClear
                   renderTags={(value, getTagProps) =>
                     value?.map((option, index) => (
-                      <Chip key={index} label={option?.cam_name} {...getTagProps({ index })} />
+                      <Chip
+                        key={index}
+                        label={
+                          option?.cam_name == 'Select All'
+                            ? option?.cam_name
+                            : option?.location + '/' + option?.room_name + ' - ' + option?.cam_name
+                        }
+                        {...getTagProps({ index })}
+                      />
                     ))
                   }
                   renderOption={(props, option, { selected }) => (
@@ -323,9 +532,11 @@ const WatchStream = () => {
                         icon={icon}
                         checkedIcon={checkedIcon}
                         style={{ marginRight: 8 }}
-                        checked={selected}
+                        checked={allCamsChecked ? allCamsChecked : selected}
                       />
-                      {selectedLocation + '/' + selectedRoom + ' - ' + option?.cam_name}
+                      {option?.cam_name == 'Select All'
+                        ? option?.cam_name
+                        : option.location + '/' + option.room_name + ' - ' + option?.cam_name}
                     </li>
                   )}
                   renderInput={(params) => (
@@ -393,83 +604,6 @@ const WatchStream = () => {
               </Box>
             )}
 
-            {!isFullScreenDialogOpen && (
-              <>
-                <Grid container spacing={1} sx={{ marginTop: '2px' }}>
-                  <Grid item md={12} sm={12} sx={{ display: 'flex', justifyContent: 'center' }}>
-                    {selectedCameras.length === 1 && playing && submitted && (
-                      <Box mt={2} height={'75%'} width="75%">
-                        <CustomPlayer
-                          streamUri={selectedCameras[0]?.stream_uri}
-                          camDetails={camLabel[0]}
-                          timeOut={timeOut}
-                          setTimeOut={setTimeOut}
-                          setPlaying={setPlaying}
-                          setIsDeleteDialogOpen={setIsDeleteDialogOpen}
-                        />
-                      </Box>
-                    )}
-                  </Grid>
-                </Grid>
-                <Grid container spacing={2} sx={{ marginTop: '2px' }}>
-                  {selectedCameras.length === 2 &&
-                    playing &&
-                    submitted &&
-                    selectedCameras?.map((value, index) => (
-                      <Grid key={index} item md={6} sm={12}>
-                        <CustomPlayer
-                          noOfCameras={2}
-                          camDetails={camLabel[index]}
-                          streamUri={value?.stream_uri}
-                          timeOut={timeOut}
-                          setTimeOut={setTimeOut}
-                          setPlaying={setPlaying}
-                          setIsDeleteDialogOpen={setIsDeleteDialogOpen}
-                        />
-                      </Grid>
-                    ))}
-                </Grid>
-                <Grid container spacing={2} sx={{ marginTop: '2px' }}>
-                  {selectedCameras.length > 2 &&
-                    selectedCameras.length <= 4 &&
-                    playing &&
-                    submitted &&
-                    selectedCameras?.map((value, index) => (
-                      <Grid key={index} item md={6} sm={12}>
-                        <CustomPlayer
-                          noOfCameras={2}
-                          camDetails={camLabel[index]}
-                          streamUri={value?.stream_uri}
-                          timeOut={timeOut}
-                          setTimeOut={setTimeOut}
-                          setPlaying={setPlaying}
-                          setIsDeleteDialogOpen={setIsDeleteDialogOpen}
-                        />
-                      </Grid>
-                    ))}
-                </Grid>
-                <Grid container spacing={2} sx={{ marginTop: '2px' }}>
-                  {selectedCameras.length > 4 &&
-                    selectedCameras.length <= 16 &&
-                    playing &&
-                    submitted &&
-                    selectedCameras?.map((value, index) => (
-                      <Grid key={index} item md={3} sm={6}>
-                        <CustomPlayer
-                          noOfCameras={2}
-                          camDetails={camLabel[index]}
-                          streamUri={value?.stream_uri}
-                          timeOut={timeOut}
-                          setTimeOut={setTimeOut}
-                          setPlaying={setPlaying}
-                          setIsDeleteDialogOpen={setIsDeleteDialogOpen}
-                        />
-                      </Grid>
-                    ))}
-                </Grid>
-              </>
-            )}
-
             <DeleteDialog
               open={isDeleteDialogOpen}
               title="Are you still watching?"
@@ -485,27 +619,34 @@ const WatchStream = () => {
             />
           </CardContent>
         </Card>
+        <FullScreen
+          handle={handle}
+          onChange={(state) => {
+            if (state == false) {
+              setIsFullScreenDialogOpen(false);
+            }
+          }}>
+          <FullScreenDialog
+            isFullScreenDialogOpen={isFullScreenDialogOpen}
+            selectedCameras={selectedCameras}
+            playing={playing}
+            submitted={submitted}
+            camLabel={selectedCameras}
+            timeOut={timeOut}
+            setTimeOut={setTimeOut}
+            setPlaying={setPlaying}
+            setIsDeleteDialogOpen={setIsDeleteDialogOpen}
+          />
+        </FullScreen>
       </Box>
       <Button
         style={{ position: 'sticky', bottom: '5%', marginLeft: '95%' }}
         onClick={() => {
           setIsFullScreenDialogOpen(true);
+          handle.enter();
         }}>
         <Maximize />
       </Button>
-      <FullScreenDialog
-        open={isFullScreenDialogOpen}
-        setOpen={setIsFullScreenDialogOpen}
-        handleDialogClose={() => setIsFullScreenDialogOpen(false)}
-        selectedCameras={selectedCameras}
-        playing={playing}
-        submitted={submitted}
-        camLabel={camLabel}
-        timeOut={timeOut}
-        setTimeOut={setTimeOut}
-        setPlaying={setPlaying}
-        setIsDeleteDialogOpen={setIsDeleteDialogOpen}
-      />
     </>
   );
 };
