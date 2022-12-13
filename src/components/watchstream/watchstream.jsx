@@ -82,7 +82,9 @@ const WatchStream = () => {
     return () => {
       window.removeEventListener('pagehide', saveCameraPreference);
       API.post('watchstream/setPreference', {
-        cameras: camLabel.current
+        cameras: camLabel.current.cameras,
+        locations: camLabel.current.locations,
+        rooms: camLabel.current.rooms
       });
       authCtx.setPreviosPagePath(window.location.pathname);
     };
@@ -97,7 +99,9 @@ const WatchStream = () => {
         Authorization: 'Bearer ' + userToken.replace(/^"|"$/g, '')
       },
       body: JSON.stringify({
-        cameras: camLabel.current
+        cameras: camLabel.current.cameras,
+        locations: camLabel.current.locations,
+        rooms: camLabel.current.rooms
       })
     });
   };
@@ -115,18 +119,24 @@ const WatchStream = () => {
     let roomsToAdd = [{ room_name: 'Select All', room_id: 'select-all' }];
     roomsToSet?.forEach((room) => roomsToAdd.push(room));
     setRooms(roomsToAdd);
-    setSelectedRoom([roomsToSet?.[0]]);
-    let camsToAdd = [
-      { cam_id: 'select-all', cam_name: 'Select All', room_id: 'roomid', room_name: 'room_name' }
-    ];
-    roomsToSet?.[0]?.cameras.forEach((cam) =>
-      camsToAdd.push({
-        ...cam,
-        room_id: roomsToSet?.[0]?.room_id,
-        room_name: roomsToSet?.[0]?.room_name
-      })
-    );
-    setCameras(camsToAdd);
+    if (selectedRoom.length == 0) {
+      setSelectedRoom([roomsToSet?.[0]]);
+      let camsToAdd = [
+        { cam_id: 'select-all', cam_name: 'Select All', room_id: 'roomid', room_name: 'room_name' }
+      ];
+      roomsToSet?.[0]?.cameras.forEach((cam) =>
+        camsToAdd.push({
+          ...cam,
+          room_id: roomsToSet?.[0]?.room_id,
+          room_name: roomsToSet?.[0]?.room_name
+        })
+      );
+      setCameras(camsToAdd);
+    }
+
+    setAllCamsChecked(false);
+    setAllRoomChecked(false);
+    camLabel.current.locations = selectedLocation;
   }, [selectedLocation]);
 
   useEffect(() => {
@@ -154,11 +164,12 @@ const WatchStream = () => {
     });
 
     setCameras(cameras1);
+    setAllCamsChecked(false);
+    camLabel.current.rooms = selectedRoom;
   }, [selectedRoom]);
 
   useEffect(() => {
-    camLabel.current = selectedCameras;
-    console.log(selectedCameras);
+    camLabel.current.cameras = selectedCameras;
   }, [selectedCameras]);
 
   const getAvailableStreams = () => {
@@ -173,7 +184,7 @@ const WatchStream = () => {
 
         if (!location.state) {
           setSelectedLocation([authCtx?.user?.location?.accessable_locations[0]]);
-          const rooms = response.data.Data.streamDetails.filter(
+          const rooms = response.data.Data.streamDetails?.filter(
             (room) => room.location === authCtx?.user?.location?.accessable_locations[0]
           );
           let roomsToAdd = [{ room_name: 'Select All', room_id: 'select-all' }];
@@ -192,6 +203,15 @@ const WatchStream = () => {
           setCameras(camsToAdd);
           if (response?.data?.Data?.defaultCams?.cameras) {
             const camsToAdd = response?.data?.Data?.defaultCams?.cameras.map((cam) => cam);
+            let defaultLocations = response?.data?.Data?.defaultCams?.locations
+              ? response?.data?.Data?.defaultCams?.locations
+              : [];
+            let defaultRooms = response?.data?.Data?.defaultCams?.rooms
+              ? response?.data?.Data?.defaultCams?.rooms
+              : [];
+
+            setSelectedRoom(defaultRooms);
+            setSelectedLocation(defaultLocations);
             setSelectedCameras(camsToAdd);
           } else {
             setSelectedCameras([
@@ -205,7 +225,7 @@ const WatchStream = () => {
           }
         } else {
           setSelectedLocation([location?.state?.location]);
-          const rooms = response.data.Data.streamDetails.filter(
+          const rooms = response.data.Data.streamDetails?.filter(
             (room) => room.location === location?.state?.location
           );
           let roomsToAdd = [{ room_name: 'Select All', room_id: 'select-all' }];
@@ -248,15 +268,15 @@ const WatchStream = () => {
   };
 
   const handleSetLocations = (_, value, reason, option) => {
-    if (reason == 'selectOption' && option.option == 'Select All' && !allLocationChecked) {
+    if (reason == 'selectOption' && option?.option == 'Select All' && !allLocationChecked) {
       setSelectedLocation(reason === 'selectOption' ? locations.slice(1, locations.length) : []);
       setAllLocationChecked(true);
-    } else if (option.option == 'Select All' && reason === 'removeOption') {
+    } else if (option?.option == 'Select All' && reason === 'removeOption') {
       setSelectedLocation([]);
       setAllLocationChecked(false);
     } else if (
       reason === 'selectOption' &&
-      option.option == 'Select All' &&
+      option?.option == 'Select All' &&
       allLocationChecked == true
     ) {
       setAllLocationChecked(false);
@@ -293,10 +313,10 @@ const WatchStream = () => {
 
     setCameras(cameras);
 
-    if (reason == 'selectOption' && option.option.room_name == 'Select All' && !allRoomChecked) {
+    if (reason == 'selectOption' && option?.option?.room_name == 'Select All' && !allRoomChecked) {
       setSelectedRoom(reason === 'selectOption' ? rooms.slice(1, rooms.length) : []);
       setAllRoomChecked(true);
-    } else if (option.option.room_name == 'Select All' && reason === 'removeOption') {
+    } else if (option?.option?.room_name == 'Select All' && reason === 'removeOption') {
       setSelectedRoom([]);
       setAllRoomChecked(false);
     } else if (
@@ -324,17 +344,19 @@ const WatchStream = () => {
           `https://maps.googleapis.com/maps/api/geocode/json?latlng=${location.lat},${location.lng}&sensor=false&key=AIzaSyDn-DZI5-5xknrwgTGIhbFc2abDFXULWro`
         );
         const locationComponents = locationResponse.data.results[0].address_components;
+        console.log(locationComponents);
         let location_name = '';
         locationComponents.forEach((component) => {
-          if (component.types.includes('administrative_area_level_2')) {
+          if (component.types.includes('administrative_area_level_3')) {
             location_name = component.long_name;
           }
         });
+
         API.post('watchstream/addviewer', {
           source_ip: ip,
           lat: location.lat,
           long: location.lng,
-          location_name
+          location_name: location_name
         }).then((response) => {
           if (response.status === 200) {
             setUserInfoSent(true);
@@ -355,14 +377,16 @@ const WatchStream = () => {
 
   const handleChangeCameras = (_, values, reason, option) => {
     if (authCtx.user.role !== 'Admin') {
-      if (values.length < 2) {
+      if (values.length < 3) {
         setPlaying(true);
         setSubmitted(false);
         setLimitReached(false);
-      } else if (values.length == 2) {
+      } else if (values.length == 3) {
         setPlaying(true);
         setSubmitted(false);
         setLimitReached(true);
+      } else if (values.length > 3) {
+        errorMessageHandler(enqueueSnackbar, 'Max 2 cameras allowed');
       }
     } else {
       if (values.length < 16) {
@@ -373,19 +397,30 @@ const WatchStream = () => {
         setPlaying(true);
         setSubmitted(false);
         setLimitReached(true);
+      } else if (values.length > 16) {
+        errorMessageHandler(enqueueSnackbar, 'Max 16 cameras allowed');
       }
     }
 
-    console.log(reason, option.option.cam_name);
-    if (reason == 'selectOption' && option.option.cam_name == 'Select All' && !allCamsChecked) {
-      setSelectedCameras(reason === 'selectOption' ? cameras.slice(1, cameras.length) : []);
-      setAllCamsChecked(true);
-    } else if (option.option.cam_name == 'Select All' && reason === 'removeOption') {
+    if (reason == 'selectOption' && option?.option?.cam_name == 'Select All' && !allCamsChecked) {
+      if (
+        (authCtx.user.role == 'Admin' && cameras.length > 17) ||
+        (authCtx.user.role !== 'Admin' && cameras.length > 3)
+      ) {
+        errorMessageHandler(
+          enqueueSnackbar,
+          `Max ${authCtx.user.role == 'Admin' ? 16 : 2} cameras allowed.`
+        );
+      } else {
+        setSelectedCameras(reason === 'selectOption' ? cameras.slice(1, cameras.length) : []);
+        setAllCamsChecked(true);
+      }
+    } else if (option?.option?.cam_name == 'Select All' && reason === 'removeOption') {
       setSelectedCameras([]);
       setAllCamsChecked(false);
     } else if (
       reason === 'selectOption' &&
-      option.option.cam_name == 'Select All' &&
+      option?.option?.cam_name == 'Select All' &&
       allCamsChecked == true
     ) {
       setAllCamsChecked(false);
@@ -409,6 +444,7 @@ const WatchStream = () => {
               <Grid item md={3} sm={12}>
                 <Autocomplete
                   multiple
+                  limitTags={1}
                   id="tags-standard"
                   options={locations?.length !== 0 ? locations : []}
                   value={selectedLocation ? selectedLocation : []}
@@ -455,9 +491,10 @@ const WatchStream = () => {
               <Grid item md={3} sm={12}>
                 <Autocomplete
                   multiple
+                  limitTags={1}
                   id="tags-standard"
                   options={rooms ? rooms : []}
-                  value={selectedRoom}
+                  value={selectedRoom?.length !== 0 ? selectedRoom : []}
                   getOptionLabel={(option) => option?.room_name}
                   isOptionEqualToValue={(option, value) => option?.room_id === value?.room_id}
                   onChange={(_, value, reason, option) => {
@@ -502,17 +539,16 @@ const WatchStream = () => {
               <Grid item md={4.7} sm={20}>
                 <Autocomplete
                   multiple
-                  limitTags={2}
+                  limitTags={1}
                   disableCloseOnSelect
                   id="tags-standard"
                   options={cameras ? cameras : []}
-                  value={selectedCameras}
+                  value={selectedCameras?.length !== 0 ? selectedCameras : []}
                   getOptionLabel={(option) => option?.cam_name}
                   isOptionEqualToValue={(option, value) => option?.cam_id === value?.cam_id}
                   onChange={(_, values, situation, option) => {
                     handleChangeCameras(_, values, situation, option);
                   }}
-                  onClear
                   renderTags={(value, getTagProps) =>
                     value?.map((option, index) => (
                       <Chip
