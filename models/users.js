@@ -61,6 +61,10 @@ const Users = sequelize.define(
       type: Sequelize.STRING(50),
       allowNull: false
     },
+    cam_preference: {
+      type: Sequelize.JSON,
+      defaultValue: {}
+    },
     created_at: {
       type: 'TIMESTAMP',
       defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),

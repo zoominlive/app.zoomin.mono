@@ -1,4 +1,4 @@
-const { Camera, Room, RecentViewers, Child, Family } = require('../models/index');
+const { Camera, Room, RecentViewers, Child, Family, Users } = require('../models/index');
 const Sequelize = require('sequelize');
 const sequelize = require('../lib/database');
 const _ = require('lodash');
@@ -289,5 +289,28 @@ module.exports = {
     });
 
     return recentViewers;
+  },
+
+  setUserCamPreference: async (user, cams) => {
+    let camObj = {
+      cam_preference: cams,
+      updated_at: Sequelize.literal('CURRENT_TIMESTAMP')
+    };
+    let camSettings;
+    if (user?.family_member_id) {
+      camSettings = await Family.update(camObj, {
+        where: {
+          family_member_id: user.family_member_id
+        }
+      });
+    } else {
+      camSettings = await Users.update(camObj, {
+        where: {
+          user_id: user.user_id
+        }
+      });
+    }
+
+    return camSettings;
   }
 };

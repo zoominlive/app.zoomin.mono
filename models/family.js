@@ -108,6 +108,10 @@ const Family = sequelize.define(
       type: 'TIMESTAMP',
       defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
       allowNull: false
+    },
+    cam_preference: {
+      type: Sequelize.JSON,
+      defaultValue: {}
     }
   },
   {

@@ -2,10 +2,11 @@ const watchStreamServices = require('../services/watchStream');
 const customerServices = require('../services/customers');
 const _ = require('lodash');
 const CONSTANTS = require('../lib/constants');
-
+const logServices = require('../services/logs');
 module.exports = {
   // encode stream and create new camera
   getAllCamForLocation: async (req, res, next) => {
+    let response;
     try {
       const location = req.query?.location;
 
@@ -17,10 +18,10 @@ module.exports = {
       cameras?.forEach((cam, camIndex) => {
         cameras[camIndex].timeout = customerDetails.timeout;
       });
-
+      response = { streamDetails: cameras, defaultCams: req.user.cam_preference };
       res.status(200).json({
         IsSuccess: true,
-        Data: cameras,
+        Data: { streamDetails: cameras, defaultCams: req.user.cam_preference },
         Message: CONSTANTS.CAMERA_DETAILS
       });
 
@@ -32,6 +33,22 @@ module.exports = {
         Message: CONSTANTS.INTERNAL_SERVER_ERROR
       });
       next(error);
+    } finally {
+      let logObj = {
+        user_id: req?.user?.family_member_id
+          ? req?.user?.family_member_id
+          : req?.user?.user_id
+          ? req?.user?.user_id
+          : 'Not Found',
+        function: 'Watch_Stream',
+        function_type: 'Get',
+        response: response
+      };
+      try {
+        await logServices.addAccessLog(logObj);
+      } catch (e) {
+        console.log(e);
+      }
     }
   },
   addRecentViewers: async (req, res, next) => {
@@ -57,6 +74,7 @@ module.exports = {
   },
 
   getAllCamForUser: async (req, res, next) => {
+    let response;
     try {
       const camDetails = await watchStreamServices.getAllCamForUser(req.user);
 
@@ -68,11 +86,48 @@ module.exports = {
           camDetails[roomIndex].cameras[camIndex].timeout = customerDetails.timeout;
         });
       });
-
+      response = camDetails;
       res.status(200).json({
         IsSuccess: true,
         Data: camDetails,
         Message: CONSTANTS.CAMERA_DETAILS
+      });
+
+      next();
+    } catch (error) {
+      res.status(500).json({
+        IsSuccess: false,
+        Message: CONSTANTS.INTERNAL_SERVER_ERROR
+      });
+      next(error);
+    } finally {
+      let logObj = {
+        user_id: req?.user.family_member_id
+          ? req?.user.family_member_id
+          : req?.user?.user_id
+          ? req?.user?.user_id
+          : 'Not Found',
+        function: 'Watch_Stream',
+        function_type: 'Get',
+        response: response
+      };
+      try {
+        await logServices.addAccessLog(logObj);
+      } catch (e) {
+        console.log(e);
+      }
+    }
+  },
+  setUserCamPreference: async (req, res, next) => {
+    try {
+      let cameras = req?.body?.data ? req?.body?.data : req?.body;
+
+      const addPreferance = await watchStreamServices.setUserCamPreference(req.user, cameras);
+
+      res.status(200).json({
+        IsSuccess: true,
+        Data: addPreferance,
+        Message: CONSTANTS.CAM_PREFERENCE_STORED
       });
 
       next();

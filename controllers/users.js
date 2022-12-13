@@ -12,7 +12,7 @@ const s3BucketImageUploader = require('../lib/aws-services');
 const encrypter = require('object-encrypter');
 const engine = encrypter(process.env.JWT_SECRET_KEY, { ttl: true });
 const customerServices = require('../services/customers');
-const moment = require('moment');
+const logServices = require('../services/logs');
 const CONSTANTS = require('../lib/constants');
 
 module.exports = {
@@ -35,6 +35,7 @@ module.exports = {
 
   /* Register new user */
   createUser: async (req, res, next) => {
+    let userAdded;
     try {
       const params = req.body;
       params.cust_id = req.user.cust_id;
@@ -54,7 +55,7 @@ module.exports = {
       params.is_verified = false;
 
       let addUser = await userServices.createUser(_.omit(params, ['image']));
-
+      userAdded = addUser;
       if (addUser) {
         let userData = addUser?.toJSON();
 
@@ -89,11 +90,26 @@ module.exports = {
         Message: CONSTANTS.INTERNAL_SERVER_ERROR
       });
       next(error);
+    } finally {
+      let logObj = {
+        user_id: userAdded ? userAdded?.user_id : 'Not Found',
+        function: 'Users',
+        function_type: 'Add',
+        request: req.body
+      };
+      try {
+        await logServices.addChangeLog(logObj);
+      } catch (e) {
+        console.log(e);
+      }
     }
   },
 
   /* Login user */
   loginUser: async (req, res, next) => {
+    let userFound;
+    let logDetails;
+    let success = false;
     try {
       let { email, password } = req.body;
       let emailIs = email;
@@ -101,9 +117,11 @@ module.exports = {
       emailIs = emailIs.toLowerCase();
 
       const user = await userServices.getUser(emailIs);
+      userFound = user;
       let familyUser;
       if (!user) {
         familyUser = await familyServices.getFamilyMember(emailIs);
+        userFound = familyUser;
       }
 
       if (user) {
@@ -119,6 +137,7 @@ module.exports = {
           if (validPassword) {
             const token = await userServices.createUserToken(user.user_id);
             const userData = _.omit(user, ['password', 'cust_id']);
+            success = true;
             res.status(200).json({
               IsSuccess: true,
               Data: { userData, ...token },
@@ -145,6 +164,7 @@ module.exports = {
           if (validPassword) {
             const token = await familyServices.createFamilyMemberToken(familyUser.family_member_id);
             const userData = _.omit(familyUser, ['password', 'cust_id']);
+            success = true;
             res.status(200).json({
               IsSuccess: true,
               Data: { userData, ...token },
@@ -165,8 +185,30 @@ module.exports = {
       }
       next();
     } catch (error) {
+      await logServices.addAccessErrorLog(logDetails.log_id, error);
       res.status(500).json({ IsSuccess: false, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
       next(error);
+    } finally {
+      let logObj = {
+        user_id: userFound?.family_member_id
+          ? userFound?.family_member_id
+          : userFound?.user_id
+          ? userFound?.user_id
+          : 'Not Found',
+        function:
+          userFound?.member_type == 'primary'
+            ? 'Primary_Family'
+            : userFound?.member_type == 'secondary'
+            ? 'Second_Family'
+            : 'Users',
+        function_type: 'Login',
+        response: { success: success }
+      };
+      try {
+        logDetails = await logServices.addAccessLog(logObj);
+      } catch (e) {
+        console.log(e);
+      }
     }
   },
 
@@ -265,13 +307,16 @@ module.exports = {
 
   /* Forget password */
   forgetPassword: async (req, res, next) => {
+    let userFound;
     try {
       let { email } = req.body;
       email = email.toLowerCase();
       let user;
       user = await userServices.getUser(email);
+      userFound = user;
       if (!user) {
         user = await familyServices.getFamilyMember(email);
+        userFound = user;
       }
       if (user) {
         const userData = user;
@@ -308,16 +353,32 @@ module.exports = {
     } catch (error) {
       res.status(500).json({ IsSuccess: false, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
       next(error);
+    } finally {
+      let logObj = {
+        user_id: userFound?.family_member_id
+          ? userFound?.family_member_id
+          : userFound?.user_id
+          ? userFound?.user_id
+          : 'Not Found',
+        function: 'User_Forgot_Password',
+        function_type: 'Edit',
+        request: req.body
+      };
+      try {
+        await logServices.addChangeLog(logObj);
+      } catch (e) {
+        console.log(e);
+      }
     }
-    next();
   },
 
   /* Upload image to s3 bucket */
   uploadImage: async (req, res, next) => {
+    let imageExist;
     try {
       const user = req.user;
       const image = req.body.image;
-
+      imageExist = req.user.profile_image != null ? true : false;
       if (!_.isEmpty(user.profile_image)) {
         let deletedImage = await s3BucketImageUploader.deleteObject(user);
       }
@@ -343,6 +404,22 @@ module.exports = {
     } catch (error) {
       res.status(500).json({ IsSuccess: false, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
       next(error);
+    } finally {
+      let logObj = {
+        user_id: req.user?.family_member_id
+          ? req.user?.family_member_id
+          : req.user?.user_id
+          ? req.user?.user_id
+          : 'Not Found',
+        function: 'Profile_Photo',
+        function_type: imageExist ? 'Edit' : 'Add',
+        request: req.body
+      };
+      try {
+        await logServices.addChangeLog(logObj);
+      } catch (e) {
+        console.log(e);
+      }
     }
   },
 
@@ -372,6 +449,22 @@ module.exports = {
     } catch (error) {
       res.status(500).json({ IsSuccess: false, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
       next(error);
+    } finally {
+      let logObj = {
+        user_id: req.user?.family_member_id
+          ? req.user?.family_member_id
+          : req.user?.user_id
+          ? req.user?.user_id
+          : 'Not Found',
+        function: 'Profile_Photo',
+        function_type: 'Delete',
+        request: req.body
+      };
+      try {
+        await logServices.addChangeLog(logObj);
+      } catch (e) {
+        console.log(e);
+      }
     }
   },
 
@@ -421,6 +514,18 @@ module.exports = {
     } catch (error) {
       res.status(500).json({ IsSuccess: false, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
       next(error);
+    } finally {
+      let logObj = {
+        user_id: req?.user?.user_id ? req?.user?.user_id : 'Not Found',
+        function: 'Users',
+        function_type: 'Edit',
+        request: req.body
+      };
+      try {
+        await logServices.addChangeLog(logObj);
+      } catch (e) {
+        console.log(e);
+      }
     }
   },
 
@@ -476,6 +581,18 @@ module.exports = {
     } catch (error) {
       res.status(500).json({ IsSuccess: false, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
       next(error);
+    } finally {
+      let logObj = {
+        user_id: req?.user?.user_id ? req?.user?.user_id : 'Not Found',
+        function: 'Users',
+        function_type: 'Edit',
+        request: req.body
+      };
+      try {
+        await logServices.addChangeLog(logObj);
+      } catch (e) {
+        console.log(e);
+      }
     }
   },
 
@@ -497,6 +614,18 @@ module.exports = {
     } catch (error) {
       res.status(500).json({ IsSuccess: false, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
       next(error);
+    } finally {
+      let logObj = {
+        user_id: req?.user?.user_id ? req?.user?.user_id : 'Not Found',
+        function: 'Users',
+        function_type: 'Delete',
+        request: req.body
+      };
+      try {
+        await logServices.addChangeLog(logObj);
+      } catch (e) {
+        console.log(e);
+      }
     }
   },
 
@@ -518,15 +647,29 @@ module.exports = {
     } catch (error) {
       res.status(500).json({ IsSuccess: false, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
       next(error);
+    } finally {
+      let logObj = {
+        user_id: req?.user?.user_id ? req?.user?.user_id : 'Not Found',
+        function: 'Users',
+        function_type: 'Delete',
+        request: req.body
+      };
+      try {
+        await logServices.addChangeLog(logObj);
+      } catch (e) {
+        console.log(e);
+      }
     }
   },
 
   changeRegisteredEmail: async (req, res, next) => {
+    let userId;
     try {
       const { token } = req.body;
       const decodeToken = engine.decrypt(token);
 
       if (decodeToken?.userId) {
+        userId = decodeToken?.userId;
         const user = await userServices.getUserById(decodeToken.userId);
 
         if (user.email !== decodeToken.email) {
@@ -549,6 +692,18 @@ module.exports = {
     } catch (error) {
       res.status(500).json({ IsSuccess: false, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
       next(error);
+    } finally {
+      let logObj = {
+        user_id: userId ? userId : 'Not Found',
+        function: 'User_Change_Email',
+        function_type: 'Edit',
+        request: req.body
+      };
+      try {
+        await logServices.addChangeLog(logObj);
+      } catch (e) {
+        console.log(e);
+      }
     }
   },
 

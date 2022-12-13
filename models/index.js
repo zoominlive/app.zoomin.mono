@@ -9,6 +9,8 @@ const Room = require('./room');
 const ScheduledToDisable = require('./scheluled_to_disable');
 const RoomsInChild = require('./rooms_assigned_to_child');
 const CamerasInRooms = require('./cameras_assigned_to_rooms');
+const AccessLogs = require('./access_logs');
+const ChangeLogs = require('./change_logs');
 
 CustomerLocations.belongsTo(Customers, { foreignKey: 'cust_id' });
 Family.hasMany(Child, {
@@ -60,8 +62,10 @@ RoomsInChild.hasMany(Room, {
 Child.belongsTo(Family, { foreignKey: 'family_id' });
 Users.belongsTo(Customers, { foreignKey: 'cust_id' });
 Room.belongsTo(Customers, { foreignKey: 'cust_id' });
-// Room.belongsTo(CustomerLocations, { foreignKey: 'location' });
+
 module.exports = {
+  ChangeLogs,
+  AccessLogs,
   Users,
   Customers,
   CustomerLocations,

@@ -10,4 +10,5 @@ const watchStreamController = require('../../controllers/watchStream');
 router.get('/', authController, watchStreamController.getAllCamForLocation);
 router.get('/userStreams', authController, watchStreamController.getAllCamForUser);
 router.post('/addviewer', authController, watchStreamController.addRecentViewers);
+router.post('/setPreference', authController, watchStreamController.setUserCamPreference);
 module.exports = router;

@@ -2,7 +2,9 @@ const cameraServices = require('../services/cameras');
 const { startEncodingStream, deleteEncodingStream } = require('../lib/rtsp-stream');
 const _ = require('lodash');
 const customerServices = require('../services/customers');
+const logServices = require('../services/logs');
 const CONSTANTS = require('../lib/constants');
+
 module.exports = {
   // encode stream and create new camera
   createCamera: async (req, res, next) => {
@@ -50,6 +52,18 @@ module.exports = {
         Message: CONSTANTS.INTERNAL_SERVER_ERROR
       });
       next(error);
+    } finally {
+      let logObj = {
+        user_id: req?.user?.user_id ? req?.user?.user_id : 'Not Found',
+        function: 'Camera',
+        function_type: 'Add',
+        request: req.body
+      };
+      try {
+        await logServices.addChangeLog(logObj);
+      } catch (e) {
+        console.log(e);
+      }
     }
   },
 
@@ -108,6 +122,18 @@ module.exports = {
         Message: CONSTANTS.INTERNAL_SERVER_ERROR
       });
       next(error);
+    } finally {
+      let logObj = {
+        user_id: req?.user?.user_id ? req?.user?.user_id : 'Not Found',
+        function: 'Camera',
+        function_type: 'Delete',
+        request: req.body
+      };
+      try {
+        await logServices.addChangeLog(logObj);
+      } catch (e) {
+        console.log(e);
+      }
     }
   },
 
@@ -135,6 +161,18 @@ module.exports = {
         Message: CONSTANTS.INTERNAL_SERVER_ERROR
       });
       next(error);
+    } finally {
+      let logObj = {
+        user_id: req?.user?.user_id ? req?.user?.user_id : 'Not Found',
+        function: 'Camera',
+        function_type: 'Edit',
+        request: req.body
+      };
+      try {
+        await logServices.addChangeLog(logObj);
+      } catch (e) {
+        console.log(e);
+      }
     }
   },
 

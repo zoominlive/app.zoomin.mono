@@ -6,52 +6,53 @@ const CONSTANTS = require('../lib/constants');
 module.exports = async function (req, res, next) {
   try {
     const token = req.header('Authorization')?.substring(7);
-    if (!token)
+    if (!token) {
       return res.status(401).json({ IsSuccess: true, Data: {}, Message: CONSTANTS.AUTH_ERROR });
-
-    const decodeToken = jwt.verify(token, process.env.JWT_SECRET_KEY);
-    let user;
-    if (decodeToken?.user_id) {
-      user = await Users.findOne({ where: { user_id: decodeToken?.user_id } });
-    }
-    if (!user) {
-      if (decodeToken?.family_member_id) {
-        let familyUser;
-        familyUser = await Family.findOne({
-          where: { family_member_id: decodeToken?.family_member_id },
-          include: [
-            {
-              model: Child,
-              attributes: ['location']
-            }
-          ]
-        });
-
-        if (familyUser) {
-          let locations = [];
-          familyUser?.children?.forEach((child) => {
-            child?.location?.locations?.forEach((location) => {
-              locations.push(location);
-            });
+    } else {
+      const decodeToken = jwt.verify(token, process.env.JWT_SECRET_KEY);
+      let user;
+      if (decodeToken?.user_id) {
+        user = await Users.findOne({ where: { user_id: decodeToken?.user_id } });
+      }
+      if (!user) {
+        if (decodeToken?.family_member_id) {
+          let familyUser;
+          familyUser = await Family.findOne({
+            where: { family_member_id: decodeToken?.family_member_id },
+            include: [
+              {
+                model: Child,
+                attributes: ['location']
+              }
+            ]
           });
-          locations = locations?.filter((v, i, a) => a.indexOf(v) === i);
-          req.userToken = token;
-          req.user = familyUser.toJSON();
-          req.user.accessable_locations = req.user.location;
-          req.user.location = { selected_locations: locations, accessable_locations: locations };
+
+          if (familyUser) {
+            let locations = [];
+            familyUser?.children?.forEach((child) => {
+              child?.location?.locations?.forEach((location) => {
+                locations.push(location);
+              });
+            });
+            locations = locations?.filter((v, i, a) => a.indexOf(v) === i);
+            req.userToken = token;
+            req.user = familyUser.toJSON();
+            req.user.accessable_locations = req.user.location;
+            req.user.location = { selected_locations: locations, accessable_locations: locations };
+          } else {
+            res.status(401).json({ IsSuccess: true, Data: {}, Message: CONSTANTS.AUTH_ERROR });
+          }
         } else {
-          res.status(401).json({ IsSuccess: true, Data: {}, Message: CONSTANTS.AUTH_ERROR });
+          return res.status(401).json({
+            IsSuccess: true,
+            Data: {},
+            Message: CONSTANTS.INVALID_TOKEN
+          });
         }
       } else {
-        return res.status(401).json({
-          IsSuccess: true,
-          Data: {},
-          Message: CONSTANTS.INVALID_TOKEN
-        });
+        req.userToken = token;
+        req.user = user.toJSON();
       }
-    } else {
-      req.userToken = token;
-      req.user = user.toJSON();
     }
 
     next();
