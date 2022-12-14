@@ -1,9 +1,11 @@
 const jwt = require('jsonwebtoken');
-const { Family, Child } = require('../models');
-const Users = require('../models/users');
+const connectToDatabase = require('../models/index');
+
 const CONSTANTS = require('../lib/constants');
 // authentication middleware to check auth and give access based on user type
 module.exports = async function (req, res, next) {
+  const { Family, Child, Users } = await connectToDatabase();
+
   try {
     const token = req.header('Authorization')?.substring(7);
     if (!token) {

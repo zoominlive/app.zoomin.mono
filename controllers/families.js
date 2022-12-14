@@ -2,9 +2,11 @@ const _ = require('lodash');
 const familyServices = require('../services/families');
 const childServices = require('../services/children');
 const userServices = require('../services/users');
+const logServices = require('../services/logs');
 const CONSTANTS = require('../lib/constants');
 const encrypter = require('object-encrypter');
 const engine = encrypter(process.env.JWT_SECRET_KEY, { ttl: true });
+const sequelize = require('../lib/database');
 var bcrypt = require('bcryptjs');
 const {
   sendRegistrationMailforFamilyMember,
@@ -15,6 +17,7 @@ const { v4: uuidv4 } = require('uuid');
 module.exports = {
   // create new family(primary parent, secondary parent ,child)
   createFamily: async (req, res, next) => {
+    const t = await sequelize.transaction();
     try {
       let { primary, secondary, children } = req.body;
       const userId = req.user.user_id;
@@ -34,12 +37,15 @@ module.exports = {
       primary.location = { selected_locations: allLocations, accessable_locations: allLocations };
       const newFamilyId = await familyServices.generateNewFamilyId();
       primary.family_id = newFamilyId;
-      let primaryParent = await familyServices.createFamily({
-        ...primary,
-        family_member_id: uuidv4(),
-        user_id: userId,
-        cust_id: custId
-      });
+      let primaryParent = await familyServices.createFamily(
+        {
+          ...primary,
+          family_member_id: uuidv4(),
+          user_id: userId,
+          cust_id: custId
+        },
+        t
+      );
 
       const familyId = primaryParent.family_id;
 
@@ -62,7 +68,7 @@ module.exports = {
           family_id: familyId
         });
       });
-      secondaryParents = await familyServices.createFamilies(familyObj);
+      secondaryParents = await familyServices.createFamilies(familyObj, t);
 
       if (primaryParent && secondaryParents) {
         const token = await familyServices.createPasswordToken(primaryParent);
@@ -99,7 +105,9 @@ module.exports = {
         });
       });
 
-      children = await childServices.createChildren(childObjs);
+      children = await childServices.createChildren(childObjs, t);
+
+      await t.commit();
 
       res.status(201).json({
         IsSuccess: true,
@@ -109,6 +117,7 @@ module.exports = {
 
       next();
     } catch (error) {
+      await t.rollback();
       res.status(500).json({
         IsSuccess: false,
         Message:
@@ -117,18 +126,53 @@ module.exports = {
             : CONSTANTS.INTERNAL_SERVER_ERROR
       });
       next(error);
+    } finally {
+      let logObj = [
+        {
+          user_id: req?.user?.user_id ? req?.user?.user_id : 'Not Found',
+          function: 'Primary_Family',
+          function_type: 'Add',
+          request: req?.body?.primary
+        }
+      ];
+
+      req?.body?.secondary?.forEach((secMember) =>
+        logObj.push({
+          user_id: req?.user?.user_id ? req?.user?.user_id : 'Not Found',
+          function: 'Second_Family',
+          function_type: 'Add',
+          request: secMember
+        })
+      );
+
+      req?.body?.children?.forEach((child) =>
+        logObj.push({
+          user_id: req?.user?.user_id ? req?.user?.user_id : 'Not Found',
+          function: 'Child',
+          function_type: 'Add',
+          request: child
+        })
+      );
+
+      try {
+        await logServices.bulkAddChangeLog(logObj);
+      } catch (e) {
+        console.log(e);
+      }
     }
   },
 
   // edit family member details
   editFamily: async (req, res, next) => {
+    const t = await sequelize.transaction();
+    let familyMember;
     try {
       const params = req.body;
       let emailExist = false;
-      const familyMember = await familyServices.getFamilyMemberById(params.family_member_id);
+      familyMember = await familyServices.getFamilyMemberById(params.family_member_id, t);
 
       if (params.email !== familyMember.email) {
-        emailExist = await userServices.checkEmailExist(params.email);
+        emailExist = await userServices.checkEmailExist(params.email, t);
       }
 
       if (emailExist) {
@@ -141,9 +185,9 @@ module.exports = {
         params.is_verified = familyMember.email != params.email ? false : true;
         let editedFamily;
         if (params.is_verified) {
-          editedFamily = await familyServices.editFamily(params);
+          editedFamily = await familyServices.editFamily(params, t);
         } else {
-          editedFamily = await familyServices.editFamily(_.omit(params, ['email']));
+          editedFamily = await familyServices.editFamily(_.omit(params, ['email']), t);
         }
 
         if (!params.is_verified) {
@@ -155,6 +199,7 @@ module.exports = {
           const response = await sendEmailChangeMail(name, params?.email, originalUrl);
         }
 
+        await t.commit();
         if (editedFamily) {
           res.status(200).json({
             IsSuccess: true,
@@ -175,6 +220,7 @@ module.exports = {
 
       next();
     } catch (error) {
+      await t.rollback();
       res.status(500).json({
         IsSuccess: false,
         Message:
@@ -183,6 +229,19 @@ module.exports = {
             : CONSTANTS.INTERNAL_SERVER_ERROR
       });
       next(error);
+    } finally {
+      let logObj = {
+        user_id: req?.user?.user_id ? req?.user?.user_id : 'Not Found',
+        function: familyMember?.member_type == 'primary' ? 'Primary_Family' : 'Second_Family',
+        function_type: 'Edit',
+        request: req?.body
+      };
+
+      try {
+        await logServices.addChangeLog(logObj);
+      } catch (e) {
+        console.log(e);
+      }
     }
   },
 
@@ -216,11 +275,12 @@ module.exports = {
 
   // add new parent to existing family
   addParent: async (req, res, next) => {
+    const t = await sequelize.transaction();
     try {
       params = req.body;
       params.cust_id = req.user.cust_id;
       params.user_id = req.user.user_id;
-      let emailExist = await userServices.checkEmailExist(params.email);
+      let emailExist = await userServices.checkEmailExist(params.email, t);
 
       if (emailExist) {
         res.status(409).json({
@@ -229,7 +289,7 @@ module.exports = {
           Message: CONSTANTS.EMAIL_EXIST
         });
       } else {
-        const parent = await familyServices.createFamily(params);
+        const parent = await familyServices.createFamily(params, t);
 
         const token = await familyServices.createPasswordToken(parent);
         const name = parent.first_name + ' ' + parent.last_name;
@@ -238,7 +298,7 @@ module.exports = {
         // const short_url = await TinyURL.shorten(originalUrl);
 
         await sendRegistrationMailforFamilyMember(name, parent.email, originalUrl);
-
+        await t.commit();
         res.status(201).json({
           IsSuccess: true,
           Data: parent,
@@ -248,21 +308,37 @@ module.exports = {
 
       next();
     } catch (error) {
+      await t.rollback();
       res.status(500).json({
         IsSuccess: false,
         Message: CONSTANTS.INTERNAL_SERVER_ERROR
       });
       next(error);
+    } finally {
+      let logObj = {
+        user_id: req?.user?.user_id ? req?.user?.user_id : 'Not Found',
+        function: 'Second_Family',
+        function_type: 'Add',
+        request: req?.body
+      };
+
+      try {
+        await logServices.addChangeLog(logObj);
+      } catch (e) {
+        console.log(e);
+      }
     }
   },
 
   // delete family
   deleteFamily: async (req, res, next) => {
+    const t = await sequelize.transaction();
     try {
       params = req.body;
 
-      let deleteFamily = await familyServices.deleteFamily(params.family_id);
+      let deleteFamily = await familyServices.deleteFamily(params.family_id, t);
 
+      await t.commit();
       res.status(200).json({
         IsSuccess: true,
         Data: {},
@@ -271,16 +347,31 @@ module.exports = {
 
       next();
     } catch (error) {
+      await t.rollback();
       res.status(500).json({
         IsSuccess: false,
         Message: CONSTANTS.INTERNAL_SERVER_ERROR
       });
       next(error);
+    } finally {
+      let logObj = {
+        user_id: req?.user?.user_id ? req?.user?.user_id : 'Not Found',
+        function: 'Primary_Family',
+        function_type: 'Delete',
+        request: req?.body
+      };
+
+      try {
+        await logServices.addChangeLog(logObj);
+      } catch (e) {
+        console.log(e);
+      }
     }
   },
 
   // disable family member
   disableFamily: async (req, res, next) => {
+    const t = await sequelize.transaction();
     try {
       params = req.body;
 
@@ -290,7 +381,8 @@ module.exports = {
         params.family_id,
         params?.scheduled_end_date,
         params?.locations_to_disable,
-        req.user
+        req.user,
+        t
       );
 
       if (params?.scheduled_end_date) {
@@ -306,19 +398,34 @@ module.exports = {
           Message: CONSTANTS.FAMILY_DISABLED
         });
       }
-
+      await t.commit();
       next();
     } catch (error) {
+      await t.rollback();
       res.status(500).json({
         IsSuccess: false,
         Message: CONSTANTS.INTERNAL_SERVER_ERROR
       });
       next(error);
+    } finally {
+      let logObj = {
+        user_id: req?.user?.user_id ? req?.user?.user_id : 'Not Found',
+        function: req?.body?.member_type == 'primary ' ? 'Primary_Family' : 'Second_Family',
+        function_type: 'Disable',
+        request: req?.body
+      };
+
+      try {
+        await logServices.addChangeLog(logObj);
+      } catch (e) {
+        console.log(e);
+      }
     }
   },
 
   // enable family member
   enableFamily: async (req, res, next) => {
+    const t = await sequelize.transaction();
     try {
       params = req.body;
 
@@ -326,7 +433,8 @@ module.exports = {
         params.family_member_id,
         params.member_type,
         params.family_id,
-        req.user
+        req.user,
+        t
       );
 
       if (params.member_type === 'secondary') {
@@ -342,19 +450,34 @@ module.exports = {
           Message: CONSTANTS.FAMILY_ENABLED
         });
       }
-
+      await t.commit();
       next();
     } catch (error) {
+      await t.rollback();
       res.status(500).json({
         IsSuccess: false,
         Message: CONSTANTS.INTERNAL_SERVER_ERROR
       });
       next(error);
+    } finally {
+      let logObj = {
+        user_id: req?.user?.user_id ? req?.user?.user_id : 'Not Found',
+        function: req?.body?.member_type == 'primary ' ? 'Primary_Family' : 'Second_Family',
+        function_type: 'Enable',
+        request: req?.body
+      };
+
+      try {
+        await logServices.addChangeLog(logObj);
+      } catch (e) {
+        console.log(e);
+      }
     }
   },
 
   /* verify email and set password */
   validateFamilyMember: async (req, res, next) => {
+    const t = await sequelize.transaction();
     try {
       const { token, password } = req.body;
       const decodeToken = engine.decrypt(token);
@@ -362,7 +485,7 @@ module.exports = {
       if (decodeToken.familyMemberId) {
         let familyMember;
 
-        familyMember = await familyServices.getFamilyMemberById(decodeToken.familyMemberId);
+        familyMember = await familyServices.getFamilyMemberById(decodeToken.familyMemberId, t);
 
         if (familyMember) {
           if (!familyMember?.password) {
@@ -371,13 +494,17 @@ module.exports = {
 
             const setPassword = await familyServices.resetPassword(
               decodeToken.familyMemberId,
-              hashPassword
+              hashPassword,
+              t
             );
 
-            await familyServices.editFamily({
-              family_member_id: familyMember.family_member_id,
-              password_link: 'inactive'
-            });
+            await familyServices.editFamily(
+              {
+                family_member_id: familyMember.family_member_id,
+                password_link: 'inactive'
+              },
+              t
+            );
             res.status(200).json({
               IsSuccess: true,
               Data: {},
@@ -389,13 +516,17 @@ module.exports = {
               let hashPassword = bcrypt.hashSync(password, salt);
               const setPassword = await familyServices.resetPassword(
                 decodeToken.familyMemberId,
-                hashPassword
+                hashPassword,
+                t
               );
 
-              await familyServices.editFamily({
-                family_member_id: familyMember.family_member_id,
-                password_link: 'inactive'
-              });
+              await familyServices.editFamily(
+                {
+                  family_member_id: familyMember.family_member_id,
+                  password_link: 'inactive'
+                },
+                t
+              );
               res.status(200).json({
                 IsSuccess: true,
                 Data: {},
@@ -421,8 +552,10 @@ module.exports = {
       } else {
         res.status(400).json({ IsSuccess: true, Data: {}, Message: CONSTANTS.LINK_EXPIRED });
       }
+      await t.commit();
       next();
     } catch (error) {
+      await t.rollback();
       res.status(500).json({ IsSuccess: false, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
       next(error);
     }
@@ -463,19 +596,23 @@ module.exports = {
 
   // change registered email and send verification mail
   changeRegisteredEmail: async (req, res, next) => {
+    const t = await sequelize.transaction();
     try {
       const { token } = req.body;
       const decodeToken = engine.decrypt(token);
 
       if (decodeToken?.familyMemberId) {
-        const user = await familyServices.getFamilyMemberById(decodeToken.familyMemberId);
+        const user = await familyServices.getFamilyMemberById(decodeToken.familyMemberId, t);
 
         if (user.email !== decodeToken.email) {
-          const emailChanged = await familyServices.editFamily({
-            family_member_id: decodeToken.familyMemberId,
-            email: decodeToken.email,
-            is_verified: true
-          });
+          const emailChanged = await familyServices.editFamily(
+            {
+              family_member_id: decodeToken.familyMemberId,
+              email: decodeToken.email,
+              is_verified: true
+            },
+            t
+          );
 
           res.status(200).json({ IsSuccess: true, Data: {}, Message: CONSTANTS.EMAIL_CHANGED });
         } else {
@@ -486,11 +623,25 @@ module.exports = {
       } else {
         res.status(400).json({ IsSuccess: true, Data: {}, Message: CONSTANTS.LINK_EXPIRED });
       }
-
+      await t.commit();
       next();
     } catch (error) {
+      await t.rollback();
       res.status(500).json({ IsSuccess: false, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
       next(error);
+    } finally {
+      let logObj = {
+        user_id: req?.user?.user_id ? req?.user?.user_id : 'Not Found',
+        function: 'User_Change_Email',
+        function_type: 'Edit',
+        request: req?.body
+      };
+
+      try {
+        await logServices.addChangeLog(logObj);
+      } catch (e) {
+        console.log(e);
+      }
     }
   }
 };

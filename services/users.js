@@ -1,4 +1,4 @@
-const { Users, Family } = require('../models/index');
+const connectToDatabase = require('../models/index');
 const Sequelize = require('sequelize');
 const sequelize = require('../lib/database');
 const jwt = require('jsonwebtoken');
@@ -19,10 +19,11 @@ const validateEmail = (emailAdress) => {
 
 module.exports = {
   /* Create new user */
-  createUser: async (userObj) => {
+  createUser: async (userObj, t) => {
+    const { User } = await connectToDatabase();
     userObj.user_id = uuidv4();
 
-    let userCreated = await Users.create(userObj);
+    let userCreated = await Users.create(userObj, { transaction: t });
 
     return userCreated;
   },
@@ -86,18 +87,26 @@ module.exports = {
   },
 
   /* Get user via email */
-  getUser: async (email) => {
-    let user = await Users.findOne({
-      where: { email: email }
-    });
+  getUser: async (email, t) => {
+    const { Users } = await connectToDatabase();
+    let user = await Users.findOne(
+      {
+        where: { email: email }
+      },
+      { transaction: t }
+    );
     return user ? user.toJSON() : null;
   },
 
   // get user by id
-  getUserById: async (userId) => {
-    let user = await Users.findOne({
-      where: { user_id: userId }
-    });
+  getUserById: async (userId, t) => {
+    const { Users } = await connectToDatabase();
+    let user = await Users.findOne(
+      {
+        where: { user_id: userId }
+      },
+      { transaction: t }
+    );
     return user ? user.toJSON() : null;
   },
 
@@ -123,27 +132,32 @@ module.exports = {
   },
 
   /* Reset user password */
-  resetPassword: async (userId, password) => {
+  resetPassword: async (userId, password, t) => {
+    const { Users } = await connectToDatabase();
     let setNewPassword = await Users.update(
       { password: password, is_verified: true },
-      { returning: true, where: { user_id: userId } }
+      { returning: true, where: { user_id: userId } },
+      { transaction: t }
     );
 
     return setNewPassword;
   },
 
   /* Verify user */
-  verifyUser: async (userId) => {
+  verifyUser: async (userId, t) => {
+    const { Users } = await connectToDatabase();
     let verifiedUser = await Users.update(
       { isVerified: true, updated_at: Sequelize.literal('CURRENT_TIMESTAMP') },
-      { where: { user_id: userId } }
+      { where: { user_id: userId } },
+      { transaction: t }
     );
 
     return verifiedUser;
   },
 
   /* Edit user profile details */
-  editUserProfile: async (user, params) => {
+  editUserProfile: async (user, params, t) => {
+    const { Users } = await connectToDatabase();
     let update = {
       first_name: params?.first_name !== undefined ? params?.first_name : user.first_name,
       last_name: params?.last_name !== undefined ? params?.last_name : user.last_name,
@@ -157,36 +171,47 @@ module.exports = {
       updated_at: Sequelize.literal('CURRENT_TIMESTAMP')
     };
 
-    let updateUserProfile = await Users.update(update, {
-      where: { user_id: user.user_id }
-    });
+    let updateUserProfile = await Users.update(
+      update,
+      {
+        where: { user_id: user.user_id }
+      },
+      { transaction: t }
+    );
 
     if (updateUserProfile) {
-      updateUserProfile = await Users.findOne({ where: { user_id: user.user_id } });
+      updateUserProfile = await Users.findOne(
+        { where: { user_id: user.user_id } },
+        { transaction: t }
+      );
     }
 
     return updateUserProfile.toJSON();
   },
 
   /* Delete user profile details */
-  deleteUser: async (userId) => {
-    let deletedUser = await Users.destroy({ where: { user_id: userId } });
+  deleteUser: async (userId, t) => {
+    const { Users } = await connectToDatabase();
+    let deletedUser = await Users.destroy({ where: { user_id: userId } }, { transaction: t });
 
     return deletedUser;
   },
 
   /* Edit user profile details */
-  deleteUserProfile: async (userId) => {
+  deleteUserProfile: async (userId, t) => {
+    const { Users } = await connectToDatabase();
     let deletedUserProfile = await Users.update(
       { status: 'inactive', updated_at: Sequelize.literal('CURRENT_TIMESTAMP') },
-      { where: { user_id: userId } }
+      { where: { user_id: userId } },
+      { transaction: t }
     );
 
     return deletedUserProfile;
   },
 
   /* Fetch all the user's details */
-  getAllUsers: async (user, filter) => {
+  getAllUsers: async (user, filter, t) => {
+    const { Users } = await connectToDatabase();
     let { pageNumber = 0, pageSize = 10, searchBy = '', location = 'All' } = filter;
 
     let users;
@@ -277,10 +302,11 @@ module.exports = {
   },
 
   // check if user already exist for given email
-  checkEmailExist: async (email) => {
-    const users = await Users.findOne({ where: { email: email } });
+  checkEmailExist: async (email, t) => {
+    const { Users, Family } = await connectToDatabase();
+    const users = await Users.findOne({ where: { email: email } }, { transaction: t });
 
-    const families = await Family.findOne({ where: { email: email } });
+    const families = await Family.findOne({ where: { email: email } }, { transaction: t });
 
     if (users === null && families === null) {
       return false;

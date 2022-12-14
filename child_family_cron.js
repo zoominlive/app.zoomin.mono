@@ -1,10 +1,11 @@
-const { Child, Family, RoomsInChild } = require('./models/index');
+const connectToDatabase = require('./models/index');
 const Sequelize = require('sequelize');
 const _ = require('lodash');
 const moment = require('moment-timezone');
 
 // cron to disable scheduled to end access members and children
 module.exports.disableScheduledFamilyAndChild = async () => {
+  const { Child, Family, RoomsInChild } = await connectToDatabase();
   let update = {
     updated_at: Sequelize.literal('CURRENT_TIMESTAMP'),
     status: 'Disabled',

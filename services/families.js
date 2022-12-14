@@ -1,4 +1,4 @@
-const { Family, Camera, Room, Child } = require('../models/index');
+const connectToDatabase = require('../models/index');
 const Sequelize = require('sequelize');
 const jwt = require('jsonwebtoken');
 const _ = require('lodash-contrib');
@@ -10,6 +10,7 @@ const { v4: uuidv4 } = require('uuid');
 module.exports = {
   /* Create new family */
   createFamily: async (familyObj) => {
+    const { Family } = await connectToDatabase();
     familyObj.family_member_id = uuidv4();
     let familyCreated = await Family.create(familyObj);
 
@@ -17,14 +18,16 @@ module.exports = {
   },
 
   /* Create new family */
-  createFamilies: async (familyObj) => {
-    let familyCreated = await Family.bulkCreate(familyObj, { returning: true });
+  createFamilies: async (familyObj, t) => {
+    const { Family } = await connectToDatabase();
+    let familyCreated = await Family.bulkCreate(familyObj, { returning: true }, { transaction: t });
 
     return familyCreated;
   },
 
   //generate new family Id
   generateNewFamilyId: async () => {
+    const { Family } = await connectToDatabase();
     let newFamilyId = await Family.findAll({
       order: [['family_id', 'DESC']],
       raw: true
@@ -35,62 +38,81 @@ module.exports = {
   },
 
   /* Edit family details */
-  editFamily: async (params) => {
+  editFamily: async (params, t) => {
+    const { Family } = await connectToDatabase();
     const familyObj = _.omit(params, ['family_member_id']);
     let update = {
       updated_at: Sequelize.literal('CURRENT_TIMESTAMP'),
       ...familyObj
     };
 
-    let updateFamilyDetails = await Family.update(update, {
-      where: { family_member_id: params.family_member_id }
-    });
+    let updateFamilyDetails = await Family.update(
+      update,
+      {
+        where: { family_member_id: params.family_member_id }
+      },
+      { transaction: t }
+    );
 
     if (updateFamilyDetails) {
-      updateFamilyDetails = await Family.findOne({
-        where: { family_member_id: params.family_member_id }
-      });
+      updateFamilyDetails = await Family.findOne(
+        {
+          where: { family_member_id: params.family_member_id }
+        },
+        { transaction: t }
+      );
     }
 
     return updateFamilyDetails;
   },
 
   /* Delete Existing family */
-  deleteFamily: async (familyId) => {
-    let deletedParents = await Family.destroy({
-      where: { family_id: familyId },
-      raw: true
-    });
+  deleteFamily: async (familyId, t) => {
+    const { Family, Child } = await connectToDatabase();
+    let deletedParents = await Family.destroy(
+      {
+        where: { family_id: familyId },
+        raw: true
+      },
+      { transaction: t }
+    );
 
-    let deletedChildren = await Child.destroy({
-      where: { family_id: familyId },
-      raw: true
-    });
+    let deletedChildren = await Child.destroy(
+      {
+        where: { family_id: familyId },
+        raw: true
+      },
+      { transaction: t }
+    );
 
     return deletedParents, deletedChildren;
   },
 
   /* Fetch all the family's details */
-  getAllFamilyDetails: async (userId, filter) => {
+  getAllFamilyDetails: async (userId, filter, t) => {
+    const { Family, Child } = await connectToDatabase();
     let { pageNumber = 1, pageSize = 10, location = 'All', searchBy = '', roomsList = [] } = filter;
 
     let families;
     let familyArray = [];
-    families = await Family.findAll({
-      where: { user_id: userId },
-      include: [
-        {
-          model: Child,
-          where: {
-            [Sequelize.Op.and]: {
-              location: {
-                [Sequelize.Op.substring]: location === 'All' ? '' : location
+    families = await Family.findAll(
+      {
+        where: { user_id: userId },
+        include: [
+          {
+            model: Child,
+            where: {
+              [Sequelize.Op.and]: {
+                location: {
+                  [Sequelize.Op.substring]: location === 'All' ? '' : location
+                }
               }
             }
           }
-        }
-      ]
-    });
+        ]
+      },
+      { transaction: t }
+    );
 
     families?.forEach((familyMember) => {
       if (familyMember.member_type == 'primary') {
@@ -179,11 +201,15 @@ module.exports = {
   },
 
   //fetch family member details by ID
-  getFamilyMemberById: async (familyMemberId) => {
-    let familyMember = await Family.findOne({
-      where: { family_member_id: familyMemberId },
-      raw: true
-    });
+  getFamilyMemberById: async (familyMemberId, t) => {
+    const { Family } = await connectToDatabase();
+    let familyMember = await Family.findOne(
+      {
+        where: { family_member_id: familyMemberId },
+        raw: true
+      },
+      { transaction: t }
+    );
     return familyMember;
   },
 
@@ -194,8 +220,10 @@ module.exports = {
     familyId,
     schedluedEndDate = null,
     locations_to_disable = [],
-    user
+    user,
+    t
   ) => {
+    const { Family, Child } = await connectToDatabase();
     let updateFamilyDetails;
     let updateChildDetails;
 
@@ -207,29 +235,44 @@ module.exports = {
       };
 
       if (memberType == 'secondary') {
-        updateFamilyDetails = await Family.update(update, {
-          where: { family_member_id: familyMemberId },
-          raw: true
-        });
+        updateFamilyDetails = await Family.update(
+          update,
+          {
+            where: { family_member_id: familyMemberId },
+            raw: true
+          },
+          { transaction: t }
+        );
       } else if (memberType == 'primary') {
-        updateFamilyDetails = await Family.update(update, {
-          where: { family_id: familyId },
-          raw: true
-        });
+        updateFamilyDetails = await Family.update(
+          update,
+          {
+            where: { family_id: familyId },
+            raw: true
+          },
+          { transaction: t }
+        );
 
-        updateChildDetails = await Child.update(update, {
-          where: { family_id: familyId },
-          raw: true
-        });
+        updateChildDetails = await Child.update(
+          update,
+          {
+            where: { family_id: familyId },
+            raw: true
+          },
+          { transaction: t }
+        );
       }
     } else {
-      const location = await Family.findOne({
-        attributes: ['location'],
-        where: {
-          family_member_id: familyMemberId
+      const location = await Family.findOne(
+        {
+          attributes: ['location'],
+          where: {
+            family_member_id: familyMemberId
+          },
+          raw: true
         },
-        raw: true
-      });
+        { transaction: t }
+      );
 
       const locations = location?.location?.selected_locations?.filter((location) => {
         let count = 0;
@@ -255,20 +298,32 @@ module.exports = {
       };
 
       if (memberType == 'secondary') {
-        updateFamilyDetails = await Family.update(update, {
-          where: { family_member_id: familyMemberId },
-          raw: true
-        });
+        updateFamilyDetails = await Family.update(
+          update,
+          {
+            where: { family_member_id: familyMemberId },
+            raw: true
+          },
+          { transaction: t }
+        );
       } else if (memberType == 'primary') {
-        updateFamilyDetails = await Family.update(update, {
-          where: { family_id: familyId },
-          raw: true
-        });
+        updateFamilyDetails = await Family.update(
+          update,
+          {
+            where: { family_id: familyId },
+            raw: true
+          },
+          { transaction: t }
+        );
 
-        updateChildDetails = await Child.update(update, {
-          where: { family_id: familyId },
-          raw: true
-        });
+        updateChildDetails = await Child.update(
+          update,
+          {
+            where: { family_id: familyId },
+            raw: true
+          },
+          { transaction: t }
+        );
       }
     }
 
@@ -276,17 +331,21 @@ module.exports = {
   },
 
   // enable family member by ID
-  enableFamily: async (familyMemberId, memberType, familyId, user) => {
+  enableFamily: async (familyMemberId, memberType, familyId, user, t) => {
+    const { Family, Child } = await connectToDatabase();
     let updateFamilyDetails;
     let updateChildDetails;
 
-    const location = await Family.findOne({
-      attributes: ['location', 'disabled_locations'],
-      where: {
-        family_member_id: familyMemberId
+    const location = await Family.findOne(
+      {
+        attributes: ['location', 'disabled_locations'],
+        where: {
+          family_member_id: familyMemberId
+        },
+        raw: true
       },
-      raw: true
-    });
+      { transaction: t }
+    );
 
     let locations = location?.location?.selected_locations;
     let disabledLocations = location?.disabled_locations?.locations;
@@ -306,20 +365,32 @@ module.exports = {
     };
 
     if (memberType == 'secondary') {
-      updateFamilyDetails = await Family.update(update, {
-        where: { family_member_id: familyMemberId },
-        raw: true
-      });
+      updateFamilyDetails = await Family.update(
+        update,
+        {
+          where: { family_member_id: familyMemberId },
+          raw: true
+        },
+        { transaction: t }
+      );
     } else if (memberType == 'primary') {
-      updateFamilyDetails = await Family.update(update, {
-        where: { family_id: familyId },
-        raw: true
-      });
+      updateFamilyDetails = await Family.update(
+        update,
+        {
+          where: { family_id: familyId },
+          raw: true
+        },
+        { transaction: t }
+      );
 
-      updateChildDetails = await Child.update(update, {
-        where: { family_id: familyId },
-        raw: true
-      });
+      updateChildDetails = await Child.update(
+        update,
+        {
+          where: { family_id: familyId },
+          raw: true
+        },
+        { transaction: t }
+      );
     }
 
     return updateFamilyDetails, updateChildDetails;
@@ -336,10 +407,14 @@ module.exports = {
   },
 
   /* Get family member by email */
-  getFamilyMember: async (email) => {
-    let familyMember = await Family.findOne({
-      where: { email: email }
-    });
+  getFamilyMember: async (email, t) => {
+    const { Family } = await connectToDatabase();
+    let familyMember = await Family.findOne(
+      {
+        where: { email: email }
+      },
+      { transaction: t }
+    );
     return familyMember ? familyMember.toJSON() : null;
   },
 
@@ -352,10 +427,12 @@ module.exports = {
   },
 
   /* Reset family member account password */
-  resetPassword: async (familyMemberId, password) => {
+  resetPassword: async (familyMemberId, password, t) => {
+    const { Family } = await connectToDatabase();
     let setNewPassword = await Family.update(
       { password: password, is_verified: true },
-      { returning: true, where: { family_member_id: familyMemberId } }
+      { returning: true, where: { family_member_id: familyMemberId } },
+      { transaction: t }
     );
 
     return setNewPassword;
@@ -371,16 +448,20 @@ module.exports = {
   },
 
   /* Get family's with scheduled to end access  */
-  getFamilyWithSEA: async (userId) => {
-    let familyMembers = await Family.findAll({
-      where: {
-        scheduled_end_date: {
-          [Sequelize.Op.ne]: null
-        },
-        member_type: 'primary',
-        user_id: userId
-      }
-    });
+  getFamilyWithSEA: async (userId, t) => {
+    const { Family } = await connectToDatabase();
+    let familyMembers = await Family.findAll(
+      {
+        where: {
+          scheduled_end_date: {
+            [Sequelize.Op.ne]: null
+          },
+          member_type: 'primary',
+          user_id: userId
+        }
+      },
+      { transaction: t }
+    );
     return familyMembers;
   }
 };

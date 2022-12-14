@@ -28,7 +28,7 @@ const ChangeLogs = sequelize.define(
       required: true
     },
     function_type: {
-      type: Sequelize.ENUM('Add', 'Edit', 'Delete'),
+      type: Sequelize.ENUM('Add', 'Edit', 'Delete', 'Disable', 'Enable'),
       required: true
     },
     request: {

@@ -1,4 +1,4 @@
-const { Camera, Room, RecentViewers, Child, Family, Users } = require('../models/index');
+const connectToDatabase = require('../models/index');
 const Sequelize = require('sequelize');
 const sequelize = require('../lib/database');
 const _ = require('lodash');
@@ -7,6 +7,7 @@ const { cons } = require('lodash-contrib');
 module.exports = {
   /* Create new camera */
   getAllCamForLocation: async (user) => {
+    const { Camera, Room, Child } = await connectToDatabase();
     let rooms = [];
     if (user?.family_id) {
       let childDetails;
@@ -100,6 +101,7 @@ module.exports = {
   },
 
   getAllCamForUser: async (user) => {
+    const { Camera, Room, Child, Family } = await connectToDatabase();
     let children = [];
     if (user?.family_id) {
       let childDetails;
@@ -242,38 +244,50 @@ module.exports = {
     }
   },
 
-  addRecentViewers: async (params) => {
+  addRecentViewers: async (params, t) => {
+    const { RecentViewers } = await connectToDatabase();
     let recentViewerObj = { ...params, requested_at: Sequelize.literal('CURRENT_TIMESTAMP') };
     let recentViewer;
-    let viewerAlreadyExist = await RecentViewers.findOne({
-      where: {
-        user_id: params?.user?.family_member_id
-          ? params?.user?.family_member_id
-          : params?.user?.user_id
-      },
-      raw: true
-    });
-    if (!viewerAlreadyExist) {
-      recentViewer = await RecentViewers.create({
-        ...recentViewerObj,
-        user_id: params?.user?.family_member_id
-          ? params?.user?.family_member_id
-          : params?.user?.user_id
-      });
-    } else {
-      recentViewer = await RecentViewers.update(recentViewerObj, {
+    let viewerAlreadyExist = await RecentViewers.findOne(
+      {
         where: {
           user_id: params?.user?.family_member_id
             ? params?.user?.family_member_id
             : params?.user?.user_id
-        }
-      });
+        },
+        raw: true
+      },
+      { transaction: t }
+    );
+    if (!viewerAlreadyExist) {
+      recentViewer = await RecentViewers.create(
+        {
+          ...recentViewerObj,
+          user_id: params?.user?.family_member_id
+            ? params?.user?.family_member_id
+            : params?.user?.user_id
+        },
+        { transaction: t }
+      );
+    } else {
+      recentViewer = await RecentViewers.update(
+        recentViewerObj,
+        {
+          where: {
+            user_id: params?.user?.family_member_id
+              ? params?.user?.family_member_id
+              : params?.user?.user_id
+          }
+        },
+        { transaction: t }
+      );
     }
 
     return recentViewer;
   },
 
   getRecentViewers: async () => {
+    const { RecentViewers } = await connectToDatabase();
     let twoHoursBefore = new Date();
     twoHoursBefore.setHours(twoHoursBefore.getHours() - 2);
 
@@ -291,24 +305,33 @@ module.exports = {
     return recentViewers;
   },
 
-  setUserCamPreference: async (user, cams) => {
+  setUserCamPreference: async (user, cams, t) => {
+    const { Family, Users } = await connectToDatabase();
     let camObj = {
       cam_preference: cams,
       updated_at: Sequelize.literal('CURRENT_TIMESTAMP')
     };
     let camSettings;
     if (user?.family_member_id) {
-      camSettings = await Family.update(camObj, {
-        where: {
-          family_member_id: user.family_member_id
-        }
-      });
+      camSettings = await Family.update(
+        camObj,
+        {
+          where: {
+            family_member_id: user.family_member_id
+          }
+        },
+        { transaction: t }
+      );
     } else {
-      camSettings = await Users.update(camObj, {
-        where: {
-          user_id: user.user_id
-        }
-      });
+      camSettings = await Users.update(
+        camObj,
+        {
+          where: {
+            user_id: user.user_id
+          }
+        },
+        { transaction: t }
+      );
     }
 
     return camSettings;

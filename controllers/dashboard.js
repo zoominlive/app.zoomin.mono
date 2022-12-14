@@ -4,6 +4,7 @@ const childrenServices = require('../services/children');
 const watchStreamServices = require('../services/watchStream');
 const { listAvailableStreams } = require('../lib/rtsp-stream');
 const _ = require('lodash');
+const sequelize = require('../lib/database');
 const CONSTANTS = require('../lib/constants');
 module.exports = {
   // get all stream statistics data to populate dashboard

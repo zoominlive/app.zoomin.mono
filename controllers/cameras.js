@@ -4,15 +4,16 @@ const _ = require('lodash');
 const customerServices = require('../services/customers');
 const logServices = require('../services/logs');
 const CONSTANTS = require('../lib/constants');
-
+const sequelize = require('../lib/database');
 module.exports = {
   // encode stream and create new camera
   createCamera: async (req, res, next) => {
+    const t = await sequelize.transaction();
     try {
       params = req.body;
       params.cust_id = req.user.cust_id;
 
-      const customer = await customerServices.getCustomerDetails(params.cust_id);
+      const customer = await customerServices.getCustomerDetails(params.cust_id, t);
       const availableCameras = customer?.available_cameras;
 
       if (availableCameras > 0) {
@@ -25,13 +26,14 @@ module.exports = {
         params.stream_uri = transcodedDetails?.data ? transcodedDetails.data?.uri : '';
         params.stream_uuid = transcodedDetails?.data ? transcodedDetails.data?.id : '';
         params.cam_alias = transcodedDetails?.data ? transcodedDetails.data?.alias : '';
-        const camera = await cameraServices.createCamera(params);
+        const camera = await cameraServices.createCamera(params, t);
 
         const resetAvailableCameras = await customerServices.setAvailableCameras(
           req.user.cust_id,
-          availableCameras - 1
+          availableCameras - 1,
+          t
         );
-
+        await t.commit();
         res.status(201).json({
           IsSuccess: true,
           Data: camera,
@@ -47,6 +49,7 @@ module.exports = {
 
       next();
     } catch (error) {
+      await t.rollback();
       res.status(500).json({
         IsSuccess: false,
         Message: CONSTANTS.INTERNAL_SERVER_ERROR
@@ -69,21 +72,23 @@ module.exports = {
 
   // delete encoded stream and camera
   deleteCamera: async (req, res, next) => {
+    const t = await sequelize.transaction();
     try {
       const params = req.body;
       const token = req.userToken;
 
-      const customer = await customerServices.getCustomerDetails(req.user.cust_id);
+      const customer = await customerServices.getCustomerDetails(req.user.cust_id, t);
       const availableCameras = customer?.available_cameras;
 
       const camEncodedDeleted = await deleteEncodingStream(
         params.streamId,
         params.wait,
         token,
-        req.user.cust_id
+        req.user.cust_id,
+        t
       );
 
-      const cameraDeleted = await cameraServices.deleteCamera(params.cam_id);
+      const cameraDeleted = await cameraServices.deleteCamera(params.cam_id, t);
 
       if (cameraDeleted === 0) {
         res.status(404).json({
@@ -94,7 +99,8 @@ module.exports = {
       } else if (camEncodedDeleted.status === 200) {
         const resetAvailableCameras = await customerServices.setAvailableCameras(
           req.user.cust_id,
-          availableCameras + 1
+          availableCameras + 1,
+          t
         );
 
         res.status(200).json({
@@ -105,7 +111,8 @@ module.exports = {
       } else {
         const resetAvailableCameras = await customerServices.setAvailableCameras(
           req.user.cust_id,
-          availableCameras + 1
+          availableCameras + 1,
+          t
         );
 
         res.status(200).json({
@@ -115,8 +122,10 @@ module.exports = {
         });
       }
 
+      await t.commit();
       next();
     } catch (error) {
+      await t.rollback();
       res.status(500).json({
         IsSuccess: false,
         Message: CONSTANTS.INTERNAL_SERVER_ERROR
@@ -139,15 +148,20 @@ module.exports = {
 
   // edit camera details
   editCamera: async (req, res, next) => {
+    const t = await sequelize.transaction();
     try {
       const params = req.body;
       const token = req.userToken;
 
-      const cameraUpdated = await cameraServices.editCamera({
-        cam_id: params.camId,
-        cam_name: params.camName
-      });
+      const cameraUpdated = await cameraServices.editCamera(
+        {
+          cam_id: params.camId,
+          cam_name: params.camName
+        },
+        t
+      );
 
+      await t.commit();
       res.status(200).json({
         IsSuccess: false,
         Data: {},
@@ -156,6 +170,7 @@ module.exports = {
 
       next();
     } catch (error) {
+      await t.rollback();
       res.status(500).json({
         IsSuccess: false,
         Message: CONSTANTS.INTERNAL_SERVER_ERROR

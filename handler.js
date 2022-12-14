@@ -10,6 +10,7 @@ var indexRouter = require('./routes/index');
 const sequelize = require('./lib/database');
 var bodyParser = require('body-parser');
 const cors = require('cors');
+const connectToDatabase = require('./models/index');
 
 app.use(cors());
 // To create DB tables from modules and sync DB

@@ -155,17 +155,17 @@ functions:
           path: /api/rooms
 
   watchStreamFunction:
-    handler: handler.handler
-    events:
-      - httpApi:
-          method: '*'
-          path: /api/watchstream
-      - httpApi:
-          method: '*'
-          path: /api/watchstream/userStreams
-      - httpApi:
-          method: '*'
-          path: /api/watchstream/addviewer
+  #   handler: handler.handler
+  #   events:
+  #     - httpApi:
+  #         method: '*'
+  #         path: /api/watchstream
+  #     - httpApi:
+  #         method: '*'
+  #         path: /api/watchstream/userStreams
+  #     - httpApi:
+  #         method: '*'
+  #         path: /api/watchstream/addviewer
 
   disableScheduledMembers:
     handler: child_family_cron.disableScheduledFamilyAndChild

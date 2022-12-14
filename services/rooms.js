@@ -1,13 +1,14 @@
-const { Room, Camera, CamerasInRooms, RoomsInChild } = require('../models/index');
+const connectToDatabase = require('../models/index');
 const Sequelize = require('sequelize');
 const _ = require('lodash');
 const sequelize = require('../lib/database');
 const { v4: uuidv4 } = require('uuid');
 module.exports = {
   /* Create new room */
-  createRoom: async (roomObj) => {
+  createRoom: async (roomObj, t) => {
+    const { Room, CamerasInRooms } = await connectToDatabase();
     roomObj.room_id = uuidv4();
-    let roomCreated = await Room.create(roomObj);
+    let roomCreated = await Room.create(roomObj, { transaction: t });
 
     const camsToAdd = roomObj.cameras.map((cam) => {
       return {
@@ -16,14 +17,14 @@ module.exports = {
       };
     });
 
-    let camerasAssigned = await CamerasInRooms.bulkCreate(camsToAdd);
+    let camerasAssigned = await CamerasInRooms.bulkCreate(camsToAdd, { transaction: t });
 
     return roomCreated !== undefined ? roomCreated.toJSON() : null;
   },
 
   /* Edit room details */
   editRoom: async (user, params, t) => {
-    console.log(params);
+    const { Room, CamerasInRooms } = await connectToDatabase();
     let update = {
       updated_at: Sequelize.literal('CURRENT_TIMESTAMP')
     };
@@ -61,29 +62,40 @@ module.exports = {
       return cam.cam_id;
     });
 
-    let camsRemoved = await CamerasInRooms.destroy({
-      where: { room_id: params.room_id, cam_id: camsToRemove },
-      raw: true
-    });
+    let camsRemoved = await CamerasInRooms.destroy(
+      {
+        where: { room_id: params.room_id, cam_id: camsToRemove },
+        raw: true
+      },
+      { transaction: t }
+    );
 
-    let camsAdded = await CamerasInRooms.bulkCreate(camsToAdd);
+    let camsAdded = await CamerasInRooms.bulkCreate(camsToAdd, { transaction: t });
 
     return updateRoomDetails.toJSON();
   },
 
   /* Delete Existing room */
-  deleteRoom: async (roomId) => {
-    let camsDeleted = await CamerasInRooms.destroy({ where: { room_id: roomId }, raw: true });
+  deleteRoom: async (roomId, t) => {
+    const { Room, CamerasInRooms } = await connectToDatabase();
+    let camsDeleted = await CamerasInRooms.destroy(
+      { where: { room_id: roomId }, raw: true },
+      { transaction: t }
+    );
 
-    let deletedRoom = await Room.destroy({
-      where: { room_id: roomId }
-    });
+    let deletedRoom = await Room.destroy(
+      {
+        where: { room_id: roomId }
+      },
+      { transaction: t }
+    );
 
     return deletedRoom;
   },
 
   /* Fetch all the room's details */
-  getAllRoomsDetails: async (userId, filter) => {
+  getAllRoomsDetails: async (userId, filter, t) => {
+    const { Room, Camera } = await connectToDatabase();
     let { pageNumber = 0, pageSize = 10, roomsList = [], location = 'All', searchBy = '' } = filter;
 
     if (location == 'All') {
@@ -91,40 +103,46 @@ module.exports = {
     }
     let rooms;
     if (roomsList?.length !== 0) {
-      rooms = await Room.findAll({
-        where: {
-          user_id: userId,
-          location: {
-            [Sequelize.Op.substring]: location
+      rooms = await Room.findAll(
+        {
+          where: {
+            user_id: userId,
+            location: {
+              [Sequelize.Op.substring]: location
+            },
+            room_name: {
+              [Sequelize.Op.and]: { [Sequelize.Op.substring]: searchBy }
+            },
+            room_name: roomsList
           },
-          room_name: {
-            [Sequelize.Op.and]: { [Sequelize.Op.substring]: searchBy }
-          },
-          room_name: roomsList
+          include: [
+            {
+              model: Camera
+            }
+          ]
         },
-        include: [
-          {
-            model: Camera
-          }
-        ]
-      });
+        { transaction: t }
+      );
     } else {
-      rooms = await Room.findAll({
-        where: {
-          user_id: userId,
-          location: {
-            [Sequelize.Op.substring]: location
+      rooms = await Room.findAll(
+        {
+          where: {
+            user_id: userId,
+            location: {
+              [Sequelize.Op.substring]: location
+            },
+            room_name: {
+              [Sequelize.Op.substring]: searchBy
+            }
           },
-          room_name: {
-            [Sequelize.Op.substring]: searchBy
-          }
+          include: [
+            {
+              model: Camera
+            }
+          ]
         },
-        include: [
-          {
-            model: Camera
-          }
-        ]
-      });
+        { transaction: t }
+      );
     }
 
     let filteredrooms = [];
@@ -156,16 +174,21 @@ module.exports = {
   },
 
   // get all room's list for loggedin user
-  getAllRoomsList: async (userId) => {
-    let roomList = await Room.findAll({
-      attributes: ['room_name', 'room_id', 'location'],
-      where: { user_id: userId }
-    });
+  getAllRoomsList: async (userId, t) => {
+    const { Room } = await connectToDatabase();
+    let roomList = await Room.findAll(
+      {
+        attributes: ['room_name', 'room_id', 'location'],
+        where: { user_id: userId }
+      },
+      { transaction: t }
+    );
 
     return roomList;
   },
   // get all room's list for loggedin user
   enableRoom: async (params, t) => {
+    const { RoomsInChild } = await connectToDatabase();
     let roomObj = [];
     params?.rooms.forEach((roomId) => {
       roomObj.push({
@@ -175,7 +198,7 @@ module.exports = {
         disabled: 'true'
       });
     });
-    let assignRoomToChild = await RoomsInChild.bulkCreate(roomObj);
+    let assignRoomToChild = await RoomsInChild.bulkCreate(roomObj, { transaction: t });
 
     return assignRoomToChild;
   }

@@ -3,6 +3,7 @@ const customerServices = require('../services/customers');
 const _ = require('lodash');
 const CONSTANTS = require('../lib/constants');
 const logServices = require('../services/logs');
+const sequelize = require('../lib/database');
 module.exports = {
   // encode stream and create new camera
   getAllCamForLocation: async (req, res, next) => {

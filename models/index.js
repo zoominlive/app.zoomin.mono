@@ -12,6 +12,8 @@ const CamerasInRooms = require('./cameras_assigned_to_rooms');
 const AccessLogs = require('./access_logs');
 const ChangeLogs = require('./change_logs');
 
+const sequelize = require('../lib/database');
+
 CustomerLocations.belongsTo(Customers, { foreignKey: 'cust_id' });
 Family.hasMany(Child, {
   sourceKey: 'family_id',
@@ -63,18 +65,45 @@ Child.belongsTo(Family, { foreignKey: 'family_id' });
 Users.belongsTo(Customers, { foreignKey: 'cust_id' });
 Room.belongsTo(Customers, { foreignKey: 'cust_id' });
 
-module.exports = {
-  ChangeLogs,
-  AccessLogs,
-  Users,
-  Customers,
-  CustomerLocations,
-  Family,
-  Child,
-  RecentViewers,
-  Room,
-  Camera,
-  ScheduledToDisable,
-  RoomsInChild,
-  CamerasInRooms
+const connection = {};
+
+module.exports = async () => {
+  if (connection?.isConnected) {
+    console.log('=> Using existing connection.');
+    return {
+      ChangeLogs,
+      AccessLogs,
+      Users,
+      Customers,
+      CustomerLocations,
+      Family,
+      Child,
+      RecentViewers,
+      Room,
+      Camera,
+      ScheduledToDisable,
+      RoomsInChild,
+      CamerasInRooms
+    };
+  }
+
+  await sequelize.sync();
+  await sequelize.authenticate();
+  connection.isConnected = true;
+  console.log('=> Created a new connection.');
+  return {
+    ChangeLogs,
+    AccessLogs,
+    Users,
+    Customers,
+    CustomerLocations,
+    Family,
+    Child,
+    RecentViewers,
+    Room,
+    Camera,
+    ScheduledToDisable,
+    RoomsInChild,
+    CamerasInRooms
+  };
 };

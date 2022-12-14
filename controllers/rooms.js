@@ -1,5 +1,6 @@
 const roomServices = require('../services/rooms');
 const cameraServices = require('../services/cameras');
+const logServices = require('../services/logs');
 const CONSTANTS = require('../lib/constants');
 const _ = require('lodash');
 const sequelize = require('../lib/database');
@@ -7,11 +8,12 @@ const sequelize = require('../lib/database');
 module.exports = {
   // create new room
   createRoom: async (req, res, next) => {
+    const t = await sequelize.transaction();
     try {
       const params = req.body;
       params.user_id = req.user.user_id;
       params.cust_id = req.user.cust_id;
-      const room = await roomServices.createRoom(params);
+      const room = await roomServices.createRoom(params, t);
 
       params?.cameras?.forEach(async (camera) => {
         let rooms = [];
@@ -21,9 +23,10 @@ module.exports = {
         }
         rooms.push({ room_name: room.room_name, room_id: room.room_id });
 
-        await cameraServices.editCamera(camera.cam_id, { room_ids: { rooms: rooms } });
+        await cameraServices.editCamera(camera.cam_id, { room_ids: { rooms: rooms } }, t);
       });
 
+      await t.commit();
       res.status(201).json({
         IsSuccess: true,
         Data: room,
@@ -32,11 +35,24 @@ module.exports = {
 
       next();
     } catch (error) {
+      await t.rollback();
       res.status(500).json({
         IsSuccess: false,
         Message: CONSTANTS.INTERNAL_SERVER_ERROR
       });
       next(error);
+    } finally {
+      let logObj = {
+        user_id: req?.user?.user_id ? req?.user?.user_id : 'Not Found',
+        function: 'Room',
+        function_type: 'Add',
+        request: req.body
+      };
+      try {
+        await logServices.addChangeLog(logObj);
+      } catch (e) {
+        console.log(e);
+      }
     }
   },
 
@@ -75,15 +91,29 @@ module.exports = {
         Message: CONSTANTS.INTERNAL_SERVER_ERROR
       });
       next(error);
+    } finally {
+      let logObj = {
+        user_id: req?.user?.user_id ? req?.user?.user_id : 'Not Found',
+        function: 'Room',
+        function_type: 'Edit',
+        request: req.body
+      };
+      try {
+        await logServices.addChangeLog(logObj);
+      } catch (e) {
+        console.log(e);
+      }
     }
   },
 
   // delete existing room
   deleteRoom: async (req, res, next) => {
+    const t = await sequelize.transaction();
     try {
       const params = req.body;
-      const room = await roomServices.deleteRoom(params.room_id);
+      const room = await roomServices.deleteRoom(params.room_id, t);
 
+      await t.commit();
       res.status(200).json({
         IsSuccess: true,
         Data: {},
@@ -92,11 +122,24 @@ module.exports = {
 
       next();
     } catch (error) {
+      await t.rollback();
       res.status(500).json({
         IsSuccess: false,
         Message: CONSTANTS.INTERNAL_SERVER_ERROR
       });
       next(error);
+    } finally {
+      let logObj = {
+        user_id: req?.user?.user_id ? req?.user?.user_id : 'Not Found',
+        function: 'Room',
+        function_type: 'Delete',
+        request: req.body
+      };
+      try {
+        await logServices.addChangeLog(logObj);
+      } catch (e) {
+        console.log(e);
+      }
     }
   },
 
@@ -156,8 +199,6 @@ module.exports = {
 
       const room = await roomServices.enableRoom(params, t);
 
-      console.log(params);
-
       await t.commit();
 
       res.status(200).json({
@@ -174,6 +215,18 @@ module.exports = {
         Message: CONSTANTS.INTERNAL_SERVER_ERROR
       });
       next(error);
+    } finally {
+      let logObj = {
+        user_id: req?.user?.user_id ? req?.user?.user_id : 'Not Found',
+        function: 'Room',
+        function_type: 'Enable',
+        request: req.body
+      };
+      try {
+        await logServices.addChangeLog(logObj);
+      } catch (e) {
+        console.log(e);
+      }
     }
   }
 };
