@@ -3,6 +3,7 @@ const Sequelize = require('sequelize');
 const sequelize = require('../lib/database');
 const _ = require('lodash');
 const { cons } = require('lodash-contrib');
+const rooms = require('./rooms');
 
 module.exports = {
   /* Create new camera */
@@ -14,7 +15,7 @@ module.exports = {
       if (user?.family_id) {
         childDetails = await Child.findAll({
           raw: true,
-          where: { family_id: user.family_id, status: 'Enabled' }
+          where: { family_id: user?.family_id, status: 'Enabled' }
         });
       }
 
@@ -26,7 +27,7 @@ module.exports = {
     } else {
       rooms = await Room.findAll({
         raw: true,
-        where: { user_id: user.user_id }
+        where: { user_id: user?.user_id }
       });
     }
 
@@ -173,73 +174,46 @@ module.exports = {
     } else {
       children = await Room.findAll({
         raw: true,
-        where: { user_id: user.user_id }
+        where: { user_id: user?.user_id },
+        attributes: ['room_id', 'room_name', 'location']
       });
 
-      let families = await Family.findAll({
-        where: { member_type: 'primary', user_id: user.user_id },
-        raw: true
+      let roomIds = children.map((room) => {
+        return { room_ids: { [Sequelize.Op.substring]: room.room_id } };
       });
 
-      let familyIds = families.map((family) => family.family_id);
-
-      let children1 = await Child.findAll({
-        where: { family_Id: familyIds },
-        raw: true
+      let cameras = await Camera.findAll({
+        where: {
+          [Sequelize.Op.or]: roomIds
+        }
       });
 
-      let cameras = Promise.all(
-        children?.map(async (room) => {
-          const query = `SELECT cam_id,cam_name , description, stream_uri FROM camera WHERE room_ids LIKE '%${room.room_id}%'  `;
-          let cams = await sequelize.query(
-            query,
-            { type: Sequelize.QueryTypes.SELECT },
-            {
-              model: Camera,
-              mapToModel: true
-            }
-          );
+      let locations;
+      locations = user?.location?.accessable_locations;
 
-          return { ...room, cameras: cams };
-        })
-      );
-      const cameraDetails = await cameras;
-      let locations = [];
-      const childDetails = children1.map((child) => {
-        const rooms = child.rooms.rooms.map((room) => {
-          let cam;
-
-          cameraDetails.forEach((room1) => {
-            if (room1.room_id === room.room_id) {
-              cam = room1.cameras;
-            }
+      const finalResponse = locations?.map((loc) => {
+        let rooms = children?.filter((room) => room.location == loc);
+        let finalrooms = rooms?.map((room) => {
+          let camsInRoom = [];
+          cameras?.forEach((cam) => {
+            console.log(cam);
+            cam?.room_ids?.rooms?.forEach((room1) => {
+              if (room1.room_id === room.room_id) {
+                camsInRoom.push({
+                  cam_id: cam.cam_id,
+                  cam_name: cam.cam_name,
+                  description: cam.description,
+                  stream_uri: cam.stream_uri
+                });
+              }
+            });
           });
 
-          locations.push(room.location);
-
-          return { ...room, cameras: cam };
+          return { room_id: room?.room_id, room_name: room?.room_name, cameras: camsInRoom };
         });
 
-        return { childFirstName: null, childLastName: null, rooms: rooms };
+        return { location: loc, rooms: finalrooms };
       });
-
-      locations = _.uniq(locations);
-
-      const finalResponse = locations?.map((location) => {
-        let roomsObj = [];
-        childDetails.forEach((child) => {
-          child.rooms.forEach((room) => {
-            if (room.location === location) {
-              roomsObj.push(_.omit(room, ['location']));
-            }
-          });
-        });
-
-        roomsObj = _.uniqBy(roomsObj, 'room_id');
-
-        return { location: location, rooms: roomsObj };
-      });
-
       return finalResponse;
     }
   },
@@ -273,6 +247,7 @@ module.exports = {
       recentViewer = await RecentViewers.update(
         recentViewerObj,
         {
+          returning: true,
           where: {
             user_id: params?.user?.family_member_id
               ? params?.user?.family_member_id
@@ -308,8 +283,7 @@ module.exports = {
   setUserCamPreference: async (user, cams, t) => {
     const { Family, Users } = await connectToDatabase();
     let camObj = {
-      cam_preference: cams,
-      updated_at: Sequelize.literal('CURRENT_TIMESTAMP')
+      cam_preference: cams
     };
     let camSettings;
     if (user?.family_member_id) {
@@ -327,7 +301,7 @@ module.exports = {
         camObj,
         {
           where: {
-            user_id: user.user_id
+            user_id: user?.user_id
           }
         },
         { transaction: t }

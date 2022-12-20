@@ -9,7 +9,7 @@ provider:
   runtime: nodejs16.x
   httpApi:
     cors: true
-  timeout: 15
+  timeout: 30
   tracing:
     lambda: true
   environment:
@@ -169,6 +169,11 @@ functions:
 
   disableScheduledMembers:
     handler: child_family_cron.disableScheduledFamilyAndChild
+    events:
+      - schedule: rate(1 hour)
+
+  enableScheduledChildren:
+    handler: child_family_cron.enableScheduledChild
     events:
       - schedule: rate(1 hour)
 

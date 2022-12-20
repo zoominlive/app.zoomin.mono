@@ -5,15 +5,27 @@ const _ = require('lodash');
 module.exports = {
   /* Create new child */
   createChild: async (childObj, t) => {
+    let createObj = {
+      ...childObj,
+      status: childObj?.enable_date !== null ? 'Disabled' : 'Enabled',
+      scheduled_enable_date: childObj?.enable_date
+    };
     const { Child } = await connectToDatabase();
-    let childCreated = await Child.create(childObj, { transaction: t });
+    let childCreated = await Child.create(createObj, { transaction: t });
 
     return childCreated !== undefined ? childCreated.toJSON() : null;
   },
 
   createChildren: async (childObj, t) => {
+    let childObjs = childObj?.map((child) => {
+      return {
+        ...child,
+        status: child?.enable_date !== null ? 'Disabled' : 'Enabled',
+        scheduled_enable_date: child?.enable_date
+      };
+    });
     const { Child } = await connectToDatabase();
-    let childCreated = await Child.bulkCreate(childObj, { returning: true }, { transaction: t });
+    let childCreated = await Child.bulkCreate(childObjs, { returning: true }, { transaction: t });
 
     return childCreated;
   },
@@ -23,7 +35,6 @@ module.exports = {
     const { Child } = await connectToDatabase();
     const childObj = _.omit(params, ['child_id']);
     let update = {
-      updated_at: Sequelize.literal('CURRENT_TIMESTAMP'),
       ...childObj
     };
 
@@ -95,7 +106,6 @@ module.exports = {
 
     if (schedluedEndDate != null && schedluedEndDate != '') {
       let update = {
-        updated_at: Sequelize.literal('CURRENT_TIMESTAMP'),
         scheduled_end_date: schedluedEndDate
       };
 
@@ -119,7 +129,6 @@ module.exports = {
       }
     } else {
       let update = {
-        updated_at: Sequelize.literal('CURRENT_TIMESTAMP'),
         status: 'Disabled',
         scheduled_end_date: null
       };
@@ -151,10 +160,10 @@ module.exports = {
   enableChild: async (childId, rooms, t) => {
     const { Child, RoomsInChild } = await connectToDatabase();
     let update = {
-      updated_at: Sequelize.literal('CURRENT_TIMESTAMP'),
       status: 'Enabled',
       rooms: rooms,
-      scheduled_end_date: null
+      scheduled_end_date: null,
+      scheduled_enable_date: null
     };
 
     let updateRoomStatus = await RoomsInChild.update(

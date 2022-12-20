@@ -23,5 +23,5 @@ router.delete('/', authController, userController.deleteUserProfile);
 router.post('/emailChange', userController.changeRegisteredEmail);
 router.post('/checkLinkValid', userController.checkLinkValid);
 router.post('/emailValidation', authController, userController.isEmailExist);
-
+router.get('/location', authController, userController.getAllUsersForLocation);
 module.exports = router;

@@ -231,7 +231,7 @@ module.exports = {
       next(error);
     } finally {
       let logObj = {
-        user_id: req?.user?.user_id ? req?.user?.user_id : 'Not Found',
+        user_id: familyMember?.family_member_id ? familyMember?.family_member_id : 'Not Found',
         function: familyMember?.member_type == 'primary' ? 'Primary_Family' : 'Second_Family',
         function_type: 'Edit',
         request: req?.body
@@ -275,6 +275,7 @@ module.exports = {
 
   // add new parent to existing family
   addParent: async (req, res, next) => {
+    let member;
     const t = await sequelize.transaction();
     try {
       params = req.body;
@@ -290,7 +291,7 @@ module.exports = {
         });
       } else {
         const parent = await familyServices.createFamily(params, t);
-
+        member = parent;
         const token = await familyServices.createPasswordToken(parent);
         const name = parent.first_name + ' ' + parent.last_name;
         const originalUrl =
@@ -316,7 +317,7 @@ module.exports = {
       next(error);
     } finally {
       let logObj = {
-        user_id: req?.user?.user_id ? req?.user?.user_id : 'Not Found',
+        user_id: member?.family_member_id ? rmember?.family_member_id : 'Not Found',
         function: 'Second_Family',
         function_type: 'Add',
         request: req?.body
@@ -409,7 +410,7 @@ module.exports = {
       next(error);
     } finally {
       let logObj = {
-        user_id: req?.user?.user_id ? req?.user?.user_id : 'Not Found',
+        user_id: params?.family_member_id ? params?.family_member_id : 'Not Found',
         function: req?.body?.member_type == 'primary ' ? 'Primary_Family' : 'Second_Family',
         function_type: 'Disable',
         request: req?.body
@@ -461,7 +462,7 @@ module.exports = {
       next(error);
     } finally {
       let logObj = {
-        user_id: req?.user?.user_id ? req?.user?.user_id : 'Not Found',
+        user_id: params?.family_member_id ? params?.family_member_id : 'Not Found',
         function: req?.body?.member_type == 'primary ' ? 'Primary_Family' : 'Second_Family',
         function_type: 'Enable',
         request: req?.body
@@ -597,10 +598,11 @@ module.exports = {
   // change registered email and send verification mail
   changeRegisteredEmail: async (req, res, next) => {
     const t = await sequelize.transaction();
+    let memberId;
     try {
       const { token } = req.body;
       const decodeToken = engine.decrypt(token);
-
+      memberId = decodeToken?.familyMemberId;
       if (decodeToken?.familyMemberId) {
         const user = await familyServices.getFamilyMemberById(decodeToken.familyMemberId, t);
 
@@ -631,7 +633,7 @@ module.exports = {
       next(error);
     } finally {
       let logObj = {
-        user_id: req?.user?.user_id ? req?.user?.user_id : 'Not Found',
+        user_id: memberId ? memberId : 'Not Found',
         function: 'User_Change_Email',
         function_type: 'Edit',
         request: req?.body
@@ -642,6 +644,23 @@ module.exports = {
       } catch (e) {
         console.log(e);
       }
+    }
+  },
+  getAllUsersForLocation: async (req, res, next) => {
+    try {
+      let users = await familyServices.getAllUsersForLocation(
+        req.user.cust_id,
+        req.query.locations
+      );
+      res.status(200).json({
+        IsSuccess: true,
+        Data: users,
+        Message: CONSTANTS.USER_FOUND
+      });
+      next();
+    } catch (error) {
+      res.status(500).json({ IsSuccess: false, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
+      next(error);
     }
   }
 };

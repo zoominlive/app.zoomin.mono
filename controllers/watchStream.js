@@ -103,8 +103,8 @@ module.exports = {
       next(error);
     } finally {
       let logObj = {
-        user_id: req?.user.family_member_id
-          ? req?.user.family_member_id
+        user_id: req?.user?.family_member_id
+          ? req?.user?.family_member_id
           : req?.user?.user_id
           ? req?.user?.user_id
           : 'Not Found',

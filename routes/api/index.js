@@ -8,6 +8,7 @@ const familyRoutes = require('./family');
 const childRoutes = require('./children');
 const dashboardRoutes = require('./dashboard');
 const watchStreamRoutes = require('./watchStream');
+const logRoutes = require('./logs');
 
 /* user routes */
 router.use('/users', userRoutes);
@@ -30,5 +31,7 @@ router.use('/dashboard', dashboardRoutes);
 /* watchStream routes */
 router.use('/watchstream', watchStreamRoutes);
 
-/* family routes */
+/* logs routes */
+router.use('/logs', logRoutes);
+
 module.exports = router;

@@ -25,20 +25,12 @@ const CustomerLocations = sequelize.define(
     cust_id: {
       type: Sequelize.STRING(50)
     },
-    created_at: {
-      type: 'TIMESTAMP',
-      defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
-      allowNull: false
-    },
-    updated_at: {
-      type: 'TIMESTAMP',
-      defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
-      allowNull: false
-    }
+    createdAt: { type: Sequelize.DATE, field: 'created_at' },
+    updatedAt: { type: Sequelize.DATE, field: 'updated_at' }
   },
   {
     tableName: 'customer_locations',
-    timestamps: false
+    timestamps: true
   }
 );
 

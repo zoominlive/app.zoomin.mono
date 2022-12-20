@@ -42,23 +42,20 @@ const Child = sequelize.define(
       allowNull: true,
       defaultValue: null
     },
+    scheduled_enable_date: {
+      type: Sequelize.DATEONLY,
+      allowNull: true,
+      defaultValue: null
+    },
     time_zone: {
       type: Sequelize.STRING(100)
     },
-    created_at: {
-      type: 'TIMESTAMP',
-      defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
-      allowNull: false
-    },
-    updated_at: {
-      type: 'TIMESTAMP',
-      defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
-      allowNull: false
-    }
+    createdAt: { type: Sequelize.DATE, field: 'created_at' },
+    updatedAt: { type: Sequelize.DATE, field: 'updated_at' }
   },
   {
     tableName: 'child',
-    timestamps: false
+    timestamps: true
   }
 );
 

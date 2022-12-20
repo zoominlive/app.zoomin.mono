@@ -7,20 +7,24 @@ const engine = encrypter(process.env.JWT_SECRET_KEY, { ttl: true });
 const _ = require('lodash');
 const { v4: uuidv4 } = require('uuid');
 
+var validator = require('validator');
+
 /* Validate email */
 const validateEmail = (emailAdress) => {
-  let regexEmail = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
-  if (emailAdress.match(regexEmail)) {
-    return true;
-  } else {
-    return false;
-  }
+  // let regexEmail = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
+  // if (emailAdress.match(regexEmail)) {
+  //   return true;
+  // } else {
+  //   return false;
+  // }
+
+  return validator.isEmail(emailAdress);
 };
 
 module.exports = {
   /* Create new user */
   createUser: async (userObj, t) => {
-    const { User } = await connectToDatabase();
+    const { Users } = await connectToDatabase();
     userObj.user_id = uuidv4();
 
     let userCreated = await Users.create(userObj, { transaction: t });
@@ -147,7 +151,7 @@ module.exports = {
   verifyUser: async (userId, t) => {
     const { Users } = await connectToDatabase();
     let verifiedUser = await Users.update(
-      { isVerified: true, updated_at: Sequelize.literal('CURRENT_TIMESTAMP') },
+      { isVerified: true },
       { where: { user_id: userId } },
       { transaction: t }
     );
@@ -167,8 +171,7 @@ module.exports = {
       role: params?.role !== undefined ? params?.role : user.role,
       email: params?.email !== undefined ? params?.email : user.email,
       password_link:
-        params?.password_link !== undefined ? params?.password_link : user.password_link,
-      updated_at: Sequelize.literal('CURRENT_TIMESTAMP')
+        params?.password_link !== undefined ? params?.password_link : user.password_link
     };
 
     let updateUserProfile = await Users.update(
@@ -201,7 +204,7 @@ module.exports = {
   deleteUserProfile: async (userId, t) => {
     const { Users } = await connectToDatabase();
     let deletedUserProfile = await Users.update(
-      { status: 'inactive', updated_at: Sequelize.literal('CURRENT_TIMESTAMP') },
+      { status: 'inactive' },
       { where: { user_id: userId } },
       { transaction: t }
     );
@@ -313,5 +316,21 @@ module.exports = {
     } else {
       return true;
     }
+  },
+  getAllUsersForLocation: async (custId, locations) => {
+    const { Users } = await connectToDatabase();
+    let locArray = locations?.map((loc) => {
+      return {
+        location: {
+          [Sequelize.Op.substring]: loc
+        }
+      };
+    });
+    let users = await Users.findAll({
+      where: { cust_id: custId, [Sequelize.Op.or]: locArray },
+      attributes: ['first_name', 'last_name', 'user_id']
+    });
+
+    return users;
   }
 };

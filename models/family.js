@@ -99,16 +99,8 @@ const Family = sequelize.define(
     time_zone: {
       type: Sequelize.STRING(100)
     },
-    created_at: {
-      type: 'TIMESTAMP',
-      defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
-      allowNull: false
-    },
-    updated_at: {
-      type: 'TIMESTAMP',
-      defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
-      allowNull: false
-    },
+    createdAt: { type: Sequelize.DATE, field: 'created_at' },
+    updatedAt: { type: Sequelize.DATE, field: 'updated_at' },
     cam_preference: {
       type: Sequelize.JSON,
       defaultValue: {}
@@ -116,7 +108,7 @@ const Family = sequelize.define(
   },
   {
     tableName: 'family',
-    timestamps: false
+    timestamps: true
   }
 );
 

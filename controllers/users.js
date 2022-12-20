@@ -17,6 +17,20 @@ const CONSTANTS = require('../lib/constants');
 const sequelize = require('../lib/database');
 
 module.exports = {
+  getAllUsersForLocation: async (req, res, next) => {
+    try {
+      let users = await userServices.getAllUsersForLocation(req.user.cust_id, req.query.locations);
+      res.status(200).json({
+        IsSuccess: true,
+        Data: users,
+        Message: CONSTANTS.USER_FOUND
+      });
+      next();
+    } catch (error) {
+      res.status(500).json({ IsSuccess: false, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
+      next(error);
+    }
+  },
   /* Get  user's details */
   getUserDetails: async (req, res, next) => {
     try {
@@ -95,7 +109,7 @@ module.exports = {
       next(error);
     } finally {
       let logObj = {
-        user_id: userAdded ? userAdded?.user_id : 'Not Found',
+        user_id: userAdded?.user_id ? userAdded?.user_id : 'Not Found',
         function: 'Users',
         function_type: 'Add',
         request: req.body

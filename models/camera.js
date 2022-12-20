@@ -56,20 +56,12 @@ const Camera = sequelize.define(
       required: true,
       comment: 'Unless specified by the user use the stream_uuid here'
     },
-    created_at: {
-      type: 'TIMESTAMP',
-      defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
-      allowNull: false
-    },
-    updated_at: {
-      type: 'TIMESTAMP',
-      defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
-      allowNull: false
-    }
+    createdAt: { type: Sequelize.DATE, field: 'created_at' },
+    updatedAt: { type: Sequelize.DATE, field: 'updated_at' }
   },
   {
     tableName: 'camera',
-    timestamps: false
+    timestamps: true
   }
 );
 

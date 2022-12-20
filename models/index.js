@@ -29,6 +29,22 @@ Room.hasMany(Camera, {
   }
 });
 
+Users.belongsTo(AccessLogs, { foreignKey: 'user_id' });
+AccessLogs.hasOne(Users, {
+  sourceKey: 'user_id',
+  foreignKey: {
+    name: 'user_id'
+  }
+});
+
+Users.belongsTo(ChangeLogs, { foreignKey: 'user_id' });
+ChangeLogs.hasOne(Users, {
+  sourceKey: 'user_id',
+  foreignKey: {
+    name: 'user_id'
+  }
+});
+
 RoomsInChild.belongsTo(Child, { foreignKey: 'child_id' });
 Child.hasMany(RoomsInChild, {
   sourceKey: 'child_id',

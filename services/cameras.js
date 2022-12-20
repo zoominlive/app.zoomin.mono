@@ -29,7 +29,6 @@ module.exports = {
   editCamera: async (camId, camObj, t) => {
     const { Camera } = await connectToDatabase();
     let update = {
-      updated_at: Sequelize.literal('CURRENT_TIMESTAMP'),
       ...camObj
     };
     let deletedCam = await Camera.update(

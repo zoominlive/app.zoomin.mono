@@ -42,7 +42,6 @@ module.exports = {
     const { Family } = await connectToDatabase();
     const familyObj = _.omit(params, ['family_member_id']);
     let update = {
-      updated_at: Sequelize.literal('CURRENT_TIMESTAMP'),
       ...familyObj
     };
 
@@ -229,7 +228,6 @@ module.exports = {
 
     if (schedluedEndDate != null && schedluedEndDate != '') {
       let update = {
-        updated_at: Sequelize.literal('CURRENT_TIMESTAMP'),
         scheduled_end_date: schedluedEndDate,
         disabled_locations: { locations: locations_to_disable }
       };
@@ -287,7 +285,6 @@ module.exports = {
       });
 
       let update = {
-        updated_at: Sequelize.literal('CURRENT_TIMESTAMP'),
         disabled_locations: { locations: locations_to_disable },
         scheduled_end_date: null,
         status: 'Disabled',
@@ -354,7 +351,6 @@ module.exports = {
     }
 
     let update = {
-      updated_at: Sequelize.literal('CURRENT_TIMESTAMP'),
       status: 'Enabled',
       scheduled_end_date: null,
       location: {
@@ -463,5 +459,21 @@ module.exports = {
       { transaction: t }
     );
     return familyMembers;
+  },
+  getAllUsersForLocation: async (custId, locations) => {
+    const { Family } = await connectToDatabase();
+    let locArray = locations.map((loc) => {
+      return {
+        location: {
+          [Sequelize.Op.substring]: loc
+        }
+      };
+    });
+    let users = await Family.findAll({
+      where: { cust_id: custId, [Sequelize.Op.or]: locArray },
+      attributes: ['first_name', 'last_name', 'family_member_id']
+    });
+
+    return users;
   }
 };

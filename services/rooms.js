@@ -25,9 +25,7 @@ module.exports = {
   /* Edit room details */
   editRoom: async (user, params, t) => {
     const { Room, CamerasInRooms } = await connectToDatabase();
-    let update = {
-      updated_at: Sequelize.literal('CURRENT_TIMESTAMP')
-    };
+    let update = {};
 
     if (params?.room_name) {
       update.room_name = params.room_name;

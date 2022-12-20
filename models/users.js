@@ -65,20 +65,12 @@ const Users = sequelize.define(
       type: Sequelize.JSON,
       defaultValue: {}
     },
-    created_at: {
-      type: 'TIMESTAMP',
-      defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
-      allowNull: false
-    },
-    updated_at: {
-      type: 'TIMESTAMP',
-      defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
-      allowNull: false
-    }
+    createdAt: { type: Sequelize.DATE, field: 'created_at' },
+    updatedAt: { type: Sequelize.DATE, field: 'updated_at' }
   },
   {
     tableName: 'users',
-    timestamps: false
+    timestamps: true
   }
 );
 
