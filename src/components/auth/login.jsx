@@ -111,6 +111,11 @@ const Login = () => {
                         <Stack spacing={3} mb={4}>
                           <TextField
                             label="Username/Email"
+                            InputLabelProps={{
+                              focused: true,
+                              shrink: true
+                            }}
+                            placeholder="Username/Email"
                             name="email"
                             value={values?.email || ''}
                             onChange={(e) => {
@@ -123,6 +128,11 @@ const Login = () => {
                           <TextField
                             autoComplete="current-password"
                             label="Password"
+                            placeholder="Password"
+                            InputLabelProps={{
+                              focused: true,
+                              shrink: true
+                            }}
                             type={showPassword ? 'text' : 'password'}
                             name="password"
                             onChange={(e) => {

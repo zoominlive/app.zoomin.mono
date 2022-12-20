@@ -1,4 +1,14 @@
-import { Chip, Grid, IconButton, TextField, Box, Button, Autocomplete } from '@mui/material';
+import {
+  Chip,
+  Grid,
+  IconButton,
+  TextField,
+  Box,
+  Button,
+  Autocomplete,
+  Radio,
+  FormControlLabel
+} from '@mui/material';
 import React from 'react';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
@@ -8,11 +18,21 @@ import { useContext } from 'react';
 import AuthContext from '../../../context/authcontext';
 import { useState } from 'react';
 import { useEffect } from 'react';
+import { DesktopDatePicker, LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import ArrowDropUpIcon from '@mui/icons-material/ArrowDropUp';
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+import moment from 'moment';
 
 const Children = (props) => {
   const authCtx = useContext(AuthContext);
   const [selectedLocation, setSelectedLocation] = useState([]);
   const [roomList, setRoomList] = useState([]);
+
+  useEffect(() => {
+    console.log(props.values.children);
+  }, [props.values.children]);
+
   useEffect(() => {
     let rooms = [];
     props.roomsList?.map((room) => {
@@ -102,7 +122,7 @@ const Children = (props) => {
                       />
                     </Grid>
 
-                    <Grid item md={5} sm={12}>
+                    <Grid item md={6} sm={12}>
                       <Autocomplete
                         fullWidth
                         multiple
@@ -149,7 +169,7 @@ const Children = (props) => {
                         )}
                       />
                     </Grid>
-                    <Grid item md={5} sm={12}>
+                    <Grid item md={6} sm={12}>
                       <Autocomplete
                         fullWidth
                         multiple
@@ -201,6 +221,90 @@ const Children = (props) => {
                           />
                         )}
                       />
+                    </Grid>
+                    <Grid item md={2.5} sm={12}>
+                      <FormControlLabel
+                        value="Start Now"
+                        control={
+                          <Radio
+                            checked={
+                              props?.values?.children[index]?.selected_option === 'Start Now' ||
+                              !props?.values?.children[index]?.selected_option
+                            }
+                            onChange={(e) => {
+                              props.setFieldValue(
+                                `children[${index}].selected_option`,
+                                e.target.value
+                              );
+
+                              props.setFieldValue(`children[${index}].enable_date`, null);
+                            }}
+                          />
+                        }
+                        label="Start Now"
+                      />
+                    </Grid>
+                    <Grid item md={3.5} sm={12}>
+                      <FormControlLabel
+                        value="Schedule start date"
+                        control={
+                          <Radio
+                            checked={
+                              props?.values?.children[index]?.selected_option ===
+                              'Schedule start date'
+                            }
+                            onChange={(e) =>
+                              props.setFieldValue(
+                                `children[${index}].selected_option`,
+                                e.target.value
+                              )
+                            }
+                          />
+                        }
+                        label="Schedule start date"
+                      />
+                    </Grid>
+                    <Grid item md={3.5} sm={12}>
+                      {props?.values?.children[index]?.selected_option ===
+                        'Schedule start date' && (
+                        <LocalizationProvider dateAdapter={AdapterDayjs}>
+                          <DesktopDatePicker
+                            open={
+                              props?.values?.children[index]?.date_picker_open
+                                ? props?.values?.children[index]?.date_picker_open
+                                : false
+                            }
+                            minDate={new Date()}
+                            label="Start date"
+                            toolbarPlaceholder="Start date"
+                            value={
+                              props?.values?.children[index]?.enable_date
+                                ? props?.values?.children[index]?.enable_date
+                                : moment()
+                            }
+                            inputFormat="MM/DD/YYYY"
+                            onClose={() =>
+                              props.setFieldValue(`children[${index}].date_picker_open`, false)
+                            }
+                            renderInput={(params) => (
+                              <TextField
+                                onClick={() =>
+                                  props.setFieldValue(`children[${index}].date_picker_open`, true)
+                                }
+                                {...params}
+                              />
+                            )}
+                            components={{
+                              OpenPickerIcon: !props?.values?.children[index]?.date_picker_open
+                                ? ArrowDropDownIcon
+                                : ArrowDropUpIcon
+                            }}
+                            onChange={(value) => {
+                              props.setFieldValue(`children[${index}].enable_date`, value);
+                            }}
+                          />
+                        </LocalizationProvider>
+                      )}
                     </Grid>
                     <Grid item md={2} sm={12}>
                       {props.values.children.length !== 1 && (

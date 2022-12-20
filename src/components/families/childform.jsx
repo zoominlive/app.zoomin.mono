@@ -10,7 +10,9 @@ import {
   Divider,
   TextField,
   Grid,
-  Autocomplete
+  Autocomplete,
+  FormControlLabel,
+  Radio
 } from '@mui/material';
 import { Form, Formik } from 'formik';
 import * as yup from 'yup';
@@ -23,6 +25,11 @@ import { errorMessageHandler } from '../../utils/errormessagehandler';
 import { LoadingButton } from '@mui/lab';
 import SaveIcon from '@mui/icons-material/Save';
 import moment from 'moment-timezone';
+import { DesktopDatePicker, LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import ArrowDropUpIcon from '@mui/icons-material/ArrowDropUp';
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+
 const validationSchema = yup.object({
   first_name: yup.string().required('First Name is required'),
   last_name: yup.string().required('Last Name is required'),
@@ -34,6 +41,9 @@ const ChildForm = (props) => {
   const authCtx = useContext(AuthContext);
   const { enqueueSnackbar } = useSnackbar();
   const [submitLoading, setSubmitLoading] = useState(false);
+  const [selectedOption, setSelectedOption] = useState('Start Now');
+  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+  const [startDate, setStartDate] = useState(null);
 
   // Method to close the form dialog
   const handleDialogClose = () => {
@@ -86,6 +96,8 @@ const ChildForm = (props) => {
         first_name: data.first_name,
         last_name: data.last_name,
         time_zone: moment.tz.guess(),
+        enable_date: startDate,
+        selected_option: selectedOption,
         rooms: { rooms: data.rooms },
         location: { locations: data.locations },
         family_id: props.family.primary.family_id
@@ -212,6 +224,67 @@ const ChildForm = (props) => {
                       )}
                     />
                   </Grid>
+                  {!props.child && (
+                    <>
+                      {' '}
+                      <Grid item md={2.5} sm={12}>
+                        <FormControlLabel
+                          value="Start Now"
+                          control={
+                            <Radio
+                              checked={selectedOption === 'Start Now'}
+                              onChange={(e) => {
+                                setStartDate(null);
+                                setSelectedOption(e.target.value);
+                              }}
+                            />
+                          }
+                          label="Start Now"
+                        />
+                      </Grid>
+                      <Grid item md={3.5} sm={12}>
+                        <FormControlLabel
+                          value="Schedule start date"
+                          control={
+                            <Radio
+                              checked={selectedOption === 'Schedule start date'}
+                              onChange={(e) => {
+                                setStartDate(moment());
+                                setSelectedOption(e.target.value);
+                              }}
+                            />
+                          }
+                          label="Schedule start date"
+                        />
+                      </Grid>
+                      <Grid item md={3.5} sm={12}>
+                        {selectedOption === 'Schedule start date' && (
+                          <LocalizationProvider dateAdapter={AdapterDayjs}>
+                            <DesktopDatePicker
+                              open={isDatePickerOpen}
+                              minDate={new Date()}
+                              label="Start date"
+                              toolbarPlaceholder="Start date"
+                              value={startDate}
+                              inputFormat="MM/DD/YYYY"
+                              onClose={() => setIsDatePickerOpen(false)}
+                              renderInput={(params) => (
+                                <TextField onClick={() => setIsDatePickerOpen(true)} {...params} />
+                              )}
+                              components={{
+                                OpenPickerIcon: !isDatePickerOpen
+                                  ? ArrowDropDownIcon
+                                  : ArrowDropUpIcon
+                              }}
+                              onChange={(value) => {
+                                setStartDate(value);
+                              }}
+                            />
+                          </LocalizationProvider>
+                        )}
+                      </Grid>
+                    </>
+                  )}
                 </Grid>
               </DialogContent>
               <Divider />

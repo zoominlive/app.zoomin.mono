@@ -121,11 +121,17 @@ const Layout = () => {
       key: 7
     },
     {
-      name: 'AI Alerts',
+      name: 'Logs',
       icon: <Code style={{ color: 'white' }} />,
-      link: '/alerts',
+      link: '/logs',
       key: 8
     }
+    // {
+    //   name: 'AI Alerts',
+    //   icon: <Code style={{ color: 'white' }} />,
+    //   link: '/alerts',
+    //   key: 8
+    // }
   ];
 
   const bottomMenuItems = [

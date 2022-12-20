@@ -250,7 +250,10 @@ const AddFamily = (props) => {
               first_name: '',
               last_name: '',
               rooms: [],
-              locations: []
+              locations: [],
+              enable_date: null,
+              selected_option: 'Start Now',
+              date_picker_open: 'false'
             }
           ]
         }}
@@ -265,15 +268,35 @@ const AddFamily = (props) => {
 
           const duplicateEmails = emails.filter((item, index) => emails.indexOf(item) !== index);
 
-          // if (activeStep === 0) {
-          //   errors.primary = {};
-          //   if (duplicateEmails.includes(values.primary.email)) {
-          //     errors.primary.email = 'Email must be unique';
-          //   }
-          //   if (Object.keys(errors.primary).length === 0) {
-          //     delete errors.primary;
-          //   }
-          // }
+          if (activeStep === 2) {
+            errors.children = {};
+            const childrenTemp = values.children.map(() => {
+              return {};
+            });
+
+            values.children.forEach((child, idx) => {
+              if (child.selected_option === 'Schedule start date') {
+                if (child.enable_date == '') {
+                  childrenTemp[idx].enable_date = 'Date is required';
+                }
+              }
+            });
+
+            errors.children = childrenTemp;
+
+            if (errors.children.length === 0) {
+              delete errors.children;
+            } else {
+              if (errors.children.length > 0) {
+                errors.children = errors.children.filter(
+                  (value) => Object.keys(value).length !== 0
+                );
+                if (errors.children.length === 0) {
+                  delete errors.children;
+                }
+              }
+            }
+          }
 
           if (activeStep === 1) {
             const secondaryTemp = values.secondary.map(() => {

@@ -10,6 +10,7 @@ import { AuthContextProvider } from './context/authcontext';
 import { SnackbarProvider } from 'notistack';
 import SnackbarCloseButton from './components/common/snackbarclosrbutton';
 import * as serviceWorker from './serviceWorker';
+
 ReactDOM.render(
   <AuthContextProvider>
     <LayoutContextProvider>

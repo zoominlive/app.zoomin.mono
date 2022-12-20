@@ -344,7 +344,6 @@ const WatchStream = () => {
           `https://maps.googleapis.com/maps/api/geocode/json?latlng=${location.lat},${location.lng}&sensor=false&key=AIzaSyDn-DZI5-5xknrwgTGIhbFc2abDFXULWro`
         );
         const locationComponents = locationResponse.data.results[0].address_components;
-        console.log(locationComponents);
         let location_name = '';
         locationComponents.forEach((component) => {
           if (component.types.includes('administrative_area_level_3')) {
