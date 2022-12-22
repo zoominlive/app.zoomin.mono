@@ -30,10 +30,6 @@ const Children = (props) => {
   const [roomList, setRoomList] = useState([]);
 
   useEffect(() => {
-    console.log(props.values.children);
-  }, [props.values.children]);
-
-  useEffect(() => {
     let rooms = [];
     props.roomsList?.map((room) => {
       let count = 0;

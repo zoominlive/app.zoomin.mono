@@ -131,7 +131,15 @@ const ChildForm = (props) => {
         initialValues={{
           first_name: props.child ? props.child.first_name : '',
           last_name: props.child ? props.child.last_name : '',
-          rooms: props.child ? props.child.rooms.rooms : [],
+          rooms: props.child
+            ? props.child?.newRooms.map((room) => {
+                return {
+                  room_name: room.rooms.room_name,
+                  location: room.rooms.location,
+                  room_id: room.room_id
+                };
+              })
+            : [],
           locations: props.child ? props.child.location.locations : []
         }}
         onSubmit={handleSubmit}>
@@ -171,11 +179,13 @@ const ChildForm = (props) => {
                       fullWidth
                       multiple
                       id="rooms"
-                      options={props.roomsList.sort((a, b) => (a.room_name > b.room_name ? 1 : -1))}
+                      options={props.roomsList.sort((a, b) =>
+                        a?.room_name > b?.room_name ? 1 : -1
+                      )}
                       value={values?.rooms}
                       isOptionEqualToValue={(option, value) => option.room_id === value.room_id}
                       getOptionLabel={(option) => {
-                        return option.room_name;
+                        return option?.room_name;
                       }}
                       onChange={(_, value) => {
                         setFieldValue('rooms', value);

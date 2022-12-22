@@ -71,6 +71,7 @@ const Families = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [parentType, setParentType] = useState('');
+  const [familyIndex, setFamilyIndex] = useState();
   const [familiesPayload, setFamiliesPayload] = useState({
     page: 1,
     limit: parseInt(process.env.REACT_APP_PAGINATION_LIMIT, 10),
@@ -107,6 +108,10 @@ const Families = () => {
       setRoomsDropdownLoading(false);
     });
   }, []);
+
+  useEffect(() => {
+    setFamily(familiesList[familyIndex]);
+  }, [familiesList]);
 
   // Method to fetch families list
   const getFamiliesList = () => {
@@ -308,15 +313,15 @@ const Families = () => {
                       fullWidth
                       multiple
                       id="rooms"
-                      options={roomsList.sort((a, b) => (a.room_name > b.room_name ? 1 : -1))}
-                      isOptionEqualToValue={(option, value) => option.room_id === value.room_id}
+                      options={roomsList.sort((a, b) => (a?.room_name > b?.room_name ? 1 : -1))}
+                      isOptionEqualToValue={(option, value) => option?.room_id === value?.room_id}
                       getOptionLabel={(option) => {
-                        return option.room_name;
+                        return option?.room_name;
                       }}
                       onChange={handleRoomChange}
                       renderTags={(value, getTagProps) =>
                         value.map((option, index) => (
-                          <Chip key={index} label={option.room_name} {...getTagProps({ index })} />
+                          <Chip key={index} label={option?.room_name} {...getTagProps({ index })} />
                         ))
                       }
                       renderInput={(params) => (
@@ -377,12 +382,13 @@ const Families = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {familiesList.map((row, index) => (
+                  {familiesList?.map((row, index) => (
                     <TableRow
                       key={index}
                       hover
                       onClick={() => {
                         setIsFamilyDrawerOpen(true);
+                        setFamilyIndex(index);
                         setFamily(row);
                       }}>
                       <TableCell component="th" scope="row">
@@ -495,15 +501,17 @@ const Families = () => {
           getFamiliesList={getFamiliesList}
         />
       )}
-      <DisableDialog
-        open={isDisableFamilyDialogOpen}
-        setOpen={setIsDisableFamilyDialogOpen}
-        loading={disableLoading}
-        title="Disable Family"
-        contentText="This action will disable access for all children."
-        handleDisable={handleFamilyDisable}
-        handleDialogClose={() => setIsDisableFamilyDialogOpen(false)}
-      />
+      {isDisableFamilyDialogOpen && (
+        <DisableDialog
+          open={isDisableFamilyDialogOpen}
+          setOpen={setIsDisableFamilyDialogOpen}
+          loading={disableLoading}
+          title="Disable Family"
+          contentText="This action will disable access for all children."
+          handleDisable={handleFamilyDisable}
+          handleDialogClose={() => setIsDisableFamilyDialogOpen(false)}
+        />
+      )}
       {isAddFamilyDialogOpen && (
         <FamilyForm
           open={isAddFamilyDialogOpen}

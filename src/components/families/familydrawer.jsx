@@ -2,7 +2,6 @@ import {
   Avatar,
   Box,
   Button,
-  Chip,
   Divider,
   Drawer,
   IconButton,
@@ -10,6 +9,10 @@ import {
   Typography,
   Tooltip
 } from '@mui/material';
+
+import BlockIcon from '@mui/icons-material/Block';
+import Schedule from '../../assets/schedule.svg';
+import DeleteScheduleIcon from '../../assets/delete-icon.svg';
 import React from 'react';
 import PropTypes from 'prop-types';
 import EditIcon from '@mui/icons-material/Edit';
@@ -18,8 +21,8 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import { useState } from 'react';
 import DeleteDialog from '../common/deletedialog';
 import DisableDialog from './disabledialog';
+import RoomDialog from './roomdialog';
 import dayjs from 'dayjs';
-import { Plus } from 'react-feather';
 import { useEffect } from 'react';
 import { LoadingButton } from '@mui/lab';
 import SaveIcon from '@mui/icons-material/Save';
@@ -39,9 +42,11 @@ const FamilyDrawer = (props) => {
   const [parentToDisable, setParentToDisable] = useState();
   const [disableLoading, setDisableLoading] = useState(false);
   const [isDisableDialogOpen, setIsDisableDialogOpen] = useState(false);
+  const [isRoomDialogOpen, setIsRoomDialogOpen] = useState(false);
   const [isDeleteChildDialogOpen, setIsDeleteChildDialogOpen] = useState(false);
   const [disableDialogTitle, setDisableDialogTitle] = useState();
   const [deleteLoading, setDeleteLoading] = useState();
+  const [roomLoading, setRoomLoading] = useState(false);
   const [enableFamilyLoading, setEnableFamilyLoading] = useState(false);
   const [enableFamilyMembersLoading, setEnableFamilyMembersLoading] = useState([]);
   const [enableChildrenLoading, setEnableChildrenLoading] = useState([]);
@@ -49,6 +54,12 @@ const FamilyDrawer = (props) => {
   const [scheduledLoading, setScheduledLoading] = useState({ loading: false, index: -1, type: '' });
   const [locationsToDisable, setLocationsToDisable] = useState([]);
   const [selectedLocationsToDisable, setSelectedLocationsToDisable] = useState([]);
+  const [roomTodisable, setRoomToDisable] = useState({});
+  const [roomScheduleDeleteLoading, setRoomScheduleDeleteLoading] = useState({
+    room_id: '',
+    child_id: '',
+    loading: false
+  });
 
   useEffect(() => {
     if (!isDisableDialogOpen) {
@@ -171,6 +182,7 @@ const FamilyDrawer = (props) => {
   // Method to disable the parent and child
   const handleDisable = (data) => {
     setDisableLoading(true);
+    console.log(parentToDisable);
     if (parentToDisable) {
       API.put('family/disable', {
         family_member_id: parentToDisable,
@@ -343,6 +355,117 @@ const FamilyDrawer = (props) => {
     });
   };
 
+  const handleRoomDisableEnable = (data) => {
+    setRoomLoading(true);
+
+    if (roomTodisable.disabled == 'true') {
+      let scheduled_enable_date =
+        data.selectedOption == 'schedule' ? dayjs(data.date).format('YYYY-MM-DD') : null;
+      API.put('rooms/enable', {
+        room_child_id: roomTodisable?.room_child_id,
+        scheduled_enable_date: scheduled_enable_date
+      }).then((response) => {
+        if (response.status === 200) {
+          setRoomLoading(false);
+          setIsRoomDialogOpen(false);
+          enqueueSnackbar(response.data.Message, { variant: 'success' });
+          props.getFamiliesList();
+          // props.setFamily((prevState) => {
+          //   const tempFamily = { ...prevState };
+          //   tempFamily.children[index].status = 'Enabled';
+          //   tempFamily.children[index].scheduled_end_date = null;
+          //   return tempFamily;
+          // });
+        } else {
+          setRoomLoading(false);
+          errorMessageHandler(
+            enqueueSnackbar,
+            response?.response?.data?.Message || 'Something Went Wrong.',
+            response?.response?.status,
+            authCtx.setAuthError
+          );
+        }
+      });
+    } else {
+      let scheduled_disable_date =
+        data.selectedOption == 'schedule' ? dayjs(data.date).format('YYYY-MM-DD') : null;
+      API.put('rooms/disable', {
+        room_child_id: roomTodisable?.room_child_id,
+        scheduled_disable_date: scheduled_disable_date
+      }).then((response) => {
+        if (response.status === 200) {
+          setRoomLoading(false);
+          setIsRoomDialogOpen(false);
+          enqueueSnackbar(response.data.Message, { variant: 'success' });
+          props.getFamiliesList();
+          // props.setFamily((prevState) => {
+          //   const tempFamily = { ...prevState };
+          //   tempFamily.children[index].status = 'Enabled';
+          //   tempFamily.children[index].scheduled_end_date = null;
+          //   return tempFamily;
+          // });
+        } else {
+          setRoomLoading(false);
+          errorMessageHandler(
+            enqueueSnackbar,
+            response?.response?.data?.Message || 'Something Went Wrong.',
+            response?.response?.status,
+            authCtx.setAuthError
+          );
+        }
+      });
+    }
+  };
+
+  const handleDeleteSchedule = (room) => {
+    setRoomScheduleDeleteLoading({ room_id: room.room_id, child_id: room.child_id, loading: true });
+    if (room.disabled == 'true') {
+      API.put('rooms/disable', {
+        room_child_id: room?.room_child_id,
+        scheduled_disable_date: null
+      }).then((response) => {
+        if (response.status === 200) {
+          enqueueSnackbar(response.data.Message, { variant: 'success' });
+          props.getFamiliesList();
+        } else {
+          errorMessageHandler(
+            enqueueSnackbar,
+            response?.response?.data?.Message || 'Something Went Wrong.',
+            response?.response?.status,
+            authCtx.setAuthError
+          );
+        }
+        setRoomScheduleDeleteLoading({
+          room_id: room.room_id,
+          child_id: room.child_id,
+          loading: false
+        });
+      });
+    } else {
+      API.put('rooms/enable', {
+        room_child_id: room?.room_child_id,
+        scheduled_enable_date: null
+      }).then((response) => {
+        if (response.status === 200) {
+          enqueueSnackbar(response.data.Message, { variant: 'success' });
+          props.getFamiliesList();
+        } else {
+          errorMessageHandler(
+            enqueueSnackbar,
+            response?.response?.data?.Message || 'Something Went Wrong.',
+            response?.response?.status,
+            authCtx.setAuthError
+          );
+        }
+        setRoomScheduleDeleteLoading({
+          room_id: room.room_id,
+          child_id: room.child_id,
+          loading: false
+        });
+      });
+    }
+  };
+
   return (
     <Drawer
       className="family-drawer"
@@ -390,7 +513,6 @@ const FamilyDrawer = (props) => {
 
         <IconButton
           className="edit-btn"
-          disabled={props?.family?.primary?.status === 'Disabled'}
           onClick={() => {
             props.setPrimaryParent(props?.family?.primary);
             props.setParentType('primary');
@@ -434,16 +556,14 @@ const FamilyDrawer = (props) => {
                 </Stack>
                 <Stack direction="row" spacing={1.5} alignItems="center" justifyContent="center">
                   {parent.status === 'Disabled' ? (
-                    <LoadingButton
-                      loading={enableFamilyMembersLoading[index]}
-                      disabled={props.family.primary.status === 'Disabled'}
+                    <Button
                       onClick={() => {
                         handleParentEnable(parent.family_member_id, index);
                       }}
-                      variant="contained"
-                      className="enable-btn">
-                      ENABLE
-                    </LoadingButton>
+                      variant="outlined"
+                      className="secondary-disabled-btn">
+                      <BlockIcon></BlockIcon>
+                    </Button>
                   ) : (
                     <>
                       {parent?.scheduled_end_date == null && (
@@ -454,14 +574,16 @@ const FamilyDrawer = (props) => {
                             setDisableDialogTitle('Disable Secondary Family Member');
                             setIsDisableDialogOpen(true);
                             let locations = [];
-                            props?.family?.children.forEach((child) =>
+                            props?.family?.children.forEach((child) => {
                               // eslint-disable-next-line no-unsafe-optional-chaining
-                              locations.push(...child?.location?.locations)
-                            );
+                              locations.push(...child?.location?.locations);
+                            });
                             setLocationsToDisable(_.uniq(locations));
+                            console.log(_.uniq(locations));
+                            console.log('parent to disable', parent.family_member_id);
                             setParentToDisable(parent.family_member_id);
                           }}>
-                          Disable
+                          <BlockIcon className="curser-pointer"></BlockIcon>
                         </Button>
                       )}
                       {parent?.scheduled_end_date !== null && parent?.scheduled_end_date && (
@@ -500,7 +622,6 @@ const FamilyDrawer = (props) => {
                   )}
                   <IconButton
                     className="edit-btn"
-                    disabled={props.family.primary.status === 'Disabled'}
                     onClick={() => {
                       props.setSecondaryParent(parent);
                       props.setParentType('secondary');
@@ -534,76 +655,82 @@ const FamilyDrawer = (props) => {
                         {capitalizeFirstLetter(child?.last_name)}
                       </Typography>
                     </Stack>
+                    <Stack direction="row" spacing={2} alignItems="center">
+                      {child?.scheduled_end_date !== null && child?.scheduled_end_date && (
+                        <Box
+                          sx={{
+                            display: 'flex',
+                            alignItems: 'center'
+                          }}>
+                          <Typography variant="caption">
+                            {`Disable Date:  ${child?.scheduled_end_date}`}
+                          </Typography>
+                          <Tooltip id="button-report" title="Delete scheduled disable">
+                            <img
+                              src={DeleteScheduleIcon}
+                              style={{ height: '.8rem', marginLeft: '.3rem' }}
+                              onClick={() => {
+                                setScheduledLoading({
+                                  loading: true,
+                                  index: index,
+                                  type: 'child'
+                                });
+                                handleChildEnable(child.child_id, index);
+                              }}
+                              className="curser-pointer"></img>
+                          </Tooltip>
+                          <Loader
+                            loading={
+                              scheduledLoading?.loading &&
+                              scheduledLoading?.index == index &&
+                              scheduledLoading?.type == 'child'
+                                ? true
+                                : false
+                            }
+                          />
+                        </Box>
+                      )}
+                    </Stack>
                     <Stack
                       direction="row"
                       spacing={1.5}
                       alignItems="center"
                       justifyContent="center">
                       {child.status === 'Disabled' ? (
-                        <LoadingButton
-                          disabled={props.family.primary.status === 'Disabled'}
-                          loading={enableChildrenLoading[index]}
-                          onClick={() => {
-                            handleChildEnable(child.child_id, index);
-                          }}
-                          variant="contained"
-                          className="enable-btn">
-                          ENABLE
-                        </LoadingButton>
+                        <Tooltip id="button-report" title="Enable">
+                          <LoadingButton
+                            style={{ color: 'gray', border: '1px solid gray' }}
+                            loading={enableChildrenLoading[index]}
+                            onClick={() => {
+                              handleChildEnable(child.child_id, index);
+                            }}
+                            variant="outlined"
+                            className="enable-btn">
+                            {!enableChildrenLoading[index] && <BlockIcon></BlockIcon>}
+                          </LoadingButton>
+                        </Tooltip>
                       ) : (
                         <>
                           {child?.scheduled_end_date == null && (
-                            <Button
-                              variant="outlined"
-                              className="disabled-btn"
-                              onClick={() => {
-                                setLocationsToDisable(child?.location?.locations);
-                                setIsDisableDialogOpen(true);
-                                setChildToDisable(child.child_id);
-                                setDisableDialogTitle('Disable Child');
-                              }}>
-                              Disable
-                            </Button>
-                          )}
-                          {child?.scheduled_end_date !== null && child?.scheduled_end_date && (
-                            <>
-                              {' '}
-                              <Typography variant="caption">
-                                {`Disable Date:  ${child?.scheduled_end_date}`}
-                              </Typography>
-                              <Tooltip id="button-report" title="Delete scheduled disable">
-                                <IconButton
-                                  aria-label="delete"
-                                  className="row-delete-btn"
-                                  color="error"
-                                  onClick={() => {
-                                    setScheduledLoading({
-                                      loading: true,
-                                      index: index,
-                                      type: 'child'
-                                    });
-                                    handleChildEnable(child.child_id, index);
-                                  }}>
-                                  <Loader
-                                    loading={
-                                      scheduledLoading.loading &&
-                                      scheduledLoading.index == index &&
-                                      scheduledLoading.type == 'child'
-                                        ? true
-                                        : false
-                                    }
-                                  />
-                                  <DeleteIcon />
-                                </IconButton>
-                              </Tooltip>
-                            </>
+                            <Tooltip id="button-report" title="Disable">
+                              <Button
+                                variant="outlined"
+                                className="disabled-btn"
+                                onClick={() => {
+                                  setLocationsToDisable(child?.location?.locations);
+                                  setIsDisableDialogOpen(true);
+                                  setChildToDisable(child.child_id);
+                                  setDisableDialogTitle('Disable Child');
+                                }}>
+                                <BlockIcon></BlockIcon>
+                              </Button>
+                            </Tooltip>
                           )}
                         </>
                       )}
 
                       <IconButton
                         className="edit-btn"
-                        disabled={props.family.primary.status === 'Disabled'}
                         onClick={() => {
                           props.setChild(child);
                           props.setIsChildFormDialogOpen(true);
@@ -613,7 +740,6 @@ const FamilyDrawer = (props) => {
                       {props?.family?.children.length !== 1 && (
                         <IconButton
                           className="child-delete-btn"
-                          disabled={props.family.primary.status === 'Disabled'}
                           onClick={() => {
                             setIsDeleteChildDialogOpen(true);
                             setChildToDelete(child.child_id);
@@ -623,24 +749,75 @@ const FamilyDrawer = (props) => {
                       )}
                     </Stack>
                   </Stack>
-                  <Box
-                    className="rooms"
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'center'
-                    }}>
-                    {child?.rooms?.rooms?.map((room, index) => (
-                      <Chip style={{ cursor: 'pointer' }} key={index} label={room.room_name} />
-                    ))}
-                    <Plus
-                      style={{ cursor: 'pointer' }}
-                      onClick={() => {
-                        props.setIsRoomFormDialogOpen(true);
-                      }}></Plus>
-                  </Box>
-                  {index !== props.family.children.length - 1 && (
-                    <Divider variant="middle" sx={{ marginTop: '15px', marginBottom: '15px' }} />
-                  )}
+                  <Divider variant="middle" sx={{ marginTop: '15px', marginBottom: '15px' }} />
+                  {child?.newRooms?.map((room, index) => (
+                    <Box key={index}>
+                      <Stack
+                        spacing={1.5}
+                        direction="row"
+                        alignItems="center"
+                        justifyContent="space-between">
+                        <Stack direction="row" spacing={1.5}>
+                          <Stack px={2.5}>
+                            <Stack direction="row" spacing={1.5}>
+                              <Typography variant="body2">
+                                <Box sx={{ fontWeight: 'bold' }}>
+                                  {capitalizeFirstLetter(room.rooms.room_name)}
+                                </Box>
+                              </Typography>
+                            </Stack>
+                            <Box
+                              sx={{
+                                display: 'flex',
+                                alignItems: 'center'
+                              }}>
+                              <Typography variant="caption">
+                                {room?.scheduled_enable_date
+                                  ? 'Enable date: ' + room?.scheduled_enable_date + '  '
+                                  : room?.scheduled_disable_date
+                                  ? 'Disable date: ' + room?.scheduled_disable_date + '  '
+                                  : room?.disabled == 'true'
+                                  ? 'Disabled  '
+                                  : 'Enabled  '}
+                              </Typography>
+                              {(room?.scheduled_enable_date || room?.scheduled_disable_date) && (
+                                <img
+                                  src={DeleteScheduleIcon}
+                                  style={{ height: '.8rem', marginLeft: '.3rem' }}
+                                  onClick={() => handleDeleteSchedule(room)}
+                                  className="curser-pointer"></img>
+                              )}
+                              {roomScheduleDeleteLoading.room_id == room.room_id &&
+                                roomScheduleDeleteLoading.child_id == child.child_id &&
+                                roomScheduleDeleteLoading.loading && <Loader loading={true} />}
+                            </Box>
+                          </Stack>
+                        </Stack>
+                        <Stack
+                          direction="row"
+                          spacing={1.5}
+                          alignItems="center"
+                          justifyContent="center">
+                          <img
+                            src={Schedule}
+                            style={{ height: '1.5rem' }}
+                            className="curser-pointer"></img>
+
+                          <BlockIcon
+                            className={
+                              room?.disabled == 'true'
+                                ? 'disable-icon curser-pointer'
+                                : 'curser-pointer'
+                            }
+                            onClick={() => {
+                              setRoomToDisable(room);
+                              setIsRoomDialogOpen(true);
+                            }}></BlockIcon>
+                        </Stack>
+                      </Stack>
+                    </Box>
+                  ))}
+                  <Divider variant="middle" sx={{ marginTop: '15px', marginBottom: '15px' }} />
                 </Stack>
               </Stack>
             ))}
@@ -725,6 +902,16 @@ const FamilyDrawer = (props) => {
         locationsToDisable={locationsToDisable}
         handleDialogClose={handleDisableDialogClose}
         handleDisable={handleDisable}
+      />
+      <RoomDialog
+        open={isRoomDialogOpen}
+        setOpen={setIsRoomDialogOpen}
+        loading={roomLoading}
+        roomDetails={roomTodisable}
+        title={roomTodisable?.disabled == 'true' ? 'Enable Room' : 'Disable Room'}
+        contentText="This action will disable room access to this child"
+        handleRoomDisableEnable={handleRoomDisableEnable}
+        handleDialogClose={() => setIsRoomDialogOpen(false)}
       />
     </Drawer>
   );

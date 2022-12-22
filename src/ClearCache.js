@@ -25,8 +25,8 @@ function withClearCache(Component) {
         .then((meta) => {
           const latestVersionDate = meta.buildDate;
           const currentVersionDate = packageJson.buildDate;
-
           const shouldForceRefresh = buildDateGreaterThan(latestVersionDate, currentVersionDate);
+
           if (shouldForceRefresh) {
             setIsLatestBuildDate(false);
             refreshCacheAndReload();
@@ -34,27 +34,32 @@ function withClearCache(Component) {
             setIsLatestBuildDate(true);
           }
         });
+      let timer1;
       const timer = setInterval(() => {
-        fetch('/meta.json')
+        fetch(`/meta.json?nocache=${new Date().getTime()}`)
           .then((response) => response.json())
           .then((meta) => {
             const latestVersionDate = meta.buildDate;
             const currentVersionDate = packageJson.buildDate;
 
             const shouldForceRefresh = buildDateGreaterThan(latestVersionDate, currentVersionDate);
+            console.log('New version Available.', shouldForceRefresh);
             if (shouldForceRefresh) {
               //show snackbar with refresh button
-              enqueueSnackbar('A new version was released', {
-                autoHideDuration: 30000,
-                variant: 'success',
-                action: refreshAction
-              });
+              timer1 = setTimeout(() => {
+                enqueueSnackbar('A new version was released', {
+                  autoHideDuration: 290000,
+                  variant: 'success',
+                  action: refreshAction
+                });
+              }, 120000);
             }
           });
       }, 300000);
 
       return () => {
         clearInterval(timer);
+        clearTimeout(timer1);
       };
     }, []);
 

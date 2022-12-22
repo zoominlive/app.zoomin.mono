@@ -170,10 +170,17 @@
       cursor: pointer;
     }
   }
-
   .content-area {
     padding: 30px;
   }
+}
+
+.curser-pointer {
+  cursor: pointer !important;
+}
+
+.disable-icon {
+  color: gray !important;
 }
 
 .account-menu {
@@ -498,9 +505,9 @@
     }
     .disabled-btn,
     .enable-btn {
-      height: 30px;
-      min-width: 70px;
-      padding: 5px 10px;
+      height: 36px;
+      min-width: 36px;
+      padding: 5px;
     }
     .rooms {
       .MuiChip-root {
@@ -510,15 +517,23 @@
   }
 }
 
+.secondary-disabled-btn {
+  color: gray !important;
+  border: 1px solid gray !important;
+  min-width: 36px !important;
+  min-height: 36px !important;
+  padding: 5px !important;
+}
+
 .disabled-btn {
   &.Mui-disabled {
     color: rgba(0, 0, 0, 0.26) !important;
     border: 1px solid rgba(0, 0, 0, 0.12) !important;
   }
   background: rgba(211, 47, 47, 0.04) !important;
-  border: 1px solid rgba(211, 47, 47, 0.5) !important;
+  border: 1px solid black !important;
   border-radius: 4px !important;
-  color: #d32f2f !important;
+  color: black !important;
 }
 
 .empty-content-placeholder {

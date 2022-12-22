@@ -17,7 +17,8 @@ import {
   Typography,
   Autocomplete,
   Checkbox,
-  Button
+  Button,
+  Radio
 } from '@mui/material';
 import { CSVLink } from 'react-csv';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
@@ -48,7 +49,18 @@ const Logs = () => {
   const [totalLogs, setTotalLogs] = useState(0);
   const [selectedLocation, setSelectedLocation] = useState([]);
   const [selectedType, setSelectedType] = useState('Access Log');
-  const [selectedFunction, setSelectedFunction] = useState(['Watch_Stream']);
+  const [selectedAction, setSelectedAction] = useState([
+    'Add',
+    'Edit',
+    'Delete',
+    'Disable',
+    'Enable',
+    'Get',
+    'Login'
+  ]);
+  const [selectedFunction, setSelectedFunction] = useState([
+    { id: 'Watch_Stream', name: 'Request Stream' }
+  ]);
   const [fromDate, setFromDate] = useState(moment().subtract(7, 'days'));
   const [toDate, setToDate] = useState(moment());
   const [pageNumber, setPageNumber] = useState(0);
@@ -68,6 +80,7 @@ const Logs = () => {
   const [loading, setLoading] = useState(false);
   const [locations, setLocations] = useState([]);
   const [allLocationChecked, setAllLocationChecked] = useState(false);
+  const [allActionsChecked, setAllActionsChecked] = useState(false);
   const [allFunctionChecked, setAllFunctionChecked] = useState(false);
   const [pageReady, setPageReady] = useState(false);
 
@@ -80,25 +93,26 @@ const Logs = () => {
     functions: ['Watch_Stream'],
     users: [],
     locations: [],
-    familyMemberIds: []
+    familyMemberIds: [],
+    actions: ['Select All', 'Get', 'Login', 'Add', 'Edit', 'Delete', 'Disable', 'Enable']
   });
   const [isDatePickerOpen1, setIsDatePickerOpen1] = useState(false);
   const [isDatePickerOpen2, setIsDatePickerOpen2] = useState(false);
   const types = ['Access Log', 'Change Log'];
+  const actions = ['Select All', 'Get', 'Login', 'Add', 'Edit', 'Delete', 'Disable', 'Enable'];
   const functions = [
-    'Select All',
-    'Watch_Stream',
-    'Primary_Family',
-    'Second_Family',
-    'Child',
-    'Room',
-    'Camera',
-    'Users',
-    'Profile_Photo',
-    'User_Change_Email',
-    'User_Forgot_Password',
-    'User_Change_Password',
-    'User_Reg_Accout'
+    { id: 'Select All', name: 'Select All' },
+    { id: 'Watch_Stream', name: 'Request Stream' },
+    { id: 'Primary_Family', name: 'Family' },
+    { id: 'Child', name: 'Child' },
+    { id: 'Room', name: 'Room' },
+    { id: 'Camera', name: 'Camera' },
+    { id: 'Users', name: 'Users' },
+    { id: 'Profile_Photo', name: 'Profile Photo' },
+    { id: 'User_Change_Email', name: 'Change Email' },
+    { id: 'User_Forgot_Password', name: 'Forgot Password' },
+    { id: 'User_Change_Password', name: 'Change Password' },
+    { id: 'User_Reg_Accout', name: 'Accout Registration' }
   ];
 
   useEffect(() => {
@@ -175,15 +189,27 @@ const Logs = () => {
   useEffect(() => {
     let userIds = selectedUsers?.map((user) => user.user_id);
     let FamilyMemberIds = selectedFamilies?.map((user) => user.family_member_id);
+    let familySelected = false;
+    let functionList = selectedFunction.map((fun) => {
+      if (fun.id === 'Primary_Family') {
+        familySelected = true;
+      }
+      return fun.id;
+    });
+    if (familySelected) {
+      functionList.push('Second_Family');
+    }
+
     setLogsPayload({
       ...logsPayload,
       from: moment(fromDate).format('YYYY-MM-DD'),
       to: moment(toDate).format('YYYY-MM-DD'),
       type: selectedType,
-      functions: selectedFunction,
+      functions: functionList,
       users: userIds,
       locations: selectedLocation,
-      familyMemberIds: FamilyMemberIds
+      familyMemberIds: FamilyMemberIds,
+      actions: selectedAction
     });
   }, [
     selectedLocation,
@@ -192,7 +218,8 @@ const Logs = () => {
     selectedType,
     selectedFunction,
     selectedUsers,
-    selectedFamilies
+    selectedFamilies,
+    selectedAction
   ]);
 
   useEffect(() => {
@@ -242,19 +269,40 @@ const Logs = () => {
     }
   }, [selectedLocation]);
 
+  useEffect(() => {
+    setSelectedAction(
+      selectedType == 'Access Log' ? actions.slice(1, 3) : actions.slice(3, actions.length)
+    );
+  }, [selectedType]);
+
   //   Method to fetch user list for table
   const getLogsList = () => {
     if (
-      selectedFamilies?.length == 0 ||
       selectedFunction?.length == 0 ||
       selectedLocation?.length == 0 ||
-      selectedUsers?.length == 0
+      selectedAction?.length == 0
     ) {
-      errorMessageHandler(enqueueSnackbar, 'Please Select All the filters');
+      errorMessageHandler(enqueueSnackbar, 'Please select required filters');
     } else {
       setIsLoading(true);
+      let familiesToAdd;
+      let usersToAdd;
+      if (selectedFamilies.length == 0) {
+        familiesToAdd = families.slice(1, families.length);
+        familiesToAdd = familiesToAdd?.map((user) => user.family_member_id);
+      }
+      if (selectedUsers.length == 0) {
+        usersToAdd = users.slice(1, users.length);
+        usersToAdd = usersToAdd?.map((user) => user.user_id);
+      }
       API.get('logs/', {
-        params: { ...logsPayload, pageNumber, pageSize }
+        params: {
+          ...logsPayload,
+          pageNumber,
+          pageSize,
+          users: usersToAdd ? usersToAdd : logsPayload.users,
+          familyMemberIds: familiesToAdd ? familiesToAdd : logsPayload.familyMemberIds
+        }
       }).then((response) => {
         if (response.status === 200) {
           setResponseData(response.data.Data.logs);
@@ -306,16 +354,42 @@ const Logs = () => {
     }
   };
 
+  const handleActionTypeChange = (_, value, reason, option) => {
+    if (reason == 'selectOption' && option?.option == 'Select All' && !allActionsChecked) {
+      setSelectedAction(
+        reason === 'selectOption'
+          ? selectedType == 'Access Log'
+            ? actions.slice(1, 3)
+            : actions.slice(3, actions.length)
+          : []
+      );
+      setAllActionsChecked(true);
+    } else if (option?.option == 'Select All' && reason === 'removeOption') {
+      setSelectedAction([]);
+      setAllActionsChecked(false);
+    } else if (
+      reason === 'selectOption' &&
+      option?.option == 'Select All' &&
+      allActionsChecked == true
+    ) {
+      setAllActionsChecked(false);
+      setSelectedAction([]);
+    } else {
+      setAllActionsChecked(false);
+      setSelectedAction(value);
+    }
+  };
+
   const handleFunctionChange = (_, value, reason, option) => {
-    if (reason == 'selectOption' && option?.option == 'Select All' && !allFunctionChecked) {
+    if (reason == 'selectOption' && option?.option?.id == 'Select All' && !allFunctionChecked) {
       setSelectedFunction(reason === 'selectOption' ? functions.slice(1, functions.length) : []);
       setAllFunctionChecked(true);
-    } else if (option?.option == 'Select All' && reason === 'removeOption') {
+    } else if (option?.option?.id == 'Select All' && reason === 'removeOption') {
       setSelectedFunction([]);
       setAllFunctionChecked(false);
     } else if (
       reason === 'selectOption' &&
-      option?.option == 'Select All' &&
+      option?.option?.id == 'Select All' &&
       allFunctionChecked == true
     ) {
       setAllFunctionChecked(false);
@@ -404,7 +478,7 @@ const Logs = () => {
                 <Grid item md={18} sm={16}>
                   <Box>
                     <Grid container spacing={2}>
-                      <Grid item md={3} sm={6}>
+                      <Grid item md={1.5} sm={6}>
                         <LocalizationProvider dateAdapter={AdapterMoment}>
                           <DesktopDatePicker
                             open={isDatePickerOpen1}
@@ -412,7 +486,7 @@ const Logs = () => {
                             label="From"
                             autoOk={true}
                             value={fromDate}
-                            inputFormat="MM/DD/YYYY"
+                            inputFormat="MM/DD/YY"
                             onClose={() => setIsDatePickerOpen1(false)}
                             renderInput={(params) => (
                               <TextField onClick={() => setIsDatePickerOpen1(true)} {...params} />
@@ -428,14 +502,14 @@ const Logs = () => {
                           />
                         </LocalizationProvider>
                       </Grid>
-                      <Grid item md={3} sm={6}>
+                      <Grid item md={1.5} sm={6}>
                         <LocalizationProvider dateAdapter={AdapterMoment}>
                           <DesktopDatePicker
                             open={isDatePickerOpen2}
                             maxDate={moment()}
                             label="To"
                             value={toDate}
-                            inputFormat="MM/DD/YYYY"
+                            inputFormat="MM/DD/YY"
                             onClose={() => setIsDatePickerOpen2(false)}
                             renderInput={(params) => (
                               <TextField onClick={() => setIsDatePickerOpen2(true)} {...params} />
@@ -509,6 +583,7 @@ const Logs = () => {
                           limitTags={1}
                           id="tags-standard"
                           options={types}
+                          disableClearable
                           value={selectedType ? selectedType : []}
                           getOptionLabel={(option) => option}
                           onChange={(_, value) => {
@@ -521,12 +596,7 @@ const Logs = () => {
                           }
                           renderOption={(props, option, { selected }) => (
                             <li {...props}>
-                              <Checkbox
-                                icon={icon}
-                                checkedIcon={checkedIcon}
-                                style={{ marginRight: 8 }}
-                                checked={selected}
-                              />
+                              <Radio style={{ marginRight: 8 }} checked={selected} />
                               {option}
                             </li>
                           )}
@@ -535,6 +605,64 @@ const Logs = () => {
                               {...params}
                               label="type"
                               fullWidth
+                              InputProps={{
+                                ...params.InputProps,
+                                endAdornment: (
+                                  <React.Fragment>
+                                    {/* {dropdownLoading ? (
+                                    <CircularProgress color="inherit" size={20} />
+                                  ) : null} */}
+                                    {params.InputProps.endAdornment}
+                                  </React.Fragment>
+                                )
+                              }}
+                            />
+                          )}
+                        />
+                      </Grid>
+                      <Grid item md={3} sm={6}>
+                        <Autocomplete
+                          multiple
+                          limitTags={1}
+                          id="tags-standard"
+                          options={
+                            selectedType == 'Access Log'
+                              ? [actions[0], ...actions.slice(1, 3)]
+                              : [actions[0], ...actions.slice(3, actions.length)]
+                          }
+                          value={selectedAction ? selectedAction : []}
+                          getOptionLabel={(option) => {
+                            if (option === 'Get') {
+                              return 'Request';
+                            } else {
+                              return option;
+                            }
+                          }}
+                          onChange={(_, value, reason, option) => {
+                            handleActionTypeChange(_, value, reason, option);
+                          }}
+                          renderTags={(value, getTagProps) =>
+                            value?.map((option, index) => (
+                              <Chip key={index} label={option} {...getTagProps({ index })} />
+                            ))
+                          }
+                          renderOption={(props, option, { selected }) => (
+                            <li {...props}>
+                              <Checkbox
+                                icon={icon}
+                                checkedIcon={checkedIcon}
+                                style={{ marginRight: 8 }}
+                                checked={allActionsChecked ? allActionsChecked : selected}
+                              />
+                              {option}
+                            </li>
+                          )}
+                          renderInput={(params) => (
+                            <TextField
+                              {...params}
+                              label="Action"
+                              fullWidth
+                              error={selectedAction?.length == 0 ? true : false}
                               InputProps={{
                                 ...params.InputProps,
                                 endAdornment: (
@@ -568,24 +696,25 @@ const Logs = () => {
                           id="tags-standard"
                           options={functions}
                           value={selectedFunction ? selectedFunction : []}
-                          getOptionLabel={(option) => option}
+                          getOptionLabel={(option) => option?.name}
                           onChange={(_, value, reason, option) => {
                             handleFunctionChange(_, value, reason, option);
                           }}
                           renderTags={(value, getTagProps) =>
                             value?.map((option, index) => (
-                              <Chip key={index} label={option} {...getTagProps({ index })} />
+                              <Chip key={index} label={option?.name} {...getTagProps({ index })} />
                             ))
                           }
-                          renderOption={(props, option, { selected }) => (
+                          isOptionEqualToValue={(option, value) => option?.id === value?.id}
+                          renderOption={(props, option, state) => (
                             <li {...props}>
                               <Checkbox
                                 icon={icon}
                                 checkedIcon={checkedIcon}
                                 style={{ marginRight: 8 }}
-                                checked={allFunctionChecked ? allFunctionChecked : selected}
+                                checked={allFunctionChecked ? allFunctionChecked : state.selected}
                               />
-                              {option}
+                              {option?.name}
                             </li>
                           )}
                           renderInput={(params) => (
@@ -645,7 +774,6 @@ const Logs = () => {
                               {...params}
                               label="User name"
                               fullWidth
-                              error={selectedUsers?.length == 0 ? true : false}
                               InputProps={{
                                 ...params.InputProps,
                                 endAdornment: (
@@ -697,7 +825,6 @@ const Logs = () => {
                               {...params}
                               label="Families"
                               fullWidth
-                              error={selectedFamilies?.length == 0 ? true : false}
                               InputProps={{
                                 ...params.InputProps,
                                 endAdornment: (

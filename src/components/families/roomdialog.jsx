@@ -14,9 +14,7 @@ import {
   Radio,
   RadioGroup,
   Stack,
-  TextField,
-  Autocomplete,
-  Chip
+  TextField
 } from '@mui/material';
 import { DesktopDatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
@@ -28,7 +26,7 @@ import { LoadingButton } from '@mui/lab';
 import SaveIcon from '@mui/icons-material/Save';
 const validationSchema = yup.object().shape({
   selectedOption: yup.string().required('Please select atleast one option'),
-  disableDate: yup
+  date: yup
     .date()
     .typeError('Please enter valid date!')
     .nullable()
@@ -40,7 +38,6 @@ const validationSchema = yup.object().shape({
 
 const DisableDialog = (props) => {
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
-  const [isSubmitClicked, setIsSubmitClicked] = useState(false);
 
   return (
     <Dialog
@@ -58,10 +55,10 @@ const DisableDialog = (props) => {
         enableReinitialize
         validationSchema={validationSchema}
         initialValues={{
-          selectedOption: 'disable',
-          disableDate: ''
+          selectedOption: props?.roomDetails?.disabled == 'true' ? 'enable' : 'disable',
+          date: ''
         }}
-        onSubmit={props.handleDisable}>
+        onSubmit={props.handleRoomDisableEnable}>
         {({ values, errors, setFieldValue, touched }) => (
           <Form>
             <DialogContent>
@@ -79,31 +76,43 @@ const DisableDialog = (props) => {
                     }}>
                     <Stack spacing={2}>
                       <FormControlLabel
-                        value="disable"
+                        value={props?.roomDetails?.disabled == 'true' ? 'enable' : 'disable'}
                         control={<Radio />}
-                        label="Disable immediately"
+                        label={
+                          props?.roomDetails?.disabled == 'true'
+                            ? 'Enable immediately'
+                            : 'Disable immediately'
+                        }
                       />
                       <Stack direction="row" spacing={10}>
                         <FormControlLabel
                           value="schedule"
                           control={<Radio />}
-                          label="Schedule end date"
+                          label={
+                            props?.roomDetails?.disabled == 'true'
+                              ? 'Schedule enable date'
+                              : 'Schedule end date'
+                          }
                           sx={{ whiteSpace: 'nowrap' }}
                         />
                         <LocalizationProvider dateAdapter={AdapterDayjs}>
                           <DesktopDatePicker
                             open={isDatePickerOpen}
                             minDate={new Date()}
-                            label="Disable date"
-                            value={values?.disableDate}
+                            label={
+                              props?.roomDetails?.disabled == 'true'
+                                ? 'Enable date'
+                                : 'Disable date'
+                            }
+                            value={values?.date}
                             inputFormat="MM/DD/YYYY"
                             onClose={() => setIsDatePickerOpen(false)}
                             renderInput={(params) => (
                               <TextField
                                 onClick={() => setIsDatePickerOpen(true)}
                                 {...params}
-                                helperText={touched.disableDate && errors.disableDate}
-                                error={touched.disableDate && Boolean(errors.disableDate)}
+                                helperText={touched.date && errors.date}
+                                error={touched.date && Boolean(errors.date)}
                               />
                             )}
                             components={{
@@ -112,46 +121,11 @@ const DisableDialog = (props) => {
                                 : ArrowDropUpIcon
                             }}
                             onChange={(value) => {
-                              setFieldValue('disableDate', value ? value : '');
+                              setFieldValue('date', value ? value : '');
                             }}
                           />
                         </LocalizationProvider>
                       </Stack>
-                      <Autocomplete
-                        fullWidth
-                        multiple
-                        id="rooms"
-                        options={
-                          props?.locationsToDisable
-                            ? props?.locationsToDisable?.sort((a, b) => (a > b ? 1 : -1))
-                            : []
-                        }
-                        value={values?.locations?.length !== 0 ? values?.locations : []}
-                        onChange={(_, value) => {
-                          props.setSelectedLocationsToDisable(value);
-                          setFieldValue('locations', value);
-                        }}
-                        renderTags={(value, getTagProps) =>
-                          value.map((option, index) => (
-                            <Chip key={index} label={option} {...getTagProps({ index })} />
-                          ))
-                        }
-                        renderInput={(params) => (
-                          <TextField
-                            {...params}
-                            label="Locations to end access"
-                            helperText={
-                              values?.locations?.length === 0 && isSubmitClicked
-                                ? 'Minimum one location is required'
-                                : ''
-                            }
-                            error={
-                              values?.locations?.length === 0 && isSubmitClicked ? true : false
-                            }
-                            fullWidth
-                          />
-                        )}
-                      />
                     </Stack>
                   </RadioGroup>
                   {touched.selectedOption && Boolean(errors.selectedOption) && (
@@ -169,7 +143,6 @@ const DisableDialog = (props) => {
                 disabled={props.loading}
                 onClick={() => {
                   if (!props.loading) {
-                    setIsSubmitClicked(true);
                     props.handleDialogClose();
                   }
                 }}>
@@ -182,9 +155,9 @@ const DisableDialog = (props) => {
                 variant="text"
                 type="submit"
                 onClick={() => {
-                  setIsSubmitClicked(true);
+                  console.log('Hello');
                 }}>
-                YES, DISABLE
+                {props?.roomDetails?.disabled == 'true' ? 'YES, ENABLE' : 'YES, DISABLE'}
               </LoadingButton>
             </DialogActions>
           </Form>
@@ -200,11 +173,9 @@ DisableDialog.propTypes = {
   open: PropTypes.bool,
   setOpen: PropTypes.func,
   title: PropTypes.string,
-  handleDisable: PropTypes.func,
+  handleRoomDisableEnable: PropTypes.func,
   contentText: PropTypes.string,
   loading: PropTypes.bool,
-  locationsToDisable: PropTypes.array,
   handleDialogClose: PropTypes.func,
-  setSelectedLocationsToDisable: PropTypes.func,
-  disableAllMembers: PropTypes.bool
+  roomDetails: PropTypes.object
 };
