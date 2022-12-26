@@ -43,7 +43,6 @@ function withClearCache(Component) {
             const currentVersionDate = packageJson.buildDate;
 
             const shouldForceRefresh = buildDateGreaterThan(latestVersionDate, currentVersionDate);
-            console.log('New version Available.', shouldForceRefresh);
             if (shouldForceRefresh) {
               //show snackbar with refresh button
               timer1 = setTimeout(() => {

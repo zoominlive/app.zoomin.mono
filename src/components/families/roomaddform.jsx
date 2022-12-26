@@ -10,7 +10,12 @@ import {
   Divider,
   TextField,
   Grid,
-  Autocomplete
+  Autocomplete,
+  FormControl,
+  FormControlLabel,
+  Radio,
+  RadioGroup,
+  FormHelperText
 } from '@mui/material';
 import { Form, Formik } from 'formik';
 import * as yup from 'yup';
@@ -22,93 +27,88 @@ import { useSnackbar } from 'notistack';
 import { errorMessageHandler } from '../../utils/errormessagehandler';
 import { LoadingButton } from '@mui/lab';
 import SaveIcon from '@mui/icons-material/Save';
-import moment from 'moment-timezone';
+import { DesktopDatePicker, LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import ArrowDropUpIcon from '@mui/icons-material/ArrowDropUp';
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+import dayjs from 'dayjs';
+
 const validationSchema = yup.object({
   rooms: yup.array().min(1, 'Atleast one room is required'),
-  locations: yup.array().min(1, 'Select at least one location').required('required')
+  locations: yup.array().min(1, 'Select at least one location').required('required'),
+  selectedOption: yup.string().required('Please select atleast one option'),
+  date: yup
+    .date()
+    .typeError('Please enter valid date!')
+    .nullable()
+    .when('selectedOption', {
+      is: (val) => val === 'schedule',
+      then: yup.date().typeError('Please enter valid date!').nullable().required('Date is required')
+    })
 });
 
-const ChildForm = (props) => {
+const AddRoomForm = (props) => {
   const authCtx = useContext(AuthContext);
   const { enqueueSnackbar } = useSnackbar();
   const [submitLoading, setSubmitLoading] = useState(false);
+  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
 
   // Method to close the form dialog
   const handleDialogClose = () => {
-    if (!submitLoading) {
-      props.setOpen(false);
-      props.setChild();
-    }
+    props.setOpen(false);
   };
 
-  // Method to create/edit the child
+  // Method to add room
   const handleSubmit = (data) => {
     setSubmitLoading(true);
-    if (props.child) {
-      API.put('family/child/edit', {
-        first_name: data.first_name,
-        last_name: data.last_name,
-        rooms: { rooms: data.rooms },
-        location: { locations: data.locations },
-        child_id: props.child.child_id
-      }).then((response) => {
-        if (response.status === 200) {
-          enqueueSnackbar(response.data.Message, { variant: 'success' });
-          props.getFamiliesList();
-          props.setFamily((prevState) => {
-            const tempFamily = { ...prevState };
-            const index = tempFamily.children.findIndex(
-              (child) => child.child_id === props.child.child_id
-            );
-            if (index !== -1) {
-              tempFamily.children[index] = {
-                child_id: props.child.child_id,
-                ...response.data.Data
-              };
-            }
-            return tempFamily;
-          });
-          handleDialogClose();
-        } else {
-          errorMessageHandler(
-            enqueueSnackbar,
-            response?.response?.data?.Message || 'Something Went Wrong.',
-            response?.response?.status,
-            authCtx.setAuthError
-          );
-        }
-        setSubmitLoading(false);
-      });
-    } else {
-      API.post('family/child/add', {
-        first_name: data.first_name,
-        last_name: data.last_name,
-        time_zone: moment.tz.guess(),
-        rooms: { rooms: data.rooms },
-        location: { locations: data.locations },
-        family_id: props.family.primary.family_id
-      }).then((response) => {
-        if (response.status === 201) {
-          enqueueSnackbar(response.data.Message, { variant: 'success' });
-          props.setFamily();
-          props.getFamiliesList();
-          handleDialogClose();
-        } else {
-          errorMessageHandler(
-            enqueueSnackbar,
-            response?.response?.data?.Message || 'Something Went Wrong.',
-            response?.response?.status,
-            authCtx.setAuthError
-          );
-        }
-        setSubmitLoading(false);
-      });
-    }
+    let existingRoom = props?.existingRooms.map((room) => {
+      return {
+        room_id: room.room_id,
+        room_name: room.rooms.room_name,
+        location: room.rooms.location
+      };
+    });
+
+    API.post('family/child/addroom', {
+      existingRooms: existingRoom,
+      roomsToAdd: data?.rooms,
+      selectedOption: data?.selectedOption,
+      schedule_enable_date:
+        data?.selectedOption == 'schedule' ? dayjs(data?.date).format('YYYY-MM-DD') : null,
+      child_id: props?.child?.child_id
+    }).then((response) => {
+      if (response.status === 200) {
+        enqueueSnackbar(response.data.Message, { variant: 'success' });
+        props.getFamiliesList();
+        // props.setFamily((prevState) => {
+        //   const tempFamily = { ...prevState };
+        //   const index = tempFamily.children.findIndex(
+        //     (child) => child.child_id === props.child.child_id
+        //   );
+        //   if (index !== -1) {
+        //     tempFamily.children[index] = {
+        //       child_id: props.child.child_id,
+        //       ...response.data.Data
+        //     };
+        //   }
+        //   return tempFamily;
+        // });
+      } else {
+        errorMessageHandler(
+          enqueueSnackbar,
+          response?.response?.data?.Message || 'Something Went Wrong.',
+          response?.response?.status,
+          authCtx.setAuthError
+        );
+      }
+      setSubmitLoading(false);
+      handleDialogClose();
+    });
   };
 
   const setRoomsList = (locations) => {
     if (locations?.length !== 0) {
-      return props.roomsList
+      let rooms = props.roomsList
         .filter((room) => {
           let count = 0;
           locations?.forEach((loc) => {
@@ -120,6 +120,20 @@ const ChildForm = (props) => {
           return count === 1;
         })
         .sort((a, b) => (a.room_name > b.room_name ? 1 : -1));
+      let roomsToAdd = [];
+      rooms.forEach((room) => {
+        let count = 0;
+        props.existingRooms.forEach((room1) => {
+          if (room1.room_id === room.room_id) {
+            count = 1;
+          }
+        });
+        if (count == 0) {
+          roomsToAdd.push(room);
+        }
+      });
+
+      return roomsToAdd;
     } else {
       return [];
     }
@@ -134,13 +148,13 @@ const ChildForm = (props) => {
         validateOnChange
         validationSchema={validationSchema}
         initialValues={{
-          rooms: props.child ? props.child.rooms.rooms : [],
-          locations: props.child ? props.child.location.locations : []
+          rooms: [],
+          locations: [],
+          selectedOption: 'enable',
+          date: ''
         }}
-        onSubmit={(e) => {
-          if (e === 'hello') {
-            handleSubmit();
-          }
+        onSubmit={(data) => {
+          handleSubmit(data);
         }}>
         {({ values, setFieldValue, touched, errors, isValidating }) => {
           return (
@@ -152,7 +166,7 @@ const ChildForm = (props) => {
                       fullWidth
                       multiple
                       id="rooms"
-                      options={authCtx?.user?.location?.selected_locations.sort((a, b) =>
+                      options={authCtx?.user?.location?.selected_locations?.sort((a, b) =>
                         a > b ? 1 : -1
                       )}
                       value={values?.locations}
@@ -181,7 +195,11 @@ const ChildForm = (props) => {
                       multiple
                       id="rooms"
                       options={setRoomsList(values?.locations)}
-                      noOptionsText={'Select location first'}
+                      noOptionsText={
+                        values.locations.length == 0
+                          ? 'Select location first'
+                          : 'No rooms available'
+                      }
                       value={values?.rooms}
                       isOptionEqualToValue={(option, value) => option.room_id === value.room_id}
                       getOptionLabel={(option) => {
@@ -205,6 +223,62 @@ const ChildForm = (props) => {
                         />
                       )}
                     />
+                  </Grid>
+                  <Grid item md={6} sm={12}>
+                    <FormControl>
+                      <RadioGroup
+                        aria-labelledby="disable-group"
+                        row
+                        name="selectedOptionn"
+                        value={values.selectedOption}
+                        onChange={(event) => {
+                          setFieldValue('selectedOption', event.currentTarget.value);
+                        }}>
+                        <FormControlLabel
+                          value={'enable'}
+                          control={<Radio />}
+                          label={'Enable immediately'}
+                        />
+                        <FormControlLabel
+                          value="schedule"
+                          control={<Radio />}
+                          style={{ paddingLeft: '15px' }}
+                          label={'Schedule enable date'}
+                        />
+                      </RadioGroup>
+                      {touched.selectedOption && Boolean(errors.selectedOption) && (
+                        <FormHelperText sx={{ color: '#d32f2f' }}>
+                          {touched.selectedOption && errors.selectedOption}
+                        </FormHelperText>
+                      )}
+                    </FormControl>
+                  </Grid>
+                  <Grid item md={3} sm={12}>
+                    {' '}
+                    <LocalizationProvider dateAdapter={AdapterDayjs}>
+                      <DesktopDatePicker
+                        open={isDatePickerOpen}
+                        minDate={new Date()}
+                        label={'Enable date'}
+                        value={values?.date}
+                        inputFormat="MM/DD/YYYY"
+                        onClose={() => setIsDatePickerOpen(false)}
+                        renderInput={(params) => (
+                          <TextField
+                            onClick={() => setIsDatePickerOpen(true)}
+                            {...params}
+                            helperText={touched.date && errors.date}
+                            error={touched.date && Boolean(errors.date)}
+                          />
+                        )}
+                        components={{
+                          OpenPickerIcon: !isDatePickerOpen ? ArrowDropDownIcon : ArrowDropUpIcon
+                        }}
+                        onChange={(value) => {
+                          setFieldValue('date', value ? value : '');
+                        }}
+                      />
+                    </LocalizationProvider>
                   </Grid>
                 </Grid>
               </DialogContent>
@@ -233,9 +307,9 @@ const ChildForm = (props) => {
   );
 };
 
-export default ChildForm;
+export default AddRoomForm;
 
-ChildForm.propTypes = {
+AddRoomForm.propTypes = {
   open: PropTypes.bool,
   setOpen: PropTypes.func,
   roomsList: PropTypes.array,
@@ -243,5 +317,6 @@ ChildForm.propTypes = {
   child: PropTypes.any,
   setChild: PropTypes.func,
   setFamily: PropTypes.func,
-  getFamiliesList: PropTypes.func
+  getFamiliesList: PropTypes.func,
+  existingRooms: PropTypes.array
 };

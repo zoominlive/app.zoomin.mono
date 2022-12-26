@@ -9,7 +9,8 @@ import {
   Typography,
   Tooltip
 } from '@mui/material';
-
+import RoomAddForm from './roomaddform';
+import SchedulerFrom from './scheduler';
 import BlockIcon from '@mui/icons-material/Block';
 import Schedule from '../../assets/schedule.svg';
 import DeleteScheduleIcon from '../../assets/delete-icon.svg';
@@ -33,6 +34,7 @@ import { useContext } from 'react';
 import AuthContext from '../../context/authcontext';
 import Loader from '../common/loader';
 import _ from 'lodash';
+import AddIcon from '@mui/icons-material/Add';
 
 const FamilyDrawer = (props) => {
   const authCtx = useContext(AuthContext);
@@ -55,6 +57,11 @@ const FamilyDrawer = (props) => {
   const [locationsToDisable, setLocationsToDisable] = useState([]);
   const [selectedLocationsToDisable, setSelectedLocationsToDisable] = useState([]);
   const [roomTodisable, setRoomToDisable] = useState({});
+  const [isRoomAddDialogOpen, setIsRoomAddDialogOpen] = useState(false);
+  const [isSchedulerOpen, setIsSchedulerOpen] = useState(false);
+  const [existingRooms, setExistingRooms] = useState([]);
+  const [selectedChild, setSelectedChild] = useState({});
+  const [roomOpenInScheduler, setRoomOpenInScheduler] = useState({});
   const [roomScheduleDeleteLoading, setRoomScheduleDeleteLoading] = useState({
     room_id: '',
     child_id: '',
@@ -182,7 +189,6 @@ const FamilyDrawer = (props) => {
   // Method to disable the parent and child
   const handleDisable = (data) => {
     setDisableLoading(true);
-    console.log(parentToDisable);
     if (parentToDisable) {
       API.put('family/disable', {
         family_member_id: parentToDisable,
@@ -370,12 +376,6 @@ const FamilyDrawer = (props) => {
           setIsRoomDialogOpen(false);
           enqueueSnackbar(response.data.Message, { variant: 'success' });
           props.getFamiliesList();
-          // props.setFamily((prevState) => {
-          //   const tempFamily = { ...prevState };
-          //   tempFamily.children[index].status = 'Enabled';
-          //   tempFamily.children[index].scheduled_end_date = null;
-          //   return tempFamily;
-          // });
         } else {
           setRoomLoading(false);
           errorMessageHandler(
@@ -579,8 +579,6 @@ const FamilyDrawer = (props) => {
                               locations.push(...child?.location?.locations);
                             });
                             setLocationsToDisable(_.uniq(locations));
-                            console.log(_.uniq(locations));
-                            console.log('parent to disable', parent.family_member_id);
                             setParentToDisable(parent.family_member_id);
                           }}>
                           <BlockIcon className="curser-pointer"></BlockIcon>
@@ -800,6 +798,10 @@ const FamilyDrawer = (props) => {
                           justifyContent="center">
                           <img
                             src={Schedule}
+                            onClick={() => {
+                              setRoomOpenInScheduler(room);
+                              setIsSchedulerOpen(true);
+                            }}
                             style={{ height: '1.5rem' }}
                             className="curser-pointer"></img>
 
@@ -817,6 +819,13 @@ const FamilyDrawer = (props) => {
                       </Stack>
                     </Box>
                   ))}
+                  <AddIcon
+                    className={'room-add-btn'}
+                    onClick={() => {
+                      setExistingRooms(child.newRooms);
+                      setIsRoomAddDialogOpen(true);
+                      setSelectedChild(child);
+                    }}></AddIcon>
                   <Divider variant="middle" sx={{ marginTop: '15px', marginBottom: '15px' }} />
                 </Stack>
               </Stack>
@@ -913,6 +922,22 @@ const FamilyDrawer = (props) => {
         handleRoomDisableEnable={handleRoomDisableEnable}
         handleDialogClose={() => setIsRoomDialogOpen(false)}
       />
+      <RoomAddForm
+        open={isRoomAddDialogOpen}
+        setOpen={setIsRoomAddDialogOpen}
+        roomsList={props.roomsList}
+        existingRooms={existingRooms}
+        child={selectedChild}
+        getFamiliesList={props.getFamiliesList}
+      />
+      {isSchedulerOpen && (
+        <SchedulerFrom
+          open={isSchedulerOpen}
+          setOpen={setIsSchedulerOpen}
+          roomDetails={roomOpenInScheduler}
+          getFamiliesList={props.getFamiliesList}
+        />
+      )}
     </Drawer>
   );
 };
@@ -932,5 +957,6 @@ FamilyDrawer.propTypes = {
   setPrimaryParent: PropTypes.func,
   setSecondaryParent: PropTypes.func,
   setChild: PropTypes.func,
-  getFamiliesList: PropTypes.func
+  getFamiliesList: PropTypes.func,
+  roomsList: PropTypes.array
 };

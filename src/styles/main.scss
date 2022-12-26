@@ -53,6 +53,69 @@
   }
 }
 
+.scheduler-dialog {
+  .MuiDialog-container {
+    .MuiDialog-paper {
+      max-width: 700px !important;
+    }
+  }
+}
+
+.schduler-edit-button {
+  background-color: #ebebeb !important;
+}
+
+.schduler-delete-button {
+  background-color: #d21919 !important;
+  color: white !important;
+
+  &:hover {
+    background: #d21919;
+  }
+}
+
+.scheduler-avatar-not-selected {
+  color: black !important;
+  background: whitesmoke !important;
+}
+
+.schduler-addtime-container {
+  display: flex !important;
+  justify-content: flex-end !important;
+}
+
+.schduler-stack {
+  .MuiContainer-root {
+    display: flex !important;
+    align-content: flex-start !important;
+    .MuiAvatarGroup-root {
+      display: flex !important;
+      align-content: flex-start !important;
+      .MuiAvatar-root {
+        background-color: #6e66c7;
+        margin: 5px;
+        font-size: 15px;
+        cursor: pointer;
+      }
+    }
+  }
+}
+
+.MuiSlider-root {
+  color: #6e66c7 !important ;
+}
+
+// MuiSlider-valueLabel
+.MuiSlider-valueLabelOpen {
+  background-color: white !important;
+  color: #6e66c7 !important ;
+  border: 1px solid #6e66c7 !important ;
+  transform: rotate(180deg) !important;
+  .MuiSlider-valueLabelCircle {
+    transform: rotate(180deg) !important;
+  }
+}
+
 .layout-drawer {
   position: fixed;
   transition: all 0.5s ease;
@@ -540,6 +603,31 @@
   .MuiCardContent-root {
     height: 70vh;
   }
+}
+.scheduler-selected-option {
+  background-color: #6e66c7 !important;
+  .MuiFormControlLabel-root {
+    color: white !important;
+    .MuiButtonBase-root {
+      color: #90caf9 !important;
+    }
+  }
+}
+
+.scheduler-option {
+  background-color: rgba(0, 0, 0, 0.05) !important;
+}
+
+.scheduler-label {
+  padding-left: 10px !important;
+}
+
+.room-add-btn {
+  color: black !important;
+  width: 20px !important;
+
+  margin-left: 15px !important;
+  cursor: pointer !important;
 }
 
 .menu {

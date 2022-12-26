@@ -549,6 +549,7 @@ const Families = () => {
         setChild={setChild}
         getFamiliesList={getFamiliesList}
         setParentType={setParentType}
+        roomsList={roomsList}
         parentType={parentType}
       />
       <DeleteDialog

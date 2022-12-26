@@ -153,10 +153,7 @@ const DisableDialog = (props) => {
                 loadingPosition={props.loading ? 'start' : undefined}
                 startIcon={props.loading && <SaveIcon />}
                 variant="text"
-                type="submit"
-                onClick={() => {
-                  console.log('Hello');
-                }}>
+                type="submit">
                 {props?.roomDetails?.disabled == 'true' ? 'YES, ENABLE' : 'YES, DISABLE'}
               </LoadingButton>
             </DialogActions>
