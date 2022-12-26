@@ -3,6 +3,7 @@ const Sequelize = require('sequelize');
 const _ = require('lodash');
 const sequelize = require('../lib/database');
 const { v4: uuidv4 } = require('uuid');
+
 module.exports = {
   /* Create new room */
   createRoom: async (roomObj, t) => {
@@ -92,7 +93,7 @@ module.exports = {
   },
 
   /* Fetch all the room's details */
-  getAllRoomsDetails: async (userId, filter, t) => {
+  getAllRoomsDetails: async (userId, user, filter, t) => {
     const { Room, Camera } = await connectToDatabase();
     let { pageNumber = 0, pageSize = 10, roomsList = [], location = 'All', searchBy = '' } = filter;
 
@@ -100,47 +101,103 @@ module.exports = {
       location = '';
     }
     let rooms;
-    if (roomsList?.length !== 0) {
-      rooms = await Room.findAll(
-        {
-          where: {
-            user_id: userId,
-            location: {
-              [Sequelize.Op.substring]: location
+    if (user.role !== 'Admin') {
+      if (roomsList?.length !== 0) {
+        rooms = await Room.findAll(
+          {
+            where: {
+              user_id: userId,
+              location: {
+                [Sequelize.Op.substring]: location
+              },
+              room_name: {
+                [Sequelize.Op.and]: { [Sequelize.Op.substring]: searchBy }
+              },
+              room_name: roomsList
             },
-            room_name: {
-              [Sequelize.Op.and]: { [Sequelize.Op.substring]: searchBy }
-            },
-            room_name: roomsList
+            include: [
+              {
+                model: Camera
+              }
+            ]
           },
-          include: [
-            {
-              model: Camera
-            }
-          ]
-        },
-        { transaction: t }
-      );
+          { transaction: t }
+        );
+      } else {
+        rooms = await Room.findAll(
+          {
+            where: {
+              user_id: userId,
+              location: {
+                [Sequelize.Op.substring]: location
+              },
+              room_name: {
+                [Sequelize.Op.substring]: searchBy
+              }
+            },
+            include: [
+              {
+                model: Camera
+              }
+            ]
+          },
+          { transaction: t }
+        );
+      }
     } else {
-      rooms = await Room.findAll(
-        {
-          where: {
-            user_id: userId,
-            location: {
-              [Sequelize.Op.substring]: location
+      if (roomsList?.length !== 0) {
+        rooms = await Room.findAll(
+          {
+            where: {
+              cust_id: user.cust_id,
+              [Sequelize.Op.and]: [
+                { location: user.location.accessable_locations },
+                {
+                  location: {
+                    [Sequelize.Op.substring]: location
+                  }
+                }
+              ],
+              room_name: {
+                [Sequelize.Op.and]: { [Sequelize.Op.substring]: searchBy }
+              },
+              room_name: roomsList
             },
-            room_name: {
-              [Sequelize.Op.substring]: searchBy
-            }
+            include: [
+              {
+                model: Camera
+              }
+            ]
           },
-          include: [
-            {
-              model: Camera
-            }
-          ]
-        },
-        { transaction: t }
-      );
+          { transaction: t }
+        );
+      } else {
+        rooms = await Room.findAll(
+          {
+            where: {
+              cust_id: user.cust_id,
+              [Sequelize.Op.and]: [
+                { location: user.location.accessable_locations },
+                {
+                  location: {
+                    [Sequelize.Op.substring]: location
+                  }
+                }
+              ],
+
+              room_name: {
+                [Sequelize.Op.substring]: searchBy
+              }
+            },
+            include: [
+              {
+                model: Camera
+              }
+            ]
+          },
+          { transaction: t }
+        );
+      }
     }
 
     let filteredrooms = [];
@@ -172,32 +229,69 @@ module.exports = {
   },
 
   // get all room's list for loggedin user
-  getAllRoomsList: async (userId, t) => {
+  getAllRoomsList: async (userId, user, t) => {
     const { Room } = await connectToDatabase();
-    let roomList = await Room.findAll(
+    let roomList;
+    if (user.role === 'Admin') {
+      roomList = await Room.findAll(
+        {
+          attributes: ['room_name', 'room_id', 'location'],
+          where: { cust_id: user.cust_id, location: user.location.accessable_locations }
+        },
+        { transaction: t }
+      );
+    } else {
+      roomList = await Room.findAll(
+        {
+          attributes: ['room_name', 'room_id', 'location'],
+          where: { user_id: userId }
+        },
+        { transaction: t }
+      );
+    }
+
+    return roomList;
+  },
+
+  disableRoom: async (params, t) => {
+    const { RoomsInChild } = await connectToDatabase();
+    let update;
+    if (params?.scheduled_disable_date == '' || params?.scheduled_disable_date == null) {
+      update = { scheduled_enable_date: null, scheduled_disable_date: null, disabled: 'true' };
+    } else {
+      update = {
+        scheduled_disable_date: params.scheduled_disable_date
+      };
+    }
+
+    let disableRoom = await RoomsInChild.update(update, {
+      where: {
+        room_child_id: params.room_child_id
+      },
+      returning: true
+    });
+
+    return disableRoom;
+  },
+  enableRoom: async (params, t) => {
+    const { RoomsInChild } = await connectToDatabase();
+    let update;
+    if (params?.scheduled_enable_date == '' || params?.scheduled_enable_date == null) {
+      update = { scheduled_enable_date: null, scheduled_disable_date: null, disabled: 'false' };
+    } else {
+      update = { scheduled_enable_date: params.scheduled_enable_date };
+    }
+
+    let enableRoom = await RoomsInChild.update(
+      update,
       {
-        attributes: ['room_name', 'room_id', 'location'],
-        where: { user_id: userId }
+        where: {
+          room_child_id: params.room_child_id
+        }
       },
       { transaction: t }
     );
 
-    return roomList;
-  },
-  // get all room's list for loggedin user
-  enableRoom: async (params, t) => {
-    const { RoomsInChild } = await connectToDatabase();
-    let roomObj = [];
-    params?.rooms.forEach((roomId) => {
-      roomObj.push({
-        child_id: params?.child_id,
-        room_id: roomId,
-        scheduled_enable_date: params.scheduled_enable_date,
-        disabled: 'true'
-      });
-    });
-    let assignRoomToChild = await RoomsInChild.bulkCreate(roomObj, { transaction: t });
-
-    return assignRoomToChild;
+    return enableRoom;
   }
 };

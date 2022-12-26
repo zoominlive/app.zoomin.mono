@@ -51,6 +51,10 @@ const Customers = sequelize.define(
     timeout: {
       type: Sequelize.INTEGER(3)
     },
+    permit_audio: {
+      type: Sequelize.BOOLEAN,
+      defaultValue: true
+    },
     createdAt: { type: Sequelize.DATE, field: 'created_at' },
     updatedAt: { type: Sequelize.DATE, field: 'updated_at' }
   },

@@ -153,7 +153,7 @@ module.exports = {
         location: req.query?.location,
         searchBy: req.query?.searchBy.replace(/'/g, "\\'")
       };
-      const rooms = await roomServices.getAllRoomsDetails(req.user.user_id, filter);
+      const rooms = await roomServices.getAllRoomsDetails(req.user.user_id, req.user, filter);
 
       res.status(200).json({
         IsSuccess: true,
@@ -174,7 +174,7 @@ module.exports = {
   // get room's list for loggedin user
   getAllRoomsList: async (req, res, next) => {
     try {
-      const rooms = await roomServices.getAllRoomsList(req.user.user_id);
+      const rooms = await roomServices.getAllRoomsList(req.user.user_id, req.user);
 
       res.status(200).json({
         IsSuccess: true,
@@ -191,13 +191,13 @@ module.exports = {
       next(error);
     }
   },
-  // enable room for child
-  enableRoom: async (req, res, next) => {
+  // disable room for child
+  disableRoom: async (req, res, next) => {
     const t = await sequelize.transaction();
     try {
       const params = req.body;
 
-      const room = await roomServices.enableRoom(params, t);
+      const room = await roomServices.disableRoom(params, t);
 
       await t.commit();
 
@@ -219,7 +219,46 @@ module.exports = {
       let logObj = {
         user_id: req?.user?.user_id ? req?.user?.user_id : 'Not Found',
         function: 'Room',
-        function_type: 'Enable',
+        function_type: 'Disable',
+        request: req.body
+      };
+      try {
+        await logServices.addChangeLog(logObj);
+      } catch (e) {
+        console.log(e);
+      }
+    }
+  },
+  // enable room for child
+  enableRoom: async (req, res, next) => {
+    const t = await sequelize.transaction();
+    try {
+      const params = req.body;
+
+      const room = await roomServices.enableRoom(params, t);
+
+      await t.commit();
+
+      res.status(200).json({
+        IsSuccess: true,
+        Data: room,
+        Message: CONSTANTS.ROOM_UPDATED
+      });
+
+      next();
+    } catch (error) {
+      console.log(error);
+      await t.rollback();
+      res.status(500).json({
+        IsSuccess: false,
+        Message: CONSTANTS.INTERNAL_SERVER_ERROR
+      });
+      next(error);
+    } finally {
+      let logObj = {
+        user_id: req?.user?.user_id ? req?.user?.user_id : 'Not Found',
+        function: 'Room',
+        function_type: 'Disable',
         request: req.body
       };
       try {

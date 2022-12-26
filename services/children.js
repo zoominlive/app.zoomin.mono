@@ -287,11 +287,52 @@ module.exports = {
     let disabledRooms = await RoomsInChild.findAll(
       {
         where: { child_id: childId },
-        include: [{ model: Room, attributes: ['room_id', 'location', 'room_name'] }]
+        include: [{ model: Room, as: 'rooms', attributes: ['room_id', 'location', 'room_name'] }]
       },
       { transaction: t }
     );
 
     return disabledRooms;
+  },
+
+  addNewRoomsToChild: async (childId, roomsToAdd, selectedOption, scheduled_enable_date, t) => {
+    const { RoomsInChild } = await connectToDatabase();
+    let addRooms;
+    if (selectedOption == 'enable') {
+      const roomsToadd = roomsToAdd.map((room) => {
+        return {
+          room_id: room.room_id,
+          child_id: childId,
+          disabled: 'false'
+        };
+      });
+      addRooms = await RoomsInChild.bulkCreate(roomsToadd, { transaction: t });
+    } else {
+      const roomsToadd = roomsToAdd.map((room) => {
+        return {
+          room_id: room.room_id,
+          child_id: childId,
+          disabled: 'true',
+          scheduled_enable_date: scheduled_enable_date
+        };
+      });
+      addRooms = await RoomsInChild.bulkCreate(roomsToadd, { transaction: t });
+    }
+
+    return addRooms;
+  },
+
+  changeRoomScheduler: async (roomChildId, update, t) => {
+    const { RoomsInChild } = await connectToDatabase();
+    console.log(update);
+    let schedule = await RoomsInChild.update(
+      { schedule: update },
+      {
+        where: { room_child_id: roomChildId }
+      },
+      { transaction: t }
+    );
+
+    return schedule;
   }
 };

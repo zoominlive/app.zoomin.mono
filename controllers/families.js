@@ -265,6 +265,7 @@ module.exports = {
 
       next();
     } catch (error) {
+      console.log(error);
       res.status(500).json({
         IsSuccess: false,
         Message: CONSTANTS.INTERNAL_SERVER_ERROR

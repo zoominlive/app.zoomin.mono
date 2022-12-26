@@ -27,7 +27,7 @@ module.exports = {
     } else {
       rooms = await Room.findAll({
         raw: true,
-        where: { user_id: user?.user_id }
+        where: { cust_id: user?.cust_id, location: user.location.accessable_locations }
       });
     }
 
@@ -172,11 +172,19 @@ module.exports = {
       const cameraDetails = await cameras;
       return cameraDetails;
     } else {
-      children = await Room.findAll({
-        raw: true,
-        where: { user_id: user?.user_id },
-        attributes: ['room_id', 'room_name', 'location']
-      });
+      if (user.role == 'Admin') {
+        children = await Room.findAll({
+          raw: true,
+          where: { cust_id: user?.cust_id, location: user.location.accessable_locations },
+          attributes: ['room_id', 'room_name', 'location']
+        });
+      } else {
+        children = await Room.findAll({
+          raw: true,
+          where: { user_id: user?.user_id },
+          attributes: ['room_id', 'room_name', 'location']
+        });
+      }
 
       let roomIds = children.map((room) => {
         return { room_ids: { [Sequelize.Op.substring]: room.room_id } };
@@ -196,7 +204,6 @@ module.exports = {
         let finalrooms = rooms?.map((room) => {
           let camsInRoom = [];
           cameras?.forEach((cam) => {
-            console.log(cam);
             cam?.room_ids?.rooms?.forEach((room1) => {
               if (room1.room_id === room.room_id) {
                 camsInRoom.push({

@@ -18,6 +18,7 @@ module.exports = {
 
       cameras?.forEach((cam, camIndex) => {
         cameras[camIndex].timeout = customerDetails.timeout;
+        cameras[camIndex].permit_audio = customerDetails.permit_audio;
       });
       response = { streamDetails: cameras, defaultCams: req.user.cam_preference };
       res.status(200).json({
@@ -83,8 +84,9 @@ module.exports = {
 
       camDetails?.forEach((room, roomIndex) => {
         camDetails[roomIndex].timeout = customerDetails.timeout;
+        camDetails[roomIndex].permit_audio = customerDetails.permit_audio;
         room?.cameras?.forEach((cam, camIndex) => {
-          camDetails[roomIndex].cameras[camIndex].timeout = customerDetails.timeout;
+          camDetails[roomIndex].cameras[camIndex].permit_audio = customerDetails.permit_audio;
         });
       });
       response = camDetails;

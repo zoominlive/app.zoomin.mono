@@ -22,16 +22,17 @@ const RoomsInChild = sequelize.define(
       type: Sequelize.ENUM('true', 'false'),
       defaultValue: 'false'
     },
-    // scheduled_disable_date: {
-    //   type: Sequelize.DATEONLY,
-    //   allowNull: true,
-    //   defaultValue: null
-    // },
-    // scheduled_enable_date: {
-    //   type: Sequelize.DATEONLY,
-    //   allowNull: true,
-    //   defaultValue: null
-    // },
+    scheduled_disable_date: {
+      type: Sequelize.DATEONLY,
+      allowNull: true,
+      defaultValue: null
+    },
+    scheduled_enable_date: {
+      type: Sequelize.DATEONLY,
+      allowNull: true,
+      defaultValue: null
+    },
+    schedule: { type: Sequelize.JSON, defaultValue: {}, allowNull: true },
     createdAt: { type: Sequelize.DATE, field: 'created_at' },
     updatedAt: { type: Sequelize.DATE, field: 'updated_at' }
   },

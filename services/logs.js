@@ -44,7 +44,8 @@ module.exports = {
       functions,
       userIds,
       locations,
-      familyMemberIds
+      familyMemberIds,
+      actions
     } = filter;
 
     const { ChangeLogs, AccessLogs, Users } = await connectToDatabase();
@@ -65,6 +66,7 @@ module.exports = {
             ]
           },
           function: functions,
+          function_type: actions,
           [Sequelize.Op.or]: [{ user_id: userIds }, { user_id: familyMemberIds }]
         },
 
@@ -96,6 +98,7 @@ module.exports = {
             ]
           },
           function: functions,
+          function_type: actions,
           [Sequelize.Op.or]: [{ user_id: userIds }, { user_id: familyMemberIds }]
         },
         order: [['created_at', 'DESC']],
@@ -120,6 +123,7 @@ module.exports = {
               moment(endDate).endOf('Day').toISOString()
             ]
           },
+          function_type: actions,
           function: functions,
           [Sequelize.Op.or]: [{ user_id: userIds }, { user_id: familyMemberIds }]
         },
@@ -152,6 +156,7 @@ module.exports = {
             ]
           },
           function: functions,
+          function_type: actions,
           [Sequelize.Op.or]: [{ user_id: userIds }, { user_id: familyMemberIds }]
         },
         order: [['created_at', 'DESC']],

@@ -144,3 +144,63 @@ module.exports.enableScheduledChild = async () => {
 
   return { childrenToEnable };
 };
+
+module.exports.enableDisableScheduledRoom = async () => {
+  const { RoomsInChild } = await connectToDatabase();
+
+  const enableRooms = await RoomsInChild.findAll({
+    where: {
+      scheduled_enable_date: {
+        [Sequelize.Op.not]: null
+      }
+    },
+    raw: true
+  });
+
+  const disableRooms = await RoomsInChild.findAll({
+    where: {
+      scheduled_disable_date: {
+        [Sequelize.Op.not]: null
+      }
+    },
+    raw: true
+  });
+
+  let roomsToEnable = [];
+  enableRooms?.forEach((room) => {
+    const today = moment()?.format('YYYY-MM-DD');
+    if (room?.scheduled_enable_date <= today) {
+      roomsToEnable.push(room.room_child_id);
+    }
+  });
+
+  let roomsToDisable = [];
+  disableRooms?.forEach((room) => {
+    const today = moment()?.format('YYYY-MM-DD');
+    if (room?.scheduled_disable_date <= today) {
+      roomsToDisable.push(room.room_child_id);
+    }
+  });
+
+  if (roomsToEnable.length !== 0) {
+    let update = {
+      disabled: 'false',
+      scheduled_enable_date: null
+    };
+    const enabledRooms = await RoomsInChild.update(update, {
+      where: { room_child_id: roomsToEnable }
+    });
+  }
+
+  if (roomsToDisable.length !== 0) {
+    let update = {
+      disabled: 'true',
+      scheduled_disable_date: null
+    };
+    const enabledRooms = await RoomsInChild.update(update, {
+      where: { room_child_id: roomsToDisable }
+    });
+  }
+
+  return { roomsToEnable, roomsToDisable };
+};

@@ -6,6 +6,8 @@ const sequelize = require('../lib/database');
 const encrypter = require('object-encrypter');
 const engine = encrypter(process.env.JWT_SECRET_KEY, { ttl: true });
 const { v4: uuidv4 } = require('uuid');
+const RoomsInChild = require('../models/rooms_assigned_to_child');
+const Room = require('../models/room');
 
 module.exports = {
   /* Create new family */
@@ -100,19 +102,33 @@ module.exports = {
         include: [
           {
             model: Child,
+            attributes: {
+              exclude: ['rooms']
+            },
             where: {
               [Sequelize.Op.and]: {
                 location: {
                   [Sequelize.Op.substring]: location === 'All' ? '' : location
                 }
               }
-            }
+            },
+            include: [
+              {
+                model: RoomsInChild,
+                as: 'newRooms',
+                include: [
+                  {
+                    model: Room,
+                    as: 'rooms'
+                  }
+                ]
+              }
+            ]
           }
         ]
       },
       { transaction: t }
     );
-
     families?.forEach((familyMember) => {
       if (familyMember.member_type == 'primary') {
         familyArray.push({
@@ -162,7 +178,7 @@ module.exports = {
       if (roomsList.length !== 0) {
         found = 0;
         family.children.forEach((child) => {
-          const childRoom = JSON.stringify(child.rooms);
+          const childRoom = JSON.stringify(child.newRooms);
           roomsList.forEach((room) => {
             if (childRoom.includes(room)) {
               found = 1;
@@ -314,7 +330,7 @@ module.exports = {
         );
 
         updateChildDetails = await Child.update(
-          update,
+          { scheduled_end_date: null, status: 'Disabled' },
           {
             where: { family_id: familyId },
             raw: true
@@ -380,7 +396,7 @@ module.exports = {
       );
 
       updateChildDetails = await Child.update(
-        update,
+        { status: 'Enabled', scheduled_end_date: null },
         {
           where: { family_id: familyId },
           raw: true

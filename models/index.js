@@ -47,6 +47,7 @@ ChangeLogs.hasOne(Users, {
 
 RoomsInChild.belongsTo(Child, { foreignKey: 'child_id' });
 Child.hasMany(RoomsInChild, {
+  as: 'newRooms',
   sourceKey: 'child_id',
   foreignKey: {
     name: 'child_id'
@@ -70,7 +71,8 @@ Child.hasMany(CamerasInRooms, {
 });
 
 Room.belongsTo(RoomsInChild, { foreignKey: 'room_id' });
-RoomsInChild.hasMany(Room, {
+RoomsInChild.hasOne(Room, {
+  as: 'rooms',
   sourceKey: 'room_id',
   foreignKey: {
     name: 'room_id'
