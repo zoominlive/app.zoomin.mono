@@ -119,6 +119,7 @@ const Logs = () => {
     layoutCtx.setActive(8);
     layoutCtx.setBreadcrumb(['Logs']);
     if (authCtx?.user?.location?.accessable_locations) {
+      setIsLoading(true);
       API.get('users/location/', {
         params: { locations: [authCtx.user.location.accessable_locations[0]] }
       }).then((response) => {
@@ -158,6 +159,7 @@ const Logs = () => {
                 setIsLoading(false);
               });
             } else {
+              setIsLoading(false);
               errorMessageHandler(
                 enqueueSnackbar,
                 response?.response?.data?.Message || 'Something Went Wrong.',
@@ -165,9 +167,9 @@ const Logs = () => {
                 authCtx.setAuthError
               );
             }
-            setIsLoading(false);
           });
         } else {
+          setIsLoading(false);
           errorMessageHandler(
             enqueueSnackbar,
             response?.response?.data?.Message || 'Something Went Wrong.',
@@ -175,7 +177,6 @@ const Logs = () => {
             authCtx.setAuthError
           );
         }
-        setIsLoading(false);
       });
     }
     // eslint-disable-next-line no-unsafe-optional-chaining

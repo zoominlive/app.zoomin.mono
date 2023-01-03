@@ -67,19 +67,19 @@ const ChildForm = (props) => {
         if (response.status === 200) {
           enqueueSnackbar(response.data.Message, { variant: 'success' });
           props.getFamiliesList();
-          props.setFamily((prevState) => {
-            const tempFamily = { ...prevState };
-            const index = tempFamily.children.findIndex(
-              (child) => child.child_id === props.child.child_id
-            );
-            if (index !== -1) {
-              tempFamily.children[index] = {
-                child_id: props.child.child_id,
-                ...response.data.Data
-              };
-            }
-            return tempFamily;
-          });
+
+          //   const tempFamily = { ...prevState };
+          //   const index = tempFamily.children.findIndex(
+          //     (child) => child.child_id === props.child.child_id
+          //   );
+          //   if (index !== -1) {
+          //     tempFamily.children[index] = {
+          //       child_id: props.child.child_id,
+          //       ...response.data.Data
+          //     };
+          //   }
+          //   return tempFamily;
+          // });
           handleDialogClose();
         } else {
           errorMessageHandler(
@@ -132,10 +132,10 @@ const ChildForm = (props) => {
           first_name: props.child ? props.child.first_name : '',
           last_name: props.child ? props.child.last_name : '',
           rooms: props.child
-            ? props.child?.newRooms.map((room) => {
+            ? props.child?.roomsInChild.map((room) => {
                 return {
-                  room_name: room.rooms.room_name,
-                  location: room.rooms.location,
+                  room_name: room.room.room_name,
+                  location: room.room.location,
                   room_id: room.room_id
                 };
               })
@@ -179,9 +179,42 @@ const ChildForm = (props) => {
                       fullWidth
                       multiple
                       id="rooms"
-                      options={props.roomsList.sort((a, b) =>
-                        a?.room_name > b?.room_name ? 1 : -1
+                      options={authCtx?.user?.location?.selected_locations.sort((a, b) =>
+                        a > b ? 1 : -1
                       )}
+                      value={values?.locations}
+                      onChange={(_, value) => {
+                        setFieldValue('locations', value);
+                      }}
+                      renderTags={(value, getTagProps) =>
+                        value.map((option, index) => (
+                          <Chip key={index} label={option} {...getTagProps({ index })} />
+                        ))
+                      }
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          label="Locations"
+                          helperText={touched.locations && errors.locations}
+                          error={touched.locations && Boolean(errors.locations)}
+                          fullWidth
+                        />
+                      )}
+                    />
+                  </Grid>
+                  <Grid item md={6} sm={12}>
+                    <Autocomplete
+                      fullWidth
+                      multiple
+                      id="rooms"
+                      options={props.roomsList
+                        .sort((a, b) => (a?.room_name > b?.room_name ? 1 : -1))
+                        ?.filter((room) => {
+                          if (values?.locations?.find((loc) => loc == room?.location)) {
+                            return room;
+                          }
+                        })}
+                      noOptionsText="Select location first"
                       value={values?.rooms}
                       isOptionEqualToValue={(option, value) => option.room_id === value.room_id}
                       getOptionLabel={(option) => {
@@ -206,34 +239,7 @@ const ChildForm = (props) => {
                       )}
                     />
                   </Grid>
-                  <Grid item md={6} sm={12}>
-                    <Autocomplete
-                      fullWidth
-                      multiple
-                      id="rooms"
-                      options={authCtx?.user?.location?.selected_locations.sort((a, b) =>
-                        a > b ? 1 : -1
-                      )}
-                      value={values?.locations}
-                      onChange={(_, value) => {
-                        setFieldValue('locations', value);
-                      }}
-                      renderTags={(value, getTagProps) =>
-                        value.map((option, index) => (
-                          <Chip key={index} label={option} {...getTagProps({ index })} />
-                        ))
-                      }
-                      renderInput={(params) => (
-                        <TextField
-                          {...params}
-                          label="Locations"
-                          helperText={touched.locations && errors.locations}
-                          error={touched.locations && Boolean(errors.locations)}
-                          fullWidth
-                        />
-                      )}
-                    />
-                  </Grid>
+
                   {!props.child && (
                     <>
                       {' '}

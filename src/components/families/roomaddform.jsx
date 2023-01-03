@@ -64,8 +64,8 @@ const AddRoomForm = (props) => {
     let existingRoom = props?.existingRooms.map((room) => {
       return {
         room_id: room.room_id,
-        room_name: room.rooms.room_name,
-        location: room.rooms.location
+        room_name: room.room.room_name,
+        location: room.room.location
       };
     });
 
@@ -80,19 +80,6 @@ const AddRoomForm = (props) => {
       if (response.status === 200) {
         enqueueSnackbar(response.data.Message, { variant: 'success' });
         props.getFamiliesList();
-        // props.setFamily((prevState) => {
-        //   const tempFamily = { ...prevState };
-        //   const index = tempFamily.children.findIndex(
-        //     (child) => child.child_id === props.child.child_id
-        //   );
-        //   if (index !== -1) {
-        //     tempFamily.children[index] = {
-        //       child_id: props.child.child_id,
-        //       ...response.data.Data
-        //     };
-        //   }
-        //   return tempFamily;
-        // });
       } else {
         errorMessageHandler(
           enqueueSnackbar,

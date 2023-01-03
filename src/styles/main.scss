@@ -61,6 +61,12 @@
   }
 }
 
+.family_disable_enable_btn {
+  border: 1px solid black !important;
+  background: white !important;
+  color: black !important;
+}
+
 .schduler-edit-button {
   background-color: #ebebeb !important;
 }
@@ -79,9 +85,41 @@
   background: whitesmoke !important;
 }
 
+.schduler-addtime-container-saved {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 250px !important;
+}
+
+.list-timerange-item {
+  display: flex;
+  align-items: center;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  padding-left: 20px;
+  border: 1px solid #6e66c7;
+  border-radius: 16px;
+  .MuiAvatarGroup-root {
+    display: flex !important;
+    align-content: flex-start !important;
+    .MuiAvatar-root {
+      background-color: #6e66c7;
+      margin: 1px !important;
+      height: 30px !important;
+      width: 30px !important;
+      font-size: 15px !important;
+    }
+  }
+  .list-item-container {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+}
 .schduler-addtime-container {
-  display: flex !important;
-  justify-content: flex-end !important;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .schduler-stack {
@@ -619,7 +657,9 @@
 }
 
 .scheduler-label {
-  padding-left: 10px !important;
+  display: block;
+  padding: 10px;
+  color: white;
 }
 
 .room-add-btn {
@@ -797,6 +837,23 @@
 
 .MuiAutocomplete-endAdornment {
   top: 14px !important;
+}
+
+.schedule-btn {
+  background-color: #bdbdbd !important;
+  color: white !important;
+}
+
+.no-custom-period-text {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  align-content: center;
+  font-size: 25px;
+  font-weight: 500;
+  color: #bdbdbd;
+  text-align: center;
+  height: 200px;
 }
 
 .map-wrapper {

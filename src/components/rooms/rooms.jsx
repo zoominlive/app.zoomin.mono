@@ -58,7 +58,7 @@ const Row = (props) => {
         </TableCell>
         <TableCell>{row.room_name}</TableCell>
         <TableCell>{row.location}</TableCell>
-        <TableCell>{row.camDetails.length}</TableCell>
+        <TableCell>{row.cameras.length}</TableCell>
         <TableCell align="right">
           <RoomActions
             room={row}
@@ -81,11 +81,11 @@ const Row = (props) => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {row?.camDetails?.map((camRow, index) => (
+                  {row?.cameras?.map((camRow, index) => (
                     <TableRow key={index} hover>
-                      <TableCell>{camRow.cam_name}</TableCell>
+                      <TableCell>{camRow?.cam_name}</TableCell>
                       <TableCell>
-                        <Typography>{camRow.description} </Typography>
+                        <Typography>{camRow?.description} </Typography>
                       </TableCell>
                       <TableCell>
                         <Link
@@ -96,7 +96,7 @@ const Row = (props) => {
                             roomId: row?.room_id,
                             location: row?.location,
                             camName: camRow?.cam_name,
-                            camId: camRow.cam_id,
+                            camId: camRow?.cam_id,
                             streamUrl: camRow?.stream_uri
                           }}>
                           <Video />
@@ -119,12 +119,7 @@ Row.propTypes = {
     room_name: PropTypes.string,
     location: PropTypes.string,
     number_of_cam: PropTypes.number,
-    camDetails: PropTypes.arrayOf(
-      PropTypes.shape({
-        cam_name: PropTypes.string,
-        cam_url: PropTypes.string
-      })
-    )
+    cameras: PropTypes.array
   }),
   setRoom: PropTypes.func,
   setIsRoomFormDialogOpen: PropTypes.func,

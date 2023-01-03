@@ -44,8 +44,9 @@ const RoomForm = (props) => {
   const [initialState, setInitialState] = useState({
     room_name: props?.room?.room_name ? props?.room?.room_name : '',
     location: props?.room?.location ? props?.room?.location : '',
-    cameras: props?.room?.camDetails ? props?.room?.camDetails : []
+    cameras: props?.room?.cameras ? props?.room?.cameras : []
   });
+
   const [submitLoading, setSubmitLoading] = useState(false);
   const [cameraSaveLoading, setCameraSaveLoading] = useState([]);
   const [disableActions, setDisableActions] = useState(false);
@@ -56,7 +57,7 @@ const RoomForm = (props) => {
   // const maximumCams = 15;
 
   useEffect(() => {
-    const tempCameraSaveLoading = props?.room?.camDetails?.map(() => false);
+    const tempCameraSaveLoading = props?.room?.cameras?.map(() => false);
     setCameraSaveLoading(tempCameraSaveLoading || []);
     setDropdownLoading(true);
     API.get(props?.room?.location ? `cams?location=${props?.room?.location}` : `cams/`).then(
@@ -93,37 +94,12 @@ const RoomForm = (props) => {
   // Method to add/edit room
   const handleSubmit = (data) => {
     setSubmitLoading(true);
-    if (props.room) {
-      let cameras = [];
-      props.room.camDetails.map((cam) => {
-        let count = 0;
-        data.cameras.forEach((cam1) => {
-          if (cam1.cam_id === cam.cam_id) {
-            count = count + 1;
-          }
-        });
-        if (count === 0) {
-          cameras.push(cam);
-        }
-      });
-      let camerasToAdd = [];
-      data.cameras.forEach((cam) => {
-        let count = 0;
-        props.room.camDetails.forEach((cam1) => {
-          if (cam1.cam_id === cam.cam_id) {
-            count = count + 1;
-          }
-        });
-        if (count == 0) {
-          camerasToAdd.push(cam);
-        }
-      });
 
+    if (props.room) {
       API.put('rooms/edit', {
         ...data,
         room_id: props.room.room_id,
-        cameras: cameras,
-        camerasToAdd: camerasToAdd
+        camerasToAdd: data.cameras
       }).then((response) => {
         if (response.status === 200) {
           enqueueSnackbar(response.data.Message, { variant: 'success' });
@@ -298,7 +274,7 @@ const RoomForm = (props) => {
                         onChange={(_, value) => {
                           setFieldValue('cameras', value);
                         }}
-                        defaultValue={props?.room?.camDetails ? props?.room?.camDetails : []}
+                        defaultValue={props?.room?.cameras ? props?.room?.cameras : []}
                         renderTags={(value, getTagProps) =>
                           value.map((option, index) => (
                             <Chip key={index} label={option.cam_name} {...getTagProps({ index })} />

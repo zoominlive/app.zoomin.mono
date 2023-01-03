@@ -391,6 +391,7 @@ const WatchStream = () => {
       if (values.length < 16) {
         setPlaying(true);
         setSubmitted(false);
+
         setLimitReached(false);
       } else if (values.length == 16) {
         setPlaying(true);
