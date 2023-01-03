@@ -22,6 +22,9 @@ const CustomerLocations = sequelize.define(
       type: Sequelize.BOOLEAN,
       defaultValue: true
     },
+    time_zone: {
+      type: Sequelize.STRING(100)
+    },
     cust_id: {
       type: Sequelize.STRING(50)
     },

@@ -32,6 +32,7 @@ module.exports = {
       await t.rollback();
       res.status(500).json({
         IsSuccess: false,
+        error_log: error,
         Message: CONSTANTS.INTERNAL_SERVER_ERROR
       });
       next(error);
@@ -76,6 +77,7 @@ module.exports = {
       await t.rollback();
       res.status(500).json({
         IsSuccess: false,
+        error_log: error,
         Message: CONSTANTS.INTERNAL_SERVER_ERROR
       });
       next(error);
@@ -116,6 +118,7 @@ module.exports = {
       await t.rollback();
       res.status(500).json({
         IsSuccess: false,
+        error_log: error,
         Message: CONSTANTS.INTERNAL_SERVER_ERROR
       });
       next(error);
@@ -142,38 +145,20 @@ module.exports = {
 
       const childDetails = await childServices.getChildById(params.child_id, t);
 
-      let roomsToAdd = childDetails?.rooms?.rooms?.filter((room) => {
-        const result = _.find(params?.locations_to_disable, function (n) {
-          if (n === room?.location) {
-            return true;
-          }
-        });
-
-        return result == undefined;
-      });
-
-      const roomIdsToDisable = roomsToAdd.map((room) => room.room_id);
-
-      const roomsDisabled = await childServices.disableSelectedRoomsForChild(
-        params.child_id,
-        roomIdsToDisable,
-        t
-      );
-      if (!params.scheduled_end_date) {
-        const updateChild = await childServices.editChild(
-          {
-            child_id: params.child_id,
-            rooms: { rooms: roomsToAdd }
-          },
+      console.log(typeof params.scheduled_end_date);
+      if (childDetails?.location?.locations?.length == params?.locations_to_disable?.length) {
+        const disableChild = await childServices.disableChild(
+          params?.child_id,
+          params?.scheduled_end_date,
           t
         );
+      } else {
+        const locationsDisabled = await childServices.disableSelectedLocations(
+          params?.child_id,
+          params?.scheduled_end_date,
+          params?.locations_to_disable
+        );
       }
-
-      const disableChild = await childServices.disableChild(
-        params?.child_id,
-        params?.scheduled_end_date,
-        t
-      );
 
       await t.commit();
 
@@ -196,6 +181,7 @@ module.exports = {
       await t.rollback();
       res.status(500).json({
         IsSuccess: false,
+        error_log: error,
         Message: CONSTANTS.INTERNAL_SERVER_ERROR
       });
       next(error);
@@ -220,19 +206,9 @@ module.exports = {
     try {
       const params = req.body;
 
-      const roomsToAdd = await childServices.addRoomsToChild(params.child_id, t);
+      console.log('hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh', params);
 
-      let rooms = roomsToAdd.map((room) => {
-        return { ...room.rooms.dataValues };
-      });
-
-      const enableChild = await childServices.enableChild(
-        params.child_id,
-        {
-          rooms: rooms
-        },
-        t
-      );
+      const enableChild = await childServices.enableChild(params.child_id, t);
 
       await t.commit();
       res.status(200).json({
@@ -246,6 +222,7 @@ module.exports = {
       await t.rollback();
       res.status(500).json({
         IsSuccess: false,
+        error_log: error,
         Message: CONSTANTS.INTERNAL_SERVER_ERROR
       });
       next(error);
@@ -302,6 +279,7 @@ module.exports = {
       await t.rollback();
       res.status(500).json({
         IsSuccess: false,
+        error_log: error,
         Message: CONSTANTS.INTERNAL_SERVER_ERROR
       });
       next(error);
@@ -323,11 +301,11 @@ module.exports = {
   changeRoomScheduler: async (req, res, next) => {
     const t = await sequelize.transaction();
     try {
-      const { room_child_id, selectedOption, selectedDays, timeRange } = req.body;
+      const { room_child_id, timeRange } = req.body;
 
       const schedulerAdded = await childServices.changeRoomScheduler(
         room_child_id,
-        { selectedOption, selectedDays, timeRange },
+        { timeRange },
         t
       );
 
@@ -344,6 +322,7 @@ module.exports = {
       await t.rollback();
       res.status(500).json({
         IsSuccess: false,
+        error_log: error,
         Message: CONSTANTS.INTERNAL_SERVER_ERROR
       });
       next(error);

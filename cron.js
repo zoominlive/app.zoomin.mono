@@ -97,7 +97,7 @@ module.exports.disableScheduledFamilyAndChild = async () => {
           return count == 0;
         });
 
-        let updateObj = { ...update, rooms: { rooms: roomsToAdd } };
+        let updateObj = { ...update };
 
         const updatedChildren = await Child.update(updateObj, {
           where: { child_id: child.child_id }
@@ -146,7 +146,11 @@ module.exports.enableScheduledChild = async () => {
 };
 
 module.exports.enableDisableScheduledRoom = async () => {
-  const { RoomsInChild } = await connectToDatabase();
+  const { RoomsInChild, CustomerLocations, Room } = await connectToDatabase();
+
+  let availableLocations = await CustomerLocations.findAll({
+    raw: true
+  });
 
   const enableRooms = await RoomsInChild.findAll({
     where: {
@@ -154,7 +158,7 @@ module.exports.enableDisableScheduledRoom = async () => {
         [Sequelize.Op.not]: null
       }
     },
-    raw: true
+    include: [{ model: Room, as: 'room' }]
   });
 
   const disableRooms = await RoomsInChild.findAll({
@@ -163,12 +167,13 @@ module.exports.enableDisableScheduledRoom = async () => {
         [Sequelize.Op.not]: null
       }
     },
-    raw: true
+    include: [{ model: Room, as: 'room' }]
   });
 
   let roomsToEnable = [];
   enableRooms?.forEach((room) => {
-    const today = moment()?.format('YYYY-MM-DD');
+    const timeZone = availableLocations?.find((loc) => loc?.loc_name == room?.room?.location);
+    const today = moment()?.tz(timeZone?.time_zone)?.format('YYYY-MM-DD');
     if (room?.scheduled_enable_date <= today) {
       roomsToEnable.push(room.room_child_id);
     }
@@ -176,7 +181,8 @@ module.exports.enableDisableScheduledRoom = async () => {
 
   let roomsToDisable = [];
   disableRooms?.forEach((room) => {
-    const today = moment()?.format('YYYY-MM-DD');
+    const timeZone = availableLocations.find((loc) => loc.loc_name == room.room.location);
+    const today = moment()?.tz(timeZone.time_zone)?.format('YYYY-MM-DD');
     if (room?.scheduled_disable_date <= today) {
       roomsToDisable.push(room.room_child_id);
     }

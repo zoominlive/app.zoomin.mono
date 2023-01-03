@@ -217,91 +217,44 @@ module.exports = {
     const { Users } = await connectToDatabase();
     let { pageNumber = 0, pageSize = 10, searchBy = '', location = 'All' } = filter;
 
-    let users;
-    let count = 0;
-    if (location === 'All') {
-      const userdata = await Users.findAll({
-        where: {
-          cust_id: user.cust_id,
-          user_id: {
-            [Sequelize.Op.not]: user.user_id
-          },
-          [Sequelize.Op.or]: [
-            {
-              first_name: {
-                [Sequelize.Op.like]: `%${searchBy}%`
-              }
-            },
-            {
-              last_name: {
-                [Sequelize.Op.like]: `%${searchBy}%`
-              }
-            },
-            {
-              email: {
-                [Sequelize.Op.like]: `%${searchBy}%`
-              }
-            }
-          ]
-        },
-        attributes: { exclude: ['password'] }
-      });
-
-      users = await Users.findAll({
-        limit: parseInt(pageSize),
-        offset: parseInt(pageNumber * pageSize),
-        where: {
-          cust_id: user.cust_id,
-          user_id: {
-            [Sequelize.Op.not]: user.user_id
-          },
-          [Sequelize.Op.or]: [
-            {
-              first_name: {
-                [Sequelize.Op.like]: `%${searchBy}%`
-              }
-            },
-            {
-              last_name: {
-                [Sequelize.Op.like]: `%${searchBy}%`
-              }
-            },
-            {
-              email: {
-                [Sequelize.Op.like]: `%${searchBy}%`
-              }
-            }
-          ]
-        },
-
-        attributes: { exclude: ['password'] }
-      });
-      count = userdata.length;
-    } else {
-      count = (
-        await sequelize.query(
-          `SELECT DISTINCT COUNT(user_id) AS count FROM users WHERE location LIKE '%${location}%' AND user_id !='${user.user_id}' AND (first_name LIKE '%${searchBy}%' OR last_name LIKE '%${searchBy}%' OR email LIKE '%${searchBy}%')`,
-          {
-            model: Users,
-            mapToModel: true
-          }
-        )
-      )[0].dataValues.count;
-
-      users = await sequelize.query(
-        `SELECT DISTINCT * FROM users WHERE location LIKE '%${location}%' AND user_id !='${
-          user.user_id
-        }' AND (first_name LIKE '%${searchBy}%' OR last_name LIKE '%${searchBy}%' OR email LIKE '%${searchBy}%') LIMIT ${pageSize} OFFSET ${
-          pageNumber * pageSize
-        }`,
-        {
-          model: Users,
-          mapToModel: true
-        }
-      );
+    if (location == 'All') {
+      location = '';
     }
 
-    return { users, count };
+    let users = await Users.findAndCountAll({
+      limit: parseInt(pageSize),
+      offset: parseInt(pageNumber * pageSize),
+      where: {
+        cust_id: user.cust_id,
+        user_id: {
+          [Sequelize.Op.not]: user.user_id
+        },
+        [Sequelize.Op.or]: [
+          {
+            first_name: {
+              [Sequelize.Op.like]: `%${searchBy}%`
+            }
+          },
+          {
+            last_name: {
+              [Sequelize.Op.like]: `%${searchBy}%`
+            }
+          },
+          {
+            email: {
+              [Sequelize.Op.like]: `%${searchBy}%`
+            }
+          }
+        ],
+        location: {
+          [Sequelize.Op.substring]: location
+        }
+      },
+
+      attributes: { exclude: ['password'] }
+    });
+
+    return { users: users.rows, count: users.count };
   },
 
   // check if user already exist for given email

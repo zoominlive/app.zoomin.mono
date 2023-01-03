@@ -94,6 +94,35 @@ module.exports = {
     const { Family, Child } = await connectToDatabase();
     let { pageNumber = 1, pageSize = 10, location = 'All', searchBy = '', roomsList = [] } = filter;
 
+    // const query = `SELECT * FROM family INNER JOIN child ON family.family_id = child.family_id INNER JOIN rooms_assigned_to_child ON rooms_assigned_to_child.child_id = child.child_id INNER JOIN room ON rooms_assigned_to_child.room_id = room.room_id `;
+
+    // const options = {
+    //   hasJoin: true,
+    //   include: [
+    //     {
+    //       // include related models
+    //       model: Family,
+    //       include: [
+    //         {
+    //           model: Child,
+    //           include: [
+    //             {
+    //               model: RoomsInChild,
+    //               include: [
+    //                 {
+    //                   model: Room
+    //                 }
+    //               ]
+    //             }
+    //           ]
+    //         }
+    //       ]
+    //     }
+    //   ]
+    // };
+    // let families = await sequelize.query(query, { type: Sequelize.QueryTypes.SELECT }, options);
+
+    // return families;
     let families;
     let familyArray = [];
     families = await Family.findAll(
@@ -115,11 +144,11 @@ module.exports = {
             include: [
               {
                 model: RoomsInChild,
-                as: 'newRooms',
+                as: 'roomsInChild',
                 include: [
                   {
                     model: Room,
-                    as: 'rooms'
+                    as: 'room'
                   }
                 ]
               }
@@ -178,7 +207,7 @@ module.exports = {
       if (roomsList.length !== 0) {
         found = 0;
         family.children.forEach((child) => {
-          const childRoom = JSON.stringify(child.newRooms);
+          const childRoom = JSON.stringify(child.roomsInChild);
           roomsList.forEach((room) => {
             if (childRoom.includes(room)) {
               found = 1;

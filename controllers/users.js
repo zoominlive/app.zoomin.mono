@@ -27,7 +27,9 @@ module.exports = {
       });
       next();
     } catch (error) {
-      res.status(500).json({ IsSuccess: false, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
+      res
+        .status(500)
+        .json({ IsSuccess: false, error_log: error, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
       next(error);
     }
   },
@@ -43,7 +45,9 @@ module.exports = {
       });
       next();
     } catch (error) {
-      res.status(500).json({ IsSuccess: false, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
+      res
+        .status(500)
+        .json({ IsSuccess: false, error_log: error, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
       next(error);
     }
   },
@@ -104,6 +108,7 @@ module.exports = {
       await t.rollback();
       res.status(500).json({
         IsSuccess: false,
+        error_log: error,
         Message: CONSTANTS.INTERNAL_SERVER_ERROR
       });
       next(error);
@@ -203,7 +208,9 @@ module.exports = {
       next();
     } catch (error) {
       await logServices.addAccessErrorLog(logDetails.log_id, error);
-      res.status(500).json({ IsSuccess: false, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
+      res
+        .status(500)
+        .json({ IsSuccess: false, error_log: error, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
       next(error);
     } finally {
       let logObj = {
@@ -263,7 +270,9 @@ module.exports = {
       next();
     } catch (error) {
       await t.rollback();
-      res.status(500).json({ IsSuccess: false, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
+      res
+        .status(500)
+        .json({ IsSuccess: false, error_log: error, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
       next(error);
     }
   },
@@ -336,7 +345,9 @@ module.exports = {
       next();
     } catch (error) {
       await t.rollback();
-      res.status(500).json({ IsSuccess: false, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
+      res
+        .status(500)
+        .json({ IsSuccess: false, error_log: error, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
       next(error);
     }
   },
@@ -392,7 +403,9 @@ module.exports = {
       await t.commit();
       next();
     } catch (error) {
-      res.status(500).json({ IsSuccess: false, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
+      res
+        .status(500)
+        .json({ IsSuccess: false, error_log: error, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
       next(error);
     } finally {
       let logObj = {
@@ -449,7 +462,9 @@ module.exports = {
       next();
     } catch (error) {
       await t.rollback();
-      res.status(500).json({ IsSuccess: false, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
+      res
+        .status(500)
+        .json({ IsSuccess: false, error_log: error, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
       next(error);
     } finally {
       let logObj = {
@@ -499,7 +514,9 @@ module.exports = {
       next();
     } catch (error) {
       await t.rollback();
-      res.status(500).json({ IsSuccess: false, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
+      res
+        .status(500)
+        .json({ IsSuccess: false, error_log: error, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
       next(error);
     } finally {
       let logObj = {
@@ -567,7 +584,9 @@ module.exports = {
       next();
     } catch (error) {
       await t.rollback();
-      res.status(500).json({ IsSuccess: false, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
+      res
+        .status(500)
+        .json({ IsSuccess: false, error_log: error, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
       next(error);
     } finally {
       let logObj = {
@@ -637,7 +656,9 @@ module.exports = {
       next();
     } catch (error) {
       await t.rollback();
-      res.status(500).json({ IsSuccess: false, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
+      res
+        .status(500)
+        .json({ IsSuccess: false, error_log: error, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
       next(error);
     } finally {
       let logObj = {
@@ -673,7 +694,9 @@ module.exports = {
       next();
     } catch (error) {
       await t.rollback();
-      res.status(500).json({ IsSuccess: false, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
+      res
+        .status(500)
+        .json({ IsSuccess: false, error_log: error, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
       next(error);
     } finally {
       let logObj = {
@@ -709,7 +732,9 @@ module.exports = {
       next();
     } catch (error) {
       await t.rollback();
-      res.status(500).json({ IsSuccess: false, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
+      res
+        .status(500)
+        .json({ IsSuccess: false, error_log: error, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
       next(error);
     } finally {
       let logObj = {
@@ -757,7 +782,9 @@ module.exports = {
       next();
     } catch (error) {
       await t.rollback();
-      res.status(500).json({ IsSuccess: false, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
+      res
+        .status(500)
+        .json({ IsSuccess: false, error_log: error, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
       next(error);
     } finally {
       let logObj = {
@@ -796,7 +823,9 @@ module.exports = {
       });
       next();
     } catch (error) {
-      res.status(500).json({ IsSuccess: false, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
+      res
+        .status(500)
+        .json({ IsSuccess: false, error_log: error, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
       next(error);
     }
   },
@@ -816,7 +845,9 @@ module.exports = {
 
       next();
     } catch (error) {
-      res.status(500).json({ IsSuccess: false, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
+      res
+        .status(500)
+        .json({ IsSuccess: false, error_log: error, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
       next(error);
     }
   },
@@ -851,7 +882,9 @@ module.exports = {
       }
       next();
     } catch (error) {
-      res.status(500).json({ IsSuccess: false, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
+      res
+        .status(500)
+        .json({ IsSuccess: false, error_log: error, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
       next(error);
     }
   }

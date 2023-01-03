@@ -1,7 +1,7 @@
 const cameraServices = require('../services/cameras');
 const familyServices = require('../services/families');
 const childrenServices = require('../services/children');
-const watchStreamServices = require('../services/watchStream');
+const dashboardServices = require('../services/dashboard');
 const { listAvailableStreams } = require('../lib/rtsp-stream');
 const _ = require('lodash');
 const sequelize = require('../lib/database');
@@ -34,11 +34,43 @@ module.exports = {
 
       let SEAMembers = await familyServices.getFamilyWithSEA(userId);
 
-      let SEAChildren = await childrenServices.getChildrenWithSEA(userId);
+      const childSEA = await dashboardServices.getChildrenWithSEA(custId);
 
-      SEAMembers = SEAMembers?.length + SEAChildren.length;
+      let childrenWithEnableDate = [];
+      let childrenWithDisableDate = [];
 
-      const recentViewers = await watchStreamServices.getRecentViewers();
+      childSEA.forEach((child) => {
+        let roomsToEnable = [];
+        let roomsToDisable = [];
+        child.roomsInChild.forEach((room) => {
+          if (room.scheduled_disable_date != null) {
+            roomsToDisable.push(room.room.room_name);
+          } else {
+            roomsToEnable.push(room.room.room_name);
+          }
+        });
+
+        if (roomsToDisable.length != 0) {
+          childrenWithDisableDate.push({
+            childFirstName: child.first_name,
+            childLastName: child.last_name,
+            rooms: roomsToDisable
+          });
+        }
+        if (roomsToEnable.length != 0) {
+          childrenWithEnableDate.push({
+            childFirstName: child.first_name,
+            childLastName: child.last_name,
+            rooms: roomsToEnable
+          });
+        }
+      });
+
+      SEAMembers = SEAMembers?.length + childSEA?.length;
+
+      const topViewers = await dashboardServices.topViewersOfTheWeek();
+
+      const recentViewers = await dashboardServices.getLastOneHourViewers();
 
       res.status(200).json({
         IsSuccess: true,
@@ -46,7 +78,11 @@ module.exports = {
           enrolledStreams: totalStreams ? totalStreams.length : 0,
           activeStreams: activeStreams ? activeStreams.length : 0,
           SEAMembers: SEAMembers ? SEAMembers : 0,
-          recentViewers: recentViewers ? recentViewers.length : 0,
+          topViewers: topViewers ? topViewers : '',
+          recentViewers: recentViewers?.length != 0 ? recentViewers.length : 0,
+          childSEA: childSEA,
+          childrenWithEnableDate,
+          childrenWithDisableDate,
           enroledStreamsDetails: recentViewers ? recentViewers : 0
         },
         Message: CONSTANTS.STREAM_DATA
@@ -56,6 +92,7 @@ module.exports = {
     } catch (error) {
       res.status(500).json({
         IsSuccess: false,
+        error_log: error,
         Message: CONSTANTS.INTERNAL_SERVER_ERROR
       });
       next(error);

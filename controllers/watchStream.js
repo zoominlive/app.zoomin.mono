@@ -9,9 +9,15 @@ module.exports = {
   getAllCamForLocation: async (req, res, next) => {
     let response;
     try {
-      const location = req.query?.location;
-
-      let cameras = await watchStreamServices.getAllCamForLocation(req.user, location);
+      if (req.user.role == 'Family') {
+        let accessableLocsToFamily = req.user?.location?.accessable_locations?.filter((loc) => {
+          if (!req.user?.disabled_locations?.locations?.find((loc1) => loc1 == loc)) {
+            return loc;
+          }
+        });
+        req.user.location.accessable_locations = accessableLocsToFamily;
+      }
+      let cameras = await watchStreamServices.getAllCamForLocation(req.user);
 
       const customerDetails = await customerServices.getCustomerDetails(req.user.cust_id);
       cameras = _.uniqBy(cameras, 'room_id');
@@ -32,6 +38,7 @@ module.exports = {
       console.log(error);
       res.status(500).json({
         IsSuccess: false,
+        error_log: error,
         Message: CONSTANTS.INTERNAL_SERVER_ERROR
       });
       next(error);
@@ -69,6 +76,7 @@ module.exports = {
     } catch (error) {
       res.status(500).json({
         IsSuccess: false,
+        error_log: error,
         Message: CONSTANTS.INTERNAL_SERVER_ERROR
       });
       next(error);
@@ -78,6 +86,14 @@ module.exports = {
   getAllCamForUser: async (req, res, next) => {
     let response;
     try {
+      if (req.user.role == 'Family') {
+        let accessableLocsToFamily = req.user?.location?.accessable_locations?.filter((loc) => {
+          if (!req.user?.disabled_locations?.locations?.find((loc1) => loc1 == loc)) {
+            return loc;
+          }
+        });
+        req.user.location.accessable_locations = accessableLocsToFamily;
+      }
       const camDetails = await watchStreamServices.getAllCamForUser(req.user);
 
       const customerDetails = await customerServices.getCustomerDetails(req.user.cust_id);
@@ -100,6 +116,7 @@ module.exports = {
     } catch (error) {
       res.status(500).json({
         IsSuccess: false,
+        error_log: error,
         Message: CONSTANTS.INTERNAL_SERVER_ERROR
       });
       next(error);
@@ -137,6 +154,7 @@ module.exports = {
     } catch (error) {
       res.status(500).json({
         IsSuccess: false,
+        error_log: error,
         Message: CONSTANTS.INTERNAL_SERVER_ERROR
       });
       next(error);

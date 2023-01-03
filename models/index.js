@@ -21,13 +21,6 @@ Family.hasMany(Child, {
     name: 'family_id'
   }
 });
-Camera.belongsTo(Room, { foreignKey: 'cust_id' });
-Room.hasMany(Camera, {
-  sourceKey: 'cust_id',
-  foreignKey: {
-    name: 'cust_id'
-  }
-});
 
 Users.belongsTo(AccessLogs, { foreignKey: 'user_id' });
 AccessLogs.hasOne(Users, {
@@ -47,7 +40,7 @@ ChangeLogs.hasOne(Users, {
 
 RoomsInChild.belongsTo(Child, { foreignKey: 'child_id' });
 Child.hasMany(RoomsInChild, {
-  as: 'newRooms',
+  as: 'roomsInChild',
   sourceKey: 'child_id',
   foreignKey: {
     name: 'child_id'
@@ -62,20 +55,44 @@ Room.hasMany(CamerasInRooms, {
   }
 });
 
-CamerasInRooms.belongsTo(Child, { foreignKey: 'child_id' });
-Child.hasMany(CamerasInRooms, {
-  sourceKey: 'child_id',
+CamerasInRooms.belongsTo(Camera, { foreignKey: 'cam_id' });
+Camera.hasMany(CamerasInRooms, {
+  sourceKey: 'cam_id',
   foreignKey: {
-    name: 'child_id'
+    name: 'cam_id'
   }
 });
 
 Room.belongsTo(RoomsInChild, { foreignKey: 'room_id' });
 RoomsInChild.hasOne(Room, {
-  as: 'rooms',
+  as: 'room',
   sourceKey: 'room_id',
   foreignKey: {
     name: 'room_id'
+  }
+});
+
+Room.belongsTo(CustomerLocations, { foreignKey: 'location' });
+CustomerLocations.hasMany(Room, {
+  sourceKey: 'loc_name',
+  foreignKey: {
+    name: 'location'
+  }
+});
+
+Family.belongsTo(RecentViewers, { foreignKey: 'family_member_id' });
+RecentViewers.hasOne(Family, {
+  sourceKey: 'recent_user_id',
+  foreignKey: {
+    name: 'family_member_id'
+  }
+});
+
+Users.belongsTo(RecentViewers, { foreignKey: 'user_id' });
+RecentViewers.hasOne(Users, {
+  sourceKey: 'recent_user_id',
+  foreignKey: {
+    name: 'user_id'
   }
 });
 

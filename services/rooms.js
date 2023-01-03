@@ -3,6 +3,7 @@ const Sequelize = require('sequelize');
 const _ = require('lodash');
 const sequelize = require('../lib/database');
 const { v4: uuidv4 } = require('uuid');
+const CamerasInRooms = require('../models/cameras_assigned_to_rooms');
 
 module.exports = {
   /* Create new room */
@@ -57,13 +58,9 @@ module.exports = {
       };
     });
 
-    const camsToRemove = params.cameras.map((cam) => {
-      return cam.cam_id;
-    });
-
     let camsRemoved = await CamerasInRooms.destroy(
       {
-        where: { room_id: params.room_id, cam_id: camsToRemove },
+        where: { room_id: params.room_id },
         raw: true
       },
       { transaction: t }
@@ -76,8 +73,13 @@ module.exports = {
 
   /* Delete Existing room */
   deleteRoom: async (roomId, t) => {
-    const { Room, CamerasInRooms } = await connectToDatabase();
+    const { Room, CamerasInRooms, RoomsInChild } = await connectToDatabase();
     let camsDeleted = await CamerasInRooms.destroy(
+      { where: { room_id: roomId }, raw: true },
+      { transaction: t }
+    );
+
+    let roomsDeleted = await RoomsInChild.destroy(
       { where: { room_id: roomId }, raw: true },
       { transaction: t }
     );
@@ -97,14 +99,20 @@ module.exports = {
     const { Room, Camera } = await connectToDatabase();
     let { pageNumber = 0, pageSize = 10, roomsList = [], location = 'All', searchBy = '' } = filter;
 
+    if (pageNumber != 0) {
+      pageNumber = pageNumber - 1;
+    }
+
     if (location == 'All') {
       location = '';
     }
     let rooms;
     if (user.role !== 'Admin') {
       if (roomsList?.length !== 0) {
-        rooms = await Room.findAll(
+        rooms = await Room.findAndCountAll(
           {
+            limit: parseInt(pageSize),
+            offset: parseInt(pageNumber * pageSize),
             where: {
               user_id: userId,
               location: {
@@ -115,17 +123,27 @@ module.exports = {
               },
               room_name: roomsList
             },
+            attributes: ['room_id', 'room_name', 'location'],
             include: [
               {
-                model: Camera
+                model: CamerasInRooms,
+                attributes: ['cam_room_id'],
+                include: [
+                  {
+                    model: Camera,
+                    attributes: ['cam_id', 'cam_name', 'location', 'stream_uri', 'description']
+                  }
+                ]
               }
             ]
           },
           { transaction: t }
         );
       } else {
-        rooms = await Room.findAll(
+        rooms = await Room.findAndCountAll(
           {
+            limit: parseInt(pageSize),
+            offset: parseInt(pageNumber * pageSize),
             where: {
               user_id: userId,
               location: {
@@ -135,9 +153,17 @@ module.exports = {
                 [Sequelize.Op.substring]: searchBy
               }
             },
+            attributes: ['room_id', 'room_name', 'location'],
             include: [
               {
-                model: Camera
+                model: CamerasInRooms,
+                attributes: ['cam_room_id'],
+                include: [
+                  {
+                    model: Camera,
+                    attributes: ['cam_id', 'cam_name', 'location', 'stream_uri', 'description']
+                  }
+                ]
               }
             ]
           },
@@ -146,8 +172,10 @@ module.exports = {
       }
     } else {
       if (roomsList?.length !== 0) {
-        rooms = await Room.findAll(
+        rooms = await Room.findAndCountAll(
           {
+            limit: parseInt(pageSize),
+            offset: parseInt(pageNumber * pageSize),
             where: {
               cust_id: user.cust_id,
               [Sequelize.Op.and]: [
@@ -163,17 +191,27 @@ module.exports = {
               },
               room_name: roomsList
             },
+            attributes: ['room_id', 'room_name', 'location'],
             include: [
               {
-                model: Camera
+                model: CamerasInRooms,
+                attributes: ['cam_room_id'],
+                include: [
+                  {
+                    model: Camera,
+                    attributes: ['cam_id', 'cam_name', 'location', 'stream_uri', 'description']
+                  }
+                ]
               }
             ]
           },
           { transaction: t }
         );
       } else {
-        rooms = await Room.findAll(
+        rooms = await Room.findAndCountAll(
           {
+            limit: parseInt(pageSize),
+            offset: parseInt(pageNumber * pageSize),
             where: {
               cust_id: user.cust_id,
               [Sequelize.Op.and]: [
@@ -189,9 +227,17 @@ module.exports = {
                 [Sequelize.Op.substring]: searchBy
               }
             },
+            attributes: ['room_id', 'room_name', 'location'],
             include: [
               {
-                model: Camera
+                model: CamerasInRooms,
+                attributes: ['cam_room_id'],
+                include: [
+                  {
+                    model: Camera,
+                    attributes: ['cam_id', 'cam_name', 'location', 'stream_uri', 'description']
+                  }
+                ]
               }
             ]
           },
@@ -200,32 +246,18 @@ module.exports = {
       }
     }
 
-    let filteredrooms = [];
-
-    rooms?.forEach((room) => {
-      const cameras = [];
-      room?.cameras?.forEach((cam) => {
-        cam?.room_ids?.rooms?.forEach((room1) => {
-          if (room1?.room_id === room?.room_id) {
-            cameras?.push(cam?.dataValues);
-          }
-        });
-      });
-
-      filteredrooms?.push({ ...room?.dataValues, camDetails: cameras });
+    let count = rooms.count;
+    rooms = rooms?.rows?.map((room) => {
+      let cams = room.cameras_assigned_to_rooms.map((cam) => cam.camera);
+      return {
+        room_id: room.room_id,
+        room_name: room.room_name,
+        location: room.location,
+        cameras: cams
+      };
     });
 
-    let count = filteredrooms.length;
-
-    if (count > pageSize) {
-      if (filteredrooms?.length > (pageNumber - 1) * pageSize + pageSize) {
-        filteredrooms = filteredrooms?.slice((pageNumber - 1) * pageSize, pageNumber * pageSize);
-      } else if (filteredrooms?.length > (pageNumber - 1) * pageSize) {
-        filteredrooms = filteredrooms?.slice((pageNumber - 1) * pageSize);
-      }
-    }
-
-    return { finalRoomDetails: filteredrooms, count };
+    return { finalRoomDetails: rooms, count: count };
   },
 
   // get all room's list for loggedin user
@@ -264,12 +296,16 @@ module.exports = {
       };
     }
 
-    let disableRoom = await RoomsInChild.update(update, {
-      where: {
-        room_child_id: params.room_child_id
+    let disableRoom = await RoomsInChild.update(
+      update,
+      {
+        where: {
+          room_child_id: params.room_child_id
+        },
+        returning: true
       },
-      returning: true
-    });
+      { transaction: t }
+    );
 
     return disableRoom;
   },

@@ -14,7 +14,11 @@ module.exports = {
 
   /* Delete Existing camera */
   deleteCamera: async (camId, t) => {
-    const { Camera } = await connectToDatabase();
+    const { Camera, CamerasInRooms } = await connectToDatabase();
+    let camsDeleted = await CamerasInRooms.destroy(
+      { where: { cam_id: camId }, raw: true },
+      { transaction: t }
+    );
     let deletedCam = await Camera.destroy(
       {
         where: { cam_id: camId }
@@ -75,43 +79,14 @@ module.exports = {
   /* Fetch all the camera's details for given customer */
   getAllCameraForCustomer: async (custId, filter, t) => {
     const { Camera } = await connectToDatabase();
-    let { pageNumber, pageSize, searchBy = '', location = 'All' } = filter;
+    let { pageNumber = 0, pageSize = 10, searchBy = '', location = 'All' } = filter;
 
     let cams;
-    let count = 0;
     if (location === 'All') {
       location = '';
     }
 
-    count = await Camera.count(
-      {
-        where: {
-          cust_id: custId,
-          location: {
-            [Sequelize.Op.like]: `%${location}`
-          },
-          [Sequelize.Op.or]: [
-            {
-              cam_name: {
-                [Sequelize.Op.like]: `%${searchBy}%`
-              }
-            },
-            {
-              description: {
-                [Sequelize.Op.like]: `%${searchBy}%`
-              }
-            }
-          ]
-        }
-      },
-      { transaction: t }
-    );
-
-    if (!pageNumber || !pageSize) {
-      pageSize = count;
-      pageNumber = 0;
-    }
-    cams = await Camera.findAll(
+    cams = await Camera.findAndCountAll(
       {
         limit: parseInt(pageSize),
         offset: parseInt(pageNumber * pageSize),
@@ -137,6 +112,6 @@ module.exports = {
       { transaction: t }
     );
 
-    return { cams, count };
+    return { cams: cams.rows, count: cams.count };
   }
 };

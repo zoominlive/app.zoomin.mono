@@ -14,11 +14,6 @@ const Camera = sequelize.define(
       type: Sequelize.STRING(50),
       allowNull: false
     },
-    room_ids: {
-      type: Sequelize.JSON,
-      defaultValue: {},
-      allowNull: true
-    },
     cam_name: {
       type: Sequelize.STRING(25),
       allowNull: false

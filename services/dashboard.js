@@ -1,0 +1,139 @@
+const connectToDatabase = require('../models/index');
+const Sequelize = require('sequelize');
+const _ = require('lodash');
+const moment = require('moment-timezone');
+const RoomsInChild = require('../models/rooms_assigned_to_child');
+const Room = require('../models/room');
+
+module.exports = {
+  /* get recent viewers */
+  getLastOneHourViewers: async () => {
+    const { RecentViewers, Family, Child, Room, RoomsInChild } = await connectToDatabase();
+    let oneHourBefore = new Date();
+    oneHourBefore.setHours(oneHourBefore.getHours() - 1);
+
+    const currentTime = new Date();
+
+    let recentViewers = await RecentViewers.findAll({
+      where: {
+        requested_at: {
+          [Sequelize.Op.between]: [oneHourBefore.toISOString(), currentTime.toISOString()]
+        }
+      },
+      group: ['recent_user_id'],
+      include: [
+        {
+          model: Family,
+          attributes: ['first_name', 'last_name'],
+          include: [
+            {
+              model: Child,
+              attributes: ['first_name'],
+              include: [
+                {
+                  model: RoomsInChild,
+                  attributes: ['room_id'],
+                  as: 'roomsInChild',
+                  include: [
+                    {
+                      attributes: ['room_name'],
+                      model: Room,
+                      as: 'room'
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    });
+
+    return recentViewers;
+  },
+
+  topViewersOfTheWeek: async () => {
+    const { RecentViewers, Family, Users } = await connectToDatabase();
+
+    let recentViewers = await RecentViewers.findAll({
+      where: {
+        requested_at: {
+          [Sequelize.Op.between]: [
+            moment().subtract(1, 'w').startOf('day').toISOString(),
+            moment().toISOString()
+          ]
+        }
+      },
+      attributes: {
+        include: [[Sequelize.fn('COUNT', Sequelize.col('recent_user_id')), 'count']],
+        exclude: [
+          'rv_id',
+          'recent_user_id',
+          'source_ip',
+          'location_name',
+          'lat',
+          'long',
+          'requested_at'
+        ]
+      },
+      group: ['recent_user_id'],
+      include: [
+        {
+          model: Family,
+          attributes: ['first_name', 'last_name']
+        },
+        {
+          model: Users,
+          attributes: ['first_name', 'last_name']
+        }
+      ]
+    });
+
+    return recentViewers;
+  },
+
+  getChildrenWithSEA: async (custId) => {
+    const { Child } = await connectToDatabase();
+
+    let children = await Child.findAll({
+      where: { cust_id: custId },
+      attributes: ['first_name', 'last_name'],
+      include: [
+        {
+          model: RoomsInChild,
+          as: 'roomsInChild',
+          attributes: ['scheduled_disable_date', 'scheduled_enable_date'],
+          where: {
+            [Sequelize.Op.or]: [
+              {
+                scheduled_disable_date: {
+                  [Sequelize.Op.between]: [
+                    moment().toISOString(),
+                    moment().add(1, 'w').toISOString()
+                  ]
+                }
+              },
+              {
+                scheduled_enable_date: {
+                  [Sequelize.Op.between]: [
+                    moment().toISOString(),
+                    moment().add(1, 'w').toISOString()
+                  ]
+                }
+              }
+            ]
+          },
+          include: [
+            {
+              model: Room,
+              as: 'room',
+              attributes: ['room_name']
+            }
+          ]
+        }
+      ]
+    });
+
+    return children;
+  }
+};

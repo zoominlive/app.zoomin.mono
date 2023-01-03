@@ -57,36 +57,11 @@ module.exports = {
       };
     });
     if (type == 'Access Log') {
-      let count = await AccessLogs.count({
-        where: {
-          created_at: {
-            [Sequelize.Op.between]: [
-              moment(startDate).startOf('day').toISOString(),
-              moment(endDate).endOf('Day').toISOString()
-            ]
-          },
-          function: functions,
-          function_type: actions,
-          [Sequelize.Op.or]: [{ user_id: userIds }, { user_id: familyMemberIds }]
-        },
-
-        include: [
-          {
-            model: Users,
-            where: {
-              [Sequelize.Op.or]: locArray
-            },
-            attributes: ['first_name', 'last_name'],
-            required: true
-          }
-        ]
-      });
-
       if (!pageNumber || !pageSize) {
         pageSize = count;
         pageNumber = 0;
       }
-      let log = await AccessLogs.findAll({
+      let log = await AccessLogs.findAndCountAll({
         limit: parseInt(pageSize),
         offset: parseInt(pageNumber * pageSize),
         attributes: { exclude: ['response', 'updatedAt'] },
@@ -94,7 +69,7 @@ module.exports = {
           created_at: {
             [Sequelize.Op.between]: [
               moment(startDate).startOf('day').toISOString(),
-              moment(endDate).endOf('Day').toISOString()
+              moment(endDate).endOf('day').toISOString()
             ]
           },
           function: functions,
@@ -113,38 +88,13 @@ module.exports = {
           }
         ]
       });
-      return { logs: log, count: count };
+      return { logs: log.rows, count: log.count };
     } else {
-      let count = await ChangeLogs.count({
-        where: {
-          created_at: {
-            [Sequelize.Op.between]: [
-              moment(startDate).startOf('day').toISOString(),
-              moment(endDate).endOf('Day').toISOString()
-            ]
-          },
-          function_type: actions,
-          function: functions,
-          [Sequelize.Op.or]: [{ user_id: userIds }, { user_id: familyMemberIds }]
-        },
-
-        include: [
-          {
-            model: Users,
-            where: {
-              [Sequelize.Op.or]: locArray
-            },
-            attributes: ['first_name', 'last_name'],
-            required: true
-          }
-        ]
-      });
-
       if (!pageNumber || !pageSize) {
         pageSize = count;
         pageNumber = 0;
       }
-      let log = await ChangeLogs.findAll({
+      let log = await ChangeLogs.findAndCountAll({
         limit: parseInt(pageSize),
         offset: parseInt(pageNumber * pageSize),
         attributes: { exclude: ['response', 'updatedAt'] },
@@ -171,7 +121,7 @@ module.exports = {
           }
         ]
       });
-      return { logs: log, count: count };
+      return { logs: log.rows, count: log.count };
     }
   }
 };

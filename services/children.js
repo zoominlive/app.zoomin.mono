@@ -1,7 +1,8 @@
 const connectToDatabase = require('../models/index');
 const Sequelize = require('sequelize');
 const _ = require('lodash');
-
+const RoomsInChild = require('../models/rooms_assigned_to_child');
+const moment = require('moment');
 module.exports = {
   /* Create new child */
   createChild: async (childObj, t) => {
@@ -26,6 +27,20 @@ module.exports = {
     });
     const { Child } = await connectToDatabase();
     let childCreated = await Child.bulkCreate(childObjs, { returning: true }, { transaction: t });
+
+    await Promise.all(
+      childObjs.map(async (child, index) => {
+        let roomsInChild = child.rooms.rooms.map((room) => {
+          return { child_id: childCreated[index].child_id, room_id: room.room_id };
+        });
+        await RoomsInChild.bulkCreate(roomsInChild, { returning: true }, { transaction: t });
+      })
+    );
+    // const addRoomsToChild = await childServices.assignRoomsToChild(
+    //   newChild?.child_id,
+    //   params?.rooms?.rooms,
+    //   t
+    // );
 
     return childCreated;
   },
@@ -87,7 +102,13 @@ module.exports = {
 
   // delete selected child
   deleteChild: async (childId, t) => {
-    const { Child } = await connectToDatabase();
+    const { Child, RoomsInChild } = await connectToDatabase();
+
+    let roomsDeleted = await RoomsInChild.destroy(
+      { where: { child_id: childId }, raw: true },
+      { transaction: t }
+    );
+
     let deletedChild = await Child.destroy(
       {
         where: { child_id: childId },
@@ -104,7 +125,7 @@ module.exports = {
     const { Child } = await connectToDatabase();
     let updateChildDetails;
 
-    if (schedluedEndDate != null && schedluedEndDate != '') {
+    if (schedluedEndDate != null && schedluedEndDate != '' && schedluedEndDate != false) {
       let update = {
         scheduled_end_date: schedluedEndDate
       };
@@ -157,20 +178,13 @@ module.exports = {
   },
 
   //enable selected child
-  enableChild: async (childId, rooms, t) => {
-    const { Child, RoomsInChild } = await connectToDatabase();
+  enableChild: async (childId, t) => {
+    const { Child } = await connectToDatabase();
     let update = {
       status: 'Enabled',
-      rooms: rooms,
       scheduled_end_date: null,
       scheduled_enable_date: null
     };
-
-    let updateRoomStatus = await RoomsInChild.update(
-      { disabled: 'false' },
-      { where: { child_id: childId } },
-      { transaction: t }
-    );
 
     let updateChildDetails = await Child.update(
       update,
@@ -192,37 +206,6 @@ module.exports = {
     }
 
     return updateChildDetails;
-  },
-  getChildrenWithSEA: async (userId, t) => {
-    const { Child, Family } = await connectToDatabase();
-    let familyMembers = await Family.findAll(
-      {
-        attributes: ['family_id'],
-        where: {
-          member_type: 'primary',
-          user_id: userId
-        },
-        raw: true
-      },
-      { transaction: t }
-    );
-
-    familyMembers = familyMembers?.map((member) => member.family_id);
-
-    let children = await Child.findAll(
-      {
-        where: {
-          scheduled_end_date: {
-            [Sequelize.Op.ne]: null
-          },
-          family_id: familyMembers
-        },
-        raw: true
-      },
-      { transaction: t }
-    );
-
-    return children;
   },
 
   assignRoomsToChild: async (childId, rooms, t) => {
@@ -287,7 +270,7 @@ module.exports = {
     let disabledRooms = await RoomsInChild.findAll(
       {
         where: { child_id: childId },
-        include: [{ model: Room, as: 'rooms', attributes: ['room_id', 'location', 'room_name'] }]
+        include: [{ model: Room, as: 'room', attributes: ['room_id', 'location', 'room_name'] }]
       },
       { transaction: t }
     );
@@ -324,7 +307,7 @@ module.exports = {
 
   changeRoomScheduler: async (roomChildId, update, t) => {
     const { RoomsInChild } = await connectToDatabase();
-    console.log(update);
+
     let schedule = await RoomsInChild.update(
       { schedule: update },
       {
@@ -334,5 +317,56 @@ module.exports = {
     );
 
     return schedule;
+  },
+
+  disableSelectedLocations: async (childId, SED, locationsToDisable, t) => {
+    const { RoomsInChild, Room } = await connectToDatabase();
+
+    let getRoomsToDisable = await RoomsInChild.findAll(
+      {
+        where: {
+          child_id: childId
+        },
+        attributes: ['room_child_id'],
+        include: [
+          {
+            model: Room,
+            as: 'room',
+            where: {
+              location: locationsToDisable
+            },
+            attributes: ['room_name']
+          }
+        ]
+      },
+      { transaction: t }
+    );
+
+    let roomChildIds = getRoomsToDisable?.map((room) => room.room_child_id);
+    let disableRooms;
+
+    if (SED != null && SED != '' && SED != false) {
+      disableRooms = await RoomsInChild.update(
+        { scheduled_disable_date: SED },
+        {
+          where: {
+            room_child_id: roomChildIds
+          }
+        },
+        { transaction: t }
+      );
+    } else {
+      disableRooms = await RoomsInChild.update(
+        { disabled: 'true' },
+        {
+          where: {
+            room_child_id: roomChildIds
+          }
+        },
+        { transaction: t }
+      );
+    }
+
+    return disableRooms;
   }
 };

@@ -17,15 +17,15 @@ provider:
     ACCESS_KEY_ID: AKIAYEUNNGGXZZWD3RES
     SECRET_ACCESS_KEY: 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
     EMAIL_SOURCE_ACCOUNT: 'support@zoominlive.com'
-    RDS_HOST: zoomin-1.crzgnnp8iqzv.us-west-2.rds.amazonaws.com
-    RDS_PORT: 3306
-    RDS_USER: zoomin_dbuser
-    RDS_PASSWORD: Wk8$b6!xR
-    RDS_DB_NAME: zoomin
-    # RDS_HOST: 127.0.0.1
+    # RDS_HOST: zoomin-1.crzgnnp8iqzv.us-west-2.rds.amazonaws.com
     # RDS_PORT: 3306
-    # RDS_USER: root
+    # RDS_USER: zoomin_dbuser
+    # RDS_PASSWORD: Wk8$b6!xR
     # RDS_DB_NAME: zoomin
+    RDS_HOST: 127.0.0.1
+    RDS_PORT: 3306
+    RDS_USER: root
+    RDS_DB_NAME: zoomin
     JWT_SECRET_KEY: zoominlivesecretkey
     JWT_REFRESH_SECRET_KEY: 2d
     ACCESS_TOKEN_EXPIRY: 1d
@@ -34,29 +34,6 @@ provider:
     FE_SITE_BASE_URL: https://app2.zoominlive.com/
   stage: dev
   region: us-west-2
-  iam:
-    role:
-      statements:
-        - Effect: 'Allow'
-          Action: 's3:ListBucket'
-          Resource:
-            - '*'
-        - Effect: Allow
-          Action:
-            - 's3:GetObject'
-            - 's3:PutObject'
-          Resource:
-            - 'arn:aws:cloudformation:us-west-2:559716053423:stack/zoomin-dev/51663190-43ef-11ed-b517-0625b6019865'
-        - Effect: 'Allow'
-          Action:
-            - 'ses:SendEmail'
-            - 'ses:SendRawEmail'
-          Resource:
-            - 'arn:aws:ses:*'
-        - Effect: 'Allow'
-          Action:
-            - 'lambda:InvokeFunction'
-          Resource: '*'
 
 functions:
   userFunction:
@@ -95,11 +72,6 @@ functions:
       - httpApi:
           method: '*'
           path: /api/family/child/delete
-
-  streamStatisticsFunction:
-    handler: handler.handler
-    events:
-      - httpApi: 'GET /api/dashboard'
 
   familyFunction:
     handler: handler.handler
@@ -154,19 +126,6 @@ functions:
           method: '*'
           path: /api/rooms
 
-  watchStreamFunction:
-  #   handler: handler.handler
-  #   events:
-  #     - httpApi:
-  #         method: '*'
-  #         path: /api/watchstream
-  #     - httpApi:
-  #         method: '*'
-  #         path: /api/watchstream/userStreams
-  #     - httpApi:
-  #         method: '*'
-  #         path: /api/watchstream/addviewer
-
   disableScheduledMembers:
     handler: cron.disableScheduledFamilyAndChild
     events:
@@ -179,7 +138,7 @@ functions:
   enableDisablescheduledRoom:
     handler: cron.enableDisableScheduledRoom
     events:
-      - schedule: rate(1 hour)
+      - schedule: rate(1 minute)
 
 plugins:
   - serverless-offline

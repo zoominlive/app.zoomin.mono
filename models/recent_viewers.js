@@ -10,7 +10,7 @@ const RecentViewers = sequelize.define(
       primaryKey: true,
       autoIncrement: true
     },
-    user_id: {
+    recent_user_id: {
       type: Sequelize.STRING(50),
       allowNull: false
     },

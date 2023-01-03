@@ -38,6 +38,7 @@ module.exports = {
       await t.rollback();
       res.status(500).json({
         IsSuccess: false,
+        error_log: error,
         Message: CONSTANTS.INTERNAL_SERVER_ERROR
       });
       next(error);
@@ -63,18 +64,6 @@ module.exports = {
       const params = req.body;
       const room = await roomServices.editRoom(req.user, params, t);
 
-      console.log(params);
-      params?.cameras?.forEach(async (camera) => {
-        let rooms = camera.room_ids.rooms.filter((room) => room.room_id !== params.room_id);
-        await cameraServices.editCamera(camera.cam_id, { room_ids: { rooms: rooms } }, t);
-      });
-
-      params?.camerasToAdd?.forEach(async (cam) => {
-        let rooms = cam?.room_ids?.rooms ? cam?.room_ids?.rooms : [];
-        rooms?.push({ room_id: params.room_id, room_name: room?.room_name });
-        await cameraServices.editCamera(cam.cam_id, { room_ids: { rooms: rooms } }, t);
-      });
-
       await t.commit();
 
       res.status(200).json({
@@ -88,6 +77,7 @@ module.exports = {
       await t.rollback();
       res.status(500).json({
         IsSuccess: false,
+        error_log: error,
         Message: CONSTANTS.INTERNAL_SERVER_ERROR
       });
       next(error);
@@ -125,6 +115,7 @@ module.exports = {
       await t.rollback();
       res.status(500).json({
         IsSuccess: false,
+        error_log: error,
         Message: CONSTANTS.INTERNAL_SERVER_ERROR
       });
       next(error);
@@ -165,6 +156,7 @@ module.exports = {
     } catch (error) {
       res.status(500).json({
         IsSuccess: false,
+        error_log: error,
         Message: CONSTANTS.INTERNAL_SERVER_ERROR
       });
       next(error);
@@ -179,13 +171,14 @@ module.exports = {
       res.status(200).json({
         IsSuccess: true,
         Data: rooms,
-        Message: CONSTANTS.ROOM_DETAILS + `${req.user.first_name}`
+        Message: CONSTANTS.ROOM_DETAILS
       });
 
       next();
     } catch (error) {
       res.status(500).json({
         IsSuccess: false,
+        error_log: error,
         Message: CONSTANTS.INTERNAL_SERVER_ERROR
       });
       next(error);
@@ -212,6 +205,7 @@ module.exports = {
       await t.rollback();
       res.status(500).json({
         IsSuccess: false,
+        error_log: error,
         Message: CONSTANTS.INTERNAL_SERVER_ERROR
       });
       next(error);
@@ -251,6 +245,7 @@ module.exports = {
       await t.rollback();
       res.status(500).json({
         IsSuccess: false,
+        error_log: error,
         Message: CONSTANTS.INTERNAL_SERVER_ERROR
       });
       next(error);

@@ -120,6 +120,7 @@ module.exports = {
       await t.rollback();
       res.status(500).json({
         IsSuccess: false,
+        error_log: error,
         Message:
           error.message === 'Validation error'
             ? CONSTANTS.EMAIL_EXIST
@@ -223,6 +224,7 @@ module.exports = {
       await t.rollback();
       res.status(500).json({
         IsSuccess: false,
+        error_log: error,
         Message:
           error.message === 'Validation error'
             ? CONSTANTS.EMAIL_EXIST
@@ -268,6 +270,7 @@ module.exports = {
       console.log(error);
       res.status(500).json({
         IsSuccess: false,
+        error_log: error,
         Message: CONSTANTS.INTERNAL_SERVER_ERROR
       });
       next(error);
@@ -313,12 +316,13 @@ module.exports = {
       await t.rollback();
       res.status(500).json({
         IsSuccess: false,
+        error_log: error,
         Message: CONSTANTS.INTERNAL_SERVER_ERROR
       });
       next(error);
     } finally {
       let logObj = {
-        user_id: member?.family_member_id ? rmember?.family_member_id : 'Not Found',
+        user_id: member?.family_member_id ? member?.family_member_id : 'Not Found',
         function: 'Second_Family',
         function_type: 'Add',
         request: req?.body
@@ -352,6 +356,7 @@ module.exports = {
       await t.rollback();
       res.status(500).json({
         IsSuccess: false,
+        error_log: error,
         Message: CONSTANTS.INTERNAL_SERVER_ERROR
       });
       next(error);
@@ -406,6 +411,7 @@ module.exports = {
       await t.rollback();
       res.status(500).json({
         IsSuccess: false,
+        error_log: error,
         Message: CONSTANTS.INTERNAL_SERVER_ERROR
       });
       next(error);
@@ -458,6 +464,7 @@ module.exports = {
       await t.rollback();
       res.status(500).json({
         IsSuccess: false,
+        error_log: error,
         Message: CONSTANTS.INTERNAL_SERVER_ERROR
       });
       next(error);
@@ -558,7 +565,9 @@ module.exports = {
       next();
     } catch (error) {
       await t.rollback();
-      res.status(500).json({ IsSuccess: false, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
+      res
+        .status(500)
+        .json({ IsSuccess: false, error_log: error, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
       next(error);
     }
   },
@@ -591,7 +600,9 @@ module.exports = {
       }
       next();
     } catch (error) {
-      res.status(500).json({ IsSuccess: false, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
+      res
+        .status(500)
+        .json({ IsSuccess: false, error_log: error, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
       next(error);
     }
   },
@@ -630,7 +641,9 @@ module.exports = {
       next();
     } catch (error) {
       await t.rollback();
-      res.status(500).json({ IsSuccess: false, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
+      res
+        .status(500)
+        .json({ IsSuccess: false, error_log: error, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
       next(error);
     } finally {
       let logObj = {
@@ -660,7 +673,9 @@ module.exports = {
       });
       next();
     } catch (error) {
-      res.status(500).json({ IsSuccess: false, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
+      res
+        .status(500)
+        .json({ IsSuccess: false, error_log: error, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
       next(error);
     }
   }

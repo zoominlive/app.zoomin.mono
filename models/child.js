@@ -18,11 +18,6 @@ const Child = sequelize.define(
       type: Sequelize.STRING(30),
       required: [true, 'Last Name is mandatory field']
     },
-    rooms: {
-      type: Sequelize.JSON,
-      allowNull: false,
-      required: true
-    },
     location: {
       type: Sequelize.JSON,
       allowNull: false,
@@ -49,6 +44,9 @@ const Child = sequelize.define(
     },
     time_zone: {
       type: Sequelize.STRING(100)
+    },
+    cust_id: {
+      type: Sequelize.STRING(50)
     },
     createdAt: { type: Sequelize.DATE, field: 'created_at' },
     updatedAt: { type: Sequelize.DATE, field: 'updated_at' }

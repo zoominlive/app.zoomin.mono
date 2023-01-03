@@ -10,7 +10,6 @@ var indexRouter = require('./routes/index');
 const sequelize = require('./lib/database');
 var bodyParser = require('body-parser');
 const cors = require('cors');
-const connectToDatabase = require('./models/index');
 
 app.use(cors());
 // To create DB tables from modules and sync DB
@@ -21,7 +20,7 @@ app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 app.use(express.json());
 
 /** handle the responses to add openapi specs*/
-if (process.env.NODE_ENV !== 'production') {
+if (process.env.NODE_ENV != 'production') {
   mkdirp.sync(path.parse(openAPIFilePath).dir);
 
   let predefinedSpec;
@@ -42,7 +41,7 @@ if (process.env.NODE_ENV !== 'production') {
 app.use('/', indexRouter);
 
 /** handle the requests to add openapi specs*/
-if (process.env.NODE_ENV !== 'production') {
+if (process.env.NODE_ENV != 'production') {
   handleRequests();
 }
 

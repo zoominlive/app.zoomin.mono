@@ -32,6 +32,7 @@ module.exports = {
     } catch (error) {
       res.status(500).json({
         IsSuccess: false,
+        error_log: error,
         Message: CONSTANTS.INTERNAL_SERVER_ERROR
       });
       next(error);

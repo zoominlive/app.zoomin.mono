@@ -1,290 +1,397 @@
 const connectToDatabase = require('../models/index');
 const Sequelize = require('sequelize');
-const sequelize = require('../lib/database');
 const _ = require('lodash');
-const { cons } = require('lodash-contrib');
-const rooms = require('./rooms');
+const moment = require('moment-timezone');
 
 module.exports = {
   /* Create new camera */
   getAllCamForLocation: async (user) => {
-    const { Camera, Room, Child } = await connectToDatabase();
-    let rooms = [];
-    if (user?.family_id) {
-      let childDetails;
-      if (user?.family_id) {
-        childDetails = await Child.findAll({
-          raw: true,
-          where: { family_id: user?.family_id, status: 'Enabled' }
-        });
-      }
+    const { Camera, Room, Child, RoomsInChild, CamerasInRooms, CustomerLocations } =
+      await connectToDatabase();
 
-      childDetails?.forEach((child) => {
-        child?.rooms?.rooms.forEach((room) => rooms.push(room));
-      });
-
-      rooms = _.uniq(rooms);
-    } else {
-      rooms = await Room.findAll({
-        raw: true,
-        where: { cust_id: user?.cust_id, location: user.location.accessable_locations }
-      });
-    }
-
-    const roomIds = rooms?.map((room) => room?.room_id);
-
-    const searchQuery = roomIds;
-
-    let orArray = [];
-    searchQuery?.forEach((word) => {
-      orArray?.push({ room_ids: { [Sequelize.Op.substring]: word } });
-    });
-
-    const cameras = await Camera.findAll({
-      where: {
-        [Sequelize.Op.or]: orArray
-      },
+    let availableLocations = await CustomerLocations.findAll({
+      where: { cust_id: user.cust_id },
       raw: true
     });
 
-    let newCameras;
     if (user?.family_id) {
-      newCameras = rooms
-        ?.map((room) => {
-          let camsToAdd = [];
-          cameras?.forEach((cam) => {
-            cam?.room_ids?.rooms?.forEach((room1) => {
-              if (room1?.room_id === room?.room_id) {
-                camsToAdd?.push({
-                  cam_id: cam?.cam_id,
-                  cam_name: cam?.cam_name,
-                  description: cam?.description,
-                  stream_uri: cam?.stream_uri
-                });
+      let cameras = await Child.findAll({
+        where: { family_id: user.family_id, status: 'enabled' },
+        include: [
+          {
+            model: RoomsInChild,
+            where: {
+              disabled: 'false'
+            },
+            as: 'roomsInChild',
+            include: [
+              {
+                model: Room,
+                as: 'room',
+                where: { location: user.location.accessable_locations },
+                include: [
+                  {
+                    model: CamerasInRooms,
+                    include: [
+                      {
+                        model: Camera
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      });
+
+      let finalRooms = [];
+      cameras?.forEach((rooms) => {
+        rooms?.roomsInChild?.forEach((room) => {
+          if (room?.schedule?.timeRange) {
+            const timeZone = availableLocations.find((loc) => loc.loc_name == room.room.location);
+            let hasAccess = false;
+            room.schedule.timeRange?.forEach((range) => {
+              if (range[1].includes(moment().tz(timeZone.time_zone).format('dddd'))) {
+                const currentTime = moment(
+                  moment().tz(timeZone.time_zone).format('hh:mm A'),
+                  'hh:mm A'
+                );
+                const beforeTime = moment(range[0][0], 'hh:mm A');
+                const afterTime = moment(range[0][1], 'hh:mm A');
+                console.log(
+                  beforeTime,
+                  afterTime,
+                  currentTime,
+                  currentTime.isBetween(beforeTime, afterTime)
+                );
+                if (currentTime.isBetween(beforeTime, afterTime)) {
+                  hasAccess = true;
+                }
               }
             });
-          });
-
-          return { ...room, cameras: camsToAdd };
-        })
-        .filter((rooms) => {
-          let count = 0;
-
-          user?.accessable_locations?.selected_locations?.forEach((location) => {
-            if (rooms?.location === location) {
-              count = 1;
-            }
-          });
-
-          return count === 1;
-        });
-    } else {
-      newCameras = rooms?.map((room) => {
-        let camsToAdd = [];
-        cameras?.forEach((cam) => {
-          cam?.room_ids?.rooms?.forEach((room1) => {
-            if (room1?.room_id === room?.room_id) {
-              camsToAdd?.push({
-                cam_id: cam?.cam_id,
-                cam_name: cam?.cam_name,
-                description: cam?.description,
-                stream_uri: cam?.stream_uri
+            if (hasAccess) {
+              let cams = room?.room?.cameras_assigned_to_rooms
+                ?.map((cam) => {
+                  return {
+                    cam_id: cam?.camera?.cam_id,
+                    cam_name: cam?.camera?.cam_name,
+                    description: cam?.camera?.description,
+                    stream_uri: cam?.camera?.stream_uri
+                  };
+                })
+                .filter((cam) => cam?.cam_id);
+              finalRooms.push({
+                room_id: room.room.room_id,
+                room_name: room.room.room_name,
+                location: room.room.location,
+                cameras: cams
               });
             }
-          });
+          } else {
+            let cams = room?.room?.cameras_assigned_to_rooms
+              ?.map((cam) => {
+                return {
+                  cam_id: cam?.camera?.cam_id,
+                  cam_name: cam?.camera?.cam_name,
+                  description: cam?.camera?.description,
+                  stream_uri: cam?.camera?.stream_uri
+                };
+              })
+              .filter((cam) => cam?.cam_id);
+
+            finalRooms.push({
+              room_id: room.room.room_id,
+              room_name: room.room.room_name,
+              location: room.room.location,
+              cameras: cams
+            });
+          }
         });
-
-        return { ...room, cameras: camsToAdd };
       });
-    }
 
-    return newCameras;
+      finalRooms = _.uniqBy(finalRooms, 'room_id');
+      return finalRooms;
+    } else {
+      let rooms;
+
+      if (user.role == 'Admin') {
+        rooms = await Room.findAll({
+          where: {
+            cust_id: user.cust_id,
+            location: user.location.accessable_locations
+          },
+          include: [
+            {
+              model: CamerasInRooms,
+              include: [
+                {
+                  model: Camera
+                }
+              ]
+            }
+          ]
+        });
+      } else {
+        rooms = await Room.findAll({
+          where: {
+            user_id: user.user_id
+          },
+          include: [
+            {
+              model: CamerasInRooms,
+              include: [
+                {
+                  model: Camera
+                }
+              ]
+            }
+          ]
+        });
+      }
+
+      rooms = rooms?.map((room) => {
+        let cameras = room.cameras_assigned_to_rooms
+          ?.map((cam) => {
+            return {
+              cam_id: cam?.camera?.cam_id,
+              cam_name: cam?.camera?.cam_name,
+              description: cam?.camera?.description,
+              stream_uri: cam?.camera?.stream_uri
+            };
+          })
+          .filter((cam) => cam?.cam_id);
+        return {
+          room_id: room.room_id,
+          room_name: room.room_name,
+          location: room.location,
+          cameras: cameras
+        };
+      });
+      return rooms;
+    }
   },
 
   getAllCamForUser: async (user) => {
-    const { Camera, Room, Child, Family } = await connectToDatabase();
-    let children = [];
+    const { Camera, Room, Child, RoomsInChild, CamerasInRooms, CustomerLocations } =
+      await connectToDatabase();
+
+    let availableLocations = await CustomerLocations.findAll({
+      where: { cust_id: user.cust_id },
+      raw: true
+    });
+
     if (user?.family_id) {
-      let childDetails;
-      if (user?.family_id) {
-        childDetails = await Child.findAll({
-          raw: true,
-          where: { family_id: user.family_id, status: 'Enabled' }
-        });
-      }
-
-      let childDetailsForlocation = childDetails;
-
-      childDetailsForlocation?.forEach((child) => {
-        let rooms = [];
-        child?.rooms?.rooms?.forEach((room) =>
-          rooms.push({
-            room
-          })
-        );
-        children.push({
-          rooms,
-          childDetails: { firstName: child.first_name, lastName: child.last_name }
-        });
+      let cameras = await Child.findAll({
+        where: { family_id: user.family_id, status: 'enabled' },
+        include: [
+          {
+            model: RoomsInChild,
+            as: 'roomsInChild',
+            where: {
+              disabled: 'false'
+            },
+            include: [
+              {
+                model: Room,
+                as: 'room',
+                where: {
+                  location: user.location.accessable_locations
+                },
+                include: [
+                  {
+                    model: CamerasInRooms,
+                    include: [
+                      {
+                        model: Camera
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
       });
 
-      let cameras = Promise.all(
-        children?.map(async (child) => {
-          const childObj = Promise.all(
-            child?.rooms?.map(async (room) => {
-              const query = `SELECT cam_id,cam_name , description, stream_uri FROM camera WHERE room_ids LIKE '%${room.room.room_id}%'  `;
-              let cams = await sequelize.query(
-                query,
-                { type: Sequelize.QueryTypes.SELECT },
-                {
-                  model: Camera,
-                  mapToModel: true
+      const finalResult = cameras?.map((child) => {
+        let finalRooms = [];
+        child?.roomsInChild?.forEach((room) => {
+          if (room?.schedule?.timeRange) {
+            const timeZone = availableLocations.find((loc) => loc.loc_name == room.room.location);
+            let hasAccess = false;
+            room.schedule.timeRange?.forEach((range) => {
+              if (range[1].includes(moment().tz(timeZone.time_zone).format('dddd'))) {
+                const currentTime = moment(
+                  moment().tz(timeZone.time_zone).format('hh:mm A'),
+                  'hh:mm A'
+                );
+                const beforeTime = moment(range[0][0], 'hh:mm A');
+                const afterTime = moment(range[0][1], 'hh:mm A');
+                console.log(
+                  beforeTime,
+                  afterTime,
+                  currentTime,
+                  currentTime.isBetween(beforeTime, afterTime)
+                );
+                if (currentTime.isBetween(beforeTime, afterTime)) {
+                  hasAccess = true;
                 }
-              );
-
-              return {
-                ...room.room,
-                cameras: cams
-              };
-            })
-          );
-
-          let finalChildData = await childObj;
-          finalChildData = finalChildData.filter((room) => {
-            let count = 0;
-
-            user.accessable_locations.selected_locations.forEach((location) => {
-              if (room.location === location) {
-                count = 1;
               }
             });
+            if (hasAccess) {
+              let cams = room?.room?.cameras_assigned_to_rooms
+                ?.map((cam) => {
+                  return {
+                    cam_id: cam?.camera?.cam_id,
+                    cam_name: cam?.camera?.cam_name,
+                    description: cam?.camera?.description,
+                    stream_uri: cam?.camera?.stream_uri
+                  };
+                })
+                .filter((cam) => cam?.cam_id);
+              finalRooms.push({
+                room_id: room.room.room_id,
+                room_name: room.room.room_name,
+                location: room.room.location,
+                cameras: cams
+              });
+            }
+          } else {
+            let cams = room?.room?.cameras_assigned_to_rooms
+              ?.map((cam) => {
+                return {
+                  cam_id: cam?.camera?.cam_id,
+                  cam_name: cam?.camera?.cam_name,
+                  description: cam?.camera?.description,
+                  stream_uri: cam?.camera?.stream_uri
+                };
+              })
+              .filter((cam) => cam?.cam_id);
 
-            return count == 1;
-          });
+            finalRooms.push({
+              room_id: room.room.room_id,
+              room_name: room.room.room_name,
+              location: room.room.location,
+              cameras: cams
+            });
+          }
+        });
+        return {
+          childFirstName: child.first_name,
+          childLastName: child.last_name,
+          rooms: finalRooms
+        };
+      });
 
-          return {
-            childFirstName: child.childDetails.firstName,
-            childLastName: child.childDetails.lastName,
-            rooms: finalChildData
-          };
-        })
-      );
-      const cameraDetails = await cameras;
-      return cameraDetails;
+      return finalResult;
     } else {
       if (user.role == 'Admin') {
-        children = await Room.findAll({
-          raw: true,
-          where: { cust_id: user?.cust_id, location: user.location.accessable_locations },
-          attributes: ['room_id', 'room_name', 'location']
+        let locations = await CustomerLocations.findAll({
+          where: {
+            loc_name: user.location.accessable_locations
+          },
+          attributes: ['loc_name'],
+          include: [
+            {
+              model: Room,
+              attributes: ['room_id', 'room_name'],
+              include: [
+                {
+                  model: CamerasInRooms,
+                  include: [
+                    {
+                      model: Camera
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
         });
-      } else {
-        children = await Room.findAll({
-          raw: true,
-          where: { user_id: user?.user_id },
-          attributes: ['room_id', 'room_name', 'location']
-        });
-      }
 
-      let roomIds = children.map((room) => {
-        return { room_ids: { [Sequelize.Op.substring]: room.room_id } };
-      });
-
-      let cameras = await Camera.findAll({
-        where: {
-          [Sequelize.Op.or]: roomIds
-        }
-      });
-
-      let locations;
-      locations = user?.location?.accessable_locations;
-
-      const finalResponse = locations?.map((loc) => {
-        let rooms = children?.filter((room) => room.location == loc);
-        let finalrooms = rooms?.map((room) => {
-          let camsInRoom = [];
-          cameras?.forEach((cam) => {
-            cam?.room_ids?.rooms?.forEach((room1) => {
-              if (room1.room_id === room.room_id) {
-                camsInRoom.push({
-                  cam_id: cam.cam_id,
-                  cam_name: cam.cam_name,
-                  description: cam.description,
-                  stream_uri: cam.stream_uri
-                });
-              }
-            });
+        locations = locations?.map((loc) => {
+          let rooms = loc?.rooms?.map((room) => {
+            let cams = room?.cameras_assigned_to_rooms
+              ?.map((cam) => {
+                return {
+                  cam_id: cam?.camera?.cam_id,
+                  cam_name: cam?.camera?.cam_name,
+                  description: cam?.camera?.description,
+                  stream_uri: cam?.camera?.stream_uri
+                };
+              })
+              .filter((cam) => cam?.cam_id);
+            return { room_id: room.room_id, room_name: room.room_name, cameras: cams };
           });
 
-          return { room_id: room?.room_id, room_name: room?.room_name, cameras: camsInRoom };
+          return { location: loc.loc_name, rooms: rooms };
         });
 
-        return { location: loc, rooms: finalrooms };
-      });
-      return finalResponse;
+        return locations;
+      } else {
+        let locations = await CustomerLocations.findAll({
+          where: {
+            loc_name: user.location.accessable_locations
+          },
+          attributes: ['loc_name'],
+          include: [
+            {
+              model: Room,
+              as: 'room',
+              attributes: ['room_id', 'room_name'],
+              where: {
+                user_id: user.user_id
+              },
+              include: [
+                {
+                  model: CamerasInRooms,
+                  include: [
+                    {
+                      model: Camera
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        });
+        locations = locations?.map((loc) => {
+          let rooms = loc?.rooms?.map((room) => {
+            let cams = room?.cameras_assigned_to_rooms
+              ?.map((cam) => {
+                return {
+                  cam_id: cam?.camera?.cam_id,
+                  cam_name: cam?.camera?.cam_name,
+                  description: cam?.camera?.description,
+                  stream_uri: cam?.camera?.stream_uri
+                };
+              })
+              .filter((cam) => cam?.cam_id);
+            return { room_id: room.room_id, room_name: room.room_name, cameras: cams };
+          });
+
+          return { location: loc.loc_name, rooms: rooms };
+        });
+        return locations;
+      }
     }
   },
 
   addRecentViewers: async (params, t) => {
     const { RecentViewers } = await connectToDatabase();
     let recentViewerObj = { ...params, requested_at: Sequelize.literal('CURRENT_TIMESTAMP') };
-    let recentViewer;
-    let viewerAlreadyExist = await RecentViewers.findOne(
+    let recentViewer = await RecentViewers.create(
       {
-        where: {
-          user_id: params?.user?.family_member_id
-            ? params?.user?.family_member_id
-            : params?.user?.user_id
-        },
-        raw: true
+        ...recentViewerObj,
+        recent_user_id: params?.user?.family_member_id
+          ? params?.user?.family_member_id
+          : params?.user?.user_id
       },
       { transaction: t }
     );
-    if (!viewerAlreadyExist) {
-      recentViewer = await RecentViewers.create(
-        {
-          ...recentViewerObj,
-          user_id: params?.user?.family_member_id
-            ? params?.user?.family_member_id
-            : params?.user?.user_id
-        },
-        { transaction: t }
-      );
-    } else {
-      recentViewer = await RecentViewers.update(
-        recentViewerObj,
-        {
-          returning: true,
-          where: {
-            user_id: params?.user?.family_member_id
-              ? params?.user?.family_member_id
-              : params?.user?.user_id
-          }
-        },
-        { transaction: t }
-      );
-    }
 
     return recentViewer;
-  },
-
-  getRecentViewers: async () => {
-    const { RecentViewers } = await connectToDatabase();
-    let twoHoursBefore = new Date();
-    twoHoursBefore.setHours(twoHoursBefore.getHours() - 2);
-
-    const currentTime = new Date();
-
-    let recentViewers = await RecentViewers.findAll({
-      raw: true,
-      where: {
-        requested_at: {
-          [Sequelize.Op.between]: [twoHoursBefore.toISOString(), currentTime.toISOString()]
-        }
-      }
-    });
-
-    return recentViewers;
   },
 
   setUserCamPreference: async (user, cams, t) => {
