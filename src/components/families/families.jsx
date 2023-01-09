@@ -73,7 +73,7 @@ const Families = () => {
   const [parentType, setParentType] = useState('');
   const [familyIndex, setFamilyIndex] = useState();
   const [familiesPayload, setFamiliesPayload] = useState({
-    page: 1,
+    page: 0,
     limit: parseInt(process.env.REACT_APP_PAGINATION_LIMIT, 10),
     searchBy: '',
     location: 'All',
@@ -110,7 +110,7 @@ const Families = () => {
   }, []);
 
   useEffect(() => {
-    setFamily(familiesList[familyIndex]);
+    setFamily(familiesList?.[familyIndex]);
   }, [familiesList]);
 
   // Method to fetch families list
@@ -149,7 +149,7 @@ const Families = () => {
 
   // Method to change the page in table
   const handlePageChange = (_, newPage) => {
-    setFamiliesPayload((prevPayload) => ({ ...prevPayload, page: newPage + 1 }));
+    setFamiliesPayload((prevPayload) => ({ ...prevPayload, page: newPage }));
   };
 
   // Method to change the row per page in table
@@ -157,7 +157,7 @@ const Families = () => {
     setFamiliesPayload((prevPayload) => ({
       ...prevPayload,
       limit: parseInt(event.target.value, 10),
-      page: 1
+      page: 0
     }));
   };
 
@@ -166,7 +166,7 @@ const Families = () => {
     setFamiliesPayload((prevPayload) => ({
       ...prevPayload,
       searchBy: event.target.value,
-      page: 1
+      page: 0
     }));
   };
 
@@ -175,7 +175,7 @@ const Families = () => {
     setFamiliesPayload((prevPayload) => ({
       ...prevPayload,
       location: event.target.value,
-      page: 1
+      page: 0
     }));
   };
 
@@ -183,7 +183,7 @@ const Families = () => {
   const handleRoomChange = (_, value) => {
     const roomsArr = [];
     value.forEach((room) => roomsArr.push(room.room_name));
-    setFamiliesPayload((prevPayload) => ({ ...prevPayload, rooms: roomsArr, page: 1 }));
+    setFamiliesPayload((prevPayload) => ({ ...prevPayload, rooms: roomsArr, page: 0 }));
   };
 
   // Calls the search handler after 500ms
@@ -469,7 +469,7 @@ const Families = () => {
                 component="div"
                 count={totalFamilies}
                 rowsPerPage={familiesPayload?.limit}
-                page={familiesPayload?.page - 1}
+                page={familiesPayload?.page}
                 sx={{ flex: '1 1 auto' }}
               />
             </TableContainer>
