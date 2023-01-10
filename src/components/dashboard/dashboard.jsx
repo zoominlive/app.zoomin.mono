@@ -12,9 +12,16 @@ import {
   TableBody,
   Table,
   TablePagination,
-  Menu,
-  MenuItem,
-  IconButton
+  // Menu,
+  // MenuItem,
+  Dialog,
+  DialogTitle,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  Button,
+  IconButton,
+  useMediaQuery
 } from '@mui/material';
 import dayjs from 'dayjs';
 import { useSnackbar } from 'notistack';
@@ -30,6 +37,7 @@ import Map from './map';
 import ReactPlayer from 'react-player';
 import { Video } from 'react-feather';
 import _ from 'lodash';
+import { useTheme } from '@mui/material/styles';
 
 const Dashboard = () => {
   const layoutCtx = useContext(LayoutContext);
@@ -48,9 +56,13 @@ const Dashboard = () => {
   });
   const [anchorEl, setAnchorEl] = React.useState(null);
   const open = Boolean(anchorEl);
-  const [cameraOptions, setCameraOptions] = useState([]);
+  // const [cameraOptions, setCameraOptions] = useState([]);
   const [selectedCamera, setSelectedCamera] = useState({});
-
+  const theme = useTheme();
+  const fullScreen = useMediaQuery(theme.breakpoints.down('md'));
+  const [locations] = useState([]);
+  const [selectedLocation] = useState('');
+  const [selectedRoom] = useState([]);
   const handleClick = (event) => {
     setAnchorEl(event.currentTarget);
   };
@@ -91,11 +103,11 @@ const Dashboard = () => {
             : 0
         );
         setMapsData(points);
-        setCameraOptions(
-          response.data.Data.cameraDetails && response.data.Data.cameraDetails.length > 0
-            ? response.data.Data.cameraDetails
-            : []
-        );
+        // setCameraOptions(
+        //   response.data.Data.cameraDetails && response.data.Data.cameraDetails.length > 0
+        //     ? response.data.Data.cameraDetails
+        //     : []
+        // );
         console.log(response.data.Data.cameraDetails);
         setSelectedCamera(response.data.Data.cameraDetails[0]);
       } else {
@@ -241,7 +253,7 @@ const Dashboard = () => {
                 <Video />
               </IconButton>
 
-              <Menu
+              {/* <Menu
                 id="basic-menu"
                 anchorEl={anchorEl}
                 open={open}
@@ -254,7 +266,203 @@ const Dashboard = () => {
                     {camera.cam_name}
                   </MenuItem>
                 ))}
-              </Menu>
+              </Menu> */}
+              <Dialog
+                anchorEl={anchorEl}
+                fullScreen={fullScreen}
+                open={open}
+                onClose={handleClose}
+                aria-labelledby="responsive-dialog-title">
+                <DialogTitle id="responsive-dialog-title">
+                  {"Use Google's location service?"}
+                </DialogTitle>
+                <DialogContent>
+                  <DialogContentText>
+                    {/* Let Google help apps determine location. This means sending anonymous location
+                    data to Google, even when no apps are running. */}
+                    <Grid container spacing={2}>
+              <Grid item md={3} sm={12}>
+                <Autocomplete
+                  multiple
+                  limitTags={1}
+                  id="tags-standard"
+                  options={locations?.length !== 0 ? locations : []}
+                  value={selectedLocation ? selectedLocation : []}
+                  getOptionLabel={(option) => option}
+                  onChange={(_, value, reason, option) => {
+                    handleSetLocations(_, value, reason, option);
+                  }}
+                  renderTags={(value, getTagProps) =>
+                    value?.map((option, index) => (
+                      <Chip key={index} label={option} {...getTagProps({ index })} />
+                    ))
+                  }
+                  renderOption={(props, option, { selected }) => (
+                    <li {...props}>
+                      <Checkbox
+                        icon={icon}
+                        checkedIcon={checkedIcon}
+                        style={{ marginRight: 8 }}
+                        checked={allLocationChecked ? allLocationChecked : selected}
+                      />
+                      {option}
+                    </li>
+                  )}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="location"
+                      fullWidth
+                      InputProps={{
+                        ...params.InputProps,
+                        endAdornment: (
+                          <React.Fragment>
+                            {dropdownLoading ? (
+                              <CircularProgress color="inherit" size={20} />
+                            ) : null}
+                            {params.InputProps.endAdornment}
+                          </React.Fragment>
+                        )
+                      }}
+                    />
+                  )}
+                />
+              </Grid>
+              <Grid item md={3} sm={12}>
+                <Autocomplete
+                  multiple
+                  limitTags={1}
+                  id="tags-standard"
+                  options={rooms ? rooms : []}
+                  value={selectedRoom?.length !== 0 ? selectedRoom : []}
+                  getOptionLabel={(option) => option?.room_name}
+                  isOptionEqualToValue={(option, value) => option?.room_id === value?.room_id}
+                  onChange={(_, value, reason, option) => {
+                    handleSetRooms(_, value, reason, option);
+                  }}
+                  renderTags={(value, getTagProps) =>
+                    value?.map((option, index) => (
+                      <Chip key={index} label={option?.room_name} {...getTagProps({ index })} />
+                    ))
+                  }
+                  renderOption={(props, option, { selected }) => (
+                    <li {...props}>
+                      <Checkbox
+                        icon={icon}
+                        checkedIcon={checkedIcon}
+                        style={{ marginRight: 8 }}
+                        checked={allRoomChecked ? allRoomChecked : selected}
+                      />
+                      {option?.room_name}
+                    </li>
+                  )}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="room"
+                      fullWidth
+                      InputProps={{
+                        ...params.InputProps,
+                        endAdornment: (
+                          <React.Fragment>
+                            {dropdownLoading ? (
+                              <CircularProgress color="inherit" size={20} />
+                            ) : null}
+                            {params.InputProps.endAdornment}
+                          </React.Fragment>
+                        )
+                      }}
+                    />
+                  )}
+                />
+              </Grid>
+              <Grid item md={4.7} sm={20}>
+                <Autocomplete
+                  multiple
+                  limitTags={1}
+                  disableCloseOnSelect
+                  id="tags-standard"
+                  options={cameras ? cameras : []}
+                  value={selectedCameras?.length !== 0 ? selectedCameras : []}
+                  getOptionLabel={(option) => option?.cam_name}
+                  isOptionEqualToValue={(option, value) => option?.cam_id === value?.cam_id}
+                  onChange={(_, values, situation, option) => {
+                    handleChangeCameras(_, values, situation, option);
+                  }}
+                  renderTags={(value, getTagProps) =>
+                    value?.map((option, index) => (
+                      <Chip
+                        key={index}
+                        label={
+                          option?.cam_name == 'Select All'
+                            ? option?.cam_name
+                            : option?.location + '/' + option?.room_name + ' - ' + option?.cam_name
+                        }
+                        {...getTagProps({ index })}
+                      />
+                    ))
+                  }
+                  renderOption={(props, option, { selected }) => (
+                    <li {...props}>
+                      <Checkbox
+                        icon={icon}
+                        checkedIcon={checkedIcon}
+                        style={{ marginRight: 8 }}
+                        checked={allCamsChecked ? allCamsChecked : selected}
+                      />
+                      {option?.cam_name == 'Select All'
+                        ? option?.cam_name
+                        : option.location + '/' + option.room_name + ' - ' + option?.cam_name}
+                    </li>
+                  )}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Cameras"
+                      fullWidth
+                      helperText={
+                        limitReached &&
+                        `Maxmimum ${
+                          authCtx.user.role === 'Admin' ? 'sixteen' : 'two'
+                        } cameras can be selected`
+                      }
+                      InputProps={{
+                        ...params.InputProps,
+                        endAdornment: (
+                          <React.Fragment>
+                            {dropdownLoading ? (
+                              <CircularProgress color="inherit" size={20} />
+                            ) : null}
+                            {params.InputProps.endAdornment}
+                          </React.Fragment>
+                        )
+                      }}
+                    />
+                  )}
+                />
+              </Grid>
+              <Grid item md={1.2} sm={12} sx={{ marginTop: '6px' }}>
+                <Button
+                  className="add-btn"
+                  variant="contained"
+                  startIcon={<Play />}
+                  onClick={() => setSubmitted(true)}>
+                  {' '}
+                  Play
+                </Button>
+              </Grid>
+            </Grid>
+                  </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                  <Button autoFocus onClick={handleClose}>
+                    Disagree
+                  </Button>
+                  <Button onClick={handleClose} autoFocus>
+                    Agree
+                  </Button>
+                </DialogActions>
+              </Dialog>
             </Grid>
             <ReactPlayer
               url={
