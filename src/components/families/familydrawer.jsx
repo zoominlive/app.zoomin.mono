@@ -12,7 +12,8 @@ import {
 import RoomAddForm from './roomaddform';
 import SchedulerFrom from './scheduler';
 import BlockIcon from '@mui/icons-material/Block';
-import Schedule from '../../assets/schedule.svg';
+import EditSchedule from '../../assets/schedule.svg';
+import Schedule from '../../assets/new-schedule.svg';
 import DeleteScheduleIcon from '../../assets/delete-icon.svg';
 import React from 'react';
 import PropTypes from 'prop-types';
@@ -786,7 +787,7 @@ const FamilyDrawer = (props) => {
                           alignItems="center"
                           justifyContent="center">
                           <img
-                            src={Schedule}
+                            src={_.isEmpty(room.schedule) ? Schedule : EditSchedule}
                             onClick={() => {
                               setRoomOpenInScheduler(room);
                               setIsSchedulerOpen(true);

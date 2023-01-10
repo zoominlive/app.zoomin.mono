@@ -13,8 +13,9 @@ const FullScreenDialog = (props) => {
       {props.selectedCameras.length === 1 && props.playing && props.submitted && (
         <Grid
           container
+          alignContent={'center'}
           spacing={props.isFullScreenDialogOpen ? 0 : 1}
-          sx={{ border: props.isFullScreenDialogOpen ? '' : '16px solid white' }}>
+          sx={{ border: props.isFullScreenDialogOpen ? '' : '16px solid white', height: '100vh' }}>
           <Grid item md={12} sm={12} sx={{ display: 'flex', justifyContent: 'center' }}>
             <Box mt={2} height={'75%'} width="75%">
               <CustomPlayer
@@ -32,8 +33,9 @@ const FullScreenDialog = (props) => {
       {props.selectedCameras.length === 2 && props.playing && props.submitted && (
         <Grid
           container
+          alignContent={'center'}
           spacing={props.isFullScreenDialogOpen ? 0 : 2}
-          sx={{ border: props.isFullScreenDialogOpen ? '' : '16px solid white' }}>
+          sx={{ border: props.isFullScreenDialogOpen ? '' : '16px solid white', height: '100vh' }}>
           {props.selectedCameras?.map((value, index) => (
             <Grid key={index} item md={6} sm={12}>
               <CustomPlayer
@@ -55,8 +57,12 @@ const FullScreenDialog = (props) => {
         props.submitted && (
           <Grid
             container
+            alignContent={'center'}
             spacing={props.isFullScreenDialogOpen ? 0 : 2}
-            sx={{ border: props.isFullScreenDialogOpen ? '' : '16px solid white' }}>
+            sx={{
+              border: props.isFullScreenDialogOpen ? '' : '16px solid white',
+              height: '100vh'
+            }}>
             {props.selectedCameras?.map((value, index) => (
               <Grid key={index} item md={6} sm={12}>
                 <CustomPlayer
@@ -78,8 +84,12 @@ const FullScreenDialog = (props) => {
         props.submitted && (
           <Grid
             container
+            alignContent={'center'}
             spacing={props.isFullScreenDialogOpen ? 0 : 2}
-            sx={{ border: props.isFullScreenDialogOpen ? '16px solid black' : '16px solid white' }}>
+            sx={{
+              border: props.isFullScreenDialogOpen ? '16px solid black' : '16px solid white',
+              height: '100vh'
+            }}>
             {props.selectedCameras?.map((value, index) => (
               <Grid key={index} item md={3} sm={6}>
                 <CustomPlayer

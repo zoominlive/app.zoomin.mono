@@ -9,7 +9,7 @@ import {
   Typography
 } from '@mui/material';
 import logo from '../../assets/image2vector.svg';
-import smallLogo from '../../assets/small-logo.svg';
+import appLogo from '../../assets/app-icon.png';
 import collapseButton from '../../assets/collapse-button.svg';
 import openButton from '../../assets/open-button.svg';
 import React, { useEffect, useState } from 'react';
@@ -156,7 +156,7 @@ const Layout = () => {
           className={`layout-drawer ${open ? 'open' : 'collapsed'}`}
           open={open}>
           <div className="header">
-            <img src={open ? logo : smallLogo} style={{ height: '4.5em' }} />
+            <img src={open ? logo : appLogo} style={{ height: '4.5em' }} />
           </div>
           {authCtx.user && Object?.keys(authCtx?.user)?.length !== 0 && (
             <List>
