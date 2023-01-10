@@ -207,7 +207,7 @@ module.exports = {
       }
       next();
     } catch (error) {
-      await logServices.addAccessErrorLog(logDetails.log_id, error);
+      await logServices.addAccessErrorLog(logDetails?.log_id ?? 'not found', error);
       res
         .status(500)
         .json({ IsSuccess: false, error_log: error, Message: CONSTANTS.INTERNAL_SERVER_ERROR });

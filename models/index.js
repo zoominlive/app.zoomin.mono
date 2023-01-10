@@ -96,6 +96,15 @@ RecentViewers.hasOne(Users, {
   }
 });
 
+Family.belongsTo(Family, { foreignKey: 'family_id' });
+Family.hasMany(Family, {
+  as: 'secondary',
+  sourceKey: 'family_id',
+  foreignKey: {
+    name: 'family_id'
+  }
+});
+
 Child.belongsTo(Family, { foreignKey: 'family_id' });
 Users.belongsTo(Customers, { foreignKey: 'cust_id' });
 Room.belongsTo(Customers, { foreignKey: 'cust_id' });
@@ -104,7 +113,7 @@ const connection = {};
 
 module.exports = async () => {
   if (connection?.isConnected) {
-    console.log('=> Using existing connection.');
+    //Using existing connection
     return {
       ChangeLogs,
       AccessLogs,
@@ -125,7 +134,7 @@ module.exports = async () => {
   await sequelize.sync();
   await sequelize.authenticate();
   connection.isConnected = true;
-  console.log('=> Created a new connection.');
+  //Created a new connection
   return {
     ChangeLogs,
     AccessLogs,

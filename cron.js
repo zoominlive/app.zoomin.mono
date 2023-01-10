@@ -175,20 +175,20 @@ module.exports.enableDisableScheduledRoom = async () => {
     const timeZone = availableLocations?.find((loc) => loc?.loc_name == room?.room?.location);
     const today = moment()?.tz(timeZone?.time_zone)?.format('YYYY-MM-DD');
     if (room?.scheduled_enable_date <= today) {
-      roomsToEnable.push(room.room_child_id);
+      roomsToEnable?.push(room?.room_child_id);
     }
   });
 
   let roomsToDisable = [];
   disableRooms?.forEach((room) => {
-    const timeZone = availableLocations.find((loc) => loc.loc_name == room.room.location);
-    const today = moment()?.tz(timeZone.time_zone)?.format('YYYY-MM-DD');
+    const timeZone = availableLocations?.find((loc) => loc?.loc_name == room?.room?.location);
+    const today = moment()?.tz(timeZone?.time_zone)?.format('YYYY-MM-DD');
     if (room?.scheduled_disable_date <= today) {
-      roomsToDisable.push(room.room_child_id);
+      roomsToDisable?.push(room?.room_child_id);
     }
   });
 
-  if (roomsToEnable.length !== 0) {
+  if (roomsToEnable?.length !== 0) {
     let update = {
       disabled: 'false',
       scheduled_enable_date: null
@@ -198,7 +198,7 @@ module.exports.enableDisableScheduledRoom = async () => {
     });
   }
 
-  if (roomsToDisable.length !== 0) {
+  if (roomsToDisable?.length !== 0) {
     let update = {
       disabled: 'true',
       scheduled_disable_date: null
