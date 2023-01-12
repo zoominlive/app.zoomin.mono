@@ -1,19 +1,4 @@
-import {
-  Box,
-  Card,
-  CardContent,
-  Grid,
-  Stack,
-  Typography,
-  TableRow,
-  TableHead,
-  TableContainer,
-  TableCell,
-  TableBody,
-  Table,
-  TablePagination,
-  IconButton
-} from '@mui/material';
+import { Box, Card, CardContent, Grid, Stack, Typography, IconButton } from '@mui/material';
 import dayjs from 'dayjs';
 import { useSnackbar } from 'notistack';
 import React, { useState } from 'react';
@@ -30,6 +15,7 @@ import { Video } from 'react-feather';
 import _ from 'lodash';
 import WatchStreamDialogBox from './watchstreamdialogbox';
 import VideoOff from '../../assets/video-off.svg';
+import StickyHeadTable from './stickyheadtable';
 
 const Dashboard = () => {
   const layoutCtx = useContext(LayoutContext);
@@ -39,13 +25,6 @@ const Dashboard = () => {
   const [isLoading, setIsLoading] = useState(false);
   const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const [mapsData, setMapsData] = useState([]);
-  const [totalUsers, setTotalUsers] = useState(0);
-  const [usersPayload, setUsersPayload] = useState({
-    pageNumber: 0,
-    pageSize: parseInt(process.env.REACT_APP_PAGINATION_LIMIT, 5),
-    searchBy: '',
-    location: 'All'
-  });
   const [selectedCamera, setSelectedCamera] = useState({});
   const [openWatchStreamDialog, setOpenWatchStreamDialog] = useState(false);
   const [defaultWatchStream, setDefaultWatchStream] = useState(null);
@@ -91,18 +70,13 @@ const Dashboard = () => {
             coordinates: [parseFloat(point.long), parseFloat(point.lat)]
           }
         }));
-        setTotalUsers(
-          response.data.Data.enroledStreamsDetails
-            ? response.data.Data.enroledStreamsDetails.length
-            : 0
-        );
         setMapsData(points);
         setSelectedCamera(
-          response.data.Data.defaultWatchStream.cameras
-            ? response.data.Data.defaultWatchStream.cameras
+          response?.data?.Data?.defaultWatchStream?.cameras
+            ? response?.data?.Data?.defaultWatchStream?.cameras
             : {}
         );
-        setDefaultWatchStream(response.data.Data.defaultWatchStream ?? {});
+        setDefaultWatchStream(response?.data?.Data?.defaultWatchStream ?? {});
         setIsLoading(false);
       } else {
         errorMessageHandler(
@@ -115,304 +89,158 @@ const Dashboard = () => {
       }
     });
   }, []);
-  const handlePageChange = (_, newPage) => {
-    setUsersPayload((prevPayload) => ({ ...prevPayload, pageNumber: newPage }));
-  };
-
-  // Method to change the row per page in table
-  const handleChangeRowsPerPage = (event) => {
-    setUsersPayload((prevPayload) => ({
-      ...prevPayload,
-      pageSize: parseInt(event.target.value, 10)
-    }));
-  };
+  const AccessColumns = ['Children', 'Room'];
+  const topViewersColumns = ['Viewers', 'Views'];
+  const lastHourViewersColumns = ['Viewers', 'Children', 'Room'];
   return (
-    <Box className="dashboard">
-      <Loader loading={isLoading} />
-      <Grid container rowSpacing={1} columnSpacing={{ xs: 3 }} className="dashboard-analytics">
-        <Grid item xs={12} sm={4} md={4} lg={3.5}>
-          <Card>
-            <CardContent className="p-10">
-              <Stack direction="column" alignItems="center" spacing={0}>
-                <Typography className="count">
-                  {statisticsData?.enrolledStreams !== undefined
-                    ? statisticsData?.enrolledStreams
-                    : ' '}
-                </Typography>
-                <Stack className="name">
-                  <Typography>Registered Cameras</Typography>
+    <>
+      <Box className="dashboard">
+        <Loader loading={isLoading} />
+        <Grid container rowSpacing={1} columnSpacing={{ xs: 3 }} className="dashboard-analytics">
+          <Grid item xs={12} sm={12} md={4} lg={3.5}>
+            <Card>
+              <CardContent className="p-10">
+                <Stack direction="column" alignItems="center" spacing={0}>
+                  <Typography className="count">
+                    {statisticsData?.enrolledStreams !== undefined
+                      ? statisticsData?.enrolledStreams
+                      : ' '}
+                  </Typography>
+                  <Stack className="name">
+                    <Typography>Registered Cameras</Typography>
+                  </Stack>
                 </Stack>
-              </Stack>
-            </CardContent>
-          </Card>
-          <TableContainer component={Card}>
-            <Table className="table-column">
-              <TableHead>
-                <TableRow>
-                  <Typography>Gaining Access This Week</Typography>
-                </TableRow>
-                <TableRow>
-                  <TableCell>Children</TableCell>
-                  <TableCell>Room</TableCell>
-                </TableRow>
-              </TableHead>
-            </Table>
-            <div
-              className={`table-content ${
-                statisticsData.childrenWithEnableDate &&
-                statisticsData.childrenWithEnableDate.length == 0
-                  ? 'empty-data'
-                  : ''
-              }`}>
-              <Table>
-                <TableBody>
-                  {statisticsData.childrenWithEnableDate &&
-                  statisticsData.childrenWithEnableDate.length > 0 ? (
-                    statisticsData.childrenWithEnableDate.map((row, index) => (
-                      <TableRow
-                        key={index}
-                        sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
-                        <TableCell>{row.childFirstName + row.childLastName}</TableCell>
-                        <TableCell>{row.rooms.toString()}</TableCell>
-                      </TableRow>
-                    ))
-                  ) : (
-                    <div className="no-data-div">No Data Found</div>
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          </TableContainer>
-        </Grid>
-        <Grid item xs={12} sm={4} md={4} lg={3.5}>
-          <Card>
-            <CardContent>
-              <Stack direction="column" alignItems="center" spacing={0}>
-                <Typography className="count">
-                  {statisticsData?.activeStreams !== undefined
-                    ? statisticsData?.activeStreams
-                    : ' '}
-                </Typography>
-                <Stack className="name">
-                  <Typography>Currently Watched Cameras</Typography>
+              </CardContent>
+            </Card>
+            <StickyHeadTable
+              rows={
+                statisticsData?.childrenWithEnableDate?.length > 0
+                  ? statisticsData?.childrenWithEnableDate
+                  : []
+              }
+              columns={AccessColumns}
+              title={'Gaining Access This Week'}
+              topViewers={false}
+              pagination={false}
+            />
+          </Grid>
+          <Grid item xs={12} sm={12} md={4} lg={3.5}>
+            <Card>
+              <CardContent>
+                <Stack direction="column" alignItems="center" spacing={0}>
+                  <Typography className="count">
+                    {statisticsData?.activeStreams !== undefined
+                      ? statisticsData?.activeStreams
+                      : ' '}
+                  </Typography>
+                  <Stack className="name">
+                    <Typography>Currently Watched Cameras</Typography>
+                  </Stack>
                 </Stack>
-              </Stack>
-            </CardContent>
-          </Card>
-          <TableContainer component={Card}>
-            <Typography>Losing Access This Week</Typography>
-            <Table className="table-column">
-              <TableHead>
-                <TableRow>
-                  <TableCell>Children</TableCell>
-                  <TableCell>Room</TableCell>
-                </TableRow>
-              </TableHead>
-            </Table>
-            <div
-              className={`table-content ${
-                statisticsData.childrenWithDisableDate &&
-                statisticsData.childrenWithDisableDate.length === 0
-                  ? 'empty-data'
-                  : ''
-              }`}>
-              <Table>
-                <TableBody>
-                  {statisticsData.childrenWithDisableDate &&
-                  statisticsData.childrenWithDisableDate.length > 0 ? (
-                    statisticsData.childrenWithDisableDate.map((row, index) => (
-                      <TableRow key={index}>
-                        <TableCell>{row.childFirstName + row.childLastName}</TableCell>
-                        <TableCell>{row.rooms.toString()}</TableCell>
-                      </TableRow>
-                    ))
-                  ) : (
-                    <div className="no-data-div">No Data Found</div>
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          </TableContainer>
-        </Grid>
-        <Grid item xs={12} sm={4} md={3} lg={5}>
-          <Card className="watch-stream-card">
-            <Grid container justifyContent={'space-between'} alignContent={'center'}>
-              <Typography>Watch Stream</Typography>
-              <IconButton
-                id="basic-button"
-                aria-controls={open ? 'basic-menu' : undefined}
-                aria-haspopup="true"
-                aria-expanded={open ? 'true' : undefined}
-                onClick={handleOpen}>
-                <Video />
-              </IconButton>
-              <WatchStreamDialogBox
-                open={openWatchStreamDialog}
-                close={handleClose}
-                submit={handleSubmit}
-                defaultWatchStream={defaultWatchStream}
-              />
-            </Grid>
-            {_.isEmpty(selectedCamera) ? (
-              <Stack height={'85%'} spacing={1} alignItems="center" justifyContent="center">
-                <img src={VideoOff} />
-                <Typography>Camera not selected</Typography>
-              </Stack>
-            ) : (
-              <ReactPlayer
-                url={
-                  !_.isEmpty(selectedCamera)
-                    ? `${authCtx.user.transcoderBaseUrl}${selectedCamera.stream_uri}`
-                    : ``
-                }
-                controls={true}
-                className="watch-stream"
-                stopOnUnmount={true}
-                config={{
-                  file: {
-                    hlsOptions: {
-                      forceHLS: true,
-                      debug: false,
-                      xhrSetup: function (xhr) {
-                        xhr.setRequestHeader('Authorization', `Bearer ${authCtx.token}`);
+              </CardContent>
+            </Card>
+            <StickyHeadTable
+              rows={
+                statisticsData?.childrenWithDisableDate?.length > 0
+                  ? statisticsData?.childrenWithDisableDate
+                  : []
+              }
+              columns={AccessColumns}
+              title={'Loosing Access This Week'}
+              topViewers={false}
+              pagination={false}
+            />
+          </Grid>
+          <Grid item xs={12} sm={12} md={4} lg={5}>
+            <Card className="watch-stream-card">
+              <Grid container justifyContent={'space-between'} alignContent={'center'}>
+                <Typography>Watch Stream</Typography>
+                <IconButton
+                  id="basic-button"
+                  aria-controls={open ? 'basic-menu' : undefined}
+                  aria-haspopup="true"
+                  aria-expanded={open ? 'true' : undefined}
+                  onClick={handleOpen}>
+                  <Video />
+                </IconButton>
+                <WatchStreamDialogBox
+                  open={openWatchStreamDialog}
+                  close={handleClose}
+                  submit={handleSubmit}
+                  defaultWatchStream={defaultWatchStream}
+                />
+              </Grid>
+              {_.isEmpty(selectedCamera) ? (
+                <Stack height={'85%'} spacing={1} alignItems="center" justifyContent="center">
+                  <img src={VideoOff} />
+                  <Typography>Camera not selected</Typography>
+                </Stack>
+              ) : (
+                <ReactPlayer
+                  url={
+                    !_.isEmpty(selectedCamera)
+                      ? `${authCtx.user.transcoderBaseUrl}${selectedCamera.stream_uri}`
+                      : ``
+                  }
+                  controls={true}
+                  className="watch-stream"
+                  stopOnUnmount={true}
+                  config={{
+                    file: {
+                      hlsOptions: {
+                        forceHLS: true,
+                        debug: false,
+                        xhrSetup: function (xhr) {
+                          xhr.setRequestHeader('Authorization', `Bearer ${authCtx.token}`);
+                        }
                       }
                     }
-                  }
-                }}
-              />
-            )}
-          </Card>
-        </Grid>
-      </Grid>
-      <Grid container spacing={2}>
-        <Grid item xs={8}>
-          <TableContainer component={Card}>
-            <Typography>Viewers In The Last Hour</Typography>
-            <Table className="table-column viewers-in-last-hours-columns">
-              <TableHead>
-                <TableRow>
-                  <TableCell>Viewers</TableCell>
-                  <TableCell>Children</TableCell>
-                  <TableCell>Room</TableCell>
-                </TableRow>
-              </TableHead>
-            </Table>
-            <div
-              className={`table-content viewers-in-last-hours-content ${
-                (statisticsData.enroledStreamsDetails &&
-                  statisticsData.enroledStreamsDetails.length == 0) ||
-                (statisticsData.enroledStreamsDetails &&
-                  statisticsData.enroledStreamsDetails.length > 0 &&
-                  !statisticsData.enroledStreamsDetails.some((it) => !_.isNil(it.family)))
-                  ? 'empty-data'
-                  : ''
-              }`}>
-              <Table>
-                <TableBody>
-                  {statisticsData.enroledStreamsDetails &&
-                  statisticsData.enroledStreamsDetails.length > 0 &&
-                  statisticsData.enroledStreamsDetails.some((it) => !_.isNil(it.family)) ? (
-                    statisticsData.enroledStreamsDetails.map((row, index) => (
-                      <>
-                        {row.family ? (
-                          <TableRow key={index}>
-                            <TableCell>{row.family.first_name + row.family.last_name}</TableCell>
-                            <TableCell>
-                              {row.family.children.length > 0
-                                ? row.family.children.map((child) => child.first_name + ', ')
-                                : ''}
-                            </TableCell>
-                            <TableCell>
-                              {row.family.children.roomsInChild &&
-                              row.family.children.roomsInChild.length > 0
-                                ? row.family.children.roomsInChild.map((room) => room.name + `,`)
-                                : ''}
-                            </TableCell>
-                          </TableRow>
-                        ) : null}
-                      </>
-                    ))
-                  ) : (
-                    <div className="no-data-div">No Data Found</div>
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-            <div>
-              {statisticsData.enroledStreamsDetails &&
-              statisticsData.enroledStreamsDetails.length > 0 &&
-              statisticsData.enroledStreamsDetails.some((it) => !_.isNil(it.family)) ? (
-                <TablePagination
-                  rowsPerPageOptions={[5, 10, 20, 25, 50]}
-                  onPageChange={handlePageChange}
-                  onRowsPerPageChange={handleChangeRowsPerPage}
-                  component="div"
-                  count={totalUsers}
-                  rowsPerPage={usersPayload?.pageSize}
-                  page={usersPayload?.pageNumber}
-                  sx={{ flex: '1 1 auto' }}
+                  }}
                 />
-              ) : null}
-            </div>
-          </TableContainer>
+              )}
+            </Card>
+          </Grid>
         </Grid>
-        <Grid item xs={4}>
-          <TableContainer component={Card}>
-            <Typography>Top 5 Viewers Last 7 Days</Typography>
-            <Table className="table-column">
-              <TableHead>
-                <TableRow>
-                  <TableCell>Children</TableCell>
-                  <TableCell>Views</TableCell>
-                </TableRow>
-              </TableHead>
-            </Table>
-
-            <div
-              className={`table-content ${
-                statisticsData.topViewers && statisticsData.topViewers.length == 0
-                  ? 'empty-data'
-                  : ''
-              }${
-                statisticsData.enroledStreamsDetails &&
-                statisticsData.enroledStreamsDetails.length > 0 &&
-                statisticsData.enroledStreamsDetails.some((it) => !_.isNil(it.family))
-                  ? 'top-reviewers'
-                  : ''
-              }`}>
-              <Table>
-                <TableBody>
-                  {statisticsData.topViewers && statisticsData.topViewers.length > 0 ? (
-                    statisticsData.topViewers.map((row, index) =>
-                      row.user ? (
-                        <TableRow
-                          key={index}
-                          sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
-                          <TableCell>
-                            {row.user ? row.user.first_name + row.user.last_name : ''}
-                          </TableCell>
-                          <TableCell>{row.count}</TableCell>
-                        </TableRow>
-                      ) : null
-                    )
-                  ) : (
-                    <div className="no-data-div">No Data Found</div>
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          </TableContainer>
+        <Grid container spacing={2}>
+          <Grid item md={8} sm={12} xs={12}>
+            <StickyHeadTable
+              rows={
+                statisticsData?.enroledStreamsDetails?.length > 0 &&
+                statisticsData?.enroledStreamsDetails?.some((it) => !_.isNil(it?.family))
+                  ? statisticsData?.enroledStreamsDetails
+                  : []
+              }
+              columns={lastHourViewersColumns}
+              title={'Viewers In The Last Hour'}
+              topViewers={false}
+              pagination={true}
+            />
+          </Grid>
+          <Grid item md={4} sm={12} xs={12}>
+            <StickyHeadTable
+              rows={
+                statisticsData?.topViewers?.length > 0 &&
+                statisticsData.topViewers?.some((it) => !_.isNil(it?.family))
+                  ? statisticsData?.topViewers
+                  : []
+              }
+              columns={topViewersColumns}
+              title={'Top 5 Viewers Last 7 Days'}
+              topViewers={true}
+              pagination={false}
+            />
+          </Grid>
         </Grid>
-      </Grid>
-      <Box mt={4} className="location">
-        <Card>
-          <CardContent>
-            <Typography>Location of Recent Viewers</Typography>
-            <Map data={mapsData} />
-          </CardContent>
-        </Card>
+        <Box mt={4} className="location">
+          <Card>
+            <CardContent>
+              <Typography>Location of Recent Viewers</Typography>
+              <Map data={mapsData} />
+            </CardContent>
+          </Card>
+        </Box>
       </Box>
-    </Box>
+    </>
   );
 };
 
