@@ -8,11 +8,9 @@ import {
   TableRow,
   TableCell,
   TablePagination,
-  Paper,
-  Stack
+  Paper
 } from '@mui/material';
 import PropTypes from 'prop-types';
-import NoData from '../../assets/no-data.svg';
 
 export default function StickyHeadTable({ rows, columns, title, topViewers, pagination }) {
   const [page, setPage] = useState(0);
@@ -33,91 +31,77 @@ export default function StickyHeadTable({ rows, columns, title, topViewers, pagi
         <TableContainer
           component={Paper}
           sx={{
-            minHeight: pagination && rows.length > 0 ? 240 : 290,
-            maxHeight: pagination && rows.length > 0 ? 240 : 290,
+            minHeight: pagination && rows?.length > 0 ? 240 : 290,
+            maxHeight: pagination && rows?.length > 0 ? 240 : 290,
             marginTop: 0
-          }}
-          className={rows && rows?.length > 0 ? '' : 'empty-data'}>
-          {rows && rows?.length > 0 ? (
-            <>
-              <Table stickyHeader>
-                <TableHead>
-                  <TableRow>
-                    {columns.map((column, index) => (
-                      <TableCell key={index}>{column}</TableCell>
-                    ))}
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {pagination
-                    ? rows
-                        .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                        .map((row, index) => {
-                          return row.family ? (
-                            <TableRow key={index}>
-                              <TableCell>
-                                {row?.family?.first_name + ' ' + row.family.last_name}
-                              </TableCell>
-                              <TableCell>
-                                {row.family?.children?.length > 0
-                                  ? row?.family?.children?.map(
-                                      (child, index) =>
-                                        child?.first_name +
-                                        (index == row?.family?.children?.length - 1 ? '' : `,`)
-                                    )
-                                  : ''}
-                              </TableCell>
-                              <TableCell>
-                                {row?.family?.children[0]?.roomsInChild &&
-                                row?.family?.children[0]?.roomsInChild.length > 0
-                                  ? row?.family?.children[0]?.roomsInChild?.map(
-                                      (room, index) =>
-                                        room?.room.room_name +
-                                        (index == row?.family?.children[0]?.roomsInChild?.length - 1
-                                          ? ''
-                                          : `,`)
-                                    )
-                                  : ''}
-                              </TableCell>
-                            </TableRow>
-                          ) : null;
-                        })
-                    : rows?.map((row, index) => (
-                        <>
+          }}>
+          <>
+            <Table stickyHeader>
+              <TableHead>
+                <TableRow>
+                  {columns.map((column, index) => (
+                    <TableCell key={index}>{column}</TableCell>
+                  ))}
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {pagination
+                  ? rows
+                      .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                      .map((row, index) => {
+                        return row.family ? (
                           <TableRow key={index}>
-                            {topViewers ? (
-                              <>
-                                <TableCell>{row?.count}</TableCell>
-                                <TableCell>
-                                  {(row?.family?.first_name || row?.user?.first_name) +
-                                    ' ' +
-                                    (row?.family?.last_name || row?.user?.last_name)}
-                                </TableCell>
-                              </>
-                            ) : (
-                              <>
-                                <TableCell>
-                                  {row?.childFirstName + ' ' + row.childLastName}
-                                </TableCell>
-                                <TableCell>{row?.rooms.toString()}</TableCell>
-                              </>
-                            )}
+                            <TableCell>
+                              {row?.family?.first_name + ' ' + row.family.last_name}
+                            </TableCell>
+                            <TableCell>
+                              {row.family?.children?.length > 0
+                                ? row?.family?.children?.map(
+                                    (child, index) =>
+                                      child?.first_name +
+                                      (index == row?.family?.children?.length - 1 ? '' : `,`)
+                                  )
+                                : ''}
+                            </TableCell>
+                            <TableCell>
+                              {row?.family?.children[0]?.roomsInChild &&
+                              row?.family?.children[0]?.roomsInChild.length > 0
+                                ? row?.family?.children[0]?.roomsInChild?.map(
+                                    (room, index) =>
+                                      room?.room.room_name +
+                                      (index == row?.family?.children[0]?.roomsInChild?.length - 1
+                                        ? ''
+                                        : `,`)
+                                  )
+                                : ''}
+                            </TableCell>
                           </TableRow>
-                        </>
-                      ))}
-                </TableBody>
-              </Table>
-            </>
-          ) : (
-            <Stack
-              spacing={1}
-              alignItems="center"
-              justifyContent="center"
-              sx={{ fontWeight: 'bold' }}>
-              <img src={NoData} />
-              <div>No Data Found</div>
-            </Stack>
-          )}
+                        ) : null;
+                      })
+                  : rows?.map((row, index) => (
+                      <>
+                        <TableRow key={index}>
+                          {topViewers ? (
+                            <>
+                              <TableCell>{row?.count}</TableCell>
+                              <TableCell>
+                                {(row?.family?.first_name || row?.user?.first_name) +
+                                  ' ' +
+                                  (row?.family?.last_name || row?.user?.last_name)}
+                              </TableCell>
+                            </>
+                          ) : (
+                            <>
+                              <TableCell>{row?.childFirstName + ' ' + row.childLastName}</TableCell>
+                              <TableCell>{row?.rooms.toString()}</TableCell>
+                            </>
+                          )}
+                        </TableRow>
+                      </>
+                    ))}
+              </TableBody>
+            </Table>
+          </>
         </TableContainer>
         {pagination && rows && rows?.length > 0 ? (
           <TablePagination

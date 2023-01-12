@@ -155,12 +155,7 @@ const Dashboard = () => {
             <Card className="watch-stream-card">
               <Grid container justifyContent={'space-between'} alignContent={'center'}>
                 <Typography>Watch Stream</Typography>
-                <IconButton
-                  id="basic-button"
-                  aria-controls={open ? 'basic-menu' : undefined}
-                  aria-haspopup="true"
-                  aria-expanded={open ? 'true' : undefined}
-                  onClick={handleOpen}>
+                <IconButton id="video-button" onClick={handleOpen}>
                   <Video />
                 </IconButton>
                 <WatchStreamDialogBox
@@ -220,7 +215,7 @@ const Dashboard = () => {
             <StickyHeadTable
               rows={
                 statisticsData?.topViewers?.length > 0 &&
-                statisticsData.topViewers?.some((it) => !_.isNil(it?.family))
+                statisticsData?.topViewers?.some((it) => !_.isNil(it?.family))
                   ? statisticsData?.topViewers
                   : []
               }
