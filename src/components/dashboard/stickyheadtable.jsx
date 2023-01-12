@@ -8,9 +8,11 @@ import {
   TableRow,
   TableCell,
   TablePagination,
-  Paper
+  Paper,
+  Stack
 } from '@mui/material';
 import PropTypes from 'prop-types';
+import NoData from '../../assets/no-data.svg';
 
 export default function StickyHeadTable({ rows, columns, title, topViewers, pagination }) {
   const [page, setPage] = useState(0);
@@ -31,19 +33,20 @@ export default function StickyHeadTable({ rows, columns, title, topViewers, pagi
         <TableContainer
           component={Paper}
           sx={{
-            minHeight: pagination && rows?.length > 0 ? 240 : 290,
-            maxHeight: pagination && rows?.length > 0 ? 240 : 290,
+            minHeight: pagination && rows.length > 0 ? 240 : 290,
+            maxHeight: pagination && rows.length > 0 ? 240 : 290,
             marginTop: 0
-          }}>
-          <>
-            <Table stickyHeader>
-              <TableHead>
-                <TableRow>
-                  {columns.map((column, index) => (
-                    <TableCell key={index}>{column}</TableCell>
-                  ))}
-                </TableRow>
-              </TableHead>
+          }}
+          className={rows && rows?.length > 0 ? '' : 'empty-data'}>
+          <Table stickyHeader>
+            <TableHead>
+              <TableRow>
+                {columns.map((column, index) => (
+                  <TableCell key={index}>{column}</TableCell>
+                ))}
+              </TableRow>
+            </TableHead>
+            {rows && rows?.length > 0 ? (
               <TableBody>
                 {pagination
                   ? rows
@@ -100,8 +103,17 @@ export default function StickyHeadTable({ rows, columns, title, topViewers, pagi
                       </>
                     ))}
               </TableBody>
-            </Table>
-          </>
+            ) : (
+              <Stack
+                spacing={1}
+                alignItems="center"
+                justifyContent="center"
+                sx={{ fontWeight: 'bold', position: 'absolute', left: 0, right: 0, top: '32%' }}>
+                <img src={NoData} />
+                <div>No Data Found</div>
+              </Stack>
+            )}
+          </Table>
         </TableContainer>
         {pagination && rows && rows?.length > 0 ? (
           <TablePagination
