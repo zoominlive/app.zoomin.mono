@@ -43,6 +43,7 @@ import { useSnackbar } from 'notistack';
 import { errorMessageHandler } from '../../utils/errormessagehandler';
 import debounce from 'lodash.debounce';
 import { Link } from 'react-router-dom';
+import NoDataDiv from '../common/nodatadiv';
 
 const Row = (props) => {
   const { row } = props;
@@ -401,27 +402,32 @@ const Rooms = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {roomsList.map((room) => (
-                    <Row
-                      setRoom={setRoom}
-                      setIsRoomFormDialogOpen={setIsRoomFormDialogOpen}
-                      setIsDeleteDialogOpen={setIsDeleteDialogOpen}
-                      key={room.room_id}
-                      row={room}
-                    />
-                  ))}
+                  {roomsList?.length > 0
+                    ? roomsList?.map((room) => (
+                        <Row
+                          setRoom={setRoom}
+                          setIsRoomFormDialogOpen={setIsRoomFormDialogOpen}
+                          setIsDeleteDialogOpen={setIsDeleteDialogOpen}
+                          key={room.room_id}
+                          row={room}
+                        />
+                      ))
+                    : null}
                 </TableBody>
               </Table>
-              <TablePagination
-                rowsPerPageOptions={[5, 10, 20, 25, 50]}
-                onPageChange={handlePageChange}
-                onRowsPerPageChange={handleChangeRowsPerPage}
-                component="div"
-                count={totalRooms}
-                rowsPerPage={roomsPayload?.pageSize}
-                page={roomsPayload?.pageNumber}
-                sx={{ flex: '1 1 auto' }}
-              />
+              {roomsList?.length == 0 ? <NoDataDiv /> : null}
+              {roomsList?.length > 0 ? (
+                <TablePagination
+                  rowsPerPageOptions={[5, 10, 20, 25, 50]}
+                  onPageChange={handlePageChange}
+                  onRowsPerPageChange={handleChangeRowsPerPage}
+                  component="div"
+                  count={totalRooms}
+                  rowsPerPage={roomsPayload?.pageSize}
+                  page={roomsPayload?.pageNumber}
+                  sx={{ flex: '1 1 auto' }}
+                />
+              ) : null}
             </TableContainer>
           </Box>
         </CardContent>

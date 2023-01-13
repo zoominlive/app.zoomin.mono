@@ -37,6 +37,7 @@ import { AdapterMoment } from '@mui/x-date-pickers/AdapterMoment';
 import ArrowDropUpIcon from '@mui/icons-material/ArrowDropUp';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import LoadingButton from '@mui/lab/LoadingButton';
+import NoDataDiv from '../common/nodatadiv';
 const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
 const checkedIcon = <CheckBoxIcon fontSize="small" />;
 
@@ -874,60 +875,67 @@ const Logs = () => {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {logsList?.map((row, index) => (
-                      <TableRow key={index} hover>
-                        <TableCell component="th" scope="row">
-                          <Stack direction="row" alignItems="center" spacing={3}>
-                            <Typography>{`${
-                              logsPayload.pageNumber * logsPayload.pageSize + index + 1
-                            }`}</Typography>
-                          </Stack>
-                        </TableCell>
-                        <TableCell align="left">
-                          <Stack direction="row">
-                            <Typography>{`${moment(row.createdAt).format(
-                              'MM-DD-YYYY'
-                            )}`}</Typography>
-                          </Stack>
-                        </TableCell>
-                        <TableCell align="left">
-                          <Stack direction="row">
-                            <Typography>{`${moment(row.createdAt).format('hh:mm A')}`}</Typography>
-                          </Stack>
-                        </TableCell>
-                        <TableCell component="th" scope="row">
-                          <Stack direction="row" alignItems="center" spacing={3}>
-                            <Typography>{`${
-                              row?.user?.first_name
-                                ? row?.user?.first_name + ' ' + row?.user?.last_name
-                                : 'Not Found'
-                            }`}</Typography>
-                          </Stack>
-                        </TableCell>
-                        <TableCell component="th" scope="row">
-                          <Stack direction="row" alignItems="center" spacing={3}>
-                            <Typography>{`${row.function}`}</Typography>
-                          </Stack>
-                        </TableCell>
-                        <TableCell component="th" scope="row">
-                          <Stack direction="row" alignItems="center" spacing={3}>
-                            <Typography>{`${row.function_type}`}</Typography>
-                          </Stack>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {logsList?.length > 0
+                      ? logsList?.map((row, index) => (
+                          <TableRow key={index} hover>
+                            <TableCell component="th" scope="row">
+                              <Stack direction="row" alignItems="center" spacing={3}>
+                                <Typography>{`${
+                                  logsPayload.pageNumber * logsPayload.pageSize + index + 1
+                                }`}</Typography>
+                              </Stack>
+                            </TableCell>
+                            <TableCell align="left">
+                              <Stack direction="row">
+                                <Typography>{`${moment(row.createdAt).format(
+                                  'MM-DD-YYYY'
+                                )}`}</Typography>
+                              </Stack>
+                            </TableCell>
+                            <TableCell align="left">
+                              <Stack direction="row">
+                                <Typography>{`${moment(row.createdAt).format(
+                                  'hh:mm A'
+                                )}`}</Typography>
+                              </Stack>
+                            </TableCell>
+                            <TableCell component="th" scope="row">
+                              <Stack direction="row" alignItems="center" spacing={3}>
+                                <Typography>{`${
+                                  row?.user?.first_name
+                                    ? row?.user?.first_name + ' ' + row?.user?.last_name
+                                    : 'Not Found'
+                                }`}</Typography>
+                              </Stack>
+                            </TableCell>
+                            <TableCell component="th" scope="row">
+                              <Stack direction="row" alignItems="center" spacing={3}>
+                                <Typography>{`${row.function}`}</Typography>
+                              </Stack>
+                            </TableCell>
+                            <TableCell component="th" scope="row">
+                              <Stack direction="row" alignItems="center" spacing={3}>
+                                <Typography>{`${row.function_type}`}</Typography>
+                              </Stack>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      : null}
                   </TableBody>
                 </Table>
-                <TablePagination
-                  rowsPerPageOptions={[5, 10, 20, 25, 50]}
-                  onPageChange={handlePageChange}
-                  onRowsPerPageChange={handleChangeRowsPerPage}
-                  component="div"
-                  count={totalLogs}
-                  rowsPerPage={pageSize}
-                  page={pageNumber}
-                  sx={{ flex: '1 1 auto' }}
-                />
+                {logsList?.length == 0 ? <NoDataDiv /> : null}
+                {logsList?.length > 0 ? (
+                  <TablePagination
+                    rowsPerPageOptions={[5, 10, 20, 25, 50]}
+                    onPageChange={handlePageChange}
+                    onRowsPerPageChange={handleChangeRowsPerPage}
+                    component="div"
+                    count={totalLogs}
+                    rowsPerPage={pageSize}
+                    page={pageNumber}
+                    sx={{ flex: '1 1 auto' }}
+                  />
+                ) : null}
               </TableContainer>
             </Box>
             {!csvGenerated && (

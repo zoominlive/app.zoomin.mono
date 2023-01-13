@@ -47,6 +47,7 @@ import debounce from 'lodash.debounce';
 import Loader from '../common/loader';
 import { capitalizeFirstLetter } from '../../utils/capitalizefirstletter';
 import dayjs from 'dayjs';
+import NoDataDiv from '../common/nodatadiv';
 
 const Families = () => {
   const layoutCtx = useContext(LayoutContext);
@@ -382,96 +383,103 @@ const Families = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {familiesList?.map((row, index) => (
-                    <TableRow
-                      key={index}
-                      hover
-                      onClick={() => {
-                        setIsFamilyDrawerOpen(true);
-                        setFamilyIndex(index);
-                        setFamily(row);
-                      }}>
-                      <TableCell component="th" scope="row">
-                        <Stack direction="row" alignItems="center" spacing={3}>
-                          {row?.primary?.profile_image ? (
-                            <Avatar
-                              alt={`${row.primary?.first_name[0]?.toUpperCase()}${row.primary?.last_name[0]?.toUpperCase()}`}
-                              src={row?.primary?.profile_image}
-                            />
-                          ) : (
-                            <Avatar>{`${row.primary?.first_name[0]?.toUpperCase()}${row.primary?.last_name[0]?.toUpperCase()}`}</Avatar>
-                          )}
-
-                          <Typography>
-                            {' '}
-                            {row?.primary?.first_name &&
-                              capitalizeFirstLetter(row?.primary?.first_name)}{' '}
-                            {row?.primary?.last_name &&
-                              capitalizeFirstLetter(row?.primary?.last_name)}
-                          </Typography>
-                        </Stack>
-                      </TableCell>
-                      <TableCell align="left">
-                        {' '}
-                        <AvatarGroup>
-                          {row.children.map((child, index) => (
-                            <>
-                              <Tooltip
-                                id="button-report"
-                                placement="top"
-                                title={child?.first_name + ' ' + child?.last_name}>
+                  {familiesList?.length > 0
+                    ? familiesList?.map((row, index) => (
+                        <TableRow
+                          key={index}
+                          hover
+                          onClick={() => {
+                            setIsFamilyDrawerOpen(true);
+                            setFamilyIndex(index);
+                            setFamily(row);
+                          }}>
+                          <TableCell component="th" scope="row">
+                            <Stack direction="row" alignItems="center" spacing={3}>
+                              {row?.primary?.profile_image ? (
                                 <Avatar
-                                  key={index}>{`${child?.first_name[0]?.toUpperCase()}`}</Avatar>
-                              </Tooltip>
-                            </>
-                          ))}
-                        </AvatarGroup>
-                      </TableCell>
-                      <TableCell align="left">
-                        <Stack direction="row">{renderFamilyLocations(row.children)}</Stack>
-                      </TableCell>
-                      <TableCell align="left">
-                        <AvatarGroup>
-                          {row.secondary.map((person, index) => (
-                            <Avatar
-                              key={index}
-                              title={`${person?.first_name[0]?.toUpperCase()}${person?.last_name[0]?.toUpperCase()}`}
-                              src={
-                                person?.profile_image
-                              }>{`${person?.first_name[0]?.toUpperCase()}${person?.last_name[0]?.toUpperCase()}`}</Avatar>
-                          ))}
-                        </AvatarGroup>
-                      </TableCell>
-                      <TableCell>
-                        {row.primary.scheduled_end_date
-                          ? dayjs(row.primary.scheduled_end_date).format('MM.DD.YYYY')
-                          : 'N/A'}
-                      </TableCell>
-                      <TableCell align="right">
-                        <FamilyAction
-                          openChildFormDialog={setIsChildFormDialogOpen}
-                          openFamilyDrawer={setIsFamilyDrawerOpen}
-                          openDisableFamilyDialog={setIsDisableFamilyDialogOpen}
-                          openParentFormDialog={setIsParentFormDialogOpen}
-                          openDeleteDialog={setIsDeleteDialogOpen}
-                          family={row}
-                          setFamily={setFamily}
-                        />
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                                  alt={`${row.primary?.first_name[0]?.toUpperCase()}${row.primary?.last_name[0]?.toUpperCase()}`}
+                                  src={row?.primary?.profile_image}
+                                />
+                              ) : (
+                                <Avatar>{`${row.primary?.first_name[0]?.toUpperCase()}${row.primary?.last_name[0]?.toUpperCase()}`}</Avatar>
+                              )}
+
+                              <Typography>
+                                {' '}
+                                {row?.primary?.first_name &&
+                                  capitalizeFirstLetter(row?.primary?.first_name)}{' '}
+                                {row?.primary?.last_name &&
+                                  capitalizeFirstLetter(row?.primary?.last_name)}
+                              </Typography>
+                            </Stack>
+                          </TableCell>
+                          <TableCell align="left">
+                            {' '}
+                            <AvatarGroup>
+                              {row.children.map((child, index) => (
+                                <>
+                                  <Tooltip
+                                    id="button-report"
+                                    placement="top"
+                                    title={child?.first_name + ' ' + child?.last_name}>
+                                    <Avatar
+                                      key={
+                                        index
+                                      }>{`${child?.first_name[0]?.toUpperCase()}`}</Avatar>
+                                  </Tooltip>
+                                </>
+                              ))}
+                            </AvatarGroup>
+                          </TableCell>
+                          <TableCell align="left">
+                            <Stack direction="row">{renderFamilyLocations(row.children)}</Stack>
+                          </TableCell>
+                          <TableCell align="left">
+                            <AvatarGroup>
+                              {row.secondary.map((person, index) => (
+                                <Avatar
+                                  key={index}
+                                  title={`${person?.first_name[0]?.toUpperCase()}${person?.last_name[0]?.toUpperCase()}`}
+                                  src={
+                                    person?.profile_image
+                                  }>{`${person?.first_name[0]?.toUpperCase()}${person?.last_name[0]?.toUpperCase()}`}</Avatar>
+                              ))}
+                            </AvatarGroup>
+                          </TableCell>
+                          <TableCell>
+                            {row.primary.scheduled_end_date
+                              ? dayjs(row.primary.scheduled_end_date).format('MM.DD.YYYY')
+                              : 'N/A'}
+                          </TableCell>
+                          <TableCell align="right">
+                            <FamilyAction
+                              openChildFormDialog={setIsChildFormDialogOpen}
+                              openFamilyDrawer={setIsFamilyDrawerOpen}
+                              openDisableFamilyDialog={setIsDisableFamilyDialogOpen}
+                              openParentFormDialog={setIsParentFormDialogOpen}
+                              openDeleteDialog={setIsDeleteDialogOpen}
+                              family={row}
+                              setFamily={setFamily}
+                            />
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    : null}
                 </TableBody>
               </Table>
-              <TablePagination
-                rowsPerPageOptions={[5, 10, 20, 25, 50]}
-                onPageChange={handlePageChange}
-                onRowsPerPageChange={handleChangeRowsPerPage}
-                component="div"
-                count={totalFamilies}
-                rowsPerPage={familiesPayload?.limit}
-                page={familiesPayload?.page}
-                sx={{ flex: '1 1 auto' }}
-              />
+              {familiesList?.length == 0 ? <NoDataDiv /> : null}
+              {familiesList?.length > 0 ? (
+                <TablePagination
+                  rowsPerPageOptions={[5, 10, 20, 25, 50]}
+                  onPageChange={handlePageChange}
+                  onRowsPerPageChange={handleChangeRowsPerPage}
+                  component="div"
+                  count={totalFamilies}
+                  rowsPerPage={familiesPayload?.limit}
+                  page={familiesPayload?.page}
+                  sx={{ flex: '1 1 auto' }}
+                />
+              ) : null}
             </TableContainer>
           </Box>
         </CardContent>

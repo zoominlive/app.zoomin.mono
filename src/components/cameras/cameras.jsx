@@ -34,6 +34,7 @@ import { useSnackbar } from 'notistack';
 import Loader from '../common/loader';
 import debounce from 'lodash.debounce';
 import DeleteCamDialog from './deletecamdialog';
+import NoDataDiv from '../common/nodatadiv';
 
 const Cameras = () => {
   const layoutCtx = useContext(LayoutContext);
@@ -221,51 +222,56 @@ const Cameras = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {camerasList.map((row, index) => (
-                    <TableRow key={index} hover>
-                      <TableCell component="th" scope="row">
-                        <Stack direction="row" alignItems="center" spacing={3}>
-                          <Typography>{`${row.cam_name.toUpperCase()}`}</Typography>
-                        </Stack>
-                      </TableCell>
-                      <TableCell align="left">
-                        <Stack direction="row">
-                          <Chip key={index} label={row.location} color="primary" />
-                        </Stack>
-                      </TableCell>
-                      <TableCell component="th" scope="row">
-                        <Stack direction="row" alignItems="center" spacing={3}>
-                          <Typography>{`${row.description}`}</Typography>
-                        </Stack>
-                      </TableCell>
-                      <TableCell component="th" scope="row">
-                        <Stack direction="row" alignItems="center" spacing={3}>
-                          <Typography>{`${row.cam_uri}`}</Typography>
-                        </Stack>
-                      </TableCell>
-                      <TableCell align="right">
-                        <CameraActions
-                          camera={row}
-                          setCamera={setCamera}
-                          setIsDeleteDialogOpen={(e) => {
-                            setIsCameraDeleteDialogOpen(e);
-                          }}
-                        />
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {camerasList?.length > 0
+                    ? camerasList?.map((row, index) => (
+                        <TableRow key={index} hover>
+                          <TableCell component="th" scope="row">
+                            <Stack direction="row" alignItems="center" spacing={3}>
+                              <Typography>{`${row.cam_name.toUpperCase()}`}</Typography>
+                            </Stack>
+                          </TableCell>
+                          <TableCell align="left">
+                            <Stack direction="row">
+                              <Chip key={index} label={row.location} color="primary" />
+                            </Stack>
+                          </TableCell>
+                          <TableCell component="th" scope="row">
+                            <Stack direction="row" alignItems="center" spacing={3}>
+                              <Typography>{`${row.description}`}</Typography>
+                            </Stack>
+                          </TableCell>
+                          <TableCell component="th" scope="row">
+                            <Stack direction="row" alignItems="center" spacing={3}>
+                              <Typography>{`${row.cam_uri}`}</Typography>
+                            </Stack>
+                          </TableCell>
+                          <TableCell align="right">
+                            <CameraActions
+                              camera={row}
+                              setCamera={setCamera}
+                              setIsDeleteDialogOpen={(e) => {
+                                setIsCameraDeleteDialogOpen(e);
+                              }}
+                            />
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    : null}
                 </TableBody>
               </Table>
-              <TablePagination
-                rowsPerPageOptions={[5, 10, 20, 25, 50]}
-                onPageChange={handlePageChange}
-                onRowsPerPageChange={handleChangeRowsPerPage}
-                component="div"
-                count={totalCameras}
-                rowsPerPage={camerasPayload?.pageSize}
-                page={camerasPayload?.pageNumber}
-                sx={{ flex: '1 1 auto' }}
-              />
+              {camerasList?.length == 0 ? <NoDataDiv /> : null}
+              {camerasList?.length > 0 ? (
+                <TablePagination
+                  rowsPerPageOptions={[5, 10, 20, 25, 50]}
+                  onPageChange={handlePageChange}
+                  onRowsPerPageChange={handleChangeRowsPerPage}
+                  component="div"
+                  count={totalCameras}
+                  rowsPerPage={camerasPayload?.pageSize}
+                  page={camerasPayload?.pageNumber}
+                  sx={{ flex: '1 1 auto' }}
+                />
+              ) : null}
             </TableContainer>
           </Box>
         </CardContent>

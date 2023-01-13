@@ -35,6 +35,7 @@ import AuthContext from '../../context/authcontext';
 import { useSnackbar } from 'notistack';
 import Loader from '../common/loader';
 import debounce from 'lodash.debounce';
+import NoDataDiv from '../common/nodatadiv';
 
 const Users = () => {
   const layoutCtx = useContext(LayoutContext);
@@ -219,54 +220,59 @@ const Users = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {usersList.map((row, index) => (
-                    <TableRow key={index} hover>
-                      <TableCell component="th" scope="row">
-                        <Stack direction="row" alignItems="center" spacing={3}>
-                          {row.profile_image ? (
-                            <Avatar src={row.profile_image} />
-                          ) : (
-                            <Avatar>{`${row.first_name[0].toUpperCase()}${row.last_name[0].toUpperCase()}`}</Avatar>
-                          )}
-                          <Typography>{`${row.first_name[0].toUpperCase()}${row.first_name.slice(
-                            1
-                          )} ${row.last_name[0].toUpperCase()}${row.last_name.slice(
-                            1
-                          )}`}</Typography>
-                        </Stack>
-                      </TableCell>
-                      <TableCell align="left">
-                        <Stack direction="row">
-                          {row.location.accessable_locations
-                            .sort((a, b) => (a > b ? 1 : -1))
-                            .map((location, index) => (
-                              <Chip key={index} label={location} color="primary" />
-                            ))}
-                        </Stack>
-                      </TableCell>
-                      <TableCell align="left">{row.email}</TableCell>
-                      <TableCell align="right">
-                        <UserActions
-                          user={row}
-                          setUser={setUser}
-                          setIsUserFormDialogOpen={setIsUserFormDialogOpen}
-                          setIsDeleteDialogOpen={setIsDeleteDialogOpen}
-                        />
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {usersList?.length > 0
+                    ? usersList?.map((row, index) => (
+                        <TableRow key={index} hover>
+                          <TableCell component="th" scope="row">
+                            <Stack direction="row" alignItems="center" spacing={3}>
+                              {row.profile_image ? (
+                                <Avatar src={row.profile_image} />
+                              ) : (
+                                <Avatar>{`${row.first_name[0].toUpperCase()}${row.last_name[0].toUpperCase()}`}</Avatar>
+                              )}
+                              <Typography>{`${row.first_name[0].toUpperCase()}${row.first_name.slice(
+                                1
+                              )} ${row.last_name[0].toUpperCase()}${row.last_name.slice(
+                                1
+                              )}`}</Typography>
+                            </Stack>
+                          </TableCell>
+                          <TableCell align="left">
+                            <Stack direction="row">
+                              {row.location.accessable_locations
+                                .sort((a, b) => (a > b ? 1 : -1))
+                                .map((location, index) => (
+                                  <Chip key={index} label={location} color="primary" />
+                                ))}
+                            </Stack>
+                          </TableCell>
+                          <TableCell align="left">{row.email}</TableCell>
+                          <TableCell align="right">
+                            <UserActions
+                              user={row}
+                              setUser={setUser}
+                              setIsUserFormDialogOpen={setIsUserFormDialogOpen}
+                              setIsDeleteDialogOpen={setIsDeleteDialogOpen}
+                            />
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    : null}
                 </TableBody>
               </Table>
-              <TablePagination
-                rowsPerPageOptions={[5, 10, 20, 25, 50]}
-                onPageChange={handlePageChange}
-                onRowsPerPageChange={handleChangeRowsPerPage}
-                component="div"
-                count={totalUsers}
-                rowsPerPage={usersPayload?.pageSize}
-                page={usersPayload?.pageNumber}
-                sx={{ flex: '1 1 auto' }}
-              />
+              {usersList?.length == 0 ? <NoDataDiv /> : null}
+              {usersList?.length > 0 ? (
+                <TablePagination
+                  rowsPerPageOptions={[5, 10, 20, 25, 50]}
+                  onPageChange={handlePageChange}
+                  onRowsPerPageChange={handleChangeRowsPerPage}
+                  component="div"
+                  count={totalUsers}
+                  rowsPerPage={usersPayload?.pageSize}
+                  page={usersPayload?.pageNumber}
+                  sx={{ flex: '1 1 auto' }}
+                />
+              ) : null}
             </TableContainer>
           </Box>
         </CardContent>
