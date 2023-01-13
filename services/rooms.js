@@ -109,10 +109,8 @@ module.exports = {
     let rooms;
     if (user.role !== 'Admin') {
       if (roomsList?.length !== 0) {
-        rooms = await Room.findAndCountAll(
+        rooms = await Room.findAll(
           {
-            limit: parseInt(pageSize),
-            offset: parseInt(pageNumber * pageSize),
             where: {
               user_id: userId,
               location: {
@@ -140,10 +138,8 @@ module.exports = {
           { transaction: t }
         );
       } else {
-        rooms = await Room.findAndCountAll(
+        rooms = await Room.findAll(
           {
-            limit: parseInt(pageSize),
-            offset: parseInt(pageNumber * pageSize),
             where: {
               user_id: userId,
               location: {
@@ -172,10 +168,8 @@ module.exports = {
       }
     } else {
       if (roomsList?.length !== 0) {
-        rooms = await Room.findAndCountAll(
+        rooms = await Room.findAll(
           {
-            limit: parseInt(pageSize),
-            offset: parseInt(pageNumber * pageSize),
             where: {
               cust_id: user.cust_id,
               [Sequelize.Op.and]: [
@@ -208,10 +202,8 @@ module.exports = {
           { transaction: t }
         );
       } else {
-        rooms = await Room.findAndCountAll(
+        rooms = await Room.findAll(
           {
-            limit: parseInt(pageSize),
-            offset: parseInt(pageNumber * pageSize),
             where: {
               cust_id: user.cust_id,
               [Sequelize.Op.and]: [
@@ -246,8 +238,17 @@ module.exports = {
       }
     }
 
-    let count = rooms.count;
-    rooms = rooms?.rows?.map((room) => {
+    let count = rooms.length;
+
+    if (count > pageSize) {
+      if (count > pageNumber * pageSize + pageSize) {
+        rooms = rooms.slice(pageNumber * pageSize,(pageNumber + 1) * pageSize);
+      } else {
+        rooms = rooms.slice(pageNumber * pageSize, pageNumber * pageSize + pageSize);
+      }
+    }
+
+    rooms = rooms?.map((room) => {
       let cams = room.cameras_assigned_to_rooms.map((cam) => cam.camera);
       return {
         room_id: room.room_id,
@@ -259,7 +260,7 @@ module.exports = {
 
     return { finalRoomDetails: rooms, count: count };
   },
-
+  
   // get all room's list for loggedin user
   getAllRoomsList: async (userId, user, t) => {
     const { Room } = await connectToDatabase();

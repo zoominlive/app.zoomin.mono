@@ -13,7 +13,9 @@ module.exports = {
       params = req.body;
       custId = req.user.cust_id;
       userId = req.user.user_id;
+      const defaultWatchStream = req.user?.dashboard_cam_preference || {}
       const token = req.userToken;
+  
 
       let streams = await listAvailableStreams(token, custId);
 
@@ -83,7 +85,8 @@ module.exports = {
           childSEA: childSEA,
           childrenWithEnableDate,
           childrenWithDisableDate,
-          enroledStreamsDetails: recentViewers ? recentViewers : 0
+          enroledStreamsDetails: recentViewers ? recentViewers : 0,
+          defaultWatchStream: defaultWatchStream
         },
         Message: CONSTANTS.STREAM_DATA
       });
@@ -97,5 +100,29 @@ module.exports = {
       });
       next(error);
     }
+  },
+
+  setCamPreference: async (req, res, next) => {
+    try {
+      let cameras = req?.body?.data ? req?.body?.data : req?.body;
+
+      const addPreferance = await dashboardServices.setCamPreference(req.user, cameras);
+
+      res.status(200).json({
+        IsSuccess: true,
+        Data: addPreferance,
+        Message: CONSTANTS.CAM_PREFERENCE_STORED
+      });
+
+      next();
+    } catch (error) {
+      res.status(500).json({
+        IsSuccess: false,
+        error_log: error,
+        Message: CONSTANTS.INTERNAL_SERVER_ERROR
+      });
+      next(error);
+    }
   }
+  
 };

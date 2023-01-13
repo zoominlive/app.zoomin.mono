@@ -135,5 +135,26 @@ module.exports = {
     });
 
     return children;
-  }
+  },
+
+  setCamPreference: async (user, cams, t) => {
+    const { Users } = await connectToDatabase();
+    let camObj = {
+      dashboard_cam_preference: cams
+    };
+    let camSettings;
+    
+      camSettings = await Users.update(
+        camObj,
+        {
+          where: {
+            user_id: user?.user_id
+          }
+        },
+        { transaction: t }
+      );
+
+    return camSettings;
+}
+
 };

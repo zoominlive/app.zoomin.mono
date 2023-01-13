@@ -8,5 +8,6 @@ const dashboardController = require('../../controllers/dashboard');
 
 /* dashboard end points */
 router.get('/', authController, dashboardController.getStreamStatistics);
+router.post('/setPreference', authController, dashboardController.setCamPreference);
 
 module.exports = router;

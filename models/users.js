@@ -65,6 +65,10 @@ const Users = sequelize.define(
       type: Sequelize.JSON,
       defaultValue: {}
     },
+    dashboard_cam_preference: {
+      type: Sequelize.JSON,
+      defaultValue: {}
+    },
     createdAt: { type: Sequelize.DATE, field: 'created_at' },
     updatedAt: { type: Sequelize.DATE, field: 'updated_at' }
   },

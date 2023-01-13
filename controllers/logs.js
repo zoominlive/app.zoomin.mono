@@ -16,7 +16,7 @@ module.exports = {
         functions: req.query?.functions,
         userIds: req.query?.users,
         locations: req.query?.locations,
-        familyMemberIds: req.query?.familyMemberIds,
+        familyMemberIds: req.query?.familyMemberIds || [],
         actions: req.query?.actions
       };
 
