@@ -10,7 +10,7 @@ const NoDataDiv = () => {
       justifyContent="center"
       sx={{ fontWeight: 'bold', paddingTop: 5, paddingBottom: 5 }}>
       <img src={NoData} />
-      No Data Found
+      No Entries Found
     </Stack>
   );
 };

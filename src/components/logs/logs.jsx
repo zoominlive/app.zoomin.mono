@@ -60,7 +60,17 @@ const Logs = () => {
     'Login'
   ]);
   const [selectedFunction, setSelectedFunction] = useState([
-    { id: 'Watch_Stream', name: 'Request Stream' }
+    { id: 'Watch_Stream', name: 'Request Stream' },
+    { id: 'Primary_Family', name: 'Family' },
+    { id: 'Child', name: 'Child' },
+    { id: 'Room', name: 'Room' },
+    { id: 'Camera', name: 'Camera' },
+    { id: 'Users', name: 'Users' },
+    { id: 'Profile_Photo', name: 'Profile Photo' },
+    { id: 'User_Change_Email', name: 'Change Email' },
+    { id: 'User_Forgot_Password', name: 'Forgot Password' },
+    { id: 'User_Change_Password', name: 'Change Password' },
+    { id: 'User_Reg_Accout', name: 'Accout Registration' }
   ]);
   const [fromDate, setFromDate] = useState(moment().subtract(7, 'days'));
   const [toDate, setToDate] = useState(moment());
@@ -91,7 +101,19 @@ const Logs = () => {
     from: moment().subtract(7, 'days').format('YYYY-MM-DD'),
     to: moment().format('YYYY-MM-DD'),
     type: 'Access Log',
-    functions: ['Watch_Stream'],
+    functions: [
+      'Watch_Stream',
+      'Primary_Family',
+      'Child',
+      'Room',
+      'Camera',
+      'Users',
+      'Profile_Photo',
+      'User_Change_Email',
+      'User_Forgot_Password',
+      'User_Change_Password',
+      'User_Reg_Accout'
+    ],
     users: [],
     locations: [],
     familyMemberIds: [],
@@ -182,7 +204,7 @@ const Logs = () => {
     }
     // eslint-disable-next-line no-unsafe-optional-chaining
     setLocations(['Select All', ...authCtx?.user?.location?.accessable_locations]);
-    setSelectedLocation([authCtx?.user?.location?.accessable_locations[0]]);
+    setSelectedLocation(authCtx?.user?.location?.accessable_locations);
     return () => {
       authCtx.setPreviosPagePath(window.location.pathname);
     };
@@ -870,8 +892,8 @@ const Logs = () => {
                         Time
                       </TableCell>
                       <TableCell align="left">User</TableCell>
-                      <TableCell align="left">Function</TableCell>
                       <TableCell align="left">Event</TableCell>
+                      <TableCell align="left">Function</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -910,12 +932,12 @@ const Logs = () => {
                             </TableCell>
                             <TableCell component="th" scope="row">
                               <Stack direction="row" alignItems="center" spacing={3}>
-                                <Typography>{`${row.function}`}</Typography>
+                                <Typography>{`${row.function_type}`}</Typography>
                               </Stack>
                             </TableCell>
                             <TableCell component="th" scope="row">
                               <Stack direction="row" alignItems="center" spacing={3}>
-                                <Typography>{`${row.function_type}`}</Typography>
+                                <Typography>{`${row.function}`}</Typography>
                               </Stack>
                             </TableCell>
                           </TableRow>

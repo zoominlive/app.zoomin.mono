@@ -110,7 +110,7 @@ export default function StickyHeadTable({ rows, columns, title, topViewers, pagi
                 justifyContent="center"
                 sx={{ fontWeight: 'bold', position: 'absolute', left: 0, right: 0, top: '32%' }}>
                 <img src={NoData} />
-                <div>No Data Found</div>
+                <div>No Entries Found</div>
               </Stack>
             )}
           </Table>
