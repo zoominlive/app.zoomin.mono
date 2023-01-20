@@ -29,7 +29,13 @@ const validationSchema = yup.object({
   password: yup
     .string('Enter password')
     .required('Password is required')
-    .min(6, 'Password must be atleast 6 character log'),
+    .min(8, 'Password must be atleast 8 character log')
+    .matches(/^(?=.*[A-Z])/, 'Password should contain one uppercase character')
+    .matches(
+      //eslint-disable-next-line
+      /^(?=.*[!@#\$%\^&\*0-9])/,
+      'Password should contain one number or one special character'
+    ),
   confirm_password: yup
     .string('Enter confirm password')
     .required('Confirm password is required')

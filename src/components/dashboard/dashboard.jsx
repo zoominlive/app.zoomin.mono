@@ -1,4 +1,14 @@
-import { Box, Card, CardContent, Grid, Stack, Typography, IconButton } from '@mui/material';
+import {
+  Box,
+  Card,
+  CardContent,
+  Grid,
+  Stack,
+  Typography,
+  IconButton,
+  Button,
+  Divider
+} from '@mui/material';
 import dayjs from 'dayjs';
 import { useSnackbar } from 'notistack';
 import React, { useState } from 'react';
@@ -10,12 +20,13 @@ import LayoutContext from '../../context/layoutcontext';
 import { errorMessageHandler } from '../../utils/errormessagehandler';
 import Loader from '../common/loader';
 import Map from './map';
-import ReactPlayer from 'react-player';
 import { Video } from 'react-feather';
 import _ from 'lodash';
 import WatchStreamDialogBox from './watchstreamdialogbox';
 import VideoOff from '../../assets/video-off.svg';
 import StickyHeadTable from './stickyheadtable';
+import CustomPlayer from '../watchstream/customplayer';
+import { LoadingButton } from '@mui/lab';
 
 const Dashboard = () => {
   const layoutCtx = useContext(LayoutContext);
@@ -28,6 +39,9 @@ const Dashboard = () => {
   const [selectedCamera, setSelectedCamera] = useState({});
   const [openWatchStreamDialog, setOpenWatchStreamDialog] = useState(false);
   const [defaultWatchStream, setDefaultWatchStream] = useState(null);
+  const [timeOut, setTimeOut] = useState(10);
+  const [playing, setPlaying] = useState(true);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const handleOpen = () => {
     setOpenWatchStreamDialog(true);
@@ -35,8 +49,17 @@ const Dashboard = () => {
   const handleClose = () => {
     setOpenWatchStreamDialog(false);
   };
-  const handleSubmit = (camera, camLabel) => {
-    setSelectedCamera(camera);
+  const handleSubmit = (camLabel) => {
+    setSelectedCamera(
+      !_.isEmpty(camLabel?.current?.cameras) &&
+        camLabel?.current?.locations?.length > 0 &&
+        camLabel?.current?.rooms?.length > 0
+        ? {
+            ...camLabel?.current?.rooms[0],
+            ...camLabel.current.cameras
+          }
+        : {}
+    );
     setOpenWatchStreamDialog(false);
     API.post('dashboard/setPreference', {
       cameras: camLabel.current.cameras,
@@ -71,12 +94,33 @@ const Dashboard = () => {
           }
         }));
         setMapsData(points);
-        setSelectedCamera(
+        if (
+          response?.data?.Data?.defaultWatchStream?.location?.length > 0 &&
+          response?.data?.Data?.defaultWatchStream?.rooms?.length > 0 &&
           response?.data?.Data?.defaultWatchStream?.cameras
-            ? response?.data?.Data?.defaultWatchStream?.cameras
-            : {}
-        );
-        setDefaultWatchStream(response?.data?.Data?.defaultWatchStream ?? {});
+        ) {
+          setDefaultWatchStream(response?.data?.Data?.defaultWatchStream);
+          setSelectedCamera(
+            response?.data?.Data?.defaultWatchStream?.cameras
+              ? response?.data?.Data?.defaultWatchStream?.cameras
+              : {}
+          );
+        } else {
+          setDefaultWatchStream({
+            locations: [response?.data?.Data?.watchStreamDetails.location],
+            rooms: [response?.data?.Data?.watchStreamDetails],
+            cameras: response?.data?.Data?.watchStreamDetails.cameras[0]
+          });
+          setSelectedCamera(
+            response?.data?.Data?.watchStreamDetails.cameras[0]
+              ? {
+                  ...response?.data?.Data?.watchStreamDetails,
+                  ...response?.data?.Data?.watchStreamDetails.cameras[0]
+                }
+              : {}
+          );
+        }
+        setTimeOut(response.data.Data.watchStreamDetails.timeout);
         setIsLoading(false);
       } else {
         errorMessageHandler(
@@ -113,6 +157,7 @@ const Dashboard = () => {
               </CardContent>
             </Card>
             <StickyHeadTable
+              key={1}
               rows={
                 statisticsData?.childrenWithEnableDate?.length > 0
                   ? statisticsData?.childrenWithEnableDate
@@ -140,6 +185,7 @@ const Dashboard = () => {
               </CardContent>
             </Card>
             <StickyHeadTable
+              key={2}
               rows={
                 statisticsData?.childrenWithDisableDate?.length > 0
                   ? statisticsData?.childrenWithDisableDate
@@ -153,11 +199,16 @@ const Dashboard = () => {
           </Grid>
           <Grid item xs={12} sm={12} md={4} lg={5}>
             <Card className="watch-stream-card">
-              <Grid container justifyContent={'space-between'} alignContent={'center'}>
+              <Grid
+                container
+                justifyContent={'space-between'}
+                alignContent={'center'}
+                sx={{ backgroundColor: '#fff' }}>
                 <Typography>Watch Stream</Typography>
                 <IconButton id="video-button" onClick={handleOpen}>
                   <Video />
                 </IconButton>
+
                 <WatchStreamDialogBox
                   open={openWatchStreamDialog}
                   close={handleClose}
@@ -165,40 +216,66 @@ const Dashboard = () => {
                   defaultWatchStream={defaultWatchStream}
                 />
               </Grid>
-              {_.isEmpty(selectedCamera) ? (
-                <Stack height={'85%'} spacing={1} alignItems="center" justifyContent="center">
-                  <img src={VideoOff} />
-                  <Typography>Camera not selected</Typography>
-                </Stack>
-              ) : (
-                <ReactPlayer
-                  url={
-                    !_.isEmpty(selectedCamera)
-                      ? `${authCtx.user.transcoderBaseUrl}${selectedCamera.stream_uri}`
-                      : ``
-                  }
-                  controls={true}
-                  className="watch-stream"
-                  stopOnUnmount={true}
-                  config={{
-                    file: {
-                      hlsOptions: {
-                        forceHLS: true,
-                        debug: false,
-                        xhrSetup: function (xhr) {
-                          xhr.setRequestHeader('Authorization', `Bearer ${authCtx.token}`);
-                        }
-                      }
-                    }
-                  }}
-                />
-              )}
+
+              <div className={`video-wrap ${isDeleteDialogOpen ? 'modal-overlay' : ''}`}>
+                {_.isEmpty(selectedCamera) || !playing ? (
+                  <Stack
+                    height={'85%'}
+                    color={'#fff'}
+                    spacing={1}
+                    alignItems="center"
+                    justifyContent="center">
+                    <img src={VideoOff} />
+                    <Typography>
+                      {!playing ? 'Stream stopped due to no activity' : `Camera not selected`}
+                    </Typography>
+                  </Stack>
+                ) : (
+                  <CustomPlayer
+                    noOfCameras={2}
+                    streamUri={selectedCamera?.stream_uri}
+                    camDetails={selectedCamera}
+                    timeOut={timeOut}
+                    setTimeOut={setTimeOut}
+                    setPlaying={setPlaying}
+                    setIsDeleteDialogOpen={setIsDeleteDialogOpen}
+                  />
+                )}
+
+                {isDeleteDialogOpen ? (
+                  <div id="open-modal" className="modal-window" style={{ backgroundColor: '#fff' }}>
+                    <div>
+                      <h2>Are you still watching?</h2>
+                      <Divider />
+                      <div className="modal-content">Press Yes to continue watching</div>
+                      <Divider />
+                      <div className="modal-button-wrap">
+                        <Button
+                          variant="text"
+                          onClick={() => {
+                            setIsDeleteDialogOpen(false);
+                          }}>
+                          NO
+                        </Button>
+                        <LoadingButton
+                          onClick={() => {
+                            setPlaying(true);
+                            setIsDeleteDialogOpen(false);
+                          }}>
+                          YES
+                        </LoadingButton>
+                      </div>
+                    </div>
+                  </div>
+                ) : null}
+              </div>
             </Card>
           </Grid>
         </Grid>
         <Grid container spacing={2}>
           <Grid item md={8} sm={12} xs={12}>
             <StickyHeadTable
+              key={3}
               rows={
                 statisticsData?.enroledStreamsDetails?.length > 0 &&
                 statisticsData?.enroledStreamsDetails?.some((it) => !_.isNil(it?.family))
@@ -213,6 +290,7 @@ const Dashboard = () => {
           </Grid>
           <Grid item md={4} sm={12} xs={12}>
             <StickyHeadTable
+              key={4}
               rows={
                 statisticsData?.topViewers?.length > 0 &&
                 statisticsData?.topViewers?.some((it) => !_.isNil(it?.family))

@@ -24,6 +24,7 @@ import API from '../../api';
 import AuthContext from '../../context/authcontext';
 import Loader from '../common/loader';
 import { errorMessageHandler } from '../../utils/errormessagehandler';
+import AddFamilyDialog from '../addfamily/addfamilydialog';
 
 const Layout = () => {
   const layoutCtx = useContext(LayoutContext);
@@ -32,6 +33,7 @@ const Layout = () => {
   const navigate = useNavigate();
   const [open, setOpen] = useState(window.innerWidth < 900 ? false : true);
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
+  const [isAddFamilyDialogOpen, setIsAddFamilyDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -125,6 +127,12 @@ const Layout = () => {
       icon: <Code style={{ color: 'white' }} />,
       link: '/logs',
       key: 8
+    },
+    {
+      name: 'Add Family',
+      icon: <Users style={{ color: 'white' }} />,
+      link: '',
+      key: 9
     }
     // {
     //   name: 'AI Alerts',
@@ -146,7 +154,6 @@ const Layout = () => {
       link: 'https://www.zoominlive.com/support'
     }
   ];
-
   return (
     <>
       <Box sx={{ display: 'flex' }}>
@@ -164,9 +171,9 @@ const Layout = () => {
                 .filter((item) => {
                   if (authCtx.user.role === 'User' && item.key !== 4) {
                     return true;
-                  } else if (authCtx.user.role === 'Family' && item.key === 5) {
+                  } else if (authCtx.user.role === 'Family' && (item.key === 5 || item.key === 9)) {
                     return true;
-                  } else if (authCtx.user.role === 'Admin') {
+                  } else if (authCtx.user.role === 'Admin' && item.key !== 9) {
                     return true;
                   } else {
                     return false;
@@ -184,7 +191,9 @@ const Layout = () => {
                         justifyContent: open ? 'initial' : 'center',
                         px: 2.5
                       }}
-                      onClick={() => navigate(item.link)}>
+                      onClick={() =>
+                        item.key === 9 ? setIsAddFamilyDialogOpen(true) : navigate(item.link)
+                      }>
                       <ListItemIcon
                         sx={{
                           minWidth: 0,
@@ -261,6 +270,7 @@ const Layout = () => {
           </section>
         </main>
       </Box>
+      <AddFamilyDialog open={isAddFamilyDialogOpen} setOpen={setIsAddFamilyDialogOpen} />
       <LogoutDialog open={isLogoutDialogOpen} setOpen={setIsLogoutDialogOpen} />
     </>
   );

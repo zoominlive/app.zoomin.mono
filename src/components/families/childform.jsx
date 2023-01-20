@@ -151,7 +151,7 @@ const ChildForm = (props) => {
                   <Grid item md={6} sm={12}>
                     <TextField
                       name="first_name"
-                      label="First Name"
+                      label="Child First Name"
                       value={values.first_name}
                       onChange={(event) => {
                         setFieldValue('first_name', event.target.value);
@@ -164,7 +164,7 @@ const ChildForm = (props) => {
                   <Grid item md={6} sm={12}>
                     <TextField
                       name="last_name"
-                      label="Last Name"
+                      label="Child Last Name"
                       value={values.last_name}
                       onChange={(event) => {
                         setFieldValue('last_name', event.target.value);

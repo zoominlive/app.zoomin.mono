@@ -18,8 +18,12 @@ import {
   Autocomplete,
   Checkbox,
   Button,
-  Radio
+  Radio,
+  IconButton,
+  Collapse
 } from '@mui/material';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import { CSVLink } from 'react-csv';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import CheckBoxIcon from '@mui/icons-material/CheckBox';
@@ -38,6 +42,7 @@ import ArrowDropUpIcon from '@mui/icons-material/ArrowDropUp';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import LoadingButton from '@mui/lab/LoadingButton';
 import NoDataDiv from '../common/nodatadiv';
+import PropTypes from 'prop-types';
 const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
 const checkedIcon = <CheckBoxIcon fontSize="small" />;
 
@@ -490,7 +495,91 @@ const Logs = () => {
       return false;
     }
   };
-
+  const Row = (props) => {
+    const { row, logsPayload, index } = props;
+    const [open, setOpen] = useState(false);
+    return (
+      <>
+        <TableRow hover>
+          <TableCell>
+            <IconButton aria-label="expand row" size="small" onClick={() => setOpen(!open)}>
+              {open ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
+            </IconButton>
+          </TableCell>
+          <TableCell component="th" scope="row">
+            <Stack direction="row" alignItems="center" spacing={3}>
+              <Typography>{`${
+                logsPayload.pageNumber * logsPayload.pageSize + index + 1
+              }`}</Typography>
+            </Stack>
+          </TableCell>
+          <TableCell align="left">
+            <Stack direction="row">
+              <Typography>{`${moment(row.createdAt).format('MM-DD-YYYY')}`}</Typography>
+            </Stack>
+          </TableCell>
+          <TableCell align="left">
+            <Stack direction="row">
+              <Typography>{`${moment(row.createdAt).format('hh:mm A')}`}</Typography>
+            </Stack>
+          </TableCell>
+          <TableCell component="th" scope="row">
+            <Stack direction="row" alignItems="center" spacing={3}>
+              <Typography>{`${
+                row?.user?.first_name
+                  ? row?.user?.first_name + ' ' + row?.user?.last_name
+                  : 'Not Found'
+              }`}</Typography>
+            </Stack>
+          </TableCell>
+          <TableCell component="th" scope="row">
+            <Stack direction="row" alignItems="center" spacing={3}>
+              <Typography>{`${row.function_type}`}</Typography>
+            </Stack>
+          </TableCell>
+          <TableCell component="th" scope="row">
+            <Stack direction="row" alignItems="center" spacing={3}>
+              <Typography>{`${row.function}`}</Typography>
+            </Stack>
+          </TableCell>
+        </TableRow>
+        <TableRow className={`expandable-row ${!open ? 'border-bottom-none' : ''}`}>
+          <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={6}>
+            <Collapse in={open} timeout="auto" unmountOnExit>
+              <Box sx={{ margin: 2 }}>
+                <Table size="small" aria-label="cameras">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>{row?.request ? 'Request' : 'Response'}</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    <TableRow>
+                      <TableCell sx={{ whiteSpace: 'break-spaces' }}>
+                        {JSON.stringify(row?.request ? row.request : row.response, undefined, '\t')}
+                      </TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </Box>
+            </Collapse>
+          </TableCell>
+        </TableRow>
+      </>
+    );
+  };
+  Row.propTypes = {
+    row: PropTypes.shape({
+      createdAt: PropTypes.string,
+      user: PropTypes.obj,
+      function_type: PropTypes.string,
+      function: PropTypes.string,
+      request: PropTypes.object,
+      response: PropTypes.object
+    }),
+    logsPayload: PropTypes.obj,
+    index: PropTypes.number
+  };
   return (
     <>
       {' '}
@@ -813,57 +902,61 @@ const Logs = () => {
                           )}
                         />
                       </Grid>
-                      <Grid item md={3} sm={6}>
-                        <Autocomplete
-                          multiple
-                          limitTags={1}
-                          id="tags-standard"
-                          options={families}
-                          value={selectedFamilies ? selectedFamilies : []}
-                          getOptionLabel={(option) => option?.first_name + ' ' + option?.last_name}
-                          onChange={(_, value, reason, option) => {
-                            handleFamilyChange(_, value, reason, option);
-                          }}
-                          renderTags={(value, getTagProps) =>
-                            value?.map((option, index) => (
-                              <Chip
-                                key={index}
-                                label={option.first_name + ' ' + option.last_name}
-                                {...getTagProps({ index })}
-                              />
-                            ))
-                          }
-                          renderOption={(props, option, { selected }) => (
-                            <li {...props}>
-                              <Checkbox
-                                icon={icon}
-                                checkedIcon={checkedIcon}
-                                style={{ marginRight: 8 }}
-                                checked={allFamiliesSelected ? allFamiliesSelected : selected}
-                              />
-                              {option.first_name + ' ' + option.last_name}
-                            </li>
-                          )}
-                          renderInput={(params) => (
-                            <TextField
-                              {...params}
-                              label="Families"
-                              fullWidth
-                              InputProps={{
-                                ...params.InputProps,
-                                endAdornment: (
-                                  <React.Fragment>
-                                    {/* {dropdownLoading ? (
+                      {selectedType == 'Access Log' ? (
+                        <Grid item md={3} sm={6}>
+                          <Autocomplete
+                            multiple
+                            limitTags={1}
+                            id="tags-standard"
+                            options={families}
+                            value={selectedFamilies ? selectedFamilies : []}
+                            getOptionLabel={(option) =>
+                              option?.first_name + ' ' + option?.last_name
+                            }
+                            onChange={(_, value, reason, option) => {
+                              handleFamilyChange(_, value, reason, option);
+                            }}
+                            renderTags={(value, getTagProps) =>
+                              value?.map((option, index) => (
+                                <Chip
+                                  key={index}
+                                  label={option.first_name + ' ' + option.last_name}
+                                  {...getTagProps({ index })}
+                                />
+                              ))
+                            }
+                            renderOption={(props, option, { selected }) => (
+                              <li {...props}>
+                                <Checkbox
+                                  icon={icon}
+                                  checkedIcon={checkedIcon}
+                                  style={{ marginRight: 8 }}
+                                  checked={allFamiliesSelected ? allFamiliesSelected : selected}
+                                />
+                                {option.first_name + ' ' + option.last_name}
+                              </li>
+                            )}
+                            renderInput={(params) => (
+                              <TextField
+                                {...params}
+                                label="Families"
+                                fullWidth
+                                InputProps={{
+                                  ...params.InputProps,
+                                  endAdornment: (
+                                    <React.Fragment>
+                                      {/* {dropdownLoading ? (
                                     <CircularProgress color="inherit" size={20} />
                                   ) : null} */}
-                                    {params.InputProps.endAdornment}
-                                  </React.Fragment>
-                                )
-                              }}
-                            />
-                          )}
-                        />
-                      </Grid>
+                                      {params.InputProps.endAdornment}
+                                    </React.Fragment>
+                                  )
+                                }}
+                              />
+                            )}
+                          />
+                        </Grid>
+                      ) : null}
                       <Grid item md={1.5} sm={6} sx={{ marginTop: '6px' }}>
                         <Button
                           className="add-btn"
@@ -894,53 +987,13 @@ const Logs = () => {
                       <TableCell align="left">User</TableCell>
                       <TableCell align="left">Event</TableCell>
                       <TableCell align="left">Function</TableCell>
+                      <TableCell align="left">Event Description</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
                     {logsList?.length > 0
                       ? logsList?.map((row, index) => (
-                          <TableRow key={index} hover>
-                            <TableCell component="th" scope="row">
-                              <Stack direction="row" alignItems="center" spacing={3}>
-                                <Typography>{`${
-                                  logsPayload.pageNumber * logsPayload.pageSize + index + 1
-                                }`}</Typography>
-                              </Stack>
-                            </TableCell>
-                            <TableCell align="left">
-                              <Stack direction="row">
-                                <Typography>{`${moment(row.createdAt).format(
-                                  'MM-DD-YYYY'
-                                )}`}</Typography>
-                              </Stack>
-                            </TableCell>
-                            <TableCell align="left">
-                              <Stack direction="row">
-                                <Typography>{`${moment(row.createdAt).format(
-                                  'hh:mm A'
-                                )}`}</Typography>
-                              </Stack>
-                            </TableCell>
-                            <TableCell component="th" scope="row">
-                              <Stack direction="row" alignItems="center" spacing={3}>
-                                <Typography>{`${
-                                  row?.user?.first_name
-                                    ? row?.user?.first_name + ' ' + row?.user?.last_name
-                                    : 'Not Found'
-                                }`}</Typography>
-                              </Stack>
-                            </TableCell>
-                            <TableCell component="th" scope="row">
-                              <Stack direction="row" alignItems="center" spacing={3}>
-                                <Typography>{`${row.function_type}`}</Typography>
-                              </Stack>
-                            </TableCell>
-                            <TableCell component="th" scope="row">
-                              <Stack direction="row" alignItems="center" spacing={3}>
-                                <Typography>{`${row.function}`}</Typography>
-                              </Stack>
-                            </TableCell>
-                          </TableRow>
+                          <Row key={index} row={row} logsPayload={logsPayload} index={index} />
                         ))
                       : null}
                   </TableBody>

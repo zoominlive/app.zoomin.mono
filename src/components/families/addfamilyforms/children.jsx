@@ -58,7 +58,7 @@ const Children = (props) => {
                     <Grid item md={6} sm={12}>
                       <TextField
                         name={`children.${index}.first_name`}
-                        label="First Name"
+                        label="Child First Name"
                         value={props?.values?.children[index]?.first_name}
                         onChange={(event) => {
                           props.setFieldValue(`children[${index}].first_name`, event.target.value);
@@ -89,7 +89,7 @@ const Children = (props) => {
                     <Grid item md={6} sm={12}>
                       <TextField
                         name={`children.${index}.last_name`}
-                        label="Last Name"
+                        label="Child Last Name"
                         value={props?.values?.children[index]?.last_name}
                         onChange={(event) => {
                           props.setFieldValue(`children[${index}].last_name`, event.target.value);

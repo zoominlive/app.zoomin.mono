@@ -48,7 +48,7 @@ const WatchStreamDialogBox = (props) => {
   authCtx?.user?.location?.accessable_locations.forEach((loc) => locs.push(loc));
 
   useEffect(() => {
-    setSelectedRoom(props?.defaultWatchStream?.locations);
+    setSelectedLocation(props?.defaultWatchStream?.locations);
     setSelectedRoom(props?.defaultWatchStream?.rooms);
     setSelectedCameras(props?.defaultWatchStream?.cameras);
   }, [props?.defaultWatchStream]);
@@ -57,7 +57,7 @@ const WatchStreamDialogBox = (props) => {
     API.get('watchstream').then((response) => {
       if (response.status === 200) {
         setCamerasPayload({
-          location: response?.data?.Data.streamDetails[0].location,
+          location: [response?.data?.Data.streamDetails[0].location],
           room: response?.data?.Data.streamDetails
         });
         if (!location.state) {
@@ -233,7 +233,7 @@ const WatchStreamDialogBox = (props) => {
 
   return (
     <Dialog open={props.open} onClose={props.close} maxWidth={'md'} fullWidth={true}>
-      <DialogTitle id="responsive-dialog-title">{'please select.....'}</DialogTitle>
+      <DialogTitle id="responsive-dialog-title">{'Please select.....'}</DialogTitle>
       <DialogContent>
         <div>
           <Autocomplete
@@ -389,7 +389,7 @@ const WatchStreamDialogBox = (props) => {
       </DialogContent>
       <DialogActions>
         <Button onClick={props.close}>Cancel</Button>
-        <Button onClick={() => props.submit(selectedCameras, camLabel)} autoFocus>
+        <Button onClick={() => props.submit(camLabel)} autoFocus>
           Save
         </Button>
       </DialogActions>

@@ -239,7 +239,7 @@ const Users = () => {
                           </TableCell>
                           <TableCell align="left">
                             <Stack direction="row">
-                              {row.location.accessable_locations
+                              {row.location.selected_locations
                                 .sort((a, b) => (a > b ? 1 : -1))
                                 .map((location, index) => (
                                   <Chip key={index} label={location} color="primary" />

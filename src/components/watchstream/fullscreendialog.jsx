@@ -6,7 +6,7 @@ const FullScreenDialog = (props) => {
   return (
     <Card
       style={{
-        backgroundColor: props.isFullScreenDialogOpen ? 'black' : '',
+        backgroundColor: props.isFullScreenDialogOpen ? 'black' : '#cfc9c9',
         borderTopLeftRadius: '0',
         borderTopRightRadius: '0'
       }}>
