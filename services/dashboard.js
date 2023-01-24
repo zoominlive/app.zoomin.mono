@@ -97,7 +97,7 @@ module.exports = {
 
     let children = await Child.findAll({
       where: { cust_id: custId },
-      attributes: ['first_name', 'last_name'],
+      attributes: ['first_name', 'last_name', 'scheduled_end_date', 'scheduled_enable_date',],
       include: [
         {
           model: RoomsInChild,

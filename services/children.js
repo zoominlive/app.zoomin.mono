@@ -31,7 +31,9 @@ module.exports = {
     await Promise.all(
       childObjs.map(async (child, index) => {
         let roomsInChild = child.rooms.rooms.map((room) => {
-          return { child_id: childCreated[index].child_id, room_id: room.room_id };
+          return {  child_id: childCreated[index].child_id, room_id: room.room_id,
+                    disabled: child?.enable_date !== null ? 'false' : 'true',
+                    scheduled_enable_date: child?.enable_date !== null ? child?.enable_date : null};
         });
         await RoomsInChild.bulkCreate(roomsInChild, { returning: true }, { transaction: t });
       })
@@ -151,7 +153,8 @@ module.exports = {
     } else {
       let update = {
         status: 'Disabled',
-        scheduled_end_date: null
+        scheduled_end_date: null,
+        scheduled_enable_date: null
       };
 
       updateChildDetails = await Child.update(

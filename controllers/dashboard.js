@@ -2,6 +2,8 @@ const cameraServices = require('../services/cameras');
 const familyServices = require('../services/families');
 const childrenServices = require('../services/children');
 const dashboardServices = require('../services/dashboard');
+const watchStreamServices = require('../services/watchStream');
+const customerServices = require('../services/customers');
 const { listAvailableStreams } = require('../lib/rtsp-stream');
 const _ = require('lodash');
 const sequelize = require('../lib/database');
@@ -66,6 +68,22 @@ module.exports = {
             rooms: roomsToEnable
           });
         }
+        if(roomsToEnable.length == 0 && roomsToDisable.length == 0){
+          if(child.scheduled_end_date != null){
+            childrenWithDisableDate.push({
+              childFirstName: child.first_name,
+              childLastName: child.last_name,
+              rooms: roomsToDisable
+            });
+          }
+          if(child.scheduled_enable_date != null){
+            childrenWithEnableDate.push({
+              childFirstName: child.first_name,
+              childLastName: child.last_name,
+              rooms: roomsToEnable
+            });
+          }
+        }
       });
 
       SEAMembers = SEAMembers?.length + childSEA?.length;
@@ -73,6 +91,14 @@ module.exports = {
       const topViewers = await dashboardServices.topViewersOfTheWeek();
 
       const recentViewers = await dashboardServices.getLastOneHourViewers();
+      let cameras = await watchStreamServices.getAllCamForLocation(req.user);
+
+      const customerDetails = await customerServices.getCustomerDetails(req.user.cust_id);
+      cameras = _.uniqBy(cameras, 'room_id');
+      cameras?.forEach((cam, camIndex) => {
+        cameras[camIndex].timeout = customerDetails.timeout;
+        cameras[camIndex].permit_audio = customerDetails.permit_audio;
+      });
 
       res.status(200).json({
         IsSuccess: true,
@@ -86,7 +112,8 @@ module.exports = {
           childrenWithEnableDate,
           childrenWithDisableDate,
           enroledStreamsDetails: recentViewers ? recentViewers : 0,
-          defaultWatchStream: defaultWatchStream
+          defaultWatchStream: defaultWatchStream ?? null,
+          watchStreamDetails: cameras[0] ?? [],
         },
         Message: CONSTANTS.STREAM_DATA
       });

@@ -78,8 +78,8 @@ module.exports = {
       userAdded = addUser;
       if (addUser) {
         let userData = addUser?.toJSON();
-
-        const token = await userServices.createPasswordToken(userData);
+        const registerFlag = true;
+        const token = await userServices.createPasswordToken(userData , registerFlag);
         const name = userData.first_name + ' ' + userData.last_name;
         const originalUrl =
           process.env.FE_SITE_BASE_URL + 'set-password?' + 'token=' + token + '&type=user';
@@ -368,8 +368,9 @@ module.exports = {
       }
       if (user) {
         const userData = user;
+        const registerFlag = false;
         if (userData.role === 'Admin' || userData.role === 'User') {
-          const token = await userServices.createPasswordToken(userData);
+          const token = await userServices.createPasswordToken(userData, registerFlag);
           const name = userData.first_name + ' ' + userData.last_name;
           const originalUrl =
             process.env.FE_SITE_BASE_URL + 'set-password?' + 'token=' + token + '&type=user';
@@ -377,7 +378,7 @@ module.exports = {
           await sendForgetPasswordMail(name, email, originalUrl);
           await userServices.editUserProfile(user, { password_link: 'active' }, t);
         } else {
-          const token = await familyServices.createPasswordToken(userData);
+          const token = await familyServices.createPasswordToken(userData, registerFlag);
           const name = userData.first_name + ' ' + userData.last_name;
           const originalUrl =
             process.env.FE_SITE_BASE_URL + 'set-password?' + 'token=' + token + '&type=family';

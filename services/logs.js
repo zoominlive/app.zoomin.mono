@@ -64,7 +64,7 @@ module.exports = {
       let log = await AccessLogs.findAndCountAll({
         limit: parseInt(pageSize),
         offset: parseInt(pageNumber * pageSize),
-        attributes: { exclude: ['response', 'updatedAt'] },
+        //attributes: { exclude: ['response', 'updatedAt'] },
         where: {
           created_at: {
             [Sequelize.Op.between]: [
@@ -97,7 +97,7 @@ module.exports = {
       let log = await ChangeLogs.findAndCountAll({
         limit: parseInt(pageSize),
         offset: parseInt(pageNumber * pageSize),
-        attributes: { exclude: ['response', 'updatedAt'] },
+        //attributes: { exclude: ['response', 'updatedAt'] },
         where: {
           created_at: {
             [Sequelize.Op.between]: [

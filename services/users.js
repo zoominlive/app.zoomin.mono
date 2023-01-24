@@ -123,8 +123,9 @@ module.exports = {
   },
 
   /* Create user token to reset password */
-  createPasswordToken: async (user) => {
-    const token = engine.encrypt({ userId: user.user_id, password: user.password }, 900000);
+  createPasswordToken: async (user, registerFlag) => {
+    const duration = registerFlag ? ((60*1000)*60)*96 : 900000;
+    const token = engine.encrypt({ userId: user.user_id, password: user.password }, duration);
 
     return token;
   },
@@ -281,7 +282,8 @@ module.exports = {
     });
     let users = await Users.findAll({
       where: { cust_id: custId, [Sequelize.Op.or]: locArray },
-      attributes: ['first_name', 'last_name', 'user_id']
+      attributes: ['first_name', 'last_name', 'user_id'],
+      paranoid: false
     });
 
     return users;

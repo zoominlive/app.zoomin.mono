@@ -145,19 +145,28 @@ module.exports = {
 
       const childDetails = await childServices.getChildById(params.child_id, t);
 
-      console.log(typeof params.scheduled_end_date);
       if (childDetails?.location?.locations?.length == params?.locations_to_disable?.length) {
         const disableChild = await childServices.disableChild(
           params?.child_id,
-          params?.scheduled_end_date,
+          params?.scheduled_end_date ? params?.scheduled_end_date : null,
           t
         );
       } else {
+      if(params?.locations_to_disable?.length){
         const locationsDisabled = await childServices.disableSelectedLocations(
           params?.child_id,
-          params?.scheduled_end_date,
+          params?.scheduled_end_date ? params?.scheduled_end_date : null,
           params?.locations_to_disable
         );
+      }
+      else{
+        const disableChild = await childServices.disableChild(
+          params?.child_id,
+          params?.scheduled_end_date ?params?.scheduled_end_date: null,
+          t
+        );
+      }
+       
       }
 
       await t.commit();
@@ -209,7 +218,7 @@ module.exports = {
       console.log('hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh', params);
 
       const enableChild = await childServices.enableChild(params.child_id, t);
-
+      
       await t.commit();
       res.status(200).json({
         IsSuccess: true,

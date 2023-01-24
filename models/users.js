@@ -70,11 +70,13 @@ const Users = sequelize.define(
       defaultValue: {}
     },
     createdAt: { type: Sequelize.DATE, field: 'created_at' },
-    updatedAt: { type: Sequelize.DATE, field: 'updated_at' }
+    updatedAt: { type: Sequelize.DATE, field: 'updated_at' },
+    deletedAt: { type: Sequelize.DATE, field: 'deleted_at' }
   },
   {
     tableName: 'users',
-    timestamps: true
+    timestamps: true,
+    paranoid: true
   }
 );
 
