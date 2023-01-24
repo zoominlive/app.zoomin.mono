@@ -12,6 +12,7 @@ import {
 import RoomAddForm from './roomaddform';
 import SchedulerFrom from './scheduler';
 import BlockIcon from '@mui/icons-material/Block';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import EditSchedule from '../../assets/schedule.svg';
 import Schedule from '../../assets/new-schedule.svg';
 import DeleteScheduleIcon from '../../assets/delete-icon.svg';
@@ -326,12 +327,11 @@ const FamilyDrawer = (props) => {
 
   // Method to enable the child
   const handleChildEnable = (childToEnable, index) => {
-    setEnableChildrenLoading((prevState) => {
-      const tempLoading = [...prevState];
-      tempLoading[index] = true;
-      return tempLoading;
-    });
-
+    // setEnableChildrenLoading((prevState) => {
+    //   const tempLoading = [...prevState];
+    //   tempLoading[index] = true;
+    //   return tempLoading;
+    // });
     API.put('family/child/enable', {
       child_id: childToEnable
     }).then((response) => {
@@ -354,11 +354,47 @@ const FamilyDrawer = (props) => {
           authCtx.setAuthError
         );
       }
-      setEnableChildrenLoading((prevState) => {
-        const tempLoading = [...prevState];
-        tempLoading[index] = false;
-        return tempLoading;
-      });
+      // setEnableChildrenLoading((prevState) => {
+      //   const tempLoading = [...prevState];
+      //   tempLoading[index] = false;
+      //   return tempLoading;
+      // });
+    });
+  };
+
+  const handleChildDisable = (childToDisable, index) => {
+    // setEnableChildrenLoading((prevState) => {
+    //   const tempLoading = [...prevState];
+    //   tempLoading[index] = true;
+    //   return tempLoading;
+    // });
+    API.put('family/child/disable', {
+      child_id: childToDisable
+    }).then((response) => {
+      if (response.status === 200) {
+        setScheduledLoading({ loading: false, index: -1, type: '' });
+        enqueueSnackbar(response.data.Message, { variant: 'success' });
+        props.getFamiliesList();
+        props.setFamily((prevState) => {
+          const tempFamily = { ...prevState };
+          tempFamily.children[index].status = 'Enabled';
+          tempFamily.children[index].scheduled_end_date = null;
+          return tempFamily;
+        });
+      } else {
+        setScheduledLoading({ loading: false, index: -1, type: '' });
+        errorMessageHandler(
+          enqueueSnackbar,
+          response?.response?.data?.Message || 'Something Went Wrong.',
+          response?.response?.status,
+          authCtx.setAuthError
+        );
+      }
+      // setEnableChildrenLoading((prevState) => {
+      //   const tempLoading = [...prevState];
+      //   tempLoading[index] = false;
+      //   return tempLoading;
+      // });
     });
   };
 
@@ -647,18 +683,49 @@ const FamilyDrawer = (props) => {
                         {capitalizeFirstLetter(child?.first_name)}{' '}
                         {capitalizeFirstLetter(child?.last_name)}
                       </Typography>
+                      {/* <Typography variant="caption">
+                                {room?.scheduled_enable_date
+                                  ? 'Enable date: ' + room?.scheduled_enable_date + '  '
+                                  : room?.scheduled_disable_date
+                                  ? 'Disable date: ' + room?.scheduled_disable_date + '  '
+                                  : room?.disabled == 'true'
+                                  ? 'Disabled  '
+                                  : 'Enabled  '}
+                              </Typography> */}
                     </Stack>
                     <Stack direction="row" spacing={2} alignItems="center">
-                      {child?.scheduled_end_date !== null && child?.scheduled_end_date && (
+                      {(child?.scheduled_enable_date !== null && child?.scheduled_enable_date) ||
+                      (child?.scheduled_end_date !== null && child?.scheduled_end_date) ? (
                         <Box
                           sx={{
                             display: 'flex',
                             alignItems: 'center'
                           }}>
                           <Typography variant="caption">
-                            {`Disable Date:  ${child?.scheduled_end_date}`}
+                            {`${
+                              child?.scheduled_enable_date !== null && child?.scheduled_enable_date
+                                ? 'Enable Date'
+                                : 'Disable Date'
+                            }:  ${
+                              child?.scheduled_enable_date !== null && child?.scheduled_enable_date
+                                ? child?.scheduled_enable_date
+                                : child?.scheduled_end_date
+                            }`}
+                            {/* {`${
+                              child?.status === 'Disabled' ? 'Disable Date' : 'Enable Date'
+                            }:  ${
+                              child?.scheduled_enable_date !== null && child?.scheduled_enable_date
+                                ? child?.scheduled_enable_date
+                                : child?.scheduled_end_date
+                            }`} */}
                           </Typography>
-                          <Tooltip id="button-report" title="Delete scheduled disable">
+                          <Tooltip
+                            id="button-report"
+                            title={`Delete scheduled ${
+                              child?.scheduled_enable_date !== null && child?.scheduled_enable_date
+                                ? 'Enable'
+                                : 'disable'
+                            }`}>
                             <img
                               src={DeleteScheduleIcon}
                               style={{ height: '.8rem', marginLeft: '.3rem' }}
@@ -668,7 +735,12 @@ const FamilyDrawer = (props) => {
                                   index: index,
                                   type: 'child'
                                 });
-                                handleChildEnable(child.child_id, index);
+                                if (child?.status === 'Disabled') {
+                                  handleChildDisable(child.child_id, index);
+                                } else {
+                                  console.log('=====child=====', child);
+                                  handleChildEnable(child.child_id, index);
+                                }
                               }}
                               className="curser-pointer"></img>
                           </Tooltip>
@@ -682,7 +754,7 @@ const FamilyDrawer = (props) => {
                             }
                           />
                         </Box>
-                      )}
+                      ) : null}
                     </Stack>
                     <Stack
                       direction="row"
@@ -701,7 +773,7 @@ const FamilyDrawer = (props) => {
                         <Tooltip id="button-report" title="Enable">
                           {!enableChildrenLoading[index] && (
                             <BlockIcon
-                              className="disable-icon curser-pointer"
+                              className="curser-pointer block-icon"
                               onClick={() => {
                                 handleChildEnable(child.child_id, index);
                               }}></BlockIcon>
@@ -711,14 +783,14 @@ const FamilyDrawer = (props) => {
                         <>
                           {child?.scheduled_end_date == null && (
                             <Tooltip id="button-report" title="Disable">
-                              <BlockIcon
-                                className={'curser-pointer'}
+                              <CheckCircleIcon
+                                className={'curser-pointer enable-icon'}
                                 onClick={() => {
                                   setLocationsToDisable(child?.location?.locations);
                                   setIsDisableDialogOpen(true);
                                   setChildToDisable(child.child_id);
                                   setDisableDialogTitle('Disable Child');
-                                }}></BlockIcon>
+                                }}></CheckCircleIcon>
                             </Tooltip>
                           )}
                         </>

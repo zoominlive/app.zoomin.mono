@@ -108,7 +108,14 @@ export default function StickyHeadTable({ rows, columns, title, topViewers, pagi
                 spacing={1}
                 alignItems="center"
                 justifyContent="center"
-                sx={{ fontWeight: 'bold', position: 'absolute', left: 0, right: 0, top: '32%' }}>
+                sx={{
+                  fontSize: 15,
+                  fontWeight: 'bold',
+                  position: 'absolute',
+                  left: 0,
+                  right: 0,
+                  top: '37%'
+                }}>
                 <img src={NoData} />
                 <div>No Entries Found</div>
               </Stack>

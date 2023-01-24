@@ -283,7 +283,13 @@
 .disable-icon {
   color: gray !important;
 }
-
+.block-icon {
+  color: red !important;
+}
+.enable-icon{
+  color: green !important;
+  font-size: 27px !important;
+}
 .account-menu {
   .MuiTypography-root {
     color: #00000099;

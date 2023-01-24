@@ -8,7 +8,7 @@ const NoDataDiv = () => {
       spacing={1}
       alignItems="center"
       justifyContent="center"
-      sx={{ fontWeight: 'bold', paddingTop: 5, paddingBottom: 5 }}>
+      sx={{ fontSize: 15, fontWeight: 'bold', paddingTop: 5, paddingBottom: 5 }}>
       <img src={NoData} />
       No Entries Found
     </Stack>
