@@ -101,7 +101,8 @@ module.exports = {
         childObjs.push({
           ...child,
           rooms: { rooms: child.rooms },
-          family_id: familyId
+          family_id: familyId,
+          cust_id: custId
         });
       });
 

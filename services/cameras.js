@@ -79,13 +79,14 @@ module.exports = {
   /* Fetch all the camera's details for given customer */
   getAllCameraForCustomer: async (custId, filter, t) => {
     const { Camera } = await connectToDatabase();
-    let { pageNumber = 0, pageSize = 10, searchBy = '', location = 'All' } = filter;
+    let { pageNumber, pageSize, searchBy = '', location = 'All' } = filter;
 
     let cams;
     if (location === 'All') {
       location = '';
     }
 
+   if(filter.pageNumber && filter.pageSize){
     cams = await Camera.findAndCountAll(
       {
         limit: parseInt(pageSize),
@@ -111,7 +112,32 @@ module.exports = {
       },
       { transaction: t }
     );
-
+   }
+   else{
+    cams = await Camera.findAndCountAll(
+      {
+        where: {
+          cust_id: custId,
+          location: {
+            [Sequelize.Op.like]: `%${location}`
+          },
+          [Sequelize.Op.or]: [
+            {
+              cam_name: {
+                [Sequelize.Op.like]: `%${searchBy}%`
+              }
+            },
+            {
+              description: {
+                [Sequelize.Op.like]: `%${searchBy}%`
+              }
+            }
+          ]
+        }
+      },
+      { transaction: t }
+    );
+   }
     return { cams: cams.rows, count: cams.count };
   }
 };

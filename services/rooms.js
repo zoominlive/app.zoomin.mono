@@ -35,6 +35,9 @@ module.exports = {
     if (params?.location) {
       update.location = params.location;
     }
+    if (params?.disabled) {
+      update.location = params.disabled;
+    }
 
     let updateRoomDetails = await Room.update(
       update,

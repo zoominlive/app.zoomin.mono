@@ -20,7 +20,7 @@ const RoomsInChild = sequelize.define(
     },
     disabled: {
       type: Sequelize.ENUM('true', 'false'),
-      defaultValue: 'false'
+      defaultValue: 'true'
     },
     scheduled_disable_date: {
       type: Sequelize.DATEONLY,

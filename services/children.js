@@ -5,11 +5,12 @@ const RoomsInChild = require('../models/rooms_assigned_to_child');
 const moment = require('moment');
 module.exports = {
   /* Create new child */
-  createChild: async (childObj, t) => {
+  createChild: async (custID, childObj, t) => {
     let createObj = {
       ...childObj,
       status: childObj?.enable_date !== null ? 'Disabled' : 'Enabled',
-      scheduled_enable_date: childObj?.enable_date
+      scheduled_enable_date: childObj?.enable_date,
+      cust_id:custID
     };
     const { Child } = await connectToDatabase();
     let childCreated = await Child.create(createObj, { transaction: t });
@@ -141,6 +142,15 @@ module.exports = {
         { transaction: t }
       );
 
+      let updateRooms = await RoomsInChild.update(
+        { scheduled_enable_date: null, scheduled_disable_date: schedluedEndDate, disabled: 'false' },
+          {
+            where: {
+              child_id: childId
+            }
+          },
+          { transaction: t }
+        );
       if (updateChildDetails) {
         updateChildDetails = await Child.findOne(
           {
@@ -150,6 +160,7 @@ module.exports = {
           { transaction: t }
         );
       }
+
     } else {
       let update = {
         status: 'Disabled',
@@ -165,7 +176,15 @@ module.exports = {
         },
         { transaction: t }
       );
-
+      let updateRooms = await RoomsInChild.update(
+        { scheduled_enable_date: null, scheduled_disable_date: null, disabled: 'true' },
+          {
+            where: {
+              child_id: childId
+            }
+          },
+          { transaction: t }
+        );
       if (updateChildDetails) {
         updateChildDetails = await Child.findOne(
           {
@@ -182,7 +201,7 @@ module.exports = {
 
   //enable selected child
   enableChild: async (childId, t) => {
-    const { Child } = await connectToDatabase();
+    const { Child, RoomsInChild } = await connectToDatabase();
     let update = {
       status: 'Enabled',
       scheduled_end_date: null,
@@ -198,6 +217,15 @@ module.exports = {
       { transaction: t }
     );
 
+    let enableRooms = await RoomsInChild.update(
+    { scheduled_enable_date: null, scheduled_disable_date: null, disabled: 'false' },
+      {
+        where: {
+          child_id: childId
+        }
+      },
+      { transaction: t }
+    );
     if (updateChildDetails) {
       updateChildDetails = await Child.findOne(
         {
@@ -216,7 +244,8 @@ module.exports = {
     const roomsToadd = rooms.map((room) => {
       return {
         room_id: room.room_id,
-        child_id: childId
+        child_id: childId,
+        scheduled_enable_date: room.scheduled_enable_date
       };
     });
 

@@ -12,7 +12,7 @@ module.exports = {
 
       //add children
 
-      const newChild = await childServices.createChild(params, t);
+      const newChild = await childServices.createChild(req?.user?.cust_id, params, t);
 
       const addRoomsToChild = await childServices.assignRoomsToChild(
         newChild?.child_id,
@@ -214,9 +214,6 @@ module.exports = {
     const t = await sequelize.transaction();
     try {
       const params = req.body;
-
-      console.log('hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh', params);
-
       const enableChild = await childServices.enableChild(params.child_id, t);
       
       await t.commit();
