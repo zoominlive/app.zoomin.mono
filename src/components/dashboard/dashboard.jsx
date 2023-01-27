@@ -167,6 +167,7 @@ const Dashboard = () => {
               title={'Gaining Access This Week'}
               topViewers={false}
               pagination={false}
+              isLoading={isLoading}
             />
           </Grid>
           <Grid item xs={12} sm={12} md={4} lg={3.5}>
@@ -195,6 +196,7 @@ const Dashboard = () => {
               title={'Loosing Access This Week'}
               topViewers={false}
               pagination={false}
+              isLoading={isLoading}
             />
           </Grid>
           <Grid item xs={12} sm={12} md={4} lg={5}>
@@ -227,7 +229,7 @@ const Dashboard = () => {
                     justifyContent="center">
                     <img src={VideoOff} />
                     <Typography>
-                      {!playing ? 'Stream stopped due to no activity' : `Camera not selected`}
+                      {!playing ? 'Stream stopped due to Inactivity' : `Camera not selected`}
                     </Typography>
                   </Stack>
                 ) : (
@@ -286,6 +288,7 @@ const Dashboard = () => {
               title={'Viewers In The Last Hour'}
               topViewers={false}
               pagination={true}
+              isLoading={isLoading}
             />
           </Grid>
           <Grid item md={4} sm={12} xs={12}>
@@ -301,6 +304,7 @@ const Dashboard = () => {
               title={'Top 5 Viewers Last 7 Days'}
               topViewers={true}
               pagination={false}
+              isLoading={isLoading}
             />
           </Grid>
         </Grid>

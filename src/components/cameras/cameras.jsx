@@ -259,7 +259,7 @@ const Cameras = () => {
                     : null}
                 </TableBody>
               </Table>
-              {camerasList?.length == 0 ? <NoDataDiv /> : null}
+              {!isLoading && camerasList?.length == 0 ? <NoDataDiv /> : null}
               {camerasList?.length > 0 ? (
                 <TablePagination
                   rowsPerPageOptions={[5, 10, 20, 25, 50]}

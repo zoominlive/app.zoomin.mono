@@ -129,7 +129,7 @@ const Layout = () => {
       key: 8
     },
     {
-      name: 'Add Family',
+      name: 'Send An Invite',
       icon: <Users style={{ color: 'white' }} />,
       link: '',
       key: 9

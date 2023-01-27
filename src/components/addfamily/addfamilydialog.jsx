@@ -52,7 +52,7 @@ const AddFamilyDialog = (props) => {
     })
       .then((response) => {
         if (response.status === 201) {
-          enqueueSnackbar(response.data.Message, { variant: 'success' });
+          enqueueSnackbar('New Family Member Added', { variant: 'success' });
 
           props.setOpen(false);
           setSubmitLoading(false);

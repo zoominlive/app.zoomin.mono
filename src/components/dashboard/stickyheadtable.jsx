@@ -14,7 +14,14 @@ import {
 import PropTypes from 'prop-types';
 import NoData from '../../assets/no-data.svg';
 
-export default function StickyHeadTable({ rows, columns, title, topViewers, pagination }) {
+export default function StickyHeadTable({
+  rows,
+  columns,
+  title,
+  topViewers,
+  pagination,
+  isLoading
+}) {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
 
@@ -103,7 +110,7 @@ export default function StickyHeadTable({ rows, columns, title, topViewers, pagi
                       </>
                     ))}
               </TableBody>
-            ) : (
+            ) : !isLoading ? (
               <Stack
                 spacing={1}
                 alignItems="center"
@@ -119,7 +126,7 @@ export default function StickyHeadTable({ rows, columns, title, topViewers, pagi
                 <img src={NoData} />
                 <div>No Entries Found</div>
               </Stack>
-            )}
+            ) : null}
           </Table>
         </TableContainer>
         {pagination && rows && rows?.length > 0 ? (
@@ -142,5 +149,6 @@ StickyHeadTable.propTypes = {
   columns: PropTypes.array,
   title: PropTypes.string,
   topViewers: PropTypes.bool,
-  pagination: PropTypes.bool
+  pagination: PropTypes.bool,
+  isLoading: PropTypes.bool
 };

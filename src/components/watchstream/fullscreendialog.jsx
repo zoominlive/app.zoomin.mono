@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import { Grid, Box, Card } from '@mui/material';
 import CustomPlayer from './customplayer';
 const FullScreenDialog = (props) => {
+  console.log('-----', props.isFullScreenDialogOpen);
   return (
     <Card
       style={{

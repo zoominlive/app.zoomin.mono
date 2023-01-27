@@ -260,7 +260,7 @@ const Users = () => {
                     : null}
                 </TableBody>
               </Table>
-              {usersList?.length == 0 ? <NoDataDiv /> : null}
+              {!isLoading && usersList?.length == 0 ? <NoDataDiv /> : null}
               {usersList?.length > 0 ? (
                 <TablePagination
                   rowsPerPageOptions={[5, 10, 20, 25, 50]}

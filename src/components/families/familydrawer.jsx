@@ -634,27 +634,31 @@ const FamilyDrawer = (props) => {
                     <EditIcon />
                   </IconButton>
                   {parent.status === 'Disabled' ? (
-                    <BlockIcon
-                      className="disable-icon curser-pointer"
-                      onClick={() => {
-                        handleParentEnable(parent.family_member_id, index);
-                      }}></BlockIcon>
+                    <Tooltip id="button-report" title="Enable">
+                      <BlockIcon
+                        className="block-icon curser-pointer"
+                        onClick={() => {
+                          handleParentEnable(parent.family_member_id, index);
+                        }}></BlockIcon>
+                    </Tooltip>
                   ) : (
                     <>
                       {parent?.scheduled_end_date == null && (
-                        <BlockIcon
-                          className="curser-pointer"
-                          onClick={() => {
-                            setDisableDialogTitle('Disable Secondary Family Member');
-                            setIsDisableDialogOpen(true);
-                            let locations = [];
-                            props?.family?.children.forEach((child) => {
-                              // eslint-disable-next-line no-unsafe-optional-chaining
-                              locations.push(...child?.location?.locations);
-                            });
-                            setLocationsToDisable(_.uniq(locations));
-                            setParentToDisable(parent.family_member_id);
-                          }}></BlockIcon>
+                        <Tooltip id="button-report" title="Disable">
+                          <CheckCircleIcon
+                            className="curser-pointer enable-icon"
+                            onClick={() => {
+                              setDisableDialogTitle('Disable Secondary Family Member');
+                              setIsDisableDialogOpen(true);
+                              let locations = [];
+                              props?.family?.children.forEach((child) => {
+                                // eslint-disable-next-line no-unsafe-optional-chaining
+                                locations.push(...child?.location?.locations);
+                              });
+                              setLocationsToDisable(_.uniq(locations));
+                              setParentToDisable(parent.family_member_id);
+                            }}></CheckCircleIcon>
+                        </Tooltip>
                       )}
                     </>
                   )}
@@ -897,7 +901,8 @@ const FamilyDrawer = (props) => {
       )}
 
       <Divider textAlign="left" className="title-divider">
-        {props?.family?.primary?.status === 'Disabled' ? 'ENABLE FAMILY' : 'DISABLE FAMILY'}
+        {/* {props?.family?.primary?.status === 'Disabled' ? 'ENABLE FAMILY' : 'FAMILY MANAGEMENT'} */}
+        FAMILY MANAGEMENT
       </Divider>
       <Stack direction="row" px={2.5} mt={2} alignItems="center" justifyContent={'flex-end'}>
         {props?.family?.primary?.status === 'Disabled' ? (
@@ -912,11 +917,31 @@ const FamilyDrawer = (props) => {
         ) : (
           <>
             {props?.family?.primary?.scheduled_end_date == null && (
-              <Button
-                className="family_disable_enable_btn"
-                onClick={() => props.setIsDisableFamilyDialogOpen(true)}>
-                Disable FAMILY
-              </Button>
+              <>
+                <Stack direction="row" justifyContent="space-between" spacing={1.5}>
+                  <Button
+                    className="family_disable_enable_btn"
+                    onClick={() => {
+                      props.setFamily(props.family);
+                      props.setIsParentFormDialogOpen(true);
+                    }}>
+                    Add FAMILY MEMBER
+                  </Button>
+                  <Button
+                    className="family_disable_enable_btn"
+                    onClick={() => {
+                      props.setFamily(props.family);
+                      props.setIsChildFormDialogOpen(true);
+                    }}>
+                    Add CHILD
+                  </Button>
+                  <Button
+                    className="family_disable_enable_btn"
+                    onClick={() => props.setIsDisableFamilyDialogOpen(true)}>
+                    Disable FAMILY
+                  </Button>
+                </Stack>
+              </>
             )}
             {props?.family?.primary?.scheduled_end_date != null &&
               props?.family?.primary?.scheduled_end_date && (

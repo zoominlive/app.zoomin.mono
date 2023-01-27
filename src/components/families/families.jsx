@@ -467,7 +467,7 @@ const Families = () => {
                     : null}
                 </TableBody>
               </Table>
-              {familiesList?.length == 0 ? <NoDataDiv /> : null}
+              {!isLoading && familiesList?.length == 0 ? <NoDataDiv /> : null}
               {familiesList?.length > 0 ? (
                 <TablePagination
                   rowsPerPageOptions={[5, 10, 20, 25, 50]}

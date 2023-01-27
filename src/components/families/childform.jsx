@@ -92,6 +92,9 @@ const ChildForm = (props) => {
         setSubmitLoading(false);
       });
     } else {
+      data.rooms.forEach((room) => {
+        room.scheduled_enable_date = startDate;
+      });
       API.post('family/child/add', {
         first_name: data.first_name,
         last_name: data.last_name,

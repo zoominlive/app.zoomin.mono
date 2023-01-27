@@ -387,7 +387,6 @@ const Rooms = () => {
               </Grid>
             </Grid>
           </Box>
-
           <Box mt={2} sx={{ position: 'relative' }}>
             <Loader loading={isLoading} />
             <TableContainer component={Paper}>
@@ -415,7 +414,7 @@ const Rooms = () => {
                     : null}
                 </TableBody>
               </Table>
-              {roomsList?.length == 0 ? <NoDataDiv /> : null}
+              {!isLoading && roomsList?.length == 0 ? <NoDataDiv /> : null}
               {roomsList?.length > 0 ? (
                 <TablePagination
                   rowsPerPageOptions={[5, 10, 20, 25, 50]}

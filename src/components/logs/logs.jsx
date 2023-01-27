@@ -998,7 +998,7 @@ const Logs = () => {
                       : null}
                   </TableBody>
                 </Table>
-                {logsList?.length == 0 ? <NoDataDiv /> : null}
+                {!isLoading && logsList?.length == 0 ? <NoDataDiv /> : null}
                 {logsList?.length > 0 ? (
                   <TablePagination
                     rowsPerPageOptions={[5, 10, 20, 25, 50]}

@@ -622,7 +622,7 @@ const WatchStream = () => {
                   justifyContent="center">
                   <img src={VideoOff} />
                   <Typography>
-                    {!playing ? 'Stream stopped due to no activity' : `Camera not selected`}
+                    {!playing ? 'Stream stopped due to Inactivity' : `Camera not selected`}
                   </Typography>
                 </Stack>
               </Box>
