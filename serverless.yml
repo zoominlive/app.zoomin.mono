@@ -1,7 +1,7 @@
 org: dakshesh
 app: zoomin
 service: zoomin
-frameworkVersion: '3'
+frameworkVersion: "3"
 
 provider:
   name: aws
@@ -16,7 +16,7 @@ provider:
     AWS_BUCKET_NAME: zoomin-dev-images
     ACCESS_KEY_ID: AKIAYEUNNGGXZZWD3RES
     SECRET_ACCESS_KEY: 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
-    EMAIL_SOURCE_ACCOUNT: 'support@zoominlive.com'
+    EMAIL_SOURCE_ACCOUNT: "support@zoominlive.com"
     RDS_HOST: zoomin-1.crzgnnp8iqzv.us-west-2.rds.amazonaws.com
     RDS_PORT: 3306
     RDS_USER: zoomin_dbuser
@@ -39,91 +39,91 @@ functions:
   userFunction:
     handler: handler.handler
     events:
-      - httpApi: '*'
+      - httpApi: "*"
 
   cameraFunction:
     handler: handler.handler
     events:
       - httpApi:
-          method: '*'
+          method: "*"
           path: /api/cams
       - httpApi:
-          method: '*'
+          method: "*"
           path: /api/cams/add
       - httpApi:
-          method: '*'
+          method: "*"
           path: /api/cams/delete
 
   childFunction:
     handler: handler.handler
     events:
       - httpApi:
-          method: '*'
+          method: "*"
           path: /api/family/child/add
       - httpApi:
-          method: '*'
+          method: "*"
           path: /api/family/child/edit
       - httpApi:
-          method: '*'
+          method: "*"
           path: /api/family/child/disable
       - httpApi:
-          method: '*'
+          method: "*"
           path: /api/family/child/enable
       - httpApi:
-          method: '*'
+          method: "*"
           path: /api/family/child/delete
 
   familyFunction:
     handler: handler.handler
     events:
       - httpApi:
-          method: '*'
+          method: "*"
           path: /api/family
       - httpApi:
-          method: '*'
+          method: "*"
           path: /api/family/add
       - httpApi:
-          method: '*'
+          method: "*"
           path: /api/family/edit
       - httpApi:
-          method: '*'
+          method: "*"
           path: /api/family/addParent
       - httpApi:
-          method: '*'
+          method: "*"
           path: /api/family/disable
       - httpApi:
-          method: '*'
+          method: "*"
           path: /api/family/enable
       - httpApi:
-          method: '*'
+          method: "*"
           path: /api/family/delete
       - httpApi:
-          method: '*'
+          method: "*"
           path: /api/family/setPassword
       - httpApi:
-          method: '*'
+          method: "*"
           path: /api/family/emailChange
       - httpApi:
-          method: '*'
+          method: "*"
           path: /api/family/checkLinkValid
 
   roomFunction:
     handler: handler.handler
     events:
       - httpApi:
-          method: '*'
+          method: "*"
           path: /api/rooms/add
       - httpApi:
-          method: '*'
+          method: "*"
           path: /api/rooms/edit
       - httpApi:
-          method: '*'
+          method: "*"
           path: /api/rooms/delete
       - httpApi:
-          method: '*'
+          method: "*"
           path: /api/rooms/list
       - httpApi:
-          method: '*'
+          method: "*"
           path: /api/rooms
 
   disableScheduledMembers:

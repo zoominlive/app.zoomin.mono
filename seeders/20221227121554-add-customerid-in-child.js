@@ -10,7 +10,6 @@ module.exports = {
 
     await Promise.all(
       families.map(async (family) => {
-        console.log('family', family.family_id, family.cust_id);
         await queryInterface.sequelize.query(
           `UPDATE child SET cust_id = "${family.cust_id}" WHERE family_id = "${family.family_id}"`
         );
