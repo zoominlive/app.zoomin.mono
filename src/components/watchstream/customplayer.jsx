@@ -81,7 +81,7 @@ const CustomPlayer = (props) => {
               props?.camDetails?.cam_name}
           </label>
           <ReactPlayer
-            url={`https://www.youtube.com/watch?v=ysz5S6PUM-U`}
+            url={`${authCtx.user.transcoderBaseUrl}${props?.streamUri}`}
             className="react-player"
             height={'100%'}
             width={'100%'}
