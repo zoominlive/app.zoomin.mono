@@ -36,7 +36,7 @@ const WatchStreamDialogBox = (props) => {
     cameras: []
   });
   const [selectedLocation, setSelectedLocation] = useState([]);
-  const [selectedRoom, setSelectedRoom] = useState([]);
+  const [selectedRoom, setSelectedRoom] = useState({});
   const [cameras, setCameras] = useState();
   const [allCamsChecked, setAllCamsChecked] = useState(false);
   const [allRoomChecked, setAllRoomChecked] = useState(false);
@@ -81,9 +81,14 @@ const WatchStreamDialogBox = (props) => {
     if (reason == 'selectOption' && option?.option == 'Select All' && !allLocationChecked) {
       setSelectedLocation(reason === 'selectOption' ? locations.slice(1, locations.length) : []);
       setAllLocationChecked(true);
-    } else if (option?.option == 'Select All' && reason === 'removeOption') {
+    } else if (
+      (option?.option == 'Select All' && reason === 'removeOption') ||
+      reason === 'clear'
+    ) {
       setSelectedLocation([]);
       setAllLocationChecked(false);
+      setSelectedRoom(null);
+      setSelectedCameras(null);
     } else if (
       reason === 'selectOption' &&
       option?.option == 'Select All' &&
@@ -99,12 +104,9 @@ const WatchStreamDialogBox = (props) => {
   const handleSetRooms = (_, value, reason, option) => {
     const rooms2 = camerasPayload?.room?.filter((room) => {
       let count = 0;
-      selectedRoom?.forEach((room1) => {
-        if (room1?.room_id == room?.room_id) {
-          count = 1;
-        }
-      });
-
+      if (selectedRoom && Object.values(selectedRoom).includes(room?.room_id)) {
+        count = 1;
+      }
       return count == 1;
     });
 
@@ -125,40 +127,18 @@ const WatchStreamDialogBox = (props) => {
     if (reason == 'selectOption' && option?.option?.room_name == 'Select All' && !allRoomChecked) {
       setSelectedRoom(reason === 'selectOption' ? rooms.slice(1, rooms.length) : []);
       setAllRoomChecked(true);
-    } else if (option?.option?.room_name == 'Select All' && reason === 'removeOption') {
-      setSelectedRoom([]);
-      setAllRoomChecked(false);
     } else if ((reason === 'removeOption' && selectedRoom?.length === 1) || reason === 'clear') {
-      setSelectedRoom([]);
+      setSelectedRoom(null);
       setAllRoomChecked(false);
       setSelectedCameras(null);
-    } else if (
-      reason === 'selectOption' &&
-      option.option.room_name == 'Select All' &&
-      allRoomChecked == true
-    ) {
-      setAllRoomChecked(false);
-      setSelectedRoom([]);
     } else {
       setAllRoomChecked(false);
       setSelectedRoom(value);
     }
   };
-  const handleChangeCameras = (_, values, reason, option) => {
-    if (option?.option?.cam_name == 'Select All' && reason === 'removeOption') {
-      setSelectedCameras([]);
-      setAllCamsChecked(false);
-    } else if (
-      reason === 'selectOption' &&
-      option?.option?.cam_name == 'Select All' &&
-      allCamsChecked == true
-    ) {
-      setAllCamsChecked(false);
-      setSelectedCameras([]);
-    } else {
-      setAllCamsChecked(false);
-      setSelectedCameras(values);
-    }
+  const handleChangeCameras = (_, values) => {
+    setAllCamsChecked(false);
+    setSelectedCameras(values);
   };
 
   useEffect(() => {
@@ -181,11 +161,11 @@ const WatchStreamDialogBox = (props) => {
       });
       return count == 1;
     });
-    let roomsToAdd = [{ room_name: 'Select All', room_id: 'select-all' }];
+    let roomsToAdd = [];
     roomsToSet?.forEach((room) => roomsToAdd.push(room));
     setRooms(roomsToAdd);
-    if (selectedRoom.length == 0) {
-      setSelectedRoom([roomsToSet?.[0]]);
+    if (selectedRoom) {
+      setSelectedRoom(roomsToSet?.[0]);
       let camsToAdd = [];
       roomsToSet?.[0]?.cameras.forEach((cam) =>
         camsToAdd.push({
@@ -205,12 +185,9 @@ const WatchStreamDialogBox = (props) => {
   useEffect(() => {
     const rooms = camerasPayload?.room?.filter((room) => {
       let count = 0;
-      selectedRoom?.forEach((room1) => {
-        if (room1?.room_id == room?.room_id) {
-          count = 1;
-        }
-      });
-
+      if (selectedRoom && Object.values(selectedRoom).includes(room?.room_id)) {
+        count = 1;
+      }
       return count == 1;
     });
 
@@ -286,7 +263,6 @@ const WatchStreamDialogBox = (props) => {
           />
           <Autocomplete
             sx={{ padding: 1 }}
-            multiple
             limitTags={1}
             id="tags-standard"
             options={rooms}
@@ -337,8 +313,8 @@ const WatchStreamDialogBox = (props) => {
             value={selectedCameras}
             getOptionLabel={(option) => option?.cam_name}
             isOptionEqualToValue={(option, value) => option?.cam_id === value?.cam_id}
-            onChange={(_, values, situation, option) => {
-              handleChangeCameras(_, values, situation, option);
+            onChange={(_, values) => {
+              handleChangeCameras(_, values);
             }}
             renderTags={(value, getTagProps) =>
               value?.map((option, index) => (

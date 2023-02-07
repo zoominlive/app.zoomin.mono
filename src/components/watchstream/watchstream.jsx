@@ -281,6 +281,12 @@ const WatchStream = () => {
     ) {
       setAllLocationChecked(false);
       setSelectedLocation([]);
+    } else if (reason === 'clear') {
+      setAllLocationChecked(false);
+      setSelectedLocation([]);
+      setSelectedRoom([]);
+      setAllRoomChecked(false);
+      setSelectedCameras([]);
     } else {
       setAllLocationChecked(false);
       setSelectedLocation(value);

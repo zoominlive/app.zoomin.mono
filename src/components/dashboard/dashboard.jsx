@@ -53,9 +53,9 @@ const Dashboard = () => {
     setSelectedCamera(
       !_.isEmpty(camLabel?.current?.cameras) &&
         camLabel?.current?.locations?.length > 0 &&
-        camLabel?.current?.rooms?.length > 0
+        !_.isEmpty(camLabel?.current?.rooms) > 0
         ? {
-            ...camLabel?.current?.rooms[0],
+            ...camLabel?.current?.rooms,
             ...camLabel.current.cameras
           }
         : {}
@@ -96,7 +96,7 @@ const Dashboard = () => {
         setMapsData(points);
         if (
           response?.data?.Data?.defaultWatchStream?.locations?.length > 0 &&
-          response?.data?.Data?.defaultWatchStream?.rooms?.length > 0 &&
+          response?.data?.Data?.defaultWatchStream?.rooms &&
           response?.data?.Data?.defaultWatchStream?.cameras
         ) {
           setDefaultWatchStream(response?.data?.Data?.defaultWatchStream);
