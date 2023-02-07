@@ -95,7 +95,7 @@ const Dashboard = () => {
         }));
         setMapsData(points);
         if (
-          response?.data?.Data?.defaultWatchStream?.location?.length > 0 &&
+          response?.data?.Data?.defaultWatchStream?.locations?.length > 0 &&
           response?.data?.Data?.defaultWatchStream?.rooms?.length > 0 &&
           response?.data?.Data?.defaultWatchStream?.cameras
         ) {
@@ -279,8 +279,7 @@ const Dashboard = () => {
             <StickyHeadTable
               key={3}
               rows={
-                statisticsData?.enroledStreamsDetails?.length > 0 &&
-                statisticsData?.enroledStreamsDetails?.some((it) => !_.isNil(it?.family))
+                statisticsData?.enroledStreamsDetails?.length > 0
                   ? statisticsData?.enroledStreamsDetails
                   : []
               }

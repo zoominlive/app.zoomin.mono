@@ -4,6 +4,8 @@ import PictureInPictureAltRoundedIcon from '@mui/icons-material/PictureInPicture
 import FullscreenRoundedIcon from '@mui/icons-material/FullscreenRounded';
 import FullscreenExitRoundedIcon from '@mui/icons-material/FullscreenExitRounded';
 import PauseRoundedIcon from '@mui/icons-material/PauseRounded';
+import VolumeUpIcon from '@mui/icons-material/VolumeUp';
+import VolumeOffIcon from '@mui/icons-material/VolumeOff';
 import React from 'react';
 import PropTypes from 'prop-types';
 
@@ -11,9 +13,18 @@ const PlayerControls = (props) => {
   return (
     <Box className="controls-wrapper">
       <Grid container spacing={2} p={2}>
-        <Grid item md={props.noOfCameras === 2 ? 8 : 10} sm={8}>
+        <Grid item md={props.noOfCameras === 2 ? 6 : 9} sm={6}>
           <IconButton onClick={() => props.setPlaying((playing) => !playing)}>
             {props.playing ? <PauseRoundedIcon /> : <PlayArrowRoundedIcon />}
+          </IconButton>
+        </Grid>
+        <Grid item md={props.noOfCameras === 2 ? 2 : 1} sm={2} margin={'auto'} align={'end'}>
+          <IconButton onClick={() => props.setIsMuted((isMuted) => !isMuted)}>
+            {props.isMuted ? (
+              <VolumeOffIcon className="volume-icon" />
+            ) : (
+              <VolumeUpIcon className="volume-icon" />
+            )}
           </IconButton>
         </Grid>
         <Grid item md={props.noOfCameras === 2 ? 2 : 1} sm={2}>
@@ -40,5 +51,7 @@ PlayerControls.propTypes = {
   setPlaying: PropTypes.func,
   setInPIPMode: PropTypes.func,
   handleFullscreenToggle: PropTypes.func,
-  noOfCameras: PropTypes.number
+  noOfCameras: PropTypes.number,
+  isMuted: PropTypes.bool,
+  setIsMuted: PropTypes.func
 };

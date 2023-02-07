@@ -296,7 +296,10 @@ const Children = (props) => {
                                 : ArrowDropUpIcon
                             }}
                             onChange={(value) => {
-                              props.setFieldValue(`children[${index}].enable_date`, value);
+                              props.setFieldValue(
+                                `children[${index}].enable_date`,
+                                new Date(value)
+                              );
                             }}
                           />
                         </LocalizationProvider>

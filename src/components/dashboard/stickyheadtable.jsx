@@ -59,10 +59,12 @@ export default function StickyHeadTable({
                   ? rows
                       .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                       .map((row, index) => {
-                        return row.family ? (
+                        return (
                           <TableRow key={index}>
                             <TableCell>
-                              {row?.family?.first_name + ' ' + row.family.last_name}
+                              {(row?.family?.first_name || row?.user?.first_name) +
+                                ' ' +
+                                (row?.family?.last_name || row?.user?.last_name)}
                             </TableCell>
                             <TableCell>
                               {row.family?.children?.length > 0
@@ -71,7 +73,7 @@ export default function StickyHeadTable({
                                       child?.first_name +
                                       (index == row?.family?.children?.length - 1 ? '' : `,`)
                                   )
-                                : ''}
+                                : '--'}
                             </TableCell>
                             <TableCell>
                               {row?.family?.children[0]?.roomsInChild &&
@@ -83,22 +85,22 @@ export default function StickyHeadTable({
                                         ? ''
                                         : `,`)
                                   )
-                                : ''}
+                                : '--'}
                             </TableCell>
                           </TableRow>
-                        ) : null;
+                        );
                       })
                   : rows?.map((row, index) => (
                       <>
                         <TableRow key={index}>
                           {topViewers ? (
                             <>
-                              <TableCell>{row?.count}</TableCell>
                               <TableCell>
                                 {(row?.family?.first_name || row?.user?.first_name) +
                                   ' ' +
                                   (row?.family?.last_name || row?.user?.last_name)}
                               </TableCell>
+                              <TableCell>{row?.count}</TableCell>
                             </>
                           ) : (
                             <>

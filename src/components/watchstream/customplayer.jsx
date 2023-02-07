@@ -20,6 +20,7 @@ const CustomPlayer = (props) => {
   const [showErrorMessage, setShowErrorMessage] = useState(true);
   const [url, setUrl] = useState('');
   const [playerPlaying, setPlayerPlaying] = useState(true);
+  const [isMuted, setIsMuted] = useState(true);
   const timer = useRef({
     timerId: 0
   });
@@ -120,6 +121,7 @@ const CustomPlayer = (props) => {
                 }
               }
             }}
+            muted={isMuted}
           />
 
           <PlayerControls
@@ -130,6 +132,8 @@ const CustomPlayer = (props) => {
             fullscreen={fullscreen}
             handleFullscreenToggle={handleFullscreenToggle}
             noOfCameras={props.noOfCameras}
+            isMuted={isMuted}
+            setIsMuted={setIsMuted}
           />
         </Box>
       )}
