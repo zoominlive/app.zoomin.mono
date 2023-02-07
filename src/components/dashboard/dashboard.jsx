@@ -296,7 +296,9 @@ const Dashboard = () => {
               rows={
                 statisticsData?.topViewers?.length > 0 &&
                 statisticsData?.topViewers?.some((it) => !_.isNil(it?.family))
-                  ? statisticsData?.topViewers
+                  ? statisticsData?.topViewers?.filter(
+                      (it) => !_.isNil(it.family) || !_.isNil(it.user)
+                    )
                   : []
               }
               columns={topViewersColumns}
