@@ -326,6 +326,10 @@ const WatchStream = () => {
     ) {
       setAllRoomChecked(false);
       setSelectedRoom([]);
+    } else if ((reason === 'removeOption' && selectedRoom?.length === 1) || reason === 'clear') {
+      setSelectedRoom([]);
+      setAllRoomChecked(false);
+      setSelectedCameras([]);
     } else {
       setAllRoomChecked(false);
       setSelectedRoom(value);

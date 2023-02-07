@@ -128,6 +128,10 @@ const WatchStreamDialogBox = (props) => {
     } else if (option?.option?.room_name == 'Select All' && reason === 'removeOption') {
       setSelectedRoom([]);
       setAllRoomChecked(false);
+    } else if ((reason === 'removeOption' && selectedRoom?.length === 1) || reason === 'clear') {
+      setSelectedRoom([]);
+      setAllRoomChecked(false);
+      setSelectedCameras(null);
     } else if (
       reason === 'selectOption' &&
       option.option.room_name == 'Select All' &&
