@@ -110,66 +110,66 @@ module.exports = {
       location = '';
     }
     let rooms;
-    if (user.role !== 'Admin') {
-      if (roomsList?.length !== 0) {
-        rooms = await Room.findAll(
-          {
-            where: {
-              user_id: userId,
-              location: {
-                [Sequelize.Op.substring]: location
-              },
-              room_name: {
-                [Sequelize.Op.and]: { [Sequelize.Op.substring]: searchBy }
-              },
-              room_name: roomsList
-            },
-            attributes: ['room_id', 'room_name', 'location'],
-            include: [
-              {
-                model: CamerasInRooms,
-                attributes: ['cam_room_id'],
-                include: [
-                  {
-                    model: Camera,
-                    attributes: ['cam_id', 'cam_name', 'location', 'stream_uri', 'description']
-                  }
-                ]
-              }
-            ]
-          },
-          { transaction: t }
-        );
-      } else {
-        rooms = await Room.findAll(
-          {
-            where: {
-              user_id: userId,
-              location: {
-                [Sequelize.Op.substring]: location
-              },
-              room_name: {
-                [Sequelize.Op.substring]: searchBy
-              }
-            },
-            attributes: ['room_id', 'room_name', 'location'],
-            include: [
-              {
-                model: CamerasInRooms,
-                attributes: ['cam_room_id'],
-                include: [
-                  {
-                    model: Camera,
-                    attributes: ['cam_id', 'cam_name', 'location', 'stream_uri', 'description']
-                  }
-                ]
-              }
-            ]
-          },
-          { transaction: t }
-        );
-      }
-    } else {
+    // if (user.role !== 'Admin') {
+    //   if (roomsList?.length !== 0) {
+    //     rooms = await Room.findAll(
+    //       {
+    //         where: {
+    //           user_id: userId,
+    //           location: {
+    //             [Sequelize.Op.substring]: location
+    //           },
+    //           room_name: {
+    //             [Sequelize.Op.and]: { [Sequelize.Op.substring]: searchBy }
+    //           },
+    //           room_name: roomsList
+    //         },
+    //         attributes: ['room_id', 'room_name', 'location'],
+    //         include: [
+    //           {
+    //             model: CamerasInRooms,
+    //             attributes: ['cam_room_id'],
+    //             include: [
+    //               {
+    //                 model: Camera,
+    //                 attributes: ['cam_id', 'cam_name', 'location', 'stream_uri', 'description']
+    //               }
+    //             ]
+    //           }
+    //         ]
+    //       },
+    //       { transaction: t }
+    //     );
+    //   } else {
+    //     rooms = await Room.findAll(
+    //       {
+    //         where: {
+    //           user_id: userId,
+    //           location: {
+    //             [Sequelize.Op.substring]: location
+    //           },
+    //           room_name: {
+    //             [Sequelize.Op.substring]: searchBy
+    //           }
+    //         },
+    //         attributes: ['room_id', 'room_name', 'location'],
+    //         include: [
+    //           {
+    //             model: CamerasInRooms,
+    //             attributes: ['cam_room_id'],
+    //             include: [
+    //               {
+    //                 model: Camera,
+    //                 attributes: ['cam_id', 'cam_name', 'location', 'stream_uri', 'description']
+    //               }
+    //             ]
+    //           }
+    //         ]
+    //       },
+    //       { transaction: t }
+    //     );
+    //   }
+    // } else {
       if (roomsList?.length !== 0) {
         rooms = await Room.findAll(
           {
@@ -239,7 +239,7 @@ module.exports = {
           { transaction: t }
         );
       }
-    }
+    // }
 
     let count = rooms.length;
 

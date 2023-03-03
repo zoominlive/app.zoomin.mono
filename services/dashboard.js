@@ -8,7 +8,7 @@ const Room = require('../models/room');
 module.exports = {
   /* get recent viewers */
   getLastOneHourViewers: async () => {
-    const { RecentViewers, Family, Child, Room, RoomsInChild } = await connectToDatabase();
+    const { RecentViewers, Family, Child, Room, RoomsInChild, Users } = await connectToDatabase();
     let oneHourBefore = new Date();
     oneHourBefore.setHours(oneHourBefore.getHours() - 1);
 
@@ -43,8 +43,12 @@ module.exports = {
                   ]
                 }
               ]
-            }
+            },
           ]
+        },
+        {
+          model: Users,
+          attributes: ['first_name', 'last_name'], 
         }
       ]
     });

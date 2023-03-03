@@ -3,7 +3,7 @@ const Sequelize = require('sequelize');
 const jwt = require('jsonwebtoken');
 const _ = require('lodash-contrib');
 const encrypter = require('object-encrypter');
-const engine = encrypter(process.env.JWT_SECRET_KEY, { ttl: true });
+const engine = encrypter(process.env.JWT_SECRET_KEY, { ttl: false });
 const { v4: uuidv4 } = require('uuid');
 
 module.exports = {
@@ -87,13 +87,13 @@ module.exports = {
   },
 
   /* Fetch all the family's details */
-  getAllFamilyDetails: async (userId, filter, t) => {
+  getAllFamilyDetails: async (custId, filter, t) => {
     const { Family, Child, RoomsInChild, Room } = await connectToDatabase();
     let { pageNumber = 0, pageSize = 10, location = 'All', searchBy = '', roomsList = [] } = filter;
     let families;
     let familiesCount;
     let whereObj = {
-      user_id: userId,
+      cust_id: custId,
       [Sequelize.Op.or]: [
         { first_name: { [Sequelize.Op.substring]: searchBy } },
         { last_name: { [Sequelize.Op.substring]: searchBy } },
@@ -173,7 +173,7 @@ module.exports = {
         limit: parseInt(pageSize),
         offset: parseInt(pageNumber * pageSize),
         where: {
-          user_id: userId,
+          cust_id: custId,
           member_type: 'primary',
           family_id: familiesCount
             .filter((family) => {
@@ -395,8 +395,7 @@ module.exports = {
   /* Create family token to reset password */
   createPasswordToken: async (familyMember) => {
     const token = engine.encrypt(
-      { familyMemberId: familyMember.family_member_id, password: familyMember.password },
-      900000
+      { familyMemberId: familyMember.family_member_id, password: familyMember.password }
     );
 
     return token;

@@ -5,7 +5,7 @@ const userServices = require('../services/users');
 const logServices = require('../services/logs');
 const CONSTANTS = require('../lib/constants');
 const encrypter = require('object-encrypter');
-const engine = encrypter(process.env.JWT_SECRET_KEY, { ttl: true });
+const engine = encrypter(process.env.JWT_SECRET_KEY, { ttl: false });
 const sequelize = require('../lib/database');
 var bcrypt = require('bcryptjs');
 const {
@@ -258,7 +258,7 @@ module.exports = {
         roomsList: req.query?.rooms,
         location: req.query?.location
       };
-      let familyDetails = await familyServices.getAllFamilyDetails(req.user.user_id, filter);
+      let familyDetails = await familyServices.getAllFamilyDetails(req.user.cust_id, filter);
 
       res.status(200).json({
         IsSuccess: true,

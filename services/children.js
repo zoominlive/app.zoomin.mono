@@ -33,7 +33,7 @@ module.exports = {
       childObjs.map(async (child, index) => {
         let roomsInChild = child.rooms.rooms.map((room) => {
           return {  child_id: childCreated[index].child_id, room_id: room.room_id,
-                    disabled: child?.enable_date !== null ? 'false' : 'true',
+                    disabled: child?.enable_date !== null ? 'true' : 'false',
                     scheduled_enable_date: child?.enable_date !== null ? child?.enable_date : null};
         });
         await RoomsInChild.bulkCreate(roomsInChild, { returning: true }, { transaction: t });
