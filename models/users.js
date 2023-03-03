@@ -69,6 +69,10 @@ const Users = sequelize.define(
       type: Sequelize.JSON,
       defaultValue: {}
     },
+    fcm_token: {
+      type: Sequelize.STRING(250),
+      default: ''
+    },
     createdAt: { type: Sequelize.DATE, field: 'created_at' },
     updatedAt: { type: Sequelize.DATE, field: 'updated_at' },
     deletedAt: { type: Sequelize.DATE, field: 'deleted_at' }

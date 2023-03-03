@@ -172,7 +172,8 @@ module.exports = {
       role: params?.role !== undefined ? params?.role : user.role,
       email: params?.email !== undefined ? params?.email : user.email,
       password_link:
-        params?.password_link !== undefined ? params?.password_link : user.password_link
+        params?.password_link !== undefined ? params?.password_link : user.password_link,
+      fcm_token: params.fcm_token !== undefined ? params?.fcm_token : user.fcm_token
     };
 
     let updateUserProfile = await Users.update(

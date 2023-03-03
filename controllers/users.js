@@ -129,13 +129,15 @@ module.exports = {
 
   /* Login user */
   loginUser: async (req, res, next) => {
+    const t = await sequelize.transaction();
     let userFound;
     let logDetails;
+    let userObj;
     let success = false;
     try {
-      let { email, password } = req.body;
+      let { email, password, fcm_token } = req.body;
       let emailIs = email;
-
+      userObj = {fcm_token: fcm_token ? fcm_token : null};
       emailIs = emailIs.toLowerCase();
 
       const user = await userServices.getUser(emailIs);
@@ -228,8 +230,20 @@ module.exports = {
         function_type: 'Login',
         response: { success: success }
       };
+      
       try {
         logDetails = await logServices.addAccessLog(logObj);
+        if(userObj.fcm_token){
+          userObj = { 
+            ...userObj,
+            user_id: userFound?.family_member_id
+            ? userFound?.family_member_id
+            : userFound?.user_id
+            ? userFound?.user_id
+            : 'Not Found'
+          };
+          await userServices.editUserProfile(userObj, _.omit(userObj, ['user_id']), t);
+        }
       } catch (e) {
         console.log(e);
       }
