@@ -73,7 +73,7 @@ module.exports = {
       params.email = emailIs;
 
       params.is_verified = false;
-
+  
       let addUser = await userServices.createUser(_.omit(params, ['image']), t);
       userAdded = addUser;
       if (addUser) {
@@ -135,9 +135,10 @@ module.exports = {
     let userObj;
     let success = false;
     try {
-      let { email, password, fcm_token } = req.body;
+      let { email, password, fcm_token, device_type } = req.body;
+
       let emailIs = email;
-      userObj = {fcm_token: fcm_token ? fcm_token : null};
+      userObj = {fcm_token: fcm_token ? fcm_token : null, device_type: device_type ? device_type : null};
       emailIs = emailIs.toLowerCase();
 
       const user = await userServices.getUser(emailIs);
@@ -195,6 +196,7 @@ module.exports = {
               Message: CONSTANTS.USER_LOGGED_IN
             });
           } else {
+            await t.rollback();
             res
               .status(400)
               .json({ IsSuccess: true, Data: {}, Message: CONSTANTS.INVALID_PASSWORD });
@@ -233,20 +235,20 @@ module.exports = {
       
       try {
         logDetails = await logServices.addAccessLog(logObj);
-        if(userObj.fcm_token){
-          userObj = { 
-            ...userObj,
-            user_id: userFound?.family_member_id
-            ? userFound?.family_member_id
-            : userFound?.user_id
-            ? userFound?.user_id
-            : 'Not Found'
-          };
-          await userServices.editUserProfile(userObj, _.omit(userObj, ['user_id']), t);
-        }
+        userObj = { 
+          ...userObj,
+          user_id: userFound?.family_member_id
+          ? userFound?.family_member_id
+          : userFound?.user_id
+          ? userFound?.user_id
+          : 'Not Found'
+        };
+        await userServices.editUserProfile(userObj, _.omit(userObj, ['user_id']), t);
+        await t.commit();
       } catch (e) {
         console.log(e);
       }
+      await t.rollback();
     }
   },
 

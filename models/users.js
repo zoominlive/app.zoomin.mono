@@ -71,7 +71,13 @@ const Users = sequelize.define(
     },
     fcm_token: {
       type: Sequelize.STRING(250),
-      default: ''
+      default: null,
+      allowNull: true,
+    },
+    device_type: {
+      type: Sequelize.ENUM('ios', 'android'),
+      default: null,
+      allowNull: true,
     },
     createdAt: { type: Sequelize.DATE, field: 'created_at' },
     updatedAt: { type: Sequelize.DATE, field: 'updated_at' },

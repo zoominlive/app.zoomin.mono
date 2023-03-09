@@ -173,7 +173,8 @@ module.exports = {
       email: params?.email !== undefined ? params?.email : user.email,
       password_link:
         params?.password_link !== undefined ? params?.password_link : user.password_link,
-      fcm_token: params.fcm_token !== undefined ? params?.fcm_token : user.fcm_token
+      fcm_token: params.fcm_token !== undefined ? params?.fcm_token : user.fcm_token,
+      device_type: params.device_type !== undefined ? params?.device_type : user.device_type,
     };
 
     let updateUserProfile = await Users.update(
