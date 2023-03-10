@@ -16,28 +16,25 @@ const customerServices = require('../services/customers');
 const logServices = require('../services/logs');
 const CONSTANTS = require('../lib/constants');
 const sequelize = require('../lib/database');
-// const notificationSender = require('../lib/firebase-services');
+const notificationSender = require('../lib/firebase-services');
 
 module.exports = {
   sendNotification: async (req, res, next) => {
     try {
-      console.log('=======',req.user)
       let {room_id, title, body} = req.body
-      console.log('======= body =======',req.body)
       const t = await sequelize.transaction();
       let childs = await childServices.getChildOfAssignedRoomId(room_id, t);
       let childIds = childs.flatMap(i => i.child_id)
-      console.log('====childs====',childs, childIds)
       let familys = await childServices.getAllchildrensFamilyId(childIds, t);
       let familyIds = [...new Set(familys.flatMap(i => i.family_id))];
       let fcmTokens = await familyServices.getFamilyMembersFcmTokens(familyIds);
+      fcmTokens = fcmTokens.flatMap(i => i.fcm_token)
       
-      console.log('====',fcmTokens.flatMap(i => i.fcm_token))
-      //let families = await familyServices.getChildOfAssignedRoomId(room_id, t)
-      // let {isSent, ...rest} = await notificationSender.sendNotification("Test", "testing", ['eNrRrngRTUrDsZsWY-bqVX:APA91bF6e2IBAgEvuBEuGBgDMjGoQ4TU_7VQPEia5l2iQFTyJBy1LfZco6aL74mUWbpFlGJ16-RQZnbkIuJPNAWw78ZsvQweu1c5kKh2j2xrazP-mWJLtdRNJgInxjA5HvxqldzPRf20']);
+      await notificationSender.sendNotification(title, body, fcmTokens.filter(i => i!== null));
+    
       res.status(200).json({
         IsSuccess: true,
-        Data: fcmTokens.flatMap(i => i.fcm_token),
+        Data: fcmTokens.filter(i => i!== null),
         Message: CONSTANTS.NOTIFICATION_SENT 
       });
       next();
