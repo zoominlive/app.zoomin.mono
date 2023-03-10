@@ -400,5 +400,39 @@ module.exports = {
     }
 
     return disableRooms;
-  }
+  },
+
+  getChildOfAssignedRoomId: async (roomID, t) => {
+    const { RoomsInChild } = await connectToDatabase();
+    let roomChilds = await RoomsInChild.findAll(
+      {
+        raw: true,
+        where: { room_id: roomID },
+        attributes: ['child_id']
+
+        },
+      { transaction: t }
+    );
+
+    return roomChilds;
+  },
+
+  getAllchildrensFamilyId: async (allChildId, t) => {
+    const { Child } = await connectToDatabase();
+    let childFamilyDetails = await Child.findAll(
+      {
+        raw: true,
+        where: {
+          child_id: {
+            [Sequelize.Op.in]: allChildId,
+          },
+        },
+        attributes: ['family_id']
+      },
+      { transaction: t }
+    );
+
+    return childFamilyDetails;
+  },
 };
+

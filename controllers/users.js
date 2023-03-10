@@ -7,6 +7,7 @@ const {
 } = require('../lib/ses-mail-sender');
 const userServices = require('../services/users');
 const familyServices = require('../services/families');
+const childServices = require('../services/children');
 const s3BucketImageUploader = require('../lib/aws-services');
 // const TinyURL = require('tinyurl');
 const encrypter = require('object-encrypter');
@@ -15,8 +16,39 @@ const customerServices = require('../services/customers');
 const logServices = require('../services/logs');
 const CONSTANTS = require('../lib/constants');
 const sequelize = require('../lib/database');
+// const notificationSender = require('../lib/firebase-services');
 
 module.exports = {
+  sendNotification: async (req, res, next) => {
+    try {
+      console.log('=======',req.user)
+      let {room_id, title, body} = req.body
+      console.log('======= body =======',req.body)
+      const t = await sequelize.transaction();
+      let childs = await childServices.getChildOfAssignedRoomId(room_id, t);
+      let childIds = childs.flatMap(i => i.child_id)
+      console.log('====childs====',childs, childIds)
+      let familys = await childServices.getAllchildrensFamilyId(childIds, t);
+      let familyIds = [...new Set(familys.flatMap(i => i.family_id))];
+      let fcmTokens = await familyServices.getFamilyMembersFcmTokens(familyIds);
+      
+      console.log('====',fcmTokens.flatMap(i => i.fcm_token))
+      //let families = await familyServices.getChildOfAssignedRoomId(room_id, t)
+      // let {isSent, ...rest} = await notificationSender.sendNotification("Test", "testing", ['eNrRrngRTUrDsZsWY-bqVX:APA91bF6e2IBAgEvuBEuGBgDMjGoQ4TU_7VQPEia5l2iQFTyJBy1LfZco6aL74mUWbpFlGJ16-RQZnbkIuJPNAWw78ZsvQweu1c5kKh2j2xrazP-mWJLtdRNJgInxjA5HvxqldzPRf20']);
+      res.status(200).json({
+        IsSuccess: true,
+        Data: fcmTokens.flatMap(i => i.fcm_token),
+        Message: CONSTANTS.NOTIFICATION_SENT 
+      });
+      next();
+    } catch (error) {
+      res
+        .status(500)
+        .json({ IsSuccess: false, error_log: error, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
+      next(error);
+    }
+  },
+
   getAllUsersForLocation: async (req, res, next) => {
     try {
       let users = await userServices.getAllUsersForLocation(req.user.cust_id, req.query.locations);
@@ -163,6 +195,14 @@ module.exports = {
             const token = await userServices.createUserToken(user.user_id);
             const userData = _.omit(user, ['password', 'cust_id']);
             success = true;
+            userObj = { 
+              ...userObj,
+              user_id:userFound?.user_id
+            }
+            // await familyServices.editFamily(userObj, t);
+            // await t.commit();
+            await userServices.editUserProfile(userObj, _.omit(userObj, ['user_id']), t);
+            await t.commit();
             res.status(200).json({
               IsSuccess: true,
               Data: { userData, ...token },
@@ -189,6 +229,12 @@ module.exports = {
           if (validPassword) {
             const token = await familyServices.createFamilyMemberToken(familyUser.family_member_id);
             const userData = _.omit(familyUser, ['password', 'cust_id']);
+            userObj = { 
+              ...userObj,
+              family_member_id:userFound?.family_member_id
+            }
+            await familyServices.editFamily(userObj, t);
+            await t.commit();
             success = true;
             res.status(200).json({
               IsSuccess: true,
@@ -235,20 +281,21 @@ module.exports = {
       
       try {
         logDetails = await logServices.addAccessLog(logObj);
-        userObj = { 
-          ...userObj,
-          user_id: userFound?.family_member_id
-          ? userFound?.family_member_id
-          : userFound?.user_id
-          ? userFound?.user_id
-          : 'Not Found'
-        };
-        await userServices.editUserProfile(userObj, _.omit(userObj, ['user_id']), t);
-        await t.commit();
+        // userObj = { 
+        //   ...userObj,
+        //   user_id: userFound?.family_member_id
+        //   ? userFound?.family_member_id
+        //   : userFound?.user_id
+        //   ? userFound?.user_id
+        //   : 'Not Found'
+        // };
+        // await userServices.editUserProfile(userObj, _.omit(userObj, ['user_id']), t);
+        // await t.commit();
       } catch (e) {
         console.log(e);
+        await t.rollback();
       }
-      await t.rollback();
+      
     }
   },
 

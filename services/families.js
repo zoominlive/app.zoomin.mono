@@ -474,5 +474,22 @@ module.exports = {
     });
 
     return users;
-  }
+  },
+
+  getFamilyMembersFcmTokens: async (allfamilyIds, t) => {
+    const { Family } = await connectToDatabase();
+    let familyMembers = await Family.findAll(
+      {
+        raw: true,
+        where: {
+          family_id: {
+            [Sequelize.Op.in]: allfamilyIds,
+          },
+        },
+        attributes: ['fcm_token']
+      },
+      { transaction: t }
+    );
+    return familyMembers;
+  },
 };
