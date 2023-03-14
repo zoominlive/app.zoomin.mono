@@ -45,7 +45,7 @@ const AccountMenu = (props) => {
         <Avatar
           src={authCtx?.user?.profile_image}
           style={{
-            border: '2px solid #6E66C7'
+            border: '2px solid #1b4965'
           }}
         />
       </IconButton>

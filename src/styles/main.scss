@@ -38,7 +38,7 @@
         }
         a {
           text-decoration: none;
-          color: #6e66c7 !important;
+          color: #5fa8d3 !important;
         }
       }
     }
@@ -159,7 +159,7 @@
   transition: all 0.5s ease;
   .MuiDrawer-paper {
     transition: all 0.5s ease;
-    background: #6e66c7;
+    background: #1b4965;
     border-right: 1px solid rgba(0, 0, 0, 0.1);
     overflow: hidden;
     .header {
@@ -215,6 +215,8 @@
 }
 
 .main-content {
+  height: 100vh;
+  background: #CAE9FF;
   transition: all 0.5s ease;
   &.open {
     width: calc(100% - 260px);
@@ -273,6 +275,7 @@
   }
   .content-area {
     padding: 30px;
+    background-color: #CAE9FF;
   }
 }
 
@@ -367,6 +370,9 @@
   }
   .room-select {
     width: 100%;
+  }
+  .MuiLoadingButton-root{
+   color: #5FA8D3;
   }
 }
 
@@ -554,7 +560,7 @@
   }
   .expandable-row {
     a {
-      color: #1565c0;
+      color: #5fa8d3;
     }
     &.border-bottom-none {
       .MuiTableCell-root {
@@ -600,7 +606,8 @@
       color: #ffffff;
     }
     .blue-text {
-      color: #6e66c7 !important;
+      color: #5fa8d3 !important;
+      font-weight: 500;
     }
     .title-divider {
       font-size: 12px;
@@ -696,17 +703,17 @@
       font-size: 15px;
       line-height: 26px;
       letter-spacing: 0.46px;
-      color: #6e66c7 !important;
+      color: #5FA8D3 !important;
     }
   }
 }
 
 .MuiButton-contained {
-  background-color: #6e66c7 !important;
+  background-color: #5FA8D3 !important;
 }
 
 .MuiChip-colorPrimary {
-  background-color: #6e66c7 !important;
+  background-color: #5FA8D3 !important;
 }
 
 .MuiMenu-list {
@@ -801,7 +808,7 @@
 .MuiDialogActions-root {
   .MuiLoadingButton-loading {
     &.Mui-disabled {
-      color: #6e66c7 !important;
+      color: #5FA8D3 !important
     }
   }
   .Mui-disabled {
@@ -868,7 +875,6 @@
 
 .map-wrapper {
   .cluster-marker {
-    color: #fff;
     background: #2196f3;
     border-radius: 50%;
     border: 8px solid #79c0f7;
@@ -877,8 +883,8 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 15px;
-    font-weight: 700;
+    font-size: 12px;
+    // font-weight: 500;
     line-height: 20px;
     text-align: center;
     letter-spacing: 0.0595px;
@@ -958,7 +964,7 @@
       thead {
         tr {
           th {
-            background: #7376cf;
+            background: #1b4965;
             color: #fff !important;
           }
         }

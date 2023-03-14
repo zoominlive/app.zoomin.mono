@@ -7,9 +7,9 @@ const Loader = (props) => {
     <Backdrop
       sx={{
         position: 'absolute',
-        color: 'rgb(245 112 35)',
+        color: '#1b4965',
         zIndex: 1,
-        filter: 'invert(1)'
+        backgroundColor: 'transparent'
       }}
       open={props.loading}>
       <CircularProgress color="inherit" />
