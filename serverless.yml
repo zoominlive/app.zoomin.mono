@@ -2,6 +2,8 @@ org: dakshesh
 app: zoomin
 service: zoomin
 frameworkVersion: "3"
+package:
+  individually: true
 
 provider:
   name: aws
