@@ -169,7 +169,6 @@ module.exports = {
       let emailIs = email;
       userObj = {fcm_token: fcm_token ? fcm_token : null, device_type: device_type ? device_type : null};
       emailIs = emailIs.toLowerCase();
-
       const user = await userServices.getUser(emailIs);
       userFound = user;
       let familyUser;
@@ -179,6 +178,7 @@ module.exports = {
       }
 
       if (user) {
+        user.transcoderBaseUrl = await customerServices.getTranscoderUrl(user.cust_id);
         if (!user.is_verified || user.status == 'inactive') {
           res.status(400).json({
             IsSuccess: true,
@@ -190,14 +190,14 @@ module.exports = {
 
           if (validPassword) {
             const token = await userServices.createUserToken(user.user_id);
+            
             const userData = _.omit(user, ['password', 'cust_id']);
             success = true;
             userObj = { 
               ...userObj,
               user_id:userFound?.user_id
             }
-            // await familyServices.editFamily(userObj, t);
-            // await t.commit();
+            
             await userServices.editUserProfile(userObj, _.omit(userObj, ['user_id']), t);
             await t.commit();
             res.status(200).json({
@@ -212,6 +212,7 @@ module.exports = {
           }
         }
       } else if (familyUser) {
+        familyUser.transcoderBaseUrl = await customerServices.getTranscoderUrl(familyUser.cust_id);
         if (!familyUser.is_verified || familyUser.status == 'Disabled') {
           res.status(400).json({
             IsSuccess: true,
