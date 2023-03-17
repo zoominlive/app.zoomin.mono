@@ -16,7 +16,7 @@ const customerServices = require('../services/customers');
 const logServices = require('../services/logs');
 const CONSTANTS = require('../lib/constants');
 const sequelize = require('../lib/database');
-// const notificationSender = require('../lib/firebase-services');
+const notificationSender = require('../lib/firebase-services');
 
 module.exports = {
   sendNotification: async (req, res, next) => {
@@ -30,7 +30,7 @@ module.exports = {
       let fcmTokens = await familyServices.getFamilyMembersFcmTokens(familyIds);
       fcmTokens = fcmTokens.flatMap(i => i.fcm_token)
       
-      // await notificationSender.sendNotification(title, body, fcmTokens.filter(i => i!== null));
+      await notificationSender.sendNotification(title, body, fcmTokens.filter(i => i!== null));
     
       res.status(200).json({
         IsSuccess: true,

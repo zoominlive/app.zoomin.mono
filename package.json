@@ -16,7 +16,7 @@
     "dotenv": "^16.0.3",
     "express": "^4.17.1",
     "express-oas-generator": "^1.0.45",
-    "firebase-admin": "^11.5.0",
+    "fcm-node": "^1.6.1",
     "handlebars": "^4.7.7",
     "jsonwebtoken": "^8.5.1",
     "lambda-warmer": "^1.2.2",
@@ -38,6 +38,7 @@
     "eslint": "^8.23.1",
     "nodemon": "^2.0.20",
     "sequelize-cli": "^6.5.2",
-    "serverless-offline": "^10.1.0"
+    "serverless-offline": "^10.1.0",
+    "serverless-plugin-include-dependencies": "^5.0.0"
   }
 }
