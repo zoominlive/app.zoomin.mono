@@ -1,8 +1,8 @@
 const serverless = require('serverless-http');
 const express = require('express');
 const app = express();
-const { handleResponses, handleRequests } = require('express-oas-generator');
-const mkdirp = require('mkdirp');
+//const { handleResponses, handleRequests } = require('express-oas-generator');
+// const mkdirp = require('mkdirp');
 const path = require('path');
 const fs = require('fs');
 const openAPIFilePath = './path/to/file.json';
@@ -20,29 +20,29 @@ app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 app.use(express.json());
 
 /** handle the responses to add openapi specs*/
-if (process.env.NODE_ENV != 'production') {
-  mkdirp.sync(path.parse(openAPIFilePath).dir);
+// if (process.env.NODE_ENV != 'production') {
+//   mkdirp.sync(path.parse(openAPIFilePath).dir);
 
-  let predefinedSpec;
+//   let predefinedSpec;
 
-  try {
-    predefinedSpec = JSON.parse(fs.readFileSync(openAPIFilePath, { encoding: 'utf-8' }));
-  } catch (e) {
-    //
-  }
+//   try {
+//     predefinedSpec = JSON.parse(fs.readFileSync(openAPIFilePath, { encoding: 'utf-8' }));
+//   } catch (e) {
+//     //
+//   }
 
-  handleResponses(app, {
-    specOutputPath: openAPIFilePath,
-    writeIntervalMs: 1000,
-    predefinedSpec: predefinedSpec ? () => predefinedSpec : undefined
-  });
-}
+//   handleResponses(app, {
+//     specOutputPath: openAPIFilePath,
+//     writeIntervalMs: 1000,
+//     predefinedSpec: predefinedSpec ? () => predefinedSpec : undefined
+//   });
+// }
 
 app.use('/', indexRouter);
 
 /** handle the requests to add openapi specs*/
-if (process.env.NODE_ENV != 'production') {
-  handleRequests();
-}
+// if (process.env.NODE_ENV != 'production') {
+//   handleRequests();
+// }
 
 module.exports.handler = serverless(app);
