@@ -55,6 +55,12 @@ const Customers = sequelize.define(
       type: Sequelize.BOOLEAN,
       defaultValue: true
     },
+    rtmp_transcoder_endpoint: {
+      type: Sequelize.STRING(155)
+    },
+    max_stream_live_license: {
+      type: Sequelize.INTEGER(3)
+    },
     createdAt: { type: Sequelize.DATE, field: 'created_at' },
     updatedAt: { type: Sequelize.DATE, field: 'updated_at' }
   },

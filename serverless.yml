@@ -31,7 +31,7 @@ provider:
     ACCESS_TOKEN_EXPIRY: 1d
     REFRESH_TOKEN_EXPIRY: 1d
     NODE_ENV: production
-    FE_SITE_BASE_URL: http://stage-zoominlive-1857995739.us-east-1.elb.amazonaws.com/
+    FE_SITE_BASE_URL: https://staging.zoominlive.com/
     type: "service_account"
     project_id: "zoomin-push-notifications"
     private_key_id: "1103eee93f0e16663970b897519c219dfef17831"

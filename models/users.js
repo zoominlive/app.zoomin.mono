@@ -49,7 +49,7 @@ const Users = sequelize.define(
       required: true
     },
     role: {
-      type: Sequelize.ENUM('User', 'Admin'),
+      type: Sequelize.ENUM('Teacher', 'User', 'Admin'),
       required: true
     },
     profile_image: {
@@ -78,6 +78,10 @@ const Users = sequelize.define(
       type: Sequelize.ENUM('ios', 'android'),
       default: null,
       allowNull: true,
+    },
+    stream_live_license: {
+     type: Sequelize.BOOLEAN(),
+     defaultValue: false,
     },
     createdAt: { type: Sequelize.DATE, field: 'created_at' },
     updatedAt: { type: Sequelize.DATE, field: 'updated_at' },
