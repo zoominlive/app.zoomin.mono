@@ -27,6 +27,7 @@ provider:
     #RDS_USER: root
     #RDS_DB_NAME: zoomin
     JWT_SECRET_KEY: zoominlivesecretkey
+    LIVE_STREAM_SECRET_KEY: livestreamsecretkey
     JWT_REFRESH_SECRET_KEY: 2d
     ACCESS_TOKEN_EXPIRY: 1d
     REFRESH_TOKEN_EXPIRY: 1d

@@ -18,6 +18,10 @@ const CamerasInRooms = sequelize.define(
       type: Sequelize.STRING(100),
       allowNull: false
     },
+    hsl_url: {
+      type: Sequelize.STRING(500),
+      allowNull: true
+    },
     disabled: {
       type: Sequelize.ENUM('true', 'false'),
       defaultValue: 'false'

@@ -9,6 +9,7 @@ const childRoutes = require('./children');
 const dashboardRoutes = require('./dashboard');
 const watchStreamRoutes = require('./watchStream');
 const logRoutes = require('./logs');
+const liveStreamRoutes = require('./liveStream');
 
 /* user routes */
 router.use('/users', userRoutes);
@@ -33,5 +34,8 @@ router.use('/watchstream', watchStreamRoutes);
 
 /* logs routes */
 router.use('/logs', logRoutes);
+
+/* liveStream routes */
+router.use('/liveStream', liveStreamRoutes)
 
 module.exports = router;
