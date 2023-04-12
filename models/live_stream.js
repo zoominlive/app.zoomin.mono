@@ -9,9 +9,6 @@ const LiveStreams = sequelize.define(
             allowNull: false,
             primaryKey: true,
         },
-        stream_key: {
-            type: Sequelize.STRING(500),
-        },
         cust_id: {
             type: Sequelize.STRING(50)
         },
@@ -21,7 +18,7 @@ const LiveStreams = sequelize.define(
         room_id: {
             type: Sequelize.STRING(50)
         },
-        hsl_url: {
+        hls_url: {
             type: Sequelize.STRING(50)
         },
         stream_name: {

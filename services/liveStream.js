@@ -13,23 +13,23 @@ module.exports = {
     return streamCreated;
   },
 
-  updateLiveStream: async(user_id, stream_id, updateObj, t) => {
+  updateLiveStream: async(stream_id, updateObj, t) => {
     const { LiveStreams } = await connectToDatabase();
-    let streamCreated = await LiveStreams.update(updateObj, { where: {user_id: user_id, stream_id: stream_id} }, { transaction: t });
+    let streamCreated = await LiveStreams.update(updateObj, { where: {stream_id: stream_id} }, { transaction: t });
     return streamCreated;
   },
 
   saveEndPointInCamera: async(stream_id, t) => {
     const { LiveStreams, CamerasInRooms } = await connectToDatabase();
-    let liveStreamObj = await LiveStreams.findOne({ where: {stream_id: stream_id}, attributes: ['room_id', 'hsl_url'], }, { transaction: t });
-    let cameraUpdated = await CamerasInRooms.update({hsl_url: liveStreamObj?.dataValues?.hsl_url}, {where: {room_id: liveStreamObj?.dataValues?.room_id}})
+    let liveStreamObj = await LiveStreams.findOne({ where: {stream_id: stream_id}, attributes: ['room_id', 'hls_url'], }, { transaction: t });
+    let cameraUpdated = await CamerasInRooms.update({hls_url: liveStreamObj?.dataValues?.hls_url}, {where: {room_id: liveStreamObj?.dataValues?.room_id}})
     return cameraUpdated;
   },
 
   removeEndPointInCamera: async(stream_id, t) => {
     const { LiveStreams, CamerasInRooms } = await connectToDatabase();
-    let liveStreamObj = await LiveStreams.findOne({ where: {stream_id: stream_id}, attributes: ['room_id', 'hsl_url'], }, { transaction: t });
-    let cameraUpdated = await CamerasInRooms.update({hsl_url: null}, {where: {room_id: liveStreamObj?.dataValues?.room_id}})
+    let liveStreamObj = await LiveStreams.findOne({ where: {stream_id: stream_id}, attributes: ['room_id', 'hls_url'], }, { transaction: t });
+    let cameraUpdated = await CamerasInRooms.update({hls_url: null}, {where: {room_id: liveStreamObj?.dataValues?.room_id}})
     return cameraUpdated;
   },
   
