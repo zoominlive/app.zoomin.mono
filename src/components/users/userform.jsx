@@ -4,6 +4,7 @@ import {
   Autocomplete,
   Avatar,
   Button,
+  Checkbox,
   Chip,
   Dialog,
   DialogActions,
@@ -11,6 +12,7 @@ import {
   DialogTitle,
   Divider,
   FormControl,
+  FormControlLabel,
   FormHelperText,
   Grid,
   InputLabel,
@@ -32,6 +34,7 @@ import { useSnackbar } from 'notistack';
 import { errorMessageHandler } from '../../utils/errormessagehandler';
 import { useContext } from 'react';
 import AuthContext from '../../context/authcontext';
+import _ from 'lodash';
 
 const validationSchema = yup.object({
   first_name: yup.string('Enter first name').required('First name is required'),
@@ -156,9 +159,12 @@ const UserForm = (props) => {
           last_name: props?.user?.last_name || '',
           email: props?.user?.email || '',
           role: props?.user?.role || '',
-          locations: props?.user?.location
-            ? props?.user?.location.selected_locations.sort((a, b) => (a > b ? 1 : -1))
-            : []
+          locations: props?.user?.location?.selected_locations
+            ? props?.user?.location?.selected_locations?.sort((a, b) => (a > b ? 1 : -1))
+            : [],
+          stream_live_license: !_.isNil(props?.user?.stream_live_license)
+            ? props?.user?.stream_live_license
+            : true
         }}
         onSubmit={handleSubmit}>
         {({ values, setFieldValue, touched, errors }) => {
@@ -243,6 +249,7 @@ const UserForm = (props) => {
                         onChange={(event) => {
                           setFieldValue('role', event.target.value);
                         }}>
+                        <MenuItem value={'Teacher'}>Teacher</MenuItem>
                         <MenuItem value={'User'}>User</MenuItem>
                         <MenuItem value={'Admin'}>Admin</MenuItem>
                       </Select>
@@ -259,11 +266,11 @@ const UserForm = (props) => {
                       multiple
                       id="locations"
                       options={
-                        props?.user
-                          ? props?.user?.location?.accessable_locations.sort((a, b) =>
+                        props?.user?.location?.accessable_locations
+                          ? props?.user?.location?.accessable_locations?.sort((a, b) =>
                               a > b ? 1 : -1
                             )
-                          : authCtx.user?.location?.accessable_locations.sort((a, b) =>
+                          : authCtx.user?.location?.accessable_locations?.sort((a, b) =>
                               a > b ? 1 : -1
                             )
                       }
@@ -287,6 +294,21 @@ const UserForm = (props) => {
                         />
                       )}
                     />
+                  </Grid>
+                  <Grid item xs={12} md={6}>
+                    <FormControl>
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={values.stream_live_license}
+                            onChange={(event) => {
+                              setFieldValue('stream_live_license', event.target.checked);
+                            }}
+                          />
+                        }
+                        label="Stream live license"
+                      />
+                    </FormControl>
                   </Grid>
                 </Grid>
               </DialogContent>

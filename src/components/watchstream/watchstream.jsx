@@ -175,16 +175,16 @@ const WatchStream = () => {
   const getAvailableStreams = () => {
     API.get('watchstream').then((response) => {
       if (response.status === 200) {
-        setTimeOut(response.data.Data.streamDetails[0].timeout);
+        setTimeOut(response?.data?.Data?.streamDetails[0]?.timeout);
 
         setCamerasPayload({
-          location: response?.data?.Data.streamDetails[0].location,
-          room: response?.data?.Data.streamDetails
+          location: response?.data?.Data?.streamDetails[0]?.location,
+          room: response?.data?.Data?.streamDetails
         });
 
-        if (!location.state) {
+        if (!location?.state) {
           setSelectedLocation([authCtx?.user?.location?.accessable_locations[0]]);
-          const rooms = response.data.Data.streamDetails?.filter(
+          const rooms = response?.data?.Data.streamDetails?.filter(
             (room) => room.location === authCtx?.user?.location?.accessable_locations[0]
           );
           let roomsToAdd = [{ room_name: 'Select All', room_id: 'select-all' }];

@@ -24,7 +24,7 @@ const AppRoutes = () => {
           <Route path="/users" element={<Users />} />
         </>
       )}
-      {authCtx.user && authCtx.user.role !== 'Family' && (
+      {authCtx.user && authCtx.user.role !== 'Family' && authCtx.user.role !== 'Teacher' && (
         <>
           {' '}
           <Route path="/dashboard" element={<Dashboard />} />
@@ -44,7 +44,7 @@ const AppRoutes = () => {
       <Route
         path="*"
         element={
-          authCtx.user && authCtx.user.role === 'Family' ? (
+          authCtx.user && (authCtx.user.role === 'Family' || authCtx.user.role === 'Teacher') ? (
             <Navigate to={'watch-stream'} />
           ) : (
             <Navigate to={'dashboard'} />

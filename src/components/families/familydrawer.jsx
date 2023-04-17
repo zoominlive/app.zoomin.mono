@@ -742,7 +742,6 @@ const FamilyDrawer = (props) => {
                                 if (child?.status === 'Disabled') {
                                   handleChildDisable(child.child_id, index);
                                 } else {
-                                  console.log('=====child=====', child);
                                   handleChildEnable(child.child_id, index);
                                 }
                               }}

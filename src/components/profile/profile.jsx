@@ -276,6 +276,7 @@ const Profile = () => {
                           onChange={(event) => {
                             setFieldValue('role', event.target.value);
                           }}>
+                          <MenuItem value={'Teacher'}>Teacher</MenuItem>
                           <MenuItem value={'User'}>User</MenuItem>
                           <MenuItem value={'Admin'}>Admin</MenuItem>
                           <MenuItem value={'Family'}>Family</MenuItem>

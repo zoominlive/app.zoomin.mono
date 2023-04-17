@@ -44,7 +44,7 @@ const Login = () => {
 
   useEffect(() => {
     if (authCtx.token) {
-      navigate('/dashboard');
+      //navigate('/dashboard');
     }
   }, [authCtx.token, navigate]);
 
