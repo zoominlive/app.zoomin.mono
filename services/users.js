@@ -175,7 +175,8 @@ module.exports = {
         params?.password_link !== undefined ? params?.password_link : user.password_link,
       fcm_token: params?.fcm_token !== undefined ? params?.fcm_token : user.fcm_token,
       device_type: params?.device_type !== undefined ? params?.device_type : user.device_type,
-      stream_live_license: params?.stream_live_license !== undefined ? params?.stream_live_license : user.stream_live_license
+      stream_live_license: params?.stream_live_license !== undefined ? params?.stream_live_license : user.stream_live_license,
+      socket_connection_id: params?.socket_connection_id !== undefined ? params?.socket_connection_id : user.socket_connection_id
     };
 
     let updateUserProfile = await Users.update(

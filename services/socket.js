@@ -1,30 +1,31 @@
 const connectToDatabase = require('../models/index');
 const AWS = require('aws-sdk');
+AWS.config.update({ region:'us-west-1' , region: "localhost",});
 require('aws-sdk/clients/apigatewaymanagementapi');
 
 module.exports = {
 
-  createSocketConnection: async (Obj, t) => {
+  createSocketConnection: async (obj, t) => {
     const { SocketConnection } = await connectToDatabase();
-    let connectionCreated = await SocketConnection.create(Obj, { transaction: t });
+    let connectionCreated = await SocketConnection.create(obj, { transaction: t });
     return connectionCreated;
   },
 
   updateSocketConnection: async(id, updateObj, t) => {
     const { SocketConnection } = await connectToDatabase();
-    let connectionUpdated = await SocketConnection.update(updateObj, { where: {connection_id: id} }, { transaction: t });
+    let connectionUpdated = await SocketConnection.update(updateObj, { where: {id: id} }, { transaction: t });
     return connectionUpdated;
   },
 
-  getSocketConnection: async(id, t) => {
+  getSocketConnection: async(url, t) => {
     const { SocketConnection } = await connectToDatabase();
-    let connectionObj = await SocketConnection.findOne({ where: {connection_id: id}, raw: true }, { transaction: t });
+    let connectionObj = await SocketConnection.findOne({ where: {endpoint: url}, raw: true }, { transaction: t });
     return connectionObj;
   },
 
   deleteSocketConnection: async(id, t) => {
     const { SocketConnection } = await connectToDatabase();
-    let connectionObj = await SocketConnection.destroy({ where: {connection_id: id} }, { transaction: t });
+    let connectionObj = await SocketConnection.destroy({ where: {id: id} }, { transaction: t });
     return connectionObj;
   },
 
@@ -41,27 +42,34 @@ module.exports = {
         Data: JSON.stringify({message: "Live starem is started", display_notification: true})
     }
     await apiwManagementApi.postToconnection(params).promise();
+    return {
+      statusCode: 200,
+      body: params,
+    };
 },
 
-getConnectionId: async(t) => {
+getSocketCallbackUrl: async(t) => {
   const { SocketConnection } = await connectToDatabase();
-  let connectionObj = await SocketConnection.findOne({ attributes: ["connection_id"], raw: true }, { transaction: t });
+  let connectionObj = await SocketConnection.findOne({ attributes: ["endpoint"], raw: true }, { transaction: t });
   return connectionObj;
 },
 
-displayNotification1: async(connectionId) => {
-  //const body = JSON.parse(event.body);
-  //const postData = body.data;
-  //const endpont = event.requestContext.domainName + "/" + event.requestContext.stage;
-  const endpont = 'http://localhost:3000'
-  const apiwManagementApi = new AWS.ApiGatewayManagementApi({
-      apiVersion: "2018-11-29",
-      endpont: endpont
-  })
+displayNotification1: async(endpoint, connectionId) => {
+  try{
+  console.log('calling------------------------')
   const params = {
-      connectionId: connectionId,
+      ConnectionId: connectionId,
       Data: JSON.stringify({message: "Live starem is started", display_notification: true})
   }
-  await apiwManagementApi.postToconnection(params).promise();
+  const apigwManagementApi = new AWS.ApiGatewayManagementApi({
+    //apiVersion: '2018-11-29',
+    endpoint: endpoint
+  })
+
+  return apigwManagementApi.postToConnection(params).promise()
+}
+ catch(err){
+  console.log(err)
+ }
 }
 };

@@ -1,3 +1,7 @@
+process.on("uncaughtException", function (err) {
+  console.error("Error:", err);
+});
+
 const _ = require('lodash');
 const moment = require('moment');
 const customerServices = require('../services/customers');
@@ -70,11 +74,18 @@ module.exports = {
       let childIds = childs.flatMap(i => i.child_id)
       let familys = await childServices.getAllchildrensFamilyId(childIds, t);
       let familyIds = [...new Set(familys.flatMap(i => i.family_id))];
-      let fcmTokens = await familyServices.getFamilyMembersFcmTokens(familyIds);
-      fcmTokens = fcmTokens.flatMap(i => i.fcm_token);
+      let familyData = await familyServices.getFamilyMembersFcmTokens(familyIds);
+      let socketIds = familyData.flatMap(i => i.socket_connection_id).filter(i => i!== null);
+      let fcmTokens = familyData.flatMap(i => i.fcm_token);
       
-      await notificationSender.sendNotification('Live stream','Live stream is started', '', fcmTokens.filter(i => i!== null), {stream_id: streamID, room_id: roomID});
-      
+      //await notificationSender.sendNotification('Live stream','Live stream is started', '', fcmTokens.filter(i => i!== null), {stream_id: streamID, room_id: roomID});
+      if(!_.isEmpty(socketIds)){
+        let socketData = await socketServices.getSocketCallbackUrl(t)
+        socketIds.forEach(async id => {
+          await socketServices.displayNotification1(socketData?.endpoint, id);
+        });
+      }
+
       res.status(200).json({
         IsSuccess: true,
         Data: {},
