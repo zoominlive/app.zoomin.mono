@@ -4,13 +4,13 @@ const sequelize = require('../lib/database');
 const SocketConnection = sequelize.define(
   'socket_connection',
   {
-    cam_id: {
+    id: {
       type: Sequelize.INTEGER,
       allowNull: false,
       primaryKey: true,
       autoIncrement: true
     },
-    socket_connection_id: {
+    endpoint: {
       type: Sequelize.STRING(500),
       allowNull: true
     },

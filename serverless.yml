@@ -17,15 +17,15 @@ provider:
     ACCESS_KEY_ID: AKIAYEUNNGGXZZWD3RES
     SECRET_ACCESS_KEY: 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
     EMAIL_SOURCE_ACCOUNT: "support@zoominlive.com"
-    #RDS_HOST: zoomin-1.crzgnnp8iqzv.us-west-2.rds.amazonaws.com
-    #RDS_PORT: 3306
-    #RDS_USER: zoomin_dbuser
-    #RDS_PASSWORD: Wk8$b6!xR
-    #RDS_DB_NAME: zoomin_stage
-    RDS_HOST: 127.0.0.1
+    RDS_HOST: zoomin-1.crzgnnp8iqzv.us-west-2.rds.amazonaws.com
     RDS_PORT: 3306
-    RDS_USER: root
-    RDS_DB_NAME: zoomin
+    RDS_USER: zoomin_dbuser
+    RDS_PASSWORD: Wk8$b6!xR
+    RDS_DB_NAME: zoomin_stage
+    #RDS_HOST: 127.0.0.1
+    #RDS_PORT: 3306
+    #RDS_USER: root
+    #RDS_DB_NAME: zoomin
     JWT_SECRET_KEY: zoominlivesecretkey
     LIVE_STREAM_SECRET_KEY: livestreamsecretkey
     JWT_REFRESH_SECRET_KEY: 2d
@@ -48,20 +48,40 @@ provider:
   region: us-east-1
 
 functions:
-  connectionHandler:
-   handler: websocket/handler.connectionHandler
-   events:
-      - websocket:
-          routeKey: $connect
-      - websocket:
-          routeKey: $disconnect
-      - websocket:
-         routeKey: $default
+  # connectionHandler:
+  #  handler: websocket/handler.connectionHandler
+  #  events:
+  #     - websocket:
+  #         routeKey: $connect
+  #     - websocket:
+  #         routeKey: $disconnect
+  #     - websocket:
+  #        routeKey: $default
   # defaultHandler:
   #   handler: lambda/websocket.handler.defaulthandler
   #   events:
   #     - websocket:
   #        routeKey: $default
+  connectHandler:
+    handler: websocket/handler.connectHandler
+    events:
+      - websocket: $connect
+  
+  disconnectHandler:
+    handler:  websocket/handler.disconnectHandler
+    events:
+      - websocket: $disconnect
+
+  defaultHandler:
+    handler:  websocket/handler.defaultHandler
+    events: 
+      - websocket: $default
+  
+  # broadcastHandler:
+  #   handler:  websocket/newHandler.broadcastHandler
+  #   events:
+  #     - websocket:
+  #         route: broadcastMessage
 
   userFunction:
     handler: handler.handler
@@ -169,6 +189,5 @@ functions:
 
 plugins:
   - serverless-offline
-  - serverless-websockets-plugin
 
   

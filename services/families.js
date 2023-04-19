@@ -486,10 +486,12 @@ module.exports = {
             [Sequelize.Op.in]: allfamilyIds,
           },
         },
-        attributes: ['fcm_token']
+        attributes: ['fcm_token', 'socket_connection_id']
       },
       { transaction: t }
     );
     return familyMembers;
   },
 };
+
+
