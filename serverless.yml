@@ -48,21 +48,6 @@ provider:
   region: us-east-1
 
 functions:
-  connectionHandler:
-   handler: websocket/handler.connectionHandler
-   events:
-      - websocket:
-          routeKey: $connect
-      - websocket:
-          routeKey: $disconnect
-      - websocket:
-         routeKey: $default
-  # defaultHandler:
-  #   handler: lambda/websocket.handler.defaulthandler
-  #   events:
-  #     - websocket:
-  #        routeKey: $default
-
   userFunction:
     handler: handler.handler
     events:
@@ -169,6 +154,5 @@ functions:
 
 plugins:
   - serverless-offline
-  - serverless-websockets-plugin
 
   

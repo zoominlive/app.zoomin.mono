@@ -203,7 +203,7 @@ module.exports = {
         location: req.query?.location,
         searchBy: req.query?.searchBy?.replace(/'/g, "\\'")
       };
-      const cameras = await cameraServices.getAllCameraForCustomer(req.user.cust_id, filter);
+      const cameras = await cameraServices.getAllCameraForCustomer(req.user.cust_id, req.user, filter);
 
       res.status(200).json({
         IsSuccess: true,

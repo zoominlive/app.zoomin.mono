@@ -77,7 +77,7 @@ module.exports = {
   },
 
   /* Fetch all the camera's details for given customer */
-  getAllCameraForCustomer: async (custId, filter, t) => {
+  getAllCameraForCustomer: async (custId, user, filter, t) => {
     const { Camera } = await connectToDatabase();
     let { pageNumber, pageSize, searchBy = '', location = 'All' } = filter;
 
@@ -93,9 +93,17 @@ module.exports = {
         offset: parseInt(pageNumber * pageSize),
         where: {
           cust_id: custId,
-          location: {
-            [Sequelize.Op.like]: `%${location}`
-          },
+          // location: {
+          //   [Sequelize.Op.like]: `%${location}`
+          // },
+          [Sequelize.Op.and]: [
+            { location: user.location.accessable_locations },
+            {
+              location: {
+                [Sequelize.Op.like]: `%${location}`
+              }
+            }
+          ],
           [Sequelize.Op.or]: [
             {
               cam_name: {
