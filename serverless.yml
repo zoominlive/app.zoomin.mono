@@ -9,7 +9,7 @@ provider:
   runtime: nodejs16.x
   httpApi:
     cors: true
-  timeout: 15
+  timeout: 150
   tracing:
     lambda: true
   environment:

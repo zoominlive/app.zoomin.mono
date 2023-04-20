@@ -12,7 +12,6 @@ const CamerasInRooms = require('./cameras_assigned_to_rooms');
 const AccessLogs = require('./access_logs');
 const ChangeLogs = require('./change_logs');
 const LiveStreams = require('./live_stream');
-const SocketConnection = require('./socket_connection');
 const sequelize = require('../lib/database');
 
 CustomerLocations.belongsTo(Customers, { foreignKey: 'cust_id' });
@@ -129,8 +128,7 @@ module.exports = async () => {
       ScheduledToDisable,
       RoomsInChild,
       CamerasInRooms,
-      LiveStreams,
-      SocketConnection
+      LiveStreams
     };
   }
 
@@ -152,7 +150,6 @@ module.exports = async () => {
     ScheduledToDisable,
     RoomsInChild,
     CamerasInRooms,
-    LiveStreams,
-    SocketConnection
+    LiveStreams
   };
 };

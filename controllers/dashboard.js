@@ -88,9 +88,9 @@ module.exports = {
 
       SEAMembers = SEAMembers?.length + childSEA?.length;
 
-      const topViewers = await dashboardServices.topViewersOfTheWeek();
+      const topViewers = await dashboardServices.topViewersOfTheWeek(req.user);
 
-      const recentViewers = await dashboardServices.getLastOneHourViewers();
+      const recentViewers = await dashboardServices.getLastOneHourViewers(req.user);
       let cameras = await watchStreamServices.getAllCamForLocation(req.user);
 
       const customerDetails = await customerServices.getCustomerDetails(req.user.cust_id);

@@ -7,7 +7,7 @@ const Room = require('../models/room');
 
 module.exports = {
   /* get recent viewers */
-  getLastOneHourViewers: async () => {
+  getLastOneHourViewers: async (user) => {
     const { RecentViewers, Family, Child, Room, RoomsInChild, Users } = await connectToDatabase();
     let oneHourBefore = new Date();
     oneHourBefore.setHours(oneHourBefore.getHours() - 1);
@@ -48,15 +48,33 @@ module.exports = {
         },
         {
           model: Users,
-          attributes: ['first_name', 'last_name'], 
+          attributes: ['first_name', 'last_name'],
         }
       ]
     });
 
-    return recentViewers;
+    const result = []
+    recentViewers.map(item => {
+      let res;
+      if (item.family) {
+        res = user.location.accessable_locations.forEach(i => {
+          if (item.family.location.accessable_locations.includes(i)) {
+            result.push(item)
+          }
+        })
+      }
+      else {
+        res = user.location.accessable_locations.forEach(i => {
+          if (item.user.location.accessable_locations.includes(i)) {
+            result.push(item)
+          }
+        })
+      }
+    })
+    return result;
   },
 
-  topViewersOfTheWeek: async () => {
+  topViewersOfTheWeek: async (user) => {
     const { RecentViewers, Family, Users } = await connectToDatabase();
 
     let recentViewers = await RecentViewers.findAll({
@@ -84,21 +102,38 @@ module.exports = {
       include: [
         {
           model: Family,
-          attributes: ['first_name', 'last_name']
+          attributes: ['first_name', 'last_name', 'location']
         },
         {
           model: Users,
-          attributes: ['first_name', 'last_name']
+          attributes: ['first_name', 'last_name', 'location']
         }
       ]
     });
-
-    return recentViewers;
+    const result = []
+    recentViewers.map(item => {
+      let res;
+      if (item.family) {
+        res = user.location.accessable_locations.forEach(i => {
+          if (item.family.location.accessable_locations.includes(i)) {
+            result.push(item)
+          }
+        })
+      }
+      else {
+        res = user.location.accessable_locations.forEach(i => {
+          if (item.user.location.accessable_locations.includes(i)) {
+            result.push(item)
+          }
+        })
+      }
+    })
+    return result;
   },
 
   getChildrenWithSEA: async (custId) => {
     const { Child } = await connectToDatabase();
-    
+
     let children = await Child.findAll({
       where: { cust_id: custId },
       attributes: ['first_name', 'last_name', 'scheduled_end_date', 'scheduled_enable_date',],
@@ -147,18 +182,18 @@ module.exports = {
       dashboard_cam_preference: cams
     };
     let camSettings;
-    
-      camSettings = await Users.update(
-        camObj,
-        {
-          where: {
-            user_id: user?.user_id
-          }
-        },
-        { transaction: t }
-      );
+
+    camSettings = await Users.update(
+      camObj,
+      {
+        where: {
+          user_id: user?.user_id
+        }
+      },
+      { transaction: t }
+    );
 
     return camSettings;
-}
+  }
 
 };

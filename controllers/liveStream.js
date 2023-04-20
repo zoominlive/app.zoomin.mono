@@ -4,7 +4,7 @@ const customerServices = require('../services/customers');
 const liveStreamServices = require('../services/liveStream');
 const childServices = require('../services/children');
 const familyServices = require('../services/families');
-const socketServices = require('../services/socket');
+// const socketServices = require('../services/socket');
 const notificationSender = require('../lib/firebase-services');
 const CONSTANTS = require('../lib/constants');
 const sequelize = require('../lib/database');
@@ -74,11 +74,7 @@ module.exports = {
       fcmTokens = fcmTokens.flatMap(i => i.fcm_token);
       
       await notificationSender.sendNotification('Live stream','Live stream is started', '', fcmTokens.filter(i => i!== null), {stream_id: streamID, room_id: roomID});
-      let connectionObj = await socketServices.getConnectionId(t);
-      console.log('====',connectionObj);
-      if(connectionObj){
-        await socketServices.displayNotification1(connectionObj?.connection_id);
-      }
+      
       res.status(200).json({
         IsSuccess: true,
         Data: {},
