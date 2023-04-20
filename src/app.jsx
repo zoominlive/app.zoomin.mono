@@ -50,8 +50,8 @@ const MainApp = () => {
       }
       //navigate('/dashboard');
       const webSocket = new WebSocket(
-        //'wss://dhuvtskn6f.execute-api.us-east-1.amazonaws.com/stage'
-        'ws://localhost:3001'
+        'wss://dhuvtskn6f.execute-api.us-east-1.amazonaws.com/stage'
+        //'ws://localhost:3001'
       );
       console.log('===== webSocket =====', webSocket);
       webSocket.onopen = function (e, req, res) {
