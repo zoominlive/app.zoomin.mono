@@ -19,28 +19,32 @@ const failedResponse = (statusCode, error) => ({
 })
 sequelize.sync();
 module.exports.connectHandler = async(event, context, callback) => {
-  try{
+  // try{
     console.log("======connected")
-    callback(null, successfullResponse)
+    //callback(null, successfullResponse)
     // console.log(event.requestContext);
     // //callback(null, {...successfullResponse, id: event.requestContext.connectionId})
-    // const t = await sequelize.transaction();
-    // //let obj = {endpoint: util.format(util.format('https://%s/%s', event.requestContext.domainName, event.requestContext.stage))};
-    // let obj ={endpoint: event.requestContext.domainName + '/' + event.requestContext.stage}
-    // let socketObj = await socketServices.getSocketConnection(obj.endpoint);
-    // if(socketObj){
-    //   await socketServices.updateSocketConnection(obj, socketObj.id, t)
-    //   callback(null, {...successfullResponse, id: event.requestContext.connectionId})
-    // }
-    // else{
-    //   await socketServices.createSocketConnection(obj, t)
-    //   callback(null, {...successfullResponse, id: event.requestContext.connectionId})
-    // }
-  }
-  catch(err){
-    console.log(err)
-    callback(failedResponse(500, JSON.stringify(err)))
-  }
+    const t = await sequelize.transaction();
+    //let obj = {endpoint: util.format(util.format('https://%s/%s', event.requestContext.domainName, event.requestContext.stage))};
+    let obj ={endpoint: event.requestContext.domainName + '/' + event.requestContext.stage}
+    let socketObj = await socketServices.getSocketConnection(obj.endpoint);
+    if(socketObj){
+      console.log('inside if=======');
+      await socketServices.updateSocketConnection(obj, socketObj.id, t)
+      //callback(null, successfullResponse)
+    }
+    else{
+      console.log('inside else======')
+      await socketServices.createSocketConnection(obj, t)
+      //callback(null, successfullResponse)
+    }
+    return event
+    console.log('ending======================')
+  // }
+  // catch(err){
+  //   console.log(err)
+  //   callback(failedResponse(500, JSON.stringify(err)))
+  // }
     // const t = await sequelize.transaction();
     // let obj = {connection_id: event.requestContext.connectionId};
     // console.log('========',obj)
@@ -68,24 +72,25 @@ module.exports.disconnectHandler = (event, context, callback) => {
 
 module.exports.defaultHandler = async(event, context, callback) => {
   console.log('default==================');
-  callback(null, successfullResponse)
-  // console.log(util.format(util.format('https://%s/%s', event.requestContext.domainName, event.requestContext.stage)));
-  // const t = await sequelize.transaction();
-  // let { family_member_id, user_id } = JSON.parse(event?.body)
-  // let updateObj = { 
-  //   socket_connection_id: event?.requestContext?.connectionId,
-  // }
-  // if(family_member_id){
-  //   updateObj = {...updateObj, family_member_id: family_member_id}
-  //   await familyServices.editFamily(updateObj, t);
-  //   callback(null, successfullResponse)
-  // }
-  // else{
-  //   updateObj = {...updateObj, user_id: user_id}
-  //   await userServices.editUserProfile(updateObj, _.omit(updateObj, ['user_id']), t);
-  //   callback(null, successfullResponse)
-  // }
+  //callback(null, successfullResponse)
   
+  // console.log(util.format(util.format('https://%s/%s', event.requestContext.domainName, event.requestContext.stage)));
+  const t = await sequelize.transaction();
+  let { family_member_id, user_id } = JSON.parse(event?.body)
+  let updateObj = { 
+    socket_connection_id: event?.requestContext?.connectionId,
+  }
+  if(family_member_id){
+    updateObj = {...updateObj, family_member_id: family_member_id}
+    await familyServices.editFamily(updateObj, t);
+    //callback(null, successfullResponse)
+  }
+  else{
+    updateObj = {...updateObj, user_id: user_id}
+    await userServices.editUserProfile(updateObj, _.omit(updateObj, ['user_id']), t);
+    //callback(null, successfullResponse)
+  }
+  return event
 }
 
 module.exports.sendMessageHandler = (event, context, callback) => {
