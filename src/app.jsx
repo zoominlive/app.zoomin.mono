@@ -57,7 +57,7 @@ const MainApp = () => {
       webSocket.onopen = function (e, req, res) {
         //alert('[open] Connection established');
         //alert('Sending to server');
-        console.log(e, res, 'opopen===');
+        console.log(e, res, 'onopen===');
         webSocket.send(JSON.stringify(data));
         webSocket.onmessage = (event) => {
           console.log('===========in side === on message', event);
