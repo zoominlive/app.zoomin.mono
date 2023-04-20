@@ -5,27 +5,29 @@ require('aws-sdk/clients/apigatewaymanagementapi');
 
 module.exports = {
 
-  createSocketConnection: async (obj, t) => {
+  createSocketConnection: async (obj) => {
     const { SocketConnection } = await connectToDatabase();
-    let connectionCreated = await SocketConnection.create(obj, { transaction: t });
+    let connectionCreated = await SocketConnection.create(obj);
     return connectionCreated;
   },
 
-  updateSocketConnection: async(id, updateObj, t) => {
+  updateSocketConnection: async(id, updateObj) => {
+    console.log('update socket=====')
     const { SocketConnection } = await connectToDatabase();
-    let connectionUpdated = await SocketConnection.update(updateObj, { where: {id: id} }, { transaction: t });
+    let connectionUpdated = await SocketConnection.update(updateObj, { where: {id: id} });
     return connectionUpdated;
   },
 
-  getSocketConnection: async(url, t) => {
+  getSocketConnection: async(url) => {
+    console.log('get socket======')
     const { SocketConnection } = await connectToDatabase();
-    let connectionObj = await SocketConnection.findOne({ where: {endpoint: url}, raw: true }, { transaction: t });
+    let connectionObj = await SocketConnection.findOne({ where: {endpoint: url}, raw: true });
     return connectionObj;
   },
 
-  deleteSocketConnection: async(id, t) => {
+  deleteSocketConnection: async(id) => {
     const { SocketConnection } = await connectToDatabase();
-    let connectionObj = await SocketConnection.destroy({ where: {id: id} }, { transaction: t });
+    let connectionObj = await SocketConnection.destroy({ where: {id: id} });
     return connectionObj;
   },
 
@@ -48,9 +50,9 @@ module.exports = {
     };
 },
 
-getSocketCallbackUrl: async(t) => {
+getSocketCallbackUrl: async() => {
   const { SocketConnection } = await connectToDatabase();
-  let connectionObj = await SocketConnection.findOne({ attributes: ["endpoint"], raw: true }, { transaction: t });
+  let connectionObj = await SocketConnection.findOne({ attributes: ["endpoint"], raw: true });
   return connectionObj;
 },
 
@@ -62,7 +64,7 @@ displayNotification1: async(endpoint, connectionId) => {
       Data: JSON.stringify({message: "Live starem is started", display_notification: true})
   }
   const apigwManagementApi = new AWS.ApiGatewayManagementApi({
-    //apiVersion: '2018-11-29',
+    apiVersion: '2018-11-29',
     endpoint: endpoint
   })
 
