@@ -61,8 +61,8 @@ module.exports = {
   },
 
   startLiveStream: async (req, res, next) => {
+    const t = await sequelize.transaction();
     try {
-      const t = await sequelize.transaction();
       const { streamID } = req.query;
       let updateObj = {stream_running: true, stream_start_time: moment().toISOString() };
 
@@ -81,11 +81,15 @@ module.exports = {
       //await notificationSender.sendNotification('Live stream','Live stream is started', '', fcmTokens.filter(i => i!== null), {stream_id: streamID, room_id: roomID});
       if(!_.isEmpty(socketIds)){
         let socketData = await socketServices.getSocketCallbackUrl(t)
-        socketIds.forEach(async id => {
-          await socketServices.displayNotification1(socketData?.endpoint, id);
-        });
+        // socketIds.forEach(async id => {
+        //   // await socketServices.displayNotification1(socketData?.endpoint, id);
+        // });
+        console.log('calling=====================');
+        await socketServices.displayNotification1(socketData?.endpoint, socketIds[0]);
       }
-
+      
+      // await socketServices.displayNotification1(socketData?.endpoint, socketIds[0]);
+      await t.commit();
       res.status(200).json({
         IsSuccess: true,
         Data: {},
@@ -93,6 +97,7 @@ module.exports = {
       });
       next();
     } catch (error) {
+      await t.rollback();
       res.status(500).json({
         IsSuccess: false,
         error_log: error,
@@ -103,14 +108,14 @@ module.exports = {
   },
 
   stopLiveStream: async (req, res, next) => {
+    const t = await sequelize.transaction();
     try {
-      const t = await sequelize.transaction();
       const { streamID } = req.query;
       let updateObj = {stream_running: false, stream_stop_time: moment().toISOString() };
 
       await liveStreamServices.updateLiveStream(streamID, updateObj, t);
       await liveStreamServices.removeEndPointInCamera(streamID, t);
-      
+      await t.commit();
       res.status(200).json({
         IsSuccess: true,
         Data: {},
@@ -118,6 +123,7 @@ module.exports = {
       });
       next();
     } catch (error) {
+      await t.rollback();
       res.status(500).json({
         IsSuccess: false,
         error_log: error,

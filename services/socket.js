@@ -21,7 +21,7 @@ module.exports = {
   getSocketConnection: async(url) => {
     console.log('get socket======')
     const { SocketConnection } = await connectToDatabase();
-    let connectionObj = await SocketConnection.findOne({ where: {endpoint: url}, raw: true });
+    let connectionObj = await SocketConnection.findOne();
     return connectionObj;
   },
 
@@ -58,16 +58,16 @@ getSocketCallbackUrl: async() => {
 
 displayNotification1: async(endpoint, connectionId) => {
   try{
-  console.log('calling------------------------')
+  console.log('calling------------------------', endpoint)
   const params = {
       ConnectionId: connectionId,
-      Data: JSON.stringify({message: "Live starem is started", display_notification: true})
+      Data: JSON.stringify({message: "Live stream is started", display_notification: true})
   }
   const apigwManagementApi = new AWS.ApiGatewayManagementApi({
     apiVersion: '2018-11-29',
-    endpoint: endpoint
+    endpoint: "https://6i6bw7p391.execute-api.us-east-1.amazonaws.com/stage"
   })
-
+  console.log('=====',params, connectionId)
   return apigwManagementApi.postToConnection(params).promise()
 }
  catch(err){

@@ -12,6 +12,8 @@ provider:
   timeout: 15
   tracing:
     lambda: true
+  websocketsApiName: websockets-api
+  websocketsApiRouteSelectionExpression: $request.body.action
   environment:
     AWS_BUCKET_NAME: zoomin-stage-images
     ACCESS_KEY_ID: AKIAYEUNNGGXZZWD3RES
@@ -46,7 +48,6 @@ provider:
 
   stage: stage
   region: us-east-1
-
 functions:
   # connectionHandler:
   #  handler: websocket/handler.connectionHandler
@@ -173,6 +174,19 @@ functions:
           method: "*"
           path: /api/rooms
 
+  liveStreamFunction:
+    handler: handler.handler
+    events:
+      - httpApi:
+          method: "*"
+          path: /api/liveStream
+      - httpApi:
+          method: "*"
+          path: /api/liveStream/start
+      - httpApi:
+          method: "*"
+          path: /api/liveStream/stop
+          
   disableScheduledMembers:
     handler: cron.disableScheduledFamilyAndChild
     events:
