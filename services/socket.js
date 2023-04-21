@@ -1,4 +1,3 @@
-const connectToDatabase = require("../models/index");
 const AWS = require("aws-sdk");
 require("aws-sdk/clients/apigatewaymanagementapi");
 
