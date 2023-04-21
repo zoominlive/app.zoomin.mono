@@ -45,7 +45,8 @@ provider:
     token_uri: "https://oauth2.googleapis.com/token"
     auth_provider_x509_cert_url: "https://www.googleapis.com/oauth2/v1/certs"
     client_x509_cert_url: "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-eg6hb%40zoomin-push-notifications.iam.gserviceaccount.com"
-
+    websocket_endpoint: "https://6i6bw7p391.execute-api.us-east-1.amazonaws.com/stage"
+    
   stage: stage
   region: us-east-1
 functions:
