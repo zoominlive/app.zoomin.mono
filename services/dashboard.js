@@ -58,14 +58,14 @@ module.exports = {
       let res;
       if (item.family) {
         res = user.location.accessable_locations.forEach(i => {
-          if (item.family.location.accessable_locations.includes(i)) {
+          if (item.family?.location?.accessable_locations.includes(i)) {
             result.push(item)
           }
         })
       }
       else {
         res = user.location.accessable_locations.forEach(i => {
-          if (item.user.location.accessable_locations.includes(i)) {
+          if (item.user?.location?.accessable_locations.includes(i)) {
             result.push(item)
           }
         })
