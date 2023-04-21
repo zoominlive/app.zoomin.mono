@@ -1,77 +1,32 @@
-const connectToDatabase = require('../models/index');
-const AWS = require('aws-sdk');
-AWS.config.update({ region:'us-west-1' , region: "localhost",});
-require('aws-sdk/clients/apigatewaymanagementapi');
+const connectToDatabase = require("../models/index");
+const AWS = require("aws-sdk");
+require("aws-sdk/clients/apigatewaymanagementapi");
 
 module.exports = {
-
-  createSocketConnection: async (obj) => {
-    const { SocketConnection } = await connectToDatabase();
-    let connectionCreated = await SocketConnection.create(obj);
-    return connectionCreated;
-  },
-
-  updateSocketConnection: async(id, updateObj) => {
-    console.log('update socket=====')
-    const { SocketConnection } = await connectToDatabase();
-    let connectionUpdated = await SocketConnection.update(updateObj, { where: {id: id} });
-    return connectionUpdated;
-  },
-
-  getSocketConnection: async(url) => {
-    console.log('get socket======')
-    const { SocketConnection } = await connectToDatabase();
-    let connectionObj = await SocketConnection.findOne();
-    return connectionObj;
-  },
-
-  deleteSocketConnection: async(id) => {
-    const { SocketConnection } = await connectToDatabase();
-    let connectionObj = await SocketConnection.destroy({ where: {id: id} });
-    return connectionObj;
-  },
-
-  displayNotification: async(event, connectionId) => {
-    const body = JSON.parse(event.body);
-    //const postData = body.data;
-    const endpont = event.requestContext.domainName + "/" + event.requestContext.stage;
-    const apiwManagementApi = new AWS.ApiGatewayManagementApi({
-        apiVersion: "2018-11-29",
-        endpont: endpont
-    })
-    const params = {
-        connectionId: connectionId,
-        Data: JSON.stringify({message: "Live starem is started", display_notification: true})
-    }
-    await apiwManagementApi.postToconnection(params).promise();
-    return {
-      statusCode: 200,
-      body: params,
+  emitResponse: async (connectionId) => {
+    console.log("=====", connectionId);
+    let data = {
+      message: "Live stream is started",
+      display_notification: true,
     };
-},
-
-getSocketCallbackUrl: async() => {
-  const { SocketConnection } = await connectToDatabase();
-  let connectionObj = await SocketConnection.findOne({ attributes: ["endpoint"], raw: true });
-  return connectionObj;
-},
-
-displayNotification1: async(endpoint, connectionId) => {
-  try{
-  console.log('calling------------------------', endpoint)
-  const params = {
-      ConnectionId: connectionId,
-      Data: JSON.stringify({message: "Live stream is started", display_notification: true})
-  }
-  const apigwManagementApi = new AWS.ApiGatewayManagementApi({
-    apiVersion: '2018-11-29',
-    endpoint: "https://6i6bw7p391.execute-api.us-east-1.amazonaws.com/stage"
-  })
-  console.log('=====',params, connectionId)
-  return apigwManagementApi.postToConnection(params).promise()
-}
- catch(err){
-  console.log(err)
- }
-}
+    new Promise((resolve, reject) => {
+      const apiGatewayManagementApi = new AWS.ApiGatewayManagementApi({
+        apiVersion: "2018-11-29",
+        endpoint: process.env.websocket_endpoint
+      });
+      apiGatewayManagementApi.postToConnection(
+        {
+          ConnectionId: connectionId,
+          Data: JSON.stringify(data),
+        },
+        (err, data) => {
+          if (err) {
+            console.log("emitResponse err is", err);
+            // return reject(err);
+          }
+          return resolve(data);
+        }
+      );
+    });
+  },
 };

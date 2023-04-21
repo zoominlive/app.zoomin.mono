@@ -78,17 +78,12 @@ module.exports = {
       let socketIds = familyData.flatMap(i => i.socket_connection_id).filter(i => i!== null);
       let fcmTokens = familyData.flatMap(i => i.fcm_token);
       
-      //await notificationSender.sendNotification('Live stream','Live stream is started', '', fcmTokens.filter(i => i!== null), {stream_id: streamID, room_id: roomID});
+      await notificationSender.sendNotification('Live stream','Live stream is started', '', fcmTokens.filter(i => i!== null), {stream_id: streamID, room_id: roomID});
       if(!_.isEmpty(socketIds)){
-        let socketData = await socketServices.getSocketCallbackUrl(t)
-        // socketIds.forEach(async id => {
-        //   // await socketServices.displayNotification1(socketData?.endpoint, id);
-        // });
-        console.log('calling=====================');
-        await socketServices.displayNotification1(socketData?.endpoint, socketIds[0]);
+        socketIds.forEach(async id => {
+          await socketServices.emitResponse(id);
+        });
       }
-      
-      // await socketServices.displayNotification1(socketData?.endpoint, socketIds[0]);
       await t.commit();
       res.status(200).json({
         IsSuccess: true,
