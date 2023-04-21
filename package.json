@@ -38,7 +38,6 @@
     "react-player": "^2.11.0",
     "react-router-dom": "^6.4.1",
     "react-scripts": "5.0.1",
-    "react-use-websocket": "^4.3.1",
     "sass": "^1.55.0",
     "screenfull": "^6.0.2",
     "supercluster": "^7.1.5",
