@@ -429,7 +429,7 @@ module.exports = {
       }
       if (user) {
         const userData = user;
-        const registerFlag = false;
+        if(userData.is_verified) {
         if (userData.role === 'Admin' || userData.role === 'User') {
           const token = await userServices.createPasswordToken(userData);
           const name = userData.first_name + ' ' + userData.last_name;
@@ -453,12 +453,15 @@ module.exports = {
             t
           );
         }
-
         res.status(200).json({
           IsSuccess: true,
           Data: {},
           Message: CONSTANTS.PASSWORD_RESET_LINK_SENT
         });
+      }
+      else{
+        res.status(400).json({ IsSuccess: true, Data: {}, Message: CONSTANTS.USER_NOT_VERIFIED });
+      }
       } else {
         res.status(400).json({ IsSuccess: true, Data: {}, Message: CONSTANTS.USER_NOT_FOUND });
       }
