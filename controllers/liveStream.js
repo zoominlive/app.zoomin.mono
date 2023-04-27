@@ -76,12 +76,11 @@ module.exports = {
       let childIds = childs.flatMap(i => i.child_id)
       let familys = await childServices.getAllchildrensFamilyId(childIds, t);
       let familyIds = [...new Set(familys.flatMap(i => i.family_id))];
-      let familyMembersData = await familyServices.getFamilyMembersIds(familyIds);
-      let socketIds = familyMembersData.flatMap(i => i.socket_connection_id).filter(i => i!== null);
-      let familyMembersIds = familyMembersData.flatMap( i => i.family_member_id);
+      let familyMembers = await familyServices.getFamilyMembersIds(familyIds);
+      let socketIds = familyMembers.flatMap(i => i.socket_connection_id).filter(i => i!== null);
+      let familyMembersIds = familyMembers.flatMap( i => i.family_member_id);
       let fcmTokens = await fcmTokensServices.getFamilyMembersFcmTokens(familyMembersIds);
       fcmTokens = fcmTokens.flatMap(i => i.fcm_token);
-      console.log('===fcmTokens===',fcmTokens, socketIds);
 
       await notificationSender.sendNotification('Live stream','Live stream is started', '', fcmTokens.filter(i => i!== null), {stream_id: streamID, room_id: roomID});
       if(!_.isEmpty(socketIds)){
