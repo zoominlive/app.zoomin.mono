@@ -476,7 +476,7 @@ module.exports = {
     return users;
   },
 
-  getFamilyMembersFcmTokens: async (allfamilyIds, t) => {
+  getFamilyMembersIds: async (allfamilyIds, t) => {
     const { Family } = await connectToDatabase();
     let familyMembers = await Family.findAll(
       {
@@ -486,12 +486,29 @@ module.exports = {
             [Sequelize.Op.in]: allfamilyIds,
           },
         },
-        attributes: ['fcm_token', 'socket_connection_id']
+        attributes: ['socket_connection_id', 'family_member_id']
       },
       { transaction: t }
     );
     return familyMembers;
   },
+
+  // getFamilyMembersIds: async (allfamilyIds, t) => {
+  //   const { Family } = await connectToDatabase();
+  //   let familyMembersIds = await Family.findAll(
+  //     {
+  //       raw: true,
+  //       where: {
+  //         family_id: {
+  //           [Sequelize.Op.in]: allfamilyIds,
+  //         },
+  //       },
+  //       attributes: ['family_member_id']
+  //     },
+  //     { transaction: t }
+  //   );
+  //   return familyMembersIds;
+  // },
 };
 
 

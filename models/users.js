@@ -69,16 +69,6 @@ const Users = sequelize.define(
       type: Sequelize.JSON,
       defaultValue: {}
     },
-    fcm_token: {
-      type: Sequelize.STRING(250),
-      default: null,
-      allowNull: true,
-    },
-    device_type: {
-      type: Sequelize.ENUM('ios', 'android'),
-      default: null,
-      allowNull: true,
-    },
     stream_live_license: {
      type: Sequelize.BOOLEAN(),
      defaultValue: false,

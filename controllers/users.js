@@ -14,6 +14,7 @@ const encrypter = require('object-encrypter');
 const engine = encrypter(process.env.JWT_SECRET_KEY, { ttl: false });
 const customerServices = require('../services/customers');
 const logServices = require('../services/logs');
+const fcmTokensServices = require('../services/fcmTokens');
 const CONSTANTS = require('../lib/constants');
 const sequelize = require('../lib/database');
 const notificationSender = require('../lib/firebase-services');
@@ -27,7 +28,9 @@ module.exports = {
       let childIds = childs.flatMap(i => i.child_id)
       let familys = await childServices.getAllchildrensFamilyId(childIds, t);
       let familyIds = [...new Set(familys.flatMap(i => i.family_id))];
-      let fcmTokens = await familyServices.getFamilyMembersFcmTokens(familyIds);
+      let familyMembers = await familyServices.getFamilyMembersIds(familyIds);
+      let familyMembersIds = familyMembers.flatMap( i => i.family_member_id);
+      let fcmTokens = await fcmTokensServices.getFamilyMembersFcmTokens(familyMembersIds);
       fcmTokens = fcmTokens.flatMap(i => i.fcm_token)
       
       await notificationSender.sendNotification(title, body, image, fcmTokens.filter(i => i!== null));
@@ -161,13 +164,13 @@ module.exports = {
     const t = await sequelize.transaction();
     let userFound;
     let logDetails;
-    let userObj;
+    let fcmObj;
     let success = false;
     try {
       let { email, password, fcm_token, device_type } = req.body;
 
       let emailIs = email;
-      userObj = {fcm_token: fcm_token ? fcm_token : null, device_type: device_type ? device_type : null};
+      fcmObj = {fcm_token: fcm_token ? fcm_token : null, device_type: device_type ? device_type : null};
       emailIs = emailIs.toLowerCase();
       const user = await userServices.getUser(emailIs);
       userFound = user;
@@ -193,12 +196,12 @@ module.exports = {
             
             const userData = _.omit(user, ['password', 'cust_id']);
             success = true;
-            userObj = { 
-              ...userObj,
+            fcmObj = { 
+              ...fcmObj,
               user_id:userFound?.user_id
             }
             
-            await userServices.editUserProfile(userObj, _.omit(userObj, ['user_id']), t);
+            await fcmTokensServices.createFcmToken(fcmObj, t);
             await t.commit();
             res.status(200).json({
               IsSuccess: true,
@@ -227,11 +230,11 @@ module.exports = {
           if (validPassword) {
             const token = await familyServices.createFamilyMemberToken(familyUser.family_member_id);
             const userData = _.omit(familyUser, ['password', 'cust_id']);
-            userObj = { 
-              ...userObj,
+            fcmObj = { 
+              ...fcmObj,
               family_member_id:userFound?.family_member_id
             }
-            await familyServices.editFamily(userObj, t);
+            await fcmTokensServices.createFcmToken(fcmObj, t);
             await t.commit();
             success = true;
             res.status(200).json({

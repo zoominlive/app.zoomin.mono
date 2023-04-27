@@ -99,21 +99,6 @@ const Family = sequelize.define(
     time_zone: {
       type: Sequelize.STRING(100)
     },
-    fcm_token: {
-      type: Sequelize.STRING(250),
-      default: null,
-      allowNull: true,
-    },
-    device_type: {
-      type: Sequelize.ENUM('ios', 'android'),
-      default: null,
-      allowNull: true,
-    },
-    socket_connection_id: {
-      type: Sequelize.STRING(250),
-      default: null,
-      allowNull: true
-    },
     createdAt: { type: Sequelize.DATE, field: 'created_at' },
     updatedAt: { type: Sequelize.DATE, field: 'updated_at' },
     cam_preference: {
