@@ -170,7 +170,9 @@ module.exports = {
       let { email, password, fcm_token, device_type } = req.body;
 
       let emailIs = email;
-      fcmObj = {fcm_token: fcm_token ? fcm_token : null, device_type: device_type ? device_type : null};
+      if(fcm_token && device_type){
+        fcmObj = {fcm_token: fcm_token, device_type: device_type }
+      }
       emailIs = emailIs.toLowerCase();
       const user = await userServices.getUser(emailIs);
       userFound = user;
@@ -196,12 +198,13 @@ module.exports = {
             
             const userData = _.omit(user, ['password', 'cust_id']);
             success = true;
+            if(fcmObj){
             fcmObj = { 
               ...fcmObj,
               user_id:userFound?.user_id
             }
-            
             await fcmTokensServices.createFcmToken(fcmObj, t);
+          }
             await t.commit();
             res.status(200).json({
               IsSuccess: true,
@@ -230,11 +233,13 @@ module.exports = {
           if (validPassword) {
             const token = await familyServices.createFamilyMemberToken(familyUser.family_member_id);
             const userData = _.omit(familyUser, ['password', 'cust_id']);
+            if(fcmObj){
             fcmObj = { 
               ...fcmObj,
               family_member_id:userFound?.family_member_id
             }
             await fcmTokensServices.createFcmToken(fcmObj, t);
+          }
             await t.commit();
             success = true;
             res.status(200).json({
