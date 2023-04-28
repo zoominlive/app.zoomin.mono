@@ -13,7 +13,7 @@ provider:
   tracing:
     lambda: true
   environment:
-    AWS_BUCKET_NAME: zoomin-stage-images
+    AWS_BUCKET_NAME: zoomin-dev-images
     ACCESS_KEY_ID: AKIAYEUNNGGXZZWD3RES
     SECRET_ACCESS_KEY: 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
     EMAIL_SOURCE_ACCOUNT: "support@zoominlive.com"
@@ -21,7 +21,7 @@ provider:
     RDS_PORT: 3306
     RDS_USER: zoomin_dbuser
     RDS_PASSWORD: Wk8$b6!xR
-    RDS_DB_NAME: zoomin_stage
+    RDS_DB_NAME: zoomin
     #RDS_HOST: 127.0.0.1
     #RDS_PORT: 3306
     #RDS_USER: root
@@ -44,8 +44,8 @@ provider:
     auth_provider_x509_cert_url: "https://www.googleapis.com/oauth2/v1/certs"
     client_x509_cert_url: "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-eg6hb%40zoomin-push-notifications.iam.gserviceaccount.com"
     
-  stage: stage
-  region: us-east-1
+  stage: dev
+  region: us-west-2
 functions:
   userFunction:
     handler: handler.handler
