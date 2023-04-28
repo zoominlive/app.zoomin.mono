@@ -83,11 +83,6 @@ const Users = sequelize.define(
      type: Sequelize.BOOLEAN(),
      defaultValue: false,
     },
-    socket_connection_id: {
-      type: Sequelize.STRING(250),
-      default: null,
-      allowNull: true
-    },
     createdAt: { type: Sequelize.DATE, field: 'created_at' },
     updatedAt: { type: Sequelize.DATE, field: 'updated_at' },
     deletedAt: { type: Sequelize.DATE, field: 'deleted_at' }

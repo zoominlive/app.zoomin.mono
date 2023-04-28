@@ -53,25 +53,7 @@ module.exports = {
       ]
     });
 
-    const result = []
-    recentViewers.map(item => {
-      let res;
-      if (item.family) {
-        res = user.location.accessable_locations.forEach(i => {
-          if (item.family?.location?.accessable_locations.includes(i)) {
-            result.push(item)
-          }
-        })
-      }
-      else {
-        res = user.location.accessable_locations.forEach(i => {
-          if (item.user?.location?.accessable_locations.includes(i)) {
-            result.push(item)
-          }
-        })
-      }
-    })
-    return result;
+    return recentViewers;
   },
 
   topViewersOfTheWeek: async (user) => {
@@ -102,33 +84,16 @@ module.exports = {
       include: [
         {
           model: Family,
-          attributes: ['first_name', 'last_name', 'location']
+          attributes: ['first_name', 'last_name']
         },
         {
           model: Users,
-          attributes: ['first_name', 'last_name', 'location']
+          attributes: ['first_name', 'last_name']
         }
       ]
     });
-    const result = []
-    recentViewers.map(item => {
-      let res;
-      if (item.family) {
-        res = user.location.accessable_locations.forEach(i => {
-          if (item.family.location.accessable_locations.includes(i)) {
-            result.push(item)
-          }
-        })
-      }
-      else {
-        res = user.location.accessable_locations.forEach(i => {
-          if (item.user.location.accessable_locations.includes(i)) {
-            result.push(item)
-          }
-        })
-      }
-    })
-    return result;
+
+    return recentViewers;
   },
 
   getChildrenWithSEA: async (custId) => {

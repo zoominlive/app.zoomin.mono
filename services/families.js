@@ -486,7 +486,7 @@ module.exports = {
             [Sequelize.Op.in]: allfamilyIds,
           },
         },
-        attributes: ['fcm_token', 'socket_connection_id']
+        attributes: ['fcm_token']
       },
       { transaction: t }
     );

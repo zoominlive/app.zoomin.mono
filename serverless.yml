@@ -12,8 +12,6 @@ provider:
   timeout: 15
   tracing:
     lambda: true
-  websocketsApiName: websockets-api
-  websocketsApiRouteSelectionExpression: $request.body.action
   environment:
     AWS_BUCKET_NAME: zoomin-stage-images
     ACCESS_KEY_ID: AKIAYEUNNGGXZZWD3RES
@@ -45,46 +43,10 @@ provider:
     token_uri: "https://oauth2.googleapis.com/token"
     auth_provider_x509_cert_url: "https://www.googleapis.com/oauth2/v1/certs"
     client_x509_cert_url: "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-eg6hb%40zoomin-push-notifications.iam.gserviceaccount.com"
-    websocket_endpoint: "https://6i6bw7p391.execute-api.us-east-1.amazonaws.com/stage"
     
   stage: stage
   region: us-east-1
 functions:
-  # connectionHandler:
-  #  handler: websocket/handler.connectionHandler
-  #  events:
-  #     - websocket:
-  #         routeKey: $connect
-  #     - websocket:
-  #         routeKey: $disconnect
-  #     - websocket:
-  #        routeKey: $default
-  # defaultHandler:
-  #   handler: lambda/websocket.handler.defaulthandler
-  #   events:
-  #     - websocket:
-  #        routeKey: $default
-  connectHandler:
-    handler: websocket/handler.connectHandler
-    events:
-      - websocket: $connect
-  
-  disconnectHandler:
-    handler:  websocket/handler.disconnectHandler
-    events:
-      - websocket: $disconnect
-
-  defaultHandler:
-    handler:  websocket/handler.defaultHandler
-    events: 
-      - websocket: $default
-  
-  # broadcastHandler:
-  #   handler:  websocket/newHandler.broadcastHandler
-  #   events:
-  #     - websocket:
-  #         route: broadcastMessage
-
   userFunction:
     handler: handler.handler
     events:

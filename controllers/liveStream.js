@@ -75,15 +75,10 @@ module.exports = {
       let familys = await childServices.getAllchildrensFamilyId(childIds, t);
       let familyIds = [...new Set(familys.flatMap(i => i.family_id))];
       let familyData = await familyServices.getFamilyMembersFcmTokens(familyIds);
-      let socketIds = familyData.flatMap(i => i.socket_connection_id).filter(i => i!== null);
       let fcmTokens = familyData.flatMap(i => i.fcm_token);
       
       await notificationSender.sendNotification('Live stream','Live stream is started', '', fcmTokens.filter(i => i!== null), {stream_id: streamID, room_id: roomID});
-      if(!_.isEmpty(socketIds)){
-        socketIds.forEach(async id => {
-          await socketServices.emitResponse(id);
-        });
-      }
+      
       await t.commit();
       res.status(200).json({
         IsSuccess: true,
