@@ -90,6 +90,7 @@ module.exports = {
   getAllFamilyDetails: async (custId, filter, t) => {
     const { Family, Child, RoomsInChild, Room } = await connectToDatabase();
     let { pageNumber = 0, pageSize = 10, location = 'All', searchBy = '', roomsList = [] } = filter;
+    console.log('====location===',location)
     let families;
     let familiesCount;
     let whereObj = {
@@ -114,7 +115,7 @@ module.exports = {
             where: {
               [Sequelize.Op.and]: {
                 location: {
-                  [Sequelize.Op.substring]: location === 'All' ? '' : location
+                  [Sequelize.Op.in]: location === 'All' ? '' : [location]
                 }
               }
             },
@@ -136,7 +137,7 @@ module.exports = {
       },
       { transaction: t }
     );
-
+    console.log('===familiesCount===',familiesCount)
     families = await Family.findAll(
       {
         attributes: {

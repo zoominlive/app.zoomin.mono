@@ -18,6 +18,7 @@ const { v4: uuidv4 } = require('uuid');
 module.exports = {
   // get endpoint
   getEndpoint: async (req, res, next) => {
+    let response;
     try {
       const { roomID, streamName } = req.query;
       const { user_id, stream_live_license, cust_id } = req.user;
@@ -37,10 +38,10 @@ module.exports = {
           hls_url: `https://zoominstreamprocessing.s3.us-west-2.amazonaws.com/liveStream/${streamID}_${current_time}/index.m3u8`
         };
         let livestream = await liveStreamServices.createLiveStream(liveStreamObj);
-
+        response = { serverEndPont: endPoint };
         res.status(200).json({
           IsSuccess: true,
-          Data: { serverEndPont: endPoint },
+          Data: response,
           Message: CONSTANTS.RTMP_ENDPOINT
         });
       }
@@ -59,6 +60,22 @@ module.exports = {
         Message: CONSTANTS.INTERNAL_SERVER_ERROR
       });
       next(error);
+    } finally {
+      let logObj = {
+        user_id: req?.user?.family_member_id
+          ? req?.user?.family_member_id
+          : req?.user?.user_id
+          ? req?.user?.user_id
+          : 'Not Found',
+        function: 'Live_stream',
+        function_type: 'Get',
+        response: response
+      };
+      try {
+        await logServices.addAccessLog(logObj);
+      } catch (e) {
+        console.log(e);
+      }
     }
   },
 
@@ -103,6 +120,22 @@ module.exports = {
         Message: CONSTANTS.INTERNAL_SERVER_ERROR
       });
       next(error);
+    } finally {
+      let logObj = {
+        user_id: req?.user?.family_member_id
+          ? req?.user?.family_member_id
+          : req?.user?.user_id
+          ? req?.user?.user_id
+          : 'Not Found',
+        function: 'Live_stream',
+        function_type: 'Get',
+        response: { success: success }
+      };
+      try {
+        await logServices.addAccessLog(logObj);
+      } catch (e) {
+        console.log(e);
+      }
     }
   },
 
@@ -129,6 +162,22 @@ module.exports = {
         Message: CONSTANTS.INTERNAL_SERVER_ERROR
       });
       next(error);
+    } finally {
+      let logObj = {
+        user_id: req?.user?.family_member_id
+          ? req?.user?.family_member_id
+          : req?.user?.user_id
+          ? req?.user?.user_id
+          : 'Not Found',
+        function: 'Live_stream',
+        function_type: 'Get',
+        response: { success: success }
+      };
+      try {
+        await logServices.addAccessLog(logObj);
+      } catch (e) {
+        console.log(e);
+      }
     }
   }
 }

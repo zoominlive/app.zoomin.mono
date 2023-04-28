@@ -250,6 +250,7 @@ module.exports = {
 
   // list family details for family list page.
   getAllFamilyDetails: async (req, res, next) => {
+    const t = await sequelize.transaction();
     try {
       const filter = {
         pageNumber: parseInt(req.query?.page),
@@ -258,8 +259,8 @@ module.exports = {
         roomsList: req.query?.rooms,
         location: req.query?.location
       };
-      let familyDetails = await familyServices.getAllFamilyDetails(req.user.cust_id, filter);
-
+      let familyDetails = await familyServices.getAllFamilyDetails(req.user.cust_id, filter, t);
+      await t.commit();
       res.status(200).json({
         IsSuccess: true,
         Data: familyDetails,
@@ -268,6 +269,7 @@ module.exports = {
 
       next();
     } catch (error) {
+      await t.rollback();
       console.log(error);
       res.status(500).json({
         IsSuccess: false,
