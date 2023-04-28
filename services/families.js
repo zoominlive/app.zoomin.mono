@@ -87,14 +87,13 @@ module.exports = {
   },
 
   /* Fetch all the family's details */
-  getAllFamilyDetails: async (custId, filter, t) => {
+  getAllFamilyDetails: async (user, filter, t) => {
     const { Family, Child, RoomsInChild, Room } = await connectToDatabase();
     let { pageNumber = 0, pageSize = 10, location = 'All', searchBy = '', roomsList = [] } = filter;
-    console.log('====location===',location)
     let families;
     let familiesCount;
     let whereObj = {
-      cust_id: custId,
+      cust_id: user.cust_id,
       [Sequelize.Op.or]: [
         { first_name: { [Sequelize.Op.substring]: searchBy } },
         { last_name: { [Sequelize.Op.substring]: searchBy } },
@@ -109,15 +108,17 @@ module.exports = {
     familiesCount = await Family.count(
       {
         group: ['family.family_id'],
+        attributes: ['children.location'],
         include: [
           {
             model: Child,
+            attributes: ['location'],
             where: {
               [Sequelize.Op.and]: {
                 location: {
-                  [Sequelize.Op.in]: location === 'All' ? '' : [location]
+                  [Sequelize.Op.substring]: location === 'All' ? '' : location
                 }
-              }
+              },
             },
             include: [
               {
@@ -133,11 +134,21 @@ module.exports = {
             ]
           }
         ],
-        where: whereObj
+        where: whereObj,
+        raw: true
       },
       { transaction: t }
     );
-    console.log('===familiesCount===',familiesCount)
+    const result = []
+     familiesCount.map(item => {
+      console.log(item.location)
+      user.location.accessable_locations.forEach(i => {
+        if (item.location.locations.includes(i)) {
+          result.push(item)
+        }
+      });
+    })
+    familiesCount = result;
     families = await Family.findAll(
       {
         attributes: {
@@ -174,7 +185,7 @@ module.exports = {
         limit: parseInt(pageSize),
         offset: parseInt(pageNumber * pageSize),
         where: {
-          cust_id: custId,
+          cust_id: user.cust_id,
           member_type: 'primary',
           family_id: familiesCount
             .filter((family) => {

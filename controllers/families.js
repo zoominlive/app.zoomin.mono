@@ -259,7 +259,7 @@ module.exports = {
         roomsList: req.query?.rooms,
         location: req.query?.location
       };
-      let familyDetails = await familyServices.getAllFamilyDetails(req.user.cust_id, filter, t);
+      let familyDetails = await familyServices.getAllFamilyDetails(req.user, filter, t);
       await t.commit();
       res.status(200).json({
         IsSuccess: true,

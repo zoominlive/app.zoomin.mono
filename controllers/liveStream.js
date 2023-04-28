@@ -10,6 +10,7 @@ const childServices = require('../services/children');
 const familyServices = require('../services/families');
 const socketServices = require('../services/socket');
 const fcmTokensServices = require('../services/fcmTokens');
+const logServices = require('../services/logs');
 // const socketServices = require('../services/socket');
 const notificationSender = require('../lib/firebase-services');
 const CONSTANTS = require('../lib/constants');
@@ -122,17 +123,18 @@ module.exports = {
       next(error);
     } finally {
       let logObj = {
+        //user_id: req?.user?.user_id ? req?.user?.user_id : 'Not Found',
         user_id: req?.user?.family_member_id
           ? req?.user?.family_member_id
           : req?.user?.user_id
           ? req?.user?.user_id
           : 'Not Found',
-        function: 'Live_stream',
-        function_type: 'Get',
-        response: { success: success }
+        function: 'Live_Stream',
+        function_type: 'Start',
+        request: req.query
       };
       try {
-        await logServices.addAccessLog(logObj);
+        await logServices.addChangeLog(logObj);
       } catch (e) {
         console.log(e);
       }
@@ -164,17 +166,18 @@ module.exports = {
       next(error);
     } finally {
       let logObj = {
+        //user_id: req?.user?.user_id ? req?.user?.user_id : 'Not Found',
         user_id: req?.user?.family_member_id
           ? req?.user?.family_member_id
           : req?.user?.user_id
           ? req?.user?.user_id
           : 'Not Found',
-        function: 'Live_stream',
-        function_type: 'Get',
-        response: { success: success }
+        function: 'Live_Stream',
+        function_type: 'Stop',
+        request: req.query
       };
       try {
-        await logServices.addAccessLog(logObj);
+        await logServices.addChangeLog(logObj);
       } catch (e) {
         console.log(e);
       }

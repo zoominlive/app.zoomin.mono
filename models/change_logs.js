@@ -23,12 +23,13 @@ const ChangeLogs = sequelize.define(
         'User_Change_Email',
         'User_Forgot_Password',
         'User_Change_Password',
-        'User_Reg_Accout'
+        'User_Reg_Accout',
+        'Live_Stream'
       ),
       required: true
     },
     function_type: {
-      type: Sequelize.ENUM('Add', 'Edit', 'Delete', 'Disable', 'Enable'),
+      type: Sequelize.ENUM('Add', 'Edit', 'Delete', 'Disable', 'Enable', 'Start', 'Stop'),
       required: true
     },
     request: {
