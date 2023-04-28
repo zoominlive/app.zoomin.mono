@@ -62,7 +62,9 @@ const Logs = () => {
     'Disable',
     'Enable',
     'Get',
-    'Login'
+    'Login',
+    'Start',
+    'Stop'
   ]);
   const [selectedFunction, setSelectedFunction] = useState([
     { id: 'Watch_Stream', name: 'Request Stream' },
@@ -75,7 +77,8 @@ const Logs = () => {
     { id: 'User_Change_Email', name: 'Change Email' },
     { id: 'User_Forgot_Password', name: 'Forgot Password' },
     { id: 'User_Change_Password', name: 'Change Password' },
-    { id: 'User_Reg_Accout', name: 'Accout Registration' }
+    { id: 'User_Reg_Accout', name: 'Accout Registration' },
+    { id: 'Live_Stream', name: 'Live Stream' }
   ]);
   const [fromDate, setFromDate] = useState(moment().subtract(7, 'days'));
   const [toDate, setToDate] = useState(moment());
@@ -117,17 +120,40 @@ const Logs = () => {
       'User_Change_Email',
       'User_Forgot_Password',
       'User_Change_Password',
-      'User_Reg_Accout'
+      'User_Reg_Accout',
+      'Live_Stream'
     ],
     users: [],
     locations: [],
     familyMemberIds: [],
-    actions: ['Select All', 'Get', 'Login', 'Add', 'Edit', 'Delete', 'Disable', 'Enable']
+    actions: [
+      'Select All',
+      'Get',
+      'Login',
+      'Add',
+      'Edit',
+      'Delete',
+      'Disable',
+      'Enable',
+      'Start',
+      'Stop'
+    ]
   });
   const [isDatePickerOpen1, setIsDatePickerOpen1] = useState(false);
   const [isDatePickerOpen2, setIsDatePickerOpen2] = useState(false);
   const types = ['Access Log', 'Change Log'];
-  const actions = ['Select All', 'Get', 'Login', 'Add', 'Edit', 'Delete', 'Disable', 'Enable'];
+  const actions = [
+    'Select All',
+    'Get',
+    'Login',
+    'Add',
+    'Edit',
+    'Delete',
+    'Disable',
+    'Enable',
+    'Start',
+    'Stop'
+  ];
   const functions = [
     { id: 'Select All', name: 'Select All' },
     { id: 'Watch_Stream', name: 'Request Stream' },
@@ -140,7 +166,7 @@ const Logs = () => {
     { id: 'User_Change_Email', name: 'Change Email' },
     { id: 'User_Forgot_Password', name: 'Forgot Password' },
     { id: 'User_Change_Password', name: 'Change Password' },
-    { id: 'User_Reg_Accout', name: 'Accout Registration' }
+    { id: 'Live_Stream', name: 'Live Stream' }
   ];
 
   useEffect(() => {
