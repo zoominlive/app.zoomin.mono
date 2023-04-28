@@ -8,7 +8,6 @@ const customerServices = require('../services/customers');
 const liveStreamServices = require('../services/liveStream');
 const childServices = require('../services/children');
 const familyServices = require('../services/families');
-const socketServices = require('../services/socket');
 const notificationSender = require('../lib/firebase-services');
 const CONSTANTS = require('../lib/constants');
 const sequelize = require('../lib/database');
