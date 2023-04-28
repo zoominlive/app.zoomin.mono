@@ -141,7 +141,6 @@ module.exports = {
     );
     const result = []
      familiesCount.map(item => {
-      console.log(item.location)
       user.location.accessable_locations.forEach(i => {
         if (item.location.locations.includes(i)) {
           result.push(item)
