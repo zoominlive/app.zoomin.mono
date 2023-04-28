@@ -9,7 +9,7 @@ provider:
   runtime: nodejs16.x
   httpApi:
     cors: true
-  timeout: 150
+  timeout: 15
   tracing:
     lambda: true
   websocketsApiName: websockets-api
