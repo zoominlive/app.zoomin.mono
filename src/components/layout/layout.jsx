@@ -169,7 +169,7 @@ const Layout = () => {
             <List>
               {topMenuItems
                 .filter((item) => {
-                  if (authCtx.user.role === 'User' && item.key !== 4) {
+                  if (authCtx.user.role === 'User' && item.key !== 4 && item.key !== 9) {
                     return true;
                   } else if (authCtx.user.role === 'Family' && (item.key === 5 || item.key === 9)) {
                     return true;

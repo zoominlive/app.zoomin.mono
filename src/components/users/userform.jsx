@@ -306,7 +306,9 @@ const UserForm = (props) => {
                             }}
                           />
                         }
-                        label="Stream live license"
+                        label={`Assign Live Streaming License (${
+                          authCtx.user?.max_stream_live_license || 0
+                        } Available)`}
                       />
                     </FormControl>
                   </Grid>

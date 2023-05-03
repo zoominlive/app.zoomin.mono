@@ -52,7 +52,8 @@ const Users = () => {
     pageNumber: 0,
     pageSize: parseInt(process.env.REACT_APP_PAGINATION_LIMIT, 10),
     searchBy: '',
-    location: 'All'
+    location: 'All',
+    role: 'All'
   });
 
   useEffect(() => {
@@ -142,6 +143,10 @@ const Users = () => {
     setUsersPayload((prevPayload) => ({ ...prevPayload, location: event.target.value }));
   };
 
+  const handleRoleChange = (event) => {
+    setUsersPayload((prevPayload) => ({ ...prevPayload, role: event.target.value }));
+  };
+
   // Calls the search handler after 500ms
   const debouncedResults = useMemo(() => {
     return debounce(handleSearch, 500);
@@ -183,6 +188,22 @@ const Users = () => {
                         </Select>
                       </FormControl>
                     </Grid>
+                    <Grid item md={3} sm={12}>
+                      <FormControl fullWidth>
+                        <InputLabel id="role">Role</InputLabel>
+                        <Select
+                          labelId="role"
+                          id="role"
+                          value={usersPayload?.role}
+                          label="Role"
+                          onChange={handleRoleChange}>
+                          <MenuItem value={'All'}>All</MenuItem>
+                          <MenuItem value={'Admin'}>Admin</MenuItem>
+                          <MenuItem value={'Teacher'}>Teacher</MenuItem>
+                          <MenuItem value={'User'}>User</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </Grid>
                   </Grid>
                 </Box>
               </Grid>
@@ -216,6 +237,8 @@ const Users = () => {
                       Location
                     </TableCell>
                     <TableCell align="left">Email</TableCell>
+                    <TableCell align="left">Role</TableCell>
+                    <TableCell align="left">Live Streaming</TableCell>
                     <TableCell align="right"></TableCell>
                   </TableRow>
                 </TableHead>
@@ -247,6 +270,10 @@ const Users = () => {
                             </Stack>
                           </TableCell>
                           <TableCell align="left">{row.email}</TableCell>
+                          <TableCell align="left">{row.role}</TableCell>
+                          <TableCell align="left">
+                            {row.stream_live_license ? 'Yes' : 'No'}
+                          </TableCell>
                           <TableCell align="right">
                             <UserActions
                               user={row}
