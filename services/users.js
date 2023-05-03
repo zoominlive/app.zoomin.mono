@@ -219,16 +219,17 @@ module.exports = {
 
   /* Fetch all the user's details */
   getAllUsers: async (user, filter, t) => {
-    const { Users } = await connectToDatabase();
-    let { pageNumber = 0, pageSize = 10, searchBy = '', location = 'All' } = filter;
+    const { Users, Customers } = await connectToDatabase();
+    let { pageNumber = 0, pageSize = 10, searchBy = '', location = 'All', role = 'All' } = filter;
 
     if (location == 'All') {
       location = '';
     }
 
-    let users = await Users.findAndCountAll({
-      limit: parseInt(pageSize),
-      offset: parseInt(pageNumber * pageSize),
+    if (role == 'All') {
+      role = '';
+    }
+    let allusers = await Users.findAll({
       where: {
         cust_id: user.cust_id,
         user_id: {
@@ -253,12 +254,35 @@ module.exports = {
         ],
         location: {
           [Sequelize.Op.substring]: location
+        },
+        role: {
+          [Sequelize.Op.substring]: role
         }
       },
-
-      attributes: { exclude: ['password'] }
+      attributes: ['user_id', 'location'],
     });
 
+     const userIds = [];
+
+     allusers.map(item => {
+        user.location.accessable_locations.forEach(i => {
+          if (item.location.accessable_locations.includes(i)) {
+            userIds.push(item)
+          }
+        })
+    });
+  
+    let users = await Users.findAndCountAll({
+      limit: parseInt(pageSize),
+      offset: parseInt(pageNumber * pageSize),
+      where: {
+        user_id: {[Sequelize.Op.in]: userIds.flatMap( i => i.user_id) }
+      },
+      include: [{ model: Customers, as: 'customer', attributes: ['max_stream_live_license'] }],
+      attributes: { exclude: ['password'] },
+    });
+
+  
     return { users: users.rows, count: users.count };
   },
 

@@ -32,7 +32,7 @@ module.exports = {
       let familyMembersIds = familyMembers.flatMap( i => i.family_member_id);
       let fcmTokens = await fcmTokensServices.getFamilyMembersFcmTokens(familyMembersIds);
       fcmTokens = fcmTokens.flatMap(i => i.fcm_token)
-      
+
       await notificationSender.sendNotification(title, body, image, fcmTokens.filter(i => i!== null));
     
       res.status(200).json({
@@ -70,6 +70,7 @@ module.exports = {
     try {
       const user = req.user;
       user.transcoderBaseUrl = await customerServices.getTranscoderUrl(req.user.cust_id);
+      user.max_stream_live_license = await customerServices.getMaxLiveStramAvailable(req.user.cust_id);
       res.status(200).json({
         IsSuccess: true,
         Data: _.omit(user, ['password']),
@@ -184,6 +185,7 @@ module.exports = {
 
       if (user) {
         user.transcoderBaseUrl = await customerServices.getTranscoderUrl(user.cust_id);
+        user.max_stream_live_license = await customerServices.getMaxLiveStramAvailable(user.cust_id);
         if (!user.is_verified || user.status == 'inactive') {
           res.status(400).json({
             IsSuccess: true,
@@ -884,6 +886,7 @@ module.exports = {
         pageSize: req.query?.pageSize,
         searchBy: req.query?.searchBy.replace(/'/g, "\\'"),
         location: req.query?.location,
+        role: req.query?.role,
         pageCount: req.query?.pageCount,
         orderBy: req.query?.orderBy
       };
