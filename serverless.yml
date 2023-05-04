@@ -9,7 +9,7 @@ provider:
   runtime: nodejs16.x
   httpApi:
     cors: true
-  timeout: 15
+  timeout: 150
   tracing:
     lambda: true
   websocketsApiName: websockets-api
@@ -19,15 +19,15 @@ provider:
     ACCESS_KEY_ID: AKIAYEUNNGGXZZWD3RES
     SECRET_ACCESS_KEY: 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
     EMAIL_SOURCE_ACCOUNT: "support@zoominlive.com"
-    RDS_HOST: zoomin-1.crzgnnp8iqzv.us-west-2.rds.amazonaws.com
-    RDS_PORT: 3306
-    RDS_USER: zoomin_dbuser
-    RDS_PASSWORD: Wk8$b6!xR
-    RDS_DB_NAME: zoomin_stage
-    #RDS_HOST: 127.0.0.1
+    #RDS_HOST: zoomin-1.crzgnnp8iqzv.us-west-2.rds.amazonaws.com
     #RDS_PORT: 3306
-    #RDS_USER: root
-    #RDS_DB_NAME: zoomin
+    #RDS_USER: zoomin_dbuser
+    #RDS_PASSWORD: Wk8$b6!xR
+    #RDS_DB_NAME: zoomin_stage
+    RDS_HOST: 127.0.0.1
+    RDS_PORT: 3306
+    RDS_USER: root
+    RDS_DB_NAME: zoomin_stage
     JWT_SECRET_KEY: zoominlivesecretkey
     LIVE_STREAM_SECRET_KEY: livestreamsecretkey
     JWT_REFRESH_SECRET_KEY: 2d

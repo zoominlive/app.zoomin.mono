@@ -3,7 +3,6 @@ require("aws-sdk/clients/apigatewaymanagementapi");
 
 module.exports = {
   emitResponse: async (connectionId) => {
-    console.log("=====", connectionId);
     let data = {
       message: "Live stream is started",
       display_notification: true,

@@ -8,6 +8,7 @@ const RecentViewers = require('./recent_viewers');
 const Room = require('./room');
 const ScheduledToDisable = require('./scheluled_to_disable');
 const RoomsInChild = require('./rooms_assigned_to_child');
+const RoomsInTeacher = require('./rooms_assigned_to_teacher');
 const CamerasInRooms = require('./cameras_assigned_to_rooms');
 const AccessLogs = require('./access_logs');
 const ChangeLogs = require('./change_logs');
@@ -48,8 +49,24 @@ Child.hasMany(RoomsInChild, {
   }
 });
 
+RoomsInTeacher.belongsTo(Users, { foreignKey: 'teacher_id', targetKey: 'user_id' });
+Users.hasMany(RoomsInTeacher, {
+  as: 'roomsInTeacher',
+  sourceKey: 'user_id',
+  foreignKey: {
+    name: 'teacher_id'
+  }
+});
+
 CamerasInRooms.belongsTo(Room, { foreignKey: 'room_id' });
 Room.hasMany(CamerasInRooms, {
+  sourceKey: 'room_id',
+  foreignKey: {
+    name: 'room_id'
+  }
+});
+
+RoomsInTeacher.hasMany(CamerasInRooms, {
   sourceKey: 'room_id',
   foreignKey: {
     name: 'room_id'
@@ -66,6 +83,15 @@ Camera.hasMany(CamerasInRooms, {
 
 Room.belongsTo(RoomsInChild, { foreignKey: 'room_id' });
 RoomsInChild.hasOne(Room, {
+  as: 'room',
+  sourceKey: 'room_id',
+  foreignKey: {
+    name: 'room_id'
+  }
+});
+
+Room.belongsTo(RoomsInTeacher, { foreignKey: 'room_id' });
+RoomsInTeacher.hasOne(Room, {
   as: 'room',
   sourceKey: 'room_id',
   foreignKey: {
@@ -128,6 +154,7 @@ module.exports = async () => {
       Camera,
       ScheduledToDisable,
       RoomsInChild,
+      RoomsInTeacher,
       CamerasInRooms,
       LiveStreams,
       FcmTokens
@@ -151,6 +178,7 @@ module.exports = async () => {
     Camera,
     ScheduledToDisable,
     RoomsInChild,
+    RoomsInTeacher,
     CamerasInRooms,
     LiveStreams,
     FcmTokens

@@ -97,6 +97,7 @@ module.exports = {
 
       if (checkUserValidation && !checkUserValidation.isValid) {
         res.status(400).json(checkUserValidation.message);
+        return
       }
 
       let emailIs = params.email;
@@ -108,10 +109,19 @@ module.exports = {
       params.is_verified = false;
   
       let addUser = await userServices.createUser(_.omit(params, ['image']), t);
+      
       userAdded = addUser;
       if (addUser) {
         let userData = addUser?.toJSON();
-        const registerFlag = true;
+
+        if(params.role === 'Teacher'){
+          const addRoomsToTeacher = await userServices.assignRoomsToTeacher(
+            userData?.user_id,
+            params?.rooms,
+            t
+          );
+        }
+
         const token = await userServices.createPasswordToken(userData);
         const name = userData.first_name + ' ' + userData.last_name;
         const originalUrl =
@@ -692,6 +702,14 @@ module.exports = {
       }
 
       let editedProfile = await userServices.editUserProfile(user, _.omit(params, ['email']), t); // user should not be allowed to edit email directly.
+
+      if(params.role === 'Teacher'){
+        const roomsEdited = await userServices.editAssignedRoomsToTeacher(
+          user.user_id,
+          params?.rooms,
+          t
+        );
+      }
       editedProfile.transcoderBaseUrl = await customerServices.getTranscoderUrl(req.user.cust_id);
       if (editedProfile) {
         if (params?.email && params?.email !== user.email) {
@@ -887,6 +905,7 @@ module.exports = {
         searchBy: req.query?.searchBy.replace(/'/g, "\\'"),
         location: req.query?.location,
         role: req.query?.role,
+        liveStreaming: req.query?.liveStreaming,
         pageCount: req.query?.pageCount,
         orderBy: req.query?.orderBy
       };

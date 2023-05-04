@@ -18,7 +18,7 @@ module.exports = {
         req.user.location.accessable_locations = accessableLocsToFamily;
       }
       let cameras = await watchStreamServices.getAllCamForLocation(req.user);
-
+      
       const customerDetails = await customerServices.getCustomerDetails(req.user.cust_id);
       cameras = _.uniqBy(cameras, 'room_id');
 
