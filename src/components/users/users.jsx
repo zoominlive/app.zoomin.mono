@@ -53,7 +53,8 @@ const Users = () => {
     pageSize: parseInt(process.env.REACT_APP_PAGINATION_LIMIT, 10),
     searchBy: '',
     location: 'All',
-    role: 'All'
+    role: 'All',
+    liveStreaming: 'All'
   });
 
   useEffect(() => {
@@ -147,6 +148,10 @@ const Users = () => {
     setUsersPayload((prevPayload) => ({ ...prevPayload, role: event.target.value }));
   };
 
+  const handleLiveStreamChange = (event) => {
+    setUsersPayload((prevPayload) => ({ ...prevPayload, liveStreaming: event.target.value }));
+  };
+
   // Calls the search handler after 500ms
   const debouncedResults = useMemo(() => {
     return debounce(handleSearch, 500);
@@ -158,10 +163,10 @@ const Users = () => {
         <CardContent>
           <Box>
             <Grid container spacing={2}>
-              <Grid item md={8} sm={12}>
+              <Grid item md={9} sm={12}>
                 <Box>
                   <Grid container spacing={2}>
-                    <Grid item md={5} sm={12}>
+                    <Grid item md={4} sm={12}>
                       <TextField
                         label="Search"
                         placeholder="User Name,Email"
@@ -204,12 +209,27 @@ const Users = () => {
                         </Select>
                       </FormControl>
                     </Grid>
+                    <Grid item md={2} sm={12}>
+                      <FormControl fullWidth>
+                        <InputLabel id="live_streaming">Live Streaming</InputLabel>
+                        <Select
+                          labelId="live_streaming"
+                          id="live_streaming"
+                          value={usersPayload?.liveStreaming}
+                          label="Live Streaming"
+                          onChange={handleLiveStreamChange}>
+                          <MenuItem value={'All'}>All</MenuItem>
+                          <MenuItem value={'Yes'}>Yes</MenuItem>
+                          <MenuItem value={'No'}>No</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </Grid>
                   </Grid>
                 </Box>
               </Grid>
               <Grid
                 item
-                md={4}
+                md={3}
                 sm={12}
                 sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
                 <Box>

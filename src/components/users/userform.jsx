@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+/* eslint-disable-next-line no-unsafe-optional-chaining */
+import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import {
   Autocomplete,
@@ -36,19 +37,64 @@ import { useContext } from 'react';
 import AuthContext from '../../context/authcontext';
 import _ from 'lodash';
 
-const validationSchema = yup.object({
-  first_name: yup.string('Enter first name').required('First name is required'),
-  last_name: yup.string('Enter last name').required('Last name is required'),
-  email: yup.string('Enter your email').email('Enter a valid email').required('Email is required'),
-  role: yup.string('Enter role').required('Role is required'),
-  locations: yup.array().min(1, 'Select at least one location').required('Location is required')
-});
-
 const UserForm = (props) => {
   const { enqueueSnackbar } = useSnackbar();
   const [image, setImage] = useState(props.user && props.user.profile_image);
   const [submitLoading, setSubmitLoading] = useState(false);
   const [base64Image, setBase64Image] = useState();
+  const [selectedLocation, setSelectedLocation] = useState([]);
+  const [roomList, setRoomList] = useState([]);
+  const [selectedRole, setSelectedRole] = useState(null);
+  const validationSchema = yup.object({
+    first_name: yup.string('Enter first name').required('First name is required'),
+    last_name: yup.string('Enter last name').required('Last name is required'),
+    email: yup
+      .string('Enter your email')
+      .email('Enter a valid email')
+      .required('Email is required'),
+    role: yup.string('Enter role').required('Role is required'),
+    locations: yup.array().min(1, 'Select at least one location').required('Location is required'),
+    rooms:
+      selectedRole === 'Teacher'
+        ? yup
+            .array()
+            .of(yup.object().shape({ room_id: yup.string(), room_name: yup.string() }))
+            .min(1, 'Select at least one room')
+            .required('required')
+        : yup.array()
+  });
+
+  useEffect(() => {
+    let rooms = [];
+    roomList?.map((room) => {
+      let count = 0;
+      selectedLocation?.forEach((location) => {
+        if (room.location === location) {
+          count = count + 1;
+        }
+      });
+      if (count > 0) {
+        rooms.push(room);
+      }
+    });
+    setRoomList(rooms);
+  }, [selectedLocation]);
+
+  useEffect(() => {
+    API.get('rooms/list').then((response) => {
+      if (response.status === 200) {
+        setRoomList(response.data.Data);
+      } else {
+        errorMessageHandler(
+          enqueueSnackbar,
+          response?.response?.data?.Message || 'Something Went Wrong.',
+          response?.response?.status,
+          authCtx.setAuthError
+        );
+      }
+    });
+  }, []);
+
   const authCtx = useContext(AuthContext);
   const { getRootProps, getInputProps } = useDropzone({
     maxFiles: 1,
@@ -145,7 +191,11 @@ const UserForm = (props) => {
       setBase64Image();
     }
   };
-
+  let disable_locs = props?.user?.location?.accessable_locations
+    ? props?.user?.location?.accessable_locations.filter(
+        (o) => authCtx?.user?.location?.accessable_locations.indexOf(o) === -1
+      )
+    : [];
   return (
     <Dialog open={props.open} onClose={handleFormDialogClose} fullWidth className="add-user-drawer">
       <DialogTitle>{props.user ? 'Edit User' : 'Add User'}</DialogTitle>
@@ -161,6 +211,15 @@ const UserForm = (props) => {
           role: props?.user?.role || '',
           locations: props?.user?.location?.selected_locations
             ? props?.user?.location?.selected_locations?.sort((a, b) => (a > b ? 1 : -1))
+            : [],
+          rooms: props?.user?.roomsInTeacher
+            ? props.user?.roomsInTeacher.map((room) => {
+                return {
+                  room_name: room.room.room_name,
+                  location: room.room.location,
+                  room_id: room.room_id
+                };
+              })
             : [],
           stream_live_license: !_.isNil(props?.user?.stream_live_license)
             ? props?.user?.stream_live_license
@@ -248,6 +307,7 @@ const UserForm = (props) => {
                         name="role"
                         onChange={(event) => {
                           setFieldValue('role', event.target.value);
+                          setSelectedRole(event.target.value);
                         }}>
                         <MenuItem value={'Teacher'}>Teacher</MenuItem>
                         <MenuItem value={'User'}>User</MenuItem>
@@ -260,7 +320,7 @@ const UserForm = (props) => {
                       )}
                     </FormControl>
                   </Grid>
-                  <Grid item xs={12} md={12}>
+                  <Grid item xs={12} md={values.role === 'Teacher' ? 6 : 12}>
                     <Autocomplete
                       fullWidth
                       multiple
@@ -274,13 +334,25 @@ const UserForm = (props) => {
                               a > b ? 1 : -1
                             )
                       }
+                      // options={authCtx?.user?.location?.accessable_locations.sort((a, b) =>
+                      //   a > b ? 1 : -1
+                      // )}
                       onChange={(_, value) => {
-                        setFieldValue('locations', value);
+                        let flag = disable_locs.every((i) => value.includes(i));
+                        setFieldValue('locations', flag ? value : value.concat(disable_locs));
+                        setSelectedLocation(flag ? value : value.concat(disable_locs));
                       }}
                       value={values?.locations}
                       renderTags={(value, getTagProps) =>
                         value.map((option, index) => (
-                          <Chip key={index} label={option} {...getTagProps({ index })} />
+                          <Chip
+                            key={index}
+                            label={option}
+                            {...getTagProps({ index })}
+                            disabled={
+                              authCtx.user?.location?.accessable_locations.indexOf(option) == -1
+                            }
+                          />
                         ))
                       }
                       renderInput={(params) => (
@@ -295,6 +367,50 @@ const UserForm = (props) => {
                       )}
                     />
                   </Grid>
+                  {values.role === 'Teacher' && (
+                    <Grid item xs={12} md={6}>
+                      <Autocomplete
+                        fullWidth
+                        multiple
+                        id="rooms"
+                        noOptionsText={'Select location first'}
+                        options={roomList
+                          .sort((a, b) => (a?.room_name > b?.room_name ? 1 : -1))
+                          ?.filter((room) => {
+                            if (values?.locations?.find((loc) => loc == room?.location)) {
+                              return room;
+                            }
+                          })}
+                        value={values.rooms}
+                        isOptionEqualToValue={(option, value) => option?.room_id === value?.room_id}
+                        getOptionLabel={(option) => {
+                          return option?.room_name;
+                        }}
+                        onChange={(_, value) => {
+                          setFieldValue('rooms', value);
+                        }}
+                        renderTags={(value, getTagProps) =>
+                          value.map((option, index) => (
+                            <Chip
+                              key={index}
+                              label={option?.room_name}
+                              {...getTagProps({ index })}
+                            />
+                          ))
+                        }
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            label="Room"
+                            placeholder="Room"
+                            helperText={touched.rooms && errors.rooms}
+                            error={touched.rooms && Boolean(errors.rooms)}
+                            fullWidth
+                          />
+                        )}
+                      />
+                    </Grid>
+                  )}
                   <Grid item xs={12} md={6}>
                     <FormControl>
                       <FormControlLabel

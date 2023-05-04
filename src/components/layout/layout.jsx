@@ -175,7 +175,7 @@ const Layout = () => {
                     return true;
                   } else if (authCtx.user.role === 'Admin' && item.key !== 9) {
                     return true;
-                  } else if (authCtx.user.role === 'Teacher' && item.key == 5) {
+                  } else if (authCtx.user.role === 'Teacher' && (item.key == 5 || item.key == 7)) {
                     return true;
                   } else {
                     return false;
