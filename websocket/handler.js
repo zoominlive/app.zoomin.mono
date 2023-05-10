@@ -55,11 +55,11 @@ module.exports.defaultHandler = async (event, context, callback) => {
       );
       await t.commit();
     }
-    await t.rollback();
     return {statusCode: 200, body:"default"}
 
 }
 catch (error) {
+  await t.rollback();
   console.log(error);
   return {
     statusCode: 200,

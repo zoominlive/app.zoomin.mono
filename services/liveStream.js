@@ -37,6 +37,11 @@ module.exports = {
     const { LiveStreams } = await connectToDatabase();
     let roomObj = await LiveStreams.findOne({ where: {stream_id: stream_id}, attributes: ['room_id'], }, { transaction: t });
     return roomObj?.dataValues?.room_id;
-    
+  },
+
+  getstreamObj: async(stream_id, t) => {
+    const { LiveStreams } = await connectToDatabase();
+    let roomObj = await LiveStreams.findOne({ where: {stream_id: stream_id}, }, { transaction: t });
+    return roomObj?.dataValues;
   }
 };

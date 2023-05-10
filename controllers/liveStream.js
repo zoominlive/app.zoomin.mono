@@ -84,11 +84,23 @@ module.exports = {
     const t = await sequelize.transaction();
     try {
       const { streamID } = req.query;
-      let updateObj = {stream_running: true, stream_start_time: moment().toISOString() };
+      let streamObj = await liveStreamServices.getstreamObj(streamID, t)
+      if(streamObj.stream_running){
+        await t.commit();
+        res.status(200).json({
+          IsSuccess: true,
+          Data: {},
+          Message: CONSTANTS.LIVE_STREAM_ALREADY_STARTED
+        });
+        return
+      }
+      else{
 
+      let updateObj = {stream_running: true, stream_start_time: moment().toISOString() };
+        
       await liveStreamServices.updateLiveStream(streamID, updateObj, t);
       await liveStreamServices.saveEndPointInCamera(streamID, t);
-
+      
       let roomID = await liveStreamServices.getRoom(streamID, t);
       let childs = await childServices.getChildOfAssignedRoomId(roomID, t);
       let childIds = childs.flatMap(i => i.child_id)
@@ -99,8 +111,8 @@ module.exports = {
       let familyMembersIds = familyMembers.flatMap( i => i.family_member_id);
       let fcmTokens = await fcmTokensServices.getFamilyMembersFcmTokens(familyMembersIds);
       fcmTokens = fcmTokens.flatMap(i => i.fcm_token);
-
-      await notificationSender.sendNotification('Live stream','Live stream is started', '', fcmTokens.filter(i => i!== null), {stream_id: streamID, room_id: roomID});
+      fcmTokens = [...new Set(fcmTokens)].filter(i => i!== null);
+      await notificationSender.sendNotification('Live stream','Live stream is started', '', fcmTokens , {stream_id: streamID, room_id: roomID});
       if(!_.isEmpty(socketIds)){
         socketIds.forEach(async id => {
           await socketServices.emitResponse(id);
@@ -112,6 +124,7 @@ module.exports = {
         Data: {},
         Message: CONSTANTS.LIVE_STREAM_STARTED
       });
+    }
       next();
     } catch (error) {
       await t.rollback();

@@ -32,12 +32,12 @@ module.exports = {
       let familyMembersIds = familyMembers.flatMap( i => i.family_member_id);
       let fcmTokens = await fcmTokensServices.getFamilyMembersFcmTokens(familyMembersIds);
       fcmTokens = fcmTokens.flatMap(i => i.fcm_token)
-
-      await notificationSender.sendNotification(title, body, image, fcmTokens.filter(i => i!== null));
+      fcmTokens = [...new Set(fcmTokens)].filter(i => i!== null);
+      await notificationSender.sendNotification(title, body, image, fcmTokens, null);
     
       res.status(200).json({
         IsSuccess: true,
-        Data: fcmTokens.filter(i => i!== null),
+        Data: fcmTokens,
         Message: CONSTANTS.NOTIFICATION_SENT 
       });
       next();

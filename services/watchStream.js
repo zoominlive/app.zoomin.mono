@@ -146,7 +146,7 @@ module.exports = {
             },
           ],
         });
-        console.log(rooms);
+        
       } else if (user.role == "Teacher") {
         rooms = await RoomsInTeacher.findAll({
           where: { teacher_id: user.user_id },
