@@ -111,6 +111,12 @@ const Layout = () => {
       key: 4
     },
     {
+      name: 'Customers',
+      icon: <User style={{ color: 'white' }} />,
+      link: '/customers',
+      key: 10
+    },
+    {
       name: 'Watch Stream',
       icon: <Video style={{ color: 'white' }} />,
       link: '/watch-stream',
@@ -169,13 +175,31 @@ const Layout = () => {
             <List>
               {topMenuItems
                 .filter((item) => {
-                  if (authCtx.user.role === 'User' && item.key !== 4 && item.key !== 9) {
+                  if (
+                    authCtx.user.role === 'User' &&
+                    item.key !== 4 &&
+                    item.key !== 9 &&
+                    item.key !== 10
+                  ) {
                     return true;
-                  } else if (authCtx.user.role === 'Family' && (item.key === 5 || item.key === 9)) {
+                  } else if (
+                    authCtx.user.role === 'Family' &&
+                    (item.key === 5 || item.key === 9) &&
+                    item.key !== 10
+                  ) {
                     return true;
-                  } else if (authCtx.user.role === 'Admin' && item.key !== 9) {
+                  } else if (authCtx.user.role === 'Admin' && item.key !== 9 && item.key !== 10) {
                     return true;
-                  } else if (authCtx.user.role === 'Teacher' && (item.key == 5 || item.key == 7)) {
+                  } else if (
+                    authCtx.user.role == 'Teacher' &&
+                    (item.key == 5 || item.key == 7) &&
+                    item.key !== 10
+                  ) {
+                    return true;
+                  } else if (
+                    authCtx.user.role === 'Super Admin' &&
+                    [1, 2, 3, 4, 5, 6, 7, 8, 10].includes(item.key)
+                  ) {
                     return true;
                   } else {
                     return false;

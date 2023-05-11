@@ -9,6 +9,7 @@ import Recordings from './components/recordings/recordings';
 import Logs from './components/logs/logs';
 import Settings from './components/settings/settings';
 import Users from './components/users/users';
+import Customers from './components/customers/customers';
 import WatchStream from './components/watchstream/watchstream';
 import AuthContext from './context/authcontext';
 // import Alerts from './components/alerts/alerts';
@@ -18,6 +19,9 @@ const AppRoutes = () => {
 
   return (
     <Routes>
+      {authCtx.user && authCtx.user.role === 'Super Admin' && (
+        <Route path="/customers" element={<Customers />} />
+      )}
       {authCtx.user && authCtx.user.role === 'Admin' && (
         <>
           <Route path="/logs" element={<Logs />} />

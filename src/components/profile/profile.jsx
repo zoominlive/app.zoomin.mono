@@ -280,6 +280,7 @@ const Profile = () => {
                           <MenuItem value={'User'}>User</MenuItem>
                           <MenuItem value={'Admin'}>Admin</MenuItem>
                           <MenuItem value={'Family'}>Family</MenuItem>
+                          <MenuItem value={'Super Admin'}>Super Admin</MenuItem>
                         </Select>
                         {touched.role && Boolean(errors.role) && (
                           <FormHelperText sx={{ color: '#d32f2f' }}>
