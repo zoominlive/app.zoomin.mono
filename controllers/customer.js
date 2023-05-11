@@ -23,7 +23,6 @@ getAllCustomerDetails: async (req, res, next) => {
       });
       next();
     } catch (error) {
-      console.log('===error',error)
       res
         .status(500)
         .json({ IsSuccess: false, error_log: error, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
@@ -107,7 +106,6 @@ getAllCustomerDetails: async (req, res, next) => {
         next();
       } catch (error) {
         await t.rollback();
-        console.log('===error',error)
         res
           .status(500)
           .json({ IsSuccess: false, error_log: error, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
