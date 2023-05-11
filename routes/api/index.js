@@ -2,6 +2,7 @@ const express = require('express');
 
 const router = express.Router();
 const userRoutes = require('./user');
+const customerRoutes = require('./customer');
 const roomRoutes = require('./room');
 const cameraRoutes = require('./camera');
 const familyRoutes = require('./family');
@@ -13,6 +14,9 @@ const liveStreamRoutes = require('./liveStream');
 
 /* user routes */
 router.use('/users', userRoutes);
+
+/* customer routes */
+router.use('/customers', customerRoutes);
 
 /* room routes */
 router.use('/rooms', roomRoutes);

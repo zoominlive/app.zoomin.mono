@@ -49,7 +49,7 @@ const Users = sequelize.define(
       required: true
     },
     role: {
-      type: Sequelize.ENUM('Teacher', 'User', 'Admin'),
+      type: Sequelize.ENUM('Teacher', 'User', 'Admin', 'Super'),
       required: true
     },
     profile_image: {
