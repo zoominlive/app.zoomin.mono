@@ -194,8 +194,8 @@ module.exports = {
       }
 
       if (user) {
-        user.transcoderBaseUrl = await customerServices.getTranscoderUrl(user.cust_id);
-        user.max_stream_live_license = await customerServices.getMaxLiveStramAvailable(user.cust_id);
+        user.transcoderBaseUrl = await customerServices.getTranscoderUrl(user.cust_id) ;
+        user.max_stream_live_license = await customerServices.getMaxLiveStramAvailable(user.cust_id) ;
         if (!user.is_verified || user.status == 'inactive') {
           res.status(400).json({
             IsSuccess: true,

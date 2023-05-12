@@ -15,7 +15,7 @@ module.exports = {
       { transaction: t }
     );
 
-    return customer.max_stream_live_license;
+    return customer?.max_stream_live_license || null;
   },
 
   getRTMPTranscoderUrl: async (custId, t) => {
@@ -45,7 +45,7 @@ module.exports = {
       { transaction: t }
     );
 
-    return customer.transcoder_endpoint;
+    return customer?.transcoder_endpoint || null;
   },
 
   getCustomerDetails: async (custId, t) => {
