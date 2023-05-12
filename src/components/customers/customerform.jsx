@@ -392,6 +392,14 @@ const CustomerForm = (props) => {
                   <Grid item md={6} xs={12}>
                     <TextField
                       type="number"
+                      InputProps={{
+                        inputProps: { min: 0 }
+                      }}
+                      onKeyPress={(event) => {
+                        if (event?.key === '-' || event?.key === '+') {
+                          event.preventDefault();
+                        }
+                      }}
                       label="Maximum Stream Live License"
                       name="max_stream_live_license"
                       value={values?.max_stream_live_license}

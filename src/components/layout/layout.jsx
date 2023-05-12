@@ -114,6 +114,7 @@ const Layout = () => {
       name: 'Customers',
       icon: <User style={{ color: 'white' }} />,
       link: '/customers',
+      active: true,
       key: 10
     },
     {
@@ -172,67 +173,73 @@ const Layout = () => {
             <img src={open ? logo : appLogo} style={{ height: '4.5em' }} />
           </div>
           {authCtx.user && Object?.keys(authCtx?.user)?.length !== 0 && (
-            <List>
-              {topMenuItems
-                .filter((item) => {
-                  if (
-                    authCtx.user.role === 'User' &&
-                    item.key !== 4 &&
-                    item.key !== 9 &&
-                    item.key !== 10
-                  ) {
-                    return true;
-                  } else if (
-                    authCtx.user.role === 'Family' &&
-                    (item.key === 5 || item.key === 9) &&
-                    item.key !== 10
-                  ) {
-                    return true;
-                  } else if (authCtx.user.role === 'Admin' && item.key !== 9 && item.key !== 10) {
-                    return true;
-                  } else if (
-                    authCtx.user.role == 'Teacher' &&
-                    (item.key == 5 || item.key == 7) &&
-                    item.key !== 10
-                  ) {
-                    return true;
-                  } else if (
-                    authCtx.user.role === 'Super Admin' &&
-                    [1, 2, 3, 4, 5, 6, 7, 8, 10].includes(item.key)
-                  ) {
-                    return true;
-                  } else {
-                    return false;
-                  }
-                })
-                .map((item, index) => (
-                  <ListItem
-                    key={index}
-                    className={`${item.key === layoutCtx.active ? 'active' : ''} `}
-                    sx={{ px: 1, paddingTop: 0.7, paddingBottom: 0.7 }}>
-                    {' '}
-                    <ListItemButton
-                      sx={{
-                        minHeight: 48,
-                        justifyContent: open ? 'initial' : 'center',
-                        px: 2.5
-                      }}
-                      onClick={() =>
-                        item.key === 9 ? setIsAddFamilyDialogOpen(true) : navigate(item.link)
-                      }>
-                      <ListItemIcon
+            <div className="siderbar-list">
+              <List>
+                {topMenuItems
+                  .filter((item) => {
+                    if (
+                      authCtx.user.role === 'User' &&
+                      item.key !== 4 &&
+                      item.key !== 9 &&
+                      item.key !== 10
+                    ) {
+                      return true;
+                    } else if (
+                      authCtx.user.role === 'Family' &&
+                      (item.key === 5 || item.key === 9) &&
+                      item.key !== 10
+                    ) {
+                      return true;
+                    } else if (authCtx.user.role === 'Admin' && item.key !== 9 && item.key !== 10) {
+                      return true;
+                    } else if (
+                      authCtx.user.role == 'Teacher' &&
+                      (item.key == 5 || item.key == 7) &&
+                      item.key !== 10
+                    ) {
+                      return true;
+                    } else if (
+                      authCtx.user.role === 'Super Admin' &&
+                      item.key === 10
+                      //[1, 2, 3, 4, 5, 6, 7, 8, 10].includes(item.key)
+                    ) {
+                      return true;
+                    } else {
+                      return false;
+                    }
+                  })
+                  .map((item, index) => (
+                    <ListItem
+                      key={index}
+                      className={`${item.key === layoutCtx.active ? 'active' : ''} `}
+                      sx={{ px: 1, paddingTop: 0.7, paddingBottom: 0.7 }}>
+                      {' '}
+                      <ListItemButton
                         sx={{
-                          minWidth: 0,
-                          mr: open ? 3 : 'auto',
-                          justifyContent: 'center'
-                        }}>
-                        {item.icon}
-                      </ListItemIcon>
-                      <ListItemText primary={item.name} sx={{ display: open ? 'block' : 'none' }} />
-                    </ListItemButton>
-                  </ListItem>
-                ))}
-            </List>
+                          minHeight: 48,
+                          justifyContent: open ? 'initial' : 'center',
+                          px: 2.5
+                        }}
+                        onClick={() =>
+                          item.key === 9 ? setIsAddFamilyDialogOpen(true) : navigate(item.link)
+                        }>
+                        <ListItemIcon
+                          sx={{
+                            minWidth: 0,
+                            mr: open ? 3 : 'auto',
+                            justifyContent: 'center'
+                          }}>
+                          {item.icon}
+                        </ListItemIcon>
+                        <ListItemText
+                          primary={item.name}
+                          sx={{ display: open ? 'block' : 'none' }}
+                        />
+                      </ListItemButton>
+                    </ListItem>
+                  ))}
+              </List>
+            </div>
           )}
 
           <Box className="bottom-list-items">

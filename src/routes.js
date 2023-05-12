@@ -19,42 +19,51 @@ const AppRoutes = () => {
 
   return (
     <Routes>
-      {authCtx.user && authCtx.user.role === 'Super Admin' && (
-        <Route path="/customers" element={<Customers />} />
-      )}
-      {authCtx.user && authCtx.user.role === 'Admin' && (
+      {authCtx.user && authCtx.user.role === 'Super Admin' ? (
         <>
-          <Route path="/logs" element={<Logs />} />
-          <Route path="/users" element={<Users />} />
+          <Route path="/customers" element={<Customers />} />
+          <Route path="*" element={<Navigate to={'customers'} />} />
         </>
-      )}
-      {authCtx.user && authCtx.user.role !== 'Family' && authCtx.user.role !== 'Teacher' && (
+      ) : (
         <>
-          {' '}
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/families" element={<Families />} />
-          <Route path="/rooms" element={<Rooms />} />
-          <Route path="/cameras" element={<Cameras />} />
-          <Route path="/settings" element={<Settings />} />
+          {authCtx.user && authCtx.user.role === 'Admin' && (
+            <>
+              <Route path="/logs" element={<Logs />} />
+              <Route path="/users" element={<Users />} />
+            </>
+          )}
+          {authCtx.user && authCtx.user.role !== 'Family' && authCtx.user.role !== 'Teacher' && (
+            <>
+              {' '}
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/families" element={<Families />} />
+              <Route path="/rooms" element={<Rooms />} />
+              <Route path="/cameras" element={<Cameras />} />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="/recordings" element={<Recordings />} />
+            </>
+          )}
           <Route path="/recordings" element={<Recordings />} />
+          {/* <Route path="/alerts" element={<Alerts />} /> */}
+          <Route path="/watch-stream" element={<WatchStream />} />
+
+          {/* Default Route */}
+          <Route
+            path="*"
+            element={
+              authCtx.user &&
+              (authCtx.user.role === 'Family' || authCtx.user.role === 'Teacher') ? (
+                <Navigate to={'watch-stream'} />
+              ) : authCtx.user && authCtx.user.role === 'Super Admin' ? (
+                <Navigate to={'customers'} />
+              ) : (
+                <Navigate to={'dashboard'} />
+              )
+            }
+          />
         </>
       )}
-      <Route path="/recordings" element={<Recordings />} />
-      {/* <Route path="/alerts" element={<Alerts />} /> */}
-      <Route path="/watch-stream" element={<WatchStream />} />
       <Route path="/profile" element={<Profile />} />
-
-      {/* Default Route */}
-      <Route
-        path="*"
-        element={
-          authCtx.user && (authCtx.user.role === 'Family' || authCtx.user.role === 'Teacher') ? (
-            <Navigate to={'watch-stream'} />
-          ) : (
-            <Navigate to={'dashboard'} />
-          )
-        }
-      />
     </Routes>
   );
 };

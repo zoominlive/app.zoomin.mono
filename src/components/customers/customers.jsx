@@ -23,6 +23,7 @@ import { useEffect, useState, useContext, useMemo } from 'react';
 import API from '../../api';
 import { errorMessageHandler } from '../../utils/errormessagehandler';
 import AuthContext from '../../context/authcontext';
+import LayoutContext from '../../context/layoutcontext';
 import { useSnackbar } from 'notistack';
 import NoDataDiv from '../common/nodatadiv';
 import debounce from 'lodash.debounce';
@@ -30,9 +31,12 @@ import { Plus } from 'react-feather';
 import CustomerForm from './customerform';
 import CustomerActions from './customeractions';
 import DeleteDialog from '../common/deletedialog';
+import dayjs from 'dayjs';
 
 const Customers = () => {
   const authCtx = useContext(AuthContext);
+  const layoutCtx = useContext(LayoutContext);
+  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const { enqueueSnackbar } = useSnackbar();
   const [isLoading, setIsLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -47,11 +51,21 @@ const Customers = () => {
   const [customer, setCustomer] = useState();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
-  console.log(customersList, totalCustomers);
-
   useEffect(() => {
     getCustomersList();
   }, [customersPayload]);
+
+  useEffect(() => {
+    layoutCtx.setActive(10);
+    layoutCtx.setBreadcrumb([
+      `Welcome back, ${authCtx?.user?.first_name}`,
+      `${days[dayjs().day()]}, ${dayjs().format('DD MMMM YYYY')}`
+    ]);
+
+    return () => {
+      authCtx.setPreviosPagePath(window.location.pathname);
+    };
+  }, []);
 
   // Method to fetch customer list for table
   const getCustomersList = () => {
