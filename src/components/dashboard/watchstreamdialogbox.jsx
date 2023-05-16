@@ -54,28 +54,30 @@ const WatchStreamDialogBox = (props) => {
   }, [props?.defaultWatchStream]);
 
   const getAvailableStreams = () => {
-    API.get('watchstream').then((response) => {
-      if (response.status === 200) {
-        setCamerasPayload({
-          location: [response?.data?.Data.streamDetails[0].location],
-          room: response?.data?.Data.streamDetails
-        });
-        if (!location.state) {
-          !selectedLocation.length &&
-            setSelectedLocation([authCtx?.user?.location?.accessable_locations[0]]);
+    API.get('watchstream', { params: { cust_id: localStorage.getItem('cust_id') } }).then(
+      (response) => {
+        if (response.status === 200) {
+          setCamerasPayload({
+            location: [response?.data?.Data.streamDetails[0].location],
+            room: response?.data?.Data.streamDetails
+          });
+          if (!location.state) {
+            !selectedLocation.length &&
+              setSelectedLocation([authCtx?.user?.location?.accessable_locations[0]]);
+          } else {
+            setSelectedLocation([location?.state?.location]);
+          }
         } else {
-          setSelectedLocation([location?.state?.location]);
+          errorMessageHandler(
+            enqueueSnackbar,
+            response?.response?.data?.Message || 'Something Went Wrong.',
+            response?.response?.status,
+            authCtx.setAuthError
+          );
         }
-      } else {
-        errorMessageHandler(
-          enqueueSnackbar,
-          response?.response?.data?.Message || 'Something Went Wrong.',
-          response?.response?.status,
-          authCtx.setAuthError
-        );
+        setDropdownLoading(false);
       }
-      setDropdownLoading(false);
-    });
+    );
   };
   const handleSetLocations = (_, value, reason, option) => {
     if (reason == 'selectOption' && option?.option == 'Select All' && !allLocationChecked) {

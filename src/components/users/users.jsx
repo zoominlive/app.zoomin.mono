@@ -54,7 +54,8 @@ const Users = () => {
     searchBy: '',
     location: 'All',
     role: 'All',
-    liveStreaming: 'All'
+    liveStreaming: 'All',
+    cust_id: localStorage.getItem('cust_id')
   });
 
   useEffect(() => {

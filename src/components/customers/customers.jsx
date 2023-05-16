@@ -136,6 +136,9 @@ const Customers = () => {
     return debounce(handleSearch, 500);
   }, []);
 
+  const hanldeCustomerSelect = (custId) => {
+    localStorage.setItem('cust_id', custId);
+  };
   return (
     <Box className="listing-wrapper">
       <Card>
@@ -184,6 +187,7 @@ const Customers = () => {
                     <TableCell align="left">Maximum Locations</TableCell>
                     <TableCell align="left">Maximum cameras</TableCell>
                     <TableCell align="right"></TableCell>
+                    <TableCell align="right"></TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -204,6 +208,11 @@ const Customers = () => {
                           <TableCell align="left">{row.company_name}</TableCell>
                           <TableCell align="left">{row.max_locations}</TableCell>
                           <TableCell align="left">{row.max_cameras}</TableCell>
+                          <TableCell align="left">
+                            <Button onClick={() => hanldeCustomerSelect(row.cust_id)}>
+                              Select Customer
+                            </Button>
+                          </TableCell>
                           <TableCell align="right">
                             <CustomerActions
                               customer={row}

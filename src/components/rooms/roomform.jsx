@@ -134,22 +134,24 @@ const RoomForm = (props) => {
         handleFormDialogClose();
       });
     } else {
-      API.post('rooms/add', data).then((response) => {
-        if (response.status === 201) {
-          enqueueSnackbar(response.data.Message, { variant: 'success' });
-          props.getRoomsList();
-          props.getDropDownRoomList();
-        } else {
-          errorMessageHandler(
-            enqueueSnackbar,
-            response?.response?.data?.Message || 'Something Went Wrong.',
-            response?.response?.status,
-            authCtx.setAuthError
-          );
+      API.post('rooms/add', { ...data, cust_id: localStorage.getItem('cust_id') }).then(
+        (response) => {
+          if (response.status === 201) {
+            enqueueSnackbar(response.data.Message, { variant: 'success' });
+            props.getRoomsList();
+            props.getDropDownRoomList();
+          } else {
+            errorMessageHandler(
+              enqueueSnackbar,
+              response?.response?.data?.Message || 'Something Went Wrong.',
+              response?.response?.status,
+              authCtx.setAuthError
+            );
+          }
+          setSubmitLoading(false);
+          handleFormDialogClose();
         }
-        setSubmitLoading(false);
-        handleFormDialogClose();
-      });
+      );
     }
   };
 

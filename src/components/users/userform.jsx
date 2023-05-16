@@ -149,23 +149,25 @@ const UserForm = (props) => {
         setSubmitLoading(false);
       });
     } else {
-      API.post('users/createUser', payload).then((response) => {
-        if (response.status === 201) {
-          enqueueSnackbar(response?.data?.Message, {
-            variant: 'success'
-          });
-          handleFormDialogClose();
-          props.getUsersList();
-        } else {
-          errorMessageHandler(
-            enqueueSnackbar,
-            response?.response?.data?.Message || 'Something Went Wrong.',
-            response?.response?.status,
-            authCtx.setAuthError
-          );
+      API.post('users/createUser', { ...payload, cust_id: localStorage.getItem('cust_id') }).then(
+        (response) => {
+          if (response.status === 201) {
+            enqueueSnackbar(response?.data?.Message, {
+              variant: 'success'
+            });
+            handleFormDialogClose();
+            props.getUsersList();
+          } else {
+            errorMessageHandler(
+              enqueueSnackbar,
+              response?.response?.data?.Message || 'Something Went Wrong.',
+              response?.response?.status,
+              authCtx.setAuthError
+            );
+          }
+          setSubmitLoading(false);
         }
-        setSubmitLoading(false);
-      });
+      );
     }
   };
 

@@ -47,11 +47,13 @@ const Cameras = () => {
   const [camerasList, setCamerasList] = useState([]);
   const [totalCameras, setTotalCameras] = useState(0);
   const [camera, setCamera] = useState();
+
   const [camerasPayload, setCamerasPayload] = useState({
     pageNumber: 0,
     pageSize: parseInt(process.env.REACT_APP_PAGINATION_LIMIT, 10),
     searchBy: '',
-    location: 'All'
+    location: 'All',
+    cust_id: localStorage.getItem('cust_id')
   });
 
   useEffect(() => {

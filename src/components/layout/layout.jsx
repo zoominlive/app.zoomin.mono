@@ -200,8 +200,8 @@ const Layout = () => {
                       return true;
                     } else if (
                       authCtx.user.role === 'Super Admin' &&
-                      item.key === 10
-                      //[1, 2, 3, 4, 5, 6, 7, 8, 10].includes(item.key)
+                      //item.key === 10
+                      [1, 2, 3, 4, 5, 6, 7, 8, 10].includes(item.key)
                     ) {
                       return true;
                     } else {

@@ -60,23 +60,25 @@ const CameraForm = (props) => {
         setSubmitLoading(false);
       });
     } else {
-      API.post('cams/add', payload).then((response) => {
-        if (response.status === 201) {
-          enqueueSnackbar(response?.data?.Message, {
-            variant: 'success'
-          });
-          handleFormDialogClose();
-          props.getCamerasList();
-        } else {
-          errorMessageHandler(
-            enqueueSnackbar,
-            response?.response?.data?.Message || 'Something Went Wrong.',
-            response?.response?.status,
-            authCtx.setAuthError
-          );
+      API.post('cams/add', { ...payload, cust_id: localStorage.getItem('cust_id') }).then(
+        (response) => {
+          if (response.status === 201) {
+            enqueueSnackbar(response?.data?.Message, {
+              variant: 'success'
+            });
+            handleFormDialogClose();
+            props.getCamerasList();
+          } else {
+            errorMessageHandler(
+              enqueueSnackbar,
+              response?.response?.data?.Message || 'Something Went Wrong.',
+              response?.response?.status,
+              authCtx.setAuthError
+            );
+          }
+          setSubmitLoading(false);
         }
-        setSubmitLoading(false);
-      });
+      );
     }
   };
 

@@ -140,12 +140,14 @@ const Rooms = () => {
   const [roomsList, setRoomList] = useState([]);
   const [totalRooms, setTotalRooms] = useState(0);
   const [room, setRoom] = useState();
+
   const [roomsPayload, setRoomsPayload] = useState({
     pageNumber: 0,
     pageSize: parseInt(process.env.REACT_APP_PAGINATION_LIMIT, 10),
     searchBy: '',
     location: 'All',
-    rooms: []
+    rooms: [],
+    cust_id: localStorage.getItem('cust_id')
   });
 
   useEffect(() => {

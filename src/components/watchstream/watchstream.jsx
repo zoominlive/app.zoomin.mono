@@ -173,7 +173,11 @@ const WatchStream = () => {
   }, [selectedCameras]);
 
   const getAvailableStreams = () => {
-    API.get('watchstream').then((response) => {
+    API.get('watchstream', {
+      params: {
+        cust_id: localStorage.getItem('cust_id')
+      }
+    }).then((response) => {
       if (response.status === 200) {
         setTimeOut(response?.data?.Data?.streamDetails[0]?.timeout);
 
