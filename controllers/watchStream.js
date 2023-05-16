@@ -8,6 +8,7 @@ module.exports = {
   // encode stream and create new camera
   getAllCamForLocation: async (req, res, next) => {
     let response;
+    console.log('====calling=====', req.query);
     try {
       if (req.user.role == 'Family') {
         let accessableLocsToFamily = req.user?.location?.accessable_locations?.filter((loc) => {
@@ -17,9 +18,9 @@ module.exports = {
         });
         req.user.location.accessable_locations = accessableLocsToFamily;
       }
-      let cameras = await watchStreamServices.getAllCamForLocation(req.user);
+      let cameras = await watchStreamServices.getAllCamForLocation({...req.user, cust_id: req.query?.cust_id});
       
-      const customerDetails = await customerServices.getCustomerDetails(req.user.cust_id);
+      const customerDetails = await customerServices.getCustomerDetails(req.user.cust_id || req.query?.cust_id);
       cameras = _.uniqBy(cameras, 'room_id');
 
       cameras?.forEach((cam, camIndex) => {
@@ -94,9 +95,9 @@ module.exports = {
         });
         req.user.location.accessable_locations = accessableLocsToFamily;
       }
-      const camDetails = await watchStreamServices.getAllCamForUser(req.user);
+      const camDetails = await watchStreamServices.getAllCamForUser({...req.user, cust_id: req.query?.cust_id});
 
-      const customerDetails = await customerServices.getCustomerDetails(req.user.cust_id);
+      const customerDetails = await customerServices.getCustomerDetails(req.user.cust_id || req.query?.cust_id);
 
       camDetails?.forEach((room, roomIndex) => {
         camDetails[roomIndex].timeout = customerDetails.timeout;

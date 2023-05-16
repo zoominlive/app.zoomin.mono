@@ -100,7 +100,7 @@ module.exports = {
   /* Fetch all the room's details */
   getAllRoomsDetails: async (userId, user, filter, t) => {
     const { Room, Camera } = await connectToDatabase();
-    let { pageNumber = 0, pageSize = 10, roomsList = [], location = 'All', searchBy = '' } = filter;
+    let { pageNumber = 0, pageSize = 10, roomsList = [], location = 'All', searchBy = '', cust_id = null } = filter;
 
     if (pageNumber != 0) {
       pageNumber = pageNumber - 1;
@@ -174,7 +174,7 @@ module.exports = {
         rooms = await Room.findAll(
           {
             where: {
-              cust_id: user.cust_id,
+              cust_id: user.cust_id || cust_id,
               [Sequelize.Op.and]: [
                 { location: user.location.accessable_locations },
                 {
@@ -208,7 +208,7 @@ module.exports = {
         rooms = await Room.findAll(
           {
             where: {
-              cust_id: user.cust_id,
+              cust_id: user.cust_id || cust_id,
               [Sequelize.Op.and]: [
                 { location: user.location.accessable_locations },
                 {
@@ -260,7 +260,7 @@ module.exports = {
         cameras: cams
       };
     });
-
+  
     return { finalRoomDetails: rooms, count: count };
   },
   

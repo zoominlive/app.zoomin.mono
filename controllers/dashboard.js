@@ -13,7 +13,7 @@ module.exports = {
   getStreamStatistics: async (req, res, next) => {
     try {
       params = req.body;
-      custId = req.user.cust_id;
+      custId = req.user.cust_id || req.query.cust_id;
       userId = req.user.user_id;
       const defaultWatchStream = req.user?.dashboard_cam_preference || {}
       const token = req.userToken;
@@ -91,9 +91,9 @@ module.exports = {
       const topViewers = await dashboardServices.topViewersOfTheWeek(req.user);
 
       const recentViewers = await dashboardServices.getLastOneHourViewers(req.user);
-      let cameras = await watchStreamServices.getAllCamForLocation(req.user);
+      let cameras = await watchStreamServices.getAllCamForLocation({...req.user, cust_id: req.user.cust_id || req.query.cust_id});
 
-      const customerDetails = await customerServices.getCustomerDetails(req.user.cust_id);
+      const customerDetails = await customerServices.getCustomerDetails(req.user.cust_id || req.query.cust_id);
       cameras = _.uniqBy(cameras, 'room_id');
       cameras?.forEach((cam, camIndex) => {
         cameras[camIndex].timeout = customerDetails.timeout;

@@ -49,6 +49,7 @@ module.exports = {
   },
 
   getCustomerDetails: async (custId, t) => {
+    console.log('get customer details',custId);
     const { Customers } = await connectToDatabase();
     let customer = await Customers.findOne(
       {
@@ -79,32 +80,61 @@ module.exports = {
 
   getAllCustomer: async (filter) => {
     const { Customers } = await connectToDatabase();
-    let { pageNumber = 0, pageSize = 10, searchBy = "" } = filter;
+    let { pageNumber = 0, pageSize = 10, searchBy = "", all = false } = filter;
+    let customers
+    if(all){
 
-    let customers = await Customers.findAndCountAll({
-      where: {
-        [Sequelize.Op.or]: [
-          {
-            billing_contact_first: {
-              [Sequelize.Op.like]: `%${searchBy}%`,
+      customers = await Customers.findAndCountAll({
+        where: {
+          [Sequelize.Op.or]: [
+            {
+              billing_contact_first: {
+                [Sequelize.Op.like]: `%${searchBy}%`,
+              },
             },
-          },
-          {
-            billing_contact_last: {
-              [Sequelize.Op.like]: `%${searchBy}%`,
+            {
+              billing_contact_last: {
+                [Sequelize.Op.like]: `%${searchBy}%`,
+              },
             },
-          },
-          {
-            company_name: {
-              [Sequelize.Op.like]: `%${searchBy}%`,
+            {
+              company_name: {
+                [Sequelize.Op.like]: `%${searchBy}%`,
+              },
             },
-          },
-        ],
-      },
-      attributes: { exclude: ["createdAt", "updatedAt"] },
-      limit: parseInt(pageSize),
-      offset: parseInt(pageNumber * pageSize),
-    });
+          ],
+        },
+        attributes: { exclude: ["createdAt", "updatedAt"] },
+        // limit: parseInt(pageSize),
+        // offset: parseInt(pageNumber * pageSize),
+      });
+    }
+    else{
+      customers = await Customers.findAndCountAll({
+        where: {
+          [Sequelize.Op.or]: [
+            {
+              billing_contact_first: {
+                [Sequelize.Op.like]: `%${searchBy}%`,
+              },
+            },
+            {
+              billing_contact_last: {
+                [Sequelize.Op.like]: `%${searchBy}%`,
+              },
+            },
+            {
+              company_name: {
+                [Sequelize.Op.like]: `%${searchBy}%`,
+              },
+            },
+          ],
+        },
+        attributes: { exclude: ["createdAt", "updatedAt"] },
+        limit: parseInt(pageSize),
+        offset: parseInt(pageNumber * pageSize),
+      });
+    }
 
     return { customers: customers.rows, count: customers.count };
   },

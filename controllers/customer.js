@@ -10,9 +10,10 @@ getAllCustomerDetails: async (req, res, next) => {
       const filter = {
         pageNumber: req.query?.pageNumber,
         pageSize: req.query?.pageSize,
-        searchBy: req.query?.searchBy.replace(/'/g, "\\'"),
+        searchBy: req.query?.searchBy?.replace(/'/g, "\\'"),
         pageCount: req.query?.pageCount,
-        orderBy: req.query?.orderBy
+        orderBy: req.query?.orderBy,
+        all: req.query?.all
       };
 
       const customersDetails = await customerServices.getAllCustomer(filter);

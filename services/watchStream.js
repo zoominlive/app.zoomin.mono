@@ -16,7 +16,7 @@ module.exports = {
       CustomerLocations,
       RoomsInTeacher,
     } = await connectToDatabase();
-
+    console.log('=====getAllCamForLocation===',user.cust_id)
     let availableLocations = await CustomerLocations.findAll({
       where: { cust_id: user.cust_id },
       raw: true,
@@ -129,7 +129,7 @@ module.exports = {
     } else {
       let rooms;
 
-      if (user.role == "Admin") {
+      if (user.role == "Admin" || user.role == "Super Admin") {
         rooms = await Room.findAll({
           where: {
             cust_id: user.cust_id,

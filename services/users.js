@@ -274,6 +274,7 @@ module.exports = {
       location = "All",
       role = "All",
       liveStreaming = "All",
+      cust_id = null
     } = filter;
     let streamValue = [true, false];
     if (location == "All") {
@@ -294,7 +295,7 @@ module.exports = {
 
     let allusers = await Users.findAll({
       where: {
-        cust_id: user.cust_id,
+        cust_id: user.cust_id || cust_id,
         user_id: {
           [Sequelize.Op.not]: user.user_id,
         },

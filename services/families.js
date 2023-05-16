@@ -90,6 +90,7 @@ module.exports = {
   getAllFamilyDetails: async (user, filter, t) => {
     const { Family, Child, RoomsInChild, Room } = await connectToDatabase();
     let { pageNumber = 0, pageSize = 10, location = 'All', searchBy = '', roomsList = [] } = filter;
+    console.log('===pageSize===',pageSize, "===pageNumber===",pageNumber)
     let families;
     let familiesCount;
     let whereObj = {
@@ -139,6 +140,7 @@ module.exports = {
       },
       { transaction: t }
     );
+    console.log('familiesCount-------------',familiesCount);
     const result = []
      familiesCount.map(item => {
       user.location.accessable_locations.forEach(i => {
@@ -206,7 +208,7 @@ module.exports = {
         children: familyMember.children
       });
     });
-
+    console.log('-------------familyArray',familyArray);
     return { familyArray: familyArray, count: familiesCount.length };
   },
 

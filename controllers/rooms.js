@@ -12,7 +12,7 @@ module.exports = {
     try {
       const params = req.body;
       params.user_id = req.user.user_id;
-      params.cust_id = req.user.cust_id;
+      params.cust_id = req.user.cust_id || req.body.cust_id;
       const room = await roomServices.createRoom(params, t);
 
       params?.cameras?.forEach(async (camera) => {
@@ -142,8 +142,10 @@ module.exports = {
         pageSize: parseInt(req.query?.pageSize),
         roomsList: req.query?.rooms,
         location: req.query?.location,
-        searchBy: req.query?.searchBy.replace(/'/g, "\\'")
+        searchBy: req.query?.searchBy?.replace(/'/g, "\\'"),
+        cust_id: req.query?.cust_id
       };
+      
       const rooms = await roomServices.getAllRoomsDetails(req.user.user_id, req.user, filter);
 
       res.status(200).json({

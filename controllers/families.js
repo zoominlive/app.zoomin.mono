@@ -255,10 +255,11 @@ module.exports = {
       const filter = {
         pageNumber: parseInt(req.query?.page),
         pageSize: parseInt(req.query?.limit),
-        searchBy: req.query?.searchBy.replace(/'/g, "\\'"),
+        searchBy: req.query?.searchBy?.replace(/'/g, "\\'"),
         roomsList: req.query?.rooms,
         location: req.query?.location
       };
+      
       let familyDetails = await familyServices.getAllFamilyDetails(req.user, filter, t);
       await t.commit();
       res.status(200).json({

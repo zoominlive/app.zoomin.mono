@@ -133,7 +133,7 @@ module.exports = {
 
   getChildrenWithSEA: async (custId) => {
     const { Child } = await connectToDatabase();
-
+        console.log('getchildrenwithSEA',custId);
     let children = await Child.findAll({
       where: { cust_id: custId },
       attributes: ['first_name', 'last_name', 'scheduled_end_date', 'scheduled_enable_date',],

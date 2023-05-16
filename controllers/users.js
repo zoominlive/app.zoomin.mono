@@ -91,7 +91,7 @@ module.exports = {
     let userAdded;
     try {
       const params = req.body;
-      params.cust_id = req.user.cust_id;
+      params.cust_id = req.user.cust_id || req.body.cust_id;
 
       let checkUserValidation = await userServices.userValidation(params);
 
@@ -902,12 +902,13 @@ module.exports = {
       const filter = {
         pageNumber: req.query?.pageNumber,
         pageSize: req.query?.pageSize,
-        searchBy: req.query?.searchBy.replace(/'/g, "\\'"),
+        searchBy: req.query?.searchBy?.replace(/'/g, "\\'"),
         location: req.query?.location,
         role: req.query?.role,
         liveStreaming: req.query?.liveStreaming,
         pageCount: req.query?.pageCount,
-        orderBy: req.query?.orderBy
+        orderBy: req.query?.orderBy,
+        cust_id: req.query?.cust_id
       };
 
       const usersDetails = await userServices.getAllUsers(user, filter);
