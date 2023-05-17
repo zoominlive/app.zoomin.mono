@@ -88,12 +88,12 @@ module.exports = {
 
       SEAMembers = SEAMembers?.length + childSEA?.length;
 
-      const topViewers = await dashboardServices.topViewersOfTheWeek(req.user);
+      const topViewers = await dashboardServices.topViewersOfTheWeek(req.user, req.query?.cust_id);
 
-      const recentViewers = await dashboardServices.getLastOneHourViewers(req.user);
-      let cameras = await watchStreamServices.getAllCamForLocation({...req.user, cust_id: req.user.cust_id || req.query.cust_id});
+      const recentViewers = await dashboardServices.getLastOneHourViewers(req.user, req.query?.cust_id);
+      let cameras = await watchStreamServices.getAllCamForLocation({...req.user, cust_id: custId});
 
-      const customerDetails = await customerServices.getCustomerDetails(req.user.cust_id || req.query.cust_id);
+      const customerDetails = await customerServices.getCustomerDetails(custId);
       cameras = _.uniqBy(cameras, 'room_id');
       cameras?.forEach((cam, camIndex) => {
         cameras[camIndex].timeout = customerDetails.timeout;

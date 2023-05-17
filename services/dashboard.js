@@ -4,10 +4,11 @@ const _ = require('lodash');
 const moment = require('moment-timezone');
 const RoomsInChild = require('../models/rooms_assigned_to_child');
 const Room = require('../models/room');
+const customerServices = require('../services/customers');
 
 module.exports = {
   /* get recent viewers */
-  getLastOneHourViewers: async (user) => {
+  getLastOneHourViewers: async (user, custId = null) => {
     const { RecentViewers, Family, Child, Room, RoomsInChild, Users } = await connectToDatabase();
     let oneHourBefore = new Date();
     oneHourBefore.setHours(oneHourBefore.getHours() - 1);
@@ -52,10 +53,31 @@ module.exports = {
         }
       ]
     });
-
     const result = []
-    recentViewers.map(item => {
-      let res;
+    if(custId){
+      let availableLocations = await customerServices.getLocationDetails(custId)
+      let locs = availableLocations.flatMap((i) => i.loc_name);
+      recentViewers.map(item => {
+        let res;
+      if (item.family) {
+        res = locs.forEach(i => {
+          if (item.family?.location?.accessable_locations.includes(i)) {
+            result.push(item)
+          }
+        })
+      }
+      else {
+        res = locs.forEach(i => {
+          if (item.user?.location?.accessable_locations.includes(i)) {
+            result.push(item)
+          }
+        })
+      }
+    })
+    }
+    else{
+      recentViewers.map(item => {
+        let resp;
       if (item.family) {
         res = user.location.accessable_locations.forEach(i => {
           if (item.family?.location?.accessable_locations.includes(i)) {
@@ -71,10 +93,11 @@ module.exports = {
         })
       }
     })
+  }
     return result;
   },
 
-  topViewersOfTheWeek: async (user) => {
+  topViewersOfTheWeek: async (user, custId = null) => {
     const { RecentViewers, Family, Users } = await connectToDatabase();
 
     let recentViewers = await RecentViewers.findAll({
@@ -111,23 +134,48 @@ module.exports = {
       ]
     });
     const result = []
-    recentViewers.map(item => {
-      let res;
-      if (item.family) {
-        res = user.location.accessable_locations.forEach(i => {
-          if (item.family.location.accessable_locations.includes(i)) {
-            result.push(item)
-          }
-        })
-      }
-      else {
-        res = user.location.accessable_locations.forEach(i => {
-          if (item.user.location.accessable_locations.includes(i)) {
-            result.push(item)
-          }
-        })
-      }
-    })
+    if(custId){
+      let availableLocations = await customerServices.getLocationDetails(custId)
+      let locs = availableLocations.flatMap((i) => i.loc_name);
+      recentViewers.map(item => {
+        let res;
+        if (item.family) {
+          res = locs.forEach(i => {
+            if (item.family.location.accessable_locations.includes(i)) {
+              result.push(item)
+            }
+          })
+        }
+        else {
+          res = locs.forEach(i => {
+            if (item.user.location.accessable_locations.includes(i)) {
+              result.push(item)
+            }
+          })
+        }
+      })
+    }
+    else{
+      recentViewers.map(item => {
+        let res;
+        if (item.family) {
+          res = user.location.accessable_locations.forEach(i => {
+            if (item.family.location.accessable_locations.includes(i)) {
+              result.push(item)
+            }
+          })
+        }
+        else {
+          res = user.location.accessable_locations.forEach(i => {
+            if (item.user.location.accessable_locations.includes(i)) {
+              result.push(item)
+            }
+          })
+        }
+      })
+    }
+
+   
     return result;
   },
 
