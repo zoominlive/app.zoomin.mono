@@ -186,21 +186,23 @@ const AddFamily = (props) => {
         delete child.locations;
       });
 
-      API.post('family/add', payload).then((response) => {
-        if (response.status === 201) {
-          enqueueSnackbar(response.data.Message, { variant: 'success' });
-          props.getFamiliesList();
-          handleFormDialogClose();
-        } else {
-          errorMessageHandler(
-            enqueueSnackbar,
-            response?.response?.data?.Message || 'Something Went Wrong.',
-            response?.response?.status,
-            authCtx.setAuthError
-          );
+      API.post('family/add', { ...payload, cust_id: localStorage.getItem('cust_id') }).then(
+        (response) => {
+          if (response.status === 201) {
+            enqueueSnackbar(response.data.Message, { variant: 'success' });
+            props.getFamiliesList();
+            handleFormDialogClose();
+          } else {
+            errorMessageHandler(
+              enqueueSnackbar,
+              response?.response?.data?.Message || 'Something Went Wrong.',
+              response?.response?.status,
+              authCtx.setAuthError
+            );
+          }
+          setSubmitLoading(false);
         }
-        setSubmitLoading(false);
-      });
+      );
     } else {
       setActiveStep(activeStep + 1);
       setTouched({});

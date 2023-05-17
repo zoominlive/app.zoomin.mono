@@ -289,36 +289,38 @@ const Profile = () => {
                         )}
                       </FormControl>
                     </Grid>
-                    <Grid item xs={12} md={12}>
-                      <Autocomplete
-                        fullWidth
-                        multiple
-                        disabled={authCtx?.user?.role === 'Family'}
-                        id="locations"
-                        options={authCtx?.user?.location?.accessable_locations.sort((a, b) =>
-                          a > b ? 1 : -1
-                        )}
-                        onChange={(_, value) => {
-                          setFieldValue('locations', value);
-                        }}
-                        value={values?.locations}
-                        renderTags={(value, getTagProps) =>
-                          value.map((option, index) => (
-                            <Chip key={index} label={option} {...getTagProps({ index })} />
-                          ))
-                        }
-                        renderInput={(params) => (
-                          <TextField
-                            {...params}
-                            label="Location"
-                            placeholder="Location"
-                            helperText={touched.locations && errors.locations}
-                            error={touched.locations && Boolean(errors.locations)}
-                            fullWidth
-                          />
-                        )}
-                      />
-                    </Grid>
+                    {authCtx?.user?.role !== 'Super Admin' && (
+                      <Grid item xs={12} md={12}>
+                        <Autocomplete
+                          fullWidth
+                          multiple
+                          disabled={authCtx?.user?.role === 'Family'}
+                          id="locations"
+                          options={authCtx?.user?.location?.accessable_locations.sort((a, b) =>
+                            a > b ? 1 : -1
+                          )}
+                          onChange={(_, value) => {
+                            setFieldValue('locations', value);
+                          }}
+                          value={values?.locations}
+                          renderTags={(value, getTagProps) =>
+                            value.map((option, index) => (
+                              <Chip key={index} label={option} {...getTagProps({ index })} />
+                            ))
+                          }
+                          renderInput={(params) => (
+                            <TextField
+                              {...params}
+                              label="Location"
+                              placeholder="Location"
+                              helperText={touched.locations && errors.locations}
+                              error={touched.locations && Boolean(errors.locations)}
+                              fullWidth
+                            />
+                          )}
+                        />
+                      </Grid>
+                    )}
                     <Grid item xs={12} md={12}>
                       <Stack
                         direction="row"

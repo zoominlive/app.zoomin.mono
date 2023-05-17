@@ -39,11 +39,7 @@ const CustomerSelection = () => {
 
   const handleSubmit = (data) => {
     setSubmitLoading(true);
-    // const update = { ...authCtx?.user, cust_id: data.customer };
-    // console.log('prevUser------', update);
-    // authCtx.setUser(update);
     let token = localStorage.getItem('token');
-
     localStorage.setItem('cust_id', data?.customer);
     authCtx.setToken(token);
     setSubmitLoading(false);

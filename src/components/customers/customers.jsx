@@ -138,6 +138,27 @@ const Customers = () => {
 
   const hanldeCustomerSelect = (custId) => {
     localStorage.setItem('cust_id', custId);
+    setIsLoading(true);
+    API.get('users', { params: { cust_id: custId } }).then((response) => {
+      if (response.status === 200) {
+        authCtx.setUser({
+          ...response.data.Data,
+          location: response.data.Data.location
+        });
+        localStorage.setItem(
+          'user',
+          JSON.stringify({ ...response.data.Data, location: response.data.Data.location })
+        );
+      } else {
+        errorMessageHandler(
+          enqueueSnackbar,
+          response?.response?.data?.Message || 'Something Went Wrong.',
+          response?.response?.status,
+          authCtx.setAuthError
+        );
+      }
+      setIsLoading(false);
+    });
   };
   return (
     <Box className="listing-wrapper">

@@ -103,7 +103,8 @@ const ChildForm = (props) => {
         selected_option: selectedOption,
         rooms: { rooms: data.rooms },
         location: { locations: data.locations },
-        family_id: props.family.primary.family_id
+        family_id: props.family.primary.family_id,
+        cust_id: localStorage.getItem('cust_id')
       }).then((response) => {
         if (response.status === 201) {
           enqueueSnackbar(response.data.Message, { variant: 'success' });

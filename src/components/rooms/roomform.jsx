@@ -60,24 +60,26 @@ const RoomForm = (props) => {
     const tempCameraSaveLoading = props?.room?.cameras?.map(() => false);
     setCameraSaveLoading(tempCameraSaveLoading || []);
     setDropdownLoading(true);
-    API.get(props?.room?.location ? `cams?location=${props?.room?.location}` : `cams/`).then(
-      (response) => {
-        setDropdownLoading(true);
-        if (response.status === 200) {
-          const cameras = response.data.Data.cams;
-          setInitialState({ ...initialState, cameras: cameras });
-          setDropdownLoading(false);
-        } else {
-          errorMessageHandler(
-            enqueueSnackbar,
-            response?.response?.data?.Message || 'Something Went Wrong.',
-            response?.response?.status,
-            authCtx.setAuthError
-          );
-          setDropdownLoading(false);
-        }
+    API.get(
+      props?.room?.location
+        ? `cams?location=${props?.room?.location}?cust_id=${localStorage.getItem('cust_id')}`
+        : `cams/`
+    ).then((response) => {
+      setDropdownLoading(true);
+      if (response.status === 200) {
+        const cameras = response.data.Data.cams;
+        setInitialState({ ...initialState, cameras: cameras });
+        setDropdownLoading(false);
+      } else {
+        errorMessageHandler(
+          enqueueSnackbar,
+          response?.response?.data?.Message || 'Something Went Wrong.',
+          response?.response?.status,
+          authCtx.setAuthError
+        );
+        setDropdownLoading(false);
       }
-    );
+    });
   }, []);
 
   useEffect(() => {
@@ -163,7 +165,9 @@ const RoomForm = (props) => {
 
   const handleGetCamerasForSelectedLocation = (location) => {
     setDropdownLoading(true);
-    API.get(`cams?location=${location}`).then((response) => {
+    API.get(`cams`, {
+      params: { location: location, cust_id: localStorage.getItem('cust_id') }
+    }).then((response) => {
       if (response.status === 200) {
         const cameras = response.data.Data.cams;
 

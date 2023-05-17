@@ -92,7 +92,8 @@ const ParentsForm = (props) => {
         family_id: props.family.primary.family_id,
         member_type: 'secondary',
         time_zone: moment.tz.guess(),
-        location: authCtx.user.location
+        location: authCtx.user.location,
+        cust_id: localStorage.getItem('cust_id')
       }).then((response) => {
         if (response.status === 201) {
           enqueueSnackbar(response.data.Message, { variant: 'success' });

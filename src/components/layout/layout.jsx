@@ -39,7 +39,7 @@ const Layout = () => {
   useEffect(() => {
     setIsLoading(true);
     // API Call for Fetching Logged in user detail
-    API.get('users').then((response) => {
+    API.get('users', { params: { cust_id: localStorage.getItem('cust_id') } }).then((response) => {
       if (response.status === 200) {
         authCtx.setUser({
           ...response.data.Data,

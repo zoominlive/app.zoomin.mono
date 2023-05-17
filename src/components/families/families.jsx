@@ -78,7 +78,8 @@ const Families = () => {
     limit: parseInt(process.env.REACT_APP_PAGINATION_LIMIT, 10),
     searchBy: '',
     location: 'All',
-    rooms: []
+    rooms: [],
+    cust_id: localStorage.getItem('cust_id')
   });
 
   useEffect(() => {

@@ -48,7 +48,8 @@ const AddFamilyDialog = (props) => {
       family_id: authCtx.user.family_id,
       member_type: 'secondary',
       time_zone: moment.tz.guess(),
-      location: authCtx.user.location
+      location: authCtx.user.location,
+      cust_id: localStorage.getItem('cust_id')
     })
       .then((response) => {
         if (response.status === 201) {
