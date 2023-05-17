@@ -1,8 +1,8 @@
-const connectToDatabase = require('../models/index');
+const connectToDatabase = require("../models/index");
 
-const Sequelize = require('sequelize');
+const Sequelize = require("sequelize");
 
-const sequelize = require('../lib/database');
+const sequelize = require("../lib/database");
 
 module.exports = {
   /* Create new camera */
@@ -21,7 +21,7 @@ module.exports = {
     );
     let deletedCam = await Camera.destroy(
       {
-        where: { cam_id: camId }
+        where: { cam_id: camId },
       },
       { transaction: t }
     );
@@ -33,12 +33,12 @@ module.exports = {
   editCamera: async (camId, camObj, t) => {
     const { Camera } = await connectToDatabase();
     let update = {
-      ...camObj
+      ...camObj,
     };
     let deletedCam = await Camera.update(
       update,
       {
-        where: { cam_id: camId }
+        where: { cam_id: camId },
       },
       { transaction: t }
     );
@@ -55,7 +55,7 @@ module.exports = {
       { type: Sequelize.QueryTypes.SELECT },
       {
         model: Camera,
-        mapToModel: true
+        mapToModel: true,
       }
     );
     return cameras !== undefined ? cameras : null;
@@ -67,8 +67,8 @@ module.exports = {
     let cameras = await Camera.findAll(
       {
         where: {
-          cust_id: custId
-        }
+          cust_id: custId,
+        },
       },
       { transaction: t }
     );
@@ -78,74 +78,91 @@ module.exports = {
 
   /* Fetch all the camera's details for given customer */
   getAllCameraForCustomer: async (custId, user, filter, t) => {
-    const { Camera } = await connectToDatabase();
-    let { pageNumber, pageSize, searchBy = '', location = 'All', cust_id = null } = filter;
+    const { Camera, CustomerLocations } = await connectToDatabase();
+    let {
+      pageNumber,
+      pageSize,
+      searchBy = "",
+      location = "All",
+      cust_id = null,
+    } = filter;
 
     let cams;
-    if (location === 'All') {
-      location = '';
+    if (location === "All") {
+      location = "";
     }
-      console.log('===',custId || cust_id);
-   if(filter.pageNumber && filter.pageSize){
-    cams = await Camera.findAndCountAll(
-      {
-        limit: parseInt(pageSize),
-        offset: parseInt(pageNumber * pageSize),
-        where: {
-          cust_id: custId || cust_id,
-          // location: {
-          //   [Sequelize.Op.like]: `%${location}`
-          // },
-          [Sequelize.Op.and]: [
-            { location: user.location.accessable_locations },
-            {
-              location: {
-                [Sequelize.Op.like]: `%${location}`
-              }
-            }
-          ],
-          [Sequelize.Op.or]: [
-            {
-              cam_name: {
-                [Sequelize.Op.like]: `%${searchBy}%`
-              }
-            },
-            {
-              description: {
-                [Sequelize.Op.like]: `%${searchBy}%`
-              }
-            }
-          ]
-        }
-      },
-      { transaction: t }
-    );
-   }
-   else{
-    cams = await Camera.findAndCountAll(
-      {
-        where: {
-          cust_id: custId || cust_id,
-          location: {
-            [Sequelize.Op.like]: `%${location}`
+    let loc_obj = {};
+    if (!cust_id) {
+      loc_obj = { location: user.location.accessable_locations };
+    } else {
+      let availableLocations = await CustomerLocations.findAll({
+        where: { cust_id: cust_id },
+        raw: true,
+      });
+      let locs = availableLocations.flatMap((i) => i.loc_name);
+      loc_obj = { location: locs };
+    }
+
+    if (filter.pageNumber && filter.pageSize) {
+      cams = await Camera.findAndCountAll(
+        {
+          limit: parseInt(pageSize),
+          offset: parseInt(pageNumber * pageSize),
+          where: {
+            cust_id: custId || cust_id,
+            // location: {
+            //   [Sequelize.Op.like]: `%${location}`
+            // },
+            [Sequelize.Op.and]: [
+              // { location: user.location.accessable_locations },
+              loc_obj,
+              {
+                location: {
+                  [Sequelize.Op.like]: `%${location}`,
+                },
+              },
+            ],
+            [Sequelize.Op.or]: [
+              {
+                cam_name: {
+                  [Sequelize.Op.like]: `%${searchBy}%`,
+                },
+              },
+              {
+                description: {
+                  [Sequelize.Op.like]: `%${searchBy}%`,
+                },
+              },
+            ],
           },
-          [Sequelize.Op.or]: [
-            {
-              cam_name: {
-                [Sequelize.Op.like]: `%${searchBy}%`
-              }
+        },
+        { transaction: t }
+      );
+    } else {
+      cams = await Camera.findAndCountAll(
+        {
+          where: {
+            cust_id: custId || cust_id,
+            location: {
+              [Sequelize.Op.like]: `%${location}`,
             },
-            {
-              description: {
-                [Sequelize.Op.like]: `%${searchBy}%`
-              }
-            }
-          ]
-        }
-      },
-      { transaction: t }
-    );
-   }
+            [Sequelize.Op.or]: [
+              {
+                cam_name: {
+                  [Sequelize.Op.like]: `%${searchBy}%`,
+                },
+              },
+              {
+                description: {
+                  [Sequelize.Op.like]: `%${searchBy}%`,
+                },
+              },
+            ],
+          },
+        },
+        { transaction: t }
+      );
+    }
     return { cams: cams.rows, count: cams.count };
-  }
+  },
 };

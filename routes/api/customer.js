@@ -11,5 +11,6 @@ router.get('/all', authController, customerController.getAllCustomerDetails);
 router.post('/createCustomer', authController, customerController.createCustomer);
 router.put('/edit', authController, customerController.updateCustomerProfile);
 router.delete('/delete', authController, customerController.deleteCustomer);
+router.get('/locations', authController, customerController.getLocationDetails)
 
 module.exports = router;

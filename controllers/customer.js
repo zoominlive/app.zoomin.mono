@@ -113,4 +113,25 @@ getAllCustomerDetails: async (req, res, next) => {
         next(error);
       }
     },
+
+    getLocationDetails: async(req, res, next) => {
+      const t = await sequelize.transaction();
+      try {
+        const params = req.query;
+        let locations = await customerServices.getLocationDetails(params.cust_id, t);
+          res.status(200).json({
+            IsSuccess: true,
+            Data: locations,
+            Message: CONSTANTS.CUSTOMER_LOCATIONS_DETAILS
+          });
+        await t.commit();
+        next();
+      } catch (error) {
+        await t.rollback();
+        res
+          .status(500)
+          .json({ IsSuccess: false, error_log: error, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
+        next(error);
+      }
+    }
 }

@@ -11,8 +11,8 @@ module.exports = {
       let params = req.body;
 
       //add children
-
-      const newChild = await childServices.createChild(req?.user?.cust_id, params, t);
+      const custId = req?.user?.cust_id || req?.body?.cust_id
+      const newChild = await childServices.createChild(custId, params, t);
 
       const addRoomsToChild = await childServices.assignRoomsToChild(
         newChild?.child_id,

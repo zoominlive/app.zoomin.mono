@@ -52,11 +52,8 @@ module.exports = async function (req, res, next) {
         }
       } else {
         req.userToken = token;
-        // if(user?.role === 'Super Admin'){
-        //   user.cust_id = req?.query?.cust_id
-        // }
         req.user = user.toJSON();
-       // console.log(" req.user ============", req.user )
+       
       }
     }
 

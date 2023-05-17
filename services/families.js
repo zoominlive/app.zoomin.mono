@@ -1,10 +1,10 @@
-const connectToDatabase = require('../models/index');
-const Sequelize = require('sequelize');
-const jwt = require('jsonwebtoken');
-const _ = require('lodash-contrib');
-const encrypter = require('object-encrypter');
+const connectToDatabase = require("../models/index");
+const Sequelize = require("sequelize");
+const jwt = require("jsonwebtoken");
+const _ = require("lodash-contrib");
+const encrypter = require("object-encrypter");
 const engine = encrypter(process.env.JWT_SECRET_KEY, { ttl: false });
-const { v4: uuidv4 } = require('uuid');
+const { v4: uuidv4 } = require("uuid");
 
 module.exports = {
   /* Create new family */
@@ -19,7 +19,11 @@ module.exports = {
   /* Create new family */
   createFamilies: async (familyObj, t) => {
     const { Family } = await connectToDatabase();
-    let familyCreated = await Family.bulkCreate(familyObj, { returning: true }, { transaction: t });
+    let familyCreated = await Family.bulkCreate(
+      familyObj,
+      { returning: true },
+      { transaction: t }
+    );
 
     return familyCreated;
   },
@@ -28,8 +32,8 @@ module.exports = {
   generateNewFamilyId: async () => {
     const { Family } = await connectToDatabase();
     let newFamilyId = await Family.findAll({
-      order: [['family_id', 'DESC']],
-      raw: true
+      order: [["family_id", "DESC"]],
+      raw: true,
     });
 
     newFamilyId = _.uniq(newFamilyId.map((family) => family.family_id));
@@ -39,15 +43,15 @@ module.exports = {
   /* Edit family details */
   editFamily: async (params, t) => {
     const { Family } = await connectToDatabase();
-    const familyObj = _.omit(params, ['family_member_id']);
+    const familyObj = _.omit(params, ["family_member_id"]);
     let update = {
-      ...familyObj
+      ...familyObj,
     };
 
     let updateFamilyDetails = await Family.update(
       update,
       {
-        where: { family_member_id: params.family_member_id }
+        where: { family_member_id: params.family_member_id },
       },
       { transaction: t }
     );
@@ -55,7 +59,7 @@ module.exports = {
     if (updateFamilyDetails) {
       updateFamilyDetails = await Family.findOne(
         {
-          where: { family_member_id: params.family_member_id }
+          where: { family_member_id: params.family_member_id },
         },
         { transaction: t }
       );
@@ -70,7 +74,7 @@ module.exports = {
     let deletedParents = await Family.destroy(
       {
         where: { family_id: familyId },
-        raw: true
+        raw: true,
       },
       { transaction: t }
     );
@@ -78,7 +82,7 @@ module.exports = {
     let deletedChildren = await Child.destroy(
       {
         where: { family_id: familyId },
-        raw: true
+        raw: true,
       },
       { transaction: t }
     );
@@ -88,72 +92,105 @@ module.exports = {
 
   /* Fetch all the family's details */
   getAllFamilyDetails: async (user, filter, t) => {
-    const { Family, Child, RoomsInChild, Room } = await connectToDatabase();
-    let { pageNumber = 0, pageSize = 10, location = 'All', searchBy = '', roomsList = [] } = filter;
-    console.log('===pageSize===',pageSize, "===pageNumber===",pageNumber)
+    const { Family, Child, RoomsInChild, Room, CustomerLocations } =
+      await connectToDatabase();
+    let {
+      pageNumber = 0,
+      pageSize = 10,
+      location = "All",
+      searchBy = "",
+      roomsList = [],
+      cust_id = null,
+    } = filter;
+
     let families;
     let familiesCount;
     let whereObj = {
-      cust_id: user.cust_id,
+      cust_id: user.cust_id || cust_id,
       [Sequelize.Op.or]: [
         { first_name: { [Sequelize.Op.substring]: searchBy } },
         { last_name: { [Sequelize.Op.substring]: searchBy } },
-        { '$children.first_name$': { [Sequelize.Op.substring]: searchBy } },
-        { '$children.last_name$': { [Sequelize.Op.substring]: searchBy } }
-      ]
+        { "$children.first_name$": { [Sequelize.Op.substring]: searchBy } },
+        { "$children.last_name$": { [Sequelize.Op.substring]: searchBy } },
+      ],
     };
     if (roomsList.length != 0) {
-      whereObj = { ...whereObj, '$children->roomsInChild->room.room_name$': roomsList };
+      whereObj = {
+        ...whereObj,
+        "$children->roomsInChild->room.room_name$": roomsList,
+      };
     }
 
     familiesCount = await Family.count(
       {
-        group: ['family.family_id'],
-        attributes: ['children.location'],
+        group: ["family.family_id"],
+        attributes: ["children.location"],
         include: [
           {
             model: Child,
-            attributes: ['location'],
+            attributes: ["location"],
             where: {
               [Sequelize.Op.and]: {
                 location: {
-                  [Sequelize.Op.substring]: location === 'All' ? '' : location
-                }
+                  [Sequelize.Op.substring]: location === "All" ? "" : location,
+                },
               },
             },
             include: [
               {
                 model: RoomsInChild,
-                as: 'roomsInChild',
+                as: "roomsInChild",
                 include: [
                   {
                     model: Room,
-                    as: 'room'
-                  }
-                ]
-              }
-            ]
-          }
+                    as: "room",
+                  },
+                ],
+              },
+            ],
+          },
         ],
         where: whereObj,
-        raw: true
+        raw: true,
       },
       { transaction: t }
     );
-    console.log('familiesCount-------------',familiesCount);
-    const result = []
-     familiesCount.map(item => {
-      user.location.accessable_locations.forEach(i => {
-        if (item.location.locations.includes(i)) {
-          result.push(item)
-        }
+  
+    const result = [];
+    if (!user.cust_id) {
+      let availableLocations = await CustomerLocations.findAll({
+        where: { cust_id: cust_id },
+        raw: true,
       });
-    })
+      let locs = availableLocations.flatMap((i) => i.loc_name);
+      familiesCount.map((item) => {
+        locs.forEach((i) => {
+          if (item.location.locations.includes(i)) {
+            result.push(item);
+          }
+        });
+      });
+    } else {
+      familiesCount.map((item) => {
+        user.location.accessable_locations.forEach((i) => {
+          if (item.location.locations.includes(i)) {
+            result.push(item);
+          }
+        });
+      });
+    }
+  
     familiesCount = result;
     families = await Family.findAll(
       {
         attributes: {
-          exclude: ['password', 'password_link', 'createdAt', 'cam_preference', 'updatedAt']
+          exclude: [
+            "password",
+            "password_link",
+            "createdAt",
+            "cam_preference",
+            "updatedAt",
+          ],
         },
         include: [
           {
@@ -161,41 +198,47 @@ module.exports = {
             include: [
               {
                 model: RoomsInChild,
-                as: 'roomsInChild',
+                as: "roomsInChild",
                 include: [
                   {
                     model: Room,
-                    as: 'room'
-                  }
-                ]
-              }
-            ]
+                    as: "room",
+                  },
+                ],
+              },
+            ],
           },
           {
             model: Family,
-            as: 'secondary',
+            as: "secondary",
             attributes: {
-              exclude: ['password', 'password_link', 'createdAt', 'cam_preference', 'updatedAt']
+              exclude: [
+                "password",
+                "password_link",
+                "createdAt",
+                "cam_preference",
+                "updatedAt",
+              ],
             },
             where: {
-              member_type: 'secondary'
+              member_type: "secondary",
             },
-            required: false
-          }
+            required: false,
+          },
         ],
         limit: parseInt(pageSize),
         offset: parseInt(pageNumber * pageSize),
         where: {
-          cust_id: user.cust_id,
-          member_type: 'primary',
+          cust_id: user.cust_id || cust_id,
+          member_type: "primary",
           family_id: familiesCount
             .filter((family) => {
               if (family.count != 0) {
                 return family;
               }
             })
-            .map((fam) => fam.family_id)
-        }
+            .map((fam) => fam.family_id),
+        },
       },
       { transaction: t }
     );
@@ -203,12 +246,15 @@ module.exports = {
     let familyArray = [];
     families?.forEach((familyMember) => {
       familyArray.push({
-        primary: _.omit(JSON.parse(JSON.stringify(familyMember)), ['secondary', 'children']),
+        primary: _.omit(JSON.parse(JSON.stringify(familyMember)), [
+          "secondary",
+          "children",
+        ]),
         secondary: familyMember.secondary,
-        children: familyMember.children
+        children: familyMember.children,
       });
     });
-    console.log('-------------familyArray',familyArray);
+
     return { familyArray: familyArray, count: familiesCount.length };
   },
 
@@ -218,7 +264,7 @@ module.exports = {
     let familyMember = await Family.findOne(
       {
         where: { family_member_id: familyMemberId },
-        raw: true
+        raw: true,
       },
       { transaction: t }
     );
@@ -239,27 +285,27 @@ module.exports = {
     let updateFamilyDetails;
     let updateChildDetails;
 
-    if (schedluedEndDate != null && schedluedEndDate != '') {
+    if (schedluedEndDate != null && schedluedEndDate != "") {
       let update = {
         scheduled_end_date: schedluedEndDate,
-        disabled_locations: { locations: locations_to_disable }
+        disabled_locations: { locations: locations_to_disable },
       };
 
-      if (memberType == 'secondary') {
+      if (memberType == "secondary") {
         updateFamilyDetails = await Family.update(
           update,
           {
             where: { family_member_id: familyMemberId },
-            raw: true
+            raw: true,
           },
           { transaction: t }
         );
-      } else if (memberType == 'primary') {
+      } else if (memberType == "primary") {
         updateFamilyDetails = await Family.update(
           update,
           {
             where: { family_id: familyId },
-            raw: true
+            raw: true,
           },
           { transaction: t }
         );
@@ -268,7 +314,7 @@ module.exports = {
           update,
           {
             where: { family_id: familyId },
-            raw: true
+            raw: true,
           },
           { transaction: t }
         );
@@ -276,61 +322,63 @@ module.exports = {
     } else {
       const location = await Family.findOne(
         {
-          attributes: ['location'],
+          attributes: ["location"],
           where: {
-            family_member_id: familyMemberId
+            family_member_id: familyMemberId,
           },
-          raw: true
+          raw: true,
         },
         { transaction: t }
       );
 
-      const locations = location?.location?.selected_locations?.filter((location) => {
-        let count = 0;
+      const locations = location?.location?.selected_locations?.filter(
+        (location) => {
+          let count = 0;
 
-        locations_to_disable.forEach((loc) => {
-          if (loc === location) {
-            count = 1;
-          }
-        });
+          locations_to_disable.forEach((loc) => {
+            if (loc === location) {
+              count = 1;
+            }
+          });
 
-        return count === 0;
-      });
+          return count === 0;
+        }
+      );
 
       let update = {
         disabled_locations: { locations: locations_to_disable },
         scheduled_end_date: null,
-        status: 'Disabled',
+        status: "Disabled",
         location: {
           selected_locations: locations,
-          accessable_locations: locations
-        }
+          accessable_locations: locations,
+        },
       };
 
-      if (memberType == 'secondary') {
+      if (memberType == "secondary") {
         updateFamilyDetails = await Family.update(
           update,
           {
             where: { family_member_id: familyMemberId },
-            raw: true
+            raw: true,
           },
           { transaction: t }
         );
-      } else if (memberType == 'primary') {
+      } else if (memberType == "primary") {
         updateFamilyDetails = await Family.update(
           update,
           {
             where: { family_id: familyId },
-            raw: true
+            raw: true,
           },
           { transaction: t }
         );
 
         updateChildDetails = await Child.update(
-          { scheduled_end_date: null, status: 'Disabled' },
+          { scheduled_end_date: null, status: "Disabled" },
           {
             where: { family_id: familyId },
-            raw: true
+            raw: true,
           },
           { transaction: t }
         );
@@ -348,11 +396,11 @@ module.exports = {
 
     const location = await Family.findOne(
       {
-        attributes: ['location', 'disabled_locations'],
+        attributes: ["location", "disabled_locations"],
         where: {
-          family_member_id: familyMemberId
+          family_member_id: familyMemberId,
         },
-        raw: true
+        raw: true,
       },
       { transaction: t }
     );
@@ -364,39 +412,39 @@ module.exports = {
     }
 
     let update = {
-      status: 'Enabled',
+      status: "Enabled",
       scheduled_end_date: null,
       location: {
         selected_locations: locations,
-        accessable_locations: locations
+        accessable_locations: locations,
       },
-      disabled_locations: {}
+      disabled_locations: {},
     };
 
-    if (memberType == 'secondary') {
+    if (memberType == "secondary") {
       updateFamilyDetails = await Family.update(
         update,
         {
           where: { family_member_id: familyMemberId },
-          raw: true
+          raw: true,
         },
         { transaction: t }
       );
-    } else if (memberType == 'primary') {
+    } else if (memberType == "primary") {
       updateFamilyDetails = await Family.update(
         update,
         {
           where: { family_id: familyId },
-          raw: true
+          raw: true,
         },
         { transaction: t }
       );
 
       updateChildDetails = await Child.update(
-        { status: 'Enabled', scheduled_end_date: null },
+        { status: "Enabled", scheduled_end_date: null },
         {
           where: { family_id: familyId },
-          raw: true
+          raw: true,
         },
         { transaction: t }
       );
@@ -407,9 +455,10 @@ module.exports = {
 
   /* Create family token to reset password */
   createPasswordToken: async (familyMember) => {
-    const token = engine.encrypt(
-      { familyMemberId: familyMember.family_member_id, password: familyMember.password }
-    );
+    const token = engine.encrypt({
+      familyMemberId: familyMember.family_member_id,
+      password: familyMember.password,
+    });
 
     return token;
   },
@@ -419,7 +468,7 @@ module.exports = {
     const { Family } = await connectToDatabase();
     let familyMember = await Family.findOne(
       {
-        where: { email: email }
+        where: { email: email },
       },
       { transaction: t }
     );
@@ -428,9 +477,13 @@ module.exports = {
 
   /* Create family member token */
   createFamilyMemberToken: async (familyMemberId) => {
-    const token = jwt.sign({ family_member_id: familyMemberId }, process.env.JWT_SECRET_KEY, {
-      expiresIn: process.env.ACCESS_TOKEN_EXPIRY
-    });
+    const token = jwt.sign(
+      { family_member_id: familyMemberId },
+      process.env.JWT_SECRET_KEY,
+      {
+        expiresIn: process.env.ACCESS_TOKEN_EXPIRY,
+      }
+    );
     return { token };
   },
 
@@ -462,11 +515,11 @@ module.exports = {
       {
         where: {
           scheduled_end_date: {
-            [Sequelize.Op.ne]: null
+            [Sequelize.Op.ne]: null,
           },
-          member_type: 'primary',
-          user_id: userId
-        }
+          member_type: "primary",
+          user_id: userId,
+        },
       },
       { transaction: t }
     );
@@ -477,13 +530,13 @@ module.exports = {
     let locArray = locations.map((loc) => {
       return {
         location: {
-          [Sequelize.Op.substring]: loc
-        }
+          [Sequelize.Op.substring]: loc,
+        },
       };
     });
     let users = await Family.findAll({
       where: { cust_id: custId, [Sequelize.Op.or]: locArray },
-      attributes: ['first_name', 'last_name', 'family_member_id']
+      attributes: ["first_name", "last_name", "family_member_id"],
     });
 
     return users;
@@ -499,7 +552,7 @@ module.exports = {
             [Sequelize.Op.in]: allfamilyIds,
           },
         },
-        attributes: ['socket_connection_id', 'family_member_id']
+        attributes: ["socket_connection_id", "family_member_id"],
       },
       { transaction: t }
     );
@@ -523,5 +576,3 @@ module.exports = {
   //   return familyMembersIds;
   // },
 };
-
-

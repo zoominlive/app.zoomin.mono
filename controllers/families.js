@@ -19,9 +19,9 @@ module.exports = {
   createFamily: async (req, res, next) => {
     const t = await sequelize.transaction();
     try {
-      let { primary, secondary, children } = req.body;
+      let { primary, secondary, children, cust_id = null } = req.body;
       const userId = req.user.user_id;
-      const custId = req.user.cust_id;
+      const custId = req.user.cust_id || cust_id;
 
       //add primary parent
 
@@ -257,7 +257,8 @@ module.exports = {
         pageSize: parseInt(req.query?.limit),
         searchBy: req.query?.searchBy?.replace(/'/g, "\\'"),
         roomsList: req.query?.rooms,
-        location: req.query?.location
+        location: req.query?.location,
+        cust_id: req. query?.cust_id
       };
       
       let familyDetails = await familyServices.getAllFamilyDetails(req.user, filter, t);
@@ -287,7 +288,7 @@ module.exports = {
     const t = await sequelize.transaction();
     try {
       params = req.body;
-      params.cust_id = req.user.cust_id;
+      params.cust_id = req.user.cust_id || req.body.cust_id;
       params.user_id = req.user.user_id;
       let emailExist = await userServices.checkEmailExist(params.email, t);
 

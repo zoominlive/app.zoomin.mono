@@ -16,7 +16,7 @@ module.exports = {
       CustomerLocations,
       RoomsInTeacher,
     } = await connectToDatabase();
-    console.log('=====getAllCamForLocation===',user.cust_id)
+  
     let availableLocations = await CustomerLocations.findAll({
       where: { cust_id: user.cust_id },
       raw: true,

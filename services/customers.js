@@ -1,5 +1,5 @@
 const connectToDatabase = require("../models/index");
-const Sequelize = require('sequelize');
+const Sequelize = require("sequelize");
 const { v4: uuidv4 } = require("uuid");
 
 module.exports = {
@@ -49,7 +49,6 @@ module.exports = {
   },
 
   getCustomerDetails: async (custId, t) => {
-    console.log('get customer details',custId);
     const { Customers } = await connectToDatabase();
     let customer = await Customers.findOne(
       {
@@ -81,9 +80,8 @@ module.exports = {
   getAllCustomer: async (filter) => {
     const { Customers } = await connectToDatabase();
     let { pageNumber = 0, pageSize = 10, searchBy = "", all = false } = filter;
-    let customers
-    if(all){
-
+    let customers;
+    if (all) {
       customers = await Customers.findAndCountAll({
         where: {
           [Sequelize.Op.or]: [
@@ -108,8 +106,7 @@ module.exports = {
         // limit: parseInt(pageSize),
         // offset: parseInt(pageNumber * pageSize),
       });
-    }
-    else{
+    } else {
       customers = await Customers.findAndCountAll({
         where: {
           [Sequelize.Op.or]: [
@@ -143,11 +140,13 @@ module.exports = {
     const { Customers } = await connectToDatabase();
     customerObj.cust_id = uuidv4();
 
-    let customerCreated = await Customers.create(customerObj, { transaction: t });
+    let customerCreated = await Customers.create(customerObj, {
+      transaction: t,
+    });
 
     return customerCreated;
   },
-  
+
   deleteCustomer: async (customerId, t) => {
     const { Customers } = await connectToDatabase();
     let deletedCustomer = await Customers.destroy(
@@ -160,7 +159,7 @@ module.exports = {
 
   editCustomer: async (customerId, params, t) => {
     const { Customers } = await connectToDatabase();
-    let update =  {...params};
+    let update = { ...params };
     let updateCustomerProfile = await Customers.update(
       update,
       {
@@ -177,5 +176,15 @@ module.exports = {
     }
 
     return updateCustomerProfile.toJSON();
+  },
+
+  getLocationDetails: async (custId) => {
+    const { CustomerLocations } = await connectToDatabase();
+    let availableLocations = await CustomerLocations.findAll({
+      where: { cust_id: custId },
+      raw: true,
+    });
+    
+    return availableLocations;
   },
 };

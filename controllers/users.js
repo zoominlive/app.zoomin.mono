@@ -69,8 +69,14 @@ module.exports = {
   getUserDetails: async (req, res, next) => {
     try {
       const user = req.user;
-      user.transcoderBaseUrl = await customerServices.getTranscoderUrl(req.user.cust_id);
-      user.max_stream_live_license = await customerServices.getMaxLiveStramAvailable(req.user.cust_id);
+      const custId = req.user.cust_id || req.query?.cust_id;
+      if(!req.user.cust_id){
+        let availableLocations = await customerServices.getLocationDetails(custId)
+        let locs = availableLocations.flatMap((i) => i.loc_name);
+        user.location = { selected_locations: locs, accessable_locations: locs };
+      }
+      user.transcoderBaseUrl = await customerServices.getTranscoderUrl(custId);
+      user.max_stream_live_license = await customerServices.getMaxLiveStramAvailable(custId);
       res.status(200).json({
         IsSuccess: true,
         Data: _.omit(user, ['password']),
