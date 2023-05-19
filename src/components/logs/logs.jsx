@@ -175,7 +175,10 @@ const Logs = () => {
     if (authCtx?.user?.location?.accessable_locations) {
       setIsLoading(true);
       API.get('users/location/', {
-        params: { locations: [authCtx.user.location.accessable_locations[0]] }
+        params: {
+          locations: [authCtx.user.location.accessable_locations[0]],
+          cust_id: localStorage.getItem('cust_id')
+        }
       }).then((response) => {
         if (response.status === 200) {
           let userToAdd = response.data.Data?.map((user) => user?.user_id);

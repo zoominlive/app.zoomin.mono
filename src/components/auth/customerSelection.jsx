@@ -42,6 +42,10 @@ const CustomerSelection = () => {
     let token = localStorage.getItem('token');
     localStorage.setItem('cust_id', data?.customer);
     authCtx.setToken(token);
+    let customer = customersList.find((i) => i.cust_id === data?.customer);
+    let name = customer.billing_contact_first + ' ' + customer.billing_contact_last;
+    localStorage.setItem('cust_name', name);
+    authCtx.setCustName(name);
     setSubmitLoading(false);
   };
 

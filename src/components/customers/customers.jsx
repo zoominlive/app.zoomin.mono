@@ -4,7 +4,6 @@ import {
   Button,
   Card,
   CardContent,
-  ///Chip,
   Grid,
   Paper,
   Stack,
@@ -31,12 +30,11 @@ import { Plus } from 'react-feather';
 import CustomerForm from './customerform';
 import CustomerActions from './customeractions';
 import DeleteDialog from '../common/deletedialog';
-import dayjs from 'dayjs';
 
 const Customers = () => {
   const authCtx = useContext(AuthContext);
   const layoutCtx = useContext(LayoutContext);
-  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  // const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const { enqueueSnackbar } = useSnackbar();
   const [isLoading, setIsLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -57,15 +55,11 @@ const Customers = () => {
 
   useEffect(() => {
     layoutCtx.setActive(10);
-    layoutCtx.setBreadcrumb([
-      `Welcome back, ${authCtx?.user?.first_name}`,
-      `${days[dayjs().day()]}, ${dayjs().format('DD MMMM YYYY')}`
-    ]);
-
+    layoutCtx.setBreadcrumb(['Customers', authCtx?.custName || null]);
     return () => {
       authCtx.setPreviosPagePath(window.location.pathname);
     };
-  }, []);
+  }, [authCtx?.custName]);
 
   // Method to fetch customer list for table
   const getCustomersList = () => {
@@ -136,10 +130,13 @@ const Customers = () => {
     return debounce(handleSearch, 500);
   }, []);
 
-  const hanldeCustomerSelect = (custId) => {
-    localStorage.setItem('cust_id', custId);
+  const hanldeCustomerSelect = (data) => {
     setIsLoading(true);
-    API.get('users', { params: { cust_id: custId } }).then((response) => {
+    localStorage.setItem('cust_id', data.cust_id);
+    let name = data.billing_contact_first + ' ' + data.billing_contact_last;
+    localStorage.setItem('cust_name', name);
+    authCtx.setCustName(name);
+    API.get('users', { params: { cust_id: data.cust_id } }).then((response) => {
       if (response.status === 200) {
         authCtx.setUser({
           ...response.data.Data,
@@ -230,7 +227,7 @@ const Customers = () => {
                           <TableCell align="left">{row.max_locations}</TableCell>
                           <TableCell align="left">{row.max_cameras}</TableCell>
                           <TableCell align="left">
-                            <Button onClick={() => hanldeCustomerSelect(row.cust_id)}>
+                            <Button onClick={() => hanldeCustomerSelect(row)}>
                               Select Customer
                             </Button>
                           </TableCell>
