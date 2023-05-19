@@ -3,7 +3,7 @@ const Sequelize = require("sequelize");
 const _ = require("lodash");
 const moment = require("moment-timezone");
 const RoomsInTeacher = require("../models/rooms_assigned_to_teacher");
-
+const customerServices = require('../services/customers');
 module.exports = {
   /* Create new camera */
   getAllCamForLocation: async (user) => {
@@ -16,7 +16,7 @@ module.exports = {
       CustomerLocations,
       RoomsInTeacher,
     } = await connectToDatabase();
-  
+
     let availableLocations = await CustomerLocations.findAll({
       where: { cust_id: user.cust_id },
       raw: true,
@@ -130,10 +130,20 @@ module.exports = {
       let rooms;
 
       if (user.role == "Admin" || user.role == "Super Admin") {
+        let loc_obj = {};
+        if (user.role == "Super Admin") {
+          let availableLocations = await customerServices.getLocationDetails(
+            user.cust_id
+            );
+            let locs = availableLocations.flatMap((i) => i.loc_name);
+            loc_obj = { location: locs };
+        } else {
+            loc_obj = { location: user.location.accessable_locations };
+        }
         rooms = await Room.findAll({
           where: {
             cust_id: user.cust_id,
-            location: user.location.accessable_locations,
+            ...loc_obj,
           },
           include: [
             {
@@ -146,7 +156,6 @@ module.exports = {
             },
           ],
         });
-        
       } else if (user.role == "Teacher") {
         rooms = await RoomsInTeacher.findAll({
           where: { teacher_id: user.user_id },

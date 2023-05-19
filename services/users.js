@@ -9,7 +9,7 @@ const { v4: uuidv4 } = require("uuid");
 
 var validator = require("validator");
 const RoomsInTeacher = require("../models/rooms_assigned_to_teacher");
-
+const customerServices = require('../services/customers')
 /* Validate email */
 const validateEmail = (emailAdress) => {
   // let regexEmail = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
@@ -98,8 +98,7 @@ module.exports = {
         message: {
           IsSuccess: true,
           Data: [],
-          Message:
-            "Email already exist",
+          Message: "Email already exist",
         },
       };
     } else {
@@ -274,7 +273,7 @@ module.exports = {
       location = "All",
       role = "All",
       liveStreaming = "All",
-      cust_id = null
+      cust_id = null,
     } = filter;
     let streamValue = [true, false];
     if (location == "All") {
@@ -329,13 +328,26 @@ module.exports = {
 
     const userIds = [];
 
-    allusers.map((item) => {
-      user.location.accessable_locations.forEach((i) => {
-        if (item.location.accessable_locations.includes(i)) {
-          userIds.push(item);
-        }
+    if(!user.cust_id){
+      let availableLocations = await customerServices.getLocationDetails(cust_id)
+      let locs = availableLocations.flatMap((i) => i.loc_name);
+      allusers.map((item) => {
+        locs.forEach((i) => {
+          if (item.location.accessable_locations.includes(i)) {
+            userIds.push(item);
+          }
+        });
       });
-    });
+    }
+    else{
+      allusers.map((item) => {
+        user.location.accessable_locations.forEach((i) => {
+          if (item.location.accessable_locations.includes(i)) {
+            userIds.push(item);
+          }
+        });
+      });
+    }
 
     let users = await Users.findAndCountAll({
       limit: parseInt(pageSize),

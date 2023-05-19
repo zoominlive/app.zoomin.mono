@@ -51,7 +51,8 @@ module.exports = {
 
   getAllUsersForLocation: async (req, res, next) => {
     try {
-      let users = await userServices.getAllUsersForLocation(req.user.cust_id, req.query.locations);
+      let custId = req.user.cust_id || req.query.cust_id;
+      let users = await userServices.getAllUsersForLocation(custId, req.query.locations);
       res.status(200).json({
         IsSuccess: true,
         Data: users,

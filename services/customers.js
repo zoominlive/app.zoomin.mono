@@ -1,6 +1,7 @@
 const connectToDatabase = require("../models/index");
 const Sequelize = require("sequelize");
 const { v4: uuidv4 } = require("uuid");
+const Users = require("../models/users");
 
 module.exports = {
   getMaxLiveStramAvailable: async (custId, t) => {
@@ -78,7 +79,7 @@ module.exports = {
   },
 
   getAllCustomer: async (filter) => {
-    const { Customers } = await connectToDatabase();
+    const { Customers, CustomerLocations } = await connectToDatabase();
     let { pageNumber = 0, pageSize = 10, searchBy = "", all = false } = filter;
     let customers;
     if (all) {
@@ -127,13 +128,24 @@ module.exports = {
             },
           ],
         },
+        include: [
+          {
+            model: CustomerLocations,
+            as: "customer_locations",
+            attributes: ["loc_name"],
+          },
+          {
+            model: Users,
+            attributes: ['first_name', 'last_name','role','location','stream_live_license', 'email', 'user_id'],
+          }
+        ],
         attributes: { exclude: ["createdAt", "updatedAt"] },
         limit: parseInt(pageSize),
         offset: parseInt(pageNumber * pageSize),
+        order: [[{ model: Users }, 'created_at', 'ASC']]
       });
     }
-
-    return { customers: customers.rows, count: customers.count };
+    return { customers: customers.rows, count: customers.count,  };
   },
 
   createCustomer: async (customerObj, t) => {
@@ -184,7 +196,27 @@ module.exports = {
       where: { cust_id: custId },
       raw: true,
     });
-    
+
     return availableLocations;
   },
+
+  createLocation: async (custId, locations, t) => {
+    const { CustomerLocations } = await connectToDatabase();
+
+    let createLocations = Promise.all(
+      locations.map(async (loc) => {
+        const obj = { loc_name: loc, cust_id: custId };
+        await CustomerLocations.create(obj, {
+          transaction: t,
+        });
+      })
+    );
+    return createLocations;
+  },
+
+  deleteLocation: async (custId) => {
+    const { CustomerLocations } = await connectToDatabase();
+    let deletedLocations = await CustomerLocations.destroy({where: {cust_id: custId}});
+    return deletedLocations
+  }
 };

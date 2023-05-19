@@ -17,6 +17,19 @@ const FcmTokens = require('./fcm_tokens');
 const sequelize = require('../lib/database');
 
 CustomerLocations.belongsTo(Customers, { foreignKey: 'cust_id' });
+Customers.hasMany(CustomerLocations, {
+  sourceKey: 'cust_id',
+  foreignKey: {
+    name: 'cust_id'
+  }
+});
+Customers.hasMany(Users, {
+  sourceKey: 'cust_id',
+  foreignKey: {
+    name: 'cust_id'
+  }
+});
+
 Family.hasMany(Child, {
   sourceKey: 'family_id',
   foreignKey: {

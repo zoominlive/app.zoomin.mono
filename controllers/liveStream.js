@@ -39,7 +39,7 @@ module.exports = {
           hls_url: `https://zoominstreamprocessing.s3.us-west-2.amazonaws.com/liveStream/${streamID}_${current_time}/index.m3u8`
         };
         let livestream = await liveStreamServices.createLiveStream(liveStreamObj);
-        response = { serverEndPont: endPoint };
+        response = { serverEndPoint: endPoint };
         res.status(200).json({
           IsSuccess: true,
           Data: response,
