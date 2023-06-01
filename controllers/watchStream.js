@@ -106,7 +106,7 @@ module.exports = {
         });
         req.user.location.accessable_locations = accessableLocsToFamily;
       }
-      const camDetails = await watchStreamServices.getAllCamForUser({...req.user, cust_id: req.query?.cust_id});
+      const camDetails = await watchStreamServices.getAllCamForUser({...req.user, cust_id: req.user.cust_id  || req.query?.cust_id});
 
       const customerDetails = await customerServices.getCustomerDetails(req.user.cust_id || req.query?.cust_id);
 
