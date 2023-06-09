@@ -3,7 +3,8 @@ const Sequelize = require("sequelize");
 const _ = require("lodash");
 const moment = require("moment-timezone");
 const RoomsInTeacher = require("../models/rooms_assigned_to_teacher");
-const customerServices = require('../services/customers');
+const customerServices = require("../services/customers");
+// const livestreamCameras = require("./livestreamCameras");
 module.exports = {
   /* Create new camera */
   getAllCamForLocation: async (user) => {
@@ -15,6 +16,7 @@ module.exports = {
       CamerasInRooms,
       CustomerLocations,
       RoomsInTeacher,
+      LiveStreamCameras,
     } = await connectToDatabase();
 
     let availableLocations = await CustomerLocations.findAll({
@@ -45,6 +47,9 @@ module.exports = {
                         model: Camera,
                       },
                     ],
+                  },
+                  {
+                    model: LiveStreamCameras,
                   },
                 ],
               },
@@ -95,6 +100,17 @@ module.exports = {
                   };
                 })
                 .filter((cam) => cam?.cam_id);
+
+              let livStreamCams = room.room?.live_stream_cameras?.map((cam) => {
+                return {
+                  cam_id: cam?.cam_id,
+                  cam_name: cam?.cam_name,
+                  description: cam?.description || "",
+                  stream_uri: cam?.stream_uri,
+                };
+              });
+              cams = cams.concat(livStreamCams);
+
               finalRooms.push({
                 room_id: room.room.room_id,
                 room_name: room.room.room_name,
@@ -113,6 +129,16 @@ module.exports = {
                 };
               })
               .filter((cam) => cam?.cam_id);
+
+            let livStreamCams = room.room?.live_stream_cameras?.map((cam) => {
+              return {
+                cam_id: cam?.cam_id,
+                cam_name: cam?.cam_name,
+                description: cam?.description || "",
+                stream_uri: cam?.stream_uri,
+              };
+            });
+            cams = cams.concat(livStreamCams);
 
             finalRooms.push({
               room_id: room.room.room_id,
@@ -134,11 +160,11 @@ module.exports = {
         if (user.role == "Super Admin") {
           let availableLocations = await customerServices.getLocationDetails(
             user.cust_id
-            );
-            let locs = availableLocations.flatMap((i) => i.loc_name);
-            loc_obj = { location: locs };
+          );
+          let locs = availableLocations.flatMap((i) => i.loc_name);
+          loc_obj = { location: locs };
         } else {
-            loc_obj = { location: user.location.accessable_locations };
+          loc_obj = { location: user.location.accessable_locations };
         }
         rooms = await Room.findAll({
           where: {
@@ -154,6 +180,9 @@ module.exports = {
                 },
               ],
             },
+            {
+              model: LiveStreamCameras,
+            },
           ],
         });
       } else if (user.role == "Teacher") {
@@ -167,6 +196,9 @@ module.exports = {
                   model: Camera,
                 },
               ],
+            },
+            {
+              model: LiveStreamCameras,
             },
             { model: Room, as: "room", raw: true },
           ],
@@ -185,11 +217,16 @@ module.exports = {
                 },
               ],
             },
+            {
+              model: LiveStreamCameras,
+            },
           ],
         });
       }
 
       rooms = rooms?.map((room) => {
+        //.filter((cam) => cam?.cam_id);
+
         let cameras = room.dataValues.cameras_assigned_to_rooms
           ?.map((cam) => {
             return {
@@ -200,6 +237,19 @@ module.exports = {
             };
           })
           .filter((cam) => cam?.cam_id);
+
+        let livStreamCameras = room.dataValues.live_stream_cameras?.map(
+          (cam) => {
+            return {
+              cam_id: cam?.cam_id,
+              cam_name: cam?.cam_name,
+              description: cam?.description || "",
+              stream_uri: cam?.stream_uri,
+            };
+          }
+        );
+        cameras = cameras.concat(livStreamCameras);
+
         return {
           room_id: room.room_id,
           room_name:
@@ -221,6 +271,8 @@ module.exports = {
       RoomsInChild,
       CamerasInRooms,
       CustomerLocations,
+      LiveStreamCameras,
+      RoomsInTeacher,
     } = await connectToDatabase();
 
     let availableLocations = await CustomerLocations.findAll({
@@ -253,6 +305,9 @@ module.exports = {
                         model: Camera,
                       },
                     ],
+                  },
+                  {
+                    model: LiveStreamCameras,
                   },
                 ],
               },
@@ -303,6 +358,17 @@ module.exports = {
                   };
                 })
                 .filter((cam) => cam?.cam_id);
+
+              let livStreamCams = room.room?.live_stream_cameras?.map((cam) => {
+                return {
+                  cam_id: cam?.cam_id,
+                  cam_name: cam?.cam_name,
+                  description: cam?.description || "",
+                  stream_uri: cam?.stream_uri,
+                };
+              });
+              cams = cams.concat(livStreamCams);
+
               finalRooms.push({
                 room_id: room.room.room_id,
                 room_name: room.room.room_name,
@@ -321,7 +387,15 @@ module.exports = {
                 };
               })
               .filter((cam) => cam?.cam_id);
-
+            let livStreamCams = room.room?.live_stream_cameras?.map((cam) => {
+              return {
+                cam_id: cam?.cam_id,
+                cam_name: cam?.cam_name,
+                description: cam?.description || "",
+                stream_uri: cam?.stream_uri,
+              };
+            });
+            cams = cams.concat(livStreamCams);
             finalRooms.push({
               room_id: room.room.room_id,
               room_name: room.room.room_name,
@@ -358,6 +432,9 @@ module.exports = {
                     },
                   ],
                 },
+                {
+                  model: LiveStreamCameras,
+                },
               ],
             },
           ],
@@ -375,6 +452,15 @@ module.exports = {
                 };
               })
               .filter((cam) => cam?.cam_id);
+            let livStreamCams = room.live_stream_cameras?.map((cam) => {
+              return {
+                cam_id: cam?.cam_id,
+                cam_name: cam?.cam_name,
+                description: cam?.description || "",
+                stream_uri: cam?.stream_uri,
+              };
+            });
+            cams = cams.concat(livStreamCams);
             return {
               room_id: room.room_id,
               room_name: room.room_name,
@@ -395,7 +481,6 @@ module.exports = {
           include: [
             {
               model: Room,
-              as: "room",
               attributes: ["room_id", "room_name"],
               where: {
                 user_id: user.user_id,
@@ -409,10 +494,95 @@ module.exports = {
                     },
                   ],
                 },
+                {
+                  model: LiveStreamCameras,
+                },
               ],
             },
           ],
         });
+        if (user.role == "Teacher") {
+          let rooms = await RoomsInTeacher.findAll({
+            where: { teacher_id: user.user_id },
+            include: [
+              {
+                model: CamerasInRooms,
+                include: [
+                  {
+                    model: Camera,
+                  },
+                ],
+              },
+              {
+                model: LiveStreamCameras,
+                raw: true,
+              },
+              {
+                model: Room,
+                as: "room",
+                raw: true,
+                where: {
+                  location: user.location.accessable_locations,
+                },
+              },
+            ],
+          });
+          rooms = rooms?.map((room) => {
+            //.filter((cam) => cam?.cam_id);
+
+            let cameras = room.dataValues.cameras_assigned_to_rooms
+              ?.map((cam) => {
+                return {
+                  cam_id: cam?.camera?.cam_id,
+                  cam_name: cam?.camera?.cam_name,
+                  description: cam?.camera?.description,
+                  stream_uri: cam?.camera?.stream_uri,
+                };
+              })
+              .filter((cam) => cam?.cam_id);
+
+            let livStreamCameras = room.dataValues.live_stream_cameras?.map(
+              (cam) => {
+                return {
+                  cam_id: cam?.cam_id,
+                  cam_name: cam?.cam_name,
+                  description: cam?.description || "",
+                  stream_uri: cam?.stream_uri,
+                };
+              }
+            );
+            cameras = cameras.concat(livStreamCameras);
+            return {
+              room_id: room.room_id,
+              room_name:
+                room.room_name || room.dataValues?.room?.dataValues?.room_name,
+              location:
+                room.location || room.dataValues?.room?.dataValues?.location,
+              cameras: cameras,
+            };
+          });
+          //console.log('===rooms====final',rooms)
+          let result = _.chain(rooms)
+            .groupBy("location")
+            .map((value, key) => ({
+              location: key,
+              rooms: value,
+            }))
+            .value();
+
+          result = result.map((item) => {
+            let { rooms, ...rest } = item;
+            let newRooms = _.map(rooms, (object) => {
+              return _.omit(object, ["location"]);
+            });
+            return {
+              ...rest,
+              rooms: newRooms,
+            };
+          });
+
+          return result;
+        }
         locations = locations?.map((loc) => {
           let rooms = loc?.rooms?.map((room) => {
             let cams = room?.cameras_assigned_to_rooms
@@ -425,6 +595,20 @@ module.exports = {
                 };
               })
               .filter((cam) => cam?.cam_id);
+            console.log(
+              "===room.live_stream_cameras==",
+              room.live_stream_cameras
+            );
+            let livStreamCams = room.live_stream_cameras?.map((cam) => {
+              return {
+                cam_id: cam?.cam_id,
+                cam_name: cam?.cam_name,
+                description: cam?.description || "",
+                stream_uri: cam?.stream_uri,
+              };
+            });
+            cams = cams.concat(livStreamCams);
+
             return {
               room_id: room.room_id,
               room_name: room.room_name,

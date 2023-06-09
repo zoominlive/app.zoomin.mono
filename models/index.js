@@ -13,6 +13,7 @@ const CamerasInRooms = require('./cameras_assigned_to_rooms');
 const AccessLogs = require('./access_logs');
 const ChangeLogs = require('./change_logs');
 const LiveStreams = require('./live_stream');
+const LiveStreamCameras = require('./live_stream_cameras');
 const FcmTokens = require('./fcm_tokens');
 const sequelize = require('../lib/database');
 
@@ -79,12 +80,28 @@ Room.hasMany(CamerasInRooms, {
   }
 });
 
+LiveStreamCameras.belongsTo(Room, { foreignKey: 'room_id' });
+Room.hasMany(LiveStreamCameras, {
+  sourceKey: 'room_id',
+  foreignKey: {
+    name: 'room_id'
+  }
+});
+
 RoomsInTeacher.hasMany(CamerasInRooms, {
   sourceKey: 'room_id',
   foreignKey: {
     name: 'room_id'
   }
 });
+
+RoomsInTeacher.hasMany(LiveStreamCameras, {
+  sourceKey: 'room_id',
+  foreignKey: {
+    name: 'room_id'
+  }
+});
+
 
 CamerasInRooms.belongsTo(Camera, { foreignKey: 'cam_id' });
 Camera.hasMany(CamerasInRooms, {
@@ -119,6 +136,7 @@ CustomerLocations.hasMany(Room, {
     name: 'location'
   }
 });
+
 
 Family.belongsTo(RecentViewers, { foreignKey: 'family_member_id' });
 RecentViewers.hasOne(Family, {
@@ -170,6 +188,7 @@ module.exports = async () => {
       RoomsInTeacher,
       CamerasInRooms,
       LiveStreams,
+      LiveStreamCameras,
       FcmTokens
     };
   }
@@ -194,6 +213,7 @@ module.exports = async () => {
     RoomsInTeacher,
     CamerasInRooms,
     LiveStreams,
+    LiveStreamCameras,
     FcmTokens
   };
 };

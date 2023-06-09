@@ -223,24 +223,33 @@ module.exports = {
     return children;
   },
 
-  setCamPreference: async (user, cams, t) => {
+  setCamPreference: async (user, cams) => {
     const { Users } = await connectToDatabase();
-    let camObj = {
-      dashboard_cam_preference: cams
-    };
+    // let userdetails = await Users.findOne({
+    //   where: {
+    //     user_id: user?.user_id
+    //   },
+    //   attributes: ["dashboard_cam_preference"],
+    //   raw: true
+    // });
+    console.log('===cams===', cams)
+    let camObj = [];
+    camObj.push(cams)
+    camObj.push(user?.dashboard_cam_preference)
+    console.log('===',camObj)
     let camSettings;
 
     camSettings = await Users.update(
-      camObj,
+      JSON.stringify(camObj),
       {
         where: {
           user_id: user?.user_id
         }
-      },
-      { transaction: t }
+      }
     );
 
     return camSettings;
+   // return null
   }
 
 };

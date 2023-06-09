@@ -12,7 +12,7 @@ const Camera = sequelize.define(
     },
     cust_id: {
       type: Sequelize.STRING(50),
-      allowNull: false
+      allowNull: true
     },
     cam_name: {
       type: Sequelize.STRING(25),

@@ -1,5 +1,8 @@
 const connectToDatabase = require('../models/index');
 const jwt = require('jsonwebtoken');
+// const Sequelize = require('sequelize');
+
+
 module.exports = {
   /* Create stream ID token */
   createStreamKeyToken: async (streamID) => {
@@ -20,9 +23,9 @@ module.exports = {
   },
 
   saveEndPointInCamera: async(stream_id, t) => {
-    const { LiveStreams, CamerasInRooms } = await connectToDatabase();
+    const { LiveStreams, CamerasInRooms, Camera } = await connectToDatabase();
     let liveStreamObj = await LiveStreams.findOne({ where: {stream_id: stream_id}, attributes: ['room_id', 'hls_url'], }, { transaction: t });
-    let cameraUpdated = await CamerasInRooms.update({hls_url: liveStreamObj?.dataValues?.hls_url}, {where: {room_id: liveStreamObj?.dataValues?.room_id}})
+    let cameraUpdated = await CamerasInRooms.update({hls_url: liveStreamObj?.dataValues?.hls_url}, {where: {room_id: liveStreamObj?.dataValues?.room_id}});
     return cameraUpdated;
   },
 
