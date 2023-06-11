@@ -561,7 +561,7 @@ module.exports = {
               cameras: cameras,
             };
           });
-          //console.log('===rooms====final',rooms)
+        
           let result = _.chain(rooms)
             .groupBy("location")
             .map((value, key) => ({

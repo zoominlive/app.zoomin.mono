@@ -1,15 +1,16 @@
-const connectToDatabase = require('../models/index');
-const Sequelize = require('sequelize');
-const _ = require('lodash');
-const moment = require('moment-timezone');
-const RoomsInChild = require('../models/rooms_assigned_to_child');
-const Room = require('../models/room');
-const customerServices = require('../services/customers');
+const connectToDatabase = require("../models/index");
+const Sequelize = require("sequelize");
+const _ = require("lodash");
+const moment = require("moment-timezone");
+const RoomsInChild = require("../models/rooms_assigned_to_child");
+const Room = require("../models/room");
+const customerServices = require("../services/customers");
 
 module.exports = {
   /* get recent viewers */
   getLastOneHourViewers: async (user, custId = null) => {
-    const { RecentViewers, Family, Child, Room, RoomsInChild, Users } = await connectToDatabase();
+    const { RecentViewers, Family, Child, Room, RoomsInChild, Users } =
+      await connectToDatabase();
     let oneHourBefore = new Date();
     oneHourBefore.setHours(oneHourBefore.getHours() - 1);
 
@@ -18,82 +19,84 @@ module.exports = {
     let recentViewers = await RecentViewers.findAll({
       where: {
         requested_at: {
-          [Sequelize.Op.between]: [oneHourBefore.toISOString(), currentTime.toISOString()]
-        }
+          [Sequelize.Op.between]: [
+            oneHourBefore.toISOString(),
+            currentTime.toISOString(),
+          ],
+        },
       },
-      group: ['recent_user_id'],
+      group: ["recent_user_id"],
       include: [
         {
           model: Family,
-          attributes: ['first_name', 'last_name'],
+          attributes: ["first_name", "last_name"],
           include: [
             {
               model: Child,
-              attributes: ['first_name'],
+              attributes: ["first_name"],
               include: [
                 {
                   model: RoomsInChild,
-                  attributes: ['room_id'],
-                  as: 'roomsInChild',
+                  attributes: ["room_id"],
+                  as: "roomsInChild",
                   include: [
                     {
-                      attributes: ['room_name'],
+                      attributes: ["room_name"],
                       model: Room,
-                      as: 'room'
-                    }
-                  ]
-                }
-              ]
+                      as: "room",
+                    },
+                  ],
+                },
+              ],
             },
-          ]
+          ],
         },
         {
           model: Users,
-          attributes: ['first_name', 'last_name'],
-        }
-      ]
+          attributes: ["first_name", "last_name"],
+        },
+      ],
     });
-    const result = []
-    if(custId){
-      let availableLocations = await customerServices.getLocationDetails(custId)
+    const result = [];
+    if (custId) {
+      let availableLocations = await customerServices.getLocationDetails(
+        custId
+      );
       let locs = availableLocations.flatMap((i) => i.loc_name);
-      recentViewers.map(item => {
-        let res;
-      if (item.family) {
-        res = locs.forEach(i => {
-          if (item.family?.location?.accessable_locations.includes(i)) {
-            result.push(item)
-          }
-        })
-      }
-      else {
-        res = locs.forEach(i => {
-          if (item.user?.location?.accessable_locations.includes(i)) {
-            result.push(item)
-          }
-        })
-      }
-    })
+      recentViewers.map((item) => {
+        // let res;
+        if (item.family) {
+          locs.forEach((i) => {
+            if (item.family?.location?.accessable_locations.includes(i)) {
+              result.push(item);
+            }
+          });
+        } else {
+          locs.forEach((i) => {
+            if (item.user?.location?.accessable_locations.includes(i)) {
+              result.push(item);
+            }
+          });
+        }
+      });
+    } else {
+      recentViewers.map((item) => {
+        // let res;
+        if (item.family) {
+          user.location.accessable_locations.forEach((i) => {
+            if (item.family?.location?.accessable_locations.includes(i)) {
+              result.push(item);
+            }
+          });
+        } else {
+          user.location.accessable_locations.forEach((i) => {
+            if (item.user?.location?.accessable_locations.includes(i)) {
+              result.push(item);
+            }
+          });
+        }
+      });
     }
-    else{
-      recentViewers.map(item => {
-        let resp;
-      if (item.family) {
-        res = user.location.accessable_locations.forEach(i => {
-          if (item.family?.location?.accessable_locations.includes(i)) {
-            result.push(item)
-          }
-        })
-      }
-      else {
-        res = user.location.accessable_locations.forEach(i => {
-          if (item.user?.location?.accessable_locations.includes(i)) {
-            result.push(item)
-          }
-        })
-      }
-    })
-  }
     return result;
   },
 
@@ -104,78 +107,78 @@ module.exports = {
       where: {
         requested_at: {
           [Sequelize.Op.between]: [
-            moment().subtract(1, 'w').startOf('day').toISOString(),
-            moment().toISOString()
-          ]
-        }
+            moment().subtract(1, "w").startOf("day").toISOString(),
+            moment().toISOString(),
+          ],
+        },
       },
       attributes: {
-        include: [[Sequelize.fn('COUNT', Sequelize.col('recent_user_id')), 'count']],
+        include: [
+          [Sequelize.fn("COUNT", Sequelize.col("recent_user_id")), "count"],
+        ],
         exclude: [
-          'rv_id',
-          'recent_user_id',
-          'source_ip',
-          'location_name',
-          'lat',
-          'long',
-          'requested_at'
-        ]
+          "rv_id",
+          "recent_user_id",
+          "source_ip",
+          "location_name",
+          "lat",
+          "long",
+          "requested_at",
+        ],
       },
-      group: ['recent_user_id'],
+      group: ["recent_user_id"],
       include: [
         {
           model: Family,
-          attributes: ['first_name', 'last_name', 'location']
+          attributes: ["first_name", "last_name", "location"],
         },
         {
           model: Users,
-          attributes: ['first_name', 'last_name', 'location']
-        }
-      ]
+          attributes: ["first_name", "last_name", "location"],
+        },
+      ],
     });
-    const result = []
-    if(custId){
-      let availableLocations = await customerServices.getLocationDetails(custId)
+    const result = [];
+    if (custId) {
+      let availableLocations = await customerServices.getLocationDetails(
+        custId
+      );
       let locs = availableLocations.flatMap((i) => i.loc_name);
-      recentViewers.map(item => {
+      recentViewers.map((item) => {
         let res;
         if (item.family) {
-          res = locs.forEach(i => {
+          res = locs.forEach((i) => {
             if (item.family.location.accessable_locations.includes(i)) {
-              result.push(item)
+              result.push(item);
             }
-          })
-        }
-        else {
-          res = locs.forEach(i => {
+          });
+        } else {
+          res = locs.forEach((i) => {
             if (item.user.location.accessable_locations.includes(i)) {
-              result.push(item)
+              result.push(item);
             }
-          })
+          });
         }
-      })
-    }
-    else{
-      recentViewers.map(item => {
+      });
+    } else {
+      recentViewers.map((item) => {
         let res;
         if (item.family) {
-          res = user.location.accessable_locations.forEach(i => {
+          res = user.location.accessable_locations.forEach((i) => {
             if (item.family.location.accessable_locations.includes(i)) {
-              result.push(item)
+              result.push(item);
             }
-          })
-        }
-        else {
-          res = user.location.accessable_locations.forEach(i => {
+          });
+        } else {
+          res = user.location.accessable_locations.forEach((i) => {
             if (item.user.location.accessable_locations.includes(i)) {
-              result.push(item)
+              result.push(item);
             }
-          })
+          });
         }
-      })
+      });
     }
 
-   
     return result;
   },
 
@@ -183,73 +186,97 @@ module.exports = {
     const { Child } = await connectToDatabase();
     let children = await Child.findAll({
       where: { cust_id: custId },
-      attributes: ['first_name', 'last_name', 'scheduled_end_date', 'scheduled_enable_date',],
+      attributes: [
+        "first_name",
+        "last_name",
+        "scheduled_end_date",
+        "scheduled_enable_date",
+      ],
       include: [
         {
           model: RoomsInChild,
-          as: 'roomsInChild',
-          attributes: ['scheduled_disable_date', 'scheduled_enable_date'],
+          as: "roomsInChild",
+          attributes: ["scheduled_disable_date", "scheduled_enable_date"],
           where: {
             [Sequelize.Op.or]: [
               {
                 scheduled_disable_date: {
                   [Sequelize.Op.between]: [
                     moment().toISOString(),
-                    moment().add(1, 'w').toISOString()
-                  ]
-                }
+                    moment().add(1, "w").toISOString(),
+                  ],
+                },
               },
               {
                 scheduled_enable_date: {
                   [Sequelize.Op.between]: [
                     moment().toISOString(),
-                    moment().add(1, 'w').toISOString()
-                  ]
-                }
-              }
-            ]
+                    moment().add(1, "w").toISOString(),
+                  ],
+                },
+              },
+            ],
           },
           include: [
             {
               model: Room,
-              as: 'room',
-              attributes: ['room_name']
-            }
-          ]
-        }
-      ]
+              as: "room",
+              attributes: ["room_name"],
+            },
+          ],
+        },
+      ],
     });
 
     return children;
   },
 
   setCamPreference: async (user, cams) => {
-    const { Users } = await connectToDatabase();
-    // let userdetails = await Users.findOne({
-    //   where: {
-    //     user_id: user?.user_id
-    //   },
-    //   attributes: ["dashboard_cam_preference"],
-    //   raw: true
-    // });
-    console.log('===cams===', cams)
-    let camObj = [];
-    camObj.push(cams)
-    camObj.push(user?.dashboard_cam_preference)
-    console.log('===',camObj)
+    const { Users, DashboardPreference } = await connectToDatabase();
+    let camObj = {
+      cam_preference: cams,
+    };
     let camSettings;
+    if (user.role === "Super Admin") {
+      let prefrenceDetails = await DashboardPreference.findOne({
+        where: { cust_id: cams.cust_id },
+        raw: true,
+      });
 
-    camSettings = await Users.update(
-      JSON.stringify(camObj),
-      {
-        where: {
-          user_id: user?.user_id
-        }
+      let { cust_id, ...rest } = cams;
+      if (prefrenceDetails) {
+        camSettings = await DashboardPreference.update(
+          { cam_preference: rest },
+          {
+            where: {
+              cust_id: cams.cust_id,
+            },
+          }
+        );
+      } else {
+        camSettings = await DashboardPreference.create({
+          cust_id: cust_id,
+          cam_preference: rest,
+        });
       }
-    );
+    } else {
+      camSettings = await Users.update(camObj, {
+        where: {
+          user_id: user?.user_id,
+        },
+      });
+    }
 
     return camSettings;
-   // return null
-  }
+  },
 
+  getCamPreference: async (custId) => {
+    const { DashboardPreference } = await connectToDatabase();
+    let prefrenceDetails = await DashboardPreference.findOne({
+      where: { cust_id: custId },
+      raw: true,
+    });
+     
+    return prefrenceDetails?.cam_preference
+  }
 };

@@ -30,7 +30,6 @@ module.exports = {
 
       next();
     } catch (error) {
-      console.log('====error===',error)
       res.status(500).json({
         IsSuccess: false,
         error_log: error,
