@@ -39,12 +39,16 @@ import _ from 'lodash';
 
 const UserForm = (props) => {
   const { enqueueSnackbar } = useSnackbar();
+  const authCtx = useContext(AuthContext);
   const [image, setImage] = useState(props.user && props.user.profile_image);
   const [submitLoading, setSubmitLoading] = useState(false);
   const [base64Image, setBase64Image] = useState();
   const [selectedLocation, setSelectedLocation] = useState([]);
   const [roomList, setRoomList] = useState([]);
   const [selectedRole, setSelectedRole] = useState(null);
+  const [liveStreamLicense, setLiveStreamLicense] = useState(
+    authCtx?.user?.max_stream_live_license
+  );
   const validationSchema = yup.object({
     first_name: yup.string('Enter first name').required('First name is required'),
     last_name: yup.string('Enter last name').required('Last name is required'),
@@ -95,7 +99,6 @@ const UserForm = (props) => {
     });
   }, []);
 
-  const authCtx = useContext(AuthContext);
   const { getRootProps, getInputProps } = useDropzone({
     maxFiles: 1,
     accept: {
@@ -117,6 +120,19 @@ const UserForm = (props) => {
     }
   });
 
+  const handleLivestream = () => {
+    authCtx.setUser({
+      ...authCtx.user,
+      max_stream_live_license: liveStreamLicense
+    });
+    localStorage.setItem(
+      'user',
+      JSON.stringify({
+        ...authCtx.user,
+        max_stream_live_license: liveStreamLicense
+      })
+    );
+  };
   // Method to update the user profile
   const handleSubmit = (data) => {
     const payload = {
@@ -126,7 +142,9 @@ const UserForm = (props) => {
         selected_locations: data.locations,
         accessable_locations: props.user ? props.user.location.accessable_locations : data.locations
       },
-      image: !props.user ? base64Image : image ? (base64Image ? base64Image : image) : null
+      image: !props.user ? base64Image : image ? (base64Image ? base64Image : image) : null,
+      max_stream_live_license: liveStreamLicense,
+      cust_id: props.user && props.user.cust_id
     };
     delete payload.locations;
     setSubmitLoading(true);
@@ -138,6 +156,7 @@ const UserForm = (props) => {
           });
           props.getUsersList();
           handleFormDialogClose();
+          handleLivestream();
         } else {
           errorMessageHandler(
             enqueueSnackbar,
@@ -157,6 +176,7 @@ const UserForm = (props) => {
             });
             handleFormDialogClose();
             props.getUsersList();
+            handleLivestream();
           } else {
             errorMessageHandler(
               enqueueSnackbar,
@@ -421,26 +441,14 @@ const UserForm = (props) => {
                             checked={values.stream_live_license}
                             onChange={(event) => {
                               setFieldValue('stream_live_license', event.target.checked);
-                              authCtx.setUser({
-                                ...authCtx.user,
-                                max_stream_live_license: event.target.checked
-                                  ? authCtx.user?.max_stream_live_license - 1
-                                  : authCtx.user?.max_stream_live_license + 1
-                              });
-                              localStorage.setItem(
-                                'user',
-                                JSON.stringify({
-                                  ...authCtx.user,
-                                  max_stream_live_license: event.target.checked
-                                    ? authCtx.user?.max_stream_live_license - 1
-                                    : authCtx.user?.max_stream_live_license + 1
-                                })
+                              setLiveStreamLicense(
+                                event.target.checked ? liveStreamLicense - 1 : liveStreamLicense + 1
                               );
                             }}
                           />
                         }
                         label={`Assign Live Streaming License (${
-                          authCtx.user?.max_stream_live_license || 0
+                          liveStreamLicense || 0
                         } Available)`}
                       />
                     </FormControl>

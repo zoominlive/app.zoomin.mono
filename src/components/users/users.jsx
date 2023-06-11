@@ -94,16 +94,44 @@ const Users = () => {
       setIsLoading(false);
     });
   };
+  const handleLivestream = () => {
+    authCtx.setUser({
+      ...authCtx.user,
+      max_stream_live_license: authCtx.user.max_stream_live_license + 1
+    });
+    localStorage.setItem(
+      'user',
+      JSON.stringify({
+        ...authCtx.user,
+        max_stream_live_license: authCtx.user.max_stream_live_license + 1
+      })
+    );
+  };
 
   // Method to delete user
   const handleUserDelete = () => {
     setDeleteLoading(true);
-    API.delete('users/delete', { data: { userId: user.user_id } }).then((response) => {
+    let payload = {
+      userId: user.user_id
+    };
+    if (user.stream_live_license) {
+      payload = {
+        ...payload,
+        custId: authCtx.user.cust_id || localStorage.getItem('cust_id'),
+        max_stream_live_license: authCtx.user.max_stream_live_license + 1
+      };
+    }
+    API.delete('users/delete', {
+      data: { ...payload }
+    }).then((response) => {
       if (response.status === 200) {
         getUsersList();
         enqueueSnackbar(response.data.Message, {
           variant: 'success'
         });
+        if (user.stream_live_license) {
+          handleLivestream();
+        }
       } else {
         errorMessageHandler(
           enqueueSnackbar,
