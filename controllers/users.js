@@ -120,6 +120,11 @@ module.exports = {
       userAdded = addUser;
       if (addUser) {
         let userData = addUser?.toJSON();
+         await customerServices.editCustomer(
+          params.cust_id,
+          {max_stream_live_license: params.max_stream_live_license},
+          t
+        );
 
         if(params.role === 'Teacher'){
           const addRoomsToTeacher = await userServices.assignRoomsToTeacher(
@@ -743,6 +748,12 @@ module.exports = {
             });
           }
         } else {
+          await customerServices.editCustomer(
+            params.cust_id,
+            {max_stream_live_license: params.max_stream_live_license},
+            t
+          );
+
           res.status(200).json({
             IsSuccess: true,
             Data: _.omit(editedProfile, ['password']),
@@ -817,11 +828,19 @@ module.exports = {
   deleteUser: async (req, res, next) => {
     const t = await sequelize.transaction();
     try {
-      const { userId } = req.body;
+      const { userId, custId, max_stream_live_license } = req.body;
 
       let deleted = await userServices.deleteUser(userId, t);
 
       if (deleted) {
+        if(custId && max_stream_live_license){
+          await customerServices.editCustomer(
+            custId,
+            {max_stream_live_license: max_stream_live_license},
+            t
+            );
+          }
+
         res
           .status(200)
           .json({ IsSuccess: true, Data: deleted, Message: CONSTANTS.PROFILE_DELETED });
