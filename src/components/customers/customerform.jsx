@@ -143,7 +143,7 @@ const CustomerForm = (props) => {
         location: { selected_locations: location, accessable_locations: location },
         rooms: rooms,
         stream_live_license: stream_live_license,
-        user_id: props.customer && props.customer.users[0].user_id
+        user_id: props.customer && props.customer?.users[0]?.user_id
       }
     };
     setSubmitLoading(true);

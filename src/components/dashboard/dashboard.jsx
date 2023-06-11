@@ -64,7 +64,8 @@ const Dashboard = () => {
     API.post('dashboard/setPreference', {
       cameras: camLabel.current.cameras,
       locations: camLabel.current.locations,
-      rooms: camLabel.current.rooms
+      rooms: camLabel.current.rooms,
+      cust_id: localStorage.getItem('cust_id')
     });
   };
 
@@ -86,7 +87,7 @@ const Dashboard = () => {
       (response) => {
         if (response.status === 200) {
           setStatisticsData(response.data.Data);
-          const points = response.data.Data.enroledStreamsDetails.map((point) => ({
+          const points = response?.data?.Data?.enroledStreamsDetails.map((point) => ({
             type: 'Feature',
             properties: { cluster: false, rv_id: point.rv_id, label: point.location_name },
             geometry: {
@@ -121,7 +122,7 @@ const Dashboard = () => {
                 : {}
             );
           }
-          setTimeOut(response.data.Data.watchStreamDetails.timeout);
+          setTimeOut(response?.data?.Data?.watchStreamDetails?.timeout);
           setIsLoading(false);
         } else {
           errorMessageHandler(

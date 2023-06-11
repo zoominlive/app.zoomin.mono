@@ -43,7 +43,7 @@ const CustomerSelection = () => {
     localStorage.setItem('cust_id', data?.customer);
     authCtx.setToken(token);
     let customer = customersList.find((i) => i.cust_id === data?.customer);
-    let name = customer.billing_contact_first + ' ' + customer.billing_contact_last;
+    let name = customer.company_name;
     localStorage.setItem('cust_name', name);
     authCtx.setCustName(name);
     setSubmitLoading(false);
@@ -110,7 +110,7 @@ const CustomerSelection = () => {
                           {customersList.map((i) => {
                             return (
                               <MenuItem value={i.cust_id} key={i.cust_id}>
-                                {i.billing_contact_first + ' ' + i.billing_contact_last}{' '}
+                                {i.company_name}{' '}
                               </MenuItem>
                             );
                           })}

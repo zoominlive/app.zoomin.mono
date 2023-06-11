@@ -60,11 +60,9 @@ const RoomForm = (props) => {
     const tempCameraSaveLoading = props?.room?.cameras?.map(() => false);
     setCameraSaveLoading(tempCameraSaveLoading || []);
     setDropdownLoading(true);
-    API.get(
-      props?.room?.location
-        ? `cams?location=${props?.room?.location}?cust_id=${localStorage.getItem('cust_id')}`
-        : `cams/`
-    ).then((response) => {
+    API.get(props?.room?.location ? `cams?location=${props?.room?.location}` : `cams/`, {
+      params: { cust_id: localStorage.getItem('cust_id') }
+    }).then((response) => {
       setDropdownLoading(true);
       if (response.status === 200) {
         const cameras = response.data.Data.cams;

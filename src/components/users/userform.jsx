@@ -225,7 +225,7 @@ const UserForm = (props) => {
             : [],
           stream_live_license: !_.isNil(props?.user?.stream_live_license)
             ? props?.user?.stream_live_license
-            : true
+            : false
         }}
         onSubmit={handleSubmit}>
         {({ values, setFieldValue, touched, errors }) => {
@@ -421,6 +421,21 @@ const UserForm = (props) => {
                             checked={values.stream_live_license}
                             onChange={(event) => {
                               setFieldValue('stream_live_license', event.target.checked);
+                              authCtx.setUser({
+                                ...authCtx.user,
+                                max_stream_live_license: event.target.checked
+                                  ? authCtx.user?.max_stream_live_license - 1
+                                  : authCtx.user?.max_stream_live_license + 1
+                              });
+                              localStorage.setItem(
+                                'user',
+                                JSON.stringify({
+                                  ...authCtx.user,
+                                  max_stream_live_license: event.target.checked
+                                    ? authCtx.user?.max_stream_live_license - 1
+                                    : authCtx.user?.max_stream_live_license + 1
+                                })
+                              );
                             }}
                           />
                         }

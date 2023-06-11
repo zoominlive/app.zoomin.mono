@@ -74,7 +74,7 @@ const CustomPlayer = (props) => {
         <Box className="video-player-wrapper" ref={playerContainerRef}>
           <Loader loading={!ready} />
 
-          <label style={{ position: 'absolute', color: 'white' }}>
+          <label style={{ position: 'absolute', color: 'white', paddingLeft: 30 }}>
             {props?.camDetails?.location +
               '/' +
               props?.camDetails?.room_name +
@@ -82,7 +82,11 @@ const CustomPlayer = (props) => {
               props?.camDetails?.cam_name}
           </label>
           <ReactPlayer
-            url={`${authCtx.user.transcoderBaseUrl}${props?.streamUri}`}
+            url={
+              props.streamUri.includes('https://live.zoominlive.com')
+                ? `${props?.streamUri}`
+                : `${authCtx.user.transcoderBaseUrl}${props?.streamUri}`
+            }
             className="react-player"
             height={'100%'}
             width={'100%'}

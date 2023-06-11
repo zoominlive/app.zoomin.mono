@@ -133,7 +133,7 @@ const Customers = () => {
   const hanldeCustomerSelect = (data) => {
     setIsLoading(true);
     localStorage.setItem('cust_id', data.cust_id);
-    let name = data.billing_contact_first + ' ' + data.billing_contact_last;
+    let name = data.company_name;
     localStorage.setItem('cust_name', name);
     authCtx.setCustName(name);
     API.get('users', { params: { cust_id: data.cust_id } }).then((response) => {
