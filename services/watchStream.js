@@ -643,7 +643,7 @@ module.exports = {
   },
 
   setUserCamPreference: async (user, cams, t) => {
-    const { Family, Users } = await connectToDatabase();
+    const { Family, Users, CamPreference } = await connectToDatabase();
     let camObj = {
       cam_preference: cams,
     };
@@ -659,17 +659,53 @@ module.exports = {
         { transaction: t }
       );
     } else {
-      camSettings = await Users.update(
-        camObj,
+      if (user.role === "Super Admin") {
+        let prefrenceDetails = await CamPreference.findOne({
+          where: { cust_id: cams.cust_id },
+          raw: true,
+        });
+  
+        let { cust_id, ...rest } = cams;
+        if (prefrenceDetails) {
+          camSettings = await CamPreference.update(
+            { watchstream_cam: rest },
+            {
+              where: {
+                cust_id: cams.cust_id,
+              },
+            }
+          );
+        } else {
+          camSettings = await CamPreference.create({
+            cust_id: cust_id,
+            watchstream_cam: rest,
+          });
+        }
+      } 
+      else{
+
+        camSettings = await Users.update(
+          camObj,
         {
           where: {
             user_id: user?.user_id,
           },
         },
         { transaction: t }
-      );
+        );
+      }
     }
 
     return camSettings;
   },
+
+  getCamPreference: async (custId) => {
+    const { CamPreference } = await connectToDatabase();
+    let prefrenceDetails = await CamPreference.findOne({
+      where: { cust_id: custId },
+      raw: true,
+    });
+     
+    return prefrenceDetails?.watchstream_cam
+  }
 };

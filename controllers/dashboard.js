@@ -120,7 +120,7 @@ module.exports = {
           childrenWithDisableDate,
           enroledStreamsDetails: recentViewers ? recentViewers : 0,
           defaultWatchStream: defaultWatchStream ?? null,
-          watchStreamDetails: cameras[0] ?? [],
+          watchStreamDetails: cameras[0] ?? null,
         },
         Message: CONSTANTS.STREAM_DATA,
       });

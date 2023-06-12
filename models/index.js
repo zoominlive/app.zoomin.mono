@@ -15,7 +15,7 @@ const ChangeLogs = require('./change_logs');
 const LiveStreams = require('./live_stream');
 const LiveStreamCameras = require('./live_stream_cameras');
 const FcmTokens = require('./fcm_tokens');
-const DashboardPreference = require('./dashboard_preference');
+const CamPreference = require('./cam_preference');
 const sequelize = require('../lib/database');
 
 CustomerLocations.belongsTo(Customers, { foreignKey: 'cust_id' });
@@ -191,7 +191,7 @@ module.exports = async () => {
       LiveStreams,
       LiveStreamCameras,
       FcmTokens,
-      DashboardPreference
+      CamPreference
     };
   }
 
@@ -217,6 +217,6 @@ module.exports = async () => {
     LiveStreams,
     LiveStreamCameras,
     FcmTokens,
-    DashboardPreference
+    CamPreference
   };
 };

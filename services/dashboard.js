@@ -232,21 +232,21 @@ module.exports = {
   },
 
   setCamPreference: async (user, cams) => {
-    const { Users, DashboardPreference } = await connectToDatabase();
+    const { Users, CamPreference } = await connectToDatabase();
     let camObj = {
-      cam_preference: cams,
+      dashboard_cam_preference: cams,
     };
     let camSettings;
     if (user.role === "Super Admin") {
-      let prefrenceDetails = await DashboardPreference.findOne({
+      let prefrenceDetails = await CamPreference.findOne({
         where: { cust_id: cams.cust_id },
         raw: true,
       });
 
       let { cust_id, ...rest } = cams;
       if (prefrenceDetails) {
-        camSettings = await DashboardPreference.update(
-          { cam_preference: rest },
+        camSettings = await CamPreference.update(
+          { dashboard_cam: rest },
           {
             where: {
               cust_id: cams.cust_id,
@@ -254,9 +254,9 @@ module.exports = {
           }
         );
       } else {
-        camSettings = await DashboardPreference.create({
+        camSettings = await CamPreference.create({
           cust_id: cust_id,
-          cam_preference: rest,
+          dashboard_cam: rest,
         });
       }
     } else {
@@ -271,12 +271,12 @@ module.exports = {
   },
 
   getCamPreference: async (custId) => {
-    const { DashboardPreference } = await connectToDatabase();
-    let prefrenceDetails = await DashboardPreference.findOne({
+    const { CamPreference } = await connectToDatabase();
+    let prefrenceDetails = await CamPreference.findOne({
       where: { cust_id: custId },
       raw: true,
     });
      
-    return prefrenceDetails?.cam_preference
+    return prefrenceDetails?.dashboard_cam
   }
 };

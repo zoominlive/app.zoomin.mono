@@ -38,10 +38,16 @@ module.exports = {
         cameras[camIndex].timeout = customerDetails.timeout;
         cameras[camIndex].permit_audio = customerDetails.permit_audio;
       });
-      response = { streamDetails: cameras, defaultCams: req.user.cam_preference };
+      let defaultCams = req.user.cam_preference
+      if (req.user.role === "Super Admin") {
+        let watchStream = await watchStreamServices.getCamPreference(req.query?.cust_id);
+        defaultCams = watchStream || {};
+      }
+
+      response = { streamDetails: cameras, defaultCams: defaultCams };
       res.status(200).json({
         IsSuccess: true,
-        Data: { streamDetails: cameras, defaultCams: req.user.cam_preference },
+        Data: { streamDetails: cameras, defaultCams: defaultCams },
         Message: CONSTANTS.CAMERA_DETAILS
       });
 

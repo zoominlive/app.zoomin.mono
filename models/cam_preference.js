@@ -1,8 +1,8 @@
 const { Sequelize } = require('sequelize');
 const sequelize = require('../lib/database');
 
-const DashboardPreference = sequelize.define(
-  'dashboard_preference',
+const CamPreference = sequelize.define(
+  'cam_preference',
   {
     id: {
       type: Sequelize.INTEGER,
@@ -11,17 +11,19 @@ const DashboardPreference = sequelize.define(
       autoIncrement: true
     },
     cust_id: { type: Sequelize.STRING(50), allowNull: false },
-    cam_preference: {
+    dashboard_cam: {
         type: Sequelize.JSON,
         defaultValue: {}
     },
-    // createdAt: { type: Sequelize.DATE, field: 'created_at' },
-    // updatedAt: { type: Sequelize.DATE, field: 'updated_at' }
+    watchstream_cam: {
+      type: Sequelize.JSON,
+      defaultValue: {}
+  }
   },
   {
-    tableName: 'dashboard_preference',
+    tableName: 'cam_preference',
     timestamps: false
   }
 );
 
-module.exports = DashboardPreference;
+module.exports = CamPreference;
