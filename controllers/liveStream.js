@@ -82,9 +82,9 @@ module.exports = {
             await notificationSender.sendNotification('Live stream',`${streamObj.stream_name} is started`, '', fcmTokens , {stream_id: streamID, room_id: roomID});
           }
           if(!_.isEmpty(socketIds)){
-            socketIds.forEach(async id => {
+            await Promise.all(socketIds.map(async id => {
               await socketServices.emitResponse(id);
-            });
+            }));
           }
           await t.commit();
            res.status(200).json({
@@ -118,6 +118,7 @@ module.exports = {
       }
       next();
     } catch (error) {
+      await t.rollback();
       res.status(500).json({
         IsSuccess: false,
         error_log: error,
@@ -184,9 +185,9 @@ module.exports = {
         await notificationSender.sendNotification('Live stream',`${streamObj.stream_name} is started`, '', fcmTokens , {stream_id: streamID, room_id: roomID});
       }
       if(!_.isEmpty(socketIds)){
-        socketIds.forEach(async id => {
+        await Promise.all(socketIds.map(async id => {
           await socketServices.emitResponse(id);
-        });
+        }));
       }
       await t.commit();
       res.status(200).json({

@@ -21,7 +21,7 @@ module.exports = {
         const transcodedDetails = await startEncodingStream(
           params.cam_uri,
           token,
-          req.user.cust_id
+          params.cust_id
         );
         params.stream_uri = transcodedDetails?.data ? transcodedDetails.data?.uri : '';
         params.stream_uuid = transcodedDetails?.data ? transcodedDetails.data?.id : '';
@@ -29,7 +29,7 @@ module.exports = {
         const camera = await cameraServices.createCamera(params, t);
 
         const resetAvailableCameras = await customerServices.setAvailableCameras(
-          req.user.cust_id,
+          params.cust_id,
           availableCameras - 1,
           t
         );
