@@ -109,15 +109,15 @@ const Dashboard = () => {
             );
           } else {
             setDefaultWatchStream({
-              locations: [response?.data?.Data?.watchStreamDetails.location],
+              locations: [response?.data?.Data?.watchStreamDetails?.location],
               rooms: [response?.data?.Data?.watchStreamDetails],
-              cameras: response?.data?.Data?.watchStreamDetails.cameras[0]
+              cameras: response?.data?.Data?.watchStreamDetails?.cameras[0]
             });
             setSelectedCamera(
-              response?.data?.Data?.watchStreamDetails.cameras[0]
+              response?.data?.Data?.watchStreamDetails?.cameras[0]
                 ? {
                     ...response?.data?.Data?.watchStreamDetails,
-                    ...response?.data?.Data?.watchStreamDetails.cameras[0]
+                    ...response?.data?.Data?.watchStreamDetails?.cameras[0]
                   }
                 : {}
             );

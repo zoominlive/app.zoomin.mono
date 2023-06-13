@@ -47,7 +47,7 @@ const UserForm = (props) => {
   const [roomList, setRoomList] = useState([]);
   const [selectedRole, setSelectedRole] = useState(null);
   const [liveStreamLicense, setLiveStreamLicense] = useState(
-    authCtx?.user?.max_stream_live_license
+    authCtx?.user?.max_stream_live_license || 0
   );
   const validationSchema = yup.object({
     first_name: yup.string('Enter first name').required('First name is required'),
@@ -436,6 +436,12 @@ const UserForm = (props) => {
                   <Grid item xs={12} md={6}>
                     <FormControl>
                       <FormControlLabel
+                        disabled={
+                          (props?.user && liveStreamLicense === 0 && !values.stream_live_license) ||
+                          (!props?.user && liveStreamLicense === 0)
+                            ? true
+                            : false
+                        }
                         control={
                           <Checkbox
                             checked={values.stream_live_license}
@@ -447,9 +453,7 @@ const UserForm = (props) => {
                             }}
                           />
                         }
-                        label={`Assign Live Streaming License (${
-                          liveStreamLicense || 0
-                        } Available)`}
+                        label={`Assign Live Streaming License (${liveStreamLicense} Available)`}
                       />
                     </FormControl>
                   </Grid>

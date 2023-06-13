@@ -84,7 +84,8 @@ const WatchStream = () => {
       API.post('watchstream/setPreference', {
         cameras: camLabel.current.cameras,
         locations: camLabel.current.locations,
-        rooms: camLabel.current.rooms
+        rooms: camLabel.current.rooms,
+        cust_id: localStorage.getItem('cust_id')
       });
       authCtx.setPreviosPagePath(window.location.pathname);
     };
@@ -389,7 +390,7 @@ const WatchStream = () => {
   }, []);
 
   const handleChangeCameras = (_, values, reason, option) => {
-    if (authCtx.user.role !== 'Admin') {
+    if (!(authCtx.user.role == 'Admin' || authCtx.user.role == 'Super Admin')) {
       if (values.length < 3) {
         setPlaying(true);
         setSubmitted(false);
@@ -418,12 +419,16 @@ const WatchStream = () => {
 
     if (reason == 'selectOption' && option?.option?.cam_name == 'Select All' && !allCamsChecked) {
       if (
-        (authCtx.user.role == 'Admin' && cameras.length > 17) ||
-        (authCtx.user.role !== 'Admin' && cameras.length > 3)
+        ((authCtx.user.role == 'Admin' || authCtx.user.role == 'Super Admin') &&
+          cameras.length > 17) ||
+        (!(authCtx.user.role == 'Admin' || authCtx.user.role == 'Super Admin') &&
+          cameras.length > 3)
       ) {
         errorMessageHandler(
           enqueueSnackbar,
-          `Max ${authCtx.user.role == 'Admin' ? 16 : 2} cameras allowed.`
+          `Max ${
+            authCtx.user.role == 'Admin' || authCtx.user.role == 'Super Admin' ? 16 : 2
+          } cameras allowed.`
         );
       } else {
         setSelectedCameras(reason === 'selectOption' ? cameras.slice(1, cameras.length) : []);
@@ -597,7 +602,9 @@ const WatchStream = () => {
                       helperText={
                         limitReached &&
                         `Maxmimum ${
-                          authCtx.user.role === 'Admin' ? 'sixteen' : 'two'
+                          authCtx.user.role === 'Admin' || authCtx.user.role === 'Super Admin'
+                            ? 'sixteen'
+                            : 'two'
                         } cameras can be selected`
                       }
                       InputProps={{

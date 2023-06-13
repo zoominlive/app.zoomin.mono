@@ -58,8 +58,8 @@ const WatchStreamDialogBox = (props) => {
       (response) => {
         if (response.status === 200) {
           setCamerasPayload({
-            location: [response?.data?.Data.streamDetails[0].location],
-            room: response?.data?.Data.streamDetails
+            location: [response?.data?.Data.streamDetails[0]?.location],
+            rooms: response?.data?.Data.streamDetails
           });
           if (!location.state) {
             !selectedLocation.length &&
@@ -104,7 +104,7 @@ const WatchStreamDialogBox = (props) => {
     }
   };
   const handleSetRooms = (_, value, reason, option) => {
-    const rooms2 = camerasPayload?.room?.filter((room) => {
+    const rooms2 = camerasPayload?.rooms?.filter((room) => {
       let count = 0;
       if (selectedRoom && Object.values(selectedRoom).includes(room?.room_id)) {
         count = 1;
@@ -154,7 +154,7 @@ const WatchStreamDialogBox = (props) => {
   }, []);
 
   useEffect(() => {
-    const roomsToSet = camerasPayload?.room?.filter((room) => {
+    const roomsToSet = camerasPayload?.rooms?.filter((room) => {
       let count = 0;
       selectedLocation?.forEach((loc) => {
         if (loc == room?.location) {
@@ -185,7 +185,7 @@ const WatchStreamDialogBox = (props) => {
   }, [selectedLocation]);
 
   useEffect(() => {
-    const rooms = camerasPayload?.room?.filter((room) => {
+    const rooms = camerasPayload?.rooms?.filter((room) => {
       let count = 0;
       if (selectedRoom && Object.values(selectedRoom).includes(room?.room_id)) {
         count = 1;
@@ -352,7 +352,9 @@ const WatchStreamDialogBox = (props) => {
                 helperText={
                   limitReached &&
                   `Maxmimum ${
-                    authCtx.user.role === 'Admin' ? 'sixteen' : 'two'
+                    authCtx.user.role === 'Admin' || authCtx.user.role === 'Super Admin'
+                      ? 'sixteen'
+                      : 'two'
                   } cameras can be selected`
                 }
                 InputProps={{
