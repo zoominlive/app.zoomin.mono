@@ -24,7 +24,8 @@ const AccessLogs = sequelize.define(
         'User_Forgot_Password',
         'User_Change_Password',
         'User_Reg_Accout',
-        'Watch_Stream'
+        'Watch_Stream',
+        'Live_stream'
       ),
       required: true
     },

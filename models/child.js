@@ -18,6 +18,11 @@ const Child = sequelize.define(
       type: Sequelize.STRING(30),
       required: [true, 'Last Name is mandatory field']
     },
+    rooms: {
+      type: Sequelize.JSON,
+      allowNull: false,
+      required: true
+    },
     location: {
       type: Sequelize.JSON,
       allowNull: false,

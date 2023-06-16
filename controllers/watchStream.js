@@ -10,26 +10,44 @@ module.exports = {
     let response;
     try {
       if (req.user.role == 'Family') {
-        let accessableLocsToFamily = req.user?.location?.accessable_locations?.filter((loc) => {
-          if (!req.user?.disabled_locations?.locations?.find((loc1) => loc1 == loc)) {
-            return loc;
-          }
-        });
+        let accessableLocsToFamily
+        if(req.user.cust_id){
+          accessableLocsToFamily = req.user?.location?.accessable_locations?.filter((loc) => {
+            if (!req.user?.disabled_locations?.locations?.find((loc1) => loc1 == loc)) {
+              return loc;
+            }
+          });
+        }
+        else{
+          let availableLocations = await customerServices.getLocationDetails(req.query?.cust_id)
+          let locs = availableLocations.flatMap((i) => i.loc_name);
+          accessableLocsToFamily = locs?.filter((loc) => {
+            if (!req.user?.disabled_locations?.locations?.find((loc1) => loc1 == loc)) {
+              return loc;
+            }
+          });
+        }
         req.user.location.accessable_locations = accessableLocsToFamily;
       }
-      let cameras = await watchStreamServices.getAllCamForLocation(req.user);
-
-      const customerDetails = await customerServices.getCustomerDetails(req.user.cust_id);
+      let cameras = await watchStreamServices.getAllCamForLocation({...req.user, cust_id: req.user.cust_id || req.query?.cust_id});
+      
+      const customerDetails = await customerServices.getCustomerDetails(req.user.cust_id || req.query?.cust_id);
       cameras = _.uniqBy(cameras, 'room_id');
 
       cameras?.forEach((cam, camIndex) => {
         cameras[camIndex].timeout = customerDetails.timeout;
         cameras[camIndex].permit_audio = customerDetails.permit_audio;
       });
-      response = { streamDetails: cameras, defaultCams: req.user.cam_preference };
+      let defaultCams = req.user.cam_preference
+      if (req.user.role === "Super Admin") {
+        let watchStream = await watchStreamServices.getCamPreference(req.query?.cust_id);
+        defaultCams = watchStream || {};
+      }
+
+      response = { streamDetails: cameras, defaultCams: defaultCams };
       res.status(200).json({
         IsSuccess: true,
-        Data: { streamDetails: cameras, defaultCams: req.user.cam_preference },
+        Data: { streamDetails: cameras, defaultCams: defaultCams },
         Message: CONSTANTS.CAMERA_DETAILS
       });
 
@@ -94,9 +112,9 @@ module.exports = {
         });
         req.user.location.accessable_locations = accessableLocsToFamily;
       }
-      const camDetails = await watchStreamServices.getAllCamForUser(req.user);
+      const camDetails = await watchStreamServices.getAllCamForUser({...req.user, cust_id: req.user.cust_id  || req.query?.cust_id});
 
-      const customerDetails = await customerServices.getCustomerDetails(req.user.cust_id);
+      const customerDetails = await customerServices.getCustomerDetails(req.user.cust_id || req.query?.cust_id);
 
       camDetails?.forEach((room, roomIndex) => {
         camDetails[roomIndex].timeout = customerDetails.timeout;

@@ -14,6 +14,7 @@ const encrypter = require('object-encrypter');
 const engine = encrypter(process.env.JWT_SECRET_KEY, { ttl: false });
 const customerServices = require('../services/customers');
 const logServices = require('../services/logs');
+const fcmTokensServices = require('../services/fcmTokens');
 const CONSTANTS = require('../lib/constants');
 const sequelize = require('../lib/database');
 const notificationSender = require('../lib/firebase-services');
@@ -27,14 +28,16 @@ module.exports = {
       let childIds = childs.flatMap(i => i.child_id)
       let familys = await childServices.getAllchildrensFamilyId(childIds, t);
       let familyIds = [...new Set(familys.flatMap(i => i.family_id))];
-      let fcmTokens = await familyServices.getFamilyMembersFcmTokens(familyIds);
+      let familyMembers = await familyServices.getFamilyMembersIds(familyIds);
+      let familyMembersIds = familyMembers.flatMap( i => i.family_member_id);
+      let fcmTokens = await fcmTokensServices.getFamilyMembersFcmTokens(familyMembersIds);
       fcmTokens = fcmTokens.flatMap(i => i.fcm_token)
-      
-      await notificationSender.sendNotification(title, body, image, fcmTokens.filter(i => i!== null));
+      fcmTokens = [...new Set(fcmTokens)].filter(i => i!== null);
+      await notificationSender.sendNotification(title, body, image, fcmTokens, null);
     
       res.status(200).json({
         IsSuccess: true,
-        Data: fcmTokens.filter(i => i!== null),
+        Data: fcmTokens,
         Message: CONSTANTS.NOTIFICATION_SENT 
       });
       next();
@@ -48,7 +51,8 @@ module.exports = {
 
   getAllUsersForLocation: async (req, res, next) => {
     try {
-      let users = await userServices.getAllUsersForLocation(req.user.cust_id, req.query.locations);
+      let custId = req.user.cust_id || req.query.cust_id;
+      let users = await userServices.getAllUsersForLocation(custId, req.query.locations);
       res.status(200).json({
         IsSuccess: true,
         Data: users,
@@ -66,7 +70,14 @@ module.exports = {
   getUserDetails: async (req, res, next) => {
     try {
       const user = req.user;
-      user.transcoderBaseUrl = await customerServices.getTranscoderUrl(req.user.cust_id);
+      const custId = req.user.cust_id || req.query?.cust_id;
+      if(!req.user.cust_id){
+        let availableLocations = await customerServices.getLocationDetails(custId)
+        let locs = availableLocations.flatMap((i) => i.loc_name);
+        user.location = { selected_locations: locs, accessable_locations: locs };
+      }
+      user.transcoderBaseUrl = await customerServices.getTranscoderUrl(custId);
+      user.max_stream_live_license = await customerServices.getMaxLiveStramAvailable(custId);
       res.status(200).json({
         IsSuccess: true,
         Data: _.omit(user, ['password']),
@@ -87,12 +98,13 @@ module.exports = {
     let userAdded;
     try {
       const params = req.body;
-      params.cust_id = req.user.cust_id;
+      params.cust_id = req.user.cust_id || req.body.cust_id;
 
       let checkUserValidation = await userServices.userValidation(params);
 
       if (checkUserValidation && !checkUserValidation.isValid) {
         res.status(400).json(checkUserValidation.message);
+        return
       }
 
       let emailIs = params.email;
@@ -104,10 +116,24 @@ module.exports = {
       params.is_verified = false;
   
       let addUser = await userServices.createUser(_.omit(params, ['image']), t);
+      
       userAdded = addUser;
       if (addUser) {
         let userData = addUser?.toJSON();
-        const registerFlag = true;
+         await customerServices.editCustomer(
+          params.cust_id,
+          {max_stream_live_license: params.max_stream_live_license},
+          t
+        );
+
+        if(params.role === 'Teacher'){
+          const addRoomsToTeacher = await userServices.assignRoomsToTeacher(
+            userData?.user_id,
+            params?.rooms,
+            t
+          );
+        }
+
         const token = await userServices.createPasswordToken(userData);
         const name = userData.first_name + ' ' + userData.last_name;
         const originalUrl =
@@ -161,13 +187,15 @@ module.exports = {
     const t = await sequelize.transaction();
     let userFound;
     let logDetails;
-    let userObj;
+    let fcmObj;
     let success = false;
     try {
       let { email, password, fcm_token, device_type } = req.body;
 
       let emailIs = email;
-      userObj = {fcm_token: fcm_token ? fcm_token : null, device_type: device_type ? device_type : null};
+      if(fcm_token && device_type){
+        fcmObj = {fcm_token: fcm_token, device_type: device_type }
+      }
       emailIs = emailIs.toLowerCase();
       const user = await userServices.getUser(emailIs);
       userFound = user;
@@ -178,7 +206,8 @@ module.exports = {
       }
 
       if (user) {
-        user.transcoderBaseUrl = await customerServices.getTranscoderUrl(user.cust_id);
+        user.transcoderBaseUrl = await customerServices.getTranscoderUrl(user.cust_id) ;
+        user.max_stream_live_license = await customerServices.getMaxLiveStramAvailable(user.cust_id) ;
         if (!user.is_verified || user.status == 'inactive') {
           res.status(400).json({
             IsSuccess: true,
@@ -193,12 +222,13 @@ module.exports = {
             
             const userData = _.omit(user, ['password', 'cust_id']);
             success = true;
-            userObj = { 
-              ...userObj,
+            if(fcmObj){
+            fcmObj = { 
+              ...fcmObj,
               user_id:userFound?.user_id
             }
-            
-            await userServices.editUserProfile(userObj, _.omit(userObj, ['user_id']), t);
+            await fcmTokensServices.createFcmToken(fcmObj, t);
+          }
             await t.commit();
             res.status(200).json({
               IsSuccess: true,
@@ -227,11 +257,13 @@ module.exports = {
           if (validPassword) {
             const token = await familyServices.createFamilyMemberToken(familyUser.family_member_id);
             const userData = _.omit(familyUser, ['password', 'cust_id']);
-            userObj = { 
-              ...userObj,
+            if(fcmObj){
+            fcmObj = { 
+              ...fcmObj,
               family_member_id:userFound?.family_member_id
             }
-            await familyServices.editFamily(userObj, t);
+            await fcmTokensServices.createFcmToken(fcmObj, t);
+          }
             await t.commit();
             success = true;
             res.status(200).json({
@@ -429,7 +461,7 @@ module.exports = {
       }
       if (user) {
         const userData = user;
-        const registerFlag = false;
+        if(userData.is_verified) {
         if (userData.role === 'Admin' || userData.role === 'User') {
           const token = await userServices.createPasswordToken(userData);
           const name = userData.first_name + ' ' + userData.last_name;
@@ -453,12 +485,15 @@ module.exports = {
             t
           );
         }
-
         res.status(200).json({
           IsSuccess: true,
           Data: {},
           Message: CONSTANTS.PASSWORD_RESET_LINK_SENT
         });
+      }
+      else{
+        res.status(400).json({ IsSuccess: true, Data: {}, Message: CONSTANTS.USER_NOT_VERIFIED });
+      }
       } else {
         res.status(400).json({ IsSuccess: true, Data: {}, Message: CONSTANTS.USER_NOT_FOUND });
       }
@@ -679,6 +714,14 @@ module.exports = {
       }
 
       let editedProfile = await userServices.editUserProfile(user, _.omit(params, ['email']), t); // user should not be allowed to edit email directly.
+
+      if(params.role === 'Teacher'){
+        const roomsEdited = await userServices.editAssignedRoomsToTeacher(
+          user.user_id,
+          params?.rooms,
+          t
+        );
+      }
       editedProfile.transcoderBaseUrl = await customerServices.getTranscoderUrl(req.user.cust_id);
       if (editedProfile) {
         if (params?.email && params?.email !== user.email) {
@@ -705,6 +748,12 @@ module.exports = {
             });
           }
         } else {
+          await customerServices.editCustomer(
+            params.cust_id,
+            {max_stream_live_license: params.max_stream_live_license},
+            t
+          );
+
           res.status(200).json({
             IsSuccess: true,
             Data: _.omit(editedProfile, ['password']),
@@ -779,11 +828,19 @@ module.exports = {
   deleteUser: async (req, res, next) => {
     const t = await sequelize.transaction();
     try {
-      const { userId } = req.body;
+      const { userId, custId, max_stream_live_license } = req.body;
 
       let deleted = await userServices.deleteUser(userId, t);
 
       if (deleted) {
+        if(custId && max_stream_live_license){
+          await customerServices.editCustomer(
+            custId,
+            {max_stream_live_license: max_stream_live_license},
+            t
+            );
+          }
+
         res
           .status(200)
           .json({ IsSuccess: true, Data: deleted, Message: CONSTANTS.PROFILE_DELETED });
@@ -871,10 +928,13 @@ module.exports = {
       const filter = {
         pageNumber: req.query?.pageNumber,
         pageSize: req.query?.pageSize,
-        searchBy: req.query?.searchBy.replace(/'/g, "\\'"),
+        searchBy: req.query?.searchBy?.replace(/'/g, "\\'"),
         location: req.query?.location,
+        role: req.query?.role,
+        liveStreaming: req.query?.liveStreaming,
         pageCount: req.query?.pageCount,
-        orderBy: req.query?.orderBy
+        orderBy: req.query?.orderBy,
+        cust_id: req.query?.cust_id
       };
 
       const usersDetails = await userServices.getAllUsers(user, filter);

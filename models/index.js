@@ -8,13 +8,30 @@ const RecentViewers = require('./recent_viewers');
 const Room = require('./room');
 const ScheduledToDisable = require('./scheluled_to_disable');
 const RoomsInChild = require('./rooms_assigned_to_child');
+const RoomsInTeacher = require('./rooms_assigned_to_teacher');
 const CamerasInRooms = require('./cameras_assigned_to_rooms');
 const AccessLogs = require('./access_logs');
 const ChangeLogs = require('./change_logs');
 const LiveStreams = require('./live_stream');
+const LiveStreamCameras = require('./live_stream_cameras');
+const FcmTokens = require('./fcm_tokens');
+const CamPreference = require('./cam_preference');
 const sequelize = require('../lib/database');
 
 CustomerLocations.belongsTo(Customers, { foreignKey: 'cust_id' });
+Customers.hasMany(CustomerLocations, {
+  sourceKey: 'cust_id',
+  foreignKey: {
+    name: 'cust_id'
+  }
+});
+Customers.hasMany(Users, {
+  sourceKey: 'cust_id',
+  foreignKey: {
+    name: 'cust_id'
+  }
+});
+
 Family.hasMany(Child, {
   sourceKey: 'family_id',
   foreignKey: {
@@ -47,6 +64,15 @@ Child.hasMany(RoomsInChild, {
   }
 });
 
+RoomsInTeacher.belongsTo(Users, { foreignKey: 'teacher_id', targetKey: 'user_id' });
+Users.hasMany(RoomsInTeacher, {
+  as: 'roomsInTeacher',
+  sourceKey: 'user_id',
+  foreignKey: {
+    name: 'teacher_id'
+  }
+});
+
 CamerasInRooms.belongsTo(Room, { foreignKey: 'room_id' });
 Room.hasMany(CamerasInRooms, {
   sourceKey: 'room_id',
@@ -54,6 +80,29 @@ Room.hasMany(CamerasInRooms, {
     name: 'room_id'
   }
 });
+
+LiveStreamCameras.belongsTo(Room, { foreignKey: 'room_id' });
+Room.hasMany(LiveStreamCameras, {
+  sourceKey: 'room_id',
+  foreignKey: {
+    name: 'room_id'
+  }
+});
+
+RoomsInTeacher.hasMany(CamerasInRooms, {
+  sourceKey: 'room_id',
+  foreignKey: {
+    name: 'room_id'
+  }
+});
+
+RoomsInTeacher.hasMany(LiveStreamCameras, {
+  sourceKey: 'room_id',
+  foreignKey: {
+    name: 'room_id'
+  }
+});
+
 
 CamerasInRooms.belongsTo(Camera, { foreignKey: 'cam_id' });
 Camera.hasMany(CamerasInRooms, {
@@ -72,6 +121,15 @@ RoomsInChild.hasOne(Room, {
   }
 });
 
+Room.belongsTo(RoomsInTeacher, { foreignKey: 'room_id' });
+RoomsInTeacher.hasOne(Room, {
+  as: 'room',
+  sourceKey: 'room_id',
+  foreignKey: {
+    name: 'room_id'
+  }
+});
+
 Room.belongsTo(CustomerLocations, { foreignKey: 'location' });
 CustomerLocations.hasMany(Room, {
   sourceKey: 'loc_name',
@@ -79,6 +137,7 @@ CustomerLocations.hasMany(Room, {
     name: 'location'
   }
 });
+
 
 Family.belongsTo(RecentViewers, { foreignKey: 'family_member_id' });
 RecentViewers.hasOne(Family, {
@@ -127,8 +186,12 @@ module.exports = async () => {
       Camera,
       ScheduledToDisable,
       RoomsInChild,
+      RoomsInTeacher,
       CamerasInRooms,
-      LiveStreams
+      LiveStreams,
+      LiveStreamCameras,
+      FcmTokens,
+      CamPreference
     };
   }
 
@@ -149,7 +212,11 @@ module.exports = async () => {
     Camera,
     ScheduledToDisable,
     RoomsInChild,
+    RoomsInTeacher,
     CamerasInRooms,
-    LiveStreams
+    LiveStreams,
+    LiveStreamCameras,
+    FcmTokens,
+    CamPreference
   };
 };

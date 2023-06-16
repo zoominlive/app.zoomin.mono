@@ -14,7 +14,7 @@ module.exports = {
         endDate: req.query?.to ? req.query?.to : moment(),
         type: req.query?.type,
         functions: req.query?.functions,
-        userIds: req.query?.users,
+        userIds: req.query?.users || [],
         locations: req.query?.locations,
         familyMemberIds: req.query?.familyMemberIds || [],
         actions: req.query?.actions

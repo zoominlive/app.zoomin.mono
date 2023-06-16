@@ -11,7 +11,7 @@ module.exports = {
     const t = await sequelize.transaction();
     try {
       params = req.body;
-      params.cust_id = req.user.cust_id;
+      params.cust_id = req.user.cust_id || req.body.cust_id;
 
       const customer = await customerServices.getCustomerDetails(params.cust_id, t);
       const availableCameras = customer?.available_cameras;
@@ -21,7 +21,7 @@ module.exports = {
         const transcodedDetails = await startEncodingStream(
           params.cam_uri,
           token,
-          req.user.cust_id
+          params.cust_id
         );
         params.stream_uri = transcodedDetails?.data ? transcodedDetails.data?.uri : '';
         params.stream_uuid = transcodedDetails?.data ? transcodedDetails.data?.id : '';
@@ -29,7 +29,7 @@ module.exports = {
         const camera = await cameraServices.createCamera(params, t);
 
         const resetAvailableCameras = await customerServices.setAvailableCameras(
-          req.user.cust_id,
+          params.cust_id,
           availableCameras - 1,
           t
         );
@@ -201,9 +201,10 @@ module.exports = {
         pageNumber: req.query?.pageNumber,
         pageSize: req.query?.pageSize,
         location: req.query?.location,
-        searchBy: req.query?.searchBy?.replace(/'/g, "\\'")
+        searchBy: req.query?.searchBy?.replace(/'/g, "\\'"),
+        cust_id: req.query?.cust_id
       };
-      const cameras = await cameraServices.getAllCameraForCustomer(req.user.cust_id, req.user, filter);
+      const cameras = await cameraServices.getAllCameraForCustomer(req.user.cust_id , req.user, filter);
 
       res.status(200).json({
         IsSuccess: true,

@@ -49,7 +49,7 @@ const Users = sequelize.define(
       required: true
     },
     role: {
-      type: Sequelize.ENUM('Teacher', 'User', 'Admin'),
+      type: Sequelize.ENUM('Teacher', 'User', 'Admin', 'Super'),
       required: true
     },
     profile_image: {
@@ -68,16 +68,6 @@ const Users = sequelize.define(
     dashboard_cam_preference: {
       type: Sequelize.JSON,
       defaultValue: {}
-    },
-    fcm_token: {
-      type: Sequelize.STRING(250),
-      default: null,
-      allowNull: true,
-    },
-    device_type: {
-      type: Sequelize.ENUM('ios', 'android'),
-      default: null,
-      allowNull: true,
     },
     stream_live_license: {
      type: Sequelize.BOOLEAN(),

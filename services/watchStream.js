@@ -1,64 +1,83 @@
-const connectToDatabase = require('../models/index');
-const Sequelize = require('sequelize');
-const _ = require('lodash');
-const moment = require('moment-timezone');
-
+const connectToDatabase = require("../models/index");
+const Sequelize = require("sequelize");
+const _ = require("lodash");
+const moment = require("moment-timezone");
+const RoomsInTeacher = require("../models/rooms_assigned_to_teacher");
+const customerServices = require("../services/customers");
+// const livestreamCameras = require("./livestreamCameras");
 module.exports = {
   /* Create new camera */
   getAllCamForLocation: async (user) => {
-    const { Camera, Room, Child, RoomsInChild, CamerasInRooms, CustomerLocations } =
-      await connectToDatabase();
+    const {
+      Camera,
+      Room,
+      Child,
+      RoomsInChild,
+      CamerasInRooms,
+      CustomerLocations,
+      RoomsInTeacher,
+      LiveStreamCameras,
+    } = await connectToDatabase();
 
     let availableLocations = await CustomerLocations.findAll({
       where: { cust_id: user.cust_id },
-      raw: true
+      raw: true,
     });
 
     if (user?.family_id) {
       let cameras = await Child.findAll({
-        where: { family_id: user.family_id, status: 'enabled' },
+        where: { family_id: user.family_id, status: "enabled" },
         include: [
           {
             model: RoomsInChild,
             where: {
-              disabled: 'false'
+              disabled: "false",
             },
-            as: 'roomsInChild',
+            as: "roomsInChild",
             include: [
               {
                 model: Room,
-                as: 'room',
+                as: "room",
                 where: { location: user.location.accessable_locations },
                 include: [
                   {
                     model: CamerasInRooms,
                     include: [
                       {
-                        model: Camera
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
-          }
-        ]
+                        model: Camera,
+                      },
+                    ],
+                  },
+                  {
+                    model: LiveStreamCameras,
+                  },
+                ],
+              },
+            ],
+          },
+        ],
       });
 
       let finalRooms = [];
       cameras?.forEach((rooms) => {
         rooms?.roomsInChild?.forEach((room) => {
           if (room?.schedule?.timeRange) {
-            const timeZone = availableLocations.find((loc) => loc.loc_name == room.room.location);
+            const timeZone = availableLocations.find(
+              (loc) => loc.loc_name == room.room.location
+            );
             let hasAccess = false;
             room.schedule.timeRange?.forEach((range) => {
-              if (range[1].includes(moment().tz(timeZone.time_zone).format('dddd'))) {
+              if (
+                range[1].includes(
+                  moment().tz(timeZone.time_zone).format("dddd")
+                )
+              ) {
                 const currentTime = moment(
-                  moment().tz(timeZone.time_zone).format('hh:mm A'),
-                  'hh:mm A'
+                  moment().tz(timeZone.time_zone).format("hh:mm A"),
+                  "hh:mm A"
                 );
-                const beforeTime = moment(range[0][0], 'hh:mm A');
-                const afterTime = moment(range[0][1], 'hh:mm A');
+                const beforeTime = moment(range[0][0], "hh:mm A");
+                const afterTime = moment(range[0][1], "hh:mm A");
                 console.log(
                   beforeTime,
                   afterTime,
@@ -77,15 +96,26 @@ module.exports = {
                     cam_id: cam?.camera?.cam_id,
                     cam_name: cam?.camera?.cam_name,
                     description: cam?.camera?.description,
-                    stream_uri: cam?.camera?.stream_uri
+                    stream_uri: cam?.camera?.stream_uri,
                   };
                 })
                 .filter((cam) => cam?.cam_id);
+
+              let livStreamCams = room.room?.live_stream_cameras?.map((cam) => {
+                return {
+                  cam_id: cam?.cam_id,
+                  cam_name: cam?.cam_name,
+                  description: cam?.description || "",
+                  stream_uri: cam?.stream_uri,
+                };
+              });
+              cams = cams.concat(livStreamCams);
+
               finalRooms.push({
                 room_id: room.room.room_id,
                 room_name: room.room.room_name,
                 location: room.room.location,
-                cameras: cams
+                cameras: cams,
               });
             }
           } else {
@@ -95,77 +125,138 @@ module.exports = {
                   cam_id: cam?.camera?.cam_id,
                   cam_name: cam?.camera?.cam_name,
                   description: cam?.camera?.description,
-                  stream_uri: cam?.camera?.stream_uri
+                  stream_uri: cam?.camera?.stream_uri,
                 };
               })
               .filter((cam) => cam?.cam_id);
+
+            let livStreamCams = room.room?.live_stream_cameras?.map((cam) => {
+              return {
+                cam_id: cam?.cam_id,
+                cam_name: cam?.cam_name,
+                description: cam?.description || "",
+                stream_uri: cam?.stream_uri,
+              };
+            });
+            cams = cams.concat(livStreamCams);
 
             finalRooms.push({
               room_id: room.room.room_id,
               room_name: room.room.room_name,
               location: room.room.location,
-              cameras: cams
+              cameras: cams,
             });
           }
         });
       });
 
-      finalRooms = _.uniqBy(finalRooms, 'room_id');
+      finalRooms = _.uniqBy(finalRooms, "room_id");
       return finalRooms;
     } else {
       let rooms;
 
-      if (user.role == 'Admin') {
+      if (user.role == "Admin" || user.role == "Super Admin") {
+        let loc_obj = {};
+        if (user.role == "Super Admin") {
+          let availableLocations = await customerServices.getLocationDetails(
+            user.cust_id
+          );
+          let locs = availableLocations.flatMap((i) => i.loc_name);
+          loc_obj = { location: locs };
+        } else {
+          loc_obj = { location: user.location.accessable_locations };
+        }
         rooms = await Room.findAll({
           where: {
             cust_id: user.cust_id,
-            location: user.location.accessable_locations
+            ...loc_obj,
           },
           include: [
             {
               model: CamerasInRooms,
               include: [
                 {
-                  model: Camera
-                }
-              ]
-            }
-          ]
+                  model: Camera,
+                },
+              ],
+            },
+            {
+              model: LiveStreamCameras,
+            },
+          ],
+        });
+      } else if (user.role == "Teacher") {
+        rooms = await RoomsInTeacher.findAll({
+          where: { teacher_id: user.user_id },
+          include: [
+            {
+              model: CamerasInRooms,
+              include: [
+                {
+                  model: Camera,
+                },
+              ],
+            },
+            {
+              model: LiveStreamCameras,
+            },
+            { model: Room, as: "room", raw: true },
+          ],
         });
       } else {
         rooms = await Room.findAll({
           where: {
-            user_id: user.user_id
+            user_id: user.user_id,
           },
           include: [
             {
               model: CamerasInRooms,
               include: [
                 {
-                  model: Camera
-                }
-              ]
-            }
-          ]
+                  model: Camera,
+                },
+              ],
+            },
+            {
+              model: LiveStreamCameras,
+            },
+          ],
         });
       }
 
       rooms = rooms?.map((room) => {
-        let cameras = room.cameras_assigned_to_rooms
+        //.filter((cam) => cam?.cam_id);
+
+        let cameras = room.dataValues.cameras_assigned_to_rooms
           ?.map((cam) => {
             return {
               cam_id: cam?.camera?.cam_id,
               cam_name: cam?.camera?.cam_name,
               description: cam?.camera?.description,
-              stream_uri: cam?.camera?.stream_uri
+              stream_uri: cam?.camera?.stream_uri,
             };
           })
           .filter((cam) => cam?.cam_id);
+
+        let livStreamCameras = room.dataValues.live_stream_cameras?.map(
+          (cam) => {
+            return {
+              cam_id: cam?.cam_id,
+              cam_name: cam?.cam_name,
+              description: cam?.description || "",
+              stream_uri: cam?.stream_uri,
+            };
+          }
+        );
+        cameras = cameras.concat(livStreamCameras);
+
         return {
           room_id: room.room_id,
-          room_name: room.room_name,
-          location: room.location,
-          cameras: cameras
+          room_name:
+            room.room_name || room.dataValues?.room?.dataValues?.room_name,
+          location:
+            room.location || room.dataValues?.room?.dataValues?.location,
+          cameras: cameras,
         };
       });
       return rooms;
@@ -173,61 +264,78 @@ module.exports = {
   },
 
   getAllCamForUser: async (user) => {
-    const { Camera, Room, Child, RoomsInChild, CamerasInRooms, CustomerLocations } =
-      await connectToDatabase();
+    const {
+      Camera,
+      Room,
+      Child,
+      RoomsInChild,
+      CamerasInRooms,
+      CustomerLocations,
+      LiveStreamCameras,
+      RoomsInTeacher,
+    } = await connectToDatabase();
 
     let availableLocations = await CustomerLocations.findAll({
       where: { cust_id: user.cust_id },
-      raw: true
+      raw: true,
     });
 
     if (user?.family_id) {
       let cameras = await Child.findAll({
-        where: { family_id: user.family_id, status: 'enabled' },
+        where: { family_id: user.family_id, status: "enabled" },
         include: [
           {
             model: RoomsInChild,
-            as: 'roomsInChild',
+            as: "roomsInChild",
             where: {
-              disabled: 'false'
+              disabled: "false",
             },
             include: [
               {
                 model: Room,
-                as: 'room',
+                as: "room",
                 where: {
-                  location: user.location.accessable_locations
+                  location: user.location.accessable_locations,
                 },
                 include: [
                   {
                     model: CamerasInRooms,
                     include: [
                       {
-                        model: Camera
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
-          }
-        ]
+                        model: Camera,
+                      },
+                    ],
+                  },
+                  {
+                    model: LiveStreamCameras,
+                  },
+                ],
+              },
+            ],
+          },
+        ],
       });
 
       const finalResult = cameras?.map((child) => {
         let finalRooms = [];
         child?.roomsInChild?.forEach((room) => {
           if (room?.schedule?.timeRange) {
-            const timeZone = availableLocations.find((loc) => loc.loc_name == room.room.location);
+            const timeZone = availableLocations.find(
+              (loc) => loc.loc_name == room.room.location
+            );
             let hasAccess = false;
             room.schedule.timeRange?.forEach((range) => {
-              if (range[1].includes(moment().tz(timeZone.time_zone).format('dddd'))) {
+              if (
+                range[1].includes(
+                  moment().tz(timeZone.time_zone).format("dddd")
+                )
+              ) {
                 const currentTime = moment(
-                  moment().tz(timeZone.time_zone).format('hh:mm A'),
-                  'hh:mm A'
+                  moment().tz(timeZone.time_zone).format("hh:mm A"),
+                  "hh:mm A"
                 );
-                const beforeTime = moment(range[0][0], 'hh:mm A');
-                const afterTime = moment(range[0][1], 'hh:mm A');
+                const beforeTime = moment(range[0][0], "hh:mm A");
+                const afterTime = moment(range[0][1], "hh:mm A");
                 console.log(
                   beforeTime,
                   afterTime,
@@ -246,15 +354,26 @@ module.exports = {
                     cam_id: cam?.camera?.cam_id,
                     cam_name: cam?.camera?.cam_name,
                     description: cam?.camera?.description,
-                    stream_uri: cam?.camera?.stream_uri
+                    stream_uri: cam?.camera?.stream_uri,
                   };
                 })
                 .filter((cam) => cam?.cam_id);
+
+              let livStreamCams = room.room?.live_stream_cameras?.map((cam) => {
+                return {
+                  cam_id: cam?.cam_id,
+                  cam_name: cam?.cam_name,
+                  description: cam?.description || "",
+                  stream_uri: cam?.stream_uri,
+                };
+              });
+              cams = cams.concat(livStreamCams);
+
               finalRooms.push({
                 room_id: room.room.room_id,
                 room_name: room.room.room_name,
                 location: room.room.location,
-                cameras: cams
+                cameras: cams,
               });
             }
           } else {
@@ -264,50 +383,61 @@ module.exports = {
                   cam_id: cam?.camera?.cam_id,
                   cam_name: cam?.camera?.cam_name,
                   description: cam?.camera?.description,
-                  stream_uri: cam?.camera?.stream_uri
+                  stream_uri: cam?.camera?.stream_uri,
                 };
               })
               .filter((cam) => cam?.cam_id);
-
+            let livStreamCams = room.room?.live_stream_cameras?.map((cam) => {
+              return {
+                cam_id: cam?.cam_id,
+                cam_name: cam?.cam_name,
+                description: cam?.description || "",
+                stream_uri: cam?.stream_uri,
+              };
+            });
+            cams = cams.concat(livStreamCams);
             finalRooms.push({
               room_id: room.room.room_id,
               room_name: room.room.room_name,
               location: room.room.location,
-              cameras: cams
+              cameras: cams,
             });
           }
         });
         return {
           childFirstName: child.first_name,
           childLastName: child.last_name,
-          rooms: finalRooms
+          rooms: finalRooms,
         };
       });
 
       return finalResult;
     } else {
-      if (user.role == 'Admin') {
+      if (user.role == "Admin") {
         let locations = await CustomerLocations.findAll({
           where: {
-            loc_name: user.location.accessable_locations
+            loc_name: user.location.accessable_locations,
           },
-          attributes: ['loc_name'],
+          attributes: ["loc_name"],
           include: [
             {
               model: Room,
-              attributes: ['room_id', 'room_name'],
+              attributes: ["room_id", "room_name"],
               include: [
                 {
                   model: CamerasInRooms,
                   include: [
                     {
-                      model: Camera
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
+                      model: Camera,
+                    },
+                  ],
+                },
+                {
+                  model: LiveStreamCameras,
+                },
+              ],
+            },
+          ],
         });
 
         locations = locations?.map((loc) => {
@@ -318,11 +448,24 @@ module.exports = {
                   cam_id: cam?.camera?.cam_id,
                   cam_name: cam?.camera?.cam_name,
                   description: cam?.camera?.description,
-                  stream_uri: cam?.camera?.stream_uri
+                  stream_uri: cam?.camera?.stream_uri,
                 };
               })
               .filter((cam) => cam?.cam_id);
-            return { room_id: room.room_id, room_name: room.room_name, cameras: cams };
+            let livStreamCams = room.live_stream_cameras?.map((cam) => {
+              return {
+                cam_id: cam?.cam_id,
+                cam_name: cam?.cam_name,
+                description: cam?.description || "",
+                stream_uri: cam?.stream_uri,
+              };
+            });
+            cams = cams.concat(livStreamCams);
+            return {
+              room_id: room.room_id,
+              room_name: room.room_name,
+              cameras: cams,
+            };
           });
 
           return { location: loc.loc_name, rooms: rooms };
@@ -332,30 +475,114 @@ module.exports = {
       } else {
         let locations = await CustomerLocations.findAll({
           where: {
-            loc_name: user.location.accessable_locations
+            loc_name: user.location.accessable_locations,
           },
-          attributes: ['loc_name'],
+          attributes: ["loc_name"],
           include: [
             {
               model: Room,
-              as: 'room',
-              attributes: ['room_id', 'room_name'],
+              attributes: ["room_id", "room_name"],
               where: {
-                user_id: user.user_id
+                user_id: user.user_id,
               },
               include: [
                 {
                   model: CamerasInRooms,
                   include: [
                     {
-                      model: Camera
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
+                      model: Camera,
+                    },
+                  ],
+                },
+                {
+                  model: LiveStreamCameras,
+                },
+              ],
+            },
+          ],
         });
+        if (user.role == "Teacher") {
+          let rooms = await RoomsInTeacher.findAll({
+            where: { teacher_id: user.user_id },
+            include: [
+              {
+                model: CamerasInRooms,
+                include: [
+                  {
+                    model: Camera,
+                  },
+                ],
+              },
+              {
+                model: LiveStreamCameras,
+                raw: true,
+              },
+              {
+                model: Room,
+                as: "room",
+                raw: true,
+                where: {
+                  location: user.location.accessable_locations,
+                },
+              },
+            ],
+          });
+          rooms = rooms?.map((room) => {
+            //.filter((cam) => cam?.cam_id);
+
+            let cameras = room.dataValues.cameras_assigned_to_rooms
+              ?.map((cam) => {
+                return {
+                  cam_id: cam?.camera?.cam_id,
+                  cam_name: cam?.camera?.cam_name,
+                  description: cam?.camera?.description,
+                  stream_uri: cam?.camera?.stream_uri,
+                };
+              })
+              .filter((cam) => cam?.cam_id);
+
+            let livStreamCameras = room.dataValues.live_stream_cameras?.map(
+              (cam) => {
+                return {
+                  cam_id: cam?.cam_id,
+                  cam_name: cam?.cam_name,
+                  description: cam?.description || "",
+                  stream_uri: cam?.stream_uri,
+                };
+              }
+            );
+            cameras = cameras.concat(livStreamCameras);
+            return {
+              room_id: room.room_id,
+              room_name:
+                room.room_name || room.dataValues?.room?.dataValues?.room_name,
+              location:
+                room.location || room.dataValues?.room?.dataValues?.location,
+              cameras: cameras,
+            };
+          });
+        
+          let result = _.chain(rooms)
+            .groupBy("location")
+            .map((value, key) => ({
+              location: key,
+              rooms: value,
+            }))
+            .value();
+
+          result = result.map((item) => {
+            let { rooms, ...rest } = item;
+            let newRooms = _.map(rooms, (object) => {
+              return _.omit(object, ["location"]);
+            });
+            return {
+              ...rest,
+              rooms: newRooms,
+            };
+          });
+
+          return result;
+        }
         locations = locations?.map((loc) => {
           let rooms = loc?.rooms?.map((room) => {
             let cams = room?.cameras_assigned_to_rooms
@@ -364,11 +591,29 @@ module.exports = {
                   cam_id: cam?.camera?.cam_id,
                   cam_name: cam?.camera?.cam_name,
                   description: cam?.camera?.description,
-                  stream_uri: cam?.camera?.stream_uri
+                  stream_uri: cam?.camera?.stream_uri,
                 };
               })
               .filter((cam) => cam?.cam_id);
-            return { room_id: room.room_id, room_name: room.room_name, cameras: cams };
+            console.log(
+              "===room.live_stream_cameras==",
+              room.live_stream_cameras
+            );
+            let livStreamCams = room.live_stream_cameras?.map((cam) => {
+              return {
+                cam_id: cam?.cam_id,
+                cam_name: cam?.cam_name,
+                description: cam?.description || "",
+                stream_uri: cam?.stream_uri,
+              };
+            });
+            cams = cams.concat(livStreamCams);
+
+            return {
+              room_id: room.room_id,
+              room_name: room.room_name,
+              cameras: cams,
+            };
           });
 
           return { location: loc.loc_name, rooms: rooms };
@@ -380,13 +625,16 @@ module.exports = {
 
   addRecentViewers: async (params, t) => {
     const { RecentViewers } = await connectToDatabase();
-    let recentViewerObj = { ...params, requested_at: Sequelize.literal('CURRENT_TIMESTAMP') };
+    let recentViewerObj = {
+      ...params,
+      requested_at: Sequelize.literal("CURRENT_TIMESTAMP"),
+    };
     let recentViewer = await RecentViewers.create(
       {
         ...recentViewerObj,
         recent_user_id: params?.user?.family_member_id
           ? params?.user?.family_member_id
-          : params?.user?.user_id
+          : params?.user?.user_id,
       },
       { transaction: t }
     );
@@ -395,9 +643,9 @@ module.exports = {
   },
 
   setUserCamPreference: async (user, cams, t) => {
-    const { Family, Users } = await connectToDatabase();
+    const { Family, Users, CamPreference } = await connectToDatabase();
     let camObj = {
-      cam_preference: cams
+      cam_preference: cams,
     };
     let camSettings;
     if (user?.family_member_id) {
@@ -405,23 +653,59 @@ module.exports = {
         camObj,
         {
           where: {
-            family_member_id: user.family_member_id
-          }
+            family_member_id: user.family_member_id,
+          },
         },
         { transaction: t }
       );
     } else {
-      camSettings = await Users.update(
-        camObj,
+      if (user.role === "Super Admin") {
+        let prefrenceDetails = await CamPreference.findOne({
+          where: { cust_id: cams.cust_id },
+          raw: true,
+        });
+  
+        let { cust_id, ...rest } = cams;
+        if (prefrenceDetails) {
+          camSettings = await CamPreference.update(
+            { watchstream_cam: rest },
+            {
+              where: {
+                cust_id: cams.cust_id,
+              },
+            }
+          );
+        } else {
+          camSettings = await CamPreference.create({
+            cust_id: cust_id,
+            watchstream_cam: rest,
+          });
+        }
+      } 
+      else{
+
+        camSettings = await Users.update(
+          camObj,
         {
           where: {
-            user_id: user?.user_id
-          }
+            user_id: user?.user_id,
+          },
         },
         { transaction: t }
-      );
+        );
+      }
     }
 
     return camSettings;
+  },
+
+  getCamPreference: async (custId) => {
+    const { CamPreference } = await connectToDatabase();
+    let prefrenceDetails = await CamPreference.findOne({
+      where: { cust_id: custId },
+      raw: true,
+    });
+     
+    return prefrenceDetails?.watchstream_cam
   }
 };
