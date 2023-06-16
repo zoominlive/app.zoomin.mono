@@ -78,9 +78,9 @@ module.exports = {
           let fcmTokens = await fcmTokensServices.getFamilyMembersFcmTokens(familyMembersIds);
           fcmTokens = fcmTokens.flatMap(i => i.fcm_token);
           fcmTokens = [...new Set(fcmTokens)].filter(i => i!== null);
-          // if(!_.isEmpty(fcmTokens)){
+          if(!_.isEmpty(fcmTokens)){
             await notificationSender.sendNotification('Live stream',`${streamObj.stream_name} has started`, '', fcmTokens , {stream_id: streamID, room_id: roomID, stream_uri: camObj?.stream_uri});
-          // }
+          }
           if(!_.isEmpty(socketIds)){
             await Promise.all(socketIds.map(async id => {
               await socketServices.emitResponse(id);
