@@ -13,9 +13,8 @@ module.exports = {
       await connectToDatabase();
     let oneHourBefore = new Date();
     oneHourBefore.setHours(oneHourBefore.getHours() - 1);
-
     const currentTime = new Date();
-
+    
     let recentViewers = await RecentViewers.findAll({
       where: {
         requested_at: {
@@ -29,7 +28,7 @@ module.exports = {
       include: [
         {
           model: Family,
-          attributes: ["first_name", "last_name"],
+          attributes: ["first_name", "last_name", "location"],
           include: [
             {
               model: Child,
@@ -53,7 +52,7 @@ module.exports = {
         },
         {
           model: Users,
-          attributes: ["first_name", "last_name"],
+          attributes: ["first_name", "last_name","location"],
         },
       ],
     });
@@ -64,7 +63,6 @@ module.exports = {
       );
       let locs = availableLocations.flatMap((i) => i.loc_name);
       recentViewers.map((item) => {
-        // let res;
         if (item.family) {
           locs.forEach((i) => {
             if (item.family?.location?.accessable_locations.includes(i)) {
@@ -81,7 +79,6 @@ module.exports = {
       });
     } else {
       recentViewers.map((item) => {
-        // let res;
         if (item.family) {
           user.location.accessable_locations.forEach((i) => {
             if (item.family?.location?.accessable_locations.includes(i)) {
@@ -145,15 +142,14 @@ module.exports = {
       );
       let locs = availableLocations.flatMap((i) => i.loc_name);
       recentViewers.map((item) => {
-        let res;
         if (item.family) {
-          res = locs.forEach((i) => {
+          locs.forEach((i) => {
             if (item.family.location.accessable_locations.includes(i)) {
               result.push(item);
             }
           });
         } else {
-          res = locs.forEach((i) => {
+           locs.forEach((i) => {
             if (item.user.location.accessable_locations.includes(i)) {
               result.push(item);
             }
@@ -162,15 +158,15 @@ module.exports = {
       });
     } else {
       recentViewers.map((item) => {
-        let res;
+      
         if (item.family) {
-          res = user.location.accessable_locations.forEach((i) => {
+           user.location.accessable_locations.forEach((i) => {
             if (item.family.location.accessable_locations.includes(i)) {
               result.push(item);
             }
           });
         } else {
-          res = user.location.accessable_locations.forEach((i) => {
+           user.location.accessable_locations.forEach((i) => {
             if (item.user.location.accessable_locations.includes(i)) {
               result.push(item);
             }
