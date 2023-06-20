@@ -297,9 +297,9 @@ const Dashboard = () => {
             <StickyHeadTable
               key={4}
               rows={
-                statisticsData?.topViewers?.length > 0 &&
-                statisticsData?.topViewers?.some((it) => !_.isNil(it?.family))
-                  ? statisticsData?.topViewers?.filter(
+                statisticsData?.topViewers?.length > 0
+                  ? //statisticsData?.topViewers?.some((it) => !_.isNil(it?.family) && )
+                    statisticsData?.topViewers?.filter(
                       (it) => !_.isNil(it.family) || !_.isNil(it.user)
                     )
                   : []

@@ -35,7 +35,8 @@ import { useEffect } from 'react';
 
 const validationSchema = yup.object({
   room_name: yup.string('Enter Room name').required('Room name is required'),
-  location: yup.string('Select Location').required('Location is required')
+  location: yup.string('Select Location').required('Location is required'),
+  cameras: yup.array().min(1, 'Select at least one Camera').required('Camera is required')
 });
 
 const RoomForm = (props) => {
@@ -53,6 +54,7 @@ const RoomForm = (props) => {
   const formikRef = useRef(null);
   const [dropdownLoading, setDropdownLoading] = useState(false);
   const [locationSelected, setLocationSelected] = useState(false);
+  const [cameraOptions, setCameraOptions] = useState([]);
   // const [isInitialLocation, setIsInitialLocation] = useState(false);
   // const maximumCams = 15;
 
@@ -66,7 +68,8 @@ const RoomForm = (props) => {
       setDropdownLoading(true);
       if (response.status === 200) {
         const cameras = response.data.Data.cams;
-        setInitialState({ ...initialState, cameras: cameras });
+        setCameraOptions(cameras);
+        //setInitialState({ ...initialState, cameras: cameras });
         setDropdownLoading(false);
       } else {
         errorMessageHandler(
@@ -168,8 +171,8 @@ const RoomForm = (props) => {
     }).then((response) => {
       if (response.status === 200) {
         const cameras = response.data.Data.cams;
-
-        setInitialState({ ...initialState, cameras: cameras, location: location });
+        setCameraOptions(cameras);
+        //setInitialState({ ...initialState, cameras: cameras, location: location });
         setDropdownLoading(false);
       } else {
         errorMessageHandler(
@@ -262,9 +265,7 @@ const RoomForm = (props) => {
                         fullWidth
                         multiple
                         id="cameras"
-                        options={
-                          initialState.cameras && locationSelected ? initialState.cameras : []
-                        }
+                        options={cameraOptions && locationSelected ? cameraOptions : []}
                         noOptionsText={!locationSelected ? 'Select location first' : 'No Camera'}
                         isOptionEqualToValue={(option, value) => option.cam_id === value.cam_id}
                         getOptionLabel={(option) => {
@@ -275,10 +276,11 @@ const RoomForm = (props) => {
                             setLocationSelected(true);
                           }
                         }}
+                        value={values?.cameras}
                         onChange={(_, value) => {
                           setFieldValue('cameras', value);
                         }}
-                        defaultValue={props?.room?.cameras ? props?.room?.cameras : []}
+                        //defaultValue={props?.room?.cameras ? props?.room?.cameras : []}
                         renderTags={(value, getTagProps) =>
                           value.map((option, index) => (
                             <Chip key={index} label={option.cam_name} {...getTagProps({ index })} />

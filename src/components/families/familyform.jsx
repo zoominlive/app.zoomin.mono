@@ -174,7 +174,6 @@ const AddFamily = (props) => {
       payload.primary.member_type = 'primary';
       payload.primary.time_zone = moment.tz.guess();
       payload.primary.location = authCtx.user.location;
-
       payload.secondary.forEach((parent) => {
         parent.member_type = 'secondary';
         parent.time_zone = moment.tz.guess();

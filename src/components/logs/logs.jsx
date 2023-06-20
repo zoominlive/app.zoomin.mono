@@ -292,7 +292,7 @@ const Logs = () => {
   useEffect(() => {
     if (selectedLocation?.length !== 0) {
       API.get('users/location/', {
-        params: { locations: selectedLocation }
+        params: { locations: selectedLocation, cust_id: localStorage.getItem('cust_id') }
       }).then((response) => {
         if (response.status === 200) {
           setSelectedUsers(response.data.Data);
@@ -307,9 +307,8 @@ const Logs = () => {
         }
         setIsLoading(false);
       });
-
       API.get('family/location/', {
-        params: { locations: selectedLocation }
+        params: { locations: selectedLocation, cust_id: localStorage.getItem('cust_id') }
       }).then((response) => {
         if (response.status === 200) {
           setSelectedFamilies(response.data.Data);
