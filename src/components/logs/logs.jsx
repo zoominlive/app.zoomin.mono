@@ -185,7 +185,10 @@ const Logs = () => {
           setSelectedUsers(response.data.Data);
           setUsers([users[0], ...response.data.Data]);
           API.get('family/location/', {
-            params: { locations: [authCtx.user.location.accessable_locations[0]] }
+            params: {
+              locations: [authCtx.user.location.accessable_locations[0]],
+              cust_id: localStorage.getItem('cust_id')
+            }
           }).then((response) => {
             if (response.status === 200) {
               let familyToAdd = response.data.Data?.map((user) => user?.family_member_id);
