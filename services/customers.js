@@ -145,7 +145,7 @@ module.exports = {
         order: [[{ model: Users }, 'created_at', 'ASC']]
       });
     }
-    return { customers: customers.rows, count: customers.count,  };
+    return { customers: customers.rows, count: customers.rows.length,  };
   },
 
   createCustomer: async (customerObj, t) => {
