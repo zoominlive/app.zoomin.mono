@@ -79,7 +79,7 @@ module.exports = {
           fcmTokens = fcmTokens.flatMap(i => i.fcm_token);
           fcmTokens = [...new Set(fcmTokens)].filter(i => i!== null);
           if(!_.isEmpty(fcmTokens)){
-            await notificationSender.sendNotification('Live stream',`${streamObj.stream_name} is started`, '', fcmTokens , {stream_id: streamID, room_id: roomID});
+            await notificationSender.sendNotification('Live stream',`${streamObj.stream_name} is started`, '', fcmTokens , {stream_id: streamID, room_id: roomID, stream_uri: `https://live.zoominlive.com/stream/${streamID}.m3u8`});
           }
           if(!_.isEmpty(socketIds)){
             await Promise.all(socketIds.map(async id => {
@@ -182,7 +182,7 @@ module.exports = {
       fcmTokens = fcmTokens.flatMap(i => i.fcm_token);
       fcmTokens = [...new Set(fcmTokens)].filter(i => i!== null);
       if(!_.isEmpty(fcmTokens)){
-        await notificationSender.sendNotification('Live stream',`${streamObj.stream_name} is started`, '', fcmTokens , {stream_id: streamID, room_id: roomID});
+        await notificationSender.sendNotification('Live stream',`${streamObj.stream_name} is started`, '', fcmTokens , {stream_id: streamID, room_id: roomID, stream_uri: `https://live.zoominlive.com/stream/${streamID}.m3u8`});
       }
       if(!_.isEmpty(socketIds)){
         await Promise.all(socketIds.map(async id => {
