@@ -236,6 +236,7 @@ module.exports = {
               Message: CONSTANTS.USER_LOGGED_IN
             });
           } else {
+            await t.commit();
             res
               .status(400)
               .json({ IsSuccess: true, Data: {}, Message: CONSTANTS.INVALID_PASSWORD });
@@ -244,6 +245,7 @@ module.exports = {
       } else if (familyUser) {
         familyUser.transcoderBaseUrl = await customerServices.getTranscoderUrl(familyUser.cust_id);
         if (!familyUser.is_verified || familyUser.status == 'Disabled') {
+          await t.commit();
           res.status(400).json({
             IsSuccess: true,
             Data: [],
@@ -272,13 +274,15 @@ module.exports = {
               Message: CONSTANTS.USER_LOGGED_IN
             });
           } else {
-            await t.rollback();
+            //await t.rollback();
+            await t.commit();
             res
               .status(400)
               .json({ IsSuccess: true, Data: {}, Message: CONSTANTS.INVALID_PASSWORD });
           }
         }
       } else {
+        await t.commit();
         res.status(400).json({
           IsSuccess: true,
           Data: {},
@@ -288,6 +292,7 @@ module.exports = {
       next();
     } catch (error) {
       await logServices.addAccessErrorLog(logDetails?.log_id ?? 'not found', error);
+      await t.rollback();
       res
         .status(500)
         .json({ IsSuccess: false, error_log: error, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
@@ -320,10 +325,9 @@ module.exports = {
         //   : 'Not Found'
         // };
         // await userServices.editUserProfile(userObj, _.omit(userObj, ['user_id']), t);
-        // await t.commit();
       } catch (e) {
         console.log(e);
-        await t.rollback();
+       // await t.rollback();
       }
       
     }

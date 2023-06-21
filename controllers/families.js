@@ -668,7 +668,7 @@ module.exports = {
   getAllUsersForLocation: async (req, res, next) => {
     try {
       let users = await familyServices.getAllUsersForLocation(
-        req.user.cust_id,
+        req.user.cust_id || req.query.cust_id,
         req.query.locations
       );
       res.status(200).json({
