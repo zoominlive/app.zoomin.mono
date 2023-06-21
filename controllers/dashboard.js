@@ -11,6 +11,7 @@ const CONSTANTS = require("../lib/constants");
 module.exports = {
   // get all stream statistics data to populate dashboard
   getStreamStatistics: async (req, res, next) => {
+    const t = await sequelize.transaction();
     try {
       params = req.body;
       custId = req.user.cust_id || req.query.cust_id;
@@ -21,10 +22,10 @@ module.exports = {
         defaultWatchStream = watchStream || {};
       }
       const token = req.userToken;
-  
+
       let streams = await listAvailableStreams(token, custId);
       const totalStreams =
-        await cameraServices.getAllCameraForCustomerDashboard(custId);
+        await cameraServices.getAllCameraForCustomerDashboard(custId, t);
       let totalActiveStreams = streams?.data?.filter((stream) => {
         return stream.running === true;
       });
@@ -38,7 +39,7 @@ module.exports = {
         });
       });
 
-      let SEAMembers = await familyServices.getFamilyWithSEA(userId);
+      let SEAMembers = await familyServices.getFamilyWithSEA(userId, t);
       const childSEA = await dashboardServices.getChildrenWithSEA(custId);
       let childrenWithEnableDate = [];
       let childrenWithDisableDate = [];
@@ -100,13 +101,14 @@ module.exports = {
         ...req.user,
         cust_id: custId,
       });
-      const customerDetails = await customerServices.getCustomerDetails(custId);
+      const customerDetails = await customerServices.getCustomerDetails(custId, t);
       cameras = _.uniqBy(cameras, "room_id");
       cameras?.forEach((cam, camIndex) => {
         cameras[camIndex].timeout = customerDetails.timeout;
         cameras[camIndex].permit_audio = customerDetails.permit_audio;
       });
 
+      await t.commit();
       res.status(200).json({
         IsSuccess: true,
         Data: {
@@ -127,6 +129,8 @@ module.exports = {
 
       next();
     } catch (error) {
+      await t.rollback();
+      console.log('=====dashboard error====',error)
       res.status(500).json({
         IsSuccess: false,
         error_log: error,
