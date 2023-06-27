@@ -155,7 +155,7 @@ module.exports = {
       },
       { transaction: t }
     );
-  
+
     const result = [];
     if (!user.cust_id) {
       let availableLocations = await CustomerLocations.findAll({

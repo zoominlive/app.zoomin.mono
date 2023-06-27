@@ -9,13 +9,13 @@ provider:
   runtime: nodejs16.x
   httpApi:
     cors: true
-  timeout: 15
+  timeout: 150
   tracing:
     lambda: true
   websocketsApiName: websockets-api
   websocketsApiRouteSelectionExpression: $request.body.action
   environment:
-    AWS_BUCKET_NAME: zoomin-stage-images
+    AWS_BUCKET_NAME: zoomin-dev-images
     ACCESS_KEY_ID: AKIAYEUNNGGXZZWD3RES
     SECRET_ACCESS_KEY: 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
     EMAIL_SOURCE_ACCOUNT: "support@zoominlive.com"
@@ -23,11 +23,11 @@ provider:
     RDS_PORT: 3306
     RDS_USER: zoomin_dbuser
     RDS_PASSWORD: Wk8$b6!xR
-    RDS_DB_NAME: zoomin_stage
+    RDS_DB_NAME: zoomin
     #RDS_HOST: 127.0.0.1
     #RDS_PORT: 3306
     #RDS_USER: root
-    #RDS_DB_NAME: zoomin_stage
+    #RDS_DB_NAME: zoomin
     JWT_SECRET_KEY: zoominlivesecretkey
     LIVE_STREAM_SECRET_KEY: livestreamsecretkey
     JWT_REFRESH_SECRET_KEY: 2d
@@ -47,24 +47,9 @@ provider:
     client_x509_cert_url: "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-eg6hb%40zoomin-push-notifications.iam.gserviceaccount.com"
     websocket_endpoint: "https://6i6bw7p391.execute-api.us-east-1.amazonaws.com/stage"
     
-  stage: stage
-  region: us-east-1
+  stage: dev
+  region: us-west-2
 functions:
-  connectHandler:
-    handler: websocket/handler.connectHandler
-    events:
-      - websocket: $connect
-  
-  disconnectHandler:
-    handler:  websocket/handler.disconnectHandler
-    events:
-      - websocket: $disconnect
-
-  defaultHandler:
-    handler:  websocket/handler.defaultHandler
-    events: 
-      - websocket: $default
-
   userFunction:
     handler: handler.handler
     events:
@@ -167,25 +152,6 @@ functions:
       - httpApi:
           method: "*"
           path: /api/liveStream/stop
-
-  customerFunction:
-    handler: handler.handler
-    events:
-      - httpApi:
-          method: "*"
-          path: /api/customers/all
-      - httpApi:
-          method: "*"
-          path: /api/customers/createCustomer
-      - httpApi:
-          method: "*"
-          path: /api/customers/edit
-      - httpApi:
-          method: "*"
-          path: /api/customers/delete
-      - httpApi:
-          method: "*"
-          path: /api/customers/locations
           
   disableScheduledMembers:
     handler: cron.disableScheduledFamilyAndChild
