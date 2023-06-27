@@ -104,7 +104,6 @@ module.exports = {
 
       if (checkUserValidation && !checkUserValidation.isValid) {
         res.status(400).json(checkUserValidation.message);
-        return
       }
 
       let emailIs = params.email;
@@ -146,19 +145,19 @@ module.exports = {
           const imageUrl = await s3BucketImageUploader._upload(req.body.image, userData.user_id);
           userData = await userServices.editUserProfile(userData, { image: imageUrl }, t);
         }
-        await t.commit();
+        // await t.commit();
         res.status(201).json({
           IsSuccess: true,
           Data: _.omit(userData, ['password']),
           Message: CONSTANTS.USER_REGISTERED
         });
       } else {
-        await t.commit();
+        // await t.commit();
         res
           .status(400)
           .json({ IsSuccess: true, Data: {}, Message: CONSTANTS.USER_REGISRATION_FAILED });
       }
-      
+      await t.commit();
       next();
     } catch (error) {
       await t.rollback();

@@ -75,9 +75,25 @@ module.exports = {
       let emailData = validateEmail(params.email);
 
       if (emailData) {
-        validationResponse = {
-          isValid: true,
-        };
+        // validationResponse = {
+        //   isValid: true,
+        // };
+        let emailCheck = await Users.findOne({ where: { email: params.email } });
+
+        if (emailCheck) {
+          validationResponse = {
+            isValid: false,
+            message: {
+              IsSuccess: true,
+              Data: [],
+              Message: "Email already exist",
+            },
+          };
+        } else {
+          validationResponse = {
+            isValid: true,
+          };
+        }
       } else {
         validationResponse = {
           isValid: false,
@@ -88,24 +104,9 @@ module.exports = {
           },
         };
       }
-    }
 
-    let emailCheck = await Users.findOne({ where: { email: params.email } });
-
-    if (emailCheck) {
-      validationResponse = {
-        isValid: false,
-        message: {
-          IsSuccess: true,
-          Data: [],
-          Message: "Email already exist",
-        },
-      };
-    } else {
-      validationResponse = {
-        isValid: true,
-      };
-    }
+   
+  }
     return validationResponse;
   },
 
