@@ -22,7 +22,7 @@ module.exports = {
         defaultWatchStream = watchStream || {};
       }
       const token = req.userToken;
-
+  
       let streams = await listAvailableStreams(token, custId);
       const totalStreams =
         await cameraServices.getAllCameraForCustomerDashboard(custId, t);
@@ -97,6 +97,7 @@ module.exports = {
         req.user,
         req.query?.cust_id
       );
+      console.log('===recentViewers==',recentViewers)
       let cameras = await watchStreamServices.getAllCamForLocation({
         ...req.user,
         cust_id: custId,
