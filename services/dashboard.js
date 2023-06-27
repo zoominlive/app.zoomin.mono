@@ -29,7 +29,7 @@ module.exports = {
       include: [
         {
           model: Family,
-          attributes: ["first_name", "last_name"],
+          attributes: ["first_name", "last_name", "location"],
           include: [
             {
               model: Child,
@@ -53,10 +53,11 @@ module.exports = {
         },
         {
           model: Users,
-          attributes: ["first_name", "last_name"],
+          attributes: ["first_name", "last_name", "location"],
         },
       ],
     });
+    console.log('=====recentViewers===in===',recentViewers)
     const result = [];
     if (custId) {
       let availableLocations = await customerServices.getLocationDetails(
@@ -67,13 +68,13 @@ module.exports = {
         // let res;
         if (item.family) {
           locs.forEach((i) => {
-            if (item.family?.location?.accessable_locations.includes(i)) {
+            if (item.family.location.accessable_locations.includes(i)) {
               result.push(item);
             }
           });
         } else {
           locs.forEach((i) => {
-            if (item.user?.location?.accessable_locations.includes(i)) {
+            if (item.user.location.accessable_locations.includes(i)) {
               result.push(item);
             }
           });
@@ -81,6 +82,7 @@ module.exports = {
       });
     } else {
       recentViewers.map((item) => {
+        console.log('===item==',item)
         // let res;
         if (item.family) {
           user.location.accessable_locations.forEach((i) => {

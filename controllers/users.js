@@ -146,18 +146,19 @@ module.exports = {
           const imageUrl = await s3BucketImageUploader._upload(req.body.image, userData.user_id);
           userData = await userServices.editUserProfile(userData, { image: imageUrl }, t);
         }
-
+        await t.commit();
         res.status(201).json({
           IsSuccess: true,
           Data: _.omit(userData, ['password']),
           Message: CONSTANTS.USER_REGISTERED
         });
       } else {
+        await t.commit();
         res
           .status(400)
           .json({ IsSuccess: true, Data: {}, Message: CONSTANTS.USER_REGISRATION_FAILED });
       }
-      await t.commit();
+      
       next();
     } catch (error) {
       await t.rollback();
@@ -229,14 +230,14 @@ module.exports = {
             }
             await fcmTokensServices.createFcmToken(fcmObj, t);
           }
-            await t.commit();
+            //await t.commit();
             res.status(200).json({
               IsSuccess: true,
               Data: { userData, ...token },
               Message: CONSTANTS.USER_LOGGED_IN
             });
           } else {
-            await t.commit();
+            //await t.commit();
             res
               .status(400)
               .json({ IsSuccess: true, Data: {}, Message: CONSTANTS.INVALID_PASSWORD });
@@ -245,7 +246,7 @@ module.exports = {
       } else if (familyUser) {
         familyUser.transcoderBaseUrl = await customerServices.getTranscoderUrl(familyUser.cust_id);
         if (!familyUser.is_verified || familyUser.status == 'Disabled') {
-          await t.commit();
+          //await t.commit();
           res.status(400).json({
             IsSuccess: true,
             Data: [],
@@ -266,7 +267,7 @@ module.exports = {
             }
             await fcmTokensServices.createFcmToken(fcmObj, t);
           }
-            await t.commit();
+            //await t.commit();
             success = true;
             res.status(200).json({
               IsSuccess: true,
@@ -275,24 +276,26 @@ module.exports = {
             });
           } else {
             //await t.rollback();
-            await t.commit();
+            //await t.commit();
             res
               .status(400)
               .json({ IsSuccess: true, Data: {}, Message: CONSTANTS.INVALID_PASSWORD });
           }
         }
       } else {
-        await t.commit();
+        //await t.commit();
         res.status(400).json({
           IsSuccess: true,
           Data: {},
           Message: CONSTANTS.USER_NOT_FOUND
         });
       }
+      await t.commit();
       next();
     } catch (error) {
       await logServices.addAccessErrorLog(logDetails?.log_id ?? 'not found', error);
-      await t.rollback();
+      //await t.commit();
+      //await t.rollback();
       res
         .status(500)
         .json({ IsSuccess: false, error_log: error, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
