@@ -195,19 +195,21 @@ const Rooms = () => {
   // Method to fetch the rooms list for dropdown
   const getDropDownRoomList = () => {
     setRoomsDropdownLoading(true);
-    API.get('rooms/list').then((response) => {
-      if (response.status === 200) {
-        setDropdownList(response.data.Data);
-      } else {
-        errorMessageHandler(
-          enqueueSnackbar,
-          response?.response?.data?.Message || 'Something Went Wrong.',
-          response?.response?.status,
-          authCtx.setAuthError
-        );
+    API.get('rooms/list', { params: { cust_id: localStorage.getItem('cust_id') } }).then(
+      (response) => {
+        if (response.status === 200) {
+          setDropdownList(response.data.Data);
+        } else {
+          errorMessageHandler(
+            enqueueSnackbar,
+            response?.response?.data?.Message || 'Something Went Wrong.',
+            response?.response?.status,
+            authCtx.setAuthError
+          );
+        }
+        setRoomsDropdownLoading(false);
       }
-      setRoomsDropdownLoading(false);
-    });
+    );
   };
 
   // Method to delete room

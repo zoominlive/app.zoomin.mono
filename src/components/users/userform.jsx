@@ -85,18 +85,20 @@ const UserForm = (props) => {
   }, [selectedLocation]);
 
   useEffect(() => {
-    API.get('rooms/list').then((response) => {
-      if (response.status === 200) {
-        setRoomList(response.data.Data);
-      } else {
-        errorMessageHandler(
-          enqueueSnackbar,
-          response?.response?.data?.Message || 'Something Went Wrong.',
-          response?.response?.status,
-          authCtx.setAuthError
-        );
+    API.get('rooms/list', { params: { cust_id: localStorage.getItem('cust_id') } }).then(
+      (response) => {
+        if (response.status === 200) {
+          setRoomList(response.data.Data);
+        } else {
+          errorMessageHandler(
+            enqueueSnackbar,
+            response?.response?.data?.Message || 'Something Went Wrong.',
+            response?.response?.status,
+            authCtx.setAuthError
+          );
+        }
       }
-    });
+    );
   }, []);
 
   const { getRootProps, getInputProps } = useDropzone({
