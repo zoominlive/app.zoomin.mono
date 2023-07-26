@@ -2,9 +2,9 @@ const AWS = require("aws-sdk");
 require("aws-sdk/clients/apigatewaymanagementapi");
 
 module.exports = {
-  emitResponse: async (connectionId) => {
+  emitResponse: async (connectionId, message) => {
     let data = {
-      message: "Live stream has started",
+      message: message,
       display_notification: true,
     };
     new Promise((resolve, reject) => {

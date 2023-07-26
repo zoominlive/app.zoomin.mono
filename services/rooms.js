@@ -303,16 +303,29 @@ module.exports = {
   },
 
   // get all room's list for loggedin user
-  getAllRoomsList: async (userId, user, t) => {
-    const { Room } = await connectToDatabase();
+  getAllRoomsList: async (userId, user, cust_id = null, t) => {
+    const { Room, CustomerLocations } = await connectToDatabase();
     let roomList;
-    if (user.role === "Admin") {
+    if (user.role === "Admin" || user.role === "Super Admin") {
+      let loc_obj = {};
+      if (!cust_id) {
+        loc_obj = { location: user.location.accessable_locations };
+      } else {
+        let availableLocations = await CustomerLocations.findAll({
+          where: { cust_id: cust_id },
+          raw: true,
+        });
+        let locs = availableLocations.flatMap((i) => i.loc_name);
+        loc_obj = { location: locs };
+      }
+
+
       roomList = await Room.findAll(
         {
           attributes: ["room_name", "room_id", "location"],
           where: {
-            cust_id: user.cust_id,
-            location: user.location.accessable_locations,
+            cust_id: user.cust_id || cust_id,
+            ...loc_obj
           },
         },
         { transaction: t }

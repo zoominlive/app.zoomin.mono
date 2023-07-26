@@ -167,9 +167,10 @@ module.exports = {
 
   // get room's list for loggedin user
   getAllRoomsList: async (req, res, next) => {
+    const t = await sequelize.transaction();
     try {
-      const rooms = await roomServices.getAllRoomsList(req.user.user_id, req.user);
-
+      const rooms = await roomServices.getAllRoomsList(req.user.user_id, req.user, req?.query?.cust_id, t);
+      await t.commit();
       res.status(200).json({
         IsSuccess: true,
         Data: rooms,
@@ -178,6 +179,7 @@ module.exports = {
 
       next();
     } catch (error) {
+      await t.rollback();
       res.status(500).json({
         IsSuccess: false,
         error_log: error,

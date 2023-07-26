@@ -97,7 +97,7 @@ module.exports = {
         req.user,
         req.query?.cust_id
       );
-      console.log('===recentViewers==',recentViewers)
+      
       let cameras = await watchStreamServices.getAllCamForLocation({
         ...req.user,
         cust_id: custId,

@@ -103,6 +103,7 @@ const Family = sequelize.define(
       type: Sequelize.STRING(250),
       default: null,
       allowNull: true
+    },
     createdAt: { type: Sequelize.DATE, field: 'created_at' },
     updatedAt: { type: Sequelize.DATE, field: 'updated_at' },
     cam_preference: {

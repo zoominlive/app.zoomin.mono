@@ -18,8 +18,8 @@ module.exports = {
 
   updateLiveStream: async(stream_id, updateObj, t) => {
     const { LiveStreams } = await connectToDatabase();
-    let streamCreated = await LiveStreams.update(updateObj, { where: {stream_id: stream_id} }, { transaction: t });
-    return streamCreated;
+    let streamUpdated = await LiveStreams.update(updateObj, { where: {stream_id: stream_id} }, { transaction: t });
+    return streamUpdated;
   },
 
   saveEndPointInCamera: async(stream_id, t) => {

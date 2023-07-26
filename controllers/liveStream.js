@@ -26,10 +26,14 @@ module.exports = {
       const { roomID, streamName } = req.query;
       const { user_id, stream_live_license, cust_id } = req.user;
       if (stream_live_license) {
-        let rtmpTranscoderBaseUrl = await customerServices.getRTMPTranscoderUrl(cust_id);
+        let rtmpTranscoderBaseUrl = await customerServices.getRTMPTranscoderUrl(
+          cust_id
+        );
         let current_time = moment().toISOString();
         let streamID = uuidv4();
-        let streamKeyAuth = await liveStreamServices.createStreamKeyToken(streamID);
+        let streamKeyAuth = await liveStreamServices.createStreamKeyToken(
+          streamID
+        );
 
         let endPoint = `${rtmpTranscoderBaseUrl}/stream/${streamID}?auth=${streamKeyAuth.token}`;
         let liveStreamObj = {
@@ -38,62 +42,15 @@ module.exports = {
           user_id: user_id,
           room_id: roomID,
           stream_name: streamName,
-          hls_url: `https://zoominstreamprocessing.s3.us-west-2.amazonaws.com/liveStream/${streamID}_${current_time}/index.m3u8`
+          hls_url: `https://zoominstreamprocessing.s3.us-west-2.amazonaws.com/liveStream/${streamID}_${current_time}/index.m3u8`,
         };
-        let livestream = await liveStreamServices.createLiveStream(liveStreamObj);
+        let livestream = await liveStreamServices.createLiveStream(
+          liveStreamObj
+        );
         response = { serverEndPoint: endPoint };
         // try {
-          // const { streamID } = req.query;
-          let streamObj = await liveStreamServices.getstreamObj(streamID, t)
-          if(streamObj.stream_running){
-            await t.commit();
-            res.status(200).json({
-              IsSuccess: true,
-              Data: {},
-              Message: CONSTANTS.LIVE_STREAM_ALREADY_STARTED
-            });
-            return
-          }
-          else{
-    
-          let updateObj = {stream_running: true, stream_start_time: moment().toISOString() };
-            
-          await liveStreamServices.updateLiveStream(streamID, updateObj, t);
-          await liveStreamServices.saveEndPointInCamera(streamID, t);
-          let roomID = await liveStreamServices.getRoom(streamID, t);
-         let camObj = {
-          cam_name: "Live Stream",
-          room_id: roomID,
-          stream_uri: `https://live.zoominlive.com/stream/${streamID}.m3u8`
-          
-         }
-          await liveStramcameraServices.createLivestreamCamera(camObj, t)
-          let childs = await childServices.getChildOfAssignedRoomId(roomID, t);
-          let childIds = childs.flatMap(i => i.child_id)
-          let familys = await childServices.getAllchildrensFamilyId(childIds, t);
-          let familyIds = [...new Set(familys.flatMap(i => i.family_id))];
-          let familyMembers = await familyServices.getFamilyMembersIds(familyIds);
-          let socketIds = familyMembers.flatMap(i => i.socket_connection_id).filter(i => i!== null);
-          let familyMembersIds = familyMembers.flatMap( i => i.family_member_id);
-          let fcmTokens = await fcmTokensServices.getFamilyMembersFcmTokens(familyMembersIds);
-          fcmTokens = fcmTokens.flatMap(i => i.fcm_token);
-          fcmTokens = [...new Set(fcmTokens)].filter(i => i!== null);
-          if(!_.isEmpty(fcmTokens)){
-            await notificationSender.sendNotification('Live stream',`${streamObj.stream_name} is started`, '', fcmTokens , {stream_id: streamID, room_id: roomID, stream_uri: `https://live.zoominlive.com/stream/${streamID}.m3u8`});
-          }
-          if(!_.isEmpty(socketIds)){
-            await Promise.all(socketIds.map(async id => {
-              await socketServices.emitResponse(id);
-            }));
-          }
-          await t.commit();
-           res.status(200).json({
-          IsSuccess: true,
-          Data: response,
-          Message: CONSTANTS.RTMP_ENDPOINT
-        });
-        }
-          next();
+        // const { streamID } = req.query;
+        
         // } catch (error) {
         //   await t.rollback();
         //   res.status(500).json({
@@ -103,17 +60,16 @@ module.exports = {
         //   });
         //   next(error);
         // }
-        // res.status(200).json({
-        //   IsSuccess: true,
-        //   Data: response,
-        //   Message: CONSTANTS.RTMP_ENDPOINT
-        // });
-      }
-      else {
         res.status(200).json({
           IsSuccess: true,
-          Data: {},
-          Message: CONSTANTS.LIVE_STREAM_UNAUTHORIZE
+          Data: response,
+          Message: CONSTANTS.RTMP_ENDPOINT
+        });
+      } else {
+        res.status(200).json({
+          IsSuccess: true,
+          Data: {room_id: roomID},
+          Message: CONSTANTS.LIVE_STREAM_UNAUTHORIZE,
         });
       }
       next();
@@ -122,7 +78,7 @@ module.exports = {
       res.status(500).json({
         IsSuccess: false,
         error_log: error,
-        Message: CONSTANTS.INTERNAL_SERVER_ERROR
+        Message: CONSTANTS.INTERNAL_SERVER_ERROR,
       });
       next(error);
     } finally {
@@ -131,10 +87,10 @@ module.exports = {
           ? req?.user?.family_member_id
           : req?.user?.user_id
           ? req?.user?.user_id
-          : 'Not Found',
-        function: 'Live_stream',
-        function_type: 'Get',
-        response: response
+          : "Not Found",
+        function: "Live_stream",
+        function_type: "Get",
+        response: response,
       };
       try {
         await logServices.addAccessLog(logObj);
@@ -148,61 +104,79 @@ module.exports = {
     const t = await sequelize.transaction();
     try {
       const { streamID } = req.query;
-      let streamObj = await liveStreamServices.getstreamObj(streamID, t)
-      if(streamObj.stream_running){
+      let streamObj = await liveStreamServices.getstreamObj(streamID, t);
+      if (streamObj.stream_running) {
         await t.commit();
         res.status(200).json({
           IsSuccess: true,
-          Data: {},
-          Message: CONSTANTS.LIVE_STREAM_ALREADY_STARTED
+          Data: {stream_id: streamID},
+          Message: CONSTANTS.LIVE_STREAM_ALREADY_STARTED,
         });
-        return
-      }
-      else{
+        return;
+      } else {
+        let updateObj = {
+          stream_running: true,
+          stream_start_time: moment().toISOString(),
+        };
 
-      let updateObj = {stream_running: true, stream_start_time: moment().toISOString() };
-        
-      await liveStreamServices.updateLiveStream(streamID, updateObj, t);
-      await liveStreamServices.saveEndPointInCamera(streamID, t);
-      let roomID = await liveStreamServices.getRoom(streamID, t);
-     let camObj = {
-      cam_name: "Live Stream",
-      room_id: roomID,
-      stream_uri: `https://live.zoominlive.com/stream/${streamID}.m3u8`
-     }
-      await liveStramcameraServices.createLivestreamCamera(camObj, t)
-      let childs = await childServices.getChildOfAssignedRoomId(roomID, t);
-      let childIds = childs.flatMap(i => i.child_id)
-      let familys = await childServices.getAllchildrensFamilyId(childIds, t);
-      let familyIds = [...new Set(familys.flatMap(i => i.family_id))];
-      let familyMembers = await familyServices.getFamilyMembersIds(familyIds);
-      let socketIds = familyMembers.flatMap(i => i.socket_connection_id).filter(i => i!== null);
-      let familyMembersIds = familyMembers.flatMap( i => i.family_member_id);
-      let fcmTokens = await fcmTokensServices.getFamilyMembersFcmTokens(familyMembersIds);
-      fcmTokens = fcmTokens.flatMap(i => i.fcm_token);
-      fcmTokens = [...new Set(fcmTokens)].filter(i => i!== null);
-      if(!_.isEmpty(fcmTokens)){
-        await notificationSender.sendNotification('Live stream',`${streamObj.stream_name} is started`, '', fcmTokens , {stream_id: streamID, room_id: roomID, stream_uri: `https://live.zoominlive.com/stream/${streamID}.m3u8`});
+        await liveStreamServices.updateLiveStream(streamID, updateObj, t);
+        await liveStreamServices.saveEndPointInCamera(streamID, t);
+        let roomID = await liveStreamServices.getRoom(streamID, t);
+        let camObj = {
+          cam_name: "Live Stream",
+          room_id: roomID,
+          stream_uri: `https://live.zoominlive.com/stream/${streamID}.m3u8`,
+        };
+        await liveStramcameraServices.createLivestreamCamera(camObj, t);
+        let childs = await childServices.getChildOfAssignedRoomId(roomID, t);
+        let childIds = childs.flatMap((i) => i.child_id);
+        let familys = await childServices.getAllchildrensFamilyId(childIds, t);
+        let familyIds = [...new Set(familys.flatMap((i) => i.family_id))];
+        let familyMembers = await familyServices.getFamilyMembersIds(familyIds);
+        let socketIds = familyMembers
+          .flatMap((i) => i.socket_connection_id)
+          .filter((i) => i !== null);
+        let familyMembersIds = familyMembers.flatMap((i) => i.family_member_id);
+        let fcmTokens = await fcmTokensServices.getFamilyMembersFcmTokens(
+          familyMembersIds
+        );
+        fcmTokens = fcmTokens.flatMap((i) => i.fcm_token);
+        fcmTokens = [...new Set(fcmTokens)].filter((i) => i !== null);
+        let message = `${streamObj.stream_name} has started`;
+        if (!_.isEmpty(fcmTokens)) {
+          await notificationSender.sendNotification(
+            "Live stream",
+            message,
+            "",
+            fcmTokens,
+            {
+              stream_id: streamID,
+              room_id: roomID,
+              stream_uri: camObj?.stream_uri,
+            }
+          );
+        }
+        if (!_.isEmpty(socketIds)) {
+          await Promise.all(
+            socketIds.map(async (id) => {
+              await socketServices.emitResponse(id, message);
+            })
+          );
+        }
+        await t.commit();
+        res.status(200).json({
+          IsSuccess: true,
+          Data: {stream_id: streamID},
+          Message: CONSTANTS.LIVE_STREAM_STARTED,
+        });
       }
-      if(!_.isEmpty(socketIds)){
-        await Promise.all(socketIds.map(async id => {
-          await socketServices.emitResponse(id);
-        }));
-      }
-      await t.commit();
-      res.status(200).json({
-        IsSuccess: true,
-        Data: {},
-        Message: CONSTANTS.LIVE_STREAM_STARTED
-      });
-    }
       next();
     } catch (error) {
       await t.rollback();
       res.status(500).json({
         IsSuccess: false,
         error_log: error,
-        Message: CONSTANTS.INTERNAL_SERVER_ERROR
+        Message: CONSTANTS.INTERNAL_SERVER_ERROR,
       });
       next(error);
     } finally {
@@ -212,10 +186,10 @@ module.exports = {
           ? req?.user?.family_member_id
           : req?.user?.user_id
           ? req?.user?.user_id
-          : 'Not Found',
-        function: 'Live_Stream',
-        function_type: 'Start',
-        request: req.query
+          : "Not Found",
+        function: "Live_Stream",
+        function_type: "Start",
+        request: req.query,
       };
       try {
         await logServices.addChangeLog(logObj);
@@ -229,19 +203,63 @@ module.exports = {
     const t = await sequelize.transaction();
     try {
       const { streamID } = req.query;
-      let updateObj = {stream_running: false, stream_stop_time: moment().toISOString() };
+      const { s3_url } = req.body;
+      let updateObj = {
+        stream_running: false,
+        stream_stop_time: moment().toISOString(),
+        s3_url: s3_url
+      };
 
       await liveStreamServices.updateLiveStream(streamID, updateObj, t);
       await liveStreamServices.removeEndPointInCamera(streamID, t);
 
       let roomID = await liveStreamServices.getRoom(streamID, t);
+      console.log(roomID)
       await liveStramcameraServices.deleteLivestreamCamera(roomID);
-      
+
+      let streamObj = await liveStreamServices.getstreamObj(streamID, t);
+
+      let childs = await childServices.getChildOfAssignedRoomId(roomID, t);
+      let childIds = childs.flatMap((i) => i.child_id);
+      let familys = await childServices.getAllchildrensFamilyId(childIds, t);
+      let familyIds = [...new Set(familys.flatMap((i) => i.family_id))];
+      let familyMembers = await familyServices.getFamilyMembersIds(familyIds);
+      let socketIds = familyMembers
+        .flatMap((i) => i.socket_connection_id)
+        .filter((i) => i !== null);
+      let familyMembersIds = familyMembers.flatMap((i) => i.family_member_id);
+      let fcmTokens = await fcmTokensServices.getFamilyMembersFcmTokens(
+        familyMembersIds
+      );
+      fcmTokens = fcmTokens.flatMap((i) => i.fcm_token);
+      fcmTokens = [...new Set(fcmTokens)].filter((i) => i !== null);
+      let message = `${streamObj.stream_name} has stoped`;
+
+      if (!_.isEmpty(fcmTokens)) {
+        await notificationSender.sendNotification(
+          "Live stream",
+          message,
+          "",
+          fcmTokens,
+          {
+            stream_id: streamID,
+            room_id: roomID,
+            stream_uri: `https://live.zoominlive.com/stream/${streamID}.m3u8`,
+          }
+        );
+      }
+      if (!_.isEmpty(socketIds)) {
+        await Promise.all(
+          socketIds.map(async (id) => {
+            await socketServices.emitResponse(id, message);
+          })
+        );
+      }
       await t.commit();
       res.status(200).json({
         IsSuccess: true,
-        Data: {},
-        Message: CONSTANTS.LIVE_STREAM_STOPPED
+        Data: {stream_id: streamID},
+        Message: CONSTANTS.LIVE_STREAM_STOPPED,
       });
       next();
     } catch (error) {
@@ -249,7 +267,7 @@ module.exports = {
       res.status(500).json({
         IsSuccess: false,
         error_log: error,
-        Message: CONSTANTS.INTERNAL_SERVER_ERROR
+        Message: CONSTANTS.INTERNAL_SERVER_ERROR,
       });
       next(error);
     } finally {
@@ -259,10 +277,10 @@ module.exports = {
           ? req?.user?.family_member_id
           : req?.user?.user_id
           ? req?.user?.user_id
-          : 'Not Found',
-        function: 'Live_Stream',
-        function_type: 'Stop',
-        request: req.query
+          : "Not Found",
+        function: "Live_Stream",
+        function_type: "Stop",
+        request: req.query,
       };
       try {
         await logServices.addChangeLog(logObj);
@@ -270,5 +288,31 @@ module.exports = {
         console.log(e);
       }
     }
-  }
-}
+  },
+  
+  getstreamDetails: async (req, res, next) => {
+    const t = await sequelize.transaction();
+    try {
+      const { streamID } = req.query;
+      let streamObj = await liveStreamServices.getstreamObj(streamID);
+      let response = {
+        room_id: streamObj?.room_id,
+        cust_id: streamObj?.cust_id,
+      };
+      await t.commit();
+      res.status(200).json({
+        IsSuccess: streamObj ? true : false,
+        Data: response,
+        Message: streamObj ? CONSTANTS.LIVE_STREAM_DETAILS : CONSTANTS.LIVE_STREAM_DETAILS_NOT_FOUND,
+      });
+    } catch (error) {
+      await t.rollback();
+      res.status(500).json({
+        IsSuccess: false,
+        error_log: error,
+        Message: CONSTANTS.INTERNAL_SERVER_ERROR,
+      });
+      next(error);
+    }
+  },
+};

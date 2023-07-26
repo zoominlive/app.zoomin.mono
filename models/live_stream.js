@@ -28,6 +28,9 @@ const LiveStreams = sequelize.define(
             type: Sequelize.BOOLEAN(1),
             defaultValue: false
         },
+        s3_url: {
+            type: Sequelize.STRING(250)
+        },
         stream_start_time: {
             type: Sequelize.DATE,
             defaultValue: null

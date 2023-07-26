@@ -104,6 +104,8 @@ module.exports = {
 
       if (checkUserValidation && !checkUserValidation.isValid) {
         res.status(400).json(checkUserValidation.message);
+        await t.commit();
+        return
       }
 
       let emailIs = params.email;
