@@ -84,7 +84,9 @@ const CustomPlayer = (props) => {
           <ReactPlayer
             url={
               props.streamUri.includes('https://live.zoominlive.com')
-                ? `${props?.streamUri}`
+                ? `${props?.streamUri}?id=${
+                    authCtx?.user?.family_member_id || authCtx?.user?.user_id
+                  }`
                 : `${authCtx.user.transcoderBaseUrl}${props?.streamUri}`
             }
             className="react-player"

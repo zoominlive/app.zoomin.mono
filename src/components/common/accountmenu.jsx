@@ -4,6 +4,7 @@ import {
   Divider,
   Fade,
   IconButton,
+  //IconButton,
   ListItemIcon,
   ListItemText,
   Menu,
@@ -13,11 +14,13 @@ import {
   Typography
 } from '@mui/material';
 import React, { useContext } from 'react';
-import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import PermIdentityIcon from '@mui/icons-material/PermIdentity';
 // import SettingsIcon from '@mui/icons-material/Settings';
 import { useNavigate } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import AuthContext from '../../context/authcontext';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 
 const AccountMenu = (props) => {
   const navigate = useNavigate();
@@ -41,14 +44,24 @@ const AccountMenu = (props) => {
 
   return (
     <Box>
-      <IconButton onClick={handleClick}>
+      {/* <IconButton onClick={handleClick}> */}
+
+      {/* </IconButton> */}
+      <Stack direction={'row'} alignItems={'center'} justifyContent={'space-around'}>
         <Avatar
           src={authCtx?.user?.profile_image}
           style={{
-            border: '2px solid #1b4965'
+            border: '2px solid #eae9ff',
+            margin: '5px 5px 5px 0'
           }}
         />
-      </IconButton>
+        {authCtx?.user?.first_name} {authCtx?.user?.last_name}
+        <IconButton onClick={handleClick} sx={{ ml: 1 }}>
+          {/* <KeyboardArrowDownIcon style={{ ml: 3 }} onClick={handleClick} /> */}
+          <KeyboardArrowDownIcon />
+        </IconButton>
+      </Stack>
+
       <Menu
         className="account-menu"
         open={open}
@@ -58,7 +71,7 @@ const AccountMenu = (props) => {
         anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
         TransitionComponent={Fade}>
         <MenuList>
-          <MenuItem sx={{ marginBottom: '15px' }}>
+          <MenuItem sx={{ marginBottom: 0 }}>
             <ListItemIcon>
               <Avatar src={authCtx?.user?.profile_image} />
             </ListItemIcon>
@@ -88,17 +101,21 @@ const AccountMenu = (props) => {
               handleClose(event);
             }}>
             <ListItemIcon>
-              <AccountCircleIcon />
+              <PermIdentityIcon />
             </ListItemIcon>
             <ListItemText sx={{ ml: 2 }}>Profile</ListItemText>
           </MenuItem>
           <Divider />
           <MenuItem
+            sx={{ padding: 1.4 }}
             onClick={(event) => {
               props.openLogoutDialog(true);
               handleClose(event);
             }}>
-            <ListItemText className="logout-text">SIGN OUT</ListItemText>
+            <ListItemIcon>
+              <ExitToAppIcon style={{ fill: '#5A53DD' }} />
+            </ListItemIcon>
+            <ListItemText className="logout-text">Logout</ListItemText>
           </MenuItem>
         </MenuList>
       </Menu>

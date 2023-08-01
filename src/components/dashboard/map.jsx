@@ -1,9 +1,10 @@
-import { Box, Tooltip } from '@mui/material';
+import { Box, IconButton, Tooltip } from '@mui/material';
 import React, { useRef } from 'react';
 import GoogleMapReact from 'google-map-react';
 import PropTypes from 'prop-types';
 import { useState } from 'react';
 import useSupercluster from 'use-supercluster';
+import MapOutlinedIcon from '@mui/icons-material/MapOutlined';
 
 const Marker = ({ children }) => children;
 
@@ -69,6 +70,11 @@ const Map = (props) => {
             </Marker>
           );
         })}
+        {
+          <IconButton className="map-icon" onClick={() => props.onOpen()}>
+            <MapOutlinedIcon />
+          </IconButton>
+        }
       </GoogleMapReact>
     </Box>
   );
@@ -77,5 +83,7 @@ const Map = (props) => {
 export default Map;
 
 Map.propTypes = {
-  data: PropTypes.array
+  data: PropTypes.array,
+  height: PropTypes.number,
+  onOpen: PropTypes.func
 };

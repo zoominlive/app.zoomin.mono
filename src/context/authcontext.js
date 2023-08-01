@@ -7,7 +7,8 @@ const defaultState = {
     user: JSON.parse(localStorage.getItem('user')),
     authError: false,
     previosPagePath: '',
-    custName: localStorage.getItem('cust_name')
+    custName: localStorage.getItem('cust_name'),
+    location: 'All'
   }
 };
 
@@ -23,6 +24,7 @@ export const AuthContextProvider = (props) => {
   const [authError, setAuthError] = useState(defaultState.auth.authError);
   const [previosPagePath, setPreviosPagePath] = useState(defaultState.auth.previosPagePath);
   const [custName, setCustName] = useState(defaultState.auth.custName);
+  const [location, setLocation] = useState(defaultState.auth.custName);
   // Method to handle token changes
   const handleToken = (token) => setToken(token);
 
@@ -36,6 +38,7 @@ export const AuthContextProvider = (props) => {
   const handlePageChange = (path) => setPreviosPagePath(path);
 
   const handleCustName = (name) => setCustName(name);
+  const handleLocation = (loc) => setLocation(loc);
 
   const context = {
     token,
@@ -43,11 +46,13 @@ export const AuthContextProvider = (props) => {
     authError,
     previosPagePath,
     custName,
+    location,
     setToken: handleToken,
     setUser: handleUser,
     setAuthError: handleAuthError,
     setPreviosPagePath: handlePageChange,
-    setCustName: handleCustName
+    setCustName: handleCustName,
+    setLocation: handleLocation
   };
 
   return <AuthContext.Provider value={context}>{props.children}</AuthContext.Provider>;

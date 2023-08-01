@@ -9,19 +9,24 @@ import {
   Autocomplete,
   Checkbox,
   CircularProgress,
-  Button
+  Button,
+  DialogContentText,
+  IconButton
 } from '@mui/material';
 import { useLocation } from 'react-router-dom';
-import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
-import CheckBoxIcon from '@mui/icons-material/CheckBox';
+//import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+// import CheckBoxIcon from '@mui/icons-material/CheckBox';
 import PropTypes from 'prop-types';
 import API from '../../api';
 import { errorMessageHandler } from '../../utils/errormessagehandler';
 import AuthContext from '../../context/authcontext';
 import { useSnackbar } from 'notistack';
+import CloseIcon from '@mui/icons-material/Close';
+import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 
-const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
-const checkedIcon = <CheckBoxIcon fontSize="small" />;
+const icon = <RadioButtonUncheckedIcon fontSize="small" />;
+const checkedIcon = <CheckCircleOutlineIcon fontSize="small" style={{ color: '#5A53DD' }} />;
 
 const WatchStreamDialogBox = (props) => {
   const authCtx = useContext(AuthContext);
@@ -216,11 +221,26 @@ const WatchStreamDialogBox = (props) => {
 
   return (
     <Dialog open={props.open} onClose={props.close} maxWidth={'md'} fullWidth={true}>
-      <DialogTitle id="responsive-dialog-title">{'Please select.....'}</DialogTitle>
+      <DialogTitle id="responsive-dialog-title" sx={{ paddingTop: 3.5 }}>
+        {'Watch Stream'}
+        <DialogContentText>
+          Please select which stream you want to watch on your dashboard
+        </DialogContentText>
+        <IconButton
+          aria-label="close"
+          onClick={props.close}
+          sx={{
+            position: 'absolute',
+            right: 18,
+            top: 30
+          }}>
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
       <DialogContent>
         <div>
           <Autocomplete
-            sx={{ padding: 1 }}
+            sx={{ padding: 1.5, '& fieldset': { borderRadius: 4 } }}
             multiple
             limitTags={1}
             id="tags-standard"
@@ -264,7 +284,7 @@ const WatchStreamDialogBox = (props) => {
             )}
           />
           <Autocomplete
-            sx={{ padding: 1 }}
+            sx={{ padding: 1.5, '& fieldset': { borderRadius: 4 } }}
             limitTags={1}
             id="tags-standard"
             options={rooms}
@@ -276,7 +296,12 @@ const WatchStreamDialogBox = (props) => {
             }}
             renderTags={(value, getTagProps) =>
               value?.map((option, index) => (
-                <Chip key={index} label={option?.room_name} {...getTagProps({ index })} />
+                <Chip
+                  style={{ backgroundColor: 'red' }}
+                  key={index}
+                  label={option?.room_name}
+                  {...getTagProps({ index })}
+                />
               ))
             }
             renderOption={(props, option, { selected }) => (
@@ -308,7 +333,7 @@ const WatchStreamDialogBox = (props) => {
             )}
           />
           <Autocomplete
-            sx={{ padding: 1 }}
+            sx={{ padding: 1.5, '& fieldset': { borderRadius: 4 } }}
             limitTags={1}
             id="tags-standard"
             options={cameras ? cameras : []}
@@ -371,10 +396,38 @@ const WatchStreamDialogBox = (props) => {
           />
         </div>
       </DialogContent>
-      <DialogActions>
-        <Button onClick={props.close}>Cancel</Button>
-        <Button onClick={() => props.submit(camLabel)} autoFocus>
-          Save
+      <DialogActions sx={{ paddingRight: 4, paddingBottom: 3 }}>
+        {/* <Button onClick={props.close}>Cancel</Button> */}
+        {/* <Button onClick={() => props.submit(camLabel)} autoFocus>
+          Save Stream
+        </Button> */}
+        {/* <Button
+          className="add-btn stream-btn"
+          onClick={() => props.submit(camLabel)}
+          // style={{
+          //   borderRadius: 20,
+          //   background: '#5A53DD',
+          //   color: '#fff',
+          //   textTransform: 'capitalize',
+          //   maxWidth: 150,
+          //   margin: 2
+          // }}
+        >
+          Save Stream
+        </Button> */}
+        <Button
+          className="add-btn dashboard-btn"
+          onClick={() => props.submit(camLabel)}
+          autoFocus
+          // variant="contained"
+          sx={{
+            borderRadius: 20,
+            background: '#5A53DD',
+            color: '#fff',
+            textTransform: 'capitalize',
+            maxWidth: 150
+          }}>
+          Save Stream
         </Button>
       </DialogActions>
     </Dialog>

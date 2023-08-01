@@ -1,11 +1,16 @@
 import {
   Box,
   Drawer,
+  FormControl,
+  // InputLabel,
   List,
   ListItem,
   ListItemButton,
   ListItemIcon,
   ListItemText,
+  MenuItem,
+  Select,
+  Stack,
   Typography
 } from '@mui/material';
 import logo from '../../assets/image2vector.svg';
@@ -25,6 +30,7 @@ import AuthContext from '../../context/authcontext';
 import Loader from '../common/loader';
 import { errorMessageHandler } from '../../utils/errormessagehandler';
 import AddFamilyDialog from '../addfamily/addfamilydialog';
+//import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
 
 const Layout = () => {
   const layoutCtx = useContext(LayoutContext);
@@ -35,6 +41,10 @@ const Layout = () => {
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
   const [isAddFamilyDialogOpen, setIsAddFamilyDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  const handleChange = (event) => {
+    authCtx.setLocation(event.target.value);
+  };
 
   useEffect(() => {
     setIsLoading(true);
@@ -280,8 +290,8 @@ const Layout = () => {
             <Box className="header-left">
               <img
                 onClick={() => setOpen(!open)}
-                style={{ width: '46px', height: '46px', borderRadius: '50%' }}
                 src={open ? collapseButton : openButton}
+                className="collapse-btn"
               />
 
               <Box className="breadcrumb">
@@ -294,9 +304,55 @@ const Layout = () => {
                 )}
               </Box>
             </Box>
-            <Box className="header-right">
-              <AccountMenu openLogoutDialog={setIsLogoutDialogOpen} />
-            </Box>
+
+            {/* <FormControl fullWidth className="header-location">
+                <InputLabel id="demo-simple-select-label">Location</InputLabel>
+                <Select
+                  labelId="demo-simple-select-label"
+                  id="demo-simple-select"
+                  value={location}
+                  label="Location"
+                  onChange={handleChange}
+                  sx={{
+                    '& fieldset': {
+                      border: 'none'
+                    }
+                  }}>
+                  <MenuItem value={'Location 1'}>Location 1</MenuItem>
+                  <MenuItem value={'Location 2'}>Location 2</MenuItem>
+                  <MenuItem value={'Location 3'}>Location 3</MenuItem>
+                </Select>
+                
+              </FormControl> */}
+            <Stack direction={'row'} gap={2} alignItems={'center'}>
+              <FormControl fullWidth className="location-select header-location">
+                {/* <InputLabel id="location">Location</InputLabel> */}
+                <Select
+                  // labelId="location"
+                  id="location"
+                  value={authCtx?.location || 'All'}
+                  label="Location"
+                  onChange={handleChange}
+                  sx={{
+                    '& fieldset': {
+                      border: 'none'
+                    }
+                  }}>
+                  <MenuItem value={'All'}>All</MenuItem>
+                  {authCtx?.user?.location?.accessable_locations
+                    .sort((a, b) => (a > b ? 1 : -1))
+                    .map((location, index) => (
+                      <MenuItem key={index} value={location}>
+                        {location}
+                      </MenuItem>
+                    ))}
+                </Select>
+              </FormControl>
+
+              <Box className="header-right">
+                <AccountMenu openLogoutDialog={setIsLogoutDialogOpen} />
+              </Box>
+            </Stack>
           </header>
           <section className="content-area">
             <Outlet />
