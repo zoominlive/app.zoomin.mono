@@ -47,6 +47,7 @@ const MainApp = () => {
         data = { user_id: user_id };
       }
       //navigate('/dashboard');
+
       const socket = new WebSocket(process.env.REACT_APP_SOCKET_URL);
 
       // Connection opened
@@ -58,7 +59,13 @@ const MainApp = () => {
       // Listen for messages
       socket.addEventListener('message', (event) => {
         let data = JSON.parse(event.data);
-        enqueueSnackbar(data?.message, { variant: 'success' });
+        console.log('=======socket message', data);
+        if (data?.update_dashboard_data) {
+          localStorage.setItem('updateDashboardData', true);
+          authCtx.setUpdateDashboardData(true);
+        } else {
+          enqueueSnackbar(data?.message, { variant: 'success' });
+        }
       });
 
       socket.addEventListener('error', (event) => {

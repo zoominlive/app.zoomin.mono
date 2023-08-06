@@ -61,6 +61,7 @@ export default function StickyHeadTable({
                     .map((row, index) => {
                       return (
                         <TableRow key={index}>
+                          <TableCell></TableCell>
                           <TableCell>
                             {(row?.family?.first_name || row?.user?.first_name) +
                               ' ' +

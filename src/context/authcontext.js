@@ -8,7 +8,8 @@ const defaultState = {
     authError: false,
     previosPagePath: '',
     custName: localStorage.getItem('cust_name'),
-    location: 'All'
+    location: 'All',
+    updateDashboardData: false
   }
 };
 
@@ -24,7 +25,10 @@ export const AuthContextProvider = (props) => {
   const [authError, setAuthError] = useState(defaultState.auth.authError);
   const [previosPagePath, setPreviosPagePath] = useState(defaultState.auth.previosPagePath);
   const [custName, setCustName] = useState(defaultState.auth.custName);
-  const [location, setLocation] = useState(defaultState.auth.custName);
+  const [location, setLocation] = useState(defaultState.auth.location);
+  const [updateDashboardData, setUpdateDashboardData] = useState(
+    defaultState.auth.updateDashboardData
+  );
   // Method to handle token changes
   const handleToken = (token) => setToken(token);
 
@@ -39,6 +43,7 @@ export const AuthContextProvider = (props) => {
 
   const handleCustName = (name) => setCustName(name);
   const handleLocation = (loc) => setLocation(loc);
+  const handleUpdateDashboardData = (value) => setUpdateDashboardData(value);
 
   const context = {
     token,
@@ -47,12 +52,14 @@ export const AuthContextProvider = (props) => {
     previosPagePath,
     custName,
     location,
+    updateDashboardData,
     setToken: handleToken,
     setUser: handleUser,
     setAuthError: handleAuthError,
     setPreviosPagePath: handlePageChange,
     setCustName: handleCustName,
-    setLocation: handleLocation
+    setLocation: handleLocation,
+    setUpdateDashboardData: handleUpdateDashboardData
   };
 
   return <AuthContext.Provider value={context}>{props.children}</AuthContext.Provider>;

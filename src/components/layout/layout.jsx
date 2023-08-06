@@ -1,4 +1,5 @@
 import {
+  Avatar,
   Box,
   Drawer,
   FormControl,
@@ -294,15 +295,34 @@ const Layout = () => {
                 className="collapse-btn"
               />
 
-              <Box className="breadcrumb">
+              {/* <Box className="breadcrumb">
+                {layoutCtx?.breadcrumb?.length > 2 ? (
+                  <Avatar src={layoutCtx?.breadcrumb[2]} />
+                ) : null}
+
                 <Typography variant="h2">{layoutCtx?.breadcrumb[0]}</Typography>
-                {layoutCtx?.breadcrumb?.length > 1 && (
-                  <>
-                    <Typography> | </Typography>
-                    <Typography variant="h4">{layoutCtx?.breadcrumb[1]}</Typography>
-                  </>
-                )}
-              </Box>
+              </Box>*/}
+
+              <Stack
+                direction={'row'}
+                justifyContent={'center'}
+                alignItems={'center'}
+                gap={2}
+                className="breadcrumb">
+                {layoutCtx?.breadcrumb?.length > 2 ? (
+                  <Avatar
+                    src={layoutCtx?.breadcrumb[2]}
+                    sx={{ width: 55, height: 60 }}
+                    alt='="profile-image'
+                  />
+                ) : null}
+                <Stack direction={'column'} spacing={0.5}>
+                  <Typography variant="h2">{layoutCtx?.breadcrumb[0]}</Typography>
+                  {layoutCtx?.breadcrumb?.length > 1 && (
+                    <Typography className="">{layoutCtx?.breadcrumb[1]}</Typography>
+                  )}
+                </Stack>
+              </Stack>
             </Box>
 
             {/* <FormControl fullWidth className="header-location">

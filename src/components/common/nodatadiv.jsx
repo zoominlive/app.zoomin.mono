@@ -1,5 +1,5 @@
 import React from 'react';
-import { Stack } from '@mui/material';
+import { Avatar, Stack } from '@mui/material';
 import NoData from '../../assets/no-data.svg';
 
 const NoDataDiv = () => {
@@ -9,7 +9,7 @@ const NoDataDiv = () => {
       alignItems="center"
       justifyContent="center"
       sx={{ fontSize: 15, fontWeight: 'bold', paddingTop: 5, paddingBottom: 5 }}>
-      <img src={NoData} />
+      <Avatar src={NoData} />
       No Entries Found
     </Stack>
   );

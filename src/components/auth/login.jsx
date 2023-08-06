@@ -57,6 +57,7 @@ const Login = () => {
         if (response.status === 200) {
           localStorage.setItem('token', response.data.Data.token);
           localStorage.setItem('user', JSON.stringify(response.data.Data.userData));
+          authCtx.setUser(response.data.Data.userData);
           if (response.data.Data.userData.role === 'Super Admin') {
             setShowCustomerSelection(true);
           } else {

@@ -27,7 +27,7 @@ import { Video } from 'react-feather';
 import _ from 'lodash';
 import WatchStreamDialogBox from './watchstreamdialogbox';
 import VideoOff from '../../assets/video-off.svg';
-import StickyHeadTable from './stickyheadtable';
+// import StickyHeadTable from './stickyheadtable';
 import CustomPlayer from '../watchstream/customplayer';
 import { LoadingButton } from '@mui/lab';
 import StreamTable from './streamtable';
@@ -35,10 +35,20 @@ import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 import MapDialog from './mapDialog';
 import { useNavigate } from 'react-router-dom';
 import OutboundIcon from '@mui/icons-material/Outbound';
+import ViewersTable from './viewerstable';
+import AccessTable from './accesstable';
+import moment from 'moment';
 
 const AccessColumns = ['Children', 'Room'];
-const topViewersColumns = ['Viewers', 'Views'];
-const lastHourViewersColumns = ['Viewers', 'Children', 'Room'];
+const topViewersColumns = [
+  { label: 'Viewers', width: '50%' },
+  { label: 'Views', width: '45%' }
+];
+const lastHourViewersColumns = [
+  { label: 'Viewers', width: '30%' },
+  { label: 'Children', width: '20%' },
+  { label: 'Room', width: '40%' }
+];
 const streamColumns = ['Stream Name', 'Time', 'Rooms'];
 
 const Dashboard = () => {
@@ -52,9 +62,9 @@ const Dashboard = () => {
   const [mapsData, setMapsData] = useState([]);
   const [selectedCamera, setSelectedCamera] = useState({});
   const [openWatchStreamDialog, setOpenWatchStreamDialog] = useState(false);
-  const [timeOut, setTimeOut] = useState(10);
-  const [playing, setPlaying] = useState(true);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [timeOut, setTimeOut] = useState(2);
+  const [playing, setPlaying] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(true);
   const [defaultWatchStream, setDefaultWatchStream] = useState(null);
   const [openMapDialog, setOpenMapDialog] = useState(false);
 
@@ -83,12 +93,27 @@ const Dashboard = () => {
       cust_id: localStorage.getItem('cust_id')
     });
   };
+  function greeting() {
+    const hour = moment().hour();
+
+    if (hour > 16) {
+      return 'Good evening';
+    }
+
+    if (hour > 11) {
+      return 'Good afternoon';
+    }
+
+    return 'Good morning';
+  }
 
   useEffect(() => {
+    console.log('=====authCtx?.user?.first_name', authCtx?.user?.first_name);
     layoutCtx.setActive(1);
     layoutCtx.setBreadcrumb([
-      `Welcome back, ${authCtx?.user?.first_name}`,
-      `${days[dayjs().day()]}, ${dayjs().format('DD MMMM YYYY')}`
+      `${greeting()}, ${authCtx?.user?.first_name}!`,
+      `${days[dayjs().day()]}, ${dayjs().format('DD MMMM YYYY')}`,
+      `${authCtx?.user?.profile_image}`
     ]);
 
     return () => {
@@ -97,11 +122,17 @@ const Dashboard = () => {
   }, []);
 
   useEffect(() => {
+    getDashboardData();
+  }, [authCtx.location, localStorage.getItem('updateDashboardData'), authCtx.updateDashboardData]);
+
+  const getDashboardData = () => {
     setIsLoading(true);
     API.get('dashboard', {
       params: { cust_id: localStorage.getItem('cust_id'), location: authCtx?.location || 'All' }
     }).then((response) => {
       if (response.status === 200) {
+        localStorage.setItem('updateDashboardData', false);
+        authCtx.setUpdateDashboardData(false);
         setStatisticsData(response.data.Data);
         const points = response?.data?.Data?.enroledStreamsDetails.map((point) => ({
           type: 'Feature',
@@ -150,7 +181,7 @@ const Dashboard = () => {
         setIsLoading(false);
       }
     });
-  }, [authCtx.location]);
+  };
 
   return (
     <>
@@ -188,7 +219,7 @@ const Dashboard = () => {
                                     {' '}
                                     <OutboundIcon />{' '}
                                   </Box>{' '}
-                                  <span>+15%</span>
+                                  <Box component={'span'}>+15%</Box>
                                 </Stack>
                                 <Link href="#">View Report</Link>
                               </Grid>
@@ -209,12 +240,13 @@ const Dashboard = () => {
                               <Grid item className="report-div">
                                 <Stack
                                   direction={'row'}
+                                  alignItems={'center'}
                                   spacing={0.7}
                                   className="strem-report viewers-report">
                                   <Box className="icon">
                                     <OutboundIcon />{' '}
                                   </Box>{' '}
-                                  <span>-3.5%</span>
+                                  <Box component={'span'}>-3.5%</Box>
                                 </Stack>
                                 <Link href="#">View Report</Link>
                               </Grid>
@@ -250,7 +282,7 @@ const Dashboard = () => {
                                   <Box className="icon">
                                     <OutboundIcon />{' '}
                                   </Box>{' '}
-                                  <span>+15%</span>
+                                  <Box component={'span'}>+15%</Box>
                                 </Stack>
                                 <Link href="#">View Report</Link>
                               </Grid>
@@ -278,7 +310,7 @@ const Dashboard = () => {
                                     {' '}
                                     <OutboundIcon />{' '}
                                   </Box>{' '}
-                                  <span>-3.5%</span>
+                                  <Box component={'span'}>-3.5%</Box>
                                 </Stack>
 
                                 <Link href="#">View Report</Link>
@@ -328,7 +360,7 @@ const Dashboard = () => {
                         className="report-circle familiy-circle"
                         style={{ borderColor: '#A855F7' }}>
                         <Stack direction={'column'} alignItems={'center'}>
-                          <span>Children</span>
+                          <Box component={'span'}>Children</Box>
                           {statisticsData?.families !== undefined ? statisticsData?.families : ' '}
                         </Stack>
                       </Box>
@@ -336,7 +368,7 @@ const Dashboard = () => {
                         className="report-circle familiy-circle"
                         style={{ borderColor: '#FAD203' }}>
                         <Stack direction={'column'} alignItems={'center'}>
-                          <span>Users</span>
+                          <Box component={'span'}>Users</Box>
                           {statisticsData?.childrens !== undefined
                             ? statisticsData?.childrens
                             : ' '}
@@ -346,7 +378,7 @@ const Dashboard = () => {
                         className="report-circle familiy-circle"
                         style={{ borderColor: '#FF8762' }}>
                         <Stack direction={'column'} alignItems={'center'}>
-                          <span>Famillies</span>
+                          <Box component={'span'}>Famillies</Box>
                           {statisticsData?.familyMembers !== undefined
                             ? statisticsData?.familyMembers
                             : ' '}
@@ -363,21 +395,6 @@ const Dashboard = () => {
           <Grid item md={7} sm={12} xs={12} style={{ paddingTop: 0 }}>
             <Card>
               <CardContent>
-                {/* <StickyHeadTable
-                  style={{ borderRadius: 5 }}
-                  key={3}
-                  rows={
-                    statisticsData?.activeLiveStreams?.length > 0
-                      ? statisticsData?.activeLiveStreams
-                      : []
-                  }
-                  columns={streamColumns}
-                  title={'Active Stream'}
-                  topViewers={false}
-                  pagination={false}
-                  height={160}
-                  isLoading={isLoading}
-                /> */}
                 <StreamTable
                   style={{ borderRadius: 5 }}
                   columns={streamColumns}
@@ -401,18 +418,6 @@ const Dashboard = () => {
                   title={'Recent Stream'}
                   isLoading={isLoading}
                 />
-
-                {/* <StickyHeadTable
-                  style={{ borderRadius: 5 }}
-                  key={3}
-                  rows={statisticsData?.activeLiveStreams?.length > 0 ? [] : []}
-                  columns={streamColumns}
-                  title={'Recent Stream'}
-                  topViewers={false}
-                  pagination={false}
-                  height={160}
-                  isLoading={isLoading}
-                /> */}
               </CardContent>
             </Card>
           </Grid>
@@ -436,7 +441,7 @@ const Dashboard = () => {
                 />
               </Grid>
 
-              <div className={`video-wrap ${isDeleteDialogOpen ? 'modal-overlay' : ''}`}>
+              <Box className={`video-wrap ${isDeleteDialogOpen ? 'modal-overlay' : ''}`}>
                 {_.isEmpty(selectedCamera) || !playing ? (
                   <Stack
                     height={'85%'}
@@ -462,13 +467,13 @@ const Dashboard = () => {
                 )}
 
                 {isDeleteDialogOpen ? (
-                  <div id="open-modal" className="modal-window" style={{ backgroundColor: '#fff' }}>
-                    <div>
-                      <h2>Are you still watching?</h2>
+                  <Box id="open-modal" className="modal-window">
+                    <Box>
+                      <Typography variant="h2">Are you still watching?</Typography>
                       <Divider />
-                      <div className="modal-content">Press Yes to continue watching</div>
+                      <Box className="modal-content">Press Yes to continue watching</Box>
                       <Divider />
-                      <div className="modal-button-wrap">
+                      <Box className="modal-button-wrap">
                         <Button
                           variant="text"
                           onClick={() => {
@@ -483,19 +488,18 @@ const Dashboard = () => {
                           }}>
                           YES
                         </LoadingButton>
-                      </div>
-                    </div>
-                  </div>
+                      </Box>
+                    </Box>
+                  </Box>
                 ) : null}
-              </div>
+              </Box>
             </Card>
           </Grid>
         </Grid>
         <Grid container spacing={3}>
           <Grid item md={3.5} sm={12} xs={12}>
             <Paper sx={{ marginTop: 2 }}>
-              <StickyHeadTable
-                key={1}
+              <AccessTable
                 rows={
                   statisticsData?.childrenWithEnableDate?.length > 0
                     ? statisticsData?.childrenWithEnableDate
@@ -503,16 +507,13 @@ const Dashboard = () => {
                 }
                 columns={AccessColumns}
                 title={'Weekly Gaining Access'}
-                topViewers={false}
-                pagination={false}
                 isLoading={isLoading}
               />
             </Paper>
           </Grid>
           <Grid item md={3.5} sm={12} xs={12}>
             <Paper sx={{ marginTop: 2 }}>
-              <StickyHeadTable
-                key={1}
+              <AccessTable
                 rows={
                   statisticsData?.childrenWithEnableDate?.length > 0
                     ? statisticsData?.childrenWithEnableDate
@@ -520,29 +521,23 @@ const Dashboard = () => {
                 }
                 columns={AccessColumns}
                 title={'Weekly Loosing Access'}
-                topViewers={false}
-                pagination={false}
                 isLoading={isLoading}
               />
             </Paper>
           </Grid>
           <Grid item md={5} sm={12} xs={12}>
-            <Paper sx={{ marginTop: 2 }}>
-              <StickyHeadTable
-                key={4}
-                rows={
-                  statisticsData?.enroledStreamsDetails?.length > 0 &&
-                  statisticsData?.enroledStreamsDetails?.some((it) => !_.isNil(it?.family))
-                    ? statisticsData?.enroledStreamsDetails
-                    : []
-                }
-                columns={lastHourViewersColumns}
-                title={'Viewers In The Last Hour'}
-                topViewers={true}
-                pagination={true}
-                isLoading={isLoading}
-              />
-            </Paper>
+            <ViewersTable
+              rows={
+                statisticsData?.enroledStreamsDetails?.length > 0 &&
+                statisticsData?.enroledStreamsDetails?.some((it) => !_.isNil(it?.family))
+                  ? statisticsData?.enroledStreamsDetails
+                  : []
+              }
+              columns={lastHourViewersColumns}
+              title={'Viewers In The Last Hour'}
+              pagination={true}
+              isLoading={isLoading}
+            />
           </Grid>
         </Grid>
         <Grid container spacing={3} mt={1}>
@@ -552,8 +547,6 @@ const Dashboard = () => {
                 <CardHeader
                   title={
                     <>
-                      {/* <Typography style={{ padding: 15 }}>Location of Recent Viewers</Typography>
-                      <Typography>Recent</Typography> */}
                       <Stack
                         direction="row"
                         spacing={2}
@@ -572,7 +565,12 @@ const Dashboard = () => {
                   }
                 />
                 <CardContent>
-                  <Map data={mapsData} height={600} onOpen={() => setOpenMapDialog(true)} />
+                  <Map
+                    data={mapsData}
+                    height={600}
+                    isMapIcon={true}
+                    onOpen={() => setOpenMapDialog(true)}
+                  />
                   <MapDialog
                     open={openMapDialog}
                     onClose={() => setOpenMapDialog(false)}
@@ -584,9 +582,7 @@ const Dashboard = () => {
           </Grid>
           <Grid item md={5} sm={12} xs={12} style={{ paddingTop: 9 }}>
             <Paper sx={{ marginTop: 2 }}>
-              <StickyHeadTable
-                style={{ minHeight: 350 }}
-                key={4}
+              <ViewersTable
                 rows={
                   statisticsData?.topViewers?.length > 0
                     ? //statisticsData?.topViewers?.some((it) => !_.isNil(it?.family) && )
@@ -597,7 +593,6 @@ const Dashboard = () => {
                 }
                 columns={topViewersColumns}
                 title={'Top 5 Viewers Last 7 Days'}
-                topViewers={true}
                 pagination={false}
                 isLoading={isLoading}
               />

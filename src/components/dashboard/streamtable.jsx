@@ -1,16 +1,14 @@
 import React from 'react';
 import { Typography, Stack, Chip, Box } from '@mui/material';
 import PropTypes from 'prop-types';
-import NoData from '../../assets/no-data.svg';
 import moment from 'moment';
 import { Video } from 'react-feather';
 import { Link } from 'react-router-dom';
+import NoDataDiv from '../common/nodatadiv';
 
 export default function StreamTable({ rows, columns, title, isLoading }) {
   return (
     <>
-      {/* <Paper sx={{ marginTop: 2 }}> */}
-
       <Stack
         direction="row"
         spacing={2}
@@ -22,24 +20,7 @@ export default function StreamTable({ rows, columns, title, isLoading }) {
           View More
         </Link>
       </Stack>
-
-      {/* <TableContainer
-        component={Paper}
-        sx={{
-          minHeight: 160,
-          maxHeight: 160,
-          marginTop: 0,
-          width: '100%'
-        }}
-        className={rows && rows?.length > 0 ? '' : 'empty-data'}> */}
       <Box>
-        {/* <TableHead>
-            <TableRow>
-              {columns.map((column, index) => (
-                <TableCell key={index}>{column}</TableCell>
-              ))}
-            </TableRow>
-          </TableHead> */}
         <Box className="div-header">
           {columns.map((column, index) => (
             <Box key={index} style={{ width: column == 'Rooms' ? '45%' : '35%' }}>
@@ -107,20 +88,11 @@ export default function StreamTable({ rows, columns, title, isLoading }) {
               })}
           </Box>
         ) : !isLoading ? (
-          <Stack
-            spacing={1}
-            alignItems="center"
-            justifyContent="center"
-            sx={{
-              fontWeight: 'bold'
-            }}>
-            <img src={NoData} />
-            <div>No Entries Found</div>
+          <Stack alignItems="center" justifyContent="center" sx={{ paddingTop: 2 }}>
+            <NoDataDiv />
           </Stack>
         ) : null}
       </Box>
-      {/* </TableContainer> */}
-      {/* </Paper> */}
     </>
   );
 }
