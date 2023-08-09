@@ -191,7 +191,7 @@ const Dashboard = () => {
         <Loader loading={isLoading} />
 
         <Grid container spacing={3} mt={2} alignItems={'stretch'}>
-          <Grid item md={7} sm={12} xs={12} style={{ paddingTop: 0 }}>
+          <Grid item md={12} sm={12} xs={12} lg={7} style={{ paddingTop: 0 }}>
             <Card sx={{ borderRadius: 5, background: '#5A53DD' }}>
               <CardContent style={{ padding: '6px 16px 6px 16px' }}>
                 <Grid
@@ -206,8 +206,11 @@ const Dashboard = () => {
                           Live Mobile Streams
                         </Typography>
                         <Grid container spacing={1}>
-                          <Grid item xs={12} sm={12} md={6} lg={6}>
-                            <Typography variant="subtitle2" gutterBottom>
+                          <Grid item xs={12} sm={6} md={6} lg={6}>
+                            <Typography
+                              variant="subtitle2"
+                              gutterBottom
+                              className="stream-sub-title">
                               Number of Streams
                             </Typography>
                             <Grid container spacing={1} alignItems={'end'}>
@@ -234,8 +237,11 @@ const Dashboard = () => {
                               </Grid>
                             </Grid>
                           </Grid>
-                          <Grid item xs={12} sm={12} md={6} lg={6}>
-                            <Typography variant="subtitle2" gutterBottom>
+                          <Grid item xs={12} sm={6} md={6} lg={6}>
+                            <Typography
+                              variant="subtitle2"
+                              gutterBottom
+                              className="stream-sub-title">
                               Number of Viewers
                             </Typography>
                             <Grid container spacing={1} alignItems={'end'}>
@@ -270,8 +276,11 @@ const Dashboard = () => {
                           Live Mounted Cameras
                         </Typography>
                         <Grid container spacing={1}>
-                          <Grid item xs={12} sm={12} md={6} lg={6}>
-                            <Typography variant="subtitle2" gutterBottom>
+                          <Grid item xs={12} sm={6} md={6} lg={6}>
+                            <Typography
+                              variant="subtitle2"
+                              gutterBottom
+                              className="stream-sub-title">
                               Number of Streams
                             </Typography>
                             <Grid container spacing={1} alignItems={'end'}>
@@ -297,8 +306,11 @@ const Dashboard = () => {
                               </Grid>
                             </Grid>
                           </Grid>
-                          <Grid item xs={12} sm={12} md={6} lg={6}>
-                            <Typography variant="subtitle2" gutterBottom>
+                          <Grid item xs={12} sm={6} md={6} lg={6}>
+                            <Typography
+                              variant="subtitle2"
+                              gutterBottom
+                              className="stream-sub-title">
                               Number of Viewers
                             </Typography>
                             <Grid container spacing={1} alignItems={'end'}>
@@ -332,11 +344,18 @@ const Dashboard = () => {
               </CardContent>
             </Card>
           </Grid>
-          <Grid item md={5} sm={12} xs={12} style={{ paddingTop: 0 }} className="family-div">
+          <Grid
+            item
+            md={12}
+            sm={12}
+            xs={12}
+            lg={5}
+            style={{ paddingTop: 0 }}
+            className="family-div">
             <Card>
               <CardContent>
                 <Grid container direction={'row'} alignItems={'center'}>
-                  <Grid item lg={5} md={5} sm={12} xs={12}>
+                  <Grid item lg={5} md={5} sm={5} xs={12}>
                     <Stack direction={'column'}>
                       <Typography>Enrolled Families</Typography>
                       <Typography variant="body1" className="subtitle">
@@ -356,7 +375,7 @@ const Dashboard = () => {
                       </Button>
                     </Stack>
                   </Grid>
-                  <Grid item lg={7} md={7} sm={12} xs={12}>
+                  <Grid item lg={7} md={7} sm={7} xs={12}>
                     <Stack direction={'row'} spacing={1}>
                       <Box
                         className="report-circle familiy-circle"
@@ -393,8 +412,8 @@ const Dashboard = () => {
             </Card>
           </Grid>
         </Grid>
-        <Grid container spacing={3} mt={2}>
-          <Grid item md={7} sm={12} xs={12} style={{ paddingTop: 0 }}>
+        <Grid container spacing={3} mt={2} className="stream-table-main">
+          <Grid item md={12} sm={12} xs={12} lg={7} style={{ paddingTop: 0 }}>
             <Card>
               <CardContent>
                 <StreamTable
@@ -423,7 +442,14 @@ const Dashboard = () => {
               </CardContent>
             </Card>
           </Grid>
-          <Grid item md={5} sm={12} xs={12} style={{ paddingTop: 0 }}>
+          <Grid
+            item
+            md={12}
+            sm={12}
+            xs={12}
+            lg={5}
+            style={{ paddingTop: 0 }}
+            className="watch-stream-main">
             <Card className="watch-stream-card">
               <Grid
                 container
@@ -499,7 +525,7 @@ const Dashboard = () => {
           </Grid>
         </Grid>
         <Grid container spacing={3}>
-          <Grid item md={3.5} sm={12} xs={12}>
+          <Grid item md={12} sm={12} xs={12} lg={3.5}>
             <Paper sx={{ marginTop: 2 }}>
               <AccessTable
                 rows={
@@ -513,7 +539,7 @@ const Dashboard = () => {
               />
             </Paper>
           </Grid>
-          <Grid item md={3.5} sm={12} xs={12}>
+          <Grid item md={12} sm={12} xs={12} lg={3.5}>
             <Paper sx={{ marginTop: 2 }}>
               <AccessTable
                 rows={
@@ -527,7 +553,7 @@ const Dashboard = () => {
               />
             </Paper>
           </Grid>
-          <Grid item md={5} sm={12} xs={12}>
+          <Grid item md={12} sm={12} xs={12} lg={5}>
             <ViewersTable
               rows={
                 statisticsData?.enroledStreamsDetails?.length > 0 &&
@@ -543,7 +569,7 @@ const Dashboard = () => {
           </Grid>
         </Grid>
         <Grid container spacing={3} mt={1}>
-          <Grid item md={7} sm={12} xs={12}>
+          <Grid item md={12} sm={12} xs={12} lg={7}>
             <Box className="location">
               <Card>
                 <CardHeader
@@ -582,7 +608,7 @@ const Dashboard = () => {
               </Card>
             </Box>
           </Grid>
-          <Grid item md={5} sm={12} xs={12} style={{ paddingTop: 9 }}>
+          <Grid item md={12} sm={12} xs={12} lg={5} style={{ paddingTop: 9 }}>
             <Paper sx={{ marginTop: 2 }}>
               <ViewersTable
                 rows={

@@ -369,6 +369,10 @@ const Families = () => {
               </Box>
             </Grid>
           </Grid>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardContent>
           <Box mt={2} sx={{ position: 'relative' }}>
             <Loader loading={isLoading} />
             <TableContainer component={Paper}>

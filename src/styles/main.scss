@@ -287,7 +287,10 @@
     width: 100%;
     display: flex;
     justify-content: space-between;
-
+    flex-wrap: wrap;
+    @media (max-width: 1024px) {
+      padding-left: 30px;
+      }
     .header-left {
       display: flex;
       padding: 15px;
@@ -300,11 +303,18 @@
       }
 
       .collapse-btn {
-        width: 44px;
-        height: 44px;
+        background: #5a53dd;
+        color: #fff;
+        border: 7px solid #fff;
+        width: 37px;
+        height: 37px;
         border-radius: 50%;
         position: absolute;
         left: -37px;
+        @media (max-width: 1024px) {
+          left: -18px;
+          top: 25px;
+          }
       }
 
       .breadcrumb {
@@ -438,9 +448,12 @@
       display: flex;
       .MuiCardContent-root{
         width: 100%;
-        padding-bottom: 0;
       }
   }
+  @media only screen and (max-width: 1200px) {
+  margin-top: 32px;
+  }
+
   }
     
 
@@ -475,6 +488,10 @@
       &:last-child {
         padding-bottom: 18px !important;
       }
+    }
+    .stream-sub-title{
+      font-size: 13px;
+      font-weight: 500;
     }
   }
 
@@ -1009,7 +1026,7 @@
 .dashboard-btn {
   color: #fff !important;
   width: 165px;
-  height: 52px;
+  height: 48px;
   min-width: 165px !important;
 }
 
@@ -1301,6 +1318,7 @@
         font-size: 15px;
         color: #5a53dd;
         font-weight: 500;
+        text-decoration: none;
       }
     }
   }
@@ -1496,6 +1514,18 @@
     span {
       color: #ed4940;
     }
+  }
+  .stream-table-main {
+    @media (max-width: 1199px) {
+    margin-top: 32px;
+    margin-bottom: 32px;
+    }
+  }
+  .watch-stream-main{
+    @media (max-width: 1199px) {
+      margin-top: 32px;
+      height: 360px;
+      }
   }
 }
 

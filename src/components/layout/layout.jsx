@@ -32,6 +32,7 @@ import Loader from '../common/loader';
 import { errorMessageHandler } from '../../utils/errormessagehandler';
 import AddFamilyDialog from '../addfamily/addfamilydialog';
 //import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
+import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
 
 const Layout = () => {
   const layoutCtx = useContext(LayoutContext);
@@ -293,7 +294,9 @@ const Layout = () => {
                 onClick={() => setOpen(!open)}
                 src={open ? collapseButton : openButton}
                 className="collapse-btn"
+                style={{ display: 'none' }}
               />
+              <KeyboardArrowLeftIcon className="collapse-btn" onClick={() => setOpen(!open)} />
 
               {/* <Box className="breadcrumb">
                 {layoutCtx?.breadcrumb?.length > 2 ? (
