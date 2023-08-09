@@ -431,11 +431,25 @@
 .dashboard {
   position: relative;
 
+  .family-div{
+    .MuiPaper-root {
+      height: 100%;
+      align-items: center;
+      display: flex;
+      .MuiCardContent-root{
+        width: 100%;
+        padding-bottom: 0;
+      }
+  }
+  }
+    
+
   .subtitle {
     font-size: 16px;
     color: #828282;
     font-weight: 400 !important;
-    margin-bottom: 24px;
+    margin-bottom: 8px;
+    line-height: 16px;
   }
 
   .dashboard-analytics {
@@ -511,19 +525,43 @@
     }
   }
 
-  .div-header {
+  .stream-table-wrap{
+    min-height: 140px;
+  }
+    .div-header {
     display: flex;
     margin-bottom: 16px;
     font-size: 16px;
     font-weight: 500;
     margin: 4px 40px 16px 40px;
   }
+  
 
   .table-body {
     width: 100%;
     height: 100px;
     overflow-y: auto;
-
+    .child-rooms{
+      width: 55%;
+      display: flex;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      &::-webkit-scrollbar {
+        width: 2px;
+        height: 2px;
+        border-radius: 6px;
+      }
+  
+      &::-webkit-scrollbar-track {
+        box-shadow: inset 0 0 0.5px rgba(0, 0, 0, 0.6);
+      }
+  
+      &::-webkit-scrollbar-thumb {
+        background-color: #717171;
+        outline: 0.5px solid #717171;
+        border-radius: 20px;
+      }
+    }
     &::-webkit-scrollbar {
       width: 3px;
       height: 3px;
@@ -587,6 +625,7 @@
       margin: 4px 30px 4px 30px;
     }
   }
+  
 }
 
 .listing-wrapper {
@@ -969,6 +1008,9 @@
 
 .dashboard-btn {
   color: #fff !important;
+  width: 165px;
+  height: 52px;
+  min-width: 165px !important;
 }
 
 .dashboard-btn:hover {
@@ -1171,26 +1213,39 @@
   text-align: center;
   height: 200px;
 }
-
-.map-wrapper {
-  .cluster-marker {
-    background: #2196f3;
-    border-radius: 50%;
-    border: 8px solid #79c0f7;
-    padding: 10px;
-    padding-bottom: 10px !important;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 12px;
-    // font-weight: 500;
-    line-height: 20px;
-    text-align: center;
-    letter-spacing: 0.0595px;
-    width: 10px;
-    height: 10px;
+.map-dialog{
+  .MuiPaper-root{
+    position: absolute;
+    top: 0px;
+    .map-wrapper {
+      height: 360px !important;
+    }
   }
 }
+
+
+ 
+      .map-wrapper {
+        .cluster-marker {
+          background: #2196f3;
+          border-radius: 50%;
+          border: 8px solid #79c0f7;
+          padding: 10px;
+          padding-bottom: 10px !important;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          font-size: 12px;
+          // font-weight: 500;
+          line-height: 20px;
+          text-align: center;
+          letter-spacing: 0.0595px;
+          width: 10px;
+          height: 10px;
+        }
+      }
+
+
 
 .main-map-wraper {
   position: relative;
@@ -1211,6 +1266,7 @@
     color: #5a53dd;
   }
 }
+
 
 .dashboard {
   .MuiButton-contained {
@@ -1250,13 +1306,13 @@
   }
 
   .report-circle {
-    border: 5px solid #1976d2;
+    border: 8px solid #1976d2;
     border-radius: 50%;
     padding: 18px 12px 18px 12px;
     font-weight: 700;
-    font-size: 14px;
-    width: 52px;
-    height: 52px;
+    font-size: 24px;
+    width: 60px;
+    height: 60px;
     box-sizing: border-box;
     display: flex;
     align-items: center;
@@ -1266,7 +1322,7 @@
   .familiy-circle {
     width: 80px;
     height: 80px;
-
+    font-size: 20px;
     span {
       font-size: 10px;
       color: #737373;
@@ -1288,7 +1344,7 @@
       opacity: 1;
       transition: opacity 225ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
       background-color: rgb(137 127 127 / 50%);
-      z-index: 1300;
+      // z-index: 1300;
       content: '';
       top: 0;
       left: 0;
@@ -1316,7 +1372,7 @@
       .modal-window {
         background-color: rgb(255, 255, 255);
         position: absolute;
-        z-index: 9999;
+        z-index: 999;
         border-radius: 6px;
         width: 370px;
 
@@ -1338,7 +1394,7 @@
   .MuiPaper-root {
     .MuiCardContent-root {
       .label {
-        padding: 0 0 16px 0;
+        padding: 0 0 8px 0;
         font-weight: 500;
         color: #797d8c;
       }

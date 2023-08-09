@@ -20,7 +20,7 @@ export default function StreamTable({ rows, columns, title, isLoading }) {
           View More
         </Link>
       </Stack>
-      <Box>
+      <Box className="stream-table-wrap">
         <Box className="div-header">
           {columns.map((column, index) => (
             <Box key={index} style={{ width: column == 'Rooms' ? '45%' : '35%' }}>

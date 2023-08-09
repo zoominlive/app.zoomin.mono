@@ -1,4 +1,4 @@
-import { Box, Chip, Paper, Stack, Typography } from '@mui/material';
+import { Avatar, Box, Chip, Paper, Stack, Typography } from '@mui/material';
 import PropTypes from 'prop-types';
 import NoDataDiv from '../common/nodatadiv';
 
@@ -9,8 +9,8 @@ export default function AccessTable({ rows, columns, title, isLoading }) {
         <Typography style={{ padding: 20 }}>{title}</Typography>
         <Box className="div-header">
           {columns.map((column, index) => (
-            <Box key={index} style={{ width: '45%' }}>
-              {column}
+            <Box key={index} style={{ width: column.width }}>
+              {column.label}
             </Box>
           ))}
         </Box>
@@ -26,12 +26,24 @@ export default function AccessTable({ rows, columns, title, isLoading }) {
               return (
                 <Box className="div-row row-marging" key={`${row?.childFirstName}-${index}`}>
                   <Box style={{ width: '45%' }}>
-                    {row?.childFirstName + ' ' + row.childLastName}
+                    <Stack direction={'row'} alignItems={'center'} gap={1}>
+                      <Box className="viewer-profile">
+                        <Box className="profile-img">
+                          <Avatar>
+                            {row?.childFirstName[0].toUpperCase()}
+                            {row?.childLastName[0].toUpperCase()}
+                          </Avatar>
+                        </Box>
+                      </Box>
+                      {row?.childFirstName + ' ' + row.childLastName}
+                    </Stack>
                   </Box>
-                  <Box style={{ width: '45%' }}>
-                    {row?.rooms.map((r) => (
-                      <Chip key={r} label={r} />
-                    ))}
+                  <Box className="child-rooms">
+                    <Box>
+                      {row?.rooms.map((r) => (
+                        <Chip key={r} label={r} />
+                      ))}
+                    </Box>
                   </Box>
                 </Box>
               );

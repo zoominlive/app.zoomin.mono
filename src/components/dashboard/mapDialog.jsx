@@ -6,7 +6,12 @@ import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 
 const MapDialog = (props) => {
   return (
-    <Dialog open={props.open} onClose={props.onClose} maxWidth={'md'} fullWidth={true}>
+    <Dialog
+      open={props.open}
+      onClose={props.onClose}
+      maxWidth={'md'}
+      fullWidth={true}
+      className={props.open ? 'map-dialog' : ''}>
       <DialogTitle
         id="map-dialog-title"
         sx={{ paddingTop: 3.5, display: 'flex', justifyContent: 'space-between' }}>

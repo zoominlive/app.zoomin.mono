@@ -43,12 +43,14 @@ import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import LoadingButton from '@mui/lab/LoadingButton';
 import NoDataDiv from '../common/nodatadiv';
 import PropTypes from 'prop-types';
+import { useLocation } from 'react-router-dom';
 const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
 const checkedIcon = <CheckBoxIcon fontSize="small" />;
 
 const Logs = () => {
   const layoutCtx = useContext(LayoutContext);
   const authCtx = useContext(AuthContext);
+  const location = useLocation();
   const { enqueueSnackbar } = useSnackbar();
   const [isLoading, setIsLoading] = useState(false);
   const [logsList, setLogsList] = useState([]);
@@ -170,6 +172,13 @@ const Logs = () => {
   ];
 
   useEffect(() => {
+    if (location?.state?.lastHoursUsers) {
+      setFromDate(moment());
+      setToDate(moment());
+    }
+  }, [location?.state?.lastHoursUsers]);
+
+  useEffect(() => {
     layoutCtx.setActive(8);
     layoutCtx.setBreadcrumb(['Logs']);
     if (authCtx?.user?.location?.accessable_locations) {
@@ -181,9 +190,20 @@ const Logs = () => {
         }
       }).then((response) => {
         if (response.status === 200) {
-          let userToAdd = response.data.Data?.map((user) => user?.user_id);
-          setSelectedUsers(response.data.Data);
+          let userToAdd;
+          if (location?.state?.user) {
+            userToAdd = location?.state?.user?.map((user) => user?.user_id);
+          } else {
+            userToAdd = response.data.Data?.map((user) => user?.user_id);
+          }
           setUsers([users[0], ...response.data.Data]);
+          setSelectedUsers(
+            location?.state
+              ? response.data.Data.filter((user) => userToAdd.includes(user.user_id))
+              : response.data.Data
+          );
+          // eslint-disable-next-line no-unsafe-optional-chaining
+          //setUsers([users[0]], ...location?.state?.user);
           API.get('family/location/', {
             params: {
               locations: [authCtx.user.location.accessable_locations[0]],
@@ -191,9 +211,18 @@ const Logs = () => {
             }
           }).then((response) => {
             if (response.status === 200) {
-              let familyToAdd = response.data.Data?.map((user) => user?.family_member_id);
-              setSelectedFamilies(response.data.Data);
+              let familyToAdd;
+              if (location?.state?.family) {
+                familyToAdd = location?.state?.family.map((user) => user?.family_member_id);
+              } else {
+                familyToAdd = response.data.Data?.map((user) => user?.family_member_id);
+              }
               setFamilies([families[0], ...response.data.Data]);
+              setSelectedFamilies(
+                location?.state
+                  ? response.data.Data.filter((user) => familyToAdd.includes(user.family_member_id))
+                  : response.data.Data
+              );
 
               API.get('logs/', {
                 params: {
@@ -241,7 +270,13 @@ const Logs = () => {
     }
     // eslint-disable-next-line no-unsafe-optional-chaining
     setLocations(['Select All', ...authCtx?.user?.location?.accessable_locations]);
-    setSelectedLocation(authCtx?.user?.location?.accessable_locations);
+    // setSelectedLocation(authCtx?.user?.location?.accessable_locations);
+    if (location?.state) {
+      setSelectedLocation(location?.state?.location);
+      setAllLocationChecked(true);
+    } else {
+      setSelectedLocation(authCtx?.user?.location?.accessable_locations);
+    }
     return () => {
       authCtx.setPreviosPagePath(window.location.pathname);
     };
@@ -298,8 +333,12 @@ const Logs = () => {
         params: { locations: selectedLocation, cust_id: localStorage.getItem('cust_id') }
       }).then((response) => {
         if (response.status === 200) {
-          setSelectedUsers(response.data.Data);
+          //setSelectedUsers(location?.state?.user || response.data.Data);
           setUsers([users[0], ...response.data.Data]);
+          setSelectedUsers(location?.state ? location?.state.user : response.data.Data);
+
+          // eslint-disable-next-line no-unsafe-optional-chaining
+          // setUsers([users[0]], ...location?.state?.user);
         } else {
           errorMessageHandler(
             enqueueSnackbar,
@@ -314,8 +353,8 @@ const Logs = () => {
         params: { locations: selectedLocation, cust_id: localStorage.getItem('cust_id') }
       }).then((response) => {
         if (response.status === 200) {
-          setSelectedFamilies(response.data.Data);
           setFamilies([families[0], ...response.data.Data]);
+          setSelectedFamilies(location?.state?.family || response.data.Data);
         } else {
           errorMessageHandler(
             enqueueSnackbar,

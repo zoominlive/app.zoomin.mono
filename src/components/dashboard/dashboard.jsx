@@ -39,7 +39,10 @@ import ViewersTable from './viewerstable';
 import AccessTable from './accesstable';
 import moment from 'moment';
 
-const AccessColumns = ['Children', 'Room'];
+const AccessColumns = [
+  { label: 'Children', width: '45%' },
+  { label: 'Rooms', width: '50%' }
+];
 const topViewersColumns = [
   { label: 'Viewers', width: '50%' },
   { label: 'Views', width: '45%' }
@@ -108,7 +111,6 @@ const Dashboard = () => {
   }
 
   useEffect(() => {
-    console.log('=====authCtx?.user?.first_name', authCtx?.user?.first_name);
     layoutCtx.setActive(1);
     layoutCtx.setBreadcrumb([
       `${greeting()}, ${authCtx?.user?.first_name}!`,
@@ -208,7 +210,7 @@ const Dashboard = () => {
                             <Typography variant="subtitle2" gutterBottom>
                               Number of Streams
                             </Typography>
-                            <Grid container spacing={1}>
+                            <Grid container spacing={1} alignItems={'end'}>
                               <Grid item className="report-div">
                                 <Stack
                                   direction={'row'}
@@ -236,7 +238,7 @@ const Dashboard = () => {
                             <Typography variant="subtitle2" gutterBottom>
                               Number of Viewers
                             </Typography>
-                            <Grid container spacing={1}>
+                            <Grid container spacing={1} alignItems={'end'}>
                               <Grid item className="report-div">
                                 <Stack
                                   direction={'row'}
@@ -272,7 +274,7 @@ const Dashboard = () => {
                             <Typography variant="subtitle2" gutterBottom>
                               Number of Streams
                             </Typography>
-                            <Grid container spacing={1}>
+                            <Grid container spacing={1} alignItems={'end'}>
                               <Grid item className="report-div">
                                 <Stack
                                   direction={'row'}
@@ -299,7 +301,7 @@ const Dashboard = () => {
                             <Typography variant="subtitle2" gutterBottom>
                               Number of Viewers
                             </Typography>
-                            <Grid container spacing={1}>
+                            <Grid container spacing={1} alignItems={'end'}>
                               <Grid item className="report-div">
                                 <Stack
                                   direction={'row'}
@@ -330,11 +332,11 @@ const Dashboard = () => {
               </CardContent>
             </Card>
           </Grid>
-          <Grid item md={5} sm={12} xs={12} style={{ paddingTop: 0 }}>
-            <Card style={{ height: '100%' }}>
+          <Grid item md={5} sm={12} xs={12} style={{ paddingTop: 0 }} className="family-div">
+            <Card>
               <CardContent>
-                <Grid container>
-                  <Grid item lg={6} md={6} sm={12} xs={12}>
+                <Grid container direction={'row'} alignItems={'center'}>
+                  <Grid item lg={5} md={5} sm={12} xs={12}>
                     <Stack direction={'column'}>
                       <Typography>Enrolled Families</Typography>
                       <Typography variant="body1" className="subtitle">
@@ -354,7 +356,7 @@ const Dashboard = () => {
                       </Button>
                     </Stack>
                   </Grid>
-                  <Grid item lg={6} md={6} sm={12} xs={12}>
+                  <Grid item lg={7} md={7} sm={12} xs={12}>
                     <Stack direction={'row'} spacing={1}>
                       <Box
                         className="report-circle familiy-circle"
@@ -515,8 +517,8 @@ const Dashboard = () => {
             <Paper sx={{ marginTop: 2 }}>
               <AccessTable
                 rows={
-                  statisticsData?.childrenWithEnableDate?.length > 0
-                    ? statisticsData?.childrenWithEnableDate
+                  statisticsData?.childrenWithDisableDate?.length > 0
+                    ? statisticsData?.childrenWithDisableDate
                     : []
                 }
                 columns={AccessColumns}
