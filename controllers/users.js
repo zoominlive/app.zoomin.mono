@@ -296,7 +296,6 @@ module.exports = {
       await t.commit();
       next();
     } catch (error) {
-      console.log('==============error===',error)
       await logServices.addAccessErrorLog(logDetails?.log_id ?? 'not found', error);
       //await t.commit();
       //await t.rollback();

@@ -176,7 +176,6 @@ module.exports = {
       }
       next();
     } catch (error) {
-      console.log('================error===',error)
       await t.rollback();
       res.status(500).json({
         IsSuccess: false,
@@ -219,7 +218,7 @@ module.exports = {
       await liveStreamServices.removeEndPointInCamera(streamID, t);
 
       let roomID = await liveStreamServices.getRoom(streamID, t);
-  
+
       await liveStramcameraServices.deleteLivestreamCamera(roomID);
 
       let streamObj = await liveStreamServices.getstreamObj(streamID, t);
