@@ -12,7 +12,7 @@ const socketServices = require('../services/socket');
 const fcmTokensServices = require('../services/fcmTokens');
 const logServices = require('../services/logs');
 const liveStramcameraServices = require('../services/livestreamCameras');
-// const socketServices = require('../services/socket');
+const dashboardServices = require('../services/dashboard');
 const notificationSender = require('../lib/firebase-services');
 const CONSTANTS = require('../lib/constants');
 const sequelize = require('../lib/database');
@@ -159,10 +159,14 @@ module.exports = {
         if (!_.isEmpty(socketIds)) {
           await Promise.all(
             socketIds.map(async (id) => {
-              await socketServices.emitResponse(id, message);
+              await socketServices.emitResponse(id, {"message": message});
             })
           );
         }
+
+        // update dashboard details
+        await dashboardServices.updateDashboardData(streamObj.cust_id);
+
         await t.commit();
         res.status(200).json({
           IsSuccess: true,
@@ -172,6 +176,7 @@ module.exports = {
       }
       next();
     } catch (error) {
+      console.log('================error===',error)
       await t.rollback();
       res.status(500).json({
         IsSuccess: false,
@@ -214,7 +219,7 @@ module.exports = {
       await liveStreamServices.removeEndPointInCamera(streamID, t);
 
       let roomID = await liveStreamServices.getRoom(streamID, t);
-      console.log(roomID)
+  
       await liveStramcameraServices.deleteLivestreamCamera(roomID);
 
       let streamObj = await liveStreamServices.getstreamObj(streamID, t);
@@ -255,6 +260,7 @@ module.exports = {
           })
         );
       }
+      await dashboardServices.updateDashboardData(streamObj.cust_id);
       await t.commit();
       res.status(200).json({
         IsSuccess: true,
@@ -315,4 +321,27 @@ module.exports = {
       next(error);
     }
   },
+
+  addRecentViewers: async (req, res, next) => {
+    try {
+      const params = req.body;
+      const recentViewer = await liveStreamServices.addRecentViewers(params);
+
+      res.status(200).json({
+        IsSuccess: true,
+        Data: recentViewer,
+        Message: CONSTANTS.RECENT_VIEWER_ADDED
+      });
+
+      next();
+    } catch (error) {
+      res.status(500).json({
+        IsSuccess: false,
+        error_log: error,
+        Message: CONSTANTS.INTERNAL_SERVER_ERROR
+      });
+      next(error);
+    }
+  },
+  
 };

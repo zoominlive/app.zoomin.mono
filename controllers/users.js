@@ -15,6 +15,7 @@ const engine = encrypter(process.env.JWT_SECRET_KEY, { ttl: false });
 const customerServices = require('../services/customers');
 const logServices = require('../services/logs');
 const fcmTokensServices = require('../services/fcmTokens');
+const dashboardServices = require('../services/dashboard');
 const CONSTANTS = require('../lib/constants');
 const sequelize = require('../lib/database');
 const notificationSender = require('../lib/firebase-services');
@@ -147,6 +148,7 @@ module.exports = {
           const imageUrl = await s3BucketImageUploader._upload(req.body.image, userData.user_id);
           userData = await userServices.editUserProfile(userData, { image: imageUrl }, t);
         }
+        await dashboardServices.updateDashboardData(params.cust_id);
         // await t.commit();
         res.status(201).json({
           IsSuccess: true,
@@ -294,6 +296,7 @@ module.exports = {
       await t.commit();
       next();
     } catch (error) {
+      console.log('==============error===',error)
       await logServices.addAccessErrorLog(logDetails?.log_id ?? 'not found', error);
       //await t.commit();
       //await t.rollback();

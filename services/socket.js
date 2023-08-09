@@ -3,10 +3,6 @@ require("aws-sdk/clients/apigatewaymanagementapi");
 
 module.exports = {
   emitResponse: async (connectionId, message) => {
-    let data = {
-      message: message,
-      display_notification: true,
-    };
     new Promise((resolve, reject) => {
       const apiGatewayManagementApi = new AWS.ApiGatewayManagementApi({
         apiVersion: "2018-11-29",
@@ -15,7 +11,7 @@ module.exports = {
       apiGatewayManagementApi.postToConnection(
         {
           ConnectionId: connectionId,
-          Data: JSON.stringify(data),
+          Data: JSON.stringify(message),
         },
         (err, data) => {
           if (err) {

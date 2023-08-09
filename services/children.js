@@ -434,5 +434,14 @@ module.exports = {
 
     return childFamilyDetails;
   },
+
+  getAllChildren: async (t) => {
+    const {Child} = await connectToDatabase();
+    let AllChildren = await Child.findAll({
+      attributes: ["child_id"], raw: true
+    }, { transaction: t });
+    
+    return AllChildren;
+  }
 };
 

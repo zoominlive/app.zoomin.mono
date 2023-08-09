@@ -173,7 +173,7 @@ module.exports = {
     } else {
       familiesCount.map((item) => {
         user.location.accessable_locations.forEach((i) => {
-          if (item.location.locations.includes(i)) {
+          if (item.location.locations?.includes(i)) {
             result.push(item);
           }
         });
@@ -575,4 +575,22 @@ module.exports = {
   //   );
   //   return familyMembersIds;
   // },
+
+  getAllFamilyMembers: async(t) => {
+    const { Family } = await connectToDatabase();
+    let allFamilyMembers = await Family.findAll({
+      attributes: ['family_member_id'], raw: true, 
+    },  { transaction: t });
+
+    return allFamilyMembers
+  },
+
+  getAllFamilyIds: async(t) => {
+    const { Family } = await connectToDatabase();
+    let familyIds = await Family.findAll({
+      attributes: ['family_id'], group: ['family_id'], raw: true
+    }, { transaction: t });
+
+    return familyIds
+  }
 };

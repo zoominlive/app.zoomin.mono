@@ -12,5 +12,6 @@ router.get('/', authController, LiveStreamController.getEndpoint);
 router.post('/start', liveStreamAuthController, LiveStreamController.startLiveStream);
 router.post('/stop', liveStreamAuthController, LiveStreamController.stopLiveStream);
 router.get('/details', LiveStreamController.getstreamDetails);
+router.post('/reportviewer', LiveStreamController.addRecentViewers);
 
 module.exports = router;

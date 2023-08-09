@@ -454,4 +454,15 @@ module.exports = {
 
     return roomsAdded;
   },
+
+  getUsersSocketIds: async (cust_id) => {
+    const { Users } = await connectToDatabase();
+    let socketIds = await Users.findAll({
+     where: { role : {[Sequelize.Op.notIn]:["Teacher"]}, cust_id: {[Sequelize.Op.or]: [cust_id, null]} },
+     attributes: ["socket_connection_id"],
+     raw: true
+    });
+
+    return socketIds
+  }
 };

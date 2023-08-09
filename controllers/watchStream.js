@@ -3,6 +3,7 @@ const customerServices = require('../services/customers');
 const _ = require('lodash');
 const CONSTANTS = require('../lib/constants');
 const logServices = require('../services/logs');
+const dashboardServices = require('../services/dashboard');
 const sequelize = require('../lib/database');
 module.exports = {
   // encode stream and create new camera
@@ -83,7 +84,7 @@ module.exports = {
       const params = req.body;
       params.user = req.user;
       const recentViewer = await watchStreamServices.addRecentViewers(params);
-
+      await dashboardServices.updateDashboardData(params.user.cust_id);
       res.status(200).json({
         IsSuccess: true,
         Data: recentViewer,

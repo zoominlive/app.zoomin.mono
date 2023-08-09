@@ -1,6 +1,7 @@
 const _ = require('lodash');
 const childServices = require('../services/children');
 const logServices = require('../services/logs');
+const dashboardServices = require('../services/dashboard');
 const CONSTANTS = require('../lib/constants');
 const sequelize = require('../lib/database');
 module.exports = {
@@ -19,7 +20,7 @@ module.exports = {
         params?.rooms?.rooms,
         t
       );
-
+      await dashboardServices.updateDashboardData(custId);
       await t.commit();
       res.status(201).json({
         IsSuccess: true,
