@@ -536,6 +536,7 @@ const Dashboard = () => {
                 columns={AccessColumns}
                 title={'Weekly Gaining Access'}
                 isLoading={isLoading}
+                getDashboardData={getDashboardData}
               />
             </Paper>
           </Grid>
@@ -550,6 +551,7 @@ const Dashboard = () => {
                 columns={AccessColumns}
                 title={'Weekly Loosing Access'}
                 isLoading={isLoading}
+                getDashboardData={getDashboardData}
               />
             </Paper>
           </Grid>
