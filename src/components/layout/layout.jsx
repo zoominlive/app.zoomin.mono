@@ -3,7 +3,6 @@ import {
   Box,
   Drawer,
   FormControl,
-  // InputLabel,
   List,
   ListItem,
   ListItemButton,
@@ -14,7 +13,7 @@ import {
   Stack,
   Typography
 } from '@mui/material';
-import logo from '../../assets/image2vector.svg';
+import logo from '../../assets/logo.svg';
 import appLogo from '../../assets/app-icon.png';
 import collapseButton from '../../assets/collapse-button.svg';
 import openButton from '../../assets/open-button.svg';
@@ -33,7 +32,7 @@ import { errorMessageHandler } from '../../utils/errormessagehandler';
 import AddFamilyDialog from '../addfamily/addfamilydialog';
 //import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
 import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
-
+import buildingIcon from '../../assets/building.svg';
 const Layout = () => {
   const layoutCtx = useContext(LayoutContext);
   const { enqueueSnackbar } = useSnackbar();
@@ -182,7 +181,11 @@ const Layout = () => {
           className={`layout-drawer ${open ? 'open' : 'collapsed'}`}
           open={open}>
           <div className="header">
-            <img src={open ? logo : appLogo} style={{ height: '4.5em' }} />
+            {open ? (
+              <img src={logo} style={{ height: '4.5em', width: '190px' }} />
+            ) : (
+              <img src={appLogo} style={{ height: '4.5em' }} />
+            )}
           </div>
           {authCtx.user && Object?.keys(authCtx?.user)?.length !== 0 && (
             <div className="siderbar-list">
@@ -314,8 +317,8 @@ const Layout = () => {
                 className="breadcrumb">
                 {layoutCtx?.breadcrumb?.length > 2 ? (
                   <Avatar
-                    src={layoutCtx?.breadcrumb[2]}
-                    sx={{ width: 55, height: 60 }}
+                    src={authCtx?.user?.profile_image}
+                    sx={{ width: 85, height: 85 }}
                     alt='="profile-image'
                   />
                 ) : null}
@@ -360,6 +363,15 @@ const Layout = () => {
                     '& fieldset': {
                       border: 'none'
                     }
+                  }}
+                  renderValue={(value) => {
+                    return (
+                      <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                        <Avatar src={buildingIcon} sx={{ paddding: '0px 6px' }} />
+
+                        {value}
+                      </Box>
+                    );
                   }}>
                   <MenuItem value={'All'}>All</MenuItem>
                   {authCtx?.user?.location?.accessable_locations

@@ -86,14 +86,14 @@ const CustomPlayer = (props) => {
               props.streamUri.includes('https://live.zoominlive.com')
                 ? `${props?.streamUri}?uid=${
                     authCtx?.user?.family_member_id || authCtx?.user?.user_id
-                  }sid=${
+                  }&sid=${
                     props?.streamUri
                       .split('/')
                       [props?.streamUri.split('/').length - 1].split('.')[0]
                   }`
                 : `${authCtx.user.transcoderBaseUrl}${props?.streamUri}?uid=${
                     authCtx?.user?.family_member_id || authCtx?.user?.user_id
-                  }`
+                  }&sid=${props?.cam_id}`
             }
             className="react-player"
             height={'100%'}
@@ -162,5 +162,6 @@ CustomPlayer.propTypes = {
   timeOut: PropTypes.number,
   setPlaying: PropTypes.func,
   setIsDeleteDialogOpen: PropTypes.func,
-  camDetails: PropTypes.object
+  camDetails: PropTypes.object,
+  cam_id: PropTypes.number
 };

@@ -80,6 +80,20 @@ const ChildForm = (props) => {
           //   }
           //   return tempFamily;
           // });
+
+          props.setFamily((prevState) => {
+            const tempFamily = { ...prevState };
+            const index = tempFamily.children.findIndex(
+              (child) => child.child_id === props.child.child_id
+            );
+            if (index !== -1) {
+              tempFamily.children[index] = {
+                child_id: props.child.child_id,
+                ...response.data.Data
+              };
+            }
+            return tempFamily;
+          });
           handleDialogClose();
         } else {
           errorMessageHandler(
@@ -108,8 +122,24 @@ const ChildForm = (props) => {
       }).then((response) => {
         if (response.status === 201) {
           enqueueSnackbar(response.data.Message, { variant: 'success' });
-          props.setFamily();
+          //props.setFamily();
+
           props.getFamiliesList();
+          // props.setFamily((prevState) => {
+          //   const tempFamily = { ...prevState };
+          //   // const index = tempFamily.children.findIndex(
+          //   //   (child) => child.child_id === props.child.child_id
+          //   // );
+          //   // if (index !== -1) {
+          //   //   tempFamily.children[index] = {
+          //   //     child_id: props.child.child_id,
+          //   //     ...response.data.Data
+          //   //   };
+          //   // }
+          //   console.log('===tempFamily===', tempFamily);
+          //   return tempFamily;
+          // });
+
           handleDialogClose();
         } else {
           errorMessageHandler(

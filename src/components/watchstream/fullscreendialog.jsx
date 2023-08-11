@@ -25,6 +25,7 @@ const FullScreenDialog = (props) => {
                 setTimeOut={props.setTimeOut}
                 setPlaying={props.setPlaying}
                 setIsDeleteDialogOpen={props.setIsDeleteDialogOpen}
+                cam_id={props.selectedCameras[0]?.cam_id}
               />
             </Box>
           </Grid>
@@ -46,6 +47,7 @@ const FullScreenDialog = (props) => {
                 setTimeOut={props.setTimeOut}
                 setPlaying={props.setPlaying}
                 setIsDeleteDialogOpen={props.setIsDeleteDialogOpen}
+                cam_id={value?.cam_id}
               />
             </Grid>
           ))}
@@ -73,6 +75,7 @@ const FullScreenDialog = (props) => {
                   setTimeOut={props.setTimeOut}
                   setPlaying={props.setPlaying}
                   setIsDeleteDialogOpen={props.setIsDeleteDialogOpen}
+                  cam_id={value?.cam_id}
                 />
               </Grid>
             ))}
@@ -100,6 +103,7 @@ const FullScreenDialog = (props) => {
                   setTimeOut={props.setTimeOut}
                   setPlaying={props.setPlaying}
                   setIsDeleteDialogOpen={props.setIsDeleteDialogOpen}
+                  cam_id={value?.cam_id}
                 />
               </Grid>
             ))}

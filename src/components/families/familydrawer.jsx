@@ -502,7 +502,6 @@ const FamilyDrawer = (props) => {
       });
     }
   };
-
   return (
     <Drawer
       className="family-drawer"

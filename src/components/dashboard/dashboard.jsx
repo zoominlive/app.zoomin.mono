@@ -38,10 +38,15 @@ import OutboundIcon from '@mui/icons-material/Outbound';
 import ViewersTable from './viewerstable';
 import AccessTable from './accesstable';
 import moment from 'moment';
+import FamilyDrawer from '../families/familydrawer';
+import ParentsForm from '../families/parentform';
+import ChildForm from '../families/childform';
+import DisableDialog from '../families/disabledialog';
+import RoomAddForm from '../families/roomaddform';
 
 const AccessColumns = [
-  { label: 'Children', width: '45%' },
-  { label: 'Rooms', width: '50%' }
+  { label: 'Children', width: '70%' },
+  { label: 'Rooms', width: '30%' }
 ];
 const topViewersColumns = [
   { label: 'Viewers', width: '50%' },
@@ -70,6 +75,98 @@ const Dashboard = () => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(true);
   const [defaultWatchStream, setDefaultWatchStream] = useState(null);
   const [openMapDialog, setOpenMapDialog] = useState(false);
+
+  const [family, setFamily] = useState();
+  const [familyIndex, setFamilyIndex] = useState();
+
+  const [isFamilyDrawerOpen, setIsFamilyDrawerOpen] = useState(false);
+  const [isParentFormDialogOpen, setIsParentFormDialogOpen] = useState(false);
+  const [isChildFormDialogOpen, setIsChildFormDialogOpen] = useState(false);
+  const [isRoomFormDialogOpen, setIsRoomFormDialogOpen] = useState(false);
+  const [isDisableFamilyDialogOpen, setIsDisableFamilyDialogOpen] = useState(false);
+  const [primaryParent, setPrimaryParent] = useState();
+  const [secondaryParent, setSecondaryParent] = useState();
+  const [child, setChild] = useState();
+  const [parentType, setParentType] = useState('');
+  const [roomsList, setRoomsList] = useState([]);
+  const [disableLoading, setDisableLoading] = useState(false);
+
+  // const [roomsDropdownLoading, setRoomsDropdownLoading] = useState(false);
+
+  const handleFamilyDisable = (data) => {
+    setDisableLoading(true);
+    API.put('family/disable', {
+      family_member_id: family.primary.family_member_id,
+      member_type: 'primary',
+      family_id: family.primary.family_id,
+      scheduled_end_date:
+        data.selectedOption === 'schedule' && dayjs(data.disableDate).format('YYYY-MM-DD')
+    }).then((response) => {
+      if (response.status === 200) {
+        if (response?.data?.Data?.scheduled === true) {
+          setFamily((prevState) => {
+            let tempFamily = { ...prevState };
+            tempFamily.primary.scheduled_end_date = dayjs(data.disableDate).format('YYYY-MM-DD');
+            return tempFamily;
+          });
+        }
+        enqueueSnackbar(response.data.Message, { variant: 'success' });
+        //getFamiliesList();
+        if (data.selectedOption === 'disable') {
+          setFamily((prevState) => {
+            let tempFamily = { ...prevState };
+            tempFamily.primary.status = 'Disabled';
+            tempFamily.secondary.length > 0 &&
+              tempFamily.secondary.forEach((parent) => {
+                parent.status = 'Disabled';
+              });
+
+            tempFamily.children.forEach((child) => {
+              child.status = 'Disabled';
+            });
+            if (tempFamily.primary.scheduled_end_date) {
+              tempFamily.primary.scheduled_end_date = null;
+            }
+            return tempFamily;
+          });
+        } else {
+          setFamily((prevState) => {
+            let tempFamily = { ...prevState };
+            tempFamily.primary.scheduled_end_date = data.disableDate;
+            return tempFamily;
+          });
+        }
+        setIsDisableFamilyDialogOpen(false);
+      } else {
+        errorMessageHandler(
+          enqueueSnackbar,
+          response?.response?.data?.Message || 'Something Went Wrong.',
+          response?.response?.status,
+          authCtx.setAuthError
+        );
+      }
+      setDisableLoading(false);
+    });
+  };
+
+  useEffect(() => {
+    // setRoomsDropdownLoading(true);
+    API.get('rooms/list', { params: { cust_id: localStorage.getItem('cust_id') } }).then(
+      (response) => {
+        if (response.status === 200) {
+          setRoomsList(response.data.Data);
+        } else {
+          errorMessageHandler(
+            enqueueSnackbar,
+            response?.response?.data?.Message || 'Something Went Wrong.',
+            response?.response?.status,
+            authCtx.setAuthError
+          );
+        }
+        // setRoomsDropdownLoading(false);
+      }
+    );
+  }, []);
 
   const handleOpen = () => {
     setOpenWatchStreamDialog(true);
@@ -172,6 +269,17 @@ const Dashboard = () => {
           );
         }
         setTimeOut(response?.data?.Data?.watchStreamDetails?.timeout);
+        // setFamily((prevState) => {
+        //   const tempFamily = { ...prevState };
+        //   if (tempFamily) {
+        //     let obj = response?.data?.Data?.childrenWithEnableDate?.find(
+        //       (o) => o?.primary?.family_id === tempFamily?.primary?.family_id
+        //     );
+        //     return obj;
+        //   } else {
+        //     return null;
+        //   }
+        // });
         setIsLoading(false);
       } else {
         errorMessageHandler(
@@ -376,7 +484,7 @@ const Dashboard = () => {
                     </Stack>
                   </Grid>
                   <Grid item lg={7} md={7} sm={7} xs={12}>
-                    <Stack direction={'row'} spacing={1}>
+                    <Stack direction={'row'} spacing={1} className="family-circle-wrap">
                       <Box
                         className="report-circle familiy-circle"
                         style={{ borderColor: '#A855F7' }}>
@@ -455,7 +563,7 @@ const Dashboard = () => {
                 container
                 justifyContent={'space-between'}
                 alignContent={'center'}
-                sx={{ backgroundColor: '#fff', padding: 1 }}>
+                sx={{ backgroundColor: '#fff', padding: '8px 24px' }}>
                 <Typography style={{ paddingTop: 10 }}>Watch Stream</Typography>
                 <IconButton id="video-button" onClick={handleOpen}>
                   <Video />
@@ -537,6 +645,10 @@ const Dashboard = () => {
                 title={'Weekly Gaining Access'}
                 isLoading={isLoading}
                 getDashboardData={getDashboardData}
+                setFamily={setFamily}
+                setIsFamilyDrawerOpen={setIsFamilyDrawerOpen}
+                setFamilyIndex={setFamilyIndex}
+                familyIndex={familyIndex}
               />
             </Paper>
           </Grid>
@@ -552,6 +664,10 @@ const Dashboard = () => {
                 title={'Weekly Loosing Access'}
                 isLoading={isLoading}
                 getDashboardData={getDashboardData}
+                setFamily={setFamily}
+                setIsFamilyDrawerOpen={setIsFamilyDrawerOpen}
+                setFamilyIndex={setFamilyIndex}
+                familyIndex={familyIndex}
               />
             </Paper>
           </Grid>
@@ -630,6 +746,76 @@ const Dashboard = () => {
           </Grid>
         </Grid>
       </Box>
+      {isDisableFamilyDialogOpen && (
+        <DisableDialog
+          open={isDisableFamilyDialogOpen}
+          setOpen={setIsDisableFamilyDialogOpen}
+          loading={disableLoading}
+          title="Disable Family"
+          contentText="This action will disable access for all children."
+          handleDisable={handleFamilyDisable}
+          handleDialogClose={() => setIsDisableFamilyDialogOpen(false)}
+        />
+      )}
+
+      {isRoomFormDialogOpen && (
+        <RoomAddForm
+          open={isRoomFormDialogOpen}
+          setOpen={setIsRoomFormDialogOpen}
+          roomsList={roomsList}
+          family={family}
+          child={child}
+          setChild={setChild}
+          setFamily={setFamily}
+          getFamiliesList={getDashboardData}
+        />
+      )}
+      {isChildFormDialogOpen && (
+        <ChildForm
+          open={isChildFormDialogOpen}
+          setOpen={setIsChildFormDialogOpen}
+          roomsList={roomsList}
+          family={family}
+          child={child}
+          setChild={setChild}
+          setFamily={setFamily}
+          getFamiliesList={getDashboardData}
+        />
+      )}
+
+      {isParentFormDialogOpen && (
+        <ParentsForm
+          open={isParentFormDialogOpen}
+          setOpen={setIsParentFormDialogOpen}
+          primaryParent={primaryParent}
+          setPrimaryParent={setPrimaryParent}
+          secondaryParent={secondaryParent}
+          setSecondaryParent={setSecondaryParent}
+          family={family}
+          setFamily={setFamily}
+          getFamiliesList={getDashboardData}
+          setParentType={setParentType}
+          parentType={parentType}
+        />
+      )}
+
+      <FamilyDrawer
+        open={isFamilyDrawerOpen}
+        setOpen={setIsFamilyDrawerOpen}
+        family={family}
+        setFamily={setFamily}
+        setIsParentFormDialogOpen={setIsParentFormDialogOpen}
+        setIsChildFormDialogOpen={setIsChildFormDialogOpen}
+        setIsRoomFormDialogOpen={setIsRoomFormDialogOpen}
+        setIsDisableFamilyDialogOpen={setIsDisableFamilyDialogOpen}
+        setPrimaryParent={setPrimaryParent}
+        setSecondaryParent={setSecondaryParent}
+        setChild={setChild}
+        getFamiliesList={getDashboardData}
+        setParentType={setParentType}
+        roomsList={roomsList}
+        parentType={parentType}
+      />
     </>
   );
 };

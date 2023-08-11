@@ -24,7 +24,18 @@ export default function ViewersTable({ rows, columns, title, pagination, isLoadi
   return (
     <Paper sx={{ marginTop: 2, height: '96%', minHeight: !pagination ? '338px' : '' }}>
       <Box>
-        <Typography style={{ padding: 20 }}>{title}</Typography>
+        {/* <Typography style={{ padding: '20px 24px' }}>{title}</Typography> */}
+        <Stack
+          direction="row"
+          spacing={2}
+          justifyContent={'space-between'}
+          style={{ padding: '20px 24px' }}>
+          <Typography>{title}</Typography>
+          <Link href="#" sx={{ fontFamily: 'small', color: '#5A53DD' }}>
+            View More
+          </Link>
+        </Stack>
+
         <Box className="div-header">
           {columns.map((column, index) => (
             <Box key={index} style={{ width: column.width }}>

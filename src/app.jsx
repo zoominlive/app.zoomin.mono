@@ -59,7 +59,6 @@ const MainApp = () => {
       // Listen for messages
       socket.addEventListener('message', (event) => {
         let data = JSON.parse(event.data);
-        console.log('=======socket message', data);
         if (data?.update_dashboard_data) {
           localStorage.setItem('updateDashboardData', true);
           authCtx.setUpdateDashboardData(true);

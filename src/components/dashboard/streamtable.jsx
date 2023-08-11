@@ -30,7 +30,7 @@ export default function StreamTable({ rows, columns, title, isLoading }) {
           <Box key={'action'} style={{ width: '5%' }}></Box>
         </Box>
         {rows && rows?.length > 0 ? (
-          <Box style={{ width: '100%', height: '100px', overflowY: 'auto' }} className="table-body">
+          <Box style={{ width: '100%', height: '116px', overflowY: 'auto' }} className="table-body">
             {rows
               //.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
               .map((row, index) => {
