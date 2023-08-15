@@ -15,6 +15,7 @@ const ChangeLogs = require('./change_logs');
 const LiveStreams = require('./live_stream');
 const LiveStreamCameras = require('./live_stream_cameras');
 const LiveStreamRecentViewers = require('./live_stream_recent_viewers');
+const MountedCameraRecentViewers = require('./mounted_camera_recent_viewers');
 const FcmTokens = require('./fcm_tokens');
 const CamPreference = require('./cam_preference');
 const sequelize = require('../lib/database');
@@ -166,6 +167,13 @@ Family.hasMany(Family, {
 });
 
 Child.belongsTo(Family, { foreignKey: 'family_id' });
+Child.hasOne(Family, {
+  sourceKey: 'family_id',
+  foreignKey: {
+    name: 'family_id'
+  }
+});
+
 Users.belongsTo(Customers, { foreignKey: 'cust_id' });
 Room.belongsTo(Customers, { foreignKey: 'cust_id' });
 
@@ -192,6 +200,7 @@ module.exports = async () => {
       LiveStreams,
       LiveStreamCameras,
       LiveStreamRecentViewers,
+      MountedCameraRecentViewers,
       FcmTokens,
       CamPreference
     };
@@ -219,6 +228,7 @@ module.exports = async () => {
     LiveStreams,
     LiveStreamCameras,
     LiveStreamRecentViewers,
+    MountedCameraRecentViewers,
     FcmTokens,
     CamPreference
   };

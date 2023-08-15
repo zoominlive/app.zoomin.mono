@@ -5,6 +5,7 @@ const _ = require("lodash-contrib");
 const encrypter = require("object-encrypter");
 const engine = encrypter(process.env.JWT_SECRET_KEY, { ttl: false });
 const { v4: uuidv4 } = require("uuid");
+const moment = require("moment-timezone");
 
 module.exports = {
   /* Create new family */
@@ -592,5 +593,170 @@ module.exports = {
     }, { transaction: t });
 
     return familyIds
-  }
-};
+  },
+
+  getSEAChilds: async (custId, location = "All", enable = false, t) => {
+    const {Family, Child, RoomsInChild, Room } = await connectToDatabase();
+    console.log('====enable',enable)
+    let whereObj =  enable ? {
+      scheduled_enable_date: {
+        [Sequelize.Op.between]: [
+          moment().toISOString(),
+          moment().add(1, "w").toISOString(),
+        ],
+      }
+    } :{
+      scheduled_disable_date: {
+        [Sequelize.Op.between]: [
+          moment().toISOString(),
+          moment().add(1, "w").toISOString(),
+        ],
+      }
+    }
+    let families = await Family.findAll(
+      {
+        attributes: {
+          exclude: [
+            "password",
+            "password_link",
+            "createdAt",
+            "cam_preference",
+            "updatedAt",
+          ],
+        },
+        include: [
+          {
+            model: Child,
+            where: { cust_id: custId },
+      attributes: [
+        "first_name",
+        "last_name",
+        "scheduled_end_date",
+        "scheduled_enable_date",
+      ],
+            include: [
+              {
+                model: RoomsInChild,
+                as: "roomsInChild",
+                where: whereObj,
+                include: [
+                  {
+                    model: Room,
+                    as: "room",
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            model: Family,
+            as: "secondary",
+            attributes: {
+              exclude: [
+                "password",
+                "password_link",
+                "createdAt",
+                "cam_preference",
+                "updatedAt",
+              ],
+            },
+            where: {
+              member_type: "secondary",
+            },
+            required: false,
+          },
+        ],
+        where: {
+          // cust_id: custId,
+          member_type: "primary",
+        },
+      },
+      { transaction: t }
+    );
+
+    let familyArray = [];
+    families?.forEach((familyMember) => {
+      familyArray.push({
+        primary: _.omit(JSON.parse(JSON.stringify(familyMember)), [
+          "secondary",
+          "children",
+        ]),
+        secondary: familyMember.secondary,
+        children: familyMember.children,
+      });
+    });
+
+    return familyArray
+  },
+
+  getFamilyDetailsById: async(familyId) => {
+    const {Family, Child, RoomsInChild, Room } = await connectToDatabase();
+
+     let family = await Family.findOne(
+      {
+        attributes: {
+          exclude: [
+            "password",
+            "password_link",
+            "createdAt",
+            "cam_preference",
+            "updatedAt",
+          ],
+        },
+        include: [
+          {
+            model: Child,
+            include: [
+              {
+                model: RoomsInChild,
+                as: "roomsInChild",
+                include: [
+                  {
+                    model: Room,
+                    as: "room",
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            model: Family,
+            as: "secondary",
+            attributes: {
+              exclude: [
+                "password",
+                "password_link",
+                "createdAt",
+                "cam_preference",
+                "updatedAt",
+              ],
+            },
+            where: {
+              member_type: "secondary",
+            },
+            required: false,
+          },
+        ],
+        where: {
+          member_type: "primary",
+          family_id: familyId,
+        },
+      },
+      { transaction: t }
+    );
+
+  //   let familyArray = [];
+  //   families?.forEach((familyMember) => {
+  //     familyArray.push({
+  //       primary: _.omit(JSON.parse(JSON.stringify(familyMember)), [
+  //         "secondary",
+  //         "children",
+  //       ]),
+  //       secondary: familyMember.secondary,
+  //       children: familyMember.children,
+  //     });
+  // });
+  return family
+}
+
+}

@@ -707,5 +707,19 @@ module.exports = {
     });
      
     return prefrenceDetails?.watchstream_cam
-  }
+  },
+
+  reportViewers: async (params, t) => {
+    const { MountedCameraRecentViewers } = await connectToDatabase();
+    let recentViewerObj = {
+      ...params,
+      requested_at: Sequelize.literal("CURRENT_TIMESTAMP"),
+    };
+    let recentViewer = await MountedCameraRecentViewers.create(
+      recentViewerObj,
+      { transaction: t }
+    );
+
+    return recentViewer;
+  },
 };

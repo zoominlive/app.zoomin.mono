@@ -42,6 +42,9 @@ module.exports = {
 
       let SEAMembers = await familyServices.getFamilyWithSEA(userId, t);
       const childSEA = await dashboardServices.getChildrenWithSEA(custId, req?.query?.location);
+      // let  childrenWithEnableDate1= await familyServices.getSEAChilds(custId, req?.query?.location, true, t);
+      // let  childrenWithDisableDate1= await familyServices.getSEAChilds(custId, req?.query?.location, false, t);
+
       let childrenWithEnableDate = [];
       let childrenWithDisableDate = [];
 
@@ -76,6 +79,7 @@ module.exports = {
             childFirstName: child.first_name,
             childLastName: child.last_name,
             rooms: roomsToDisable,
+            family: child.family
           });
         }
         if (roomsToEnable.length != 0) {
@@ -83,6 +87,7 @@ module.exports = {
             childFirstName: child.first_name,
             childLastName: child.last_name,
             rooms: roomsToEnable,
+            family: child.family
           });
         }
         if (roomsToEnable.length == 0 && roomsToDisable.length == 0) {
@@ -91,6 +96,7 @@ module.exports = {
               childFirstName: child.first_name,
               childLastName: child.last_name,
               rooms: roomsToDisable,
+              family: child.family
             });
           }
           if (child.scheduled_enable_date != null) {
@@ -98,6 +104,7 @@ module.exports = {
               childFirstName: child.first_name,
               childLastName: child.last_name,
               rooms: roomsToEnable,
+              family: child.family
             });
           }
         }
@@ -150,7 +157,7 @@ module.exports = {
           enroledStreamsDetails: recentViewers ? recentViewers : 0,
           defaultWatchStream: defaultWatchStream ?? null,
           watchStreamDetails: cameras[0] ?? null,
-        },
+              },
         Message: CONSTANTS.STREAM_DATA,
       });
 
