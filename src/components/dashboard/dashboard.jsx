@@ -636,11 +636,7 @@ const Dashboard = () => {
           <Grid item md={12} sm={12} xs={12} lg={3.5}>
             <Paper sx={{ marginTop: 2 }}>
               <AccessTable
-                rows={
-                  statisticsData?.childrenWithEnableDate?.length > 0
-                    ? statisticsData?.childrenWithEnableDate
-                    : []
-                }
+                rows={statisticsData?.childrenWithEnableDate || []}
                 columns={AccessColumns}
                 title={'Weekly Gaining Access'}
                 isLoading={isLoading}
@@ -655,11 +651,7 @@ const Dashboard = () => {
           <Grid item md={12} sm={12} xs={12} lg={3.5}>
             <Paper sx={{ marginTop: 2 }}>
               <AccessTable
-                rows={
-                  statisticsData?.childrenWithDisableDate?.length > 0
-                    ? statisticsData?.childrenWithDisableDate
-                    : []
-                }
+                rows={statisticsData?.childrenWithDisableDate || []}
                 columns={AccessColumns}
                 title={'Weekly Loosing Access'}
                 isLoading={isLoading}

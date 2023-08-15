@@ -5,6 +5,7 @@ import moment from 'moment';
 import { Video } from 'react-feather';
 import { Link } from 'react-router-dom';
 import NoDataDiv from '../common/nodatadiv';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
 
 export default function StreamTable({ rows, columns, title, isLoading }) {
   return (
@@ -39,7 +40,13 @@ export default function StreamTable({ rows, columns, title, isLoading }) {
                     <Box className="div-row" key={`${row?.room?.room_name}-${index}`}>
                       <Box style={{ width: '35%' }}>{row?.stream_name}</Box>
                       <Box style={{ width: '35%' }}>
-                        {moment(row?.stream_start_time).format('hh:mm A')}
+                        <Stack
+                          direction={'row'}
+                          alignItems="center"
+                          justifyContent={'center'}
+                          gap={0.5}>
+                          <AccessTimeIcon /> {moment(row?.stream_start_time).format('hh:mm A')}
+                        </Stack>{' '}
                       </Box>
                       <Box style={{ width: '45%' }}>
                         <Chip label={row?.room?.room_name} />{' '}

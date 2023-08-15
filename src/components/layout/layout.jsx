@@ -367,7 +367,8 @@ const Layout = () => {
                   renderValue={(value) => {
                     return (
                       <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-                        <Avatar src={buildingIcon} sx={{ paddding: '0px 6px' }} />
+                        {/* <Avatar src={buildingIcon} sx={{ paddding: '0px 6px' }} /> */}
+                        <img src={buildingIcon} />
 
                         {value}
                       </Box>

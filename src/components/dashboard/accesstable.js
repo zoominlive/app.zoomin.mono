@@ -26,7 +26,11 @@ export default function AccessTable({
   };
 
   useEffect(() => {
-    setFamily(rows?.[familyIndex]);
+    if (rows?.length && typeof familyIndex === 'number') {
+      let { secondary, children, ...rest } = rows[familyIndex].family || {};
+      let familyDetails = { primary: rest, secondary: secondary, children: children };
+      setFamily(familyDetails);
+    }
   }, [rows]);
 
   return (
@@ -70,7 +74,7 @@ export default function AccessTable({
                     </Box>
                     <Box className="child-rooms">
                       <Box>
-                        {row?.rooms.map((r) => (
+                        {row?.rooms?.map((r) => (
                           <Chip key={r} label={r} />
                         ))}
                       </Box>

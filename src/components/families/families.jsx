@@ -279,7 +279,7 @@ const Families = () => {
 
   return (
     <Box className="listing-wrapper">
-      <Card>
+      <Card className="family-filter">
         <CardContent>
           <Grid container spacing={2}>
             <Grid item md={8} sm={12}>
@@ -359,7 +359,7 @@ const Families = () => {
               sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
               <Box>
                 <Button
-                  className="add-btn"
+                  className="add-button"
                   variant="contained"
                   startIcon={<Plus />}
                   onClick={() => setIsAddFamilyDialogOpen(true)}>
@@ -379,12 +379,12 @@ const Families = () => {
               <Table sx={{ minWidth: 650 }} aria-label="simple table">
                 <TableHead>
                   <TableRow>
-                    <TableCell style={{ minWidth: '150px' }}>Primary Family Member</TableCell>
-                    <TableCell align="left">Children</TableCell>
+                    <TableCell style={{ minWidth: '150px' }}>Primary Parent</TableCell>
                     <TableCell style={{ minWidth: '100px' }} align="left">
                       Location
                     </TableCell>
-                    <TableCell align="left">Family Members</TableCell>
+                    <TableCell align="left">Family</TableCell>
+                    <TableCell align="left">Children</TableCell>
                     <TableCell align="left">Schedule End Date</TableCell>
                     <TableCell align="right"></TableCell>
                   </TableRow>
@@ -401,7 +401,7 @@ const Families = () => {
                             setFamily(row);
                           }}>
                           <TableCell component="th" scope="row">
-                            <Stack direction="row" alignItems="center" spacing={3}>
+                            {/* <Stack direction="row" alignItems="center" spacing={3}>
                               {row?.primary?.profile_image ? (
                                 <Avatar
                                   alt={`${row.primary?.first_name[0]?.toUpperCase()}${row.primary?.last_name[0]?.toUpperCase()}`}
@@ -418,25 +418,28 @@ const Families = () => {
                                 {row?.primary?.last_name &&
                                   capitalizeFirstLetter(row?.primary?.last_name)}
                               </Typography>
-                            </Stack>
-                          </TableCell>
-                          <TableCell align="left">
-                            {' '}
-                            <AvatarGroup>
-                              {row.children.map((child, index) => (
-                                <>
-                                  <Tooltip
-                                    id="button-report"
-                                    placement="top"
-                                    title={child?.first_name + ' ' + child?.last_name}>
-                                    <Avatar
-                                      key={
-                                        index
-                                      }>{`${child?.first_name[0]?.toUpperCase()}`}</Avatar>
-                                  </Tooltip>
-                                </>
-                              ))}
-                            </AvatarGroup>
+                            </Stack> */}
+                            <Box className="viewer-profile">
+                              <Box className="profile-img">
+                                {row?.primary?.profile_image ? (
+                                  <Avatar
+                                    alt={`${row.primary?.first_name[0]?.toUpperCase()}${row.primary?.last_name[0]?.toUpperCase()}`}
+                                    src={row?.primary?.profile_image}
+                                  />
+                                ) : (
+                                  <Avatar>
+                                    {`${row.primary?.first_name[0]?.toUpperCase()}${row.primary?.last_name[0]?.toUpperCase()}`}
+                                  </Avatar>
+                                )}
+                              </Box>
+                              <Typography>
+                                {' '}
+                                {row?.primary?.first_name &&
+                                  capitalizeFirstLetter(row?.primary?.first_name)}{' '}
+                                {row?.primary?.last_name &&
+                                  capitalizeFirstLetter(row?.primary?.last_name)}
+                              </Typography>
+                            </Box>
                           </TableCell>
                           <TableCell align="left">
                             <Stack direction="row">{renderFamilyLocations(row.children)}</Stack>
@@ -453,6 +456,27 @@ const Families = () => {
                               ))}
                             </AvatarGroup>
                           </TableCell>
+                          <TableCell align="left">
+                            {' '}
+                            <AvatarGroup>
+                              {row.children.map((child, index) => (
+                                <>
+                                  <Tooltip
+                                    id="button-report"
+                                    placement="top"
+                                    title={child?.first_name + ' ' + child?.last_name}>
+                                    {/* <Box className="profile-img"> */}
+
+                                    <Avatar
+                                      key={
+                                        index
+                                      }>{`${child?.first_name[0]?.toUpperCase()}`}</Avatar>
+                                  </Tooltip>
+                                </>
+                              ))}
+                            </AvatarGroup>
+                          </TableCell>
+
                           <TableCell>
                             {row.primary.scheduled_end_date
                               ? dayjs(row.primary.scheduled_end_date).format('MM.DD.YYYY')

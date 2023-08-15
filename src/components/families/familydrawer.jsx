@@ -37,6 +37,7 @@ import AuthContext from '../../context/authcontext';
 import Loader from '../common/loader';
 import _ from 'lodash';
 import AddIcon from '@mui/icons-material/Add';
+import { Plus } from 'react-feather';
 
 const FamilyDrawer = (props) => {
   const authCtx = useContext(AuthContext);
@@ -900,9 +901,9 @@ const FamilyDrawer = (props) => {
 
       <Divider textAlign="left" className="title-divider">
         {/* {props?.family?.primary?.status === 'Disabled' ? 'ENABLE FAMILY' : 'FAMILY MANAGEMENT'} */}
-        FAMILY MANAGEMENT
+        Family Management
       </Divider>
-      <Stack direction="row" px={2.5} mt={2} alignItems="center" justifyContent={'flex-end'}>
+      <Stack direction="row" mt={2} alignItems="center" justifyContent={'flex-end'}>
         {props?.family?.primary?.status === 'Disabled' ? (
           <LoadingButton
             loading={enableFamilyLoading}
@@ -916,27 +917,33 @@ const FamilyDrawer = (props) => {
           <>
             {props?.family?.primary?.scheduled_end_date == null && (
               <>
-                <Stack direction="row" justifyContent="space-between" spacing={1.5}>
+                <Stack direction="row" justifyContent="space-between" spacing={1}>
                   <Button
-                    className="family_disable_enable_btn"
+                    className="add_family_member_btn"
+                    variant="contained"
+                    startIcon={<Plus />}
                     onClick={() => {
                       props.setFamily(props.family);
                       props.setIsParentFormDialogOpen(true);
                     }}>
-                    Add FAMILY MEMBER
+                    Add Family Member
                   </Button>
                   <Button
-                    className="family_disable_enable_btn"
+                    className="add_child_btn"
+                    variant="outlined"
+                    startIcon={<Plus />}
                     onClick={() => {
                       props.setFamily(props.family);
                       props.setIsChildFormDialogOpen(true);
                     }}>
-                    Add CHILD
+                    Add Child
                   </Button>
                   <Button
-                    className="family_disable_enable_btn"
+                    // variant="contained"
+                    className="disable_family_btn"
+                    // color="dark"
                     onClick={() => props.setIsDisableFamilyDialogOpen(true)}>
-                    Disable FAMILY
+                    Disabled Family
                   </Button>
                 </Stack>
               </>

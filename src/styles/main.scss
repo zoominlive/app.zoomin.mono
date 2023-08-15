@@ -65,12 +65,28 @@
   }
 }
 
-.family_disable_enable_btn {
-  border: 1px solid black !important;
-  background: white !important;
-  color: black !important;
+.add_child_btn{
+    border: 1px solid #5a53dd !important;
+    color: #5a53dd !important;
+    width: 135px;
+    border-radius: 30px !important;
+}
+.add_family_member_btn {
+    background-color: #5A53DD !important;
+    color: #fff !important;
+    border-radius: 30px !important;
+    height: 44px;
+    width: 206px;
+    border-color: #5A53DD !important;
 }
 
+.disable_family_btn{
+  border-radius: 30px !important;
+  background-color: #151313 !important;
+  height: 44px;
+  width: 162px;
+  color: #fff !important;
+}
 .schduler-edit-button {
   background-color: #ebebeb !important;
 }
@@ -618,25 +634,25 @@
         color: #5a53dd;
       }
 
-      .viewer-profile {
-        display: flex;
-        align-items: center;
-        gap: 8px;
+      // .viewer-profile {
+      //   display: flex;
+      //   align-items: center;
+      //   gap: 8px;
 
-        .profile-img {
-          width: 40px;
-          height: 40px;
-          border-radius: 50%;
-          overflow: hidden;
+      //   .profile-img {
+      //     width: 40px;
+      //     height: 40px;
+      //     border-radius: 50%;
+      //     overflow: hidden;
 
-          img {
-            width: 100%;
-          }
-          .MuiAvatar-circular{
-            background-color: #d8cdfb;
-          }
-        }
-      }
+      //     img {
+      //       width: 100%;
+      //     }
+      //     .MuiAvatar-circular{
+      //       background-color: #d8cdfb;
+      //     }
+      //   }
+      // }
 
       &:hover {
         background-color: #EBE8FF;
@@ -652,16 +668,29 @@
 }
 
 .listing-wrapper {
+  .family-filter{
+    margin: 25px 0px;
+    border-radius: 15px;
+    .MuiInputBase-root{
+      border-radius: 15px;
+    }
+    .MuiChip-root{
+      background-color: #d8d7f8!important;
+    }
+  }
   .MuiTextField-root {
     width: 100%;
   }
-
-  .location-select {
-    width: 100%;
-    .MuiSelect-select{
-      padding: 10px;
-    }
+  .MuiPaper-root.MuiPaper-elevation {
+    border-radius: 15px;
   }
+
+  // .location-select {
+  //   width: 100%;
+  //   .MuiSelect-select{
+  //     padding: 10px;
+  //   }
+  // }
 
   .room-select {
     width: 100%;
@@ -669,6 +698,23 @@
 
   .MuiLoadingButton-root {
     color: #5fa8d3;
+  }
+  .MuiChip-root{
+    background-color: #5A53DD !important;
+  }
+  .MuiTableCell-root{
+    .MuiAvatar-root{
+      background-color: #5A53DD;
+      font-size: 18px;
+      font-weight: 500;
+    }
+  }
+  .add-button{
+    border-radius: 30px;
+    background-color: #5A53DD!important;
+    text-transform: capitalize;
+    height: 54px;
+    width: 170px;
   }
 }
 
@@ -699,6 +745,18 @@
   .MuiDialog-paper {
     max-width: 900px !important;
     border-radius: 20px;
+    .MuiStepper-root{
+
+    }
+    .MuiStepLabel-root{
+      .Mui-active{
+        color: #5A53DD;
+      }
+      .Mui-completed{
+        color: #5A53DD;
+      }
+      
+    }
   }
 }
 
@@ -905,8 +963,8 @@
 .family-drawer {
   .MuiDrawer-paper {
     display: block !important;
-    max-width: 550px;
-    width: 550px;
+    max-width: 559px;
+    width: 559px;
 
     h5 {
       font-size: 20px !important;
@@ -1051,7 +1109,7 @@
       font-size: 15px;
       line-height: 26px;
       letter-spacing: 0.46px;
-      color: #5fa8d3 !important;
+      color: #5a53dd !important;
       //color: #fff !important;
     }
 
@@ -1062,7 +1120,7 @@
 }
 
 .MuiButton-contained {
-  background-color: #5fa8d3 !important;
+  background-color: #5a53dd !important;
 }
 
 .MuiChip-colorPrimary {
@@ -1169,8 +1227,9 @@
 
 .MuiDialogActions-root {
   .MuiLoadingButton-loading {
-    &.Mui-disabled {
-      color: #5fa8d3 !important;
+    &.Mui-disabled {  
+        color: #5A53DD !important;
+      
     }
   }
 
@@ -1276,7 +1335,7 @@
 .main-map-wraper {
   position: relative;
   .map-wrapper {
-    height: calc(100vh - 313px) !important;
+    height: calc(100vh - 700px) !important;
     margin: 0 24px 24px 24px;
     overflow: hidden;
     border-radius: 10px;
@@ -1592,3 +1651,20 @@
 }
 
 /* sidebar css end */
+
+.viewer-profile {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  .profile-img {
+    overflow: hidden;
+
+    img {
+      width: 100%;
+    }
+    .MuiAvatar-circular{
+      background-color: #d8cdfb;
+    }
+  }
+}

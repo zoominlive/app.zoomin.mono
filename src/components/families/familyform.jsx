@@ -4,8 +4,10 @@ import {
   Dialog,
   DialogActions,
   DialogContent,
+  DialogContentText,
   DialogTitle,
   Divider,
+  IconButton,
   Stack,
   Step,
   StepLabel,
@@ -27,6 +29,7 @@ import { useSnackbar } from 'notistack';
 import { errorMessageHandler } from '../../utils/errormessagehandler';
 import * as yup from 'yup';
 import moment from 'moment-timezone';
+import CloseIcon from '@mui/icons-material/Close';
 const STEPS = ['Primary', 'Secondary', 'Children'];
 
 const AddFamily = (props) => {
@@ -221,7 +224,21 @@ const AddFamily = (props) => {
       onClose={handleFormDialogClose}
       fullWidth
       className="add-family-dialog">
-      <DialogTitle>Add Family</DialogTitle>
+      <DialogTitle sx={{ paddingTop: 3.5 }}>
+        {'Add Family'}
+        <DialogContentText>Please add family member so they can watch stream</DialogContentText>
+        <IconButton
+          aria-label="close"
+          onClick={handleFormDialogClose}
+          sx={{
+            position: 'absolute',
+            right: 18,
+            top: 30
+          }}>
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
+
       <Divider />
       <Formik
         validationSchema={validationSchema[activeStep]}
