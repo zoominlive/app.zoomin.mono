@@ -72,7 +72,7 @@ const Dashboard = () => {
   const [openWatchStreamDialog, setOpenWatchStreamDialog] = useState(false);
   const [timeOut, setTimeOut] = useState(2);
   const [playing, setPlaying] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(true);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [defaultWatchStream, setDefaultWatchStream] = useState(null);
   const [openMapDialog, setOpenMapDialog] = useState(false);
 
@@ -227,7 +227,10 @@ const Dashboard = () => {
   const getDashboardData = () => {
     setIsLoading(true);
     API.get('dashboard', {
-      params: { cust_id: localStorage.getItem('cust_id'), location: authCtx?.location || 'All' }
+      params: {
+        cust_id: localStorage.getItem('cust_id'),
+        location: authCtx?.location
+      }
     }).then((response) => {
       if (response.status === 200) {
         localStorage.setItem('updateDashboardData', false);

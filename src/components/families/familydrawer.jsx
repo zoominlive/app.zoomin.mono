@@ -2,17 +2,18 @@ import {
   Avatar,
   Box,
   Button,
-  Divider,
   Drawer,
   IconButton,
   Stack,
   Typography,
-  Tooltip
+  Tooltip,
+  Chip,
+  Switch
 } from '@mui/material';
 import RoomAddForm from './roomaddform';
 import SchedulerFrom from './scheduler';
-import BlockIcon from '@mui/icons-material/Block';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+// import BlockIcon from '@mui/icons-material/Block';
+// import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import EditSchedule from '../../assets/schedule.svg';
 import Schedule from '../../assets/new-schedule.svg';
 import DeleteScheduleIcon from '../../assets/delete-icon.svg';
@@ -38,6 +39,7 @@ import Loader from '../common/loader';
 import _ from 'lodash';
 import AddIcon from '@mui/icons-material/Add';
 import { Plus } from 'react-feather';
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 
 const FamilyDrawer = (props) => {
   const authCtx = useContext(AuthContext);
@@ -50,6 +52,7 @@ const FamilyDrawer = (props) => {
   const [isRoomDialogOpen, setIsRoomDialogOpen] = useState(false);
   const [isDeleteChildDialogOpen, setIsDeleteChildDialogOpen] = useState(false);
   const [disableDialogTitle, setDisableDialogTitle] = useState();
+  const [disableDialogSubTitle, setDisableDialogSubTitle] = useState();
   const [deleteLoading, setDeleteLoading] = useState();
   const [roomLoading, setRoomLoading] = useState(false);
   const [enableFamilyLoading, setEnableFamilyLoading] = useState(false);
@@ -516,21 +519,112 @@ const FamilyDrawer = (props) => {
       <Stack direction="row" justifyContent="space-between" alignItems="center" p={2}>
         <Typography variant="h5">Family</Typography>
       </Stack>
-      <Divider textAlign="left" className="title-divider">
-        PRIMARY FAMILY MEMBER
-      </Divider>
+      <Typography variant="h6" className="title">
+        Family Management
+      </Typography>
+      <Stack direction="row" mt={2} alignItems="center" justifyContent={'flex-start'} spacing={1}>
+        {props?.family?.primary?.status === 'Disabled' ? (
+          <LoadingButton
+            loading={enableFamilyLoading}
+            loadingPosition={enableFamilyLoading ? 'start' : undefined}
+            startIcon={enableFamilyLoading && <SaveIcon />}
+            className="family_disable_enable_btn"
+            onClick={handleFamilyEnable}>
+            ENABLE FAMILY
+          </LoadingButton>
+        ) : (
+          <>
+            {props?.family?.primary?.scheduled_end_date == null && (
+              <>
+                {/* <Stack direction="row" justifyContent="space-between" spacing={1}> */}
+                <Button
+                  className="add_family_member_btn"
+                  variant="contained"
+                  startIcon={<Plus />}
+                  onClick={() => {
+                    props.setFamily(props.family);
+                    props.setIsParentFormDialogOpen(true);
+                  }}>
+                  Add Family Member
+                </Button>
+                <Button
+                  className="add_child_btn"
+                  variant="outlined"
+                  startIcon={<Plus />}
+                  onClick={() => {
+                    props.setFamily(props.family);
+                    props.setIsChildFormDialogOpen(true);
+                  }}>
+                  Add Child
+                </Button>
+                <Button
+                  // variant="contained"
+                  className="disable_family_btn"
+                  // color="dark"
+                  onClick={() => props.setIsDisableFamilyDialogOpen(true)}>
+                  Disabled Family
+                </Button>
+                {/* </Stack> */}
+              </>
+            )}
+            {props?.family?.primary?.scheduled_end_date != null &&
+              props?.family?.primary?.scheduled_end_date && (
+                <>
+                  {' '}
+                  <Typography variant="caption">
+                    {`Disable Date:  ${dayjs(props?.family?.primary?.scheduled_end_date).format(
+                      'YYYY-MM-DD'
+                    )}`}
+                  </Typography>
+                  <Tooltip id="button-report" title="Delete scheduled disable">
+                    <IconButton
+                      aria-label="delete"
+                      className="row-delete-btn"
+                      color="error"
+                      onClick={() => {
+                        setScheduledLoading({
+                          loading: true,
+                          index: -1,
+                          type: 'family'
+                        });
+                        handleFamilyEnable();
+                      }}>
+                      <Loader
+                        loading={
+                          scheduledLoading.loading && scheduledLoading.type == 'family'
+                            ? true
+                            : false
+                        }
+                      />
+                      <DeleteIcon className="delete-icon" />
+                    </IconButton>
+                  </Tooltip>
+                </>
+              )}
+          </>
+        )}
+      </Stack>
+
+      <Typography variant="h6" className="title">
+        Primary Family Member
+      </Typography>
       <Stack
         spacing={1.5}
         px={2.5}
         direction="row"
         alignItems="center"
-        justifyContent="space-between">
+        justifyContent="space-between"
+        className="family_member_wrap">
         <Stack spacing={1.5} direction="row" alignItems="center">
-          <Avatar
-            title={`${props?.family?.primary?.first_name[0]?.toUpperCase()}${props?.family?.primary?.last_name[0]?.toUpperCase()}`}
-            src={
-              props?.family?.primary?.profile_image
-            }>{`${props?.family?.primary?.first_name[0]?.toUpperCase()}${props?.family?.primary?.last_name[0]?.toUpperCase()}`}</Avatar>
+          <Box className="viewer-profile">
+            <Box className="profile-img">
+              <Avatar
+                title={`${props?.family?.primary?.first_name[0]?.toUpperCase()}${props?.family?.primary?.last_name[0]?.toUpperCase()}`}
+                src={
+                  props?.family?.primary?.profile_image
+                }>{`${props?.family?.primary?.first_name[0]?.toUpperCase()}${props?.family?.primary?.last_name[0]?.toUpperCase()}`}</Avatar>
+            </Box>
+          </Box>
           <Stack>
             <Stack direction="row" spacing={1.5}>
               <Typography variant="body2">
@@ -539,10 +633,12 @@ const FamilyDrawer = (props) => {
                 {props?.family?.primary?.last_name &&
                   capitalizeFirstLetter(props?.family?.primary?.last_name)}
               </Typography>
-              <Divider orientation="vertical" variant="middle" flexItem />
-              <Typography variant="body2" className="blue-text">
+
+              {/* <Divider orientation="vertical" variant="middle" flexItem /> */}
+              <Chip label={props?.family?.primary?.relationship} />
+              {/* <Typography variant="body2" className="blue-text">
                 {props?.family?.primary?.relationship}
-              </Typography>
+              </Typography> */}
             </Stack>
             <Typography variant="caption">{props?.family?.primary?.email}</Typography>
           </Stack>
@@ -555,14 +651,14 @@ const FamilyDrawer = (props) => {
             props.setParentType('primary');
             props.setIsParentFormDialogOpen(true);
           }}>
-          <EditIcon />
+          <EditOutlinedIcon />
         </IconButton>
       </Stack>
       {props?.family?.secondary && props?.family?.secondary?.length > 0 && (
         <>
-          <Divider textAlign="left" className="title-divider">
-            OTHER FAMILY MEMBERS
-          </Divider>
+          <Typography variant="h6" className="title">
+            Other Family Members
+          </Typography>
           {props.family.secondary.map((parent, index) => (
             <Box key={index}>
               <Stack
@@ -570,12 +666,17 @@ const FamilyDrawer = (props) => {
                 px={2.5}
                 direction="row"
                 alignItems="center"
-                justifyContent="space-between">
+                justifyContent="space-between"
+                className="family_member_wrap">
                 <Stack direction="row" spacing={1.5}>
-                  <Avatar
-                    src={
-                      parent?.profile_image
-                    }>{`${parent?.first_name[0]?.toUpperCase()}${parent?.last_name[0]?.toUpperCase()}`}</Avatar>
+                  <Box className="viewer-profile">
+                    <Box className="profile-img">
+                      <Avatar
+                        src={
+                          parent?.profile_image
+                        }>{`${parent?.first_name[0]?.toUpperCase()}${parent?.last_name[0]?.toUpperCase()}`}</Avatar>
+                    </Box>
+                  </Box>
                   <Stack>
                     <Stack direction="row" spacing={1.5}>
                       <Typography variant="body2">
@@ -583,10 +684,11 @@ const FamilyDrawer = (props) => {
                         {capitalizeFirstLetter(parent?.first_name)}{' '}
                         {capitalizeFirstLetter(parent?.last_name)}
                       </Typography>
-                      <Divider orientation="vertical" variant="middle" flexItem />
-                      <Typography variant="body2" className="blue-text">
+                      {/* <Divider orientation="vertical" variant="middle" flexItem /> */}
+                      <Chip label={parent?.relationship} />
+                      {/* <Typography variant="body2" className="blue-text">
                         {parent?.relationship}
-                      </Typography>
+                      </Typography> */}
                     </Stack>
                     <Typography variant="caption">{parent?.email}</Typography>
                   </Stack>
@@ -619,9 +721,44 @@ const FamilyDrawer = (props) => {
                                 : false
                             }
                           />
-                          <DeleteIcon />
+                          <DeleteIcon className="delete-icon" />
                         </IconButton>
                       </Tooltip>
+                    </>
+                  )}
+
+                  {parent.status === 'Disabled' ? (
+                    <Switch
+                      className={`switch-disable`}
+                      checked={false}
+                      onChange={() => {
+                        handleParentEnable(parent.family_member_id, index);
+                      }}
+                      inputProps={{ 'aria-label': 'controlled' }}
+                    />
+                  ) : (
+                    <>
+                      {parent?.scheduled_end_date == null && (
+                        <Switch
+                          className={`switch-enable`}
+                          checked={true}
+                          onChange={() => {
+                            setDisableDialogTitle('Disable Secondary Family Member');
+                            setDisableDialogSubTitle(
+                              'Disabled secondary family member so they can watch stream'
+                            );
+                            setIsDisableDialogOpen(true);
+                            let locations = [];
+                            props?.family?.children.forEach((child) => {
+                              // eslint-disable-next-line no-unsafe-optional-chaining
+                              locations.push(...child?.location?.locations);
+                            });
+                            setLocationsToDisable(_.uniq(locations));
+                            setParentToDisable(parent.family_member_id);
+                          }}
+                          inputProps={{ 'aria-label': 'controlled' }}
+                        />
+                      )}
                     </>
                   )}
                   <IconButton
@@ -631,57 +768,33 @@ const FamilyDrawer = (props) => {
                       props.setParentType('secondary');
                       props.setIsParentFormDialogOpen(true);
                     }}>
-                    <EditIcon />
+                    <EditOutlinedIcon />
                   </IconButton>
-                  {parent.status === 'Disabled' ? (
-                    <Tooltip id="button-report" title="Enable">
-                      <BlockIcon
-                        className="block-icon curser-pointer"
-                        onClick={() => {
-                          handleParentEnable(parent.family_member_id, index);
-                        }}></BlockIcon>
-                    </Tooltip>
-                  ) : (
-                    <>
-                      {parent?.scheduled_end_date == null && (
-                        <Tooltip id="button-report" title="Disable">
-                          <CheckCircleIcon
-                            className="curser-pointer enable-icon"
-                            onClick={() => {
-                              setDisableDialogTitle('Disable Secondary Family Member');
-                              setIsDisableDialogOpen(true);
-                              let locations = [];
-                              props?.family?.children.forEach((child) => {
-                                // eslint-disable-next-line no-unsafe-optional-chaining
-                                locations.push(...child?.location?.locations);
-                              });
-                              setLocationsToDisable(_.uniq(locations));
-                              setParentToDisable(parent.family_member_id);
-                            }}></CheckCircleIcon>
-                        </Tooltip>
-                      )}
-                    </>
-                  )}
                 </Stack>
               </Stack>
-              <Divider variant="middle" sx={{ marginTop: '15px', marginBottom: '15px' }} />{' '}
             </Box>
           ))}
         </>
       )}
-
       {props?.family?.children && props?.family?.children?.length > 0 && (
         <>
-          <Divider textAlign="left" className="title-divider">
-            CHILDREN
-          </Divider>
+          <Typography variant="h6" className="title">
+            Chilldren
+          </Typography>
           <Stack spacing={2}>
             {props?.family?.children.map((child, index) => (
               <Stack key={index} spacing={2}>
-                <Stack spacing={1.5} px={2.5}>
-                  <Stack direction="row" justifyContent="space-between">
+                <Stack spacing={1.5}>
+                  <Stack
+                    direction="row"
+                    justifyContent="space-between"
+                    className="family_member_wrap">
                     <Stack direction="row" spacing={2} alignItems="center">
-                      <Avatar>{`${child?.first_name[0]?.toUpperCase()}${child?.last_name[0]?.toUpperCase()}`}</Avatar>
+                      <Box className="viewer-profile">
+                        <Box className="profile-img">
+                          <Avatar>{`${child?.first_name[0]?.toUpperCase()}${child?.last_name[0]?.toUpperCase()}`}</Avatar>
+                        </Box>
+                      </Box>
                       <Typography variant="body2">
                         {' '}
                         {capitalizeFirstLetter(child?.first_name)}{' '}
@@ -764,6 +877,56 @@ const FamilyDrawer = (props) => {
                       spacing={1.5}
                       alignItems="center"
                       justifyContent="center">
+                      {child.status === 'Disabled' ? (
+                        // <Tooltip id="button-report" title="Enable">
+                        <>
+                          {!enableChildrenLoading[index] && (
+                            // <BlockIcon
+                            //   className="curser-pointer block-icon"
+                            //   onClick={() => {
+                            //     handleChildEnable(child.child_id, index);
+                            //   }}></BlockIcon>
+
+                            <Switch
+                              className="switch-disable"
+                              checked={false}
+                              onChange={() => {
+                                handleChildEnable(child.child_id, index);
+                              }}
+                              inputProps={{ 'aria-label': 'controlled' }}
+                            />
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          {child?.scheduled_end_date == null && (
+                            // <Tooltip id="button-report" title="Disable">
+                            <>
+                              {/* <CheckCircleIcon
+                                className={'curser-pointer enable-icon'}
+                                onClick={() => {
+                                  setLocationsToDisable(child?.location?.locations);
+                                  setIsDisableDialogOpen(true);
+                                  setChildToDisable(child.child_id);
+                                  setDisableDialogTitle('Disable Child');
+                                }}></CheckCircleIcon> */}
+
+                              <Switch
+                                className="switch-enable"
+                                checked={true}
+                                onChange={() => {
+                                  setLocationsToDisable(child?.location?.locations);
+                                  setIsDisableDialogOpen(true);
+                                  setChildToDisable(child.child_id);
+                                  setDisableDialogTitle('Disable Child');
+                                }}
+                                inputProps={{ 'aria-label': 'controlled' }}
+                              />
+                              {/* // </Tooltip> */}
+                            </>
+                          )}
+                        </>
+                      )}
                       <IconButton
                         className="edit-btn"
                         onClick={() => {
@@ -772,33 +935,6 @@ const FamilyDrawer = (props) => {
                         }}>
                         <EditIcon />
                       </IconButton>
-                      {child.status === 'Disabled' ? (
-                        <Tooltip id="button-report" title="Enable">
-                          {!enableChildrenLoading[index] && (
-                            <BlockIcon
-                              className="curser-pointer block-icon"
-                              onClick={() => {
-                                handleChildEnable(child.child_id, index);
-                              }}></BlockIcon>
-                          )}
-                        </Tooltip>
-                      ) : (
-                        <>
-                          {child?.scheduled_end_date == null && (
-                            <Tooltip id="button-report" title="Disable">
-                              <CheckCircleIcon
-                                className={'curser-pointer enable-icon'}
-                                onClick={() => {
-                                  setLocationsToDisable(child?.location?.locations);
-                                  setIsDisableDialogOpen(true);
-                                  setChildToDisable(child.child_id);
-                                  setDisableDialogTitle('Disable Child');
-                                }}></CheckCircleIcon>
-                            </Tooltip>
-                          )}
-                        </>
-                      )}
-
                       {props?.family?.children.length !== 1 && (
                         <IconButton
                           className="child-delete-btn"
@@ -806,12 +942,12 @@ const FamilyDrawer = (props) => {
                             setIsDeleteChildDialogOpen(true);
                             setChildToDelete(child.child_id);
                           }}>
-                          <DeleteIcon />
+                          <DeleteIcon className="delete-icon" />
                         </IconButton>
                       )}
                     </Stack>
                   </Stack>
-                  <Divider variant="middle" sx={{ marginTop: '15px', marginBottom: '15px' }} />
+
                   {child?.roomsInChild?.map((room, index) => (
                     <Box key={index}>
                       <Stack
@@ -861,6 +997,16 @@ const FamilyDrawer = (props) => {
                           spacing={1.5}
                           alignItems="center"
                           justifyContent="center">
+                          <Switch
+                            className={`switch-${room?.disabled == 'true' ? 'enable' : 'disable'}`}
+                            checked={room?.disabled == 'true' ? false : true}
+                            onChange={() => {
+                              setRoomToDisable(room);
+                              setIsRoomDialogOpen(true);
+                            }}
+                            inputProps={{ 'aria-label': 'controlled' }}
+                          />
+
                           <img
                             src={_.isEmpty(room.schedule) ? Schedule : EditSchedule}
                             onClick={() => {
@@ -870,7 +1016,7 @@ const FamilyDrawer = (props) => {
                             style={{ height: '1.5rem' }}
                             className="curser-pointer"></img>
 
-                          <BlockIcon
+                          {/* <BlockIcon
                             className={
                               room?.disabled == 'true'
                                 ? 'disable-icon curser-pointer'
@@ -879,7 +1025,7 @@ const FamilyDrawer = (props) => {
                             onClick={() => {
                               setRoomToDisable(room);
                               setIsRoomDialogOpen(true);
-                            }}></BlockIcon>
+                            }}></BlockIcon> */}
                         </Stack>
                       </Stack>
                     </Box>
@@ -891,100 +1037,12 @@ const FamilyDrawer = (props) => {
                       setIsRoomAddDialogOpen(true);
                       setSelectedChild(child);
                     }}></AddIcon>
-                  <Divider variant="middle" sx={{ marginTop: '15px', marginBottom: '15px' }} />
                 </Stack>
               </Stack>
             ))}
           </Stack>
         </>
       )}
-
-      <Divider textAlign="left" className="title-divider">
-        {/* {props?.family?.primary?.status === 'Disabled' ? 'ENABLE FAMILY' : 'FAMILY MANAGEMENT'} */}
-        Family Management
-      </Divider>
-      <Stack direction="row" mt={2} alignItems="center" justifyContent={'flex-end'}>
-        {props?.family?.primary?.status === 'Disabled' ? (
-          <LoadingButton
-            loading={enableFamilyLoading}
-            loadingPosition={enableFamilyLoading ? 'start' : undefined}
-            startIcon={enableFamilyLoading && <SaveIcon />}
-            className="family_disable_enable_btn"
-            onClick={handleFamilyEnable}>
-            ENABLE FAMILY
-          </LoadingButton>
-        ) : (
-          <>
-            {props?.family?.primary?.scheduled_end_date == null && (
-              <>
-                <Stack direction="row" justifyContent="space-between" spacing={1}>
-                  <Button
-                    className="add_family_member_btn"
-                    variant="contained"
-                    startIcon={<Plus />}
-                    onClick={() => {
-                      props.setFamily(props.family);
-                      props.setIsParentFormDialogOpen(true);
-                    }}>
-                    Add Family Member
-                  </Button>
-                  <Button
-                    className="add_child_btn"
-                    variant="outlined"
-                    startIcon={<Plus />}
-                    onClick={() => {
-                      props.setFamily(props.family);
-                      props.setIsChildFormDialogOpen(true);
-                    }}>
-                    Add Child
-                  </Button>
-                  <Button
-                    // variant="contained"
-                    className="disable_family_btn"
-                    // color="dark"
-                    onClick={() => props.setIsDisableFamilyDialogOpen(true)}>
-                    Disabled Family
-                  </Button>
-                </Stack>
-              </>
-            )}
-            {props?.family?.primary?.scheduled_end_date != null &&
-              props?.family?.primary?.scheduled_end_date && (
-                <>
-                  {' '}
-                  <Typography variant="caption">
-                    {`Disable Date:  ${dayjs(props?.family?.primary?.scheduled_end_date).format(
-                      'YYYY-MM-DD'
-                    )}`}
-                  </Typography>
-                  <Tooltip id="button-report" title="Delete scheduled disable">
-                    <IconButton
-                      aria-label="delete"
-                      className="row-delete-btn"
-                      color="error"
-                      onClick={() => {
-                        setScheduledLoading({
-                          loading: true,
-                          index: -1,
-                          type: 'family'
-                        });
-                        handleFamilyEnable();
-                      }}>
-                      <Loader
-                        loading={
-                          scheduledLoading.loading && scheduledLoading.type == 'family'
-                            ? true
-                            : false
-                        }
-                      />
-                      <DeleteIcon />
-                    </IconButton>
-                  </Tooltip>
-                </>
-              )}
-          </>
-        )}
-      </Stack>
 
       <DeleteDialog
         title="Delete Child"
@@ -996,6 +1054,7 @@ const FamilyDrawer = (props) => {
       />
       <DisableDialog
         title={disableDialogTitle}
+        subTitle={disableDialogSubTitle}
         open={isDisableDialogOpen}
         loading={disableLoading}
         setSelectedLocationsToDisable={setSelectedLocationsToDisable}

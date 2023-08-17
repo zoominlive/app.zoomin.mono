@@ -1,7 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import {
-  Button,
   Chip,
   Dialog,
   DialogActions,
@@ -12,7 +11,10 @@ import {
   Grid,
   Autocomplete,
   FormControlLabel,
-  Radio
+  Radio,
+  DialogContentText,
+  IconButton,
+  InputLabel
 } from '@mui/material';
 import { Form, Formik } from 'formik';
 import * as yup from 'yup';
@@ -29,6 +31,7 @@ import { DesktopDatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import ArrowDropUpIcon from '@mui/icons-material/ArrowDropUp';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+import CloseIcon from '@mui/icons-material/Close';
 
 const validationSchema = yup.object({
   first_name: yup.string().required('First Name is required'),
@@ -156,7 +159,23 @@ const ChildForm = (props) => {
 
   return (
     <Dialog open={props.open} onClose={handleDialogClose} fullWidth className="add-child-drawer">
-      <DialogTitle>{props.child ? 'Edit Child' : 'Add Child'}</DialogTitle>
+      <DialogTitle sx={{ paddingTop: 3.5 }}>
+        {props.child ? 'Edit Child' : 'Add Child'}
+        <DialogContentText>
+          {props.child ? 'Edit' : 'Add'} child so they can watch stream
+        </DialogContentText>
+        <IconButton
+          aria-label="close"
+          onClick={handleDialogClose}
+          sx={{
+            position: 'absolute',
+            right: 18,
+            top: 30
+          }}>
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
+
       <Divider />
       <Formik
         enableReinitialize
@@ -183,9 +202,10 @@ const ChildForm = (props) => {
               <DialogContent>
                 <Grid container spacing={3}>
                   <Grid item md={6} sm={12}>
+                    <InputLabel id="first_name">Child First Name</InputLabel>
                     <TextField
+                      labelId="first_name"
                       name="first_name"
-                      label="Child First Name"
                       value={values.first_name}
                       onChange={(event) => {
                         setFieldValue('first_name', event.target.value);
@@ -196,7 +216,9 @@ const ChildForm = (props) => {
                     />
                   </Grid>
                   <Grid item md={6} sm={12}>
+                    <InputLabel id="first_name">Child Last Name</InputLabel>
                     <TextField
+                      labelId="last_name"
                       name="last_name"
                       label="Child Last Name"
                       value={values.last_name}
@@ -209,10 +231,12 @@ const ChildForm = (props) => {
                     />
                   </Grid>
                   <Grid item md={6} sm={12}>
+                    <InputLabel id="locations">Locations</InputLabel>
                     <Autocomplete
+                      labelId="locations"
                       fullWidth
                       multiple
-                      id="rooms"
+                      id="locations"
                       options={authCtx?.user?.location?.selected_locations.sort((a, b) =>
                         a > b ? 1 : -1
                       )}
@@ -228,7 +252,6 @@ const ChildForm = (props) => {
                       renderInput={(params) => (
                         <TextField
                           {...params}
-                          label="Locations"
                           helperText={touched.locations && errors.locations}
                           error={touched.locations && Boolean(errors.locations)}
                           fullWidth
@@ -237,7 +260,9 @@ const ChildForm = (props) => {
                     />
                   </Grid>
                   <Grid item md={6} sm={12}>
+                    <InputLabel id="rooms">Rooms</InputLabel>
                     <Autocomplete
+                      labelId="rooms"
                       fullWidth
                       multiple
                       id="rooms"
@@ -265,7 +290,6 @@ const ChildForm = (props) => {
                       renderInput={(params) => (
                         <TextField
                           {...params}
-                          label="Rooms"
                           helperText={touched.rooms && errors.rooms}
                           error={touched.rooms && Boolean(errors.rooms)}
                           fullWidth
@@ -277,7 +301,7 @@ const ChildForm = (props) => {
                   {!props.child && (
                     <>
                       {' '}
-                      <Grid item md={2.5} sm={12}>
+                      <Grid item md={12} sm={12}>
                         <FormControlLabel
                           value="Start Now"
                           control={
@@ -292,7 +316,7 @@ const ChildForm = (props) => {
                           label="Start Now"
                         />
                       </Grid>
-                      <Grid item md={3.5} sm={12}>
+                      <Grid item md={3} sm={12}>
                         <FormControlLabel
                           value="Schedule start date"
                           control={
@@ -339,19 +363,28 @@ const ChildForm = (props) => {
               </DialogContent>
               <Divider />
               <DialogActions>
-                <Button
+                {/* <Button
                   disabled={submitLoading || isValidating}
                   variant="text"
                   onClick={handleDialogClose}>
                   CANCEL
-                </Button>
-                <LoadingButton
+                </Button> */}
+                {/* <LoadingButton
                   loading={submitLoading || isValidating}
                   loadingPosition={submitLoading || isValidating ? 'start' : undefined}
                   startIcon={(submitLoading || isValidating) && <SaveIcon />}
                   variant="text"
                   type="submit">
                   SAVE CHANGES
+                </LoadingButton> */}
+                <LoadingButton
+                  className="add-btn save-changes-btn"
+                  loading={submitLoading || isValidating}
+                  loadingPosition={submitLoading || isValidating ? 'start' : undefined}
+                  startIcon={(submitLoading || isValidating) && <SaveIcon />}
+                  // variant="text"
+                  type="submit">
+                  Save Changes
                 </LoadingButton>
               </DialogActions>
             </Form>

@@ -146,7 +146,7 @@ const Families = () => {
     });
     const uniqueLocations = locations?.filter((item, index) => locations?.indexOf(item) === index);
     const locationsJSX = uniqueLocations?.map((location, index) => (
-      <Chip key={index} label={location} color="primary" />
+      <Chip key={index} label={location} color="primary" className="chip-color" />
     ));
     return locationsJSX;
   };
@@ -279,27 +279,27 @@ const Families = () => {
 
   return (
     <Box className="listing-wrapper">
-      <Card className="family-filter">
+      <Card className="filter">
         <CardContent>
           <Grid container spacing={2}>
             <Grid item md={8} sm={12}>
               <Box>
                 <Grid container spacing={2}>
                   <Grid item md={5} sm={12}>
+                    <InputLabel id="search">Search</InputLabel>
                     <TextField
-                      label="Search"
+                      labelId="search"
                       placeholder={'Family Member Name, Child Name'}
                       onChange={familesListDebounce}
                     />
                   </Grid>
                   <Grid item md={3.5} sm={12}>
+                    <InputLabel id="location">Location</InputLabel>
                     <FormControl fullWidth className="location-select">
-                      <InputLabel id="location">Location</InputLabel>
                       <Select
                         labelId="location"
-                        id="location"
+                        // id="location"
                         value={familiesPayload?.location}
-                        label="Location"
                         onChange={handleLocationChange}>
                         <MenuItem value={'All'}>All</MenuItem>
                         {authCtx.user.location.accessable_locations
@@ -313,7 +313,9 @@ const Families = () => {
                     </FormControl>
                   </Grid>
                   <Grid item md={3.5} sm={12}>
+                    <InputLabel id="rooms">Rooms</InputLabel>
                     <Autocomplete
+                      labelId="rooms"
                       fullWidth
                       multiple
                       id="rooms"
@@ -331,7 +333,7 @@ const Families = () => {
                       renderInput={(params) => (
                         <TextField
                           {...params}
-                          label="Room"
+                          // label="Room"
                           fullWidth
                           placeholder="Room"
                           InputProps={{

@@ -1,6 +1,9 @@
 import {
+  Autocomplete,
   Avatar,
   Box,
+  Checkbox,
+  Chip,
   Drawer,
   FormControl,
   List,
@@ -11,8 +14,12 @@ import {
   MenuItem,
   Select,
   Stack,
-  Typography
+  Typography,
+  TextField,
+  InputAdornment,
+  CircularProgress
 } from '@mui/material';
+
 import logo from '../../assets/logo.svg';
 import appLogo from '../../assets/app-icon.png';
 import collapseButton from '../../assets/collapse-button.svg';
@@ -33,6 +40,12 @@ import AddFamilyDialog from '../addfamily/addfamilydialog';
 //import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
 import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
 import buildingIcon from '../../assets/building.svg';
+import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+
+const icon = <RadioButtonUncheckedIcon fontSize="small" />;
+const checkedIcon = <CheckCircleOutlineIcon fontSize="small" style={{ color: '#5A53DD' }} />;
+
 const Layout = () => {
   const layoutCtx = useContext(LayoutContext);
   const { enqueueSnackbar } = useSnackbar();
@@ -42,10 +55,30 @@ const Layout = () => {
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
   const [isAddFamilyDialogOpen, setIsAddFamilyDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [allLocationChecked, setAllLocationChecked] = useState(false);
+  const [locations, setLocations] = useState([]);
+  const [selectedLocation, setSelectedLocation] = useState([]);
+  const [dropdownLoading, setDropdownLoading] = useState(false);
 
+  const locs = ['Select All'];
+  authCtx?.user?.location?.accessable_locations.forEach((loc) => locs.push(loc));
   const handleChange = (event) => {
     authCtx.setLocation(event.target.value);
   };
+
+  useEffect(() => {
+    setDropdownLoading(true);
+    const locs = ['Select All'];
+    let selected_locaions = authCtx?.user?.location?.accessable_locations;
+    authCtx?.user?.location?.accessable_locations.forEach((loc) => locs.push(loc));
+    setLocations(locs);
+    setSelectedLocation(selected_locaions);
+    setDropdownLoading(false);
+  }, []);
+
+  useEffect(() => {
+    authCtx.setLocation(selectedLocation);
+  }, [selectedLocation]);
 
   useEffect(() => {
     setIsLoading(true);
@@ -172,6 +205,30 @@ const Layout = () => {
       link: 'https://www.zoominlive.com/support'
     }
   ];
+
+  const handleSetLocations = (_, value, reason, option) => {
+    if (reason == 'selectOption' && option?.option == 'Select All' && !allLocationChecked) {
+      setSelectedLocation(reason === 'selectOption' ? locations.slice(1, locations.length) : []);
+      setAllLocationChecked(true);
+    } else if (
+      (option?.option == 'Select All' && reason === 'removeOption') ||
+      reason === 'clear'
+    ) {
+      setSelectedLocation([]);
+      setAllLocationChecked(false);
+    } else if (
+      reason === 'selectOption' &&
+      option?.option == 'Select All' &&
+      allLocationChecked == true
+    ) {
+      setAllLocationChecked(false);
+      setSelectedLocation([]);
+    } else {
+      setAllLocationChecked(false);
+      setSelectedLocation(value);
+    }
+  };
+
   return (
     <>
       <Box sx={{ display: 'flex' }}>
@@ -351,7 +408,10 @@ const Layout = () => {
                 
               </FormControl> */}
             <Stack direction={'row'} gap={2} alignItems={'center'}>
-              <FormControl fullWidth className="location-select header-location">
+              <FormControl
+                fullWidth
+                className="location-select header-location"
+                sx={{ display: 'none' }}>
                 {/* <InputLabel id="location">Location</InputLabel> */}
                 <Select
                   // labelId="location"
@@ -384,7 +444,114 @@ const Layout = () => {
                     ))}
                 </Select>
               </FormControl>
+              <Autocomplete
+                className="header-location-select"
+                sx={{ padding: 1.5, maxWidth: 275, width: 275, '& fieldset': { borderRadius: 4 } }}
+                multiple
+                limitTags={1}
+                id="tags-standard"
+                options={locations?.length !== 0 ? locations : []}
+                onChange={(_, value, reason, option) => {
+                  handleSetLocations(_, value, reason, option);
+                }}
+                value={selectedLocation ? selectedLocation : []}
+                // renderValue={(value) => {
+                //   return (
+                //     <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                //       {/* <Avatar src={buildingIcon} sx={{ paddding: '0px 6px' }} /> */}
+                //       <img src={buildingIcon} />
 
+                //       {value}
+                //     </Box>
+                //   );
+                // }}
+                getOptionLabel={(option) => option}
+                renderTags={(value, getTagProps) =>
+                  value?.map((option, index) => (
+                    <Chip key={index} label={option} {...getTagProps({ index })} />
+                  ))
+                }
+                renderOption={(props, option, { selected }) => (
+                  <li {...props}>
+                    <Checkbox
+                      icon={icon}
+                      checkedIcon={checkedIcon}
+                      style={{ marginRight: 8 }}
+                      checked={allLocationChecked ? allLocationChecked : selected}
+                    />
+                    {option}
+                  </li>
+                )}
+                renderInput={(params) => {
+                  return (
+                    <TextField
+                      {...params}
+                      // variant="standard"
+                      // label="location"
+                      fullWidth
+                      InputProps={{
+                        ...params.InputProps,
+                        startAdornment: (
+                          <>
+                            <InputAdornment position="start">
+                              <img src={buildingIcon} />
+                            </InputAdornment>
+                            {params.InputProps.startAdornment}
+                          </>
+                        ),
+                        endAdornment: (
+                          <React.Fragment>
+                            {dropdownLoading ? (
+                              <CircularProgress color="inherit" size={20} />
+                            ) : null}
+                            {params.InputProps.endAdornment}
+                          </React.Fragment>
+                        )
+                      }}
+                    />
+                  );
+                }}
+
+                //renderInput={(params) => (
+                // <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }} {...params}>
+                //   {/* <Avatar src={buildingIcon} sx={{ paddding: '0px 6px' }} /> */}
+                //   <img src={buildingIcon} />
+
+                //   <TextField
+                //     {...params}
+                //     label="location"
+                //     fullWidth
+                //     InputProps={{
+                //       ...params.InputProps,
+                //       startAdornment: <img src={buildingIcon} />,
+                //       endAdornment: (
+                //         <React.Fragment>
+                //           {dropdownLoading ? (
+                //             <CircularProgress color="inherit" size={20} />
+                //           ) : null}
+                //           {params.InputProps.endAdornment}
+                //         </React.Fragment>
+                //       )
+                //     }}
+                //   />
+                // </Box>
+                // <TextField
+                //   {...params}
+                //   label="location"
+                //   fullWidth
+                //   InputProps={{
+                //     ...params.InputProps,
+                //     //startAdornment: <img src={buildingIcon} />,
+                //     endAdornment: (
+                //       <React.Fragment>
+                //         {dropdownLoading ? <CircularProgress color="inherit" size={20} /> : null}
+                //         {params.InputProps.endAdornment}
+                //       </React.Fragment>
+                //     )
+                //   }}
+                // />
+                // )}
+              />
               <Box className="header-right">
                 <AccountMenu openLogoutDialog={setIsLogoutDialogOpen} />
               </Box>

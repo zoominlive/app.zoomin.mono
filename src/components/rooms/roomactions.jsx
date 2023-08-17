@@ -1,9 +1,9 @@
 import { Box, Fade, IconButton, ListItemIcon, ListItemText, Menu, MenuItem } from '@mui/material';
 import React from 'react';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import PropTypes from 'prop-types';
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
+import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
 
 const RoomActions = (props) => {
   const [anchorEl, setAnchorEl] = React.useState(null);
@@ -52,13 +52,13 @@ const RoomActions = (props) => {
         TransitionComponent={Fade}>
         <MenuItem onClick={handleRoomEdit}>
           <ListItemIcon>
-            <EditIcon />
+            <EditOutlinedIcon />
           </ListItemIcon>
           <ListItemText>Edit Room</ListItemText>
         </MenuItem>
         <MenuItem onClick={handleRoomDelete}>
           <ListItemIcon>
-            <DeleteForeverIcon />
+            <DeleteOutlinedIcon />
           </ListItemIcon>
           <ListItemText>Delete Room</ListItemText>
         </MenuItem>

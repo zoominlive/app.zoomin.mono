@@ -7,7 +7,8 @@ import {
   Button,
   Autocomplete,
   Radio,
-  FormControlLabel
+  FormControlLabel,
+  InputLabel
 } from '@mui/material';
 import React from 'react';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -56,9 +57,10 @@ const Children = (props) => {
                 props.values.children.map((_, index) => (
                   <>
                     <Grid item md={6} sm={12}>
+                      <InputLabel id="child_first_name">Child First Name</InputLabel>
                       <TextField
                         name={`children.${index}.first_name`}
-                        label="Child First Name"
+                        labelId="child_first_name"
                         value={props?.values?.children[index]?.first_name}
                         onChange={(event) => {
                           props.setFieldValue(`children[${index}].first_name`, event.target.value);
@@ -87,9 +89,10 @@ const Children = (props) => {
                       />
                     </Grid>
                     <Grid item md={6} sm={12}>
+                      <InputLabel id="child_last_name">Child Last Name</InputLabel>
                       <TextField
+                        labelId="child_last_name"
                         name={`children.${index}.last_name`}
-                        label="Child Last Name"
                         value={props?.values?.children[index]?.last_name}
                         onChange={(event) => {
                           props.setFieldValue(`children[${index}].last_name`, event.target.value);
@@ -119,7 +122,9 @@ const Children = (props) => {
                     </Grid>
 
                     <Grid item md={6} sm={12}>
+                      <InputLabel id="locations">Locations</InputLabel>
                       <Autocomplete
+                        labelId="locations"
                         fullWidth
                         multiple
                         id={`children.${index}.locations`}
@@ -139,7 +144,6 @@ const Children = (props) => {
                         renderInput={(params) => (
                           <TextField
                             {...params}
-                            label="Locations"
                             fullWidth
                             helperText={
                               props.touched &&
@@ -166,7 +170,9 @@ const Children = (props) => {
                       />
                     </Grid>
                     <Grid item md={6} sm={12}>
+                      <InputLabel id="rooms">Rooms</InputLabel>
                       <Autocomplete
+                        labelId="rooms"
                         fullWidth
                         multiple
                         noOptionsText={'Select location first'}
@@ -192,7 +198,6 @@ const Children = (props) => {
                         renderInput={(params) => (
                           <TextField
                             {...params}
-                            label="Rooms"
                             fullWidth
                             helperText={
                               props.touched &&
@@ -218,7 +223,7 @@ const Children = (props) => {
                         )}
                       />
                     </Grid>
-                    <Grid item md={2.5} sm={12}>
+                    <Grid item md={12} sm={12}>
                       <FormControlLabel
                         value="Start Now"
                         control={
@@ -240,7 +245,7 @@ const Children = (props) => {
                         label="Start Now"
                       />
                     </Grid>
-                    <Grid item md={3.5} sm={12}>
+                    <Grid item md={12} sm={12}>
                       <FormControlLabel
                         value="Schedule start date"
                         control={
@@ -260,7 +265,7 @@ const Children = (props) => {
                         label="Schedule start date"
                       />
                     </Grid>
-                    <Grid item md={3.5} sm={12}>
+                    <Grid item md={6} sm={12}>
                       {props?.values?.children[index]?.selected_option ===
                         'Schedule start date' && (
                         <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -305,7 +310,7 @@ const Children = (props) => {
                         </LocalizationProvider>
                       )}
                     </Grid>
-                    <Grid item md={2} sm={12}>
+                    <Grid item md={6} sm={12}>
                       {props.values.children.length !== 1 && (
                         <Box className="row-button-wrapper">
                           <IconButton

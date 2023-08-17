@@ -16,8 +16,9 @@ const Primary = (props) => {
     <>
       <Grid container spacing={2}>
         <Grid item md={6} sm={12}>
+          <InputLabel id="first_name">First Name</InputLabel>
           <TextField
-            label="First Name"
+            labelId="first_name"
             name="first_name"
             value={props?.values?.primary?.first_name ? props?.values?.primary?.first_name : ''}
             onChange={(event) => {
@@ -28,11 +29,15 @@ const Primary = (props) => {
               props?.touched?.primary?.first_name && Boolean(props?.errors?.primary?.first_name)
             }
             fullWidth
+            InputLabelProps={{
+              shrink: true
+            }}
           />
         </Grid>
         <Grid item md={6} sm={12}>
+          <InputLabel id="last_name">Last Name</InputLabel>
           <TextField
-            label="Last Name"
+            labelId="last_name"
             value={props?.values?.primary?.last_name ? props?.values?.primary?.last_name : ''}
             onChange={(event) => {
               props.setFieldValue('primary.last_name', event.target.value);
@@ -45,12 +50,12 @@ const Primary = (props) => {
       </Grid>
       <Grid container spacing={2} sx={{ marginTop: 2 }}>
         <Grid item md={12} sm={12}>
+          <InputLabel id="role">Role</InputLabel>
           <FormControl
             fullWidth
             error={
               props?.touched?.primary?.relationship && Boolean(props?.errors?.primary?.relationship)
             }>
-            <InputLabel id="role">Role</InputLabel>
             <Select
               labelId="role"
               id="role"
@@ -79,8 +84,9 @@ const Primary = (props) => {
       </Grid>
       <Grid container spacing={2} sx={{ marginTop: 2 }}>
         <Grid item md={6} sm={12}>
+          <InputLabel id="phone">Phone</InputLabel>
           <TextField
-            label="Phone"
+            labelId="phone"
             value={props?.values?.primary?.phone ? props?.values?.primary?.phone : ''}
             onChange={(event) => {
               props.setFieldValue('primary.phone', event.target.value || '');
@@ -92,8 +98,9 @@ const Primary = (props) => {
           />
         </Grid>
         <Grid item md={6} sm={12}>
+          <InputLabel id="email">Email</InputLabel>
           <TextField
-            label="Email"
+            labelId="email"
             value={props?.values?.primary?.email ? props?.values?.primary?.email : ''}
             onChange={(event) => {
               props.setFieldValue('primary.email', event.target.value);

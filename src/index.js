@@ -16,7 +16,7 @@ ReactDOM.render(
     <LayoutContextProvider>
       <BrowserRouter>
         <SnackbarProvider
-          autoHideDuration={3000}
+          autoHideDuration={10000}
           maxSnack={5}
           action={(snackbarKey) => <SnackbarCloseButton snackbarKey={snackbarKey} />}
           anchorOrigin={{

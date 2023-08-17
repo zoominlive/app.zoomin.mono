@@ -11,7 +11,8 @@ import {
   CircularProgress,
   Button,
   DialogContentText,
-  IconButton
+  IconButton,
+  InputLabel
 } from '@mui/material';
 import { useLocation } from 'react-router-dom';
 //import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
@@ -239,11 +240,16 @@ const WatchStreamDialogBox = (props) => {
       </DialogTitle>
       <DialogContent>
         <div>
+          <InputLabel id="location" className="label">
+            Location
+          </InputLabel>
           <Autocomplete
-            sx={{ padding: 1.5, '& fieldset': { borderRadius: 4 } }}
+            labelId="location"
+            sx={{ padding: '5px 12px 12px 12px', '& fieldset': { borderRadius: 4 } }}
             multiple
             limitTags={1}
             id="tags-standard"
+            labelI
             options={locations?.length !== 0 ? locations : []}
             onChange={(_, value, reason, option) => {
               handleSetLocations(_, value, reason, option);
@@ -269,7 +275,6 @@ const WatchStreamDialogBox = (props) => {
             renderInput={(params) => (
               <TextField
                 {...params}
-                label="location"
                 fullWidth
                 InputProps={{
                   ...params.InputProps,
@@ -283,8 +288,12 @@ const WatchStreamDialogBox = (props) => {
               />
             )}
           />
+          <InputLabel id="room" className="label">
+            Room
+          </InputLabel>
           <Autocomplete
-            sx={{ padding: 1.5, '& fieldset': { borderRadius: 4 } }}
+            labelId="room"
+            sx={{ padding: '5px 12px 12px 12px', '& fieldset': { borderRadius: 4 } }}
             limitTags={1}
             id="tags-standard"
             options={rooms}
@@ -318,7 +327,6 @@ const WatchStreamDialogBox = (props) => {
             renderInput={(params) => (
               <TextField
                 {...params}
-                label="room"
                 fullWidth
                 InputProps={{
                   ...params.InputProps,
@@ -332,8 +340,12 @@ const WatchStreamDialogBox = (props) => {
               />
             )}
           />
+          <InputLabel id="cameras" className="label">
+            Cameras
+          </InputLabel>
           <Autocomplete
-            sx={{ padding: 1.5, '& fieldset': { borderRadius: 4 } }}
+            labelId="cameras"
+            sx={{ padding: '5px 12px 12px 12px', '& fieldset': { borderRadius: 4 } }}
             limitTags={1}
             id="tags-standard"
             options={cameras ? cameras : []}
@@ -372,7 +384,6 @@ const WatchStreamDialogBox = (props) => {
             renderInput={(params) => (
               <TextField
                 {...params}
-                label="Cameras"
                 fullWidth
                 helperText={
                   limitReached &&

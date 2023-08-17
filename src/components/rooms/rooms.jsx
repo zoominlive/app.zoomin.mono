@@ -10,10 +10,12 @@ import {
   FormControl,
   Grid,
   IconButton,
+  InputAdornment,
   InputLabel,
   MenuItem,
   Paper,
   Select,
+  //Stack,
   Table,
   TableBody,
   TableCell,
@@ -35,7 +37,7 @@ import RoomActions from './roomactions';
 import PropTypes from 'prop-types';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
-import DeleteDialog from '../common/deletedialog';
+// import DeleteDialog from '../common/deletedialog';
 import Loader from '../common/loader';
 import API from '../../api';
 import AuthContext from '../../context/authcontext';
@@ -44,6 +46,8 @@ import { errorMessageHandler } from '../../utils/errormessagehandler';
 import debounce from 'lodash.debounce';
 import { Link } from 'react-router-dom';
 import NoDataDiv from '../common/nodatadiv';
+import NewDeleteDialog from '../common/newdeletedialog';
+import SearchIcon from '@mui/icons-material/Search';
 
 const Row = (props) => {
   const { row } = props;
@@ -59,7 +63,32 @@ const Row = (props) => {
         </TableCell>
         <TableCell>{row.room_name}</TableCell>
         <TableCell>{row.location}</TableCell>
-        <TableCell>{row.cameras.length}</TableCell>
+        <TableCell style={{ lineHeight: 2.5 }}>
+          {/* <Stack direction={'row'} justifyContent="flex-start" alignItems="center"> */}
+          {row?.cameras?.map((camRow, index) => (
+            <Link
+              key={index}
+              to="/watch-stream"
+              state={{
+                roomName: row?.room_name,
+                // eslint-disable-next-line react/prop-types
+                roomId: row?.room_id,
+                location: row?.location,
+                camName: camRow?.cam_name,
+                camId: camRow?.cam_id,
+                streamUrl: camRow?.stream_uri
+              }}>
+              <Chip
+                color="primary"
+                className="chip-color"
+                label={camRow?.cam_name}
+                icon={<Video />}
+              />
+            </Link>
+          ))}
+          {/* </Stack> */}
+        </TableCell>
+
         <TableCell align="right">
           <RoomActions
             room={row}
@@ -152,7 +181,7 @@ const Rooms = () => {
 
   useEffect(() => {
     layoutCtx.setActive(3);
-    layoutCtx.setBreadcrumb(['Rooms']);
+    layoutCtx.setBreadcrumb(['Rooms', 'Manage rooms and their camera authorization']);
 
     return () => {
       authCtx.setPreviosPagePath(window.location.pathname);
@@ -290,7 +319,7 @@ const Rooms = () => {
 
   return (
     <Box className="listing-wrapper">
-      <Card>
+      <Card className="filter">
         <CardContent>
           <Box>
             <Grid container spacing={2}>
@@ -298,21 +327,28 @@ const Rooms = () => {
                 <Box>
                   <Grid container spacing={2}>
                     <Grid item md={5} sm={12}>
+                      <InputLabel id="search">Search</InputLabel>
                       <TextField
-                        label="Search"
+                        labelId="search"
                         placeholder="Room Name,etc"
                         onChange={roomsListDebounce}
+                        InputProps={{
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <SearchIcon />
+                            </InputAdornment>
+                          )
+                        }}
                       />
                     </Grid>
                     <Grid item md={3.5} sm={12}>
+                      <InputLabel id="location">Select Location</InputLabel>
                       <FormControl fullWidth className="location-select">
-                        <InputLabel id="location">Location</InputLabel>
                         <Select
                           labelId="location"
                           id="location"
                           value={roomsPayload?.location}
-                          onChange={handleLocationChange}
-                          label="Location">
+                          onChange={handleLocationChange}>
                           <MenuItem value={'All'}>All</MenuItem>
                           {authCtx.user.location.accessable_locations
                             .sort((a, b) => (a > b ? 1 : -1))
@@ -325,7 +361,9 @@ const Rooms = () => {
                       </FormControl>
                     </Grid>
                     <Grid item md={3.5} sm={12}>
+                      <InputLabel id="rooms">Select Rooms</InputLabel>
                       <Autocomplete
+                        labelId="rooms"
                         loading={roomsDropdownLoading}
                         fullWidth
                         multiple
@@ -348,9 +386,8 @@ const Rooms = () => {
                         renderInput={(params) => (
                           <TextField
                             {...params}
-                            label="Room"
                             fullWidth
-                            placeholder="Room"
+                            placeholder="Rooms"
                             InputProps={{
                               ...params.InputProps,
                               endAdornment: (
@@ -380,7 +417,7 @@ const Rooms = () => {
                 }}>
                 <Box>
                   <Button
-                    className="add-btn"
+                    className="add-button"
                     variant="contained"
                     startIcon={<Plus />}
                     onClick={() => setIsRoomFormDialogOpen(true)}>
@@ -398,9 +435,9 @@ const Rooms = () => {
                 <TableHead>
                   <TableRow>
                     <TableCell sx={{ width: '50px' }} />
-                    <TableCell sx={{ width: '200px' }}>Room Name</TableCell>
-                    <TableCell>Location</TableCell>
-                    <TableCell sx={{ width: '100px' }}>Cams</TableCell>
+                    <TableCell sx={{ width: '200px' }}>Rooms</TableCell>
+                    <TableCell sx={{ width: '200px' }}>Location</TableCell>
+                    <TableCell>Cams</TableCell>
                     <TableCell align="right" sx={{ width: '50px' }} />
                   </TableRow>
                 </TableHead>
@@ -448,7 +485,7 @@ const Rooms = () => {
           setDropdownList={setDropdownList}
         />
       )}
-      <DeleteDialog
+      <NewDeleteDialog
         open={isDeleteDialogOpen}
         title="Delete Room"
         contentText="Are you sure you want to delete this room?"

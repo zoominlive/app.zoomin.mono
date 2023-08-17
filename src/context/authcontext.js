@@ -8,7 +8,7 @@ const defaultState = {
     authError: false,
     previosPagePath: '',
     custName: localStorage.getItem('cust_name'),
-    location: 'All',
+    location: ['Select All'],
     updateDashboardData: false
   }
 };

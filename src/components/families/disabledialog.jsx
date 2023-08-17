@@ -16,7 +16,8 @@ import {
   Stack,
   TextField,
   Autocomplete,
-  Chip
+  Chip,
+  IconButton
 } from '@mui/material';
 import { DesktopDatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
@@ -26,6 +27,8 @@ import { Form, Formik } from 'formik';
 import * as yup from 'yup';
 import { LoadingButton } from '@mui/lab';
 import SaveIcon from '@mui/icons-material/Save';
+import CloseIcon from '@mui/icons-material/Close';
+
 const validationSchema = yup.object().shape({
   selectedOption: yup.string().required('Please select atleast one option'),
   disableDate: yup
@@ -52,7 +55,26 @@ const DisableDialog = (props) => {
       }}
       fullWidth
       className="disable-family-dialog small-dialog">
-      <DialogTitle>{props.title}</DialogTitle>
+      <DialogTitle id="responsive-dialog-title" sx={{ paddingTop: 3.5 }}>
+        {props.title}
+        <DialogContentText>{props.subTitle}</DialogContentText>
+        <IconButton
+          aria-label="close"
+          onClick={() => {
+            if (!props.loading) {
+              setIsSubmitClicked(true);
+              props.handleDialogClose();
+            }
+          }}
+          sx={{
+            position: 'absolute',
+            right: 18,
+            top: 30
+          }}>
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
+
       <Divider />
       <Formik
         enableReinitialize
@@ -200,6 +222,7 @@ DisableDialog.propTypes = {
   open: PropTypes.bool,
   setOpen: PropTypes.func,
   title: PropTypes.string,
+  subTitle: PropTypes.string,
   handleDisable: PropTypes.func,
   contentText: PropTypes.string,
   loading: PropTypes.bool,

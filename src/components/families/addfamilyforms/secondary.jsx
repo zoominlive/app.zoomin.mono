@@ -39,14 +39,15 @@ const Secondary = (props) => {
                     </Divider>
                   )}
                   <Grid container spacing={2}>
-                    <Grid item md={4} sm={12}>
+                    <Grid item md={6} sm={12}>
+                      <InputLabel id="first_name">First Name</InputLabel>
                       <TextField
                         name={`secondary.${index}.first_name`}
                         value={props?.values?.secondary[index]?.first_name}
                         onChange={(event) => {
                           props.setFieldValue(`secondary[${index}].first_name`, event.target.value);
                         }}
-                        label="First Name"
+                        labelId="first_name"
                         helperText={
                           props.touched &&
                           props.touched.secondary &&
@@ -70,9 +71,10 @@ const Secondary = (props) => {
                         fullWidth
                       />
                     </Grid>
-                    <Grid item md={4} sm={12}>
+                    <Grid item md={6} sm={12}>
+                      <InputLabel id="last_name">First Name</InputLabel>
                       <TextField
-                        label="Last Name"
+                        labelId="last_name"
                         name={`secondary.${index}.last_name`}
                         value={props?.values?.secondary[index]?.last_name}
                         onChange={(event) => {
@@ -101,7 +103,8 @@ const Secondary = (props) => {
                         fullWidth
                       />
                     </Grid>
-                    <Grid item md={4} sm={12}>
+                    <Grid item md={12} sm={12}>
+                      <InputLabel id="role">Role</InputLabel>
                       <FormControl
                         fullWidth
                         error={
@@ -114,11 +117,9 @@ const Secondary = (props) => {
                           props.errors.secondary[index] &&
                           Boolean(props.errors.secondary[index].relationship)
                         }>
-                        <InputLabel id="role">Role</InputLabel>
                         <Select
                           labelId="role"
                           id="role"
-                          label="role"
                           name={`secondary.${index}.relationship`}
                           value={props?.values?.secondary[index]?.relationship}
                           onChange={(event) => {
@@ -149,10 +150,12 @@ const Secondary = (props) => {
                           )}
                       </FormControl>
                     </Grid>
-                    <Grid item md={5} sm={12}>
+                    <Grid item md={6} sm={12}>
+                      <InputLabel id="phone">Phone</InputLabel>
+
                       <TextField
                         name={`secondary.${index}.phone`}
-                        label="Phone"
+                        labelId="phone"
                         value={
                           props?.values?.secondary[index]?.phone
                             ? props?.values?.secondary[index]?.phone
@@ -188,10 +191,11 @@ const Secondary = (props) => {
                         fullWidth
                       />
                     </Grid>
-                    <Grid item md={5} sm={12}>
+                    <Grid item md={6} sm={12}>
+                      <InputLabel id="email">Email</InputLabel>
                       <TextField
                         name={`secondary.${index}.email`}
-                        label="Email"
+                        labelId="email"
                         value={props?.values?.secondary[index]?.email}
                         onChange={(event) => {
                           props.setFieldValue(`secondary[${index}].email`, event.target.value);
@@ -219,7 +223,7 @@ const Secondary = (props) => {
                         fullWidth
                       />
                     </Grid>
-                    <Grid item md={2} sm={12}>
+                    <Grid item md={12} sm={12}>
                       <Box className="row-button-wrapper">
                         <IconButton
                           aria-label="delete"

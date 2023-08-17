@@ -1,8 +1,8 @@
 import {
-  Button,
   Dialog,
   DialogActions,
   DialogContent,
+  DialogContentText,
   DialogTitle,
   Divider,
   FormControl,
@@ -11,8 +11,10 @@ import {
   InputLabel,
   MenuItem,
   Select,
-  TextField
+  TextField,
+  IconButton
 } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { Form, Formik } from 'formik';
@@ -122,7 +124,7 @@ const ParentsForm = (props) => {
 
   return (
     <Dialog open={props.open} onClose={handleDialogClose} fullWidth className="add-parentdialog">
-      <DialogTitle>
+      <DialogTitle sx={{ paddingTop: 3.5 }}>
         {props.primaryParent || props.secondaryParent
           ? `${
               props.parentType == 'primary'
@@ -134,7 +136,31 @@ const ParentsForm = (props) => {
                 ? 'Add Primary Family Member'
                 : 'Add Secondary Family Member'
             }`}
+        <DialogContentText>
+          {props.primaryParent || props.secondaryParent
+            ? `${
+                props.parentType == 'primary'
+                  ? 'Edit primary family member so they can watch stream'
+                  : 'Edit secondary family member so they can watch stream'
+              }`
+            : `${
+                props.parentType == 'primary'
+                  ? 'Add primary family member so they can watch stream'
+                  : 'Add secondary family member so they can watch stream'
+              }`}
+        </DialogContentText>
+        <IconButton
+          aria-label="close"
+          onClick={handleDialogClose}
+          sx={{
+            position: 'absolute',
+            right: 18,
+            top: 30
+          }}>
+          <CloseIcon />
+        </IconButton>
       </DialogTitle>
+
       <Divider />
       <Formik
         enableReinitialize
@@ -173,22 +199,24 @@ const ParentsForm = (props) => {
             <Form>
               <DialogContent>
                 <Grid container spacing={2}>
-                  <Grid item md={4} sm={12}>
+                  <Grid item md={6} sm={12}>
+                    <InputLabel id="first_name">First Name</InputLabel>
                     <TextField
+                      labelId="first_name"
                       name={'first_name'}
                       value={values?.first_name}
                       onChange={(event) => {
                         setFieldValue('first_name', event.target.value);
                       }}
-                      label="First Name"
                       helperText={touched.first_name && errors.first_name}
                       error={touched.first_name && Boolean(errors.first_name)}
                       fullWidth
                     />
                   </Grid>
-                  <Grid item md={4} sm={12}>
+                  <Grid item md={6} sm={12}>
+                    <InputLabel id="last_name">Last Name</InputLabel>
                     <TextField
-                      label="Last Name"
+                      labelId="last_name"
                       name={'last_name'}
                       value={values?.last_name}
                       onChange={(event) => {
@@ -199,11 +227,11 @@ const ParentsForm = (props) => {
                       fullWidth
                     />
                   </Grid>
-                  <Grid item md={4} sm={12}>
+                  <Grid item md={12} sm={12}>
+                    <InputLabel id="role">Role</InputLabel>
                     <FormControl
                       fullWidth
                       error={touched.relationship && Boolean(errors.relationship)}>
-                      <InputLabel id="role">Role</InputLabel>
                       <Select
                         labelId="role"
                         id="role"
@@ -229,9 +257,10 @@ const ParentsForm = (props) => {
                     </FormControl>
                   </Grid>
                   <Grid item md={6} sm={12}>
+                    <InputLabel id="phone">Phone</InputLabel>
                     <TextField
+                      labelId="phone"
                       name={'phone'}
-                      label="Phone"
                       value={values?.phone || ''}
                       onChange={(event) => {
                         setFieldValue('phone', event.target.value ? event.target.value : '');
@@ -243,9 +272,10 @@ const ParentsForm = (props) => {
                     />
                   </Grid>
                   <Grid item md={6} sm={12}>
+                    <InputLabel id="email">Email</InputLabel>
                     <TextField
+                      labelId="email"
                       name={'email'}
-                      label="Email"
                       value={values?.email}
                       onChange={(event) => {
                         setFieldValue('email', event.target.value);
@@ -259,19 +289,26 @@ const ParentsForm = (props) => {
               </DialogContent>
               <Divider />
               <DialogActions>
-                <Button
+                {/* <Button
                   disabled={submitLoading || isValidating}
                   variant="text"
                   onClick={handleDialogClose}>
                   CANCEL
-                </Button>
+                </Button> */}
                 <LoadingButton
+                  className="add-btn dashboard-btn"
                   loading={submitLoading || isValidating}
                   loadingPosition={submitLoading || isValidating ? 'start' : undefined}
                   startIcon={(submitLoading || isValidating) && <SaveIcon />}
-                  variant="text"
-                  type="submit">
-                  SAVE CHANGES
+                  type="submit"
+                  sx={{
+                    borderRadius: 30,
+                    background: '#5A53DD',
+                    color: '#fff',
+                    textTransform: 'capitalize',
+                    maxWidth: 184
+                  }}>
+                  Save Changes
                 </LoadingButton>
               </DialogActions>
             </Form>

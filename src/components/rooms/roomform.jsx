@@ -1,6 +1,5 @@
 import {
   Box,
-  Button,
   Dialog,
   DialogActions,
   DialogContent,
@@ -15,14 +14,15 @@ import {
   Select,
   Chip,
   TextField,
-  Autocomplete
+  Autocomplete,
+  DialogContentText,
+  IconButton
 } from '@mui/material';
 import React from 'react';
 import PropTypes from 'prop-types';
 import * as yup from 'yup';
 import { Form, Formik } from 'formik';
 import { useSnackbar } from 'notistack';
-
 import { useState } from 'react';
 import { useRef } from 'react';
 import API from '../../api';
@@ -32,6 +32,7 @@ import { errorMessageHandler } from '../../utils/errormessagehandler';
 import { LoadingButton } from '@mui/lab';
 import SaveIcon from '@mui/icons-material/Save';
 import { useEffect } from 'react';
+import CloseIcon from '@mui/icons-material/Close';
 
 const validationSchema = yup.object({
   room_name: yup.string('Enter Room name').required('Room name is required'),
@@ -196,7 +197,26 @@ const RoomForm = (props) => {
       }}
       fullWidth
       className="edit-family-dialog">
-      <DialogTitle>{props.room ? 'Edit Room' : 'Add Room'}</DialogTitle>
+      <DialogTitle sx={{ paddingTop: 3.5 }}>
+        {props.room ? 'Edit Room' : 'Add Room'}
+        <DialogContentText>
+          Please select which stream you want to watch on your dashboard
+        </DialogContentText>
+        <IconButton
+          aria-label="close"
+          onClick={() => {
+            if (!submitLoading && !disableActions) {
+              handleFormDialogClose();
+            }
+          }}
+          sx={{
+            position: 'absolute',
+            right: 18,
+            top: 30
+          }}>
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
       <Divider />
       <Formik
         enableReinitialize
@@ -209,12 +229,13 @@ const RoomForm = (props) => {
           return (
             <Form>
               <DialogContent>
-                <Box px={2}>
+                <Box px={4}>
                   <Grid container spacing={2}>
-                    <Grid item xs={12} md={6}>
+                    <Grid item xs={12} md={12}>
+                      <InputLabel id="room_name">Room Name</InputLabel>
                       <TextField
+                        labelId="room_name"
                         name="room_name"
-                        label="Room Name"
                         value={values?.room_name}
                         onChange={(event) => {
                           setFieldValue('room_name', event.target.value);
@@ -225,14 +246,13 @@ const RoomForm = (props) => {
                         fullWidth
                       />
                     </Grid>
-                    <Grid item xs={12} md={6}>
+                    <Grid item xs={12} md={12}>
+                      <InputLabel id="location-select">Location</InputLabel>
                       <FormControl fullWidth error={touched.location && Boolean(errors.location)}>
-                        <InputLabel id="location-select">Location</InputLabel>
                         <Select
                           name="location"
                           labelId="location-select"
                           id="location-select"
-                          label="Location"
                           value={values?.location}
                           onChange={(event) => {
                             setFieldValue('location', event.target.value);
@@ -261,7 +281,9 @@ const RoomForm = (props) => {
                       </FormControl>
                     </Grid>
                     <Grid item xs={12} md={12}>
+                      <InputLabel id="cameras">Cameras</InputLabel>
                       <Autocomplete
+                        labelId="cameras"
                         fullWidth
                         multiple
                         id="cameras"
@@ -290,7 +312,6 @@ const RoomForm = (props) => {
                           <TextField
                             {...params}
                             disabled={!locationSelected}
-                            label="Camera"
                             InputProps={{
                               ...params.InputProps,
                               endAdornment: (
@@ -302,7 +323,7 @@ const RoomForm = (props) => {
                                 </React.Fragment>
                               )
                             }}
-                            placeholder="Camera"
+                            // placeholder="Camera"
                             helperText={touched.cameras && errors.cameras}
                             error={touched.cameras && Boolean(errors.cameras)}
                             fullWidth
@@ -315,8 +336,8 @@ const RoomForm = (props) => {
               </DialogContent>
 
               <Divider />
-              <DialogActions>
-                <Button
+              <DialogActions sx={{ paddingRight: 4, paddingBottom: 3 }}>
+                {/* <Button
                   disabled={disableActions || submitLoading}
                   variant="text"
                   onClick={() => {
@@ -325,15 +346,16 @@ const RoomForm = (props) => {
                     }
                   }}>
                   CANCEL
-                </Button>
+                </Button> */}
                 <LoadingButton
+                  className="add-btn save-changes-btn"
                   disabled={disableActions}
                   loading={submitLoading}
                   loadingPosition={submitLoading ? 'start' : undefined}
                   startIcon={submitLoading && <SaveIcon />}
                   variant="text"
                   type="submit">
-                  {props?.room?.room_id ? 'SAVE CHANGES' : 'SAVE ROOM'}
+                  {props?.room?.room_id ? 'Save Changes' : 'Save Room'}
                 </LoadingButton>
               </DialogActions>
             </Form>
