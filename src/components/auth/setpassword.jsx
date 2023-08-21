@@ -7,6 +7,7 @@ import {
   CardContent,
   IconButton,
   InputAdornment,
+  InputLabel,
   Stack,
   TextField,
   Typography
@@ -25,6 +26,7 @@ import { errorMessageHandler } from '../../utils/errormessagehandler';
 import CheckIcon from '@mui/icons-material/Check';
 import ErrorIcon from '@mui/icons-material/Error';
 import Loader from '../common/loader';
+
 const validationSchema = yup.object({
   password: yup
     .string('Enter password')
@@ -106,7 +108,7 @@ const SetPassword = () => {
                   <>
                     {' '}
                     <Typography component="h1" variant="h5">
-                      SET PASSWORD
+                      Set Password
                     </Typography>
                     <Formik
                       enableReinitialize
@@ -120,55 +122,65 @@ const SetPassword = () => {
                       {({ values, setFieldValue, touched, errors }) => {
                         return (
                           <Form>
-                            <Stack spacing={3} my={4}>
-                              <TextField
-                                name="password"
-                                label="Password"
-                                type={showPassword ? 'text' : 'password'}
-                                value={values?.password}
-                                onChange={(event) => {
-                                  setFieldValue('password', event.target.value);
-                                }}
-                                helperText={touched.password && errors.password}
-                                error={touched.password && Boolean(errors.password)}
-                                fullWidth
-                                InputProps={{
-                                  endAdornment: (
-                                    <InputAdornment position="end">
-                                      <IconButton
-                                        aria-label="toggle password visibility"
-                                        onClick={() => setShowPassword((prevState) => !prevState)}>
-                                        {showPassword ? <Visibility /> : <VisibilityOff />}
-                                      </IconButton>
-                                    </InputAdornment>
-                                  )
-                                }}
-                              />
-                              <TextField
-                                name="confirm_password"
-                                label="Confirm Password"
-                                type={showConfirmPassword ? 'text' : 'password'}
-                                value={values?.confirm_password}
-                                onChange={(event) => {
-                                  setFieldValue('confirm_password', event.target.value);
-                                }}
-                                helperText={touched.confirm_password && errors.confirm_password}
-                                error={touched.confirm_password && Boolean(errors.confirm_password)}
-                                fullWidth
-                                InputProps={{
-                                  endAdornment: (
-                                    <InputAdornment position="end">
-                                      <IconButton
-                                        aria-label="toggle password visibility"
-                                        onClick={() =>
-                                          setShowConfirmPassword((prevState) => !prevState)
-                                        }>
-                                        {showConfirmPassword ? <Visibility /> : <VisibilityOff />}
-                                      </IconButton>
-                                    </InputAdornment>
-                                  )
-                                }}
-                              />
+                            <Stack spacing={3}>
+                              <Box mt={1}>
+                                <InputLabel id="password">Password</InputLabel>
+                                <TextField
+                                  name="password"
+                                  labelId="Password"
+                                  type={showPassword ? 'text' : 'password'}
+                                  value={values?.password}
+                                  onChange={(event) => {
+                                    setFieldValue('password', event.target.value);
+                                  }}
+                                  helperText={touched.password && errors.password}
+                                  error={touched.password && Boolean(errors.password)}
+                                  fullWidth
+                                  InputProps={{
+                                    endAdornment: (
+                                      <InputAdornment position="end">
+                                        <IconButton
+                                          aria-label="toggle password visibility"
+                                          onClick={() =>
+                                            setShowPassword((prevState) => !prevState)
+                                          }>
+                                          {showPassword ? <Visibility /> : <VisibilityOff />}
+                                        </IconButton>
+                                      </InputAdornment>
+                                    )
+                                  }}
+                                />
+                              </Box>
+                              <Box mt={1}>
+                                <InputLabel id="confirm_password">Confirm Password</InputLabel>
+                                <TextField
+                                  labelId="confirm_password"
+                                  name="confirm_password"
+                                  type={showConfirmPassword ? 'text' : 'password'}
+                                  value={values?.confirm_password}
+                                  onChange={(event) => {
+                                    setFieldValue('confirm_password', event.target.value);
+                                  }}
+                                  helperText={touched.confirm_password && errors.confirm_password}
+                                  error={
+                                    touched.confirm_password && Boolean(errors.confirm_password)
+                                  }
+                                  fullWidth
+                                  InputProps={{
+                                    endAdornment: (
+                                      <InputAdornment position="end">
+                                        <IconButton
+                                          aria-label="toggle password visibility"
+                                          onClick={() =>
+                                            setShowConfirmPassword((prevState) => !prevState)
+                                          }>
+                                          {showConfirmPassword ? <Visibility /> : <VisibilityOff />}
+                                        </IconButton>
+                                      </InputAdornment>
+                                    )
+                                  }}
+                                />
+                              </Box>
                               <LoadingButton
                                 loading={submitLoading}
                                 loadingPosition="center"

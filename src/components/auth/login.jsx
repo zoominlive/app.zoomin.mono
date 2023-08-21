@@ -4,9 +4,10 @@ import {
   CardContent,
   Stack,
   TextField,
-  Typography,
   InputAdornment,
-  IconButton
+  IconButton,
+  Grid,
+  InputLabel
 } from '@mui/material';
 import { Form, Formik } from 'formik';
 import React, { useState, useEffect } from 'react';
@@ -23,7 +24,8 @@ import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import { useSnackbar } from 'notistack';
 import { errorMessageHandler } from '../../utils/errormessagehandler';
 import CustomerSelection from './customerSelection';
-
+import TitleDiv from './titlediv';
+import LinkDiv from './linkdiv';
 const validationSchema = yup.object({
   email: yup
     .string('Enter Username/email')
@@ -80,7 +82,7 @@ const Login = () => {
 
   return (
     <>
-      <div style={{}}>
+      {/* <div style={{}}>
         <img
           src="https://zoomin-dev-images.s3.us-west-2.amazonaws.com/zoomin-logo/Group+6.png"
           alt=""
@@ -93,111 +95,118 @@ const Login = () => {
             marginRight: 'auto'
           }}
         />
-      </div>
-      {showCustomerSelection ? (
-        <CustomerSelection />
-      ) : (
-        <Box className="auth-wrapper">
+      </div> */}
+
+      <Grid container>
+        <Grid item md={6} sm={12} xs={12}>
           <Card>
             <CardContent>
-              <Box className="auth-container">
-                <Typography component="h1" variant="h5"></Typography>
-                <Box>
-                  <Formik
-                    enableReinitialize
-                    validateOnChange
-                    validationSchema={validationSchema}
-                    initialValues={{
-                      email: '',
-                      password: ''
-                    }}
-                    onSubmit={handleSubmit}>
-                    {({ values, setFieldValue, touched, errors }) => {
-                      return (
-                        <Form>
-                          <Stack spacing={3} mb={4}>
-                            <TextField
-                              label="Username/Email"
-                              InputLabelProps={{
-                                focused: true,
-                                shrink: true
-                              }}
-                              placeholder="Username/Email"
-                              name="email"
-                              value={values?.email || ''}
-                              onChange={(e) => {
-                                setFieldValue('email', e.target.value || '');
-                              }}
-                              helperText={touched.email && errors.email}
-                              error={touched.email && Boolean(errors.email)}
-                              fullWidth
-                            />
-                            <TextField
-                              autoComplete="current-password"
-                              label="Password"
-                              placeholder="Password"
-                              InputLabelProps={{
-                                focused: true,
-                                shrink: true
-                              }}
-                              type={showPassword ? 'text' : 'password'}
-                              name="password"
-                              onChange={(e) => {
-                                setFieldValue('password', e.target.value || '');
-                              }}
-                              value={values?.password || ''}
-                              helperText={touched.password && errors.password}
-                              error={touched.password && Boolean(errors.password)}
-                              fullWidth
-                              InputProps={{
-                                endAdornment: (
-                                  <InputAdornment position="end">
-                                    <IconButton
-                                      aria-label="toggle password visibility"
-                                      onClick={() => setShowPassword((prevState) => !prevState)}>
-                                      {showPassword ? <Visibility /> : <VisibilityOff />}
-                                    </IconButton>
-                                  </InputAdornment>
-                                )
-                              }}
-                            />
-                            <LoadingButton
-                              loading={submitLoading}
-                              loadingPosition="center"
-                              startIcon={submitLoading && <SaveIcon />}
-                              variant="contained"
-                              type="submit">
-                              SIGN IN
-                            </LoadingButton>
-                          </Stack>
-                        </Form>
-                      );
-                    }}
-                  </Formik>
+              <TitleDiv
+                isShowTitle={true}
+                title={'Log in to ZOOMiN Live'}
+                subtitle={'Welcome back to zoominl live'}
+              />
+              {showCustomerSelection ? (
+                <CustomerSelection />
+              ) : (
+                <Box className="auth-wrapper">
+                  <Box className="auth-container">
+                    <Box>
+                      <Formik
+                        enableReinitialize
+                        validateOnChange
+                        validationSchema={validationSchema}
+                        initialValues={{
+                          email: '',
+                          password: ''
+                        }}
+                        onSubmit={handleSubmit}>
+                        {({ values, setFieldValue, touched, errors }) => {
+                          return (
+                            <Form>
+                              <Stack spacing={3}>
+                                <Box mt={1}>
+                                  <InputLabel id="email_address">Email Address</InputLabel>
+                                  <TextField
+                                    labelId="email_address"
+                                    InputLabelProps={{
+                                      focused: true,
+                                      shrink: true
+                                    }}
+                                    placeholder="Please enter your email address"
+                                    name="email"
+                                    value={values?.email || ''}
+                                    onChange={(e) => {
+                                      setFieldValue('email', e.target.value || '');
+                                    }}
+                                    helperText={touched.email && errors.email}
+                                    error={touched.email && Boolean(errors.email)}
+                                    fullWidth
+                                  />
+                                </Box>
+                                <Box>
+                                  <InputLabel id="password">Password</InputLabel>
+                                  <TextField
+                                    autoComplete="current-password"
+                                    labelId="password"
+                                    placeholder="Please enter your password"
+                                    InputLabelProps={{
+                                      focused: true,
+                                      shrink: true
+                                    }}
+                                    type={showPassword ? 'text' : 'password'}
+                                    name="password"
+                                    onChange={(e) => {
+                                      setFieldValue('password', e.target.value || '');
+                                    }}
+                                    value={values?.password || ''}
+                                    helperText={touched.password && errors.password}
+                                    error={touched.password && Boolean(errors.password)}
+                                    fullWidth
+                                    InputProps={{
+                                      endAdornment: (
+                                        <InputAdornment position="end">
+                                          <IconButton
+                                            aria-label="toggle password visibility"
+                                            onClick={() =>
+                                              setShowPassword((prevState) => !prevState)
+                                            }>
+                                            {showPassword ? <Visibility /> : <VisibilityOff />}
+                                          </IconButton>
+                                        </InputAdornment>
+                                      )
+                                    }}
+                                  />
+                                </Box>
+                                <Stack direction={'row'} justifyContent={'flex-end'}>
+                                  <Link to="/forgot-password" variant="body2">
+                                    Forgot password?
+                                  </Link>
+                                </Stack>
+                                <LoadingButton
+                                  loading={submitLoading}
+                                  loadingPosition="center"
+                                  startIcon={submitLoading && <SaveIcon />}
+                                  variant="contained"
+                                  type="submit">
+                                  Login
+                                </LoadingButton>
+                              </Stack>
+                            </Form>
+                          );
+                        }}
+                      </Formik>
 
-                  <Stack direction="row" justifyContent="space-between">
-                    <a
-                      href="https://www.zoominlive.com/privacy-policy"
-                      rel="noreferrer"
-                      target="_blank">
-                      Privacy Policy
-                    </a>
-                    <a
-                      href="https://www.zoominlive.com/terms-conditions"
-                      rel="noreferrer"
-                      target="_blank">
-                      Terms Of Service
-                    </a>
-                    <Link to="/forgot-password" variant="body2">
-                      Forgot password?
-                    </Link>
-                  </Stack>
+                      <LinkDiv />
+                    </Box>
+                  </Box>
                 </Box>
-              </Box>
+              )}
             </CardContent>
           </Card>
-        </Box>
-      )}
+        </Grid>
+        <Grid item md={6} sm={12} xs={12}></Grid>
+      </Grid>
     </>
   );
 };

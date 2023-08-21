@@ -20,7 +20,8 @@ import {
   Button,
   Radio,
   IconButton,
-  Collapse
+  Collapse,
+  InputLabel
 } from '@mui/material';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
@@ -654,7 +655,7 @@ const Logs = () => {
     <>
       {' '}
       <Box className="listing-wrapper">
-        <Card>
+        <Card className="filter">
           <CardContent>
             <Box>
               <Grid container spacing={2}>
@@ -663,10 +664,11 @@ const Logs = () => {
                     <Grid container spacing={2}>
                       <Grid item md={1.5} sm={6}>
                         <LocalizationProvider dateAdapter={AdapterMoment}>
+                          <InputLabel id="from">From</InputLabel>
                           <DesktopDatePicker
                             open={isDatePickerOpen1}
                             maxDate={moment()}
-                            label="From"
+                            labelId="from"
                             autoOk={true}
                             value={fromDate}
                             inputFormat="MM/DD/YY"
@@ -686,11 +688,12 @@ const Logs = () => {
                         </LocalizationProvider>
                       </Grid>
                       <Grid item md={1.5} sm={6}>
+                        <InputLabel id="to">To</InputLabel>
                         <LocalizationProvider dateAdapter={AdapterMoment}>
                           <DesktopDatePicker
+                            labelId="to"
                             open={isDatePickerOpen2}
                             maxDate={moment()}
-                            label="To"
                             value={toDate}
                             inputFormat="MM/DD/YY"
                             onClose={() => setIsDatePickerOpen2(false)}
@@ -710,7 +713,9 @@ const Logs = () => {
                         <Grid />
                       </Grid>
                       <Grid item md={3} sm={6}>
+                        <InputLabel id="location">Location</InputLabel>
                         <Autocomplete
+                          labelId="location"
                           multiple
                           limitTags={1}
                           id="tags-standard"
@@ -743,7 +748,6 @@ const Logs = () => {
                           renderInput={(params) => (
                             <TextField
                               {...params}
-                              label="location"
                               fullWidth
                               error={selectedLocation?.length == 0 ? true : false}
                               InputProps={{
@@ -762,7 +766,9 @@ const Logs = () => {
                         />
                       </Grid>
                       <Grid item md={3} sm={6}>
+                        <InputLabel id="type">Type</InputLabel>
                         <Autocomplete
+                          labelId="type"
                           limitTags={1}
                           id="tags-standard"
                           options={types}
@@ -786,7 +792,6 @@ const Logs = () => {
                           renderInput={(params) => (
                             <TextField
                               {...params}
-                              label="type"
                               fullWidth
                               InputProps={{
                                 ...params.InputProps,
@@ -804,7 +809,9 @@ const Logs = () => {
                         />
                       </Grid>
                       <Grid item md={3} sm={6}>
+                        <InputLabel id="action">Action</InputLabel>
                         <Autocomplete
+                          labelId="action"
                           multiple
                           limitTags={1}
                           id="tags-standard"
@@ -843,7 +850,6 @@ const Logs = () => {
                           renderInput={(params) => (
                             <TextField
                               {...params}
-                              label="Action"
                               fullWidth
                               error={selectedAction?.length == 0 ? true : false}
                               InputProps={{
@@ -873,7 +879,9 @@ const Logs = () => {
                   <Box>
                     <Grid container spacing={2}>
                       <Grid item md={3} sm={6}>
+                        <InputLabel id="function">Function</InputLabel>
                         <Autocomplete
+                          labelId="function"
                           multiple
                           limitTags={1}
                           id="tags-standard"
@@ -903,7 +911,6 @@ const Logs = () => {
                           renderInput={(params) => (
                             <TextField
                               {...params}
-                              label="function"
                               fullWidth
                               error={selectedFunction?.length == 0 ? true : false}
                               InputProps={{
@@ -922,7 +929,9 @@ const Logs = () => {
                         />
                       </Grid>
                       <Grid item md={3} sm={6}>
+                        <InputLabel id="user_name">User Name</InputLabel>
                         <Autocomplete
+                          labelId="user_name"
                           multiple
                           limitTags={1}
                           id="tags-standard"
@@ -955,7 +964,6 @@ const Logs = () => {
                           renderInput={(params) => (
                             <TextField
                               {...params}
-                              label="User name"
                               fullWidth
                               InputProps={{
                                 ...params.InputProps,
@@ -974,7 +982,9 @@ const Logs = () => {
                       </Grid>
                       {selectedType == 'Access Log' ? (
                         <Grid item md={3} sm={6}>
+                          <InputLabel id="families">Families</InputLabel>
                           <Autocomplete
+                            labelId="families"
                             multiple
                             limitTags={1}
                             id="tags-standard"
@@ -1009,7 +1019,6 @@ const Logs = () => {
                             renderInput={(params) => (
                               <TextField
                                 {...params}
-                                label="Families"
                                 fullWidth
                                 InputProps={{
                                   ...params.InputProps,
@@ -1027,9 +1036,9 @@ const Logs = () => {
                           />
                         </Grid>
                       ) : null}
-                      <Grid item md={1.5} sm={6} sx={{ marginTop: '6px' }}>
+                      <Grid item md={1.5} sm={6} sx={{ marginTop: '10px' }}>
                         <Button
-                          className="add-btn"
+                          className="log-btn"
                           variant="outlined"
                           onClick={() => getLogsList()}>
                           Submit
@@ -1085,6 +1094,7 @@ const Logs = () => {
             </Box>
             {!csvGenerated && (
               <LoadingButton
+                className="log-btn"
                 loading={loading}
                 variant="outlined"
                 onClick={() => {
@@ -1096,7 +1106,9 @@ const Logs = () => {
             {csvGenerated && (
               <>
                 <CSVLink data={responseData ? responseData : []}>
-                  <LoadingButton variant="outlined">DownLoad CSV</LoadingButton>
+                  <LoadingButton className="log-btn" variant="outlined">
+                    DownLoad CSV
+                  </LoadingButton>
                 </CSVLink>
               </>
             )}

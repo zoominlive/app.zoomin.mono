@@ -428,6 +428,10 @@ const Rooms = () => {
               </Grid>
             </Grid>
           </Box>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardContent>
           <Box mt={2} sx={{ position: 'relative' }}>
             <Loader loading={isLoading} />
             <TableContainer component={Paper}>

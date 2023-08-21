@@ -7,6 +7,7 @@ import {
   Chip,
   FormControl,
   Grid,
+  InputAdornment,
   InputLabel,
   MenuItem,
   Paper,
@@ -28,7 +29,7 @@ import { Plus } from 'react-feather';
 import LayoutContext from '../../context/layoutcontext';
 import UserForm from './userform';
 import UserActions from './useractions';
-import DeleteDialog from '../common/deletedialog';
+// import DeleteDialog from '../common/deletedialog';
 import API from '../../api';
 import { errorMessageHandler } from '../../utils/errormessagehandler';
 import AuthContext from '../../context/authcontext';
@@ -36,6 +37,8 @@ import { useSnackbar } from 'notistack';
 import Loader from '../common/loader';
 import debounce from 'lodash.debounce';
 import NoDataDiv from '../common/nodatadiv';
+import SearchIcon from '@mui/icons-material/Search';
+import NewDeleteDialog from '../common/newdeletedialog';
 
 const Users = () => {
   const layoutCtx = useContext(LayoutContext);
@@ -60,7 +63,7 @@ const Users = () => {
 
   useEffect(() => {
     layoutCtx.setActive(4);
-    layoutCtx.setBreadcrumb(['Users']);
+    layoutCtx.setBreadcrumb(['Users', 'Manage Families and their camera authorization']);
     return () => {
       authCtx.setPreviosPagePath(window.location.pathname);
     };
@@ -188,7 +191,7 @@ const Users = () => {
 
   return (
     <Box className="listing-wrapper">
-      <Card>
+      <Card className="filter">
         <CardContent>
           <Box>
             <Grid container spacing={2}>
@@ -196,20 +199,27 @@ const Users = () => {
                 <Box>
                   <Grid container spacing={2}>
                     <Grid item md={4} sm={12}>
+                      <InputLabel id="search">Search</InputLabel>
                       <TextField
-                        label="Search"
+                        labelId="search"
                         placeholder="User Name,Email"
                         onChange={debouncedResults}
+                        InputProps={{
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <SearchIcon />
+                            </InputAdornment>
+                          )
+                        }}
                       />
                     </Grid>
                     <Grid item md={3} sm={12}>
+                      <InputLabel id="location">Location</InputLabel>
                       <FormControl fullWidth className="location-select">
-                        <InputLabel id="location">Location</InputLabel>
                         <Select
                           labelId="location"
                           id="location"
                           value={usersPayload?.location}
-                          label="Location"
                           onChange={handleLocationChange}>
                           <MenuItem value={'All'}>All</MenuItem>
                           {authCtx?.user?.location?.accessable_locations
@@ -223,13 +233,12 @@ const Users = () => {
                       </FormControl>
                     </Grid>
                     <Grid item md={3} sm={12}>
+                      <InputLabel id="role">Role</InputLabel>
                       <FormControl fullWidth>
-                        <InputLabel id="role">Role</InputLabel>
                         <Select
                           labelId="role"
                           id="role"
                           value={usersPayload?.role}
-                          label="Role"
                           onChange={handleRoleChange}>
                           <MenuItem value={'All'}>All</MenuItem>
                           <MenuItem value={'Admin'}>Admin</MenuItem>
@@ -239,13 +248,12 @@ const Users = () => {
                       </FormControl>
                     </Grid>
                     <Grid item md={2} sm={12}>
+                      <InputLabel id="live_streaming">Live Streaming</InputLabel>
                       <FormControl fullWidth>
-                        <InputLabel id="live_streaming">Live Streaming</InputLabel>
                         <Select
                           labelId="live_streaming"
                           id="live_streaming"
                           value={usersPayload?.liveStreaming}
-                          label="Live Streaming"
                           onChange={handleLiveStreamChange}>
                           <MenuItem value={'All'}>All</MenuItem>
                           <MenuItem value={'Yes'}>Yes</MenuItem>
@@ -263,7 +271,7 @@ const Users = () => {
                 sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
                 <Box>
                   <Button
-                    className="add-btn"
+                    className="add-button"
                     variant="contained"
                     startIcon={<Plus />}
                     onClick={() => setIsUserFormDialogOpen(true)}>
@@ -274,7 +282,10 @@ const Users = () => {
               </Grid>
             </Grid>
           </Box>
-
+        </CardContent>
+      </Card>
+      <Card>
+        <CardContent>
           <Box mt={2} position="relative">
             <Loader loading={isLoading} />
             <TableContainer component={Paper}>
@@ -297,11 +308,15 @@ const Users = () => {
                         <TableRow key={index} hover>
                           <TableCell component="th" scope="row">
                             <Stack direction="row" alignItems="center" spacing={3}>
-                              {row.profile_image ? (
-                                <Avatar src={row.profile_image} />
-                              ) : (
-                                <Avatar>{`${row.first_name[0].toUpperCase()}${row.last_name[0].toUpperCase()}`}</Avatar>
-                              )}
+                              <Box className="viewer-profile">
+                                <Box className="profile-img">
+                                  {row.profile_image ? (
+                                    <Avatar src={row.profile_image} />
+                                  ) : (
+                                    <Avatar>{`${row.first_name[0].toUpperCase()}${row.last_name[0].toUpperCase()}`}</Avatar>
+                                  )}
+                                </Box>
+                              </Box>
                               <Typography>{`${row.first_name[0].toUpperCase()}${row.first_name.slice(
                                 1
                               )} ${row.last_name[0].toUpperCase()}${row.last_name.slice(
@@ -314,7 +329,12 @@ const Users = () => {
                               {row.location?.selected_locations
                                 ?.sort((a, b) => (a > b ? 1 : -1))
                                 .map((location, index) => (
-                                  <Chip key={index} label={location} color="primary" />
+                                  <Chip
+                                    key={index}
+                                    label={location}
+                                    color="primary"
+                                    className="chip-color"
+                                  />
                                 ))}
                             </Stack>
                           </TableCell>
@@ -362,10 +382,22 @@ const Users = () => {
           getUsersList={getUsersList}
         />
       )}
-      <DeleteDialog
+      {/* <DeleteDialog
         open={isDeleteDialogOpen}
         title="Delete User"
         contentText={'Are you sure you want to delete this user?'}
+        loading={deleteLoading}
+        handleDialogClose={() => {
+          setUser();
+          setIsDeleteDialogOpen(false);
+        }}
+        handleDelete={handleUserDelete}
+      /> */}
+
+      <NewDeleteDialog
+        open={isDeleteDialogOpen}
+        title="Delete User"
+        contentText="Are you sure you want to delete this user?"
         loading={deleteLoading}
         handleDialogClose={() => {
           setUser();

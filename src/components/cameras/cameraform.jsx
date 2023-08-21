@@ -2,14 +2,17 @@ import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import {
   Autocomplete,
-  Button,
+  // Button,
   Chip,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
   Divider,
+  // Divider,
   Grid,
+  IconButton,
+  InputLabel,
   TextField
 } from '@mui/material';
 import { Form, Formik } from 'formik';
@@ -21,6 +24,7 @@ import { useSnackbar } from 'notistack';
 import { errorMessageHandler } from '../../utils/errormessagehandler';
 import { useContext } from 'react';
 import AuthContext from '../../context/authcontext';
+import CloseIcon from '@mui/icons-material/Close';
 
 const validationSchema = yup.object({
   cam_name: yup.string('Enter camera name').required('Camera name is required'),
@@ -92,7 +96,24 @@ const CameraForm = (props) => {
 
   return (
     <Dialog open={props.open} onClose={handleFormDialogClose} fullWidth className="add-user-drawer">
-      <DialogTitle>{props.camera ? 'Edit Camera' : 'Add Camera'}</DialogTitle>
+      <DialogTitle sx={{ paddingTop: 3.5 }}>
+        {props.camera ? 'Edit Camera' : 'Add Camera'}
+        {/* <DialogContentText>
+          Please select which stream you want to watch on your dashboard
+        </DialogContentText> */}
+        <IconButton
+          aria-label="close"
+          onClick={() => {
+            handleFormDialogClose();
+          }}
+          sx={{
+            position: 'absolute',
+            right: 18,
+            top: 30
+          }}>
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
       <Divider />
       <Formik
         enableReinitialize
@@ -111,8 +132,9 @@ const CameraForm = (props) => {
               <DialogContent>
                 <Grid container spacing={2}>
                   <Grid item md={6} xs={12}>
+                    <InputLabel id="cam_name">Camera Name</InputLabel>
                     <TextField
-                      label="Camera Name"
+                      labelId="cam_name"
                       name="cam_name"
                       value={values?.cam_name}
                       onChange={(event) => {
@@ -124,8 +146,9 @@ const CameraForm = (props) => {
                     />
                   </Grid>
                   <Grid item md={6} xs={12}>
+                    <InputLabel id="cam_uri">URL</InputLabel>
                     <TextField
-                      label="URL"
+                      labelId="cam_uri"
                       name="cam_uri"
                       value={values?.cam_uri}
                       onChange={(event) => {
@@ -137,8 +160,9 @@ const CameraForm = (props) => {
                     />
                   </Grid>
                   <Grid item md={6} xs={12}>
+                    <InputLabel id="description">description</InputLabel>
                     <TextField
-                      label="Description"
+                      labelId="description"
                       name="description"
                       value={values?.description}
                       onChange={(event) => {
@@ -150,7 +174,9 @@ const CameraForm = (props) => {
                     />
                   </Grid>
                   <Grid item md={6} xs={12}>
+                    <InputLabel id="location">Location</InputLabel>
                     <Autocomplete
+                      labelId="location"
                       fullWidth
                       id="location"
                       options={
@@ -172,8 +198,7 @@ const CameraForm = (props) => {
                       renderInput={(params) => (
                         <TextField
                           {...params}
-                          label="Location"
-                          placeholder="Location"
+                          // placeholder="Location"
                           helperText={touched.location && errors.location}
                           error={touched.location && Boolean(errors.location)}
                           fullWidth
@@ -183,12 +208,12 @@ const CameraForm = (props) => {
                   </Grid>
                 </Grid>
               </DialogContent>
-              <Divider />
-              <DialogActions>
-                <Button disabled={submitLoading} variant="text" onClick={handleFormDialogClose}>
+              <DialogActions sx={{ paddingRight: 4, paddingBottom: 3 }}>
+                {/* <Button disabled={submitLoading} variant="text" onClick={handleFormDialogClose}>
                   CANCEL
-                </Button>
+                </Button> */}
                 <LoadingButton
+                  className="add-btn save-changes-btn"
                   loading={submitLoading}
                   loadingPosition={submitLoading ? 'start' : undefined}
                   startIcon={submitLoading && <SaveIcon />}

@@ -26,6 +26,7 @@ import {
   FormHelperText,
   IconButton
 } from '@mui/material';
+import { Plus } from 'react-feather';
 import { FieldArray, Form, Formik } from 'formik';
 import * as yup from 'yup';
 import { LoadingButton } from '@mui/lab';
@@ -37,7 +38,7 @@ import { useContext } from 'react';
 import AuthContext from '../../context/authcontext';
 import _ from 'lodash';
 import PhoneNumberInput from '../common/phonenumberinput';
-import AddIcon from '@mui/icons-material/Add';
+// import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 
 const STEPS = ['Customer', 'Customer Locations', 'User'];
@@ -46,7 +47,7 @@ const CustomerForm = (props) => {
   const { enqueueSnackbar } = useSnackbar();
   const [submitLoading, setSubmitLoading] = useState(false);
   // const [selectedRole, setSelectedRole] = useState(null);
-  const [activeStep, setActiveStep] = useState(0);
+  const [activeStep, setActiveStep] = useState(2);
   const [roomList, setRoomList] = useState([]);
   const [selectedLocation, setSelectedLocation] = useState([]);
 
@@ -220,8 +221,9 @@ const CustomerForm = (props) => {
         return (
           <Grid container spacing={2}>
             <Grid item md={6} xs={12}>
+              <InputLabel id="first_name">First Name</InputLabel>
               <TextField
-                label="First Name"
+                labelId="first_name"
                 name="first_name"
                 value={values?.customer_first_name}
                 onChange={(event) => {
@@ -233,8 +235,9 @@ const CustomerForm = (props) => {
               />
             </Grid>
             <Grid item md={6} xs={12}>
+              <InputLabel id="last_name">Last Name</InputLabel>
               <TextField
-                label="Last Name"
+                labelId="last_name"
                 name="last_name"
                 value={values?.customer_last_name}
                 onChange={(event) => {
@@ -246,8 +249,9 @@ const CustomerForm = (props) => {
               />
             </Grid>
             <Grid item md={6} xs={12}>
+              <InputLabel id="company_name">Company Name</InputLabel>
               <TextField
-                label="Company Name"
+                labelId="company_name"
                 name="company_name"
                 value={values?.company_name}
                 onChange={(event) => {
@@ -259,9 +263,10 @@ const CustomerForm = (props) => {
               />
             </Grid>
             <Grid item md={6} xs={12}>
+              <InputLabel id="phone">Phone</InputLabel>
               <TextField
+                labelId="phone"
                 name={'phone'}
-                label="Phone"
                 value={values?.phone || ''}
                 onChange={(event) => {
                   setFieldValue('phone', event.target.value ? event.target.value : '');
@@ -273,8 +278,9 @@ const CustomerForm = (props) => {
               />
             </Grid>
             <Grid item md={12} xs={12}>
+              <InputLabel id="address_1">Address 1</InputLabel>
               <TextField
-                label="Address 1"
+                labelId="address_1"
                 name="address_1"
                 value={values?.address_1}
                 onChange={(event) => {
@@ -286,8 +292,9 @@ const CustomerForm = (props) => {
               />
             </Grid>
             <Grid item md={12} xs={12}>
+              <InputLabel id="address_2">Address 2</InputLabel>
               <TextField
-                label="Address 2"
+                labelId="address_2"
                 name="address_2"
                 value={values?.address_2}
                 onChange={(event) => {
@@ -299,8 +306,9 @@ const CustomerForm = (props) => {
               />
             </Grid>
             <Grid item md={4} xs={12}>
+              <InputLabel id="city">City</InputLabel>
               <TextField
-                label="City"
+                labelId="city"
                 name="city"
                 value={values?.city}
                 onChange={(event) => {
@@ -312,8 +320,9 @@ const CustomerForm = (props) => {
               />
             </Grid>
             <Grid item md={4} xs={12}>
+              <InputLabel id="country">Address 2</InputLabel>
               <TextField
-                label="Country"
+                labelId="country"
                 name="country"
                 value={values?.country}
                 onChange={(event) => {
@@ -325,8 +334,9 @@ const CustomerForm = (props) => {
               />
             </Grid>
             <Grid item md={4} xs={12}>
+              <InputLabel id="postal">Postal</InputLabel>
               <TextField
-                label="Postal"
+                labelId="postal"
                 name="postal"
                 value={values?.postal}
                 onChange={(event) => {
@@ -338,7 +348,9 @@ const CustomerForm = (props) => {
               />
             </Grid>
             <Grid item md={4} xs={12}>
+              <InputLabel id="max_cameras">Maximum Cameras</InputLabel>
               <TextField
+                labelId="max_cameras"
                 type="number"
                 InputProps={{
                   inputProps: { min: 0 }
@@ -348,7 +360,6 @@ const CustomerForm = (props) => {
                     event.preventDefault();
                   }
                 }}
-                label="Maximum Cameras"
                 name="max_cameras"
                 value={values?.max_cameras}
                 onChange={(event) => {
@@ -360,7 +371,9 @@ const CustomerForm = (props) => {
               />
             </Grid>
             <Grid item md={4} xs={12}>
+              <InputLabel id="available_cameras">Available Cameras</InputLabel>
               <TextField
+                labelId="available_cameras"
                 type="number"
                 InputProps={{
                   inputProps: { min: 0 }
@@ -370,7 +383,6 @@ const CustomerForm = (props) => {
                     event.preventDefault();
                   }
                 }}
-                label="Available Cameras"
                 name="available_cameras"
                 value={values?.available_cameras}
                 onChange={(event) => {
@@ -382,7 +394,9 @@ const CustomerForm = (props) => {
               />
             </Grid>
             <Grid item md={4} xs={12}>
+              <InputLabel id="max_locations">Maximum Locations</InputLabel>
               <TextField
+                labelId="max_locations"
                 type="number"
                 InputProps={{
                   inputProps: { min: 0 }
@@ -392,7 +406,6 @@ const CustomerForm = (props) => {
                     event.preventDefault();
                   }
                 }}
-                label="Maximum Locations"
                 name="max_locations"
                 value={values?.max_locations}
                 onChange={(event) => {
@@ -405,8 +418,9 @@ const CustomerForm = (props) => {
             </Grid>
 
             <Grid item xs={12} md={12}>
+              <InputLabel id="transcoder_endpoint">Tanscoder Endpoint</InputLabel>
               <TextField
-                label="Tanscoder Endpoint"
+                labelId="transcoder_endpoint"
                 name="transcoder_endpoint"
                 value={values?.transcoder_endpoint}
                 onChange={(event) => {
@@ -418,8 +432,9 @@ const CustomerForm = (props) => {
               />
             </Grid>
             <Grid item xs={12} md={12}>
+              <InputLabel id="rtmp_transcoder_endpoint">RTMP Tanscoder Endpoint</InputLabel>
               <TextField
-                label="RTMP Tanscoder Endpoint"
+                labelId="rtmp_transcoder_endpoint"
                 name="rtmp_transcoder_endpoint"
                 value={values?.rtmp_transcoder_endpoint}
                 onChange={(event) => {
@@ -431,7 +446,9 @@ const CustomerForm = (props) => {
               />
             </Grid>
             <Grid item md={6} xs={12}>
+              <InputLabel id="timeout">Timeout</InputLabel>
               <TextField
+                labelId="timeout"
                 type="number"
                 onKeyPress={(event) => {
                   if (event?.key === '-' || event?.key === '+') {
@@ -450,7 +467,9 @@ const CustomerForm = (props) => {
               />
             </Grid>
             <Grid item md={6} xs={12}>
+              <InputLabel id="max_stream_live_license">Maximum Stream Live License</InputLabel>
               <TextField
+                labelId="max_stream_live_license"
                 type="number"
                 InputProps={{
                   inputProps: { min: 0 }
@@ -460,7 +479,6 @@ const CustomerForm = (props) => {
                     event.preventDefault();
                   }
                 }}
-                label="Maximum Stream Live License"
                 name="max_stream_live_license"
                 value={values?.max_stream_live_license}
                 onChange={(event) => {
@@ -511,7 +529,11 @@ const CustomerForm = (props) => {
                         )}
                         <Grid container spacing={2}>
                           <Grid item md={4} sm={12}>
+                            <InputLabel id={`customer_locations.${index}.loc_name`}>
+                              Location Name
+                            </InputLabel>
                             <TextField
+                              labelId={`customer_locations.${index}.loc_name`}
                               name={`customer_locations.${index}.loc_name`}
                               value={values?.customer_locations[index]?.loc_name}
                               onChange={(event) => {
@@ -520,7 +542,6 @@ const CustomerForm = (props) => {
                                   event.target.value
                                 );
                               }}
-                              label="Location Name"
                               helperText={
                                 touched &&
                                 touched.customer_locations &&
@@ -561,7 +582,7 @@ const CustomerForm = (props) => {
                   <Box className="row-button-wrapper" justifyContent="flex-end" mt={2}>
                     <Button
                       variant="contained"
-                      endIcon={<AddIcon />}
+                      endIcon={<Plus />}
                       className="row-add-btn"
                       onClick={() => {
                         arrayHelpers.push({ loc_name: '' });
@@ -578,8 +599,9 @@ const CustomerForm = (props) => {
         return (
           <Grid container spacing={2}>
             <Grid item md={6} xs={12}>
+              <InputLabel id="first_name">First Name</InputLabel>
               <TextField
-                label="First Name"
+                labelId="first_name"
                 name="first_name"
                 value={values?.first_name}
                 onChange={(event) => {
@@ -591,8 +613,9 @@ const CustomerForm = (props) => {
               />
             </Grid>
             <Grid item md={6} xs={12}>
+              <InputLabel id="last_name">Last Name</InputLabel>
               <TextField
-                label="Last Name"
+                labelId="last_name"
                 name="last_name"
                 value={values?.last_name}
                 onChange={(event) => {
@@ -604,8 +627,9 @@ const CustomerForm = (props) => {
               />
             </Grid>
             <Grid item md={6} xs={12}>
+              <InputLabel id="email">Email</InputLabel>
               <TextField
-                label="Email"
+                labelId="email"
                 name="email"
                 value={values?.email}
                 onChange={(event) => {
@@ -617,8 +641,8 @@ const CustomerForm = (props) => {
               />
             </Grid>
             <Grid item md={6} xs={12}>
+              <InputLabel id="user-role">Role</InputLabel>
               <FormControl fullWidth error={touched.role && Boolean(errors.role)}>
-                <InputLabel id="user-role">Role</InputLabel>
                 <Select
                   labelId="user-role"
                   id="user-role"
@@ -641,7 +665,9 @@ const CustomerForm = (props) => {
               </FormControl>
             </Grid>
             <Grid item xs={12} md={values.role === 'Teacher' ? 6 : 12}>
+              <InputLabel id="location">Location</InputLabel>
               <Autocomplete
+                labelId="location"
                 fullWidth
                 multiple
                 id="location"
@@ -666,8 +692,7 @@ const CustomerForm = (props) => {
                 renderInput={(params) => (
                   <TextField
                     {...params}
-                    label="Location"
-                    placeholder="Location"
+                    // placeholder="Location"
                     helperText={touched.location && errors.location}
                     error={touched.location && Boolean(errors.location)}
                     fullWidth
@@ -677,7 +702,9 @@ const CustomerForm = (props) => {
             </Grid>
             {values.role === 'Teacher' && (
               <Grid item xs={12} md={6}>
+                <InputLabel id="rooms">Room</InputLabel>
                 <Autocomplete
+                  labelId="rooms"
                   fullWidth
                   multiple
                   id="rooms"
@@ -705,8 +732,7 @@ const CustomerForm = (props) => {
                   renderInput={(params) => (
                     <TextField
                       {...params}
-                      label="Room"
-                      placeholder="Room"
+                      // placeholder="Room"
                       helperText={touched.rooms && errors.rooms}
                       error={touched.rooms && Boolean(errors.rooms)}
                       fullWidth

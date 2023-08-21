@@ -71,7 +71,7 @@ const Dashboard = () => {
   const [selectedCamera, setSelectedCamera] = useState({});
   const [openWatchStreamDialog, setOpenWatchStreamDialog] = useState(false);
   const [timeOut, setTimeOut] = useState(2);
-  const [playing, setPlaying] = useState(false);
+  const [playing, setPlaying] = useState(true);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [defaultWatchStream, setDefaultWatchStream] = useState(null);
   const [openMapDialog, setOpenMapDialog] = useState(false);

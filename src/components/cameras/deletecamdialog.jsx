@@ -1,17 +1,19 @@
 import { LoadingButton } from '@mui/lab';
 import {
-  Button,
   Checkbox,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
-  Divider,
-  FormControlLabel
+  FormControlLabel,
+  IconButton
 } from '@mui/material';
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import SaveIcon from '@mui/icons-material/Save';
+import CloseIcon from '@mui/icons-material/Close';
+import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 
 const DeleteCamDialog = (props) => {
   const [wait, setWait] = useState(false);
@@ -23,34 +25,45 @@ const DeleteCamDialog = (props) => {
           props.handleDialogClose();
         }
       }}>
-      <DialogTitle>Delete Camera</DialogTitle>
-      <Divider />
-      <DialogContent>
-        <FormControlLabel
-          control={<Checkbox onChange={(event) => setWait(event.target.checked)} />}
-          label="Wait until no one is watching the stream before removing."
-        />
-      </DialogContent>
-      <Divider />
-      <DialogActions>
-        <Button
-          disabled={props.loading}
-          variant="text"
+      <DialogTitle sx={{ paddingTop: 3.5 }}>
+        Delete Camera
+        <IconButton
+          aria-label="close"
           onClick={() => {
             if (!props.loading) {
               props.handleDialogClose();
             }
+          }}
+          sx={{
+            position: 'absolute',
+            right: 18,
+            top: 30
           }}>
-          CANCEL
-        </Button>
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
 
+      <DialogContent>
+        <FormControlLabel
+          control={
+            <Checkbox
+              onChange={(event) => setWait(event.target.checked)}
+              icon={<RadioButtonUncheckedIcon />}
+              checkedIcon={<CheckCircleIcon />}
+            />
+          }
+          label="Wait until no one is watching the stream before removing."
+        />
+      </DialogContent>
+      <DialogActions sx={{ paddingRight: 4, paddingBottom: 3 }}>
         <LoadingButton
+          className="add-btn delete-btn"
           loading={props.loading}
           loadingPosition={props.loading ? 'start' : undefined}
           startIcon={props.loading && <SaveIcon />}
           variant="text"
           onClick={() => props.handleCamDelete(wait)}>
-          YES
+          Delete
         </LoadingButton>
       </DialogActions>
     </Dialog>

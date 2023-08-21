@@ -355,7 +355,8 @@ const RoomForm = (props) => {
                   startIcon={submitLoading && <SaveIcon />}
                   variant="text"
                   type="submit">
-                  {props?.room?.room_id ? 'Save Changes' : 'Save Room'}
+                  {/* {props?.room?.room_id ? 'Save Changes' : 'Save Room'} */}
+                  Save Room
                 </LoadingButton>
               </DialogActions>
             </Form>

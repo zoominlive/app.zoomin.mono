@@ -1,7 +1,7 @@
 import { Box, IconButton } from '@mui/material';
-import DeleteIcon from '@mui/icons-material/Delete';
 import React from 'react';
 import PropTypes from 'prop-types';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 
 const CameraActions = (props) => {
   // Method to close the user actions on table
@@ -21,10 +21,10 @@ const CameraActions = (props) => {
     <Box>
       <IconButton
         aria-label="delete"
-        className="row-delete-btn"
-        color="error"
+        className="cam-delete-btn"
+        color="default"
         onClick={handleCameraDelete}>
-        <DeleteIcon />
+        <DeleteOutlineIcon />
       </IconButton>
     </Box>
   );

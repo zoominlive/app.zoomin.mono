@@ -24,7 +24,8 @@ import {
   Grid,
   Autocomplete,
   CircularProgress,
-  Tooltip
+  Tooltip,
+  InputAdornment
 } from '@mui/material';
 import React, { useContext, useEffect, useMemo } from 'react';
 import { useState } from 'react';
@@ -48,6 +49,7 @@ import Loader from '../common/loader';
 import { capitalizeFirstLetter } from '../../utils/capitalizefirstletter';
 import dayjs from 'dayjs';
 import NoDataDiv from '../common/nodatadiv';
+import SearchIcon from '@mui/icons-material/Search';
 
 const Families = () => {
   const layoutCtx = useContext(LayoutContext);
@@ -291,6 +293,13 @@ const Families = () => {
                       labelId="search"
                       placeholder={'Family Member Name, Child Name'}
                       onChange={familesListDebounce}
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <SearchIcon />
+                          </InputAdornment>
+                        )
+                      }}
                     />
                   </Grid>
                   <Grid item md={3.5} sm={12}>
@@ -335,7 +344,7 @@ const Families = () => {
                           {...params}
                           // label="Room"
                           fullWidth
-                          placeholder="Room"
+                          placeholder="Rooms"
                           InputProps={{
                             ...params.InputProps,
                             endAdornment: (

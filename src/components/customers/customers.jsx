@@ -5,6 +5,8 @@ import {
   Card,
   CardContent,
   Grid,
+  InputAdornment,
+  InputLabel,
   Paper,
   Stack,
   Table,
@@ -29,7 +31,8 @@ import debounce from 'lodash.debounce';
 import { Plus } from 'react-feather';
 import CustomerForm from './customerform';
 import CustomerActions from './customeractions';
-import DeleteDialog from '../common/deletedialog';
+import NewDeleteDialog from '../common/newdeletedialog';
+import SearchIcon from '@mui/icons-material/Search';
 
 const Customers = () => {
   const authCtx = useContext(AuthContext);
@@ -159,7 +162,7 @@ const Customers = () => {
   };
   return (
     <Box className="listing-wrapper">
-      <Card>
+      <Card className="filter">
         <CardContent>
           <Box>
             <Grid container spacing={2}>
@@ -167,10 +170,18 @@ const Customers = () => {
                 <Box>
                   <Grid container spacing={2}>
                     <Grid item md={5} sm={12}>
+                      <InputLabel id="search">Search</InputLabel>
                       <TextField
-                        label="Search"
+                        labelId="search"
                         placeholder="Customer Name,Email"
                         onChange={debouncedResults}
+                        InputProps={{
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <SearchIcon />
+                            </InputAdornment>
+                          )
+                        }}
                       />
                     </Grid>
                   </Grid>
@@ -183,7 +194,7 @@ const Customers = () => {
                 sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
                 <Box>
                   <Button
-                    className="add-btn"
+                    className="add-button"
                     variant="contained"
                     startIcon={<Plus />}
                     onClick={() => setIsCustomerFormDialogOpen(true)}>
@@ -270,7 +281,7 @@ const Customers = () => {
           getCustomersList={getCustomersList}
         />
       )}
-      <DeleteDialog
+      <NewDeleteDialog
         open={isDeleteDialogOpen}
         title="Delete Customer"
         contentText={'Are you sure you want to delete this customer?'}

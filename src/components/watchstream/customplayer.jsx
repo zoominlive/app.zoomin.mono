@@ -9,7 +9,6 @@ import Loader from '../common/loader';
 import { useContext } from 'react';
 import AuthContext from '../../context/authcontext';
 import _ from 'lodash';
-const { v4: uuidv4 } = require('uuid');
 
 const CustomPlayer = (props) => {
   const authCtx = useContext(AuthContext);
@@ -68,7 +67,6 @@ const CustomPlayer = (props) => {
     screenfull.toggle(playerContainerRef.current);
     setFullScreen((fullscreen) => !fullscreen);
   };
-
   return (
     <>
       {!_.isEmpty(url) && (
@@ -83,18 +81,23 @@ const CustomPlayer = (props) => {
               props?.camDetails?.cam_name}
           </label>
           <ReactPlayer
+            // url={
+            //   props.streamUri.includes('https://live.zoominlive.com')
+            //     ? `${props?.streamUri}?uid=${
+            //         authCtx?.user?.family_member_id || authCtx?.user?.user_id
+            //       }&sid=${
+            //         props?.streamUri
+            //           .split('/')
+            //           [props?.streamUri.split('/').length - 1].split('.')[0]
+            //       }&uuid=${uuidv4()}`
+            //     : `${authCtx.user.transcoderBaseUrl}${props?.streamUri}?uid=${
+            //         authCtx?.user?.family_member_id || authCtx?.user?.user_id
+            //       }&sid=${props?.cam_id}&uuid=${uuidv4()}`
+            // }
             url={
               props.streamUri.includes('https://live.zoominlive.com')
-                ? `${props?.streamUri}?uid=${
-                    authCtx?.user?.family_member_id || authCtx?.user?.user_id
-                  }&sid=${
-                    props?.streamUri
-                      .split('/')
-                      [props?.streamUri.split('/').length - 1].split('.')[0]
-                  }&uuid=${uuidv4()}`
-                : `${authCtx.user.transcoderBaseUrl}${props?.streamUri}?uid=${
-                    authCtx?.user?.family_member_id || authCtx?.user?.user_id
-                  }&sid=${props?.cam_id}&uuid=${uuidv4()}`
+                ? props?.streamUri
+                : `${authCtx.user.transcoderBaseUrl}${props?.streamUri}`
             }
             className="react-player"
             height={'100%'}

@@ -4,18 +4,19 @@ import PropTypes from 'prop-types';
 import {
   Autocomplete,
   Avatar,
-  Button,
   Checkbox,
   Chip,
   Dialog,
   DialogActions,
   DialogContent,
+  DialogContentText,
   DialogTitle,
   Divider,
   FormControl,
   FormControlLabel,
   FormHelperText,
   Grid,
+  IconButton,
   InputLabel,
   MenuItem,
   Select,
@@ -36,6 +37,7 @@ import { errorMessageHandler } from '../../utils/errormessagehandler';
 import { useContext } from 'react';
 import AuthContext from '../../context/authcontext';
 import _ from 'lodash';
+import CloseIcon from '@mui/icons-material/Close';
 
 const UserForm = (props) => {
   const { enqueueSnackbar } = useSnackbar();
@@ -222,7 +224,21 @@ const UserForm = (props) => {
     : [];
   return (
     <Dialog open={props.open} onClose={handleFormDialogClose} fullWidth className="add-user-drawer">
-      <DialogTitle>{props.user ? 'Edit User' : 'Add User'}</DialogTitle>
+      <DialogTitle sx={{ paddingTop: 3.5 }}>
+        {props.user ? 'Edit User' : 'Add User'}
+        <DialogContentText></DialogContentText>
+        <IconButton
+          aria-label="close"
+          onClick={handleFormDialogClose}
+          sx={{
+            position: 'absolute',
+            right: 18,
+            top: 30
+          }}>
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
+
       <Divider />
       <Formik
         enableReinitialize
@@ -282,8 +298,9 @@ const UserForm = (props) => {
                 </Stack>
                 <Grid container spacing={2}>
                   <Grid item md={6} xs={12}>
+                    <InputLabel id="first_name">First Name</InputLabel>
                     <TextField
-                      label="First Name"
+                      labelId="first_name"
                       name="first_name"
                       value={values?.first_name}
                       onChange={(event) => {
@@ -295,8 +312,9 @@ const UserForm = (props) => {
                     />
                   </Grid>
                   <Grid item md={6} xs={12}>
+                    <InputLabel id="first_name">Last Name</InputLabel>
                     <TextField
-                      label="Last Name"
+                      labelId="last_name"
                       name="last_name"
                       value={values?.last_name}
                       onChange={(event) => {
@@ -308,8 +326,9 @@ const UserForm = (props) => {
                     />
                   </Grid>
                   <Grid item md={6} xs={12}>
+                    <InputLabel id="email">Email</InputLabel>
                     <TextField
-                      label="Email"
+                      labelId="email"
                       name="email"
                       value={values?.email}
                       onChange={(event) => {
@@ -321,8 +340,8 @@ const UserForm = (props) => {
                     />
                   </Grid>
                   <Grid item md={6} xs={12}>
+                    <InputLabel id="user-role">Role</InputLabel>
                     <FormControl fullWidth error={touched.role && Boolean(errors.role)}>
-                      <InputLabel id="user-role">Role</InputLabel>
                       <Select
                         labelId="user-role"
                         id="user-role"
@@ -345,7 +364,9 @@ const UserForm = (props) => {
                     </FormControl>
                   </Grid>
                   <Grid item xs={12} md={values.role === 'Teacher' ? 6 : 12}>
+                    <InputLabel id="locations">Location</InputLabel>
                     <Autocomplete
+                      labelId="locations"
                       fullWidth
                       multiple
                       id="locations"
@@ -382,8 +403,7 @@ const UserForm = (props) => {
                       renderInput={(params) => (
                         <TextField
                           {...params}
-                          label="Location"
-                          placeholder="Location"
+                          // placeholder="Location"
                           helperText={touched.locations && errors.locations}
                           error={touched.locations && Boolean(errors.locations)}
                           fullWidth
@@ -393,7 +413,9 @@ const UserForm = (props) => {
                   </Grid>
                   {values.role === 'Teacher' && (
                     <Grid item xs={12} md={6}>
+                      <InputLabel id="rooms">Rooms</InputLabel>
                       <Autocomplete
+                        labelId="rooms"
                         fullWidth
                         multiple
                         id="rooms"
@@ -425,8 +447,7 @@ const UserForm = (props) => {
                         renderInput={(params) => (
                           <TextField
                             {...params}
-                            label="Room"
-                            placeholder="Room"
+                            // placeholder="Room"
                             helperText={touched.rooms && errors.rooms}
                             error={touched.rooms && Boolean(errors.rooms)}
                             fullWidth
@@ -461,18 +482,19 @@ const UserForm = (props) => {
                   </Grid>
                 </Grid>
               </DialogContent>
-              <Divider />
-              <DialogActions>
-                <Button disabled={submitLoading} variant="text" onClick={handleFormDialogClose}>
+
+              <DialogActions sx={{ paddingRight: 4, paddingBottom: 3 }}>
+                {/* <Button disabled={submitLoading} variant="text" onClick={handleFormDialogClose}>
                   CANCEL
-                </Button>
+                </Button> */}
                 <LoadingButton
+                  className="add-btn save-changes-btn"
                   loading={submitLoading}
                   loadingPosition={submitLoading ? 'start' : undefined}
                   startIcon={submitLoading && <SaveIcon />}
                   variant="text"
                   type="submit">
-                  SAVE CHANGES
+                  Save Changes
                 </LoadingButton>
               </DialogActions>
             </Form>

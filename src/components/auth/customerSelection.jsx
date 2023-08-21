@@ -94,33 +94,35 @@ const CustomerSelection = () => {
               {({ values, setFieldValue, touched, errors }) => {
                 return (
                   <Form>
-                    <Stack spacing={3} my={4}>
-                      <FormControl fullWidth>
+                    <Stack spacing={3}>
+                      <Box mt={1}>
                         <InputLabel id="customer">Customer</InputLabel>
-                        <Select
-                          labelId="customer"
-                          id="customer"
-                          value={values?.role}
-                          label="Customer"
-                          name="customer"
-                          error={touched.customer && Boolean(errors.customer)}
-                          onChange={(event) => {
-                            setFieldValue('customer', event.target.value);
-                          }}>
-                          {customersList.map((i) => {
-                            return (
-                              <MenuItem value={i.cust_id} key={i.cust_id}>
-                                {i.company_name}{' '}
-                              </MenuItem>
-                            );
-                          })}
-                        </Select>
-                        {touched.customer && Boolean(errors.customer) && (
-                          <FormHelperText sx={{ color: '#d32f2f' }}>
-                            {touched.customer && errors.customer}
-                          </FormHelperText>
-                        )}
-                      </FormControl>
+                        <FormControl fullWidth>
+                          <Select
+                            labelId="customer"
+                            id="customer"
+                            value={values?.role}
+                            label="Customer"
+                            name="customer"
+                            error={touched.customer && Boolean(errors.customer)}
+                            onChange={(event) => {
+                              setFieldValue('customer', event.target.value);
+                            }}>
+                            {customersList.map((i) => {
+                              return (
+                                <MenuItem value={i.cust_id} key={i.cust_id}>
+                                  {i.company_name}{' '}
+                                </MenuItem>
+                              );
+                            })}
+                          </Select>
+                          {touched.customer && Boolean(errors.customer) && (
+                            <FormHelperText sx={{ color: '#d32f2f' }}>
+                              {touched.customer && errors.customer}
+                            </FormHelperText>
+                          )}
+                        </FormControl>
+                      </Box>
                       <LoadingButton
                         loading={submitLoading}
                         loadingPosition="center"

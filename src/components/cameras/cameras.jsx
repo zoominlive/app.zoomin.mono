@@ -6,6 +6,7 @@ import {
   Chip,
   FormControl,
   Grid,
+  InputAdornment,
   InputLabel,
   MenuItem,
   Paper,
@@ -33,9 +34,11 @@ import AuthContext from '../../context/authcontext';
 import { useSnackbar } from 'notistack';
 import Loader from '../common/loader';
 import debounce from 'lodash.debounce';
-import DeleteCamDialog from './deletecamdialog';
+// import DeleteCamDialog from './deletecamdialog';
 import NoDataDiv from '../common/nodatadiv';
-
+import SearchIcon from '@mui/icons-material/Search';
+// import NewDeleteDialog from '../common/newdeletedialog';
+import DeleteCamDialog from './deletecamdialog';
 const Cameras = () => {
   const layoutCtx = useContext(LayoutContext);
   const authCtx = useContext(AuthContext);
@@ -58,7 +61,7 @@ const Cameras = () => {
 
   useEffect(() => {
     layoutCtx.setActive(6);
-    layoutCtx.setBreadcrumb(['Cameras']);
+    layoutCtx.setBreadcrumb(['Cameras', 'Manage rooms and their camera authorization']);
     return () => {
       authCtx.setPreviosPagePath(window.location.pathname);
     };
@@ -95,6 +98,7 @@ const Cameras = () => {
 
   // Method to delete user
   const handleCameraDelete = (wait = false) => {
+    console.log('======wait====', wait);
     setDeleteLoading(true);
     API.delete('cams/delete', {
       data: { cam_id: camera.cam_id, wait: wait, streamId: camera.stream_uuid }
@@ -152,7 +156,7 @@ const Cameras = () => {
 
   return (
     <Box className="listing-wrapper">
-      <Card>
+      <Card className="filter">
         <CardContent>
           <Box>
             <Grid container spacing={2}>
@@ -160,20 +164,27 @@ const Cameras = () => {
                 <Box>
                   <Grid container spacing={2}>
                     <Grid item md={5} sm={12}>
+                      <InputLabel id="search">Search</InputLabel>
                       <TextField
-                        label="Search"
+                        labelId="search"
                         placeholder="Cam Name,Description"
                         onChange={debouncedResults}
+                        InputProps={{
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <SearchIcon />
+                            </InputAdornment>
+                          )
+                        }}
                       />
                     </Grid>
                     <Grid item md={3} sm={12}>
+                      <InputLabel id="location">Location</InputLabel>
                       <FormControl fullWidth className="location-select">
-                        <InputLabel id="location">Location</InputLabel>
                         <Select
                           labelId="location"
                           id="location"
                           value={camerasPayload?.location}
-                          label="Location"
                           onChange={handleLocationChange}>
                           <MenuItem value={'All'}>All</MenuItem>
                           {authCtx?.user?.location?.accessable_locations
@@ -196,7 +207,7 @@ const Cameras = () => {
                 sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
                 <Box>
                   <Button
-                    className="add-btn"
+                    className="add-button"
                     variant="contained"
                     startIcon={<Plus />}
                     onClick={() => setIsCameraFormDialogOpen(true)}>
@@ -207,7 +218,10 @@ const Cameras = () => {
               </Grid>
             </Grid>
           </Box>
-
+        </CardContent>
+      </Card>
+      <Card>
+        <CardContent>
           <Box mt={2} position="relative">
             <Loader loading={isLoading} />
             <TableContainer component={Paper}>
@@ -234,7 +248,12 @@ const Cameras = () => {
                           </TableCell>
                           <TableCell align="left">
                             <Stack direction="row">
-                              <Chip key={index} label={row.location} color="primary" />
+                              <Chip
+                                key={index}
+                                label={row.location}
+                                color="primary"
+                                className="chip-color"
+                              />
                             </Stack>
                           </TableCell>
                           <TableCell component="th" scope="row">
@@ -296,6 +315,18 @@ const Cameras = () => {
           setIsCameraDeleteDialogOpen(false);
         }}
         handleCamDelete={(e) => handleCameraDelete(e)}></DeleteCamDialog>
+
+      {/* <NewDeleteDialog
+        open={isCameraDeleteDialogOpen}
+        title="Delete Camera"
+        contentText="Wait until no one is watching the stream before removing."
+        loading={deleteLoading}
+        handleDialogClose={() => {
+          setCamera();
+          setIsCameraDeleteDialogOpen(false);
+        }}
+        handleDelete={(e) => handleCameraDelete(e)}
+      /> */}
     </Box>
   );
 };

@@ -5,19 +5,21 @@ import {
   Checkbox,
   Chip,
   Drawer,
-  FormControl,
+  //FormControl,
   List,
   ListItem,
   ListItemButton,
   ListItemIcon,
   ListItemText,
-  MenuItem,
-  Select,
+  //MenuItem,
+  //Select,
   Stack,
   Typography,
   TextField,
   InputAdornment,
-  CircularProgress
+  CircularProgress,
+  //InputLabel,
+  Grid
 } from '@mui/material';
 
 import logo from '../../assets/logo.svg';
@@ -62,9 +64,9 @@ const Layout = () => {
 
   const locs = ['Select All'];
   authCtx?.user?.location?.accessable_locations.forEach((loc) => locs.push(loc));
-  const handleChange = (event) => {
-    authCtx.setLocation(event.target.value);
-  };
+  // const handleChange = (event) => {
+  //   authCtx.setLocation(event.target.value);
+  // };
 
   useEffect(() => {
     setDropdownLoading(true);
@@ -365,27 +367,6 @@ const Layout = () => {
 
                 <Typography variant="h2">{layoutCtx?.breadcrumb[0]}</Typography>
               </Box>*/}
-
-              <Stack
-                direction={'row'}
-                justifyContent={'center'}
-                alignItems={'center'}
-                gap={2}
-                className="breadcrumb">
-                {layoutCtx?.breadcrumb?.length > 2 ? (
-                  <Avatar
-                    src={authCtx?.user?.profile_image}
-                    sx={{ width: 85, height: 85 }}
-                    alt='="profile-image'
-                  />
-                ) : null}
-                <Stack direction={'column'} spacing={0.5}>
-                  <Typography variant="h2">{layoutCtx?.breadcrumb[0]}</Typography>
-                  {layoutCtx?.breadcrumb?.length > 1 && (
-                    <Typography className="">{layoutCtx?.breadcrumb[1]}</Typography>
-                  )}
-                </Stack>
-              </Stack>
             </Box>
 
             {/* <FormControl fullWidth className="header-location">
@@ -407,88 +388,66 @@ const Layout = () => {
                 </Select>
                 
               </FormControl> */}
-            <Stack direction={'row'} gap={2} alignItems={'center'}>
-              <FormControl
-                fullWidth
-                className="location-select header-location"
-                sx={{ display: 'none' }}>
-                {/* <InputLabel id="location">Location</InputLabel> */}
-                <Select
-                  // labelId="location"
-                  id="location"
-                  value={authCtx?.location || 'All'}
-                  label="Location"
-                  onChange={handleChange}
-                  sx={{
-                    '& fieldset': {
-                      border: 'none'
-                    }
-                  }}
-                  renderValue={(value) => {
-                    return (
-                      <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-                        {/* <Avatar src={buildingIcon} sx={{ paddding: '0px 6px' }} /> */}
-                        <img src={buildingIcon} />
-
-                        {value}
-                      </Box>
-                    );
-                  }}>
-                  <MenuItem value={'All'}>All</MenuItem>
-                  {authCtx?.user?.location?.accessable_locations
-                    .sort((a, b) => (a > b ? 1 : -1))
-                    .map((location, index) => (
-                      <MenuItem key={index} value={location}>
-                        {location}
-                      </MenuItem>
-                    ))}
-                </Select>
-              </FormControl>
-              <Autocomplete
-                className="header-location-select"
-                sx={{ padding: 1.5, maxWidth: 275, width: 275, '& fieldset': { borderRadius: 4 } }}
-                multiple
-                limitTags={1}
-                id="tags-standard"
-                options={locations?.length !== 0 ? locations : []}
-                onChange={(_, value, reason, option) => {
-                  handleSetLocations(_, value, reason, option);
-                }}
-                value={selectedLocation ? selectedLocation : []}
-                // renderValue={(value) => {
-                //   return (
-                //     <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-                //       {/* <Avatar src={buildingIcon} sx={{ paddding: '0px 6px' }} /> */}
-                //       <img src={buildingIcon} />
-
-                //       {value}
-                //     </Box>
-                //   );
-                // }}
-                getOptionLabel={(option) => option}
-                renderTags={(value, getTagProps) =>
-                  value?.map((option, index) => (
-                    <Chip key={index} label={option} {...getTagProps({ index })} />
-                  ))
-                }
-                renderOption={(props, option, { selected }) => (
-                  <li {...props}>
-                    <Checkbox
-                      icon={icon}
-                      checkedIcon={checkedIcon}
-                      style={{ marginRight: 8 }}
-                      checked={allLocationChecked ? allLocationChecked : selected}
+            <Grid container alignItems={'self-end'} gap={1}>
+              <Grid item xs={12} sm={12} md={6.5} lg={6.5}>
+                <Stack
+                  direction={'row'}
+                  justifyContent={'flex-start'}
+                  alignItems={'center'}
+                  gap={2}
+                  className="breadcrumb">
+                  {layoutCtx?.breadcrumb?.length > 2 ? (
+                    <Avatar
+                      src={authCtx?.user?.profile_image}
+                      sx={{ width: 85, height: 85 }}
+                      alt='="profile-image'
                     />
-                    {option}
-                  </li>
-                )}
-                renderInput={(params) => {
-                  return (
+                  ) : null}
+                  <Stack direction={'column'} spacing={0.5}>
+                    <Typography variant="h2">{layoutCtx?.breadcrumb[0]}</Typography>
+                    {layoutCtx?.breadcrumb?.length > 1 && (
+                      <Typography className="">{layoutCtx?.breadcrumb[1]}</Typography>
+                    )}
+                  </Stack>
+                </Stack>
+              </Grid>
+              <Grid item xs={12} sm={6} md={2.6} lg={2.6}>
+                <Autocomplete
+                  sx={{
+                    '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                      borderWidth: 0
+                    },
+                    '& fieldset': { borderRadius: 10, borderWidth: 0 }
+                  }}
+                  className="header-location-select"
+                  multiple
+                  limitTags={1}
+                  id="tags-standard"
+                  options={locations?.length !== 0 ? locations : []}
+                  onChange={(_, value, reason, option) => {
+                    handleSetLocations(_, value, reason, option);
+                  }}
+                  value={selectedLocation ? selectedLocation : []}
+                  getOptionLabel={(option) => option}
+                  renderTags={(value, getTagProps) =>
+                    value?.map((option, index) => (
+                      <Chip key={index} label={option} {...getTagProps({ index })} />
+                    ))
+                  }
+                  renderOption={(props, option, { selected }) => (
+                    <li {...props}>
+                      <Checkbox
+                        icon={icon}
+                        checkedIcon={checkedIcon}
+                        style={{ marginRight: 8 }}
+                        checked={allLocationChecked ? allLocationChecked : selected}
+                      />
+                      {option}
+                    </li>
+                  )}
+                  renderInput={(params) => (
                     <TextField
                       {...params}
-                      // variant="standard"
-                      // label="location"
-                      fullWidth
                       InputProps={{
                         ...params.InputProps,
                         startAdornment: (
@@ -509,53 +468,15 @@ const Layout = () => {
                         )
                       }}
                     />
-                  );
-                }}
-
-                //renderInput={(params) => (
-                // <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }} {...params}>
-                //   {/* <Avatar src={buildingIcon} sx={{ paddding: '0px 6px' }} /> */}
-                //   <img src={buildingIcon} />
-
-                //   <TextField
-                //     {...params}
-                //     label="location"
-                //     fullWidth
-                //     InputProps={{
-                //       ...params.InputProps,
-                //       startAdornment: <img src={buildingIcon} />,
-                //       endAdornment: (
-                //         <React.Fragment>
-                //           {dropdownLoading ? (
-                //             <CircularProgress color="inherit" size={20} />
-                //           ) : null}
-                //           {params.InputProps.endAdornment}
-                //         </React.Fragment>
-                //       )
-                //     }}
-                //   />
-                // </Box>
-                // <TextField
-                //   {...params}
-                //   label="location"
-                //   fullWidth
-                //   InputProps={{
-                //     ...params.InputProps,
-                //     //startAdornment: <img src={buildingIcon} />,
-                //     endAdornment: (
-                //       <React.Fragment>
-                //         {dropdownLoading ? <CircularProgress color="inherit" size={20} /> : null}
-                //         {params.InputProps.endAdornment}
-                //       </React.Fragment>
-                //     )
-                //   }}
-                // />
-                // )}
-              />
-              <Box className="header-right">
-                <AccountMenu openLogoutDialog={setIsLogoutDialogOpen} />
-              </Box>
-            </Stack>
+                  )}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6} md={2.4} lg={2.4}>
+                <Box className="header-right">
+                  <AccountMenu openLogoutDialog={setIsLogoutDialogOpen} />
+                </Box>
+              </Grid>
+            </Grid>
           </header>
           <section className="content-area">
             <Outlet />

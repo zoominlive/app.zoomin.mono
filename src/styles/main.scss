@@ -14,8 +14,21 @@
   margin-top: 20px !important;
 }
 
+.auth-title-wraper {
+  img {
+    height: 59.77px;
+    width: 327px;
+    margin: auto;
+  }
+  p {
+    font-size: 16px;
+    color: #8899b4;
+    font-weight: 500;
+  }
+}
+
 .auth-wrapper {
-  height: 60vh;
+  height: 81vh;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -28,23 +41,39 @@
 
     .MuiCardContent-root {
       width: 100%;
+    }
+  }
+  .auth-container {
+    padding: 20px;
+    width: 442px !important;
 
-      .auth-container {
-        padding: 20px;
+    h1 {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+      font-weight: 500;
+    }
 
-        h1 {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin-bottom: 20px;
-          font-weight: 500;
-        }
+    a {
+      text-decoration: none;
+      color: #5a53dd !important;
+    }
 
-        a {
-          text-decoration: none;
-          color: #5fa8d3 !important;
-        }
+    .MuiButtonBase-root {
+      border-radius: 30px;
+      height: 54px;
+      text-transform: capitalize;
+      //width: 441px;
+    }
+    .link-wraper {
+      a {
+        color: #909090 !important;
       }
+    }
+    .reset-text {
+      text-align: center;
+      color: #8899b4;
     }
   }
 }
@@ -312,6 +341,7 @@
     @media (max-width: 1024px) {
       padding-left: 30px;
     }
+
     .header-left {
       display: flex;
       padding: 15px;
@@ -337,36 +367,34 @@
           top: 25px;
         }
       }
+    }
+    .breadcrumb {
+      // display: flex;
+      // align-items: center;
+      // justify-content: center;
+      margin-left: 50px;
 
-      .breadcrumb {
-        // display: flex;
-        // align-items: center;
-        // justify-content: center;
-        margin-left: 30px;
+      h2 {
+        font-weight: 600;
+        font-size: 24px;
+        line-height: 29px;
+        margin-right: 24px;
+        // color: #6e66c7;
+      }
 
-        h2 {
-          font-weight: 600;
-          font-size: 24px;
-          line-height: 29px;
-          margin-right: 24px;
-          // color: #6e66c7;
-        }
+      p {
+        font-size: 16px;
+        color: #828282;
+      }
 
-        p {
-          font-size: 16px;
-          color: #828282;
-        }
-
-        h4 {
-          font-weight: 400;
-          font-size: 14px;
-          line-height: 20px;
-          letter-spacing: 0.1px;
-          color: rgba(0, 0, 0, 0.87);
-        }
+      h4 {
+        font-weight: 400;
+        font-size: 14px;
+        line-height: 20px;
+        letter-spacing: 0.1px;
+        color: rgba(0, 0, 0, 0.87);
       }
     }
-
     .header-right {
       display: flex;
       align-items: center;
@@ -379,7 +407,9 @@
       margin-top: 10px;
       padding: 0px 8px;
     }
-
+    .MuiGrid-root {
+      padding: 0px;
+    }
     .header-location {
       width: 200px;
       background: #ffff;
@@ -390,17 +420,24 @@
       .MuiFormControl-root {
         .MuiInputBase-root {
           background-color: #fff !important;
-          border-radius: 18px !important;
+          border-radius: 50px !important;
+          // width: 300px;
           // input.MuiInputBase-input {
           //   display: none;
           // }
+          &:hover {
+            border-color: #fff !important;
+          }
         }
+      }
+      &:hover {
+        border-color: #ebe8ff;
       }
     }
   }
 
   .content-area {
-    padding: 30px;
+    padding: 30px 45px;
     background-color: #eae9ff;
   }
 }
@@ -733,6 +770,9 @@
     height: 54px;
     width: 170px;
   }
+  .MuiButton-text{
+    color: #5a53dd;
+  }
 }
 
 .MuiSelect-multiple {
@@ -914,6 +954,7 @@
 .table-actions {
   .MuiMenu-paper {
     width: 220px !important;
+    border-radius: 20px;
 
     .MuiListItemIcon-root {
       margin-right: 15px;
@@ -1060,7 +1101,7 @@
     .MuiSvgIcon-root {
       color: #455a64 !important;
     }
-    .delete-icon{
+    .delete-icon {
       color: #fff !important;
     }
   }
@@ -1142,6 +1183,7 @@
 
   .MuiSvgIcon-root {
     font-size: 20px;
+    color: #435971 !important;
   }
 }
 
@@ -1748,23 +1790,59 @@
   }
 }
 
-
-.SnackbarItem-message{
-  .MuiSvgIcon-root{
+.SnackbarItem-message {
+  .MuiSvgIcon-root {
     color: #fff !important;
   }
 }
 
-.SnackbarItem-action{
-  .MuiSvgIcon-root{
+.SnackbarItem-action {
+  .MuiSvgIcon-root {
     color: #fff !important;
   }
 }
 
-.MuiDialog-container{
-  .MuiDialogTitle-root{
-    .MuiSvgIcon-root{
-      color: #D3CBFB !important;
+.MuiDialog-container {
+  .MuiDialogTitle-root {
+    .MuiSvgIcon-root {
+      color: #d3cbfb !important;
     }
   }
+}
+
+.cam-delete-btn {
+  .MuiSvgIcon-root {
+    color: #000000 !important;
+  }
+}
+
+.stream-btn {
+  min-width: 180px !important;
+  border-radius: 20px !important;
+  height: 54px;
+  .MuiSvgIcon-root {
+    color: #fff !important;
+    font-size: 32px !important;
+  }
+}
+
+.full-screen-button {
+  background-color: #fff !important;
+  border-radius: 23px !important;
+  position: sticky !important;
+  bottom: 5%;
+  margin-left: 95% !important;
+  min-width: 45px !important;
+  min-height: 45px !important;
+}
+
+.log-btn {
+  height: 42px;
+  font-size: 16px !important;
+  font-weight: 500 !important;
+  padding: 22px !important;
+  border-radius: 15px !important;
+  color: #5a53dd !important;
+  border-color: #5a53dd !important;
+  text-transform: capitalize !important;
 }

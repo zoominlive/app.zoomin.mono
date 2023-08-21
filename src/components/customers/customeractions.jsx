@@ -1,9 +1,9 @@
 import { Box, Fade, IconButton, ListItemIcon, ListItemText, Menu, MenuItem } from '@mui/material';
 import React from 'react';
 import EditIcon from '@mui/icons-material/Edit';
-import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import PropTypes from 'prop-types';
+import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
 
 const CustomerActions = (props) => {
   const [anchorEl, setAnchorEl] = React.useState(null);
@@ -58,7 +58,7 @@ const CustomerActions = (props) => {
         </MenuItem>
         <MenuItem onClick={handleCustomerDelete}>
           <ListItemIcon>
-            <DeleteForeverIcon />
+            <DeleteOutlinedIcon />
           </ListItemIcon>
           <ListItemText>Delete Customer</ListItemText>
         </MenuItem>

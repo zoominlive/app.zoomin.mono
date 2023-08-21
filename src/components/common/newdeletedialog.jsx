@@ -54,7 +54,7 @@ const NewDeleteDialog = (props) => {
         </DialogContentText>
       </DialogContent>
 
-      <DialogActions>
+      <DialogActions sx={{ paddingRight: 4, paddingBottom: 3 }}>
         {/* {props.from === 'watchstream' ? (
           <Button
             variant="text"

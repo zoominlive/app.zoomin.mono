@@ -12,7 +12,8 @@ import {
   Button,
   DialogContentText,
   IconButton,
-  InputLabel
+  InputLabel,
+  Divider
 } from '@mui/material';
 import { useLocation } from 'react-router-dom';
 //import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
@@ -238,6 +239,7 @@ const WatchStreamDialogBox = (props) => {
           <CloseIcon />
         </IconButton>
       </DialogTitle>
+      <Divider />
       <DialogContent>
         <div>
           <InputLabel id="location" className="label">

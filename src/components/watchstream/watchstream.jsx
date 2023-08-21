@@ -13,7 +13,8 @@ import {
   Chip,
   CircularProgress,
   Button,
-  Checkbox
+  Checkbox,
+  InputLabel
 } from '@mui/material';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import CheckBoxIcon from '@mui/icons-material/CheckBox';
@@ -30,7 +31,7 @@ import { publicIpv4 } from 'public-ip';
 import axios from 'axios';
 import { useLocation } from 'react-router-dom';
 import DeleteDialog from '../common/deletedialog';
-import { Play } from 'react-feather';
+import PlayArrowSharpIcon from '@mui/icons-material/PlayArrowSharp';
 import FullScreenDialog from './fullscreendialog';
 import { Maximize } from 'react-feather';
 
@@ -71,7 +72,7 @@ const WatchStream = () => {
 
   useEffect(() => {
     layoutCtx.setActive(5);
-    layoutCtx.setBreadcrumb(['Watch Stream']);
+    layoutCtx.setBreadcrumb(['Watch Stream', 'Manage rooms and their camera authorization']);
     const locs = ['Select All'];
     authCtx?.user?.location?.accessable_locations.forEach((loc) => locs.push(loc));
     setLocations(locs);
@@ -452,16 +453,14 @@ const WatchStream = () => {
 
   return (
     <>
-      <Box>
-        <Card
-          style={{
-            borderBottomLeftRadius: '0',
-            borderBottomRightRadius: '0'
-          }}>
+      <Box className="listing-wrapper">
+        <Card className="filter">
           <CardContent>
-            <Grid container spacing={2}>
+            <Grid container spacing={2} alignItems={'self-end'}>
               <Grid item md={3} sm={12}>
+                <InputLabel id="locations">Locations</InputLabel>
                 <Autocomplete
+                  labelId="locations"
                   multiple
                   limitTags={1}
                   id="tags-standard"
@@ -490,7 +489,6 @@ const WatchStream = () => {
                   renderInput={(params) => (
                     <TextField
                       {...params}
-                      label="location"
                       fullWidth
                       InputProps={{
                         ...params.InputProps,
@@ -508,7 +506,9 @@ const WatchStream = () => {
                 />
               </Grid>
               <Grid item md={3} sm={12}>
+                <InputLabel id="rooms">Rooms</InputLabel>
                 <Autocomplete
+                  labelId="rooms"
                   multiple
                   limitTags={1}
                   id="tags-standard"
@@ -538,7 +538,6 @@ const WatchStream = () => {
                   renderInput={(params) => (
                     <TextField
                       {...params}
-                      label="room"
                       fullWidth
                       InputProps={{
                         ...params.InputProps,
@@ -555,8 +554,10 @@ const WatchStream = () => {
                   )}
                 />
               </Grid>
-              <Grid item md={4.7} sm={20}>
+              <Grid item md={4.2} sm={20}>
+                <InputLabel id="cameras">Cameras</InputLabel>
                 <Autocomplete
+                  labelId="cameras"
                   multiple
                   limitTags={1}
                   disableCloseOnSelect
@@ -597,7 +598,6 @@ const WatchStream = () => {
                   renderInput={(params) => (
                     <TextField
                       {...params}
-                      label="Cameras"
                       fullWidth
                       helperText={
                         limitReached &&
@@ -622,19 +622,23 @@ const WatchStream = () => {
                   )}
                 />
               </Grid>
-              <Grid item md={1.2} sm={12} sx={{ marginTop: '6px' }}>
+              <Grid item md={1.7} sm={12} sx={{ marginTop: '6px' }}>
                 <Button
-                  className="add-btn"
+                  className="add-button stream-btn"
                   variant="contained"
-                  startIcon={<Play />}
+                  startIcon={<PlayArrowSharpIcon />}
                   onClick={() => setSubmitted(true)}>
                   {' '}
-                  Play
+                  Play Stream
                 </Button>
               </Grid>
             </Grid>
+          </CardContent>
+        </Card>
 
-            {(selectedCameras.length == 0 || !playing) && (
+        {(selectedCameras.length == 0 || !playing) && (
+          <Card>
+            <CardContent>
               <Box mt={2} sx={{ height: '600px' }} className="no-camera-wrapper">
                 <Stack
                   className="no-camera-stack"
@@ -647,8 +651,12 @@ const WatchStream = () => {
                   </Typography>
                 </Stack>
               </Box>
-            )}
-            {!submitted && selectedCameras.length != 0 && (
+            </CardContent>
+          </Card>
+        )}
+        {!submitted && selectedCameras.length != 0 && (
+          <Card>
+            <CardContent>
               <Box mt={2} sx={{ height: '600px' }} className="no-camera-wrapper">
                 <Stack
                   className="no-camera-stack"
@@ -659,23 +667,24 @@ const WatchStream = () => {
                   <Typography>{'Submit selected cams to start the stream'}</Typography>
                 </Stack>
               </Box>
-            )}
+            </CardContent>
+          </Card>
+        )}
 
-            <DeleteDialog
-              open={isDeleteDialogOpen}
-              title="Are you still watching?"
-              from="watchstream"
-              contentText="Press Yes to continue watching "
-              handleDialogClose={() => {
-                setIsDeleteDialogOpen(false);
-              }}
-              handleDelete={() => {
-                setPlaying(true);
-                setIsDeleteDialogOpen(false);
-              }}
-            />
-          </CardContent>
-        </Card>
+        <DeleteDialog
+          open={isDeleteDialogOpen}
+          title="Are you still watching?"
+          from="watchstream"
+          contentText="Press Yes to continue watching "
+          handleDialogClose={() => {
+            setIsDeleteDialogOpen(false);
+          }}
+          handleDelete={() => {
+            setPlaying(true);
+            setIsDeleteDialogOpen(false);
+          }}
+        />
+
         <FullScreen
           handle={handle}
           onChange={(state) => {
@@ -697,7 +706,8 @@ const WatchStream = () => {
         </FullScreen>
       </Box>
       <Button
-        style={{ position: 'sticky', bottom: '5%', marginLeft: '95%' }}
+        // style={{ position: 'sticky', bottom: '5%', marginLeft: '95%' }}
+        className="full-screen-button"
         onClick={() => {
           setIsFullScreenDialogOpen(true);
           handle.enter();
