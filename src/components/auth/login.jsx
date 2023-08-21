@@ -26,6 +26,7 @@ import { errorMessageHandler } from '../../utils/errormessagehandler';
 import CustomerSelection from './customerSelection';
 import TitleDiv from './titlediv';
 import LinkDiv from './linkdiv';
+// import AuthBg from '../../assets/auth-bg.png';
 const validationSchema = yup.object({
   email: yup
     .string('Enter Username/email')
@@ -100,7 +101,7 @@ const Login = () => {
       <Grid container>
         <Grid item md={6} sm={12} xs={12}>
           <Card>
-            <CardContent>
+            <CardContent className="card-content">
               <TitleDiv
                 isShowTitle={true}
                 title={'Log in to ZOOMiN Live'}
@@ -205,7 +206,9 @@ const Login = () => {
             </CardContent>
           </Card>
         </Grid>
-        <Grid item md={6} sm={12} xs={12}></Grid>
+        <Grid item md={6} sm={12} xs={12} className="auth-img-div login-img">
+          {/* <Box component="img" src={AuthBg} alt={''} /> */}
+        </Grid>
       </Grid>
     </>
   );

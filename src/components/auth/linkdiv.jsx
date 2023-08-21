@@ -6,7 +6,7 @@ const LinkDiv = () => {
       <a href="https://www.zoominlive.com/privacy-policy" rel="noreferrer" target="_blank">
         Privacy Policy
       </a>
-      <Box>.</Box>
+      <Box component="span">.</Box>
       <a href="https://www.zoominlive.com/terms-conditions" rel="noreferrer" target="_blank">
         Terms Of Service
       </a>

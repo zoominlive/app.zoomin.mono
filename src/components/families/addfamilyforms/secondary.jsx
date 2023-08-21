@@ -16,7 +16,8 @@ import PhoneNumberInput from '../../common/phonenumberinput';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { FieldArray } from 'formik';
 import PropTypes from 'prop-types';
-import AddIcon from '@mui/icons-material/Add';
+// import AddIcon from '@mui/icons-material/Add';
+import { Plus } from 'react-feather';
 
 const Secondary = (props) => {
   return (
@@ -239,7 +240,7 @@ const Secondary = (props) => {
             <Box className="row-button-wrapper" justifyContent="flex-end" mt={2}>
               <Button
                 variant="contained"
-                endIcon={<AddIcon />}
+                endIcon={<Plus />}
                 className="row-add-btn"
                 onClick={() =>
                   arrayHelpers.push({

@@ -23,7 +23,7 @@ import { useContext } from 'react';
 import AuthContext from '../../context/authcontext';
 import TitleDiv from './titlediv';
 import LinkDiv from './linkdiv';
-
+import SuceessIcon from '../../assets/success-tick-icon.svg';
 const validationSchema = yup.object({
   email: yup.string('Enter your email').email('Enter a valid email').required('Email is required')
 });
@@ -69,21 +69,21 @@ const ForgotPassword = () => {
     <Grid container>
       <Grid item md={6} sm={12} xs={12}>
         <Card>
-          <CardContent>
-            <TitleDiv
-              isShowTitle={true}
-              title={'Reset Password'}
-              subtitle={'Reset your password to zoominlive'}
-            />
+          <CardContent className="card-content">
+            <TitleDiv isShowTitle={false} title={''} subtitle={''} />
             <Box className="auth-wrapper">
               <Box className="auth-container">
                 {isLinkSent ? (
                   <>
-                    <Stack direction={'column'} justifyContent={'center'} className="reset-text">
+                    <Stack
+                      direction={'column'}
+                      justifyContent={'center'}
+                      alignItems={'center'}
+                      className="reset-text">
                       <Typography component="h1" variant="h5">
                         Reset Password
                       </Typography>
-
+                      <Box component="img" src={SuceessIcon} alt={''} />
                       <Typography>
                         A reset password link has been sent to your registered email address. Click
                         the link there to set a new password.
@@ -158,7 +158,7 @@ const ForgotPassword = () => {
           </CardContent>
         </Card>
       </Grid>
-      <Grid item md={6} sm={12} xs={12}></Grid>
+      <Grid item md={6} sm={12} xs={12} className="auth-img-div forgot-pwd-img"></Grid>
     </Grid>
   );
 };

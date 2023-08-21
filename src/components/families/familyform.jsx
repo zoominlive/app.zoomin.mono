@@ -35,7 +35,7 @@ const STEPS = ['Primary', 'Secondary', 'Children'];
 const AddFamily = (props) => {
   const authCtx = useContext(AuthContext);
   const { enqueueSnackbar } = useSnackbar();
-  const [activeStep, setActiveStep] = useState(0);
+  const [activeStep, setActiveStep] = useState(1);
   const [submitLoading, setSubmitLoading] = useState(false);
   const formikRef = useRef();
 
@@ -364,35 +364,37 @@ const AddFamily = (props) => {
                 {renderStepContent(activeStep, values, setFieldValue, touched, errors)}
               </Box>
             </DialogContent>
-            <Divider />
-            <DialogActions>
-              <Stack direction="row" justifyContent="space-between" width="100%">
-                {activeStep > 0 && (
-                  <Button
-                    variant="text"
-                    sx={{ marginLeft: '20px', color: '#00000042' }}
-                    onClick={handleBack}>
-                    BACK
-                  </Button>
-                )}
-                <Stack direction="row" justifyContent="flex-end" width="100%">
-                  <Button
+            <DialogActions sx={{ paddingRight: 4, paddingBottom: 3 }}>
+              {/* <Stack direction="row" justifyContent="space-between" width="100%"> */}
+              <Stack direction="row" justifyContent="flex-end" width="100%">
+                {/* <Button
                     disabled={submitLoading || isValidating}
                     variant="text"
                     onClick={handleFormDialogClose}>
                     CANCEL
+                  </Button> */}
+                {activeStep > 0 && (
+                  <Button
+                    //className="add-btn save-changes-btn"
+                    className="log-btn"
+                    variant="outlined"
+                    sx={{ marginRight: 1.5 }}
+                    onClick={handleBack}>
+                    Previous Step
                   </Button>
-                  <LoadingButton
-                    loading={submitLoading || isValidating}
-                    loadingPosition={submitLoading || isValidating ? 'start' : undefined}
-                    startIcon={(submitLoading || isValidating) && <SaveIcon />}
-                    variant="text"
-                    // onClick={handleFormSubmit}
-                    type="submit">
-                    {activeStep === STEPS.length - 1 ? 'FINISH' : 'NEXT'}
-                  </LoadingButton>
-                </Stack>
+                )}
+                <LoadingButton
+                  className="add-btn save-changes-btn"
+                  loading={submitLoading || isValidating}
+                  loadingPosition={submitLoading || isValidating ? 'start' : undefined}
+                  startIcon={(submitLoading || isValidating) && <SaveIcon />}
+                  variant="text"
+                  // onClick={handleFormSubmit}
+                  type="submit">
+                  {activeStep === STEPS.length - 1 ? 'Finish' : 'Next Step'}
+                </LoadingButton>
               </Stack>
+              {/* </Stack> */}
             </DialogActions>
           </Form>
         )}

@@ -389,7 +389,7 @@ const Layout = () => {
                 
               </FormControl> */}
             <Grid container alignItems={'self-end'} gap={1}>
-              <Grid item xs={12} sm={12} md={6.5} lg={6.5}>
+              <Grid item xs={12} sm={12} md={7} lg={7}>
                 <Stack
                   direction={'row'}
                   justifyContent={'flex-start'}
@@ -411,7 +411,7 @@ const Layout = () => {
                   </Stack>
                 </Stack>
               </Grid>
-              <Grid item xs={12} sm={6} md={2.6} lg={2.6}>
+              <Grid item xs={12} sm={12} md={2.6} lg={2.6}>
                 <Autocomplete
                   sx={{
                     '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
@@ -471,7 +471,7 @@ const Layout = () => {
                   )}
                 />
               </Grid>
-              <Grid item xs={12} sm={6} md={2.4} lg={2.4}>
+              <Grid item xs={12} sm={12} md={2} lg={2}>
                 <Box className="header-right">
                   <AccountMenu openLogoutDialog={setIsLogoutDialogOpen} />
                 </Box>

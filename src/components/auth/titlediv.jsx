@@ -1,5 +1,5 @@
 import React from 'react';
-import logo from '../../assets/logo.svg';
+import logoBlue from '../../assets/logo-blue.svg';
 import { Box, Stack, Typography } from '@mui/material';
 import PropTypes from 'prop-types';
 
@@ -10,7 +10,7 @@ const TitleDiv = ({ isShowTitle = true, title, subtitle }) => {
       justifyContent={'center'}
       alignItems={'center'}
       className="auth-title-wraper">
-      <Box component="img" src={logo} alt={''} />
+      <Box component="img" src={logoBlue} alt={''} />
       {isShowTitle ? (
         <>
           <Typography component="h1" variant="h5">

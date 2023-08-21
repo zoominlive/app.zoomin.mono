@@ -40,7 +40,7 @@ import _ from 'lodash';
 import AddIcon from '@mui/icons-material/Add';
 import { Plus } from 'react-feather';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
-
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 const FamilyDrawer = (props) => {
   const authCtx = useContext(AuthContext);
   const { enqueueSnackbar } = useSnackbar();
@@ -877,6 +877,18 @@ const FamilyDrawer = (props) => {
                       spacing={1.5}
                       alignItems="center"
                       justifyContent="center">
+                      {props?.family?.children.length !== 1 && (
+                        <IconButton
+                          // className="child-delete-btn"
+                          className="edit-btn"
+                          onClick={() => {
+                            setIsDeleteChildDialogOpen(true);
+                            setChildToDelete(child.child_id);
+                          }}>
+                          {/* <DeleteIcon className="delete-icon" /> */}
+                          <DeleteOutlineIcon />
+                        </IconButton>
+                      )}
                       {child.status === 'Disabled' ? (
                         // <Tooltip id="button-report" title="Enable">
                         <>
@@ -927,6 +939,7 @@ const FamilyDrawer = (props) => {
                           )}
                         </>
                       )}
+
                       <IconButton
                         className="edit-btn"
                         onClick={() => {
@@ -935,7 +948,7 @@ const FamilyDrawer = (props) => {
                         }}>
                         <EditIcon />
                       </IconButton>
-                      {props?.family?.children.length !== 1 && (
+                      {/* {props?.family?.children.length !== 1 && (
                         <IconButton
                           className="child-delete-btn"
                           onClick={() => {
@@ -944,7 +957,7 @@ const FamilyDrawer = (props) => {
                           }}>
                           <DeleteIcon className="delete-icon" />
                         </IconButton>
-                      )}
+                      )} */}
                     </Stack>
                   </Stack>
 

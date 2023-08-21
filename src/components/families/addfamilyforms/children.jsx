@@ -12,7 +12,6 @@ import {
 } from '@mui/material';
 import React from 'react';
 import DeleteIcon from '@mui/icons-material/Delete';
-import AddIcon from '@mui/icons-material/Add';
 import { FieldArray } from 'formik';
 import PropTypes from 'prop-types';
 import { useContext } from 'react';
@@ -24,6 +23,7 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import ArrowDropUpIcon from '@mui/icons-material/ArrowDropUp';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import moment from 'moment';
+import { Plus } from 'react-feather';
 
 const Children = (props) => {
   const authCtx = useContext(AuthContext);
@@ -330,7 +330,7 @@ const Children = (props) => {
             <Box className="row-button-wrapper" justifyContent="flex-end" mt={2}>
               <Button
                 variant="contained"
-                endIcon={<AddIcon />}
+                endIcon={<Plus />}
                 className="row-add-btn"
                 onClick={() => {
                   arrayHelpers.push({
