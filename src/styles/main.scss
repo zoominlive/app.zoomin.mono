@@ -65,6 +65,9 @@
       height: 54px;
       text-transform: capitalize;
       //width: 441px;
+      .MuiCircularProgress-root{
+        color: #ffff;
+      }
     }
     .link-wraper {
       padding: 0 90px;
@@ -116,6 +119,9 @@
   width: 206px;
   border-color: #5a53dd !important;
   text-transform: capitalize !important;
+}
+.family_enable_btn{
+  width: 160px;
 }
 
 .add_child_btn {
@@ -536,7 +542,7 @@
     }
     .family-circle-wrap {
       @media only screen and (min-width: 1550px) {
-        gap: 24px;
+        // gap: 24px;
       }
     }
   }
@@ -731,9 +737,28 @@
 .MuiSvgIcon-root {
   color: #5a53dd !important;
 }
-.MuiPickersDay-root {
-  color: #5a53dd;
+
+.MuiPickersPopper-paper{
+  border-radius: 20px;
+.MuiCalendarPicker-root{
+  .MuiPickersDay-root.Mui-selected {
+    background-color: #5a53dd !important;
+  }
+
+  .MuiYearPicker-root{
+    button.Mui-selected{
+      background-color: #5a53dd !important;
+    }
+  }
 }
+}
+.date-picker .Mui-focused fieldset.MuiOutlinedInput-notchedOutline {
+  border-color: #5a53dd;
+}
+.MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-color: #5a53dd !important;
+}
+
 .listing-wrapper {
   .filter {
     margin: 25px 0px;
@@ -1889,4 +1914,17 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
+}
+
+.date-location-row{
+  margin-top: 20px !important;
+  .MuiGrid-root{
+    .MuiFormControl-root{
+      width: 100%;
+        .MuiInputBase-root{
+          border-radius: 15px;
+          height: 60px;
+        }
+    }
+  }
 }

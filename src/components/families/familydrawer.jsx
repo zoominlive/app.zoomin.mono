@@ -23,7 +23,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import { capitalizeFirstLetter } from '../../utils/capitalizefirstletter';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useState } from 'react';
-import DeleteDialog from '../common/deletedialog';
+// import DeleteDialog from '../common/deletedialog';
 import DisableDialog from './disabledialog';
 import RoomDialog from './roomdialog';
 import dayjs from 'dayjs';
@@ -41,6 +41,7 @@ import AddIcon from '@mui/icons-material/Add';
 import { Plus } from 'react-feather';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import NewDeleteDialog from '../common/newdeletedialog';
 const FamilyDrawer = (props) => {
   const authCtx = useContext(AuthContext);
   const { enqueueSnackbar } = useSnackbar();
@@ -525,12 +526,14 @@ const FamilyDrawer = (props) => {
       <Stack direction="row" mt={2} alignItems="center" justifyContent={'flex-start'} spacing={1}>
         {props?.family?.primary?.status === 'Disabled' ? (
           <LoadingButton
+            //className="add_family_member_btn"
+            variant="contained"
             loading={enableFamilyLoading}
             loadingPosition={enableFamilyLoading ? 'start' : undefined}
             startIcon={enableFamilyLoading && <SaveIcon />}
-            className="family_disable_enable_btn"
+            className="add_family_member_btn family_enable_btn"
             onClick={handleFamilyEnable}>
-            ENABLE FAMILY
+            Enable Family
           </LoadingButton>
         ) : (
           <>
@@ -1057,7 +1060,7 @@ const FamilyDrawer = (props) => {
         </>
       )}
 
-      <DeleteDialog
+      <NewDeleteDialog
         title="Delete Child"
         contentText="Are you sure you want to delete this child?"
         loading={deleteLoading}

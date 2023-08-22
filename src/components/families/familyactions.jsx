@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 
 import React from 'react';
 import EditIcon from '@mui/icons-material/Edit';
-import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import GroupAddIcon from '@mui/icons-material/GroupAdd';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
@@ -103,7 +103,7 @@ const FamilyActions = (props) => {
         </MenuItem>
         <MenuItem onClick={handleOpenDeleteDialog}>
           <ListItemIcon>
-            <DeleteForeverIcon />
+            <DeleteOutlineIcon />
           </ListItemIcon>
           <ListItemText>Delete Family</ListItemText>
         </MenuItem>

@@ -216,11 +216,10 @@ const ChildForm = (props) => {
                     />
                   </Grid>
                   <Grid item md={6} sm={12}>
-                    <InputLabel id="first_name">Child Last Name</InputLabel>
+                    <InputLabel id="last_name">Child Last Name</InputLabel>
                     <TextField
                       labelId="last_name"
                       name="last_name"
-                      label="Child Last Name"
                       value={values.last_name}
                       onChange={(event) => {
                         setFieldValue('last_name', event.target.value);
@@ -335,6 +334,19 @@ const ChildForm = (props) => {
                         {selectedOption === 'Schedule start date' && (
                           <LocalizationProvider dateAdapter={AdapterDayjs}>
                             <DesktopDatePicker
+                              sx={{
+                                '& .MuiOutlinedInput-root': {
+                                  '& fieldset': {
+                                    borderColor: 'red'
+                                  },
+                                  '&:hover fieldset': {
+                                    borderColor: 'green'
+                                  },
+                                  '&.Mui-focused fieldset': {
+                                    borderColor: 'purple'
+                                  }
+                                }
+                              }}
                               open={isDatePickerOpen}
                               minDate={new Date()}
                               label="Start date"
@@ -343,7 +355,11 @@ const ChildForm = (props) => {
                               inputFormat="MM/DD/YYYY"
                               onClose={() => setIsDatePickerOpen(false)}
                               renderInput={(params) => (
-                                <TextField onClick={() => setIsDatePickerOpen(true)} {...params} />
+                                <TextField
+                                  onClick={() => setIsDatePickerOpen(true)}
+                                  {...params}
+                                  className="date-picker"
+                                />
                               )}
                               components={{
                                 OpenPickerIcon: !isDatePickerOpen

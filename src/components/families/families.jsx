@@ -43,13 +43,14 @@ import AuthContext from '../../context/authcontext';
 import { useSnackbar } from 'notistack';
 import { errorMessageHandler } from '../../utils/errormessagehandler';
 import ParentForm from './parentform';
-import DeleteDialog from '../common/deletedialog';
+// import DeleteDialog from '../common/deletedialog';
 import debounce from 'lodash.debounce';
 import Loader from '../common/loader';
 import { capitalizeFirstLetter } from '../../utils/capitalizefirstletter';
 import dayjs from 'dayjs';
 import NoDataDiv from '../common/nodatadiv';
 import SearchIcon from '@mui/icons-material/Search';
+import NewDeleteDialog from '../common/newdeletedialog';
 
 const Families = () => {
   const layoutCtx = useContext(LayoutContext);
@@ -602,7 +603,7 @@ const Families = () => {
         roomsList={roomsList}
         parentType={parentType}
       />
-      <DeleteDialog
+      <NewDeleteDialog
         open={isDeleteDialogOpen}
         title="Delete Family"
         contentText="Are you sure you want to delete this family?"

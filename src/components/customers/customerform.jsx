@@ -47,7 +47,7 @@ const CustomerForm = (props) => {
   const { enqueueSnackbar } = useSnackbar();
   const [submitLoading, setSubmitLoading] = useState(false);
   // const [selectedRole, setSelectedRole] = useState(null);
-  const [activeStep, setActiveStep] = useState(2);
+  const [activeStep, setActiveStep] = useState(0);
   const [roomList, setRoomList] = useState([]);
   const [selectedLocation, setSelectedLocation] = useState([]);
 
@@ -880,29 +880,34 @@ const CustomerForm = (props) => {
               <Divider />
               <DialogActions>
                 <Stack direction="row" justifyContent="space-between" width="100%">
-                  {activeStep > 0 && (
+                  {/* {activeStep > 0 && (
                     <Button
                       variant="text"
                       sx={{ marginLeft: '20px', color: '#00000042' }}
                       onClick={handleBack}>
                       BACK
                     </Button>
-                  )}
+                  )} */}
                   <Stack direction="row" justifyContent="flex-end" width="100%">
-                    <Button
-                      disabled={submitLoading || isValidating}
-                      variant="text"
-                      onClick={handleFormDialogClose}>
-                      CANCEL
-                    </Button>
+                    {activeStep > 0 && (
+                      <Button
+                        className="log-btn"
+                        variant="outlined"
+                        sx={{ marginRight: 1.5 }}
+                        disabled={submitLoading || isValidating}
+                        onClick={handleBack}>
+                        Previous Step
+                      </Button>
+                    )}
                     <LoadingButton
+                      className="add-btn save-changes-btn"
                       loading={submitLoading || isValidating}
                       loadingPosition={submitLoading || isValidating ? 'start' : undefined}
                       startIcon={(submitLoading || isValidating) && <SaveIcon />}
                       variant="text"
                       // onClick={handleFormSubmit}
                       type="submit">
-                      {activeStep === STEPS.length - 1 ? 'FINISH' : 'NEXT'}
+                      {activeStep === STEPS.length - 1 ? 'Finish' : 'Next Step'}
                     </LoadingButton>
                   </Stack>
                 </Stack>

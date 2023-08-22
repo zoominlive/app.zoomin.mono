@@ -35,7 +35,7 @@ const STEPS = ['Primary', 'Secondary', 'Children'];
 const AddFamily = (props) => {
   const authCtx = useContext(AuthContext);
   const { enqueueSnackbar } = useSnackbar();
-  const [activeStep, setActiveStep] = useState(1);
+  const [activeStep, setActiveStep] = useState(0);
   const [submitLoading, setSubmitLoading] = useState(false);
   const formikRef = useRef();
 
