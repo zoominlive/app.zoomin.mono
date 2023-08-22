@@ -60,7 +60,7 @@ module.exports = {
         },
       ],
     });
-    const result = [];
+    let result = [];
     if (custId) {
       let availableLocations = await customerServices.getLocationDetails(
         custId
@@ -98,6 +98,24 @@ module.exports = {
         }
       });
     }
+
+    if(!location.includes("Select All")){
+      let filterResult = []
+       result.map(i => {
+        if(i.family){
+          if(i.family?.location?.accessable_locations.every(i => location.includes(i))){
+            filterResult.push(i)
+          }
+        }
+        else{
+          if(i.user?.location?.accessable_locations.every(i => location.includes(i))){
+            filterResult.push(i)
+          }
+        }
+      })
+      result = filterResult
+    }
+
     return result;
   },
 
@@ -178,16 +196,16 @@ module.exports = {
       });
     }
   
-    if(location !== "All"){
+    if(!location.includes("Select All")){
       let filterResult = []
        result.map(i => {
         if(i.family){
-          if(i.family?.location?.accessable_locations.includes(location)){
+          if(i.family?.location?.accessable_locations.every(i => location.includes(i))){
             filterResult.push(i)
           }
         }
         else{
-          if(i.user?.location?.accessable_locations.includes(location)){
+          if(i.user?.location?.accessable_locations.every(i => location.includes(i))){
             filterResult.push(i)
           }
         }
@@ -197,7 +215,7 @@ module.exports = {
     return result;
   },
 
-  getChildrenWithSEA: async (custId, location = "All") => {
+  getChildrenWithSEA: async (custId, location = ["Select All"]) => {
     const { Child, Family } = await connectToDatabase();
     let children = await Child.findAll({
       where: { cust_id: custId },
@@ -206,7 +224,8 @@ module.exports = {
         "last_name",
         "scheduled_end_date",
         "scheduled_enable_date",
-        "family_id"
+        "family_id",
+        "location"
       ],
       include: [
         {
@@ -289,6 +308,17 @@ module.exports = {
         },
       ],
     });
+
+    if(!location.includes("Select All")){
+      let filterResult = []
+      children.map(i => {
+          if(i.location?.locations.every(it => location.includes(it))){
+            filterResult.push(i)
+          }
+      })
+      children = filterResult
+    }
+
     return children;
   },
 

@@ -152,7 +152,8 @@ module.exports = {
             {
               stream_id: streamID,
               room_id: roomID,
-              stream_uri: camObj?.stream_uri,
+              //stream_uri: camObj?.stream_uri,
+              stream_uri: `${camObj?.stream_uri}?uid=${req?.user?.family_member_id || req?.user?.user_id}&sid=${camObj?.stream_uri.split('/')[camObj?.stream_uri.split('/').length - 1].split('.')[0]}&uuid=${uuidv4()}`
             }
           );
         }

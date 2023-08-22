@@ -133,9 +133,9 @@ module.exports = {
         cameras[camIndex].permit_audio = customerDetails.permit_audio;
       });
       const activeLiveStreams = await liveStreamServices.getAllActiveStreams(custId, req?.query?.location, t);
-      const childrens = await childrenServices.getAllChildren(t);
-      const familyMembers = await familyServices.getAllFamilyMembers(t);
-      const families = await familyServices.getAllFamilyIds(t);
+      const childrens = await childrenServices.getAllChildren(custId, req?.query?.location,t);
+      const familyMembers = await familyServices.getAllFamilyMembers(custId, req?.query?.location, t);
+      const families = await familyServices.getAllFamilyIds(custId, req?.query?.location,t);
       const recentLiveStreams = await liveStreamServices.getRecentStreams(custId, req?.query?.location, t);
       await t.commit();
       res.status(200).json({

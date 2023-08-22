@@ -577,20 +577,43 @@ module.exports = {
   //   return familyMembersIds;
   // },
 
-  getAllFamilyMembers: async(t) => {
+  getAllFamilyMembers: async(custId, location = ["Select All"], t) => {
     const { Family } = await connectToDatabase();
     let allFamilyMembers = await Family.findAll({
-      attributes: ['family_member_id'], raw: true, 
+      where: {cust_id: custId},
+      attributes: ['family_member_id', "location"], raw: true, 
     },  { transaction: t });
+
+    if(!location.includes("Select All")){
+      let filterResult = []
+      allFamilyMembers.map(i => {
+          if(i.location?.accessable_locations.every(it => location.includes(it))){
+            filterResult.push(i)
+          }
+      })
+      allFamilyMembers = filterResult
+    }
 
     return allFamilyMembers
   },
 
-  getAllFamilyIds: async(t) => {
+  getAllFamilyIds: async( custId, location = ["Select All"], t) => {
     const { Family } = await connectToDatabase();
     let familyIds = await Family.findAll({
-      attributes: ['family_id'], group: ['family_id'], raw: true
+      where: {cust_id: custId},
+      attributes: ['family_id', "location"], group: ['family_id'], raw: true
     }, { transaction: t });
+ 
+
+    if(!location.includes("Select All")){
+      let filterResult = []
+      familyIds.map(i => {
+          if(i.location?.accessable_locations.every(it => location.includes(it))){
+            filterResult.push(i)
+          }
+      })
+      familyIds = filterResult
+    }
 
     return familyIds
   },
