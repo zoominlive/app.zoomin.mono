@@ -50,6 +50,11 @@ provider:
     
   stage: stage
   region: us-east-1
+custom:
+  prune:
+    automatic: true
+    includeLayers: true
+    number: 3
 functions:
   connectHandler:
     handler: websocket/handler.connectHandler
@@ -204,5 +209,7 @@ functions:
 
 plugins:
   - serverless-offline
+  - serverless-prune-versions
+
 
   

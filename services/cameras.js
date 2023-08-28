@@ -62,12 +62,18 @@ module.exports = {
   },
 
   /* Fetch all the camera's details for given customer */
-  getAllCameraForCustomerDashboard: async (custId, t) => {
+  getAllCameraForCustomerDashboard: async (custId, location = ["Select All"], t) => {
     const { Camera } = await connectToDatabase();
+    let locs = []
+    if(!location.includes("Select All")){
+         locs = location
+    }
+  
     let cameras = await Camera.findAll(
       {
         where: {
           cust_id: custId,
+          location: { [Sequelize.Op.in]: location }
         },
       },
       { transaction: t }
@@ -164,5 +170,20 @@ module.exports = {
       );
     }
     return { cams: cams.rows, count: cams.count };
+  },
+
+  getAllMountedCameraViewers: async (camIds, t) => {
+    const { MountedCameraRecentViewers, Camera } = await connectToDatabase();
+
+    let recentViewers = await MountedCameraRecentViewers.findAll(
+      { where: {function: "start"}, 
+      include:[{
+        model: Camera,
+        where: { cam_id: { [Sequelize.Op.in]: camIds } }
+      }] },
+      { transaction: t }
+    );
+
+    return recentViewers;
   },
 };

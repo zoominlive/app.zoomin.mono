@@ -26,7 +26,7 @@ module.exports = {
   
       let streams = await listAvailableStreams(token, custId);
       const totalStreams =
-        await cameraServices.getAllCameraForCustomerDashboard(custId, t);
+        await cameraServices.getAllCameraForCustomerDashboard(custId, req?.query?.location, t);
       let totalActiveStreams = streams?.data?.filter((stream) => {
         return stream.running === true;
       });
@@ -133,16 +133,21 @@ module.exports = {
         cameras[camIndex].permit_audio = customerDetails.permit_audio;
       });
       const activeLiveStreams = await liveStreamServices.getAllActiveStreams(custId, req?.query?.location, t);
+      const numberofActiveStreamViewers = await liveStreamServices.getAllActiveStreamViewers(activeLiveStreams.flatMap(i => i.stream_id), t);
       const childrens = await childrenServices.getAllChildren(custId, req?.query?.location,t);
       const familyMembers = await familyServices.getAllFamilyMembers(custId, req?.query?.location, t);
       const families = await familyServices.getAllFamilyIds(custId, req?.query?.location,t);
       const recentLiveStreams = await liveStreamServices.getRecentStreams(custId, req?.query?.location, t);
+      const numberofMountedCameraViewers = await cameraServices.getAllMountedCameraViewers(totalStreams.flatMap(i => i.cam_id), t)
       await t.commit();
       res.status(200).json({
         IsSuccess: true,
         Data: {
+          totalStreams: totalStreams ? totalStreams : [],
           enrolledStreams: totalStreams ? totalStreams.length : 0,
           activeStreams: activeStreams ? activeStreams.length : 0,
+          numberofActiveStreamViewers: numberofActiveStreamViewers ? numberofActiveStreamViewers.length : 0,
+          numberofMountedCameraViewers: numberofMountedCameraViewers ? numberofMountedCameraViewers.length : 0,
           activeLiveStreams: activeLiveStreams ? activeLiveStreams : [],
           recentLiveStreams: recentLiveStreams ? recentLiveStreams : [],
           childrens: childrens ? childrens.length : 0,

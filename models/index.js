@@ -90,6 +90,7 @@ Room.hasMany(LiveStreamCameras, {
     name: 'room_id'
   }
 });
+LiveStreamRecentViewers.belongsTo(LiveStreams, { foreignKey: 'stream_id' })
 
 RoomsInTeacher.hasMany(CamerasInRooms, {
   sourceKey: 'room_id',
@@ -113,6 +114,8 @@ Camera.hasMany(CamerasInRooms, {
     name: 'cam_id'
   }
 });
+MountedCameraRecentViewers.belongsTo(Camera, { foreignKey: 'cam_id' })
+
 
 Room.belongsTo(RoomsInChild, { foreignKey: 'room_id' });
 RoomsInChild.hasOne(Room, {

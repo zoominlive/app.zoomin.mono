@@ -80,7 +80,7 @@ module.exports = {
     let loc_obj = location === "All" ? {} : {location: location};
     
     let activeLiveStreams = await LiveStreams.findAll(
-      { where: { stream_running: true, cust_id: cust_id }, attributes:["stream_name", "stream_start_time", "room_id"], 
+      { where: { stream_running: true, cust_id: cust_id }, attributes:["stream_id","stream_name", "stream_start_time", "room_id"], 
       include: [{
         model: Room,
         as: "room",
@@ -139,4 +139,18 @@ module.exports = {
 
     return recentViewer;
   },
+
+  getAllActiveStreamViewers: async (streamIds, t) => {
+    const { LiveStreamRecentViewers, LiveStreams } = await connectToDatabase();
+    let recentViewers = await LiveStreamRecentViewers.findAll(
+      { where: {function: "start"}, 
+      include:[{
+        model: LiveStreams,
+        where: { stream_id: { [Sequelize.Op.in]: streamIds } }
+      }], group: ["stream_id"] },
+      { transaction: t }
+    );
+
+    return recentViewers;
+  }
 };
