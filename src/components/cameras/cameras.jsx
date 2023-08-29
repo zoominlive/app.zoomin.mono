@@ -98,7 +98,6 @@ const Cameras = () => {
 
   // Method to delete user
   const handleCameraDelete = (wait = false) => {
-    console.log('======wait====', wait);
     setDeleteLoading(true);
     API.delete('cams/delete', {
       data: { cam_id: camera.cam_id, wait: wait, streamId: camera.stream_uuid }

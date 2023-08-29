@@ -59,9 +59,9 @@ export default function StreamTable({ rows, columns, title, isLoading }) {
                             // eslint-disable-next-line react/prop-types
                             roomId: row?.room?.room_id,
                             location: row?.room?.location,
-                            camName: row?.room?.live_stream_cameras[0]?.cam_name,
-                            camId: row?.room?.live_stream_cameras[0]?.cam_id,
-                            streamUrl: row?.room?.live_stream_cameras[0]?.stream_uri
+                            camName: row?.room?.cam_name,
+                            camId: row?.room?.cam_id,
+                            streamUrl: row?.room?.stream_uri
                           }}>
                           <Video />
                         </Link>

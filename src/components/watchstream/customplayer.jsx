@@ -80,6 +80,7 @@ const CustomPlayer = (props) => {
               ' - ' +
               props?.camDetails?.cam_name}
           </label>
+
           <ReactPlayer
             // url={
             //   props.streamUri.includes('https://live.zoominlive.com')

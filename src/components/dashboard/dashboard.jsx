@@ -371,7 +371,7 @@ const Dashboard = () => {
                               </Grid>
                               <Grid item>
                                 <Box className="report-circle" style={{ borderColor: '#FFAB01' }}>
-                                  20
+                                  {statisticsData?.numberofActiveStreamViewers}
                                 </Box>
                               </Grid>
                             </Grid>
@@ -442,7 +442,7 @@ const Dashboard = () => {
                               </Grid>
                               <Grid item>
                                 <Box className="report-circle" style={{ borderColor: '#01A4FF' }}>
-                                  20
+                                  {statisticsData?.numberofMountedCameraViewers}
                                 </Box>
                               </Grid>
                             </Grid>
