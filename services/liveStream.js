@@ -147,7 +147,7 @@ module.exports = {
       include:[{
         model: LiveStreams,
         where: { stream_id: { [Sequelize.Op.in]: streamIds } }
-      }], group: ["stream_id"] },
+      }], group: ["viewer_id"] },
       { transaction: t }
     );
 

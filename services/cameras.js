@@ -180,7 +180,7 @@ module.exports = {
       include:[{
         model: Camera,
         where: { cam_id: { [Sequelize.Op.in]: camIds } }
-      }] },
+      }], group: ["viewer_id"] },
       { transaction: t }
     );
 

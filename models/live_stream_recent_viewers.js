@@ -14,6 +14,10 @@ const LiveStreamRecentViewers = sequelize.define(
       type: Sequelize.STRING(50),
       allowNull: false
     },
+    viewer_id: {
+      type: Sequelize.STRING(50),
+      allowNull: false
+    },
     stream_id: {
       type: Sequelize.STRING(50),
       allowNull: false

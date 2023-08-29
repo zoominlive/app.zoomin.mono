@@ -14,6 +14,10 @@ const MountedCameraRecentViewers = sequelize.define(
       type: Sequelize.STRING(50),
       allowNull: false
     },
+    viewer_id: {
+      type: Sequelize.STRING(50),
+      allowNull: false
+    },
     cam_id: {
       type: Sequelize.STRING(50),
       allowNull: false
