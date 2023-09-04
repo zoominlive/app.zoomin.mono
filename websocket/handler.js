@@ -4,7 +4,7 @@ const userServices = require("../services/users");
 const familyServices = require("../services/families");
 const _ = require("lodash");
 
-sequelize.sync();
+// sequelize.sync();
 
 module.exports.connectHandler = async (event, context, callback) => {
   try {
