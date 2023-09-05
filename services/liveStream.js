@@ -1,7 +1,7 @@
 const connectToDatabase = require('../models/index');
 const jwt = require('jsonwebtoken');
 const Sequelize = require('sequelize');
-
+const moment = require('moment');
 
 module.exports = {
   /* Create stream ID token */
@@ -152,5 +152,36 @@ module.exports = {
     );
 
     return recentViewers;
+  },
+
+  getRecordedStreams: async(cust_id, started_at =  moment().format('YYYY-MM-DD 00:00'), location='All', rooms="All", live = true, vod = true, t)=> {
+    const { LiveStreams, Room, LiveStreamCameras } = await connectToDatabase();
+    let where_obj = location === "All" ? {} : {location: location}
+    let status_obj = live == "true" && vod == "true" ? {}: {stream_running: live == "true" ? true : false}
+    
+    if(rooms !== "All" & rooms.length > 0){
+      where_obj = {...where_obj, room_name: rooms}
+    }
+    
+    let recordedStreams = await LiveStreams.findAll(
+      { where: { cust_id: cust_id, ...status_obj,
+      stream_start_time: {
+        [Sequelize.Op.between]: [started_at, moment(started_at).format('YYYY-MM-DD 23:59')],
+      },
+     }, 
+       attributes:["stream_id", "stream_name","stream_running", "s3_url", "created_at"],
+      include: [{
+        model: Room,
+        where: where_obj,
+        as: "room",
+        include: [
+          {
+            model: LiveStreamCameras,
+          }
+        ]
+      }], },
+      { transaction: t }
+    );
+    return recordedStreams;
   }
 };

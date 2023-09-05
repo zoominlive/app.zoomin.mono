@@ -2,6 +2,7 @@ const _ = require('lodash');
 const liveStreamServices = require('../services/liveStream');
 const CONSTANTS = require('../lib/constants');
 const sequelize = require("../lib/database");
+const { v4: uuidv4 } = require("uuid");
 
 module.exports = {
   // get all recording details
@@ -11,12 +12,24 @@ module.exports = {
       custId = req.user.cust_id || req.query.cust_id;
       const activeLiveStreams = await liveStreamServices.getAllActiveStreams(custId, req?.query?.location, t);
       const recentLiveStreams = await liveStreamServices.getRecentStreams(custId, req?.query?.location, t);
-      await t.commit();
+      const recordedStreams = await liveStreamServices.getRecordedStreams(custId, req?.query?.started_at, req?.query?.location,req?.query?.rooms,req.query?.live,req.query?.vod, t);
+     // `${cam?.stream_uri}?uid=${user?.family_member_id || user?.user_id}&sid=${cam?.stream_uri.split('/') [cam?.stream_uri.split('/').length - 1].split('.')[0]}&uuid=${uuidv4()}`
+     recordedStreams.forEach(element => {
+      //element.stream_uri = `${cam?.stream_uri}?uid=${req.user?.family_member_id || req.user?.user_id}&sid=${cam?.stream_uri.split('/') [cam?.stream_uri.split('/').length - 1].split('.')[0]}&uuid=${uuidv4()}`
+     });
+     recordedStreams.forEach(element => {
+      element.room.live_stream_cameras.forEach(cam => 
+        cam.stream_uri = `${cam?.stream_uri}?uid=${req.user?.family_member_id || req.user?.user_id}&sid=${cam?.stream_uri.split('/') [cam?.stream_uri.split('/').length - 1].split('.')[0]}&uuid=${uuidv4()}`
+        )
+    });
+
+     await t.commit();
       res.status(200).json({
         IsSuccess: true,
         Data: {
           activeLiveStreams: activeLiveStreams ? activeLiveStreams : [],
           recentLiveStreams: recentLiveStreams ? recentLiveStreams : [],
+          recordedStreams: recordedStreams ? recordedStreams : []
         },
         Message: CONSTANTS.RECORDING_DETAILS
       });
