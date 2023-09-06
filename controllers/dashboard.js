@@ -4,6 +4,7 @@ const childrenServices = require("../services/children");
 const dashboardServices = require("../services/dashboard");
 const watchStreamServices = require("../services/watchStream");
 const customerServices = require("../services/customers");
+const liveStreamServices = require("../services/liveStream");
 const { listAvailableStreams } = require("../lib/rtsp-stream");
 const _ = require("lodash");
 const sequelize = require("../lib/database");
@@ -25,7 +26,7 @@ module.exports = {
   
       let streams = await listAvailableStreams(token, custId);
       const totalStreams =
-        await cameraServices.getAllCameraForCustomerDashboard(custId, t);
+        await cameraServices.getAllCameraForCustomerDashboard(custId, req?.query?.location, t);
       let totalActiveStreams = streams?.data?.filter((stream) => {
         return stream.running === true;
       });
@@ -40,7 +41,10 @@ module.exports = {
       });
 
       let SEAMembers = await familyServices.getFamilyWithSEA(userId, t);
-      const childSEA = await dashboardServices.getChildrenWithSEA(custId);
+      const childSEA = await dashboardServices.getChildrenWithSEA(custId, req?.query?.location);
+      // let  childrenWithEnableDate1= await familyServices.getSEAChilds(custId, req?.query?.location, true, t);
+      // let  childrenWithDisableDate1= await familyServices.getSEAChilds(custId, req?.query?.location, false, t);
+
       let childrenWithEnableDate = [];
       let childrenWithDisableDate = [];
 
@@ -49,9 +53,24 @@ module.exports = {
         let roomsToDisable = [];
         child.roomsInChild.forEach((room) => {
           if (room.scheduled_disable_date != null) {
+           if(req.query?.location !== "All"){
+            if(req.query?.location == room.room.location){
+              roomsToDisable.push(room.room.room_name);
+            }
+           }
+           else{
             roomsToDisable.push(room.room.room_name);
+           }
+           
           } else {
+            if(req.query?.location !== "All"){
+              if(req.query?.location == room.room.location){
+                roomsToEnable.push(room.room.room_name);
+              }
+             }
+             else{
             roomsToEnable.push(room.room.room_name);
+             }
           }
         });
 
@@ -60,6 +79,7 @@ module.exports = {
             childFirstName: child.first_name,
             childLastName: child.last_name,
             rooms: roomsToDisable,
+            family: child.family
           });
         }
         if (roomsToEnable.length != 0) {
@@ -67,6 +87,7 @@ module.exports = {
             childFirstName: child.first_name,
             childLastName: child.last_name,
             rooms: roomsToEnable,
+            family: child.family
           });
         }
         if (roomsToEnable.length == 0 && roomsToDisable.length == 0) {
@@ -75,6 +96,7 @@ module.exports = {
               childFirstName: child.first_name,
               childLastName: child.last_name,
               rooms: roomsToDisable,
+              family: child.family
             });
           }
           if (child.scheduled_enable_date != null) {
@@ -82,20 +104,22 @@ module.exports = {
               childFirstName: child.first_name,
               childLastName: child.last_name,
               rooms: roomsToEnable,
+              family: child.family
             });
           }
         }
       });
-
       SEAMembers = SEAMembers?.length + childSEA?.length;
 
       const topViewers = await dashboardServices.topViewersOfTheWeek(
         req.user,
-        req.query?.cust_id
+        req.query?.cust_id,
+        req.query?.location
       );
       const recentViewers = await dashboardServices.getLastOneHourViewers(
         req.user,
-        req.query?.cust_id
+        req.query?.cust_id,
+        req.query?.location
       );
       
       let cameras = await watchStreamServices.getAllCamForLocation({
@@ -108,13 +132,27 @@ module.exports = {
         cameras[camIndex].timeout = customerDetails.timeout;
         cameras[camIndex].permit_audio = customerDetails.permit_audio;
       });
-
+      const activeLiveStreams = await liveStreamServices.getAllActiveStreams(custId, req?.query?.location, t);
+      const numberofActiveStreamViewers = await liveStreamServices.getAllActiveStreamViewers(activeLiveStreams.flatMap(i => i.stream_id), t);
+      const childrens = await childrenServices.getAllChildren(custId, req?.query?.location,t);
+      const familyMembers = await familyServices.getAllFamilyMembers(custId, req?.query?.location, t);
+      const families = await familyServices.getAllFamilyIds(custId, req?.query?.location,t);
+      const recentLiveStreams = await liveStreamServices.getRecentStreams(custId, req?.query?.location, t);
+      const numberofMountedCameraViewers = await cameraServices.getAllMountedCameraViewers(totalStreams.flatMap(i => i.cam_id), t)
       await t.commit();
       res.status(200).json({
         IsSuccess: true,
         Data: {
+          totalStreams: totalStreams ? totalStreams : [],
           enrolledStreams: totalStreams ? totalStreams.length : 0,
           activeStreams: activeStreams ? activeStreams.length : 0,
+          numberofActiveStreamViewers: numberofActiveStreamViewers ? numberofActiveStreamViewers.length : 0,
+          numberofMountedCameraViewers: numberofMountedCameraViewers ? numberofMountedCameraViewers.length : 0,
+          activeLiveStreams: activeLiveStreams ? activeLiveStreams : [],
+          recentLiveStreams: recentLiveStreams ? recentLiveStreams : [],
+          childrens: childrens ? childrens.length : 0,
+          familyMembers: familyMembers ? familyMembers.length : 0,
+          families: families ? families.length : 0,
           SEAMembers: SEAMembers ? SEAMembers : 0,
           topViewers: topViewers ? topViewers : "",
           recentViewers: recentViewers?.length != 0 ? recentViewers.length : 0,
@@ -124,14 +162,13 @@ module.exports = {
           enroledStreamsDetails: recentViewers ? recentViewers : 0,
           defaultWatchStream: defaultWatchStream ?? null,
           watchStreamDetails: cameras[0] ?? null,
-        },
+              },
         Message: CONSTANTS.STREAM_DATA,
       });
 
       next();
     } catch (error) {
       await t.rollback();
-      console.log('=====dashboard error====',error)
       res.status(500).json({
         IsSuccess: false,
         error_log: error,

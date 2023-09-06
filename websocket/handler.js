@@ -4,7 +4,7 @@ const userServices = require("../services/users");
 const familyServices = require("../services/families");
 const _ = require("lodash");
 
-sequelize.sync();
+// sequelize.sync();
 
 module.exports.connectHandler = async (event, context, callback) => {
   try {
@@ -35,8 +35,8 @@ module.exports.disconnectHandler = (event, context, callback) => {
 };
 
 module.exports.defaultHandler = async (event, context, callback) => {
+  const t = await sequelize.transaction();
   try {
-    const t = await sequelize.transaction();
     let { family_member_id, user_id } = JSON.parse(event?.body);
     let updateObj = {
       socket_connection_id: event?.requestContext?.connectionId,

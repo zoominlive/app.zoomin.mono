@@ -2,8 +2,8 @@ const connectToDatabase = require("../models/index");
 const Sequelize = require("sequelize");
 const _ = require("lodash");
 const moment = require("moment-timezone");
-const RoomsInTeacher = require("../models/rooms_assigned_to_teacher");
 const customerServices = require("../services/customers");
+const { v4: uuidv4 } = require("uuid");
 // const livestreamCameras = require("./livestreamCameras");
 module.exports = {
   /* Create new camera */
@@ -96,7 +96,8 @@ module.exports = {
                     cam_id: cam?.camera?.cam_id,
                     cam_name: cam?.camera?.cam_name,
                     description: cam?.camera?.description,
-                    stream_uri: cam?.camera?.stream_uri,
+                    stream_uri: `${cam?.camera?.stream_uri}?uid=${user?.family_member_id || user?.user_id}&sid=${cam?.camera?.cam_id}&uuid=${uuidv4()}`
+                    
                   };
                 })
                 .filter((cam) => cam?.cam_id);
@@ -106,7 +107,7 @@ module.exports = {
                   cam_id: cam?.cam_id,
                   cam_name: cam?.cam_name,
                   description: cam?.description || "",
-                  stream_uri: cam?.stream_uri,
+                  stream_uri: `${cam?.stream_uri}?uid=${user?.family_member_id || user?.user_id}&sid=${cam?.stream_uri.split('/') [cam?.stream_uri.split('/').length - 1].split('.')[0]}&uuid=${uuidv4()}`,
                 };
               });
               cams = cams.concat(livStreamCams);
@@ -125,7 +126,7 @@ module.exports = {
                   cam_id: cam?.camera?.cam_id,
                   cam_name: cam?.camera?.cam_name,
                   description: cam?.camera?.description,
-                  stream_uri: cam?.camera?.stream_uri,
+                  stream_uri: `${cam?.camera?.stream_uri}?uid=${user?.family_member_id || user?.user_id}&sid=${cam?.camera?.cam_id}&uuid=${uuidv4()}`,
                 };
               })
               .filter((cam) => cam?.cam_id);
@@ -135,7 +136,7 @@ module.exports = {
                 cam_id: cam?.cam_id,
                 cam_name: cam?.cam_name,
                 description: cam?.description || "",
-                stream_uri: cam?.stream_uri,
+                stream_uri: `${cam?.stream_uri}?uid=${user?.family_member_id || user?.user_id}&sid=${cam?.stream_uri.split('/') [cam?.stream_uri.split('/').length - 1].split('.')[0]}&uuid=${uuidv4()}`,
               };
             });
             cams = cams.concat(livStreamCams);
@@ -233,7 +234,7 @@ module.exports = {
               cam_id: cam?.camera?.cam_id,
               cam_name: cam?.camera?.cam_name,
               description: cam?.camera?.description,
-              stream_uri: cam?.camera?.stream_uri,
+              stream_uri: `${cam?.camera?.stream_uri}?uid=${user?.family_member_id || user?.user_id}&sid=${cam?.camera?.cam_id}&uuid=${uuidv4()}`,
             };
           })
           .filter((cam) => cam?.cam_id);
@@ -244,7 +245,7 @@ module.exports = {
               cam_id: cam?.cam_id,
               cam_name: cam?.cam_name,
               description: cam?.description || "",
-              stream_uri: cam?.stream_uri,
+              stream_uri: `${cam?.stream_uri}?uid=${user?.family_member_id || user?.user_id}&sid=${cam?.stream_uri.split('/') [cam?.stream_uri.split('/').length - 1].split('.')[0]}&uuid=${uuidv4()}`,
             };
           }
         );
@@ -354,7 +355,7 @@ module.exports = {
                     cam_id: cam?.camera?.cam_id,
                     cam_name: cam?.camera?.cam_name,
                     description: cam?.camera?.description,
-                    stream_uri: cam?.camera?.stream_uri,
+                    stream_uri: `${cam?.camera?.stream_uri}?uid=${user?.family_member_id || user?.user_id}&sid=${cam?.camera?.cam_id}&uuid=${uuidv4()}`,
                   };
                 })
                 .filter((cam) => cam?.cam_id);
@@ -364,7 +365,7 @@ module.exports = {
                   cam_id: cam?.cam_id,
                   cam_name: cam?.cam_name,
                   description: cam?.description || "",
-                  stream_uri: cam?.stream_uri,
+                  stream_uri:`${cam?.stream_uri}?uid=${user?.family_member_id || user?.user_id}&sid=${cam?.stream_uri.split('/') [cam?.stream_uri.split('/').length - 1].split('.')[0]}&uuid=${uuidv4()}`,
                 };
               });
               cams = cams.concat(livStreamCams);
@@ -383,7 +384,7 @@ module.exports = {
                   cam_id: cam?.camera?.cam_id,
                   cam_name: cam?.camera?.cam_name,
                   description: cam?.camera?.description,
-                  stream_uri: cam?.camera?.stream_uri,
+                  stream_uri: `${cam?.camera?.stream_uri}?uid=${user?.family_member_id || user?.user_id}&sid=${cam?.camera?.cam_id}&uuid=${uuidv4()}`,
                 };
               })
               .filter((cam) => cam?.cam_id);
@@ -392,7 +393,7 @@ module.exports = {
                 cam_id: cam?.cam_id,
                 cam_name: cam?.cam_name,
                 description: cam?.description || "",
-                stream_uri: cam?.stream_uri,
+                stream_uri: `${cam?.stream_uri}?uid=${user?.family_member_id || user?.user_id}&sid=${cam?.stream_uri.split('/') [cam?.stream_uri.split('/').length - 1].split('.')[0]}&uuid=${uuidv4()}`,
               };
             });
             cams = cams.concat(livStreamCams);
@@ -448,7 +449,7 @@ module.exports = {
                   cam_id: cam?.camera?.cam_id,
                   cam_name: cam?.camera?.cam_name,
                   description: cam?.camera?.description,
-                  stream_uri: cam?.camera?.stream_uri,
+                  stream_uri: `${cam?.camera?.stream_uri}?uid=${user?.family_member_id || user?.user_id}&sid=${cam?.camera?.cam_id}&uuid=${uuidv4()}`,
                 };
               })
               .filter((cam) => cam?.cam_id);
@@ -457,7 +458,7 @@ module.exports = {
                 cam_id: cam?.cam_id,
                 cam_name: cam?.cam_name,
                 description: cam?.description || "",
-                stream_uri: cam?.stream_uri,
+                stream_uri: `${cam?.stream_uri}?uid=${user?.family_member_id || user?.user_id}&sid=${cam?.stream_uri.split('/') [cam?.stream_uri.split('/').length - 1].split('.')[0]}&uuid=${uuidv4()}`,
               };
             });
             cams = cams.concat(livStreamCams);
@@ -536,7 +537,8 @@ module.exports = {
                   cam_id: cam?.camera?.cam_id,
                   cam_name: cam?.camera?.cam_name,
                   description: cam?.camera?.description,
-                  stream_uri: cam?.camera?.stream_uri,
+                  stream_uri: `${cam?.camera?.stream_uri}?uid=${user?.family_member_id || user?.user_id}&sid=${cam?.camera?.cam_id}&uuid=${uuidv4()}`
+                  ,
                 };
               })
               .filter((cam) => cam?.cam_id);
@@ -547,7 +549,7 @@ module.exports = {
                   cam_id: cam?.cam_id,
                   cam_name: cam?.cam_name,
                   description: cam?.description || "",
-                  stream_uri: cam?.stream_uri,
+                  stream_uri: `${cam?.stream_uri}?uid=${user?.family_member_id || user?.user_id}&sid=${cam?.stream_uri.split('/') [cam?.stream_uri.split('/').length - 1].split('.')[0]}&uuid=${uuidv4()}`,
                 };
               }
             );
@@ -591,7 +593,8 @@ module.exports = {
                   cam_id: cam?.camera?.cam_id,
                   cam_name: cam?.camera?.cam_name,
                   description: cam?.camera?.description,
-                  stream_uri: cam?.camera?.stream_uri,
+                  stream_uri: `${cam?.camera?.stream_uri}?uid=${user?.family_member_id || user?.user_id}&sid=${cam?.camera?.cam_id}&uuid=${uuidv4()}`
+                  ,
                 };
               })
               .filter((cam) => cam?.cam_id);
@@ -604,7 +607,7 @@ module.exports = {
                 cam_id: cam?.cam_id,
                 cam_name: cam?.cam_name,
                 description: cam?.description || "",
-                stream_uri: cam?.stream_uri,
+                stream_uri: `${cam?.stream_uri}?uid=${user?.family_member_id || user?.user_id}&sid=${cam?.stream_uri.split('/') [cam?.stream_uri.split('/').length - 1].split('.')[0]}&uuid=${uuidv4()}`,
               };
             });
             cams = cams.concat(livStreamCams);
@@ -707,5 +710,19 @@ module.exports = {
     });
      
     return prefrenceDetails?.watchstream_cam
-  }
+  },
+
+  reportViewers: async (params, t) => {
+    const { MountedCameraRecentViewers } = await connectToDatabase();
+    let recentViewerObj = {
+      ...params,
+      requested_at: Sequelize.literal("CURRENT_TIMESTAMP"),
+    };
+    let recentViewer = await MountedCameraRecentViewers.create(
+      recentViewerObj,
+      { transaction: t }
+    );
+
+    return recentViewer;
+  },
 };

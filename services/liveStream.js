@@ -1,50 +1,187 @@
 const connectToDatabase = require('../models/index');
 const jwt = require('jsonwebtoken');
-// const Sequelize = require('sequelize');
-
+const Sequelize = require('sequelize');
+const moment = require('moment');
 
 module.exports = {
   /* Create stream ID token */
   createStreamKeyToken: async (streamID) => {
-    const token = jwt.sign({ stream_id: streamID }, process.env.LIVE_STREAM_SECRET_KEY);
+    const token = jwt.sign(
+      { stream_id: streamID },
+      process.env.LIVE_STREAM_SECRET_KEY
+    );
     return { token };
   },
 
   createLiveStream: async (liveStreamObj, t) => {
     const { LiveStreams } = await connectToDatabase();
-    let streamCreated = await LiveStreams.create(liveStreamObj, { transaction: t });
+    let streamCreated = await LiveStreams.create(liveStreamObj, {
+      transaction: t,
+    });
     return streamCreated;
   },
 
-  updateLiveStream: async(stream_id, updateObj, t) => {
+  updateLiveStream: async (stream_id, updateObj, t) => {
     const { LiveStreams } = await connectToDatabase();
-    let streamUpdated = await LiveStreams.update(updateObj, { where: {stream_id: stream_id} }, { transaction: t });
+    let streamUpdated = await LiveStreams.update(
+      updateObj,
+      { where: { stream_id: stream_id } },
+      { transaction: t }
+    );
     return streamUpdated;
   },
 
-  saveEndPointInCamera: async(stream_id, t) => {
+  saveEndPointInCamera: async (stream_id, t) => {
     const { LiveStreams, CamerasInRooms, Camera } = await connectToDatabase();
-    let liveStreamObj = await LiveStreams.findOne({ where: {stream_id: stream_id}, attributes: ['room_id', 'hls_url'], }, { transaction: t });
-    let cameraUpdated = await CamerasInRooms.update({hls_url: liveStreamObj?.dataValues?.hls_url}, {where: {room_id: liveStreamObj?.dataValues?.room_id}});
+    let liveStreamObj = await LiveStreams.findOne(
+      { where: { stream_id: stream_id }, attributes: ["room_id", "hls_url"] },
+      { transaction: t }
+    );
+    let cameraUpdated = await CamerasInRooms.update(
+      { hls_url: liveStreamObj?.dataValues?.hls_url },
+      { where: { room_id: liveStreamObj?.dataValues?.room_id } }
+    );
     return cameraUpdated;
   },
 
-  removeEndPointInCamera: async(stream_id, t) => {
+  removeEndPointInCamera: async (stream_id, t) => {
     const { LiveStreams, CamerasInRooms } = await connectToDatabase();
-    let liveStreamObj = await LiveStreams.findOne({ where: {stream_id: stream_id}, attributes: ['room_id', 'hls_url'], }, { transaction: t });
-    let cameraUpdated = await CamerasInRooms.update({hls_url: null}, {where: {room_id: liveStreamObj?.dataValues?.room_id}})
+    let liveStreamObj = await LiveStreams.findOne(
+      { where: { stream_id: stream_id }, attributes: ["room_id", "hls_url"] },
+      { transaction: t }
+    );
+    let cameraUpdated = await CamerasInRooms.update(
+      { hls_url: null },
+      { where: { room_id: liveStreamObj?.dataValues?.room_id } }
+    );
     return cameraUpdated;
   },
-  
-  getRoom: async(stream_id, t) => {
+
+  getRoom: async (stream_id, t) => {
     const { LiveStreams } = await connectToDatabase();
-    let roomObj = await LiveStreams.findOne({ where: {stream_id: stream_id}, attributes: ['room_id'], }, { transaction: t });
+    let roomObj = await LiveStreams.findOne(
+      { where: { stream_id: stream_id }, attributes: ["room_id"] },
+      { transaction: t }
+    );
     return roomObj?.dataValues?.room_id;
   },
 
-  getstreamObj: async(stream_id, t) => {
+  getstreamObj: async (stream_id, t) => {
     const { LiveStreams } = await connectToDatabase();
-    let roomObj = await LiveStreams.findOne({ where: {stream_id: stream_id}, }, { transaction: t });
+    let roomObj = await LiveStreams.findOne(
+      { where: { stream_id: stream_id } },
+      { transaction: t }
+    );
     return roomObj?.dataValues;
+  },
+
+  getAllActiveStreams: async (cust_id, location='All', t) => {
+    const { LiveStreams, Room, LiveStreamCameras } = await connectToDatabase();
+    let loc_obj = location === "All" ? {} : {location: location};
+    
+    let activeLiveStreams = await LiveStreams.findAll(
+      { where: { stream_running: true, cust_id: cust_id }, attributes:["stream_id","stream_name", "stream_start_time", "room_id"], 
+      include: [{
+        model: Room,
+        as: "room",
+        where: loc_obj,
+        include: [
+          {
+            model: LiveStreamCameras,
+          }
+        ]
+      }],
+    },
+      { transaction: t }
+    );
+    return activeLiveStreams;
+  },
+
+  getRecentStreams: async(cust_id, location='All', t)=> {
+    const { LiveStreams, Room, LiveStreamCameras } = await connectToDatabase();
+    let loc_obj = location === "All" ? {} : {location: location}
+    let oneHourBefore = new Date();
+    oneHourBefore.setHours(oneHourBefore.getHours() - 1);
+    const currentTime = new Date();
+
+    let recentLiveStreams = await LiveStreams.findAll(
+      { where: { stream_running: false, cust_id: cust_id,  stream_start_time: {
+        [Sequelize.Op.between]: [
+          oneHourBefore.toISOString(),
+          currentTime.toISOString(),
+        ],
+      }, }, attributes:["stream_id", "stream_start_time"],
+      include: [{
+        model: Room,
+        as: "room",
+        where: loc_obj,
+        include: [
+          {
+            model: LiveStreamCameras,
+          }
+        ]
+      }], },
+      { transaction: t }
+    );
+    return recentLiveStreams;
+  },
+
+  addRecentViewers: async (params, t) => {
+    const { LiveStreamRecentViewers } = await connectToDatabase();
+    let recentViewerObj = {
+      ...params,
+      requested_at: Sequelize.literal("CURRENT_TIMESTAMP"),
+    };
+    let recentViewer = await LiveStreamRecentViewers.create(
+      recentViewerObj,
+      { transaction: t }
+    );
+
+    return recentViewer;
+  },
+
+  getAllActiveStreamViewers: async (streamIds, t) => {
+    const { LiveStreamRecentViewers, LiveStreams } = await connectToDatabase();
+    let recentViewers = await LiveStreamRecentViewers.findAll(
+      { where: {function: "start"}, 
+      include:[{
+        model: LiveStreams,
+        where: { stream_id: { [Sequelize.Op.in]: streamIds } }
+      }], group: ["viewer_id"] },
+      { transaction: t }
+    );
+
+    return recentViewers;
+  },
+
+  getRecordedStreams: async(cust_id, started_at =  moment().format('YYYY-MM-DD 00:00'), location='All', rooms="All", live = true, vod = true, t)=> {
+    const { LiveStreams, Room, LiveStreamCameras } = await connectToDatabase();
+    let where_obj = location === "All" ? {} : {location: location}
+    let status_obj = live == "true" && vod == "true" ? {}: {stream_running: live == "true" ? true : false}
+    
+    if(rooms !== "All" & rooms.length > 0){
+      where_obj = {...where_obj, room_name: rooms}
+    }
+    
+    let recordedStreams = await LiveStreams.findAll(
+      { where: { cust_id: cust_id, ...status_obj,
+      stream_start_time: {
+        [Sequelize.Op.between]: [started_at, moment(started_at).format('YYYY-MM-DD 23:59')],
+      },
+     }, 
+       attributes:["stream_id", "stream_name","stream_running", "s3_url", "created_at"],
+      include: [{
+        model: Room,
+        where: where_obj,
+        as: "room",
+        include: [
+          {
+            model: LiveStreamCameras,
+          }
+        ]
+      }], },
+      { transaction: t }
+    );
+    return recordedStreams;
   }
 };

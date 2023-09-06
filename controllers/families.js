@@ -3,6 +3,7 @@ const familyServices = require('../services/families');
 const childServices = require('../services/children');
 const userServices = require('../services/users');
 const logServices = require('../services/logs');
+const dashboardServices = require('../services/dashboard');
 const CONSTANTS = require('../lib/constants');
 const encrypter = require('object-encrypter');
 const engine = encrypter(process.env.JWT_SECRET_KEY, { ttl: false });
@@ -107,7 +108,7 @@ module.exports = {
       });
 
       children = await childServices.createChildren(childObjs, t);
-
+      await dashboardServices.updateDashboardData(custId);
       await t.commit();
 
       res.status(201).json({

@@ -434,5 +434,25 @@ module.exports = {
 
     return childFamilyDetails;
   },
+
+  getAllChildren: async (custId, location = ["Select All"], t) => {
+    const {Child} = await connectToDatabase();
+    let AllChildren = await Child.findAll({
+      where: {cust_id: custId},
+      attributes: ["child_id", "location"], raw: true
+    }, { transaction: t });
+    
+    if(!location.includes("Select All")){
+      let filterResult = []
+      AllChildren.map(i => {
+          if(i.location?.locations?.every(it => location.includes(it))){
+            filterResult.push(i)
+          }
+      })
+      AllChildren = filterResult
+    }
+
+    return AllChildren;
+  }
 };
 

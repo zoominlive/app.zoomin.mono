@@ -5,10 +5,13 @@ const moment = require("moment-timezone");
 const RoomsInChild = require("../models/rooms_assigned_to_child");
 const Room = require("../models/room");
 const customerServices = require("../services/customers");
+const userServices = require("../services/users");
+const socketServices = require('../services/socket');
 
 module.exports = {
   /* get recent viewers */
-  getLastOneHourViewers: async (user, custId = null) => {
+  getLastOneHourViewers: async (user, custId = null, location = "All") => {
+    let loc_obj = location === "All" ? {} : {location: location};
     const { RecentViewers, Family, Child, Room, RoomsInChild, Users } =
       await connectToDatabase();
     let oneHourBefore = new Date();
@@ -28,7 +31,7 @@ module.exports = {
       include: [
         {
           model: Family,
-          attributes: ["first_name", "last_name", "location"],
+          attributes: ["first_name", "last_name", "location", "profile_image"],
           include: [
             {
               model: Child,
@@ -43,6 +46,7 @@ module.exports = {
                       attributes: ["room_name"],
                       model: Room,
                       as: "room",
+                      where: loc_obj
                     },
                   ],
                 },
@@ -52,11 +56,11 @@ module.exports = {
         },
         {
           model: Users,
-          attributes: ["first_name", "last_name","location"],
+          attributes: ["first_name", "last_name", "location", "profile_image" ],
         },
       ],
     });
-    const result = [];
+    let result = [];
     if (custId) {
       let availableLocations = await customerServices.getLocationDetails(
         custId
@@ -94,12 +98,29 @@ module.exports = {
         }
       });
     }
+
+    if(!location.includes("Select All")){
+      let filterResult = []
+       result.map(i => {
+        if(i.family){
+          if(i.family?.location?.accessable_locations.every(i => location.includes(i))){
+            filterResult.push(i)
+          }
+        }
+        else{
+          if(i.user?.location?.accessable_locations.every(i => location.includes(i))){
+            filterResult.push(i)
+          }
+        }
+      })
+      result = filterResult
+    }
+
     return result;
   },
 
-  topViewersOfTheWeek: async (user, custId = null) => {
+  topViewersOfTheWeek: async (user, custId = null, location = "All") => {
     const { RecentViewers, Family, Users } = await connectToDatabase();
-
     let recentViewers = await RecentViewers.findAll({
       where: {
         requested_at: {
@@ -127,15 +148,15 @@ module.exports = {
       include: [
         {
           model: Family,
-          attributes: ["first_name", "last_name", "location"],
+          attributes: ["family_member_id","first_name", "last_name", "location","profile_image"],
         },
         {
           model: Users,
-          attributes: ["first_name", "last_name", "location"],
+          attributes: ["user_id","first_name", "last_name", "location", "profile_image"],
         },
       ],
     });
-    const result = [];
+    let result = [];
     if (custId) {
       let availableLocations = await customerServices.getLocationDetails(
         custId
@@ -144,13 +165,13 @@ module.exports = {
       recentViewers.map((item) => {
         if (item.family) {
           locs.forEach((i) => {
-            if (item.family.location.accessable_locations.includes(i)) {
+            if (item.family?.location?.accessable_locations.includes(i)) {
               result.push(item);
             }
           });
         } else {
            locs.forEach((i) => {
-            if (item.user.location.accessable_locations.includes(i)) {
+            if (item.user?.location?.accessable_locations.includes(i)) {
               result.push(item);
             }
           });
@@ -161,13 +182,13 @@ module.exports = {
       
         if (item.family) {
            user.location.accessable_locations.forEach((i) => {
-            if (item.family?.location?.accessable_locations?.includes(i)) {
+            if (item.family?.location?.accessable_locations.includes(i)) {
               result.push(item);
             }
           });
         } else {
            user.location.accessable_locations.forEach((i) => {
-            if (item.user?.location?.accessable_locations?.includes(i)) {
+            if (item.user?.location?.accessable_locations.includes(i)) {
               result.push(item);
             }
           });
@@ -175,11 +196,27 @@ module.exports = {
       });
     }
 
+    if(!location.includes("Select All")){
+      let filterResult = []
+       result.map(i => {
+        if(i.family){
+          if(i.family?.location?.accessable_locations.every(i => location.includes(i))){
+            filterResult.push(i)
+          }
+        }
+        else{
+          if(i.user?.location?.accessable_locations.every(i => location.includes(i))){
+            filterResult.push(i)
+          }
+        }
+      })
+      result = filterResult
+    }
     return result;
   },
 
-  getChildrenWithSEA: async (custId) => {
-    const { Child } = await connectToDatabase();
+  getChildrenWithSEA: async (custId, location = ["Select All"]) => {
+    const { Child, Family } = await connectToDatabase();
     let children = await Child.findAll({
       where: { cust_id: custId },
       attributes: [
@@ -187,8 +224,56 @@ module.exports = {
         "last_name",
         "scheduled_end_date",
         "scheduled_enable_date",
+        "family_id",
+        "location"
       ],
       include: [
+        {
+          model: Family,
+          include: [
+            {
+              model: Child,
+              include: [
+                {
+                  model: RoomsInChild,
+                  as: "roomsInChild",
+                  include: [
+                    {
+                      model: Room,
+                      as: "room",
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              model: Family,
+              as: "secondary",
+              attributes: {
+                exclude: [
+                  "password",
+                  "password_link",
+                  "createdAt",
+                  "cam_preference",
+                  "updatedAt",
+                ],
+              },
+              where: {
+                member_type: "secondary",
+              },
+              required: false,
+            },
+          ],
+          attributes: {
+            exclude: [
+              "password",
+              "password_link",
+              "createdAt",
+              "cam_preference",
+              "updatedAt",
+            ],
+          },
+        },
         {
           model: RoomsInChild,
           as: "roomsInChild",
@@ -217,12 +302,22 @@ module.exports = {
             {
               model: Room,
               as: "room",
-              attributes: ["room_name"],
+              attributes: ["room_name", "location"],
             },
           ],
         },
       ],
     });
+
+    if(!location.includes("Select All")){
+      let filterResult = []
+      children.map(i => {
+          if(i.location?.locations.every(it => location.includes(it))){
+            filterResult.push(i)
+          }
+      })
+      children = filterResult
+    }
 
     return children;
   },
@@ -274,5 +369,17 @@ module.exports = {
     });
      
     return prefrenceDetails?.dashboard_cam
-  }
+  },
+
+  updateDashboardData: async (cust_id) => {
+    let usersSocketIds = await userServices.getUsersSocketIds(cust_id);
+        usersSocketIds = usersSocketIds.flatMap((i) => i.socket_connection_id).filter((i) => i !== null);
+        if (!_.isEmpty(usersSocketIds)) {
+          await Promise.all(
+            usersSocketIds.map(async (id) => {
+              await socketServices.emitResponse(id, {"update_dashboard_data": true});
+            })
+          );
+        }
+  },
 };
