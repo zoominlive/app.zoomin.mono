@@ -131,7 +131,6 @@ module.exports = {
       next();
     } catch (error) {
       await t.rollback();
-      console.log('=====dashboard error====',error)
       res.status(500).json({
         IsSuccess: false,
         error_log: error,
