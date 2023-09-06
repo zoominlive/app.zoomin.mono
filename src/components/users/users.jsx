@@ -202,7 +202,7 @@ const Users = () => {
                       <InputLabel id="search">Search</InputLabel>
                       <TextField
                         labelId="search"
-                        placeholder="User Name,Email"
+                        placeholder="User Name, Email, Location"
                         onChange={debouncedResults}
                         InputProps={{
                           startAdornment: (

@@ -104,8 +104,8 @@ const Login = () => {
             <CardContent className="card-content">
               <TitleDiv
                 isShowTitle={true}
-                title={'Log in to ZOOMiN Live'}
-                subtitle={'Welcome back to zoominl live'}
+                title={''}
+                subtitle={'Live Streaming Video Families Adore'}
               />
               {showCustomerSelection ? (
                 <CustomerSelection />

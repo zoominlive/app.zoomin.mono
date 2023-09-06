@@ -166,7 +166,7 @@ const Cameras = () => {
                       <InputLabel id="search">Search</InputLabel>
                       <TextField
                         labelId="search"
-                        placeholder="Cam Name,Description"
+                        placeholder="Camera Name, Description"
                         onChange={debouncedResults}
                         InputProps={{
                           startAdornment: (

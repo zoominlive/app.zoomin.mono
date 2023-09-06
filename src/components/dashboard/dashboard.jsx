@@ -641,7 +641,7 @@ const Dashboard = () => {
               <AccessTable
                 rows={statisticsData?.childrenWithEnableDate || []}
                 columns={AccessColumns}
-                title={'Weekly Gaining Access'}
+                title={'Gaining Access This Week'}
                 isLoading={isLoading}
                 getDashboardData={getDashboardData}
                 setFamily={setFamily}
@@ -656,7 +656,7 @@ const Dashboard = () => {
               <AccessTable
                 rows={statisticsData?.childrenWithDisableDate || []}
                 columns={AccessColumns}
-                title={'Weekly Loosing Access'}
+                title={'Loosing Access This Week'}
                 isLoading={isLoading}
                 getDashboardData={getDashboardData}
                 setFamily={setFamily}

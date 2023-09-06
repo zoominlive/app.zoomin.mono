@@ -331,7 +331,7 @@ const Rooms = () => {
                       <InputLabel id="search">Search</InputLabel>
                       <TextField
                         labelId="search"
-                        placeholder="Room Name,etc"
+                        placeholder="Room Name, Location"
                         onChange={roomsListDebounce}
                         InputProps={{
                           startAdornment: (

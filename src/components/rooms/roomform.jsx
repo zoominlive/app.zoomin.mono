@@ -199,9 +199,7 @@ const RoomForm = (props) => {
       className="edit-family-dialog">
       <DialogTitle sx={{ paddingTop: 3.5 }}>
         {props.room ? 'Edit Room' : 'Add Room'}
-        <DialogContentText>
-          Please select which stream you want to watch on your dashboard
-        </DialogContentText>
+        <DialogContentText>Quickly add rooms to your account</DialogContentText>
         <IconButton
           aria-label="close"
           onClick={() => {

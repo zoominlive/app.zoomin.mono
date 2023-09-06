@@ -30,7 +30,11 @@ import { errorMessageHandler } from '../../utils/errormessagehandler';
 import * as yup from 'yup';
 import moment from 'moment-timezone';
 import CloseIcon from '@mui/icons-material/Close';
-const STEPS = ['Primary', 'Secondary', 'Children'];
+const STEPS = [
+  'Enter the primary family members details',
+  'Add additional family members that watch the stream or click Next Step',
+  'Add any children that belong to this family'
+];
 
 const AddFamily = (props) => {
   const authCtx = useContext(AuthContext);
