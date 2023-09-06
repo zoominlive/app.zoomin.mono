@@ -11,6 +11,7 @@ import AuthContext from '../../context/authcontext';
 import _ from 'lodash';
 
 const CustomPlayer = (props) => {
+  console.log('===streamUri==', props.streamUri, props?.camDetails);
   const authCtx = useContext(AuthContext);
   const [inPIPMode, setInPIPMode] = useState(false);
   const [fullscreen, setFullScreen] = useState(false);
@@ -100,6 +101,7 @@ const CustomPlayer = (props) => {
                 ? props?.streamUri
                 : `${authCtx.user.transcoderBaseUrl}${props?.streamUri}`
             }
+            //url={props.streamUri}
             className="react-player"
             height={'100%'}
             width={'100%'}

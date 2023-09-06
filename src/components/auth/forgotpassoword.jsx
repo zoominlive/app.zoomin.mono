@@ -81,7 +81,7 @@ const ForgotPassword = () => {
                       alignItems={'center'}
                       className="reset-text">
                       <Typography component="h1" variant="h5">
-                        Reset Password
+                        Forget Password
                       </Typography>
                       <Box component="img" src={SuceessIcon} alt={''} />
                       <Typography>
@@ -90,7 +90,7 @@ const ForgotPassword = () => {
                         <br />
                       </Typography>
                       <Typography>
-                        Do not repeat this step if you already got a reset password link.
+                        To Reset your password please enter your email address
                       </Typography>
                     </Stack>
                     <br />
@@ -102,9 +102,12 @@ const ForgotPassword = () => {
                 ) : (
                   <>
                     <Typography component="h1" variant="h5">
-                      Forgot Password
+                      Forget Password
                     </Typography>
-
+                    <Typography className="reset-text">
+                      To Reset your password please enter your email address
+                    </Typography>
+                    <br />
                     <Formik
                       enableReinitialize
                       validateOnChange

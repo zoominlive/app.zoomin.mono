@@ -23,7 +23,8 @@ import {
 } from '@mui/material';
 
 import logo from '../../assets/logo.svg';
-import appLogo from '../../assets/app-icon.png';
+// import appLogo from '../../assets/app-icon.png';
+import collapsedLogo from '../../assets/white-logo-collapsed.png';
 import collapseButton from '../../assets/collapse-button.svg';
 import openButton from '../../assets/open-button.svg';
 import React, { useEffect, useState } from 'react';
@@ -243,7 +244,7 @@ const Layout = () => {
             {open ? (
               <img src={logo} style={{ height: '4.5em', width: '190px' }} />
             ) : (
-              <img src={appLogo} style={{ height: '4.5em' }} />
+              <img src={collapsedLogo} style={{ height: '42px' }} />
             )}
           </div>
           {authCtx.user && Object?.keys(authCtx?.user)?.length !== 0 && (
@@ -389,7 +390,7 @@ const Layout = () => {
                 
               </FormControl> */}
             <Grid container alignItems={'self-end'} gap={1}>
-              <Grid item xs={12} sm={12} md={7} lg={7}>
+              <Grid item xs={12} sm={12} md={12} lg={7}>
                 <Stack
                   direction={'row'}
                   justifyContent={'flex-start'}
@@ -411,7 +412,7 @@ const Layout = () => {
                   </Stack>
                 </Stack>
               </Grid>
-              <Grid item xs={12} sm={12} md={2.6} lg={2.6}>
+              <Grid item xs={12} sm={12} md={4} lg={2.6}>
                 <Autocomplete
                   sx={{
                     '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
@@ -471,7 +472,7 @@ const Layout = () => {
                   )}
                 />
               </Grid>
-              <Grid item xs={12} sm={12} md={2} lg={2}>
+              <Grid item xs={12} sm={12} md={4} lg={2}>
                 <Box className="header-right">
                   <AccountMenu openLogoutDialog={setIsLogoutDialogOpen} />
                 </Box>

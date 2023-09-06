@@ -77,7 +77,8 @@ const Row = (props) => {
                 camName: camRow?.cam_name,
                 camId: camRow?.cam_id,
                 streamUrl: camRow?.stream_uri
-              }}>
+              }}
+              className="cam-link">
               <Chip
                 color="primary"
                 className="chip-color"

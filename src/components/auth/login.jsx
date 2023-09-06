@@ -180,8 +180,8 @@ const Login = () => {
                                   />
                                 </Box>
                                 <Stack direction={'row'} justifyContent={'flex-end'}>
-                                  <Link to="/forgot-password" variant="body2">
-                                    Forgot password?
+                                  <Link to="/forget-password" variant="body2">
+                                    Forget password?
                                   </Link>
                                 </Stack>
                                 <LoadingButton

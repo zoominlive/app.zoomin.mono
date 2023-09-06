@@ -48,11 +48,11 @@ const MainApp = () => {
       }
       //navigate('/dashboard');
 
-      const socket = new WebSocket(process.env.REACT_APP_SOCKET_URL);
+      let socket = new WebSocket(process.env.REACT_APP_SOCKET_URL);
 
       // Connection opened
       socket.addEventListener('open', (event) => {
-        console.log('open');
+        console.log('Connected');
         socket.send(JSON.stringify(data), event);
       });
 
@@ -69,10 +69,20 @@ const MainApp = () => {
 
       socket.addEventListener('error', (event) => {
         console.error('WebSocket error:', event);
+        socket = new WebSocket(process.env.REACT_APP_SOCKET_URL);
+        socket.addEventListener('Open', (event) => {
+          console.log('Reconnected');
+          socket.send(JSON.stringify(data), event);
+        });
       });
 
       socket.addEventListener('close', (event) => {
         console.log('WebSocket connection closed with code:', event.code, 'reason:', event.reason);
+        socket = new WebSocket(process.env.REACT_APP_SOCKET_URL);
+        socket.addEventListener('open', (event) => {
+          console.log('Reconnected');
+          socket.send(JSON.stringify(data), event);
+        });
       });
     }
   }, [authCtx.token]);
@@ -80,7 +90,7 @@ const MainApp = () => {
     <Routes>
       <Route element={<PublicRoute />}>
         <Route path="/login" element={<Login />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/forget-password" element={<ForgotPassword />} />
       </Route>
       <Route path="/set-password" element={<SetPassword />} />
       <Route path="/email-change" element={<EmailChange />} />

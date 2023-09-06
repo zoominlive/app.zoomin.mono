@@ -181,7 +181,7 @@ const Logs = () => {
 
   useEffect(() => {
     layoutCtx.setActive(8);
-    layoutCtx.setBreadcrumb(['Logs']);
+    layoutCtx.setBreadcrumb(['Logs', 'Review Access and Change Logs']);
     if (authCtx?.user?.location?.accessable_locations) {
       setIsLoading(true);
       API.get('users/location/', {
@@ -612,6 +612,9 @@ const Logs = () => {
             <Stack direction="row" alignItems="center" spacing={3}>
               <Typography>{`${row.function}`}</Typography>
             </Stack>
+          </TableCell>
+          <TableCell component="th" scope="row">
+            - -
           </TableCell>
         </TableRow>
         <TableRow className={`expandable-row ${!open ? 'border-bottom-none' : ''}`}>
@@ -1060,6 +1063,7 @@ const Logs = () => {
                 <Table sx={{ minWidth: 650 }} aria-label="simple table">
                   <TableHead>
                     <TableRow>
+                      <TableCell></TableCell>
                       <TableCell style={{ minWidth: '20px' }}>No</TableCell>
                       <TableCell style={{ minWidth: '100px' }} align="left">
                         Date

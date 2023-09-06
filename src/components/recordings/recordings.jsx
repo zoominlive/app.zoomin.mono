@@ -60,7 +60,6 @@ const Recordings = () => {
   const layoutCtx = useContext(LayoutContext);
   const authCtx = useContext(AuthContext);
   const { enqueueSnackbar } = useSnackbar();
-  const handle = useFullScreenHandle();
   const [isLoading, setIsLoading] = useState(false);
   const [isDatePickerOpen1, setIsDatePickerOpen1] = useState(false);
   const [fromDate, setFromDate] = useState(moment());
@@ -69,42 +68,49 @@ const Recordings = () => {
   const [roomsDropdownLoading, setRoomsDropdownLoading] = useState(false);
   const [selectedRooms, setSelectedRooms] = useState([]);
   //const [selectedRoom, setSelectedRoom] = useState([]);
-  const [timeOut, setTimeOut] = useState(2);
-  const [selectedCamera] = useState({
-    camLabel: '',
-    stream_uri: 'https://www.youtube.com/watch?v=ysz5S6PUM-U',
-    cam_id: null,
-    location: '',
-    room_name: '',
-    cam_name: ''
-  });
-  const [submitted] = useState(true);
-  const [playing, setPlaying] = useState(true);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isFullScreenDialogOpen, setIsFullScreenDialogOpen] = useState(false);
-  const [streamData] = useState([
-    {
-      date: '12-05-2023',
-      location: 'Location 1',
-      room: 'Room 1',
-      status: 'Live Stream',
-      url: 'https://www.youtube.com/watch?v=ysz5S6PUM-U'
-    }
-  ]);
-  const [camerasPayload, setCamerasPayload] = useState({
+  // const [timeOut, setTimeOut] = useState(2);
+  // const [selectedCamera] = useState({
+  //   camLabel: '',
+  //   stream_uri: 'https://www.youtube.com/watch?v=ysz5S6PUM-U',
+  //   cam_id: null,
+  //   location: '',
+  //   room_name: '',
+  //   cam_name: ''
+  // });
+  // const [submitted] = useState(true);
+  // const [playing, setPlaying] = useState(true);
+  // const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  // const [isFullScreenDialogOpen, setIsFullScreenDialogOpen] = useState(false);
+  // const [streamData] = useState([
+  //   {
+  //     date: '12-05-2023',
+  //     location: 'Location 1',
+  //     room: 'Room 1',
+  //     status: 'Live Stream',
+  //     url: 'https://www.youtube.com/watch?v=ysz5S6PUM-U'
+  //   }
+  // ]);
+  const [recordingsPayload, setRecordingsPayload] = useState({
     pageNumber: 0,
     pageSize: parseInt(process.env.REACT_APP_PAGINATION_LIMIT, 10),
     searchBy: '',
     location: 'All',
-    cust_id: localStorage.getItem('cust_id')
+    cust_id: localStorage.getItem('cust_id'),
+    live: true,
+    vod: true,
+    started_at: moment().format('YYYY-MM-DD 00:00')
   });
   const [activeLiveStreamList, setActiveLivestreamList] = useState([]);
   const [recentLiveStreamList, setRecentLivestreamList] = useState([]);
+  const [recordedStreamList, setRecordedStreamList] = useState([]);
 
-  console.log('===selectedRooms', selectedRooms, isDeleteDialogOpen, playing);
+  console.log('===selectedRooms', selectedRooms);
   useEffect(() => {
     layoutCtx.setActive(7);
-    layoutCtx.setBreadcrumb(['Recordings']);
+    layoutCtx.setBreadcrumb([
+      'Recordings',
+      'Explore Past Streams: Welcome to the Recording Archives'
+    ]);
     return () => {
       authCtx.setPreviosPagePath(window.location.pathname);
     };
@@ -129,57 +135,91 @@ const Recordings = () => {
   }, []);
   const handleLocationChange = (event) => {
     setLocation(event.target.value);
+    setRecordingsPayload((prevPayload) => ({
+      ...prevPayload,
+      location: event.target.value,
+      pageNumber: 0
+    }));
   };
   const handleRoomChange = (_, value) => {
     const roomsArr = [];
     value.forEach((room) => roomsArr.push(room.room_name));
     setSelectedRooms(roomsArr);
+    setRecordingsPayload((prevPayload) => ({ ...prevPayload, rooms: roomsArr, pageNumber: 0 }));
     //setFamiliesPayload((prevPayload) => ({ ...prevPayload, rooms: roomsArr, page: 0 }));
   };
   const handlePageChange = (_, newPage) => {
-    setCamerasPayload((prevPayload) => ({ ...prevPayload, pageNumber: newPage }));
+    setRecordingsPayload((prevPayload) => ({ ...prevPayload, pageNumber: newPage }));
+    getRecordingData();
   };
 
   // Method to change the row per page in table
   const handleChangeRowsPerPage = (event) => {
-    setCamerasPayload((prevPayload) => ({
+    setRecordingsPayload((prevPayload) => ({
       ...prevPayload,
       pageSize: parseInt(event.target.value, 10)
     }));
+    getRecordingData();
   };
 
   const Row = ({ row }) => {
-    const { date, location, room, status, url } = row;
+    const { created_at, room, s3_url, stream_running } = row;
+    const handle = useFullScreenHandle();
     const [open, setOpen] = useState(false);
+    const [timeOut, setTimeOut] = useState(2);
+    const [selectedCamera, setSelectedCamera] = useState({
+      camLabel: '',
+      stream_uri: 'https://www.youtube.com/watch?v=ysz5S6PUM-U',
+      cam_id: null,
+      location: '',
+      room_name: '',
+      cam_name: ''
+    });
+    const [submitted] = useState(true);
+    const [playing, setPlaying] = useState(true);
+    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+    const [isFullScreenDialogOpen, setIsFullScreenDialogOpen] = useState(false);
+    console.log('=isDeleteDialogOpen=', isDeleteDialogOpen);
     return (
       <>
         <TableRow hover>
           <TableCell component="th" scope="row">
             <Stack direction="row" alignItems="center" spacing={3}>
-              <Typography>{`${date}`}</Typography>
+              <Typography>{`${moment(created_at).format('YYYY-MM-DD')}`}</Typography>
             </Stack>
           </TableCell>
           <TableCell align="left">
             <Stack direction="row">
-              <Chip label={location} color="primary" className="chip-color" />
+              <Chip label={room?.location} color="primary" className="chip-color" />
             </Stack>
           </TableCell>
           <TableCell align="left">
             <Stack direction="row">
-              <Chip label={room} color="primary" className="room-chip" />
+              <Chip label={room?.room_name} color="primary" className="room-chip" />
             </Stack>
           </TableCell>
           <TableCell align="left">
             <Stack direction="row">
-              <Chip label={status} color="primary" className="green-chip-color" />
+              <Chip
+                label={`${stream_running ? 'Live' : 'VOD'} Stream`}
+                color="primary"
+                className={`${stream_running ? 'green' : 'red'}-chip-color`}
+              />
             </Stack>
           </TableCell>
           <TableCell>
             <Button
-              className="add-button stream-btn"
+              className="add-button stream-btn btn-radius"
               variant="contained"
               startIcon={<PlayArrowSharpIcon />}
-              onClick={() => setOpen(true)}>
+              onClick={() => {
+                setOpen(!open);
+                setSelectedCamera({
+                  location: room?.location,
+                  room_name: room?.room_name,
+                  ...room?.live_stream_cameras[0]
+                });
+              }}>
               {' '}
               Play Stream
             </Button>
@@ -188,14 +228,21 @@ const Recordings = () => {
         <TableRow className="video-in-table">
           <TableCell colSpan={5}>
             <Box>
-              {open && url && (
+              {open && (
                 <>
                   <Card>
                     <CardContent>
-                      <Box mt={2} className="no-camera-wrapper" sx={{ height: 300 }}>
+                      <Box
+                        className="no-camera-wrapper"
+                        pt={2}
+                        sx={{
+                          height: 300,
+                          backgroundColor: '#C8C6F1',
+                          borderRadius: 4
+                        }}>
                         <CustomPlayer
                           noOfCameras={2}
-                          streamUri={url}
+                          streamUri={s3_url || room?.live_stream_cameras[0].stream_uri}
                           camDetails={selectedCamera}
                           timeOut={timeOut}
                           setTimeOut={setTimeOut}
@@ -206,7 +253,6 @@ const Recordings = () => {
                     </CardContent>
                   </Card>
                   <Button
-                    // style={{ position: 'sticky', bottom: '5%', marginLeft: '95%' }}
                     className="full-screen-button"
                     onClick={() => {
                       setIsFullScreenDialogOpen(true);
@@ -219,16 +265,36 @@ const Recordings = () => {
             </Box>
           </TableCell>
         </TableRow>
+        <FullScreen
+          handle={handle}
+          onChange={(state) => {
+            if (state == false) {
+              setIsFullScreenDialogOpen(false);
+            }
+          }}>
+          {isFullScreenDialogOpen && (
+            <FullScreenDialog
+              isFullScreenDialogOpen={isFullScreenDialogOpen}
+              selectedCameras={[selectedCamera]}
+              playing={playing}
+              submitted={submitted}
+              camLabel={[selectedCamera]}
+              timeOut={timeOut}
+              setTimeOut={setTimeOut}
+              setPlaying={setPlaying}
+              setIsDeleteDialogOpen={setIsDeleteDialogOpen}
+            />
+          )}
+        </FullScreen>
       </>
     );
   };
   Row.propTypes = {
     row: PropTypes.shape({
-      date: PropTypes.string,
-      location: PropTypes.string,
-      room: PropTypes.string,
-      status: PropTypes.string,
-      url: PropTypes.string
+      created_at: PropTypes.string,
+      stream_running: PropTypes.bool,
+      room: PropTypes.object,
+      s3_url: PropTypes.string
     })
   };
 
@@ -236,12 +302,14 @@ const Recordings = () => {
     setIsLoading(true);
     API.get('recordings', {
       params: {
+        ...recordingsPayload,
         cust_id: localStorage.getItem('cust_id')
       }
     }).then((response) => {
       if (response.status === 200) {
         setActiveLivestreamList(response.data.Data.activeLiveStreams);
         setRecentLivestreamList(response.data.Data.recentLiveStreams);
+        setRecordedStreamList(response.data.Data.recordedStreams);
         setIsLoading(false);
       } else {
         errorMessageHandler(
@@ -355,7 +423,7 @@ const Recordings = () => {
       <Box className="listing-wrapper">
         <Card className="filter">
           <CardContent>
-            <Grid container>
+            <Grid container alignContent={'center'}>
               <Grid item lg={6} md={6} sm={12} xs={12}>
                 <Grid container spacing={2}>
                   <Grid item md={3.5} sm={6}>
@@ -448,14 +516,21 @@ const Recordings = () => {
                 <>
                   <Grid container spacing={2}>
                     <Grid item md={6} sm={6}>
-                      <FormGroup>
+                      <FormGroup
+                        onChange={(e) => {
+                          setRecordingsPayload(
+                            e.target.value === 'Live'
+                              ? { ...recordingsPayload, live: e.target.checked }
+                              : { ...recordingsPayload, vod: e.target.checked }
+                          );
+                        }}>
                         <InputLabel>Status</InputLabel>
                         <Stack direction={'row'}>
                           <FormControlLabel
                             control={
                               <Checkbox
-                                checked={true}
-                                //onChange={handleChangeDomain}
+                                value={'Live'}
+                                checked={recordingsPayload.live}
                                 color="primary"
                               />
                             }
@@ -465,8 +540,8 @@ const Recordings = () => {
                           <FormControlLabel
                             control={
                               <Checkbox
-                                checked={false}
-                                //onChange={handleChangeEmail}
+                                value={'VOD'}
+                                checked={recordingsPayload.vod}
                                 color="primary"
                               />
                             }
@@ -478,13 +553,11 @@ const Recordings = () => {
 
                     <Grid item md={6} sm={6} sx={{ textAlign: 'right' }}>
                       <Button
-                        className="add-button stream-btn"
+                        className="add-button"
                         variant="contained"
-                        startIcon={<PlayArrowSharpIcon />}
-                        //onClick={() => setSubmitted(true)}
-                      >
+                        onClick={() => getRecordingData()}>
                         {' '}
-                        Play Stream
+                        Submit
                       </Button>
                     </Grid>
                   </Grid>
@@ -509,21 +582,21 @@ const Recordings = () => {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {streamData?.length > 0
-                      ? streamData?.map((row, index) => <Row row={row} key={index} />)
+                    {recordedStreamList?.length > 0
+                      ? recordedStreamList?.map((row, index) => <Row row={row} key={index} />)
                       : null}
                   </TableBody>
                 </Table>
-                {!isLoading && streamData?.length == 0 ? <NoDataDiv /> : null}
-                {streamData?.length > 0 ? (
+                {!isLoading && recordedStreamList?.length == 0 ? <NoDataDiv /> : null}
+                {recordedStreamList?.length > 0 ? (
                   <TablePagination
                     rowsPerPageOptions={[5, 10, 20, 25, 50]}
                     onPageChange={handlePageChange}
                     onRowsPerPageChange={handleChangeRowsPerPage}
                     component="div"
-                    count={streamData.length}
-                    rowsPerPage={camerasPayload?.pageSize}
-                    page={camerasPayload?.pageNumber}
+                    count={recordedStreamList.length}
+                    rowsPerPage={recordingsPayload?.pageSize}
+                    page={recordingsPayload?.pageNumber}
                     sx={{ flex: '1 1 auto' }}
                   />
                 ) : null}
@@ -531,28 +604,6 @@ const Recordings = () => {
             </Box>
           </CardContent>
         </Card>
-
-        <FullScreen
-          handle={handle}
-          onChange={(state) => {
-            if (state == false) {
-              setIsFullScreenDialogOpen(false);
-            }
-          }}>
-          {isFullScreenDialogOpen && (
-            <FullScreenDialog
-              isFullScreenDialogOpen={isFullScreenDialogOpen}
-              selectedCameras={[selectedCamera]}
-              playing={playing}
-              submitted={submitted}
-              camLabel={{}}
-              timeOut={timeOut}
-              setTimeOut={setTimeOut}
-              setPlaying={setPlaying}
-              setIsDeleteDialogOpen={setIsDeleteDialogOpen}
-            />
-          )}
-        </FullScreen>
       </Box>
     </>
   );

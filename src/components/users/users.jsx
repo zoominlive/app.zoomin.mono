@@ -63,7 +63,7 @@ const Users = () => {
 
   useEffect(() => {
     layoutCtx.setActive(4);
-    layoutCtx.setBreadcrumb(['Users', 'Manage Families and their camera authorization']);
+    layoutCtx.setBreadcrumb(['Users', 'Manage Access and Privileges of users ']);
     return () => {
       authCtx.setPreviosPagePath(window.location.pathname);
     };
