@@ -54,7 +54,7 @@ import CustomPlayer from '../watchstream/customplayer';
 import { FullScreen, useFullScreenHandle } from 'react-full-screen';
 import FullScreenDialog from '../watchstream/fullscreendialog';
 //import FullScreenDialog from '../watchstream/fullscreendialog';
-const streamColumns = ['Stream Name', 'Time', 'Rooms'];
+const streamColumns = ['Stream Name', 'Time', 'Room'];
 
 const Recordings = () => {
   const layoutCtx = useContext(LayoutContext);

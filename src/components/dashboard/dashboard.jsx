@@ -57,7 +57,7 @@ const lastHourViewersColumns = [
   { label: 'Children', width: '20%' },
   { label: 'Room', width: '40%' }
 ];
-const streamColumns = ['Stream Name', 'Time', 'Rooms'];
+const streamColumns = ['Stream Name', 'Time', 'Room'];
 
 const Dashboard = () => {
   const navigate = useNavigate();

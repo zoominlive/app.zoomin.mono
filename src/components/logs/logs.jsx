@@ -173,9 +173,12 @@ const Logs = () => {
   ];
 
   useEffect(() => {
+    console.log('====,location?.state?.lastHoursUsers', location?.state);
     if (location?.state?.lastHoursUsers) {
       setFromDate(moment());
       setToDate(moment());
+      setSelectedAction(location?.state?.action);
+      setSelectedFunction(location?.state?.function);
     }
   }, [location?.state?.lastHoursUsers]);
 

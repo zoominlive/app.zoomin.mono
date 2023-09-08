@@ -62,8 +62,11 @@ export default function ViewersTable({ rows, columns, title, pagination, isLoadi
                         to="/logs"
                         state={{
                           type: 'Access Log',
-                          action: 'Get',
-                          function: [{ id: 'Watch_Stream', name: 'Request Stream' }],
+                          action: ['Get'],
+                          function: [
+                            { id: 'Watch_Stream', name: 'Request Stream' },
+                            { id: 'Live_Stream', name: 'Live Stream' }
+                          ],
                           user: row?.user
                             ? [
                                 {
@@ -141,8 +144,11 @@ export default function ViewersTable({ rows, columns, title, pagination, isLoadi
                       to="/logs"
                       state={{
                         type: 'Access Log',
-                        action: 'Get',
-                        function: [{ id: 'Watch_Stream', name: 'Request Stream' }],
+                        action: ['Get'],
+                        function: [
+                          { id: 'Watch_Stream', name: 'Request Stream' },
+                          { id: 'Live_Stream', name: 'Live Stream' }
+                        ],
                         user: row?.user
                           ? [
                               {
@@ -162,7 +168,7 @@ export default function ViewersTable({ rows, columns, title, pagination, isLoadi
                             ]
                           : [],
                         location: [authCtx?.location],
-                        lastHoursUsers: false
+                        lastHoursUsers: true
                       }}>
                       <Box className="div-row row-marging">
                         <Box style={{ width: '50%' }}>

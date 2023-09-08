@@ -40,7 +40,7 @@ const AppRoutes = () => {
             <Route path="/recordings" element={<Recordings />} />
           </>
         )}
-        <Route path="/recordings" element={<Recordings />} />
+        {/* <Route path="/recordings" element={<Recordings />} /> */}
         {/* <Route path="/alerts" element={<Alerts />} /> */}
         <Route path="/watch-stream" element={<WatchStream />} />
 

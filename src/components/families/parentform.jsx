@@ -141,12 +141,12 @@ const ParentsForm = (props) => {
             ? `${
                 props.parentType == 'primary'
                   ? 'Edit primary family member so they can watch stream'
-                  : 'Edit secondary family member so they can watch stream'
+                  : 'Edit an additional family member that can watch the streams'
               }`
             : `${
                 props.parentType == 'primary'
                   ? 'Add primary family member so they can watch stream'
-                  : 'Add secondary family member so they can watch stream'
+                  : 'Add an additional family member that can watch the streams'
               }`}
         </DialogContentText>
         <IconButton

@@ -17,7 +17,7 @@ export default function StreamTable({ rows, columns, title, isLoading }) {
         style={{ padding: 10 }}
         className="table-title">
         <Typography>{title}</Typography>
-        <Link href="#" sx={{ fontFamily: 'small', color: '#5A53DD' }}>
+        <Link to="/recordings" sx={{ fontFamily: 'small', color: '#5A53DD' }}>
           View More
         </Link>
       </Stack>

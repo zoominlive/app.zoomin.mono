@@ -22,7 +22,7 @@ import {
   Grid
 } from '@mui/material';
 
-import logo from '../../assets/logo.svg';
+import logo from '../../assets/app-capital.svg';
 // import appLogo from '../../assets/app-icon.png';
 import collapsedLogo from '../../assets/white-logo-collapsed.png';
 import collapseButton from '../../assets/collapse-button.svg';
