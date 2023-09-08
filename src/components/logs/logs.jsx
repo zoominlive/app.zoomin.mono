@@ -35,7 +35,7 @@ import API from '../../api';
 import { errorMessageHandler } from '../../utils/errormessagehandler';
 import AuthContext from '../../context/authcontext';
 import { useSnackbar } from 'notistack';
-import Loader from '../common/loader';
+// import Loader from '../common/loader';
 import moment from 'moment';
 import { DesktopDatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterMoment } from '@mui/x-date-pickers/AdapterMoment';
@@ -45,6 +45,7 @@ import LoadingButton from '@mui/lab/LoadingButton';
 import NoDataDiv from '../common/nodatadiv';
 import PropTypes from 'prop-types';
 import { useLocation } from 'react-router-dom';
+import LinerLoader from '../common/linearLoader';
 const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
 const checkedIcon = <CheckBoxIcon fontSize="small" />;
 
@@ -1061,7 +1062,7 @@ const Logs = () => {
         <Card>
           <CardContent>
             <Box mt={2} position="relative">
-              <Loader loading={isLoading} />
+              <LinerLoader loading={isLoading} />
               <TableContainer component={Paper}>
                 <Table sx={{ minWidth: 650 }} aria-label="simple table">
                   <TableHead>

@@ -45,12 +45,13 @@ import { errorMessageHandler } from '../../utils/errormessagehandler';
 import ParentForm from './parentform';
 // import DeleteDialog from '../common/deletedialog';
 import debounce from 'lodash.debounce';
-import Loader from '../common/loader';
+// import Loader from '../common/loader';
 import { capitalizeFirstLetter } from '../../utils/capitalizefirstletter';
 import dayjs from 'dayjs';
 import NoDataDiv from '../common/nodatadiv';
 import SearchIcon from '@mui/icons-material/Search';
 import NewDeleteDialog from '../common/newdeletedialog';
+import LinerLoader from '../common/linearLoader';
 
 const Families = () => {
   const layoutCtx = useContext(LayoutContext);
@@ -386,7 +387,7 @@ const Families = () => {
       <Card>
         <CardContent>
           <Box mt={2} sx={{ position: 'relative' }}>
-            <Loader loading={isLoading} />
+            <LinerLoader loading={isLoading} />
             <TableContainer component={Paper}>
               <Table sx={{ minWidth: 650 }} aria-label="simple table">
                 <TableHead>

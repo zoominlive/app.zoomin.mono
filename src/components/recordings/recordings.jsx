@@ -4,7 +4,7 @@ import LayoutContext from '../../context/layoutcontext';
 import OutboundIcon from '@mui/icons-material/Outbound';
 import AuthContext from '../../context/authcontext';
 import PlayArrowSharpIcon from '@mui/icons-material/PlayArrowSharp';
-import Loader from '../common/loader';
+// import Loader from '../common/loader';
 //import VideoOff from '../../assets/video-off.svg';
 import PropTypes from 'prop-types';
 // import _ from 'lodash';
@@ -53,6 +53,7 @@ import CustomPlayer from '../watchstream/customplayer';
 //import CustomPlayer from '../watchstream/customplayer';
 import { FullScreen, useFullScreenHandle } from 'react-full-screen';
 import FullScreenDialog from '../watchstream/fullscreendialog';
+import LinerLoader from '../common/linearLoader';
 //import FullScreenDialog from '../watchstream/fullscreendialog';
 const streamColumns = ['Stream Name', 'Time', 'Room'];
 
@@ -569,7 +570,7 @@ const Recordings = () => {
         <Card>
           <CardContent>
             <Box mt={2} position="relative">
-              <Loader loading={isLoading} />
+              <LinerLoader loading={isLoading} />
               <TableContainer component={Paper}>
                 <Table sx={{ minWidth: 650 }} aria-label="simple table">
                   <TableHead>

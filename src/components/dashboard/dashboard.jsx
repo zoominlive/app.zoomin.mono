@@ -21,7 +21,7 @@ import API from '../../api';
 import AuthContext from '../../context/authcontext';
 import LayoutContext from '../../context/layoutcontext';
 import { errorMessageHandler } from '../../utils/errormessagehandler';
-import Loader from '../common/loader';
+//import Loader from '../common/loader';
 import Map from './map';
 import { Video } from 'react-feather';
 import _ from 'lodash';
@@ -43,6 +43,7 @@ import ParentsForm from '../families/parentform';
 import ChildForm from '../families/childform';
 import DisableDialog from '../families/disabledialog';
 import RoomAddForm from '../families/roomaddform';
+import LinerLoader from '../common/linearLoader';
 
 const AccessColumns = [
   { label: 'Children', width: '70%' },
@@ -299,7 +300,7 @@ const Dashboard = () => {
   return (
     <>
       <Box className="dashboard">
-        <Loader loading={isLoading} />
+        <LinerLoader loading={isLoading} />
 
         <Grid container spacing={3} mt={2} alignItems={'stretch'}>
           <Grid item md={12} sm={12} xs={12} lg={7} style={{ paddingTop: 0 }}>

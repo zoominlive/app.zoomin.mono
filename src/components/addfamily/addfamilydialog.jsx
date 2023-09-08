@@ -12,7 +12,8 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogActions
+  DialogActions,
+  DialogContentText
 } from '@mui/material';
 import { Form, Formik } from 'formik';
 import { LoadingButton } from '@mui/lab';
@@ -80,6 +81,9 @@ const AddFamilyDialog = (props) => {
   return (
     <Dialog open={props.open} onClose={handleDialogClose} fullWidth className="add-parentdialog">
       <DialogTitle>Add Secondary Family Member</DialogTitle>
+      <DialogContentText>
+        Add an additional family member that can watch the streams
+      </DialogContentText>
       <Divider />
       <Formik
         enableReinitialize

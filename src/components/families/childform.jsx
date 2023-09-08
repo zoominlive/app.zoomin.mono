@@ -162,7 +162,7 @@ const ChildForm = (props) => {
       <DialogTitle sx={{ paddingTop: 3.5 }}>
         {props.child ? 'Edit Child' : 'Add Child'}
         <DialogContentText>
-          {props.child ? 'Edit' : 'Add'} child so they can watch stream
+          {props.child ? 'Edit' : 'Add'} an additional child to this family
         </DialogContentText>
         <IconButton
           aria-label="close"

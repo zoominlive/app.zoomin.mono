@@ -38,7 +38,7 @@ import PropTypes from 'prop-types';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 // import DeleteDialog from '../common/deletedialog';
-import Loader from '../common/loader';
+// import Loader from '../common/loader';
 import API from '../../api';
 import AuthContext from '../../context/authcontext';
 import { useSnackbar } from 'notistack';
@@ -48,6 +48,7 @@ import { Link } from 'react-router-dom';
 import NoDataDiv from '../common/nodatadiv';
 import NewDeleteDialog from '../common/newdeletedialog';
 import SearchIcon from '@mui/icons-material/Search';
+import LinerLoader from '../common/linearLoader';
 
 const Row = (props) => {
   const { row } = props;
@@ -269,7 +270,7 @@ const Rooms = () => {
         );
       }
       setRoom();
-      setDeleteLoading(false);
+      //setDeleteLoading(false);
       setIsDeleteDialogOpen(false);
     });
   };
@@ -434,7 +435,7 @@ const Rooms = () => {
       <Card>
         <CardContent>
           <Box mt={2} sx={{ position: 'relative' }}>
-            <Loader loading={isLoading} />
+            <LinerLoader loading={isLoading} />
             <TableContainer component={Paper}>
               <Table aria-label="collapsible table">
                 <TableHead>
