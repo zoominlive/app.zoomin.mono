@@ -111,6 +111,7 @@ module.exports = {
       [Sequelize.Op.or]: [
         { first_name: { [Sequelize.Op.substring]: searchBy } },
         { last_name: { [Sequelize.Op.substring]: searchBy } },
+        { email: { [Sequelize.Op.substring]: searchBy } },
         { "$children.first_name$": { [Sequelize.Op.substring]: searchBy } },
         { "$children.last_name$": { [Sequelize.Op.substring]: searchBy } },
       ],
