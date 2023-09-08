@@ -195,7 +195,7 @@ module.exports = {
         }
       });
     }
-  
+
     if(!location.includes("Select All")){
       let filterResult = []
        result.map(i => {
