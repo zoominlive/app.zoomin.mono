@@ -24,7 +24,8 @@ import {
   Select,
   MenuItem,
   FormHelperText,
-  IconButton
+  IconButton,
+  DialogContentText
 } from '@mui/material';
 import { Plus } from 'react-feather';
 import { FieldArray, Form, Formik } from 'formik';
@@ -40,6 +41,7 @@ import _ from 'lodash';
 import PhoneNumberInput from '../common/phonenumberinput';
 // import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
+import CloseIcon from '@mui/icons-material/Close';
 
 const STEPS = ['Customer', 'Customer Locations', 'User'];
 
@@ -50,6 +52,7 @@ const CustomerForm = (props) => {
   const [activeStep, setActiveStep] = useState(0);
   const [roomList, setRoomList] = useState([]);
   const [selectedLocation, setSelectedLocation] = useState([]);
+  const [isCloseDialog, setIsCloseDialog] = useState(false);
 
   const validationSchema = [
     yup.object().shape({
@@ -211,6 +214,10 @@ const CustomerForm = (props) => {
       props.setOpen(false);
       props.setCustomer();
     }
+  };
+
+  const handleDialogCancel = () => {
+    setIsCloseDialog(!isCloseDialog);
   };
   const handleBack = () => {
     setActiveStep(activeStep - 1);
@@ -797,90 +804,138 @@ const CustomerForm = (props) => {
   return (
     <Dialog
       open={props.open}
-      onClose={handleFormDialogClose}
+      onClose={handleDialogCancel}
       fullWidth
       className="add-customer-drawer">
-      <DialogTitle>{props.customer ? 'Edit Customer' : 'Add Customer'}</DialogTitle>
+      <DialogTitle sx={{ paddingTop: 3.5 }}>
+        {props.customer ? 'Edit Customer' : 'Add Customer'}
+        {/* <DialogContentText>Please add family member so they can watch stream</DialogContentText> */}
+        <IconButton
+          aria-label="close"
+          onClick={handleDialogCancel}
+          sx={{
+            position: 'absolute',
+            right: 18,
+            top: 30
+          }}>
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
 
       <Divider />
-      <Formik
-        enableReinitialize
-        validateOnChange
-        validationSchema={validationSchema[activeStep]}
-        initialValues={{
-          customer_first_name: props?.customer?.billing_contact_first || '',
-          customer_last_name: props?.customer?.billing_contact_last || '',
-          company_name: props?.customer?.company_name || '',
-          phone: props?.customer?.phone || '',
-          address_1: props?.customer?.address_1 || '',
-          address_2: props?.customer?.address_2 || '',
-          city: props?.customer?.city || '',
-          country: props?.customer?.country || '',
-          postal: props?.customer?.postal || '',
-          max_cameras: props?.customer?.max_cameras || '',
-          available_cameras: props?.customer?.available_cameras || '',
-          max_locations: props?.customer?.max_locations || '',
-          transcoder_endpoint: props?.customer?.transcoder_endpoint || '',
-          rtmp_transcoder_endpoint: props?.customer?.rtmp_transcoder_endpoint || '',
-          timeout: props?.customer?.timeout || '',
-          max_stream_live_license: props?.customer?.max_stream_live_license || '',
-          audio_permission: !_.isNil(props?.customer?.audio_permission)
-            ? props?.customer?.audio_permission
-            : true,
-          first_name: props?.customer?.users[0]?.first_name || '',
-          last_name: props?.customer?.users[0]?.last_name || '',
-          email: props?.customer?.users[0]?.email || '',
-          role: props?.customer?.users[0]?.role || '',
-          location: props?.customer?.users[0]?.location?.selected_locations
-            ? props?.customer?.users[0]?.location?.selected_locations?.sort((a, b) =>
-                a > b ? 1 : -1
-              )
-            : [],
-          rooms: props?.customer?.users[0]?.roomsInTeacher
-            ? props.customer?.users[0]?.roomsInTeacher.map((room) => {
-                return {
-                  room_name: room.room.room_name,
-                  location: room.room.location,
-                  room_id: room.room_id
-                };
-              })
-            : [],
-          stream_live_license: !_.isNil(props?.customer?.user?.stream_live_license)
-            ? props?.customer?.user?.stream_live_license
-            : true,
-          customer_locations: props?.customer?.customer_locations
-            ? props?.customer?.customer_locations
-            : [{ loc_name: '' }]
-        }}
-        onSubmit={handleSubmit}>
-        {({ values, setFieldValue, touched, errors, isValidating, arrayHelpers }) => {
-          return (
-            <Form>
-              <DialogContent>
-                <Box sx={{ width: '100%' }}>
-                  <Stepper activeStep={activeStep} alternativeLabel>
-                    {STEPS.map((label) => (
-                      <Step key={label}>
-                        <StepLabel>{label}</StepLabel>
-                      </Step>
-                    ))}
-                  </Stepper>
-                </Box>
-                <Box p={3} mx="auto">
-                  {renderStepContent(
-                    activeStep,
-                    values,
-                    setFieldValue,
-                    touched,
-                    errors,
-                    arrayHelpers
-                  )}
-                </Box>
-              </DialogContent>
-              <Divider />
-              <DialogActions>
-                <Stack direction="row" justifyContent="space-between" width="100%">
-                  {/* {activeStep > 0 && (
+      {isCloseDialog ? (
+        <>
+          <Stack direction={'row'} justifyContent={'center'} alignItems={'start'} padding={3}>
+            <DialogContentText>
+              Are you sure you want to exit before completing the wizard ?
+            </DialogContentText>
+          </Stack>
+          <DialogActions sx={{ paddingRight: 4, paddingBottom: 3 }}>
+            <Stack direction="row" justifyContent="flex-end" width="100%">
+              <Button
+                className="log-btn"
+                variant="outlined"
+                sx={{ marginRight: 1.5 }}
+                onClick={() => {
+                  setIsCloseDialog(false);
+                }}>
+                No
+              </Button>
+
+              <Button
+                id="yes-btn"
+                className="log-btn"
+                variant="outlined"
+                sx={{ marginRight: 1.5, color: '#ffff' }}
+                style={{ color: '#ffff' }}
+                onClick={() => {
+                  setIsCloseDialog(false);
+                  props.setOpen(false);
+                }}>
+                Yes
+              </Button>
+            </Stack>
+          </DialogActions>
+        </>
+      ) : (
+        <Formik
+          enableReinitialize
+          validateOnChange
+          validationSchema={validationSchema[activeStep]}
+          initialValues={{
+            customer_first_name: props?.customer?.billing_contact_first || '',
+            customer_last_name: props?.customer?.billing_contact_last || '',
+            company_name: props?.customer?.company_name || '',
+            phone: props?.customer?.phone || '',
+            address_1: props?.customer?.address_1 || '',
+            address_2: props?.customer?.address_2 || '',
+            city: props?.customer?.city || '',
+            country: props?.customer?.country || '',
+            postal: props?.customer?.postal || '',
+            max_cameras: props?.customer?.max_cameras || '',
+            available_cameras: props?.customer?.available_cameras || '',
+            max_locations: props?.customer?.max_locations || '',
+            transcoder_endpoint: props?.customer?.transcoder_endpoint || '',
+            rtmp_transcoder_endpoint: props?.customer?.rtmp_transcoder_endpoint || '',
+            timeout: props?.customer?.timeout || '',
+            max_stream_live_license: props?.customer?.max_stream_live_license || '',
+            audio_permission: !_.isNil(props?.customer?.audio_permission)
+              ? props?.customer?.audio_permission
+              : true,
+            first_name: props?.customer?.users[0]?.first_name || '',
+            last_name: props?.customer?.users[0]?.last_name || '',
+            email: props?.customer?.users[0]?.email || '',
+            role: props?.customer?.users[0]?.role || '',
+            location: props?.customer?.users[0]?.location?.selected_locations
+              ? props?.customer?.users[0]?.location?.selected_locations?.sort((a, b) =>
+                  a > b ? 1 : -1
+                )
+              : [],
+            rooms: props?.customer?.users[0]?.roomsInTeacher
+              ? props.customer?.users[0]?.roomsInTeacher.map((room) => {
+                  return {
+                    room_name: room.room.room_name,
+                    location: room.room.location,
+                    room_id: room.room_id
+                  };
+                })
+              : [],
+            stream_live_license: !_.isNil(props?.customer?.user?.stream_live_license)
+              ? props?.customer?.user?.stream_live_license
+              : true,
+            customer_locations: props?.customer?.customer_locations
+              ? props?.customer?.customer_locations
+              : [{ loc_name: '' }]
+          }}
+          onSubmit={handleSubmit}>
+          {({ values, setFieldValue, touched, errors, isValidating, arrayHelpers }) => {
+            return (
+              <Form>
+                <DialogContent>
+                  <Box sx={{ width: '100%' }}>
+                    <Stepper activeStep={activeStep} alternativeLabel>
+                      {STEPS.map((label) => (
+                        <Step key={label}>
+                          <StepLabel>{label}</StepLabel>
+                        </Step>
+                      ))}
+                    </Stepper>
+                  </Box>
+                  <Box p={3} mx="auto">
+                    {renderStepContent(
+                      activeStep,
+                      values,
+                      setFieldValue,
+                      touched,
+                      errors,
+                      arrayHelpers
+                    )}
+                  </Box>
+                </DialogContent>
+                <Divider />
+                <DialogActions>
+                  <Stack direction="row" justifyContent="space-between" width="100%">
+                    {/* {activeStep > 0 && (
                     <Button
                       variant="text"
                       sx={{ marginLeft: '20px', color: '#00000042' }}
@@ -888,34 +943,35 @@ const CustomerForm = (props) => {
                       BACK
                     </Button>
                   )} */}
-                  <Stack direction="row" justifyContent="flex-end" width="100%">
-                    {activeStep > 0 && (
-                      <Button
-                        className="log-btn"
-                        variant="outlined"
-                        sx={{ marginRight: 1.5 }}
-                        disabled={submitLoading || isValidating}
-                        onClick={handleBack}>
-                        Previous Step
-                      </Button>
-                    )}
-                    <LoadingButton
-                      className="add-btn save-changes-btn"
-                      loading={submitLoading || isValidating}
-                      loadingPosition={submitLoading || isValidating ? 'start' : undefined}
-                      startIcon={(submitLoading || isValidating) && <SaveIcon />}
-                      variant="text"
-                      // onClick={handleFormSubmit}
-                      type="submit">
-                      {activeStep === STEPS.length - 1 ? 'Finish' : 'Next Step'}
-                    </LoadingButton>
+                    <Stack direction="row" justifyContent="flex-end" width="100%">
+                      {activeStep > 0 && (
+                        <Button
+                          className="log-btn"
+                          variant="outlined"
+                          sx={{ marginRight: 1.5 }}
+                          disabled={submitLoading || isValidating}
+                          onClick={handleBack}>
+                          Previous Step
+                        </Button>
+                      )}
+                      <LoadingButton
+                        className="add-btn save-changes-btn"
+                        loading={submitLoading || isValidating}
+                        loadingPosition={submitLoading || isValidating ? 'start' : undefined}
+                        startIcon={(submitLoading || isValidating) && <SaveIcon />}
+                        variant="text"
+                        // onClick={handleFormSubmit}
+                        type="submit">
+                        {activeStep === STEPS.length - 1 ? 'Finish' : 'Next Step'}
+                      </LoadingButton>
+                    </Stack>
                   </Stack>
-                </Stack>
-              </DialogActions>
-            </Form>
-          );
-        }}
-      </Formik>
+                </DialogActions>
+              </Form>
+            );
+          }}
+        </Formik>
+      )}
     </Dialog>
   );
 };

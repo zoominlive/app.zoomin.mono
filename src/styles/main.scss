@@ -291,7 +291,7 @@
       left: 0;
       margin-bottom: 20px;
       border-top: 1px solid #7f79f1;
-      padding-top: 24px;
+      // padding-top: 24px;
 
       ul {
         li {
@@ -466,7 +466,7 @@
   }
 
   .content-area {
-    padding:48px 45px 30px 45px;
+    padding:36px 45px 30px 45px;
     background-color: #eae9ff;
   }
 }
@@ -1084,6 +1084,10 @@
     .MuiSvgIcon-root {
       color: #455a64 !important;
     }
+    .add-room-btn{
+      width: 138px !important;
+      color: #455a64 !important;
+    }
     .delete-icon {
       color: #fff !important;
     }
@@ -1624,7 +1628,7 @@
 
 /* sidebar css start */
 .siderbar-list {
-  height: calc(100vh - 210px);
+  height: calc(100vh - 280px);
   overflow-y: auto;
 
   &::-webkit-scrollbar {
@@ -2034,11 +2038,12 @@
 }
 .linear-loader{
   background-color: #bbb7ff;
-  width: 160px;
   border-radius: 60px;
   height: 5px;
   position: absolute !important;
-  top: 20%;
+  top: 1%;
+  width: calc(100% - 270px) !important;
+  right: 6px;
   .MuiLinearProgress-bar{
     background-color: #5a53dd;
   }

@@ -16,7 +16,9 @@ import {
   TextField,
   Autocomplete,
   DialogContentText,
-  IconButton
+  IconButton,
+  Button,
+  Stack
 } from '@mui/material';
 import React from 'react';
 import PropTypes from 'prop-types';
@@ -56,6 +58,7 @@ const RoomForm = (props) => {
   const [dropdownLoading, setDropdownLoading] = useState(false);
   const [locationSelected, setLocationSelected] = useState(false);
   const [cameraOptions, setCameraOptions] = useState([]);
+  const [isCloseDialog, setIsCloseDialog] = useState(false);
   // const [isInitialLocation, setIsInitialLocation] = useState(false);
   // const maximumCams = 15;
 
@@ -186,15 +189,19 @@ const RoomForm = (props) => {
       }
     });
   };
+  const handleOnClose = () => {
+    setIsCloseDialog(!isCloseDialog);
+  };
 
   return (
     <Dialog
       open={props.open}
-      onClose={() => {
-        if (!submitLoading && !disableActions) {
-          handleFormDialogClose();
-        }
-      }}
+      // onClose={() => {
+      //   if (!submitLoading && !disableActions) {
+      //     handleFormDialogClose();
+      //   }
+      // }}
+      onClose={handleOnClose}
       fullWidth
       className="edit-family-dialog">
       <DialogTitle sx={{ paddingTop: 3.5 }}>
@@ -202,11 +209,12 @@ const RoomForm = (props) => {
         <DialogContentText>Quickly add rooms to your account</DialogContentText>
         <IconButton
           aria-label="close"
-          onClick={() => {
-            if (!submitLoading && !disableActions) {
-              handleFormDialogClose();
-            }
-          }}
+          // onClick={() => {
+          //   if (!submitLoading && !disableActions) {
+          //     handleFormDialogClose();
+          //   }
+          // }}
+          onClick={handleOnClose}
           sx={{
             position: 'absolute',
             right: 18,
@@ -216,126 +224,165 @@ const RoomForm = (props) => {
         </IconButton>
       </DialogTitle>
       <Divider />
-      <Formik
-        enableReinitialize
-        validateOnChange
-        validationSchema={validationSchema}
-        innerRef={formikRef}
-        initialValues={initialState}
-        onSubmit={handleSubmit}>
-        {({ values, setFieldValue, touched, errors }) => {
-          return (
-            <Form>
-              <DialogContent>
-                <Box px={4}>
-                  <Grid container spacing={2}>
-                    <Grid item xs={12} md={12}>
-                      <InputLabel id="room_name">Room Name</InputLabel>
-                      <TextField
-                        labelId="room_name"
-                        name="room_name"
-                        value={values?.room_name}
-                        onChange={(event) => {
-                          setFieldValue('room_name', event.target.value);
-                          setInitialState({ ...initialState, room_name: event.target.value });
-                        }}
-                        helperText={touched.room_name && errors.room_name}
-                        error={touched.room_name && Boolean(errors.room_name)}
-                        fullWidth
-                      />
-                    </Grid>
-                    <Grid item xs={12} md={12}>
-                      <InputLabel id="location-select">Location</InputLabel>
-                      <FormControl fullWidth error={touched.location && Boolean(errors.location)}>
-                        <Select
-                          name="location"
-                          labelId="location-select"
-                          id="location-select"
-                          value={values?.location}
-                          onChange={(event) => {
-                            setFieldValue('location', event.target.value);
-                            setLocationSelected(true);
-                            handleGetCamerasForSelectedLocation(event.target.value);
-                          }}>
-                          {authCtx.user &&
-                            authCtx.user.location &&
-                            authCtx.user.location.selected_locations &&
-                            authCtx.user.location.selected_locations.length > 0 &&
-                            authCtx.user.location.selected_locations
-                              .sort((a, b) => (a > b ? 1 : -1))
-                              .map((location, index) => {
-                                return (
-                                  <MenuItem key={index} value={location}>
-                                    {location}
-                                  </MenuItem>
-                                );
-                              })}
-                        </Select>
-                        {touched.location && errors.location && (
-                          <FormHelperText sx={{ color: '#d32f2f' }}>
-                            {errors.location}
-                          </FormHelperText>
-                        )}
-                      </FormControl>
-                    </Grid>
-                    <Grid item xs={12} md={12}>
-                      <InputLabel id="cameras">Cameras</InputLabel>
-                      <Autocomplete
-                        labelId="cameras"
-                        fullWidth
-                        multiple
-                        id="cameras"
-                        options={cameraOptions && locationSelected ? cameraOptions : []}
-                        noOptionsText={!locationSelected ? 'Select location first' : 'No Camera'}
-                        isOptionEqualToValue={(option, value) => option.cam_id === value.cam_id}
-                        getOptionLabel={(option) => {
-                          return option.cam_name + ' - ' + option?.description;
-                        }}
-                        onMouseEnter={() => {
-                          if (values?.location) {
-                            setLocationSelected(true);
-                          }
-                        }}
-                        value={values?.cameras}
-                        onChange={(_, value) => {
-                          setFieldValue('cameras', value);
-                        }}
-                        //defaultValue={props?.room?.cameras ? props?.room?.cameras : []}
-                        renderTags={(value, getTagProps) =>
-                          value.map((option, index) => (
-                            <Chip key={index} label={option.cam_name} {...getTagProps({ index })} />
-                          ))
-                        }
-                        renderInput={(params) => (
-                          <TextField
-                            {...params}
-                            disabled={!locationSelected}
-                            InputProps={{
-                              ...params.InputProps,
-                              endAdornment: (
-                                <React.Fragment>
-                                  {dropdownLoading ? (
-                                    <CircularProgress color="inherit" size={20} />
-                                  ) : null}
-                                  {params.InputProps.endAdornment}
-                                </React.Fragment>
-                              )
-                            }}
-                            // placeholder="Camera"
-                            helperText={touched.cameras && errors.cameras}
-                            error={touched.cameras && Boolean(errors.cameras)}
-                            fullWidth
-                          />
-                        )}
-                      />
-                    </Grid>
-                  </Grid>
-                </Box>
-              </DialogContent>
+      {isCloseDialog ? (
+        <>
+          <Stack direction={'row'} justifyContent={'center'} alignItems={'start'} padding={3}>
+            <DialogContentText>
+              Are you sure you want to exit before completing the wizard ?
+            </DialogContentText>
+          </Stack>
+          <DialogActions sx={{ paddingRight: 4, paddingBottom: 3 }}>
+            <Stack direction="row" justifyContent="flex-end" width="100%">
+              <Button
+                className="log-btn"
+                variant="outlined"
+                sx={{ marginRight: 1.5 }}
+                onClick={() => {
+                  setIsCloseDialog(false);
+                }}>
+                No
+              </Button>
 
-              <Divider />
-              <DialogActions sx={{ paddingRight: 4, paddingBottom: 3 }}>
-                {/* <Button
+              <Button
+                id="yes-btn"
+                className="log-btn"
+                variant="outlined"
+                sx={{ marginRight: 1.5, color: '#ffff' }}
+                style={{ color: '#ffff' }}
+                onClick={() => {
+                  setIsCloseDialog(false);
+                  props.setOpen(false);
+                }}>
+                Yes
+              </Button>
+            </Stack>
+          </DialogActions>
+        </>
+      ) : (
+        <Formik
+          enableReinitialize
+          validateOnChange
+          validationSchema={validationSchema}
+          innerRef={formikRef}
+          initialValues={initialState}
+          onSubmit={handleSubmit}>
+          {({ values, setFieldValue, touched, errors }) => {
+            return (
+              <Form>
+                <DialogContent>
+                  <Box px={4}>
+                    <Grid container spacing={2}>
+                      <Grid item xs={12} md={12}>
+                        <InputLabel id="room_name">Room Name</InputLabel>
+                        <TextField
+                          labelId="room_name"
+                          name="room_name"
+                          value={values?.room_name}
+                          onChange={(event) => {
+                            setFieldValue('room_name', event.target.value);
+                            setInitialState({ ...initialState, room_name: event.target.value });
+                          }}
+                          helperText={touched.room_name && errors.room_name}
+                          error={touched.room_name && Boolean(errors.room_name)}
+                          fullWidth
+                        />
+                      </Grid>
+                      <Grid item xs={12} md={12}>
+                        <InputLabel id="location-select">Location</InputLabel>
+                        <FormControl fullWidth error={touched.location && Boolean(errors.location)}>
+                          <Select
+                            name="location"
+                            labelId="location-select"
+                            id="location-select"
+                            value={values?.location}
+                            onChange={(event) => {
+                              setFieldValue('location', event.target.value);
+                              setLocationSelected(true);
+                              handleGetCamerasForSelectedLocation(event.target.value);
+                            }}>
+                            {authCtx.user &&
+                              authCtx.user.location &&
+                              authCtx.user.location.selected_locations &&
+                              authCtx.user.location.selected_locations.length > 0 &&
+                              authCtx.user.location.selected_locations
+                                .sort((a, b) => (a > b ? 1 : -1))
+                                .map((location, index) => {
+                                  return (
+                                    <MenuItem key={index} value={location}>
+                                      {location}
+                                    </MenuItem>
+                                  );
+                                })}
+                          </Select>
+                          {touched.location && errors.location && (
+                            <FormHelperText sx={{ color: '#d32f2f' }}>
+                              {errors.location}
+                            </FormHelperText>
+                          )}
+                        </FormControl>
+                      </Grid>
+                      <Grid item xs={12} md={12}>
+                        <InputLabel id="cameras">Cameras</InputLabel>
+                        <Autocomplete
+                          labelId="cameras"
+                          fullWidth
+                          multiple
+                          id="cameras"
+                          options={cameraOptions && locationSelected ? cameraOptions : []}
+                          noOptionsText={!locationSelected ? 'Select location first' : 'No Camera'}
+                          isOptionEqualToValue={(option, value) => option.cam_id === value.cam_id}
+                          getOptionLabel={(option) => {
+                            return option.cam_name + ' - ' + option?.description;
+                          }}
+                          onMouseEnter={() => {
+                            if (values?.location) {
+                              setLocationSelected(true);
+                            }
+                          }}
+                          value={values?.cameras}
+                          onChange={(_, value) => {
+                            setFieldValue('cameras', value);
+                          }}
+                          //defaultValue={props?.room?.cameras ? props?.room?.cameras : []}
+                          renderTags={(value, getTagProps) =>
+                            value.map((option, index) => (
+                              <Chip
+                                key={index}
+                                label={option.cam_name}
+                                {...getTagProps({ index })}
+                              />
+                            ))
+                          }
+                          renderInput={(params) => (
+                            <TextField
+                              {...params}
+                              disabled={!locationSelected}
+                              InputProps={{
+                                ...params.InputProps,
+                                endAdornment: (
+                                  <React.Fragment>
+                                    {dropdownLoading ? (
+                                      <CircularProgress color="inherit" size={20} />
+                                    ) : null}
+                                    {params.InputProps.endAdornment}
+                                  </React.Fragment>
+                                )
+                              }}
+                              // placeholder="Camera"
+                              helperText={touched.cameras && errors.cameras}
+                              error={touched.cameras && Boolean(errors.cameras)}
+                              fullWidth
+                            />
+                          )}
+                        />
+                      </Grid>
+                    </Grid>
+                  </Box>
+                </DialogContent>
+
+                <Divider />
+                <DialogActions sx={{ paddingRight: 4, paddingBottom: 3 }}>
+                  {/* <Button
                   disabled={disableActions || submitLoading}
                   variant="text"
                   onClick={() => {
@@ -345,22 +392,23 @@ const RoomForm = (props) => {
                   }}>
                   CANCEL
                 </Button> */}
-                <LoadingButton
-                  className="add-btn save-changes-btn"
-                  disabled={disableActions}
-                  loading={submitLoading}
-                  loadingPosition={submitLoading ? 'start' : undefined}
-                  startIcon={submitLoading && <SaveIcon />}
-                  variant="text"
-                  type="submit">
-                  {/* {props?.room?.room_id ? 'Save Changes' : 'Save Room'} */}
-                  Save Room
-                </LoadingButton>
-              </DialogActions>
-            </Form>
-          );
-        }}
-      </Formik>
+                  <LoadingButton
+                    className="add-btn save-changes-btn"
+                    disabled={disableActions}
+                    loading={submitLoading}
+                    loadingPosition={submitLoading ? 'start' : undefined}
+                    startIcon={submitLoading && <SaveIcon />}
+                    variant="text"
+                    type="submit">
+                    {/* {props?.room?.room_id ? 'Save Changes' : 'Save Room'} */}
+                    Save Room
+                  </LoadingButton>
+                </DialogActions>
+              </Form>
+            );
+          }}
+        </Formik>
+      )}
     </Dialog>
   );
 };

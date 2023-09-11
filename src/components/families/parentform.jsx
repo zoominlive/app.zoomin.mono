@@ -12,7 +12,9 @@ import {
   MenuItem,
   Select,
   TextField,
-  IconButton
+  IconButton,
+  Button,
+  Stack
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import React, { useState } from 'react';
@@ -43,6 +45,7 @@ const ParentsForm = (props) => {
   const authCtx = useContext(AuthContext);
   const { enqueueSnackbar } = useSnackbar();
   const [submitLoading, setSubmitLoading] = useState(false);
+  const [isCloseDialog, setIsCloseDialog] = useState(false);
 
   // Method to create/edit parent
   const handleSubmit = (data) => {
@@ -122,8 +125,11 @@ const ParentsForm = (props) => {
     }
   };
 
+  const handleClose = () => {
+    setIsCloseDialog(!isCloseDialog);
+  };
   return (
-    <Dialog open={props.open} onClose={handleDialogClose} fullWidth className="add-parentdialog">
+    <Dialog open={props.open} onClose={handleClose} fullWidth className="add-parentdialog">
       <DialogTitle sx={{ paddingTop: 3.5 }}>
         {props.primaryParent || props.secondaryParent
           ? `${
@@ -151,7 +157,7 @@ const ParentsForm = (props) => {
         </DialogContentText>
         <IconButton
           aria-label="close"
-          onClick={handleDialogClose}
+          onClick={handleClose}
           sx={{
             position: 'absolute',
             right: 18,
@@ -162,159 +168,195 @@ const ParentsForm = (props) => {
       </DialogTitle>
 
       <Divider />
-      <Formik
-        enableReinitialize
-        validateOnChange
-        validationSchema={validationSchema}
-        initialValues={{
-          first_name: props.primaryParent
-            ? props.primaryParent.first_name
-            : props.secondaryParent
-            ? props.secondaryParent.first_name
-            : '',
-          last_name: props.primaryParent
-            ? props.primaryParent.last_name
-            : props.secondaryParent
-            ? props.secondaryParent.last_name
-            : '',
-          relationship: props.primaryParent
-            ? props.primaryParent.relationship
-            : props.secondaryParent
-            ? props.secondaryParent.relationship
-            : '',
-          phone: props.primaryParent
-            ? props.primaryParent.phone
-            : props.secondaryParent
-            ? props.secondaryParent.phone
-            : '',
-          email: props.primaryParent
-            ? props.primaryParent.email
-            : props.secondaryParent
-            ? props.secondaryParent.email
-            : ''
-        }}
-        onSubmit={handleSubmit}>
-        {({ values, setFieldValue, touched, errors, isValidating }) => {
-          return (
-            <Form>
-              <DialogContent>
-                <Grid container spacing={2}>
-                  <Grid item md={6} sm={12}>
-                    <InputLabel id="first_name">First Name</InputLabel>
-                    <TextField
-                      labelId="first_name"
-                      name={'first_name'}
-                      value={values?.first_name}
-                      onChange={(event) => {
-                        setFieldValue('first_name', event.target.value);
-                      }}
-                      helperText={touched.first_name && errors.first_name}
-                      error={touched.first_name && Boolean(errors.first_name)}
-                      fullWidth
-                    />
-                  </Grid>
-                  <Grid item md={6} sm={12}>
-                    <InputLabel id="last_name">Last Name</InputLabel>
-                    <TextField
-                      labelId="last_name"
-                      name={'last_name'}
-                      value={values?.last_name}
-                      onChange={(event) => {
-                        setFieldValue('last_name', event.target.value);
-                      }}
-                      helperText={touched.last_name && errors.last_name}
-                      error={touched.last_name && Boolean(errors.last_name)}
-                      fullWidth
-                    />
-                  </Grid>
-                  <Grid item md={12} sm={12}>
-                    <InputLabel id="role">Role</InputLabel>
-                    <FormControl
-                      fullWidth
-                      error={touched.relationship && Boolean(errors.relationship)}>
-                      <Select
-                        labelId="role"
-                        id="role"
-                        label="Role"
-                        name={'relationship'}
-                        value={values?.relationship}
+      {isCloseDialog ? (
+        <>
+          <Stack direction={'row'} justifyContent={'center'} alignItems={'start'} padding={3}>
+            <DialogContentText>
+              Are you sure you want to exit before completing the wizard ?
+            </DialogContentText>
+          </Stack>
+          <DialogActions sx={{ paddingRight: 4, paddingBottom: 3 }}>
+            <Stack direction="row" justifyContent="flex-end" width="100%">
+              <Button
+                className="log-btn"
+                variant="outlined"
+                sx={{ marginRight: 1.5 }}
+                onClick={() => {
+                  setIsCloseDialog(false);
+                }}>
+                No
+              </Button>
+
+              <Button
+                id="yes-btn"
+                className="log-btn"
+                variant="outlined"
+                sx={{ marginRight: 1.5, color: '#ffff' }}
+                style={{ color: '#ffff' }}
+                onClick={() => {
+                  setIsCloseDialog(false);
+                  props.setOpen(false);
+                }}>
+                Yes
+              </Button>
+            </Stack>
+          </DialogActions>
+        </>
+      ) : (
+        <Formik
+          enableReinitialize
+          validateOnChange
+          validationSchema={validationSchema}
+          initialValues={{
+            first_name: props.primaryParent
+              ? props.primaryParent.first_name
+              : props.secondaryParent
+              ? props.secondaryParent.first_name
+              : '',
+            last_name: props.primaryParent
+              ? props.primaryParent.last_name
+              : props.secondaryParent
+              ? props.secondaryParent.last_name
+              : '',
+            relationship: props.primaryParent
+              ? props.primaryParent.relationship
+              : props.secondaryParent
+              ? props.secondaryParent.relationship
+              : '',
+            phone: props.primaryParent
+              ? props.primaryParent.phone
+              : props.secondaryParent
+              ? props.secondaryParent.phone
+              : '',
+            email: props.primaryParent
+              ? props.primaryParent.email
+              : props.secondaryParent
+              ? props.secondaryParent.email
+              : ''
+          }}
+          onSubmit={handleSubmit}>
+          {({ values, setFieldValue, touched, errors, isValidating }) => {
+            return (
+              <Form>
+                <DialogContent>
+                  <Grid container spacing={2}>
+                    <Grid item md={6} sm={12}>
+                      <InputLabel id="first_name">First Name</InputLabel>
+                      <TextField
+                        labelId="first_name"
+                        name={'first_name'}
+                        value={values?.first_name}
                         onChange={(event) => {
-                          setFieldValue('relationship', event.target.value);
-                        }}>
-                        <MenuItem value={'Mother'}>Mother</MenuItem>
-                        <MenuItem value={'Father'}>Father</MenuItem>
-                        <MenuItem value={'Aunt'}>Aunt</MenuItem>
-                        <MenuItem value={'Uncle'}>Uncle</MenuItem>
-                        <MenuItem value={'Grandmother'}>Grandmother</MenuItem>
-                        <MenuItem value={'Grandfather'}>Grandfather</MenuItem>
-                        <MenuItem value={'Other'}>Other</MenuItem>
-                      </Select>
-                      {touched.relationship && Boolean(errors.relationship) && (
-                        <FormHelperText sx={{ color: '#d32f2f' }}>
-                          {touched.relationship && errors.relationship}
-                        </FormHelperText>
-                      )}
-                    </FormControl>
+                          setFieldValue('first_name', event.target.value);
+                        }}
+                        helperText={touched.first_name && errors.first_name}
+                        error={touched.first_name && Boolean(errors.first_name)}
+                        fullWidth
+                      />
+                    </Grid>
+                    <Grid item md={6} sm={12}>
+                      <InputLabel id="last_name">Last Name</InputLabel>
+                      <TextField
+                        labelId="last_name"
+                        name={'last_name'}
+                        value={values?.last_name}
+                        onChange={(event) => {
+                          setFieldValue('last_name', event.target.value);
+                        }}
+                        helperText={touched.last_name && errors.last_name}
+                        error={touched.last_name && Boolean(errors.last_name)}
+                        fullWidth
+                      />
+                    </Grid>
+                    <Grid item md={12} sm={12}>
+                      <InputLabel id="role">Role</InputLabel>
+                      <FormControl
+                        fullWidth
+                        error={touched.relationship && Boolean(errors.relationship)}>
+                        <Select
+                          labelId="role"
+                          id="role"
+                          label="Role"
+                          name={'relationship'}
+                          value={values?.relationship}
+                          onChange={(event) => {
+                            setFieldValue('relationship', event.target.value);
+                          }}>
+                          <MenuItem value={'Mother'}>Mother</MenuItem>
+                          <MenuItem value={'Father'}>Father</MenuItem>
+                          <MenuItem value={'Aunt'}>Aunt</MenuItem>
+                          <MenuItem value={'Uncle'}>Uncle</MenuItem>
+                          <MenuItem value={'Grandmother'}>Grandmother</MenuItem>
+                          <MenuItem value={'Grandfather'}>Grandfather</MenuItem>
+                          <MenuItem value={'Other'}>Other</MenuItem>
+                        </Select>
+                        {touched.relationship && Boolean(errors.relationship) && (
+                          <FormHelperText sx={{ color: '#d32f2f' }}>
+                            {touched.relationship && errors.relationship}
+                          </FormHelperText>
+                        )}
+                      </FormControl>
+                    </Grid>
+                    <Grid item md={6} sm={12}>
+                      <InputLabel id="phone">Phone</InputLabel>
+                      <TextField
+                        labelId="phone"
+                        name={'phone'}
+                        value={values?.phone || ''}
+                        onChange={(event) => {
+                          setFieldValue('phone', event.target.value ? event.target.value : '');
+                        }}
+                        helperText={touched.phone && errors.phone}
+                        error={touched.phone && Boolean(errors.phone)}
+                        InputProps={{ inputComponent: PhoneNumberInput }}
+                        fullWidth
+                      />
+                    </Grid>
+                    <Grid item md={6} sm={12}>
+                      <InputLabel id="email">Email</InputLabel>
+                      <TextField
+                        labelId="email"
+                        name={'email'}
+                        value={values?.email}
+                        onChange={(event) => {
+                          setFieldValue('email', event.target.value);
+                        }}
+                        helperText={touched.email && errors.email}
+                        error={touched.email && Boolean(errors.email)}
+                        fullWidth
+                      />
+                    </Grid>
                   </Grid>
-                  <Grid item md={6} sm={12}>
-                    <InputLabel id="phone">Phone</InputLabel>
-                    <TextField
-                      labelId="phone"
-                      name={'phone'}
-                      value={values?.phone || ''}
-                      onChange={(event) => {
-                        setFieldValue('phone', event.target.value ? event.target.value : '');
-                      }}
-                      helperText={touched.phone && errors.phone}
-                      error={touched.phone && Boolean(errors.phone)}
-                      InputProps={{ inputComponent: PhoneNumberInput }}
-                      fullWidth
-                    />
-                  </Grid>
-                  <Grid item md={6} sm={12}>
-                    <InputLabel id="email">Email</InputLabel>
-                    <TextField
-                      labelId="email"
-                      name={'email'}
-                      value={values?.email}
-                      onChange={(event) => {
-                        setFieldValue('email', event.target.value);
-                      }}
-                      helperText={touched.email && errors.email}
-                      error={touched.email && Boolean(errors.email)}
-                      fullWidth
-                    />
-                  </Grid>
-                </Grid>
-              </DialogContent>
-              <Divider />
-              <DialogActions>
-                {/* <Button
+                </DialogContent>
+                <Divider />
+                <DialogActions>
+                  {/* <Button
                   disabled={submitLoading || isValidating}
                   variant="text"
                   onClick={handleDialogClose}>
                   CANCEL
                 </Button> */}
-                <LoadingButton
-                  className="add-btn dashboard-btn"
-                  loading={submitLoading || isValidating}
-                  loadingPosition={submitLoading || isValidating ? 'start' : undefined}
-                  startIcon={(submitLoading || isValidating) && <SaveIcon />}
-                  type="submit"
-                  sx={{
-                    borderRadius: 30,
-                    background: '#5A53DD',
-                    color: '#fff',
-                    textTransform: 'capitalize',
-                    maxWidth: 184
-                  }}>
-                  Save Changes
-                </LoadingButton>
-              </DialogActions>
-            </Form>
-          );
-        }}
-      </Formik>
+                  <LoadingButton
+                    className="add-btn dashboard-btn"
+                    loading={submitLoading || isValidating}
+                    loadingPosition={submitLoading || isValidating ? 'start' : undefined}
+                    startIcon={(submitLoading || isValidating) && <SaveIcon />}
+                    type="submit"
+                    sx={{
+                      borderRadius: 30,
+                      background: '#5A53DD',
+                      color: '#fff',
+                      textTransform: 'capitalize',
+                      maxWidth: 184
+                    }}>
+                    Save Changes
+                  </LoadingButton>
+                </DialogActions>
+              </Form>
+            );
+          }}
+        </Formik>
+      )}
       <Divider />
     </Dialog>
   );

@@ -786,12 +786,9 @@ const FamilyDrawer = (props) => {
           </Typography>
           <Stack spacing={2}>
             {props?.family?.children.map((child, index) => (
-              <Stack key={index} spacing={2}>
+              <Stack key={index} spacing={2} className="family_member_wrap">
                 <Stack spacing={1.5}>
-                  <Stack
-                    direction="row"
-                    justifyContent="space-between"
-                    className="family_member_wrap">
+                  <Stack direction="row" justifyContent="space-between">
                     <Stack direction="row" spacing={2} alignItems="center">
                       <Box className="viewer-profile">
                         <Box className="profile-img">
@@ -1046,13 +1043,24 @@ const FamilyDrawer = (props) => {
                       </Stack>
                     </Box>
                   ))}
-                  <AddIcon
+                  {/* <AddIcon
                     className={'room-add-btn'}
                     onClick={() => {
                       setExistingRooms(child.roomsInChild);
                       setIsRoomAddDialogOpen(true);
                       setSelectedChild(child);
-                    }}></AddIcon>
+                    }}>
+                  </AddIcon> */}
+                  <Button
+                    startIcon={<AddIcon />}
+                    className="add-room-btn"
+                    onClick={() => {
+                      setExistingRooms(child.roomsInChild);
+                      setIsRoomAddDialogOpen(true);
+                      setSelectedChild(child);
+                    }}>
+                    Add Room
+                  </Button>
                 </Stack>
               </Stack>
             ))}

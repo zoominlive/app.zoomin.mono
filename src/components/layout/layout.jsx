@@ -157,13 +157,13 @@ const Layout = () => {
       link: '/users',
       key: 4
     },
-    {
-      name: 'Customers',
-      icon: <User style={{ color: 'white' }} />,
-      link: '/customers',
-      active: true,
-      key: 10
-    },
+    // {
+    //   name: 'Customers',
+    //   icon: <User style={{ color: 'white' }} />,
+    //   link: '/customers',
+    //   active: true,
+    //   key: 10
+    // },
     {
       name: 'Watch Stream',
       icon: <Video style={{ color: 'white' }} />,
@@ -197,6 +197,12 @@ const Layout = () => {
   ];
 
   const bottomMenuItems = [
+    {
+      name: 'Customers',
+      icon: <User style={{ color: 'white' }} />,
+      link: '/customers',
+      key: 10
+    },
     {
       name: 'Knowledge Base',
       icon: <Book style={{ color: 'white' }} />,
@@ -319,34 +325,42 @@ const Layout = () => {
 
           <Box className="bottom-list-items">
             <List>
-              {bottomMenuItems.map((item, index) => (
-                <ListItem key={index} sx={{ px: 1, paddingTop: 0.7, paddingBottom: 0.7 }}>
-                  {' '}
-                  <ListItemButton
-                    sx={{
-                      minHeight: 48,
-                      justifyContent: open ? 'initial' : 'center',
-                      px: 2.5
-                    }}
-                    onClick={() => {
-                      if (item?.key) {
-                        navigate(item.link);
-                      } else {
-                        window.open(item.link, '_blank', 'noopener,noreferrer');
-                      }
-                    }}>
-                    <ListItemIcon
+              {bottomMenuItems
+                .filter((i) => {
+                  if (i.name == 'Customers') {
+                    return authCtx.user.role === 'Super Admin' ? true : false;
+                  } else {
+                    return true;
+                  }
+                })
+                .map((item, index) => (
+                  <ListItem key={index} sx={{ px: 1, paddingTop: 0.7, paddingBottom: 0.7 }}>
+                    {' '}
+                    <ListItemButton
                       sx={{
-                        minWidth: 0,
-                        mr: open ? 3 : 'auto',
-                        justifyContent: 'center'
+                        minHeight: 48,
+                        justifyContent: open ? 'initial' : 'center',
+                        px: 2.5
+                      }}
+                      onClick={() => {
+                        if (item?.key) {
+                          navigate(item.link);
+                        } else {
+                          window.open(item.link, '_blank', 'noopener,noreferrer');
+                        }
                       }}>
-                      {item.icon}
-                    </ListItemIcon>
-                    <ListItemText primary={item.name} sx={{ display: open ? 'block' : 'none' }} />
-                  </ListItemButton>
-                </ListItem>
-              ))}
+                      <ListItemIcon
+                        sx={{
+                          minWidth: 0,
+                          mr: open ? 3 : 'auto',
+                          justifyContent: 'center'
+                        }}>
+                        {item.icon}
+                      </ListItemIcon>
+                      <ListItemText primary={item.name} sx={{ display: open ? 'block' : 'none' }} />
+                    </ListItemButton>
+                  </ListItem>
+                ))}
             </List>
           </Box>
         </Drawer>
