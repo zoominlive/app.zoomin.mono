@@ -167,7 +167,7 @@ module.exports = {
       let locs = availableLocations.flatMap((i) => i.loc_name);
       familiesCount.map((item) => {
         locs.forEach((i) => {
-          if (item.location.locations.includes(i)) {
+          if (item.location?.locations?.includes(i)) {
             result.push(item);
           }
         });
@@ -175,7 +175,7 @@ module.exports = {
     } else {
       familiesCount.map((item) => {
         user.location.accessable_locations.forEach((i) => {
-          if (item.location.locations?.includes(i)) {
+          if (item.location?.locations?.includes(i)) {
             result.push(item);
           }
         });
