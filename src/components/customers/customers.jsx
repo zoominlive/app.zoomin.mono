@@ -19,7 +19,7 @@ import {
   TextField,
   Typography
 } from '@mui/material';
-import Loader from '../common/loader';
+// import Loader from '../common/loader';
 import { useEffect, useState, useContext, useMemo } from 'react';
 import API from '../../api';
 import { errorMessageHandler } from '../../utils/errormessagehandler';
@@ -33,6 +33,7 @@ import CustomerForm from './customerform';
 import CustomerActions from './customeractions';
 import NewDeleteDialog from '../common/newdeletedialog';
 import SearchIcon from '@mui/icons-material/Search';
+import LinerLoader from '../common/linearLoader';
 
 const Customers = () => {
   const authCtx = useContext(AuthContext);
@@ -206,7 +207,7 @@ const Customers = () => {
             </Grid>
           </Box>
           <Box mt={2} position="relative">
-            <Loader loading={isLoading} />
+            <LinerLoader loading={isLoading} />
             <TableContainer component={Paper}>
               <Table sx={{ minWidth: 650 }} aria-label="simple table">
                 <TableHead>

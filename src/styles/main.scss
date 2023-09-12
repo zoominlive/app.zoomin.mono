@@ -364,7 +364,7 @@
 
     .header-left {
       display: flex;
-      padding: 15px;
+      padding: 6px 15px 15px 15px;
       margin-left: 16px;
       margin-top: 2px;
       position: relative;
@@ -426,10 +426,20 @@
       border-radius: 50px;
       height: 68px;
       margin-top: 10px;
-      padding: 0px 8px;
+      padding: 0px 12px;
       @media (max-width: 1024px) {
         justify-content: flex-start;
         display: inline-flex;
+      }
+      p.profile-name{
+        max-width: 110px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        display: inline-block;
+        overflow: hidden;
+      }
+      button{
+        padding: 0;
       }
     }
     .MuiGrid-root {
@@ -466,7 +476,7 @@
   }
 
   .content-area {
-    padding:36px 45px 30px 45px;
+    padding:32px 45px 30px 45px;
     background-color: #eae9ff;
   }
 }
@@ -2041,12 +2051,17 @@
   border-radius: 60px;
   height: 5px;
   position: absolute !important;
-  top: 1%;
-  width: calc(100% - 270px) !important;
-  right: 6px;
+  top: 0%;
+  width: calc(100% - 260px) !important;
+  right: 0px;
   .MuiLinearProgress-bar{
     background-color: #5a53dd;
   }
 }
 
-
+.customer-loader{
+.linear-loader{
+  width: 50% !important;
+  left: 0;
+}
+}

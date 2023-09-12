@@ -1,5 +1,6 @@
 import { LoadingButton } from '@mui/lab';
 import {
+  //Backdrop,
   Box,
   Button,
   Card,
@@ -7,6 +8,7 @@ import {
   FormControl,
   FormHelperText,
   InputLabel,
+  //LinearProgress,
   MenuItem,
   Select,
   Stack,
@@ -23,7 +25,8 @@ import SaveIcon from '@mui/icons-material/Save';
 import { errorMessageHandler } from '../../utils/errormessagehandler';
 import { useContext } from 'react';
 import AuthContext from '../../context/authcontext';
-import Loader from '../common/loader';
+//import Loader from '../common/loader';
+import LinerLoader from '../common/linearLoader';
 
 const validationSchema = yup.object({
   customer: yup.string('Enter Customer').required('Customer is required')
@@ -74,6 +77,7 @@ const CustomerSelection = () => {
   useEffect(() => {
     getCustomersList();
   }, []);
+  console.log(isLoading);
   return (
     <Box className="auth-wrapper">
       <Card>
@@ -82,7 +86,9 @@ const CustomerSelection = () => {
             <Typography component="h1" variant="h5">
               CUSTOMER
             </Typography>
-            <Loader loading={isLoading} />
+            <Box className="customer-loader" component={'div'}>
+              <LinerLoader loading={isLoading} />
+            </Box>
             <Formik
               enableReinitialize
               validateOnChange

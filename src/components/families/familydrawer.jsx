@@ -45,7 +45,8 @@ import NewDeleteDialog from '../common/newdeletedialog';
 const FamilyDrawer = (props) => {
   const authCtx = useContext(AuthContext);
   const { enqueueSnackbar } = useSnackbar();
-  const [childToDelete, setChildToDelete] = useState();
+  const [toDelete, setToDelete] = useState();
+  const [toDeleteRoom, setToDeleteRoom] = useState();
   const [childToDisable, setChildToDisable] = useState();
   const [parentToDisable, setParentToDisable] = useState();
   const [disableLoading, setDisableLoading] = useState(false);
@@ -74,6 +75,9 @@ const FamilyDrawer = (props) => {
     child_id: '',
     loading: false
   });
+
+  const [isDeleteTitle, setIsDeleteTitle] = useState('');
+  const [isDeleteContext, setIsDeleteContext] = useState('');
 
   useEffect(() => {
     if (!isDisableDialogOpen) {
@@ -110,20 +114,45 @@ const FamilyDrawer = (props) => {
 
   // Method to delete child
   const handleChildDelete = () => {
+    console.log(isDeleteTitle, toDeleteRoom);
+    let data = {
+      [isDeleteTitle == 'Delete Child' || isDeleteTitle == "Delete Child's Room"
+        ? 'child_id'
+        : 'family_member_id']: toDelete
+    };
+    if (isDeleteTitle == "Delete Child's Room") {
+      data = { ...data, room_id: toDeleteRoom };
+    }
+    console.log(data);
     setDeleteLoading(true);
-    API.delete('family/child/delete', {
-      data: {
-        child_id: childToDelete
+    API.delete(
+      `family/${
+        isDeleteTitle == 'Delete Child'
+          ? 'child/delete'
+          : isDeleteTitle == "Delete Child's Room"
+          ? 'child/deleteroom'
+          : 'delete-member'
+      }`,
+      {
+        data: data
       }
-    }).then((response) => {
+    ).then((response) => {
       if (response.status === 200) {
         enqueueSnackbar(response.data.Message, { variant: 'success' });
         props.getFamiliesList();
         props.setFamily((prevState) => {
           const tempFamily = { ...prevState };
-          tempFamily.children = tempFamily.children.filter(
-            (child) => child.child_id !== childToDelete
-          );
+          if (isDeleteTitle == 'Delete Child') {
+            tempFamily.children = tempFamily.children.filter(
+              (child) => child.child_id !== toDelete
+            );
+          } else if (isDeleteTitle == 'Delete Primary Member') {
+            tempFamily.primary = {};
+          } else {
+            tempFamily.secondary = tempFamily.secondary.filter(
+              (member) => member.family_member_id !== toDelete
+            );
+          }
           return tempFamily;
         });
         handleDeleteDialogClose();
@@ -183,7 +212,9 @@ const FamilyDrawer = (props) => {
   // Method to close the delete child dialog
   const handleDeleteDialogClose = () => {
     setIsDeleteChildDialogOpen(false);
-    setChildToDelete();
+    setToDelete();
+    setIsDeleteTitle('');
+    setIsDeleteContext('');
   };
 
   // Method to close the disable dialog
@@ -507,6 +538,7 @@ const FamilyDrawer = (props) => {
       });
     }
   };
+  console.log('==props?.family==', props?.family);
   return (
     <Drawer
       className="family-drawer"
@@ -622,10 +654,17 @@ const FamilyDrawer = (props) => {
           <Box className="viewer-profile">
             <Box className="profile-img">
               <Avatar
-                title={`${props?.family?.primary?.first_name[0]?.toUpperCase()}${props?.family?.primary?.last_name[0]?.toUpperCase()}`}
-                src={
-                  props?.family?.primary?.profile_image
-                }>{`${props?.family?.primary?.first_name[0]?.toUpperCase()}${props?.family?.primary?.last_name[0]?.toUpperCase()}`}</Avatar>
+                title={
+                  !_.isEmpty(props?.family?.primary) &&
+                  `${props?.family?.primary?.first_name[0]?.toUpperCase()}${props?.family?.primary?.last_name[0]?.toUpperCase()}`
+                }
+                src={props?.family?.primary?.profile_image}>{`${
+                !_.isEmpty(props?.family?.primary) &&
+                props?.family?.primary?.first_name[0]?.toUpperCase()
+              }${
+                !_.isEmpty(props?.family?.primary) &&
+                props?.family?.primary?.last_name[0]?.toUpperCase()
+              }`}</Avatar>
             </Box>
           </Box>
           <Stack>
@@ -646,16 +685,26 @@ const FamilyDrawer = (props) => {
             <Typography variant="caption">{props?.family?.primary?.email}</Typography>
           </Stack>
         </Stack>
-
-        <IconButton
-          className="edit-btn"
-          onClick={() => {
-            props.setPrimaryParent(props?.family?.primary);
-            props.setParentType('primary');
-            props.setIsParentFormDialogOpen(true);
-          }}>
-          <EditOutlinedIcon />
-        </IconButton>
+        <Box>
+          <IconButton
+            className="edit-btn"
+            onClick={() => {
+              props.setPrimaryParent(props?.family?.primary);
+              props.setParentType('primary');
+              props.setIsParentFormDialogOpen(true);
+            }}>
+            <EditOutlinedIcon />
+          </IconButton>
+          <IconButton
+            onClick={() => {
+              setIsDeleteChildDialogOpen(true);
+              setIsDeleteTitle('Delete Primary Member');
+              setIsDeleteContext('Are you sure you want to delete this primary member?');
+              setToDelete(props?.family?.primary?.family_member_id);
+            }}>
+            <DeleteOutlineIcon />
+          </IconButton>
+        </Box>
       </Stack>
       {props?.family?.secondary && props?.family?.secondary?.length > 0 && (
         <>
@@ -773,6 +822,15 @@ const FamilyDrawer = (props) => {
                     }}>
                     <EditOutlinedIcon />
                   </IconButton>
+                  <IconButton
+                    onClick={() => {
+                      setIsDeleteChildDialogOpen(true);
+                      setIsDeleteTitle('Delete Family Member');
+                      setIsDeleteContext('Are you sure you want to delete this family member?');
+                      setToDelete(parent.family_member_id);
+                    }}>
+                    <DeleteOutlineIcon />
+                  </IconButton>
                 </Stack>
               </Stack>
             </Box>
@@ -877,18 +935,18 @@ const FamilyDrawer = (props) => {
                       spacing={1.5}
                       alignItems="center"
                       justifyContent="center">
-                      {props?.family?.children.length !== 1 && (
+                      {/* {props?.family?.children.length !== 1 && (
                         <IconButton
-                          // className="child-delete-btn"
+                          className="child-delete-btn"
                           className="edit-btn"
                           onClick={() => {
                             setIsDeleteChildDialogOpen(true);
                             setChildToDelete(child.child_id);
                           }}>
-                          {/* <DeleteIcon className="delete-icon" /> */}
+                          <DeleteIcon className="delete-icon" />
                           <DeleteOutlineIcon />
                         </IconButton>
-                      )}
+                      )} */}
                       {child.status === 'Disabled' ? (
                         // <Tooltip id="button-report" title="Enable">
                         <>
@@ -948,16 +1006,20 @@ const FamilyDrawer = (props) => {
                         }}>
                         <EditIcon />
                       </IconButton>
-                      {/* {props?.family?.children.length !== 1 && (
+                      {props?.family?.children.length !== 1 && (
                         <IconButton
-                          className="child-delete-btn"
+                          //className="child-delete-btn"
+                          className="edit-btn"
                           onClick={() => {
                             setIsDeleteChildDialogOpen(true);
-                            setChildToDelete(child.child_id);
+                            setToDelete(child.child_id);
+                            setIsDeleteTitle('Delete Child');
+                            setIsDeleteContext('Are you sure you want to delete this child?');
                           }}>
-                          <DeleteIcon className="delete-icon" />
+                          {/* <DeleteIcon className="delete-icon" /> */}
+                          <DeleteOutlineIcon />
                         </IconButton>
-                      )} */}
+                      )}
                     </Stack>
                   </Stack>
 
@@ -1028,7 +1090,18 @@ const FamilyDrawer = (props) => {
                             }}
                             style={{ height: '1.5rem' }}
                             className="curser-pointer"></img>
-
+                          <IconButton
+                            //className="child-delete-btn"
+                            onClick={() => {
+                              setIsDeleteChildDialogOpen(true);
+                              setToDelete(child.child_id);
+                              setToDeleteRoom(room?.room_id);
+                              setIsDeleteTitle("Delete Child's Room");
+                              setIsDeleteContext('Are you sure you want to delete this room?');
+                            }}
+                            className="edit-btn">
+                            <DeleteOutlineIcon />
+                          </IconButton>
                           {/* <BlockIcon
                             className={
                               room?.disabled == 'true'
@@ -1069,8 +1142,10 @@ const FamilyDrawer = (props) => {
       )}
 
       <NewDeleteDialog
-        title="Delete Child"
-        contentText="Are you sure you want to delete this child?"
+        //title="Delete Child"
+        title={isDeleteTitle}
+        //contentText="Are you sure you want to delete this child?"
+        contentText={isDeleteContext}
         loading={deleteLoading}
         open={isDeleteChildDialogOpen}
         handleDialogClose={handleDeleteDialogClose}

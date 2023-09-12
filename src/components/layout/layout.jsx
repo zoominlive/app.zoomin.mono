@@ -404,7 +404,7 @@ const Layout = () => {
                 
               </FormControl> */}
             <Grid container alignItems={'self-end'} gap={1}>
-              <Grid item xs={12} sm={12} md={12} lg={7}>
+              <Grid item xs={12} sm={12} md={12} lg={6.6}>
                 <Stack
                   direction={'row'}
                   justifyContent={'flex-start'}
@@ -486,7 +486,7 @@ const Layout = () => {
                   )}
                 />
               </Grid>
-              <Grid item xs={12} sm={12} md={4} lg={2}>
+              <Grid item xs={12} sm={12} md={4} lg={2.1}>
                 <Box className="header-right">
                   <AccountMenu openLogoutDialog={setIsLogoutDialogOpen} />
                 </Box>

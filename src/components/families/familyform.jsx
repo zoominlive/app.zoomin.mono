@@ -198,7 +198,8 @@ const AddFamily = (props) => {
           if (response.status === 201) {
             enqueueSnackbar(response.data.Message, { variant: 'success' });
             props.getFamiliesList();
-            handleFormDialogClose();
+            setIsCloseDialog(false);
+            props.setOpen(false);
           } else {
             errorMessageHandler(
               enqueueSnackbar,

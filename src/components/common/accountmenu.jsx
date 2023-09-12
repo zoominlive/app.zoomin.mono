@@ -48,14 +48,19 @@ const AccountMenu = (props) => {
 
       {/* </IconButton> */}
       <Stack direction={'row'} alignItems={'center'} justifyContent={'space-around'}>
-        <Avatar
-          src={authCtx?.user?.profile_image}
-          style={{
-            border: '2px solid #eae9ff',
-            margin: '5px 5px 5px 0'
-          }}
-        />
-        {authCtx?.user?.first_name} {authCtx?.user?.last_name}
+        <Stack direction={'row'}>
+          <Avatar
+            src={authCtx?.user?.profile_image}
+            style={{
+              border: '2px solid #eae9ff',
+              margin: '5px 5px 5px 0'
+            }}
+          />
+
+          <Box component={'p'} className="profile-name">
+            {authCtx?.user?.first_name} {authCtx?.user?.last_name}
+          </Box>
+        </Stack>
         <IconButton onClick={handleClick} sx={{ ml: 1 }}>
           {/* <KeyboardArrowDownIcon style={{ ml: 3 }} onClick={handleClick} /> */}
           <KeyboardArrowDownIcon />
