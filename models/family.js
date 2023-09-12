@@ -106,6 +106,7 @@ const Family = sequelize.define(
     },
     createdAt: { type: Sequelize.DATE, field: 'created_at' },
     updatedAt: { type: Sequelize.DATE, field: 'updated_at' },
+    deletedAt: { type: Sequelize.DATE, field: 'deleted_at' },
     cam_preference: {
       type: Sequelize.JSON,
       defaultValue: {}
@@ -113,7 +114,8 @@ const Family = sequelize.define(
   },
   {
     tableName: 'family',
-    timestamps: true
+    timestamps: true,
+    paranoid: true
   }
 );
 

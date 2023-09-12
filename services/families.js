@@ -781,6 +781,16 @@ module.exports = {
   //     });
   // });
   return family
-}
+},
+
+deleteFamilyMember: async (familyMemberId, t) => {
+  const { Family } = await connectToDatabase();
+  let deletedFamilyMember = await Family.destroy(
+    { where: { family_member_id: familyMemberId } },
+    { transaction: t }
+  );
+
+  return deletedFamilyMember;
+},
 
 }

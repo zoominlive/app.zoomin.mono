@@ -453,6 +453,16 @@ module.exports = {
     }
 
     return AllChildren;
-  }
+  },
+
+  deleteRoomInChild: async (childId,roomID, t) => {
+    const { RoomsInChild } = await connectToDatabase();
+    let deletedRoom = await RoomsInChild.destroy(
+      { where: { child_id: childId, room_id: roomID }, raw: true },
+      { transaction: t }
+    );
+
+    return deletedRoom;
+  },
 };
 
