@@ -496,8 +496,8 @@ module.exports = {
     try {
       const { token, password } = req.body;
       const decodeToken = engine.decrypt(token);
-
       if (decodeToken.familyMemberId) {
+        console.log('calling if=============')
         let familyMember;
 
         familyMember = await familyServices.getFamilyMemberById(decodeToken.familyMemberId, t);

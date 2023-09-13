@@ -387,6 +387,7 @@ module.exports = {
       const decodeToken = engine.decrypt(token);
 
       if (decodeToken?.userId) {
+        console.log('calling if=============')
         let user;
 
         user = await userServices.getUserById(decodeToken.userId, t);
@@ -441,7 +442,77 @@ module.exports = {
         } else {
           res.status(400).json({ IsSuccess: true, Data: {}, Message: CONSTANTS.USER_NOT_FOUND });
         }
-      } else {
+      }
+      else if (decodeToken.familyMemberId) {
+        console.log('calling else if=============')
+        let familyMember;
+
+        familyMember = await familyServices.getFamilyMemberById(decodeToken.familyMemberId, t);
+
+        if (familyMember) {
+          if (!familyMember?.password) {
+            const salt = await bcrypt.genSaltSync(10);
+            let hashPassword = bcrypt.hashSync(password, salt);
+
+            const setPassword = await familyServices.resetPassword(
+              decodeToken.familyMemberId,
+              hashPassword,
+              t
+            );
+
+            await familyServices.editFamily(
+              {
+                family_member_id: familyMember.family_member_id,
+                password_link: 'inactive'
+              },
+              t
+            );
+            res.status(200).json({
+              IsSuccess: true,
+              Data: {},
+              Message: CONSTANTS.FAMIY_MEMBER_PASS_RESET
+            });
+          } else if (familyMember?.password) {
+            if (familyMember.password === decodeToken?.password) {
+              const salt = await bcrypt.genSaltSync(10);
+              let hashPassword = bcrypt.hashSync(password, salt);
+              const setPassword = await familyServices.resetPassword(
+                decodeToken.familyMemberId,
+                hashPassword,
+                t
+              );
+
+              await familyServices.editFamily(
+                {
+                  family_member_id: familyMember.family_member_id,
+                  password_link: 'inactive'
+                },
+                t
+              );
+              res.status(200).json({
+                IsSuccess: true,
+                Data: {},
+                Message: CONSTANTS.FAMIY_MEMBER_PASS_RESET
+              });
+            } else {
+              res.status(400).json({
+                IsSuccess: false,
+                Data: {},
+                Message: CONSTANTS.PASSWORD_ALREADY_CHANGED
+              });
+            }
+          } else {
+            res.status(400).json({
+              IsSuccess: false,
+              Data: {},
+              Message: CONSTANTS.INVALID_TOKEN
+            });
+          }
+        } else {
+          res.status(400).json({ IsSuccess: true, Data: {}, Message: CONSTANTS.USER_NOT_FOUND });
+        }
+      }
+      else {
         res.status(400).json({ IsSuccess: true, Data: {}, Message: CONSTANTS.LINK_EXPIRED });
       }
       await t.commit();
