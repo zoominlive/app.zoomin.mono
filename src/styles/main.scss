@@ -441,6 +441,9 @@
       button{
         padding: 0;
       }
+      >div{
+        width: 100%;
+      }
     }
     .MuiGrid-root {
       padding-right: 8px;
@@ -2052,7 +2055,7 @@
   height: 5px;
   position: absolute !important;
   top: 0%;
-  width: calc(100% - 260px) !important;
+  width: 100% !important;
   right: 0px;
   .MuiLinearProgress-bar{
     background-color: #5a53dd;
@@ -2061,7 +2064,7 @@
 
 .customer-loader{
 .linear-loader{
-  width: 50% !important;
+  width: 100% !important;
   left: 0;
 }
 }

@@ -43,11 +43,11 @@ const AccountMenu = (props) => {
   };
 
   return (
-    <Box>
+    <>
       {/* <IconButton onClick={handleClick}> */}
 
       {/* </IconButton> */}
-      <Stack direction={'row'} alignItems={'center'} justifyContent={'space-around'}>
+      <Stack direction={'row'} alignItems={'center'} justifyContent={'space-between'}>
         <Stack direction={'row'}>
           <Avatar
             src={authCtx?.user?.profile_image}
@@ -124,7 +124,7 @@ const AccountMenu = (props) => {
           </MenuItem>
         </MenuList>
       </Menu>
-    </Box>
+    </>
   );
 };
 
