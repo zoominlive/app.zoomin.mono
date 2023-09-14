@@ -64,20 +64,24 @@ const Layout = () => {
   const [dropdownLoading, setDropdownLoading] = useState(false);
 
   const locs = ['Select All'];
-  authCtx?.user?.location?.accessable_locations.forEach((loc) => locs.push(loc));
+  //authCtx?.user?.location?.accessable_locations.forEach((loc) => locs.push(loc));
   // const handleChange = (event) => {
   //   authCtx.setLocation(event.target.value);
   // };
 
-  useEffect(() => {
-    setDropdownLoading(true);
-    const locs = ['Select All'];
-    let selected_locaions = authCtx?.user?.location?.accessable_locations;
-    authCtx?.user?.location?.accessable_locations.forEach((loc) => locs.push(loc));
-    setLocations(locs);
-    setSelectedLocation(selected_locaions);
-    setDropdownLoading(false);
-  }, []);
+  // useEffect(() => {
+  //   setDropdownLoading(true);
+  //   const locs = ['Select All'];
+  //   console.log(
+  //     '========authCtx?.user?.location?.accessable_locations===',
+  //     authCtx?.user?.location?.accessable_locations
+  //   );
+  //   let selected_locaions = authCtx?.user?.location?.accessable_locations;
+  //   authCtx?.user?.location?.accessable_locations.forEach((loc) => locs.push(loc));
+  //   setLocations(locs);
+  //   setSelectedLocation(selected_locaions);
+  //   setDropdownLoading(false);
+  // }, []);
 
   useEffect(() => {
     authCtx.setLocation(selectedLocation);
@@ -85,9 +89,12 @@ const Layout = () => {
 
   useEffect(() => {
     setIsLoading(true);
+    setDropdownLoading(true);
     // API Call for Fetching Logged in user detail
     API.get('users', { params: { cust_id: localStorage.getItem('cust_id') } }).then((response) => {
       if (response.status === 200) {
+        setSelectedLocation(response?.data?.Data?.location?.accessable_locations);
+        authCtx.setLocation(response?.data?.Data?.location?.accessable_locations);
         authCtx.setUser({
           ...response.data.Data,
           location: response.data.Data.location
@@ -96,6 +103,11 @@ const Layout = () => {
           'user',
           JSON.stringify({ ...response.data.Data, location: response.data.Data.location })
         );
+
+        let selected_locaions = response?.data?.Data?.location?.accessable_locations;
+        response?.data?.Data?.location?.accessable_locations.forEach((loc) => locs.push(loc));
+        setLocations(locs);
+        setSelectedLocation(selected_locaions);
       } else {
         errorMessageHandler(
           enqueueSnackbar,
@@ -105,6 +117,7 @@ const Layout = () => {
         );
       }
       setIsLoading(false);
+      setDropdownLoading(false);
     });
   }, []);
 
@@ -374,123 +387,109 @@ const Layout = () => {
                 style={{ display: 'none' }}
               />
               <KeyboardArrowLeftIcon className="collapse-btn" onClick={() => setOpen(!open)} />
-
-              {/* <Box className="breadcrumb">
-                {layoutCtx?.breadcrumb?.length > 2 ? (
-                  <Avatar src={layoutCtx?.breadcrumb[2]} />
-                ) : null}
-
-                <Typography variant="h2">{layoutCtx?.breadcrumb[0]}</Typography>
-              </Box>*/}
             </Box>
-
-            {/* <FormControl fullWidth className="header-location">
-                <InputLabel id="demo-simple-select-label">Location</InputLabel>
-                <Select
-                  labelId="demo-simple-select-label"
-                  id="demo-simple-select"
-                  value={location}
-                  label="Location"
-                  onChange={handleChange}
-                  sx={{
-                    '& fieldset': {
-                      border: 'none'
-                    }
-                  }}>
-                  <MenuItem value={'Location 1'}>Location 1</MenuItem>
-                  <MenuItem value={'Location 2'}>Location 2</MenuItem>
-                  <MenuItem value={'Location 3'}>Location 3</MenuItem>
-                </Select>
-                
-              </FormControl> */}
             <Grid container alignItems={'self-end'} gap={1}>
-              <Grid item xs={12} sm={12} md={12} lg={6.6}>
-                <Stack
-                  direction={'row'}
-                  justifyContent={'flex-start'}
-                  alignItems={'center'}
-                  gap={2}
-                  className="breadcrumb">
-                  {layoutCtx?.breadcrumb?.length > 2 ? (
-                    <Avatar
-                      src={authCtx?.user?.profile_image}
-                      sx={{ width: 85, height: 85 }}
-                      alt='="profile-image'
-                    />
-                  ) : null}
-                  <Stack direction={'column'} spacing={0.5}>
-                    <Typography variant="h2">{layoutCtx?.breadcrumb[0]}</Typography>
-                    {layoutCtx?.breadcrumb?.length > 1 && (
-                      <Typography className="">{layoutCtx?.breadcrumb[1]}</Typography>
-                    )}
-                  </Stack>
-                </Stack>
-              </Grid>
-              <Grid item xs={12} sm={12} md={4} lg={2.6}>
-                <Autocomplete
-                  sx={{
-                    '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                      borderWidth: 0
-                    },
-                    '& fieldset': { borderRadius: 10, borderWidth: 0 }
-                  }}
-                  className="header-location-select"
-                  multiple
-                  limitTags={1}
-                  id="tags-standard"
-                  options={locations?.length !== 0 ? locations : []}
-                  onChange={(_, value, reason, option) => {
-                    handleSetLocations(_, value, reason, option);
-                  }}
-                  value={selectedLocation ? selectedLocation : []}
-                  getOptionLabel={(option) => option}
-                  renderTags={(value, getTagProps) =>
-                    value?.map((option, index) => (
-                      <Chip key={index} label={option} {...getTagProps({ index })} />
-                    ))
-                  }
-                  renderOption={(props, option, { selected }) => (
-                    <li {...props}>
-                      <Checkbox
-                        icon={icon}
-                        checkedIcon={checkedIcon}
-                        style={{ marginRight: 8 }}
-                        checked={allLocationChecked ? allLocationChecked : selected}
+              <Grid container spacing={3} alignItems={'stretch'}>
+                <Grid item md={12} sm={12} xs={12} lg={7}>
+                  <Stack
+                    direction={'row'}
+                    justifyContent={'flex-start'}
+                    alignItems={'center'}
+                    gap={2}
+                    className="breadcrumb">
+                    {layoutCtx?.breadcrumb?.length > 2 ? (
+                      <Avatar
+                        src={authCtx?.user?.profile_image}
+                        sx={{ width: 85, height: 85 }}
+                        alt='="profile-image'
                       />
-                      {option}
-                    </li>
-                  )}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      InputProps={{
-                        ...params.InputProps,
-                        startAdornment: (
-                          <>
-                            <InputAdornment position="start">
-                              <img src={buildingIcon} />
-                            </InputAdornment>
-                            {params.InputProps.startAdornment}
-                          </>
-                        ),
-                        endAdornment: (
-                          <React.Fragment>
-                            {dropdownLoading ? (
-                              <CircularProgress color="inherit" size={20} />
-                            ) : null}
-                            {params.InputProps.endAdornment}
-                          </React.Fragment>
-                        )
-                      }}
-                    />
-                  )}
-                />
+                    ) : null}
+                    <Stack direction={'column'} spacing={0.5}>
+                      <Typography variant="h2">{layoutCtx?.breadcrumb[0]}</Typography>
+                      {layoutCtx?.breadcrumb?.length > 1 && (
+                        <Typography className="">{layoutCtx?.breadcrumb[1]}</Typography>
+                      )}
+                    </Stack>
+                  </Stack>
+                </Grid>
+
+                <Grid item md={12} sm={12} xs={12} lg={5}>
+                  <>
+                    <Stack
+                      direction={'row'}
+                      justify-content={'end'}
+                      alignItems={'center'}
+                      spacing={3}>
+                      <Autocomplete
+                        sx={{
+                          '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                            borderWidth: 0
+                          },
+                          '& fieldset': { borderRadius: 10, borderWidth: 0 }
+                        }}
+                        className="header-location-select"
+                        multiple
+                        limitTags={1}
+                        id="tags-standard"
+                        options={locations?.length !== 0 ? locations : []}
+                        onChange={(_, value, reason, option) => {
+                          handleSetLocations(_, value, reason, option);
+                        }}
+                        value={selectedLocation ? selectedLocation : []}
+                        getOptionLabel={(option) => option}
+                        renderTags={(value, getTagProps) =>
+                          value?.map((option, index) => (
+                            <Chip key={index} label={option} {...getTagProps({ index })} />
+                          ))
+                        }
+                        renderOption={(props, option, { selected }) => (
+                          <li {...props}>
+                            <Checkbox
+                              icon={icon}
+                              checkedIcon={checkedIcon}
+                              style={{ marginRight: 8 }}
+                              checked={allLocationChecked ? allLocationChecked : selected}
+                            />
+                            {option}
+                          </li>
+                        )}
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            InputProps={{
+                              ...params.InputProps,
+                              startAdornment: (
+                                <>
+                                  <InputAdornment position="start">
+                                    <img src={buildingIcon} />
+                                  </InputAdornment>
+                                  {params.InputProps.startAdornment}
+                                </>
+                              ),
+                              endAdornment: (
+                                <React.Fragment>
+                                  {dropdownLoading ? (
+                                    <CircularProgress color="inherit" size={20} />
+                                  ) : null}
+                                  {params.InputProps.endAdornment}
+                                </React.Fragment>
+                              )
+                            }}
+                          />
+                        )}
+                      />
+                      <Box className="header-right">
+                        <AccountMenu openLogoutDialog={setIsLogoutDialogOpen} />
+                      </Box>
+                    </Stack>
+                  </>
+                </Grid>
               </Grid>
-              <Grid item xs={12} sm={12} md={4} lg={2.1}>
+              {/* <Grid item xs={12} sm={12} md={4} lg={2.1}>
                 <Box className="header-right">
                   <AccountMenu openLogoutDialog={setIsLogoutDialogOpen} />
                 </Box>
-              </Grid>
+              </Grid> */}
             </Grid>
           </header>
           <section className="content-area">

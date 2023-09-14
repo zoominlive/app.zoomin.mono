@@ -371,7 +371,8 @@ const WatchStream = () => {
           source_ip: ip,
           lat: location.lat,
           long: location.lng,
-          location_name: location_name
+          location_name: location_name,
+          cust_id: localStorage.getItem('cust_id')
         }).then((response) => {
           if (response.status === 200) {
             setUserInfoSent(true);

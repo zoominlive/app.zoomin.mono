@@ -392,7 +392,7 @@
       // display: flex;
       // align-items: center;
       // justify-content: center;
-      margin-left: 50px;
+      // margin-left: 50px;
       @media (max-width: 1024px) {
         margin-left: 0px;
       }
@@ -417,6 +417,9 @@
         color: rgba(0, 0, 0, 0.87);
       }
     }
+    .header-location-select{
+      width: 54%;
+    }
     .header-right {
       display: flex;
       align-items: center;
@@ -425,8 +428,8 @@
       background: #fff;
       border-radius: 50px;
       height: 68px;
-      margin-top: 10px;
       padding: 0px 12px;
+      width: 36%;
       @media (max-width: 1024px) {
         justify-content: flex-start;
         display: inline-flex;
@@ -445,8 +448,9 @@
         width: 100%;
       }
     }
-    .MuiGrid-root {
-      padding-right: 8px;
+
+    >.MuiGrid-root {
+      padding: 0px 45px 0px 45px;
     }
     .header-location {
       width: 200px;
@@ -463,6 +467,7 @@
           background-color: #fff !important;
           border-radius: 50px !important;
           height: 68px;
+          padding-right: 40px !important;
           // width: 300px;
           // input.MuiInputBase-input {
           //   display: none;

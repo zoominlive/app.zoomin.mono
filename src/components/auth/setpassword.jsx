@@ -57,9 +57,10 @@ const SetPassword = () => {
   useEffect(() => {
     const queryParams = search?.substring(1)?.split('&');
     const token = queryParams && queryParams[0]?.substring(6);
-    const type = queryParams && queryParams[1]?.substring(5);
+    // const type = queryParams && queryParams[1]?.substring(5);
 
-    API.post(type === 'family' ? 'family/checkLinkValid' : 'users/checkLinkValid', {
+    // API.post(type === 'family' ? 'family/checkLinkValid' : 'users/checkLinkValid', {
+    API.post('users/checkLinkValid', {
       token: token
     }).then((response) => {
       if (response.status === 200) {
@@ -74,8 +75,8 @@ const SetPassword = () => {
   const handleSubmit = (data) => {
     const queryParams = search?.substring(1)?.split('&');
     const token = queryParams && queryParams[0].substring(6);
-    const type = queryParams && queryParams[1].substring(5);
-    console.log(type);
+    // const type = queryParams && queryParams[1].substring(5);
+    // console.log(type);
     setSubmitLoading(true);
     // API.post(type === 'family' ? 'family/setPassword' : 'users/setPassword', {
     API.post('users/setPassword', {
