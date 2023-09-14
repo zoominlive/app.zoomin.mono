@@ -172,18 +172,36 @@ module.exports = {
     return { cams: cams.rows, count: cams.count };
   },
 
-  getAllMountedCameraViewers: async (camIds, t) => {
-    const { MountedCameraRecentViewers, Camera } = await connectToDatabase();
+  getAllMountedCameraViewers: async (camIds) => {
+    //const { MountedCameraRecentViewers, Camera } = await connectToDatabase();
 
-    let recentViewers = await MountedCameraRecentViewers.findAll(
-      { where: {function: "start"}, 
-      include:[{
-        model: Camera,
-        where: { cam_id: { [Sequelize.Op.in]: camIds } }
-      }], group: ["viewer_id"] },
-      { transaction: t }
-    );
+    // let recentViewers = await MountedCameraRecentViewers.findAll(
+    //   { where: {function: "start"}, 
+    //   include:[{
+    //     model: Camera,
+    //     where: { cam_id: { [Sequelize.Op.in]: camIds } }
+    //   }], group: ["viewer_id"] },
+    //   { transaction: t }
+    // );
 
-    return recentViewers;
+    // return recentViewers;
+    // console.log('===camIds',camIds)
+    const recentViewers = await sequelize.query(`SELECT COUNT(DISTINCT sub.viewer_id) AS total_start_only_viewers
+    FROM (
+        SELECT viewer_id
+        FROM mounted_camera_recent_viewers
+        WHERE 'function' = 'start' AND cam_id IN (:camIds)
+        GROUP BY viewer_id
+    ) AS sub
+    WHERE NOT EXISTS (
+        SELECT 1
+        FROM mounted_camera_recent_viewers
+        WHERE 'function' = 'stop' AND viewer_id = sub.viewer_id
+    );`, {
+      replacements: { camIds },
+      type: Sequelize.QueryTypes.SELECT
+    });
+    return recentViewers
   },
+
 };

@@ -75,7 +75,7 @@ module.exports = {
         const token = await familyServices.createPasswordToken(primaryParent);
         const name = primaryParent.first_name + ' ' + primaryParent.last_name;
         const originalUrl =
-          process.env.FE_SITE_BASE_URL + 'set-password?' + 'token=' + token + '&type=family';
+          process.env.FE_SITE_BASE_URL + 'set-password?' + 'token=' + token;
         // const short_url = await TinyURL.shorten(originalUrl);
 
         await sendRegistrationMailforFamilyMember(name, primaryParent.email, originalUrl);
@@ -85,7 +85,7 @@ module.exports = {
             const token = await familyServices.createPasswordToken(secondaryParent);
             const name = secondaryParent.first_name + ' ' + secondaryParent.last_name;
             const originalUrl =
-              process.env.FE_SITE_BASE_URL + 'set-password?' + 'token=' + token + '&type=family';
+              process.env.FE_SITE_BASE_URL + 'set-password?' + 'token=' + token;
             // const short_url = await TinyURL.shorten(originalUrl);
 
             await sendRegistrationMailforFamilyMember(name, secondaryParent.email, originalUrl);
@@ -197,7 +197,7 @@ module.exports = {
           const token = await familyServices.createEmailToken(editedFamily, params.email);
           const name = editedFamily.first_name + ' ' + editedFamily.last_name;
           const originalUrl =
-            process.env.FE_SITE_BASE_URL + 'email-change?' + 'token=' + token + '&type=family';
+            process.env.FE_SITE_BASE_URL + 'email-change?' + 'token=' + token;
           // const short_url = await TinyURL.shorten(originalUrl);
           const response = await sendEmailChangeMail(name, params?.email, originalUrl);
         }
@@ -305,7 +305,7 @@ module.exports = {
         const token = await familyServices.createPasswordToken(parent);
         const name = parent.first_name + ' ' + parent.last_name;
         const originalUrl =
-          process.env.FE_SITE_BASE_URL + 'set-password?' + 'token=' + token + '&type=family';
+          process.env.FE_SITE_BASE_URL + 'set-password?' + 'token=' + token;
         // const short_url = await TinyURL.shorten(originalUrl);
 
         await sendRegistrationMailforFamilyMember(name, parent.email, originalUrl);

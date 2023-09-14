@@ -183,8 +183,9 @@ module.exports = {
   ReportViewers: async (req, res, next) => {
     try {
       const params = req.body;
+      const custId = req?.user?.cust_id || req?.body?.cust_id;
       const recentViewer = await watchStreamServices.reportViewers(params);
-
+      await dashboardServices.updateDashboardData(custId);
       res.status(200).json({
         IsSuccess: true,
         Data: recentViewer,

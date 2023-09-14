@@ -9,6 +9,7 @@ const { listAvailableStreams } = require("../lib/rtsp-stream");
 const _ = require("lodash");
 const sequelize = require("../lib/database");
 const CONSTANTS = require("../lib/constants");
+const { cons } = require("lodash-contrib");
 module.exports = {
   // get all stream statistics data to populate dashboard
   getStreamStatistics: async (req, res, next) => {
@@ -138,7 +139,8 @@ module.exports = {
       const familyMembers = await familyServices.getAllFamilyMembers(custId, req?.query?.location, t);
       const families = await familyServices.getAllFamilyIds(custId, req?.query?.location,t);
       const recentLiveStreams = await liveStreamServices.getRecentStreams(custId, req?.query?.location, t);
-      const numberofMountedCameraViewers = await cameraServices.getAllMountedCameraViewers(totalStreams.flatMap(i => i.cam_id), t)
+      const numberofMountedCameraViewers = totalStreams.length > 0 ? await cameraServices.getAllMountedCameraViewers(totalStreams.flatMap(i => i.cam_id)) : 0
+      //const numberofMountedCameraViewers = 0;
       await t.commit();
       res.status(200).json({
         IsSuccess: true,
@@ -168,6 +170,7 @@ module.exports = {
 
       next();
     } catch (error) {
+      console.log('==error==',error);
       await t.rollback();
       res.status(500).json({
         IsSuccess: false,

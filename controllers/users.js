@@ -73,6 +73,7 @@ module.exports = {
       const user = req.user;
       const custId = req.user.cust_id || req.query?.cust_id;
       if(!req.user.cust_id){
+        console.log('calling===================')
         let availableLocations = await customerServices.getLocationDetails(custId)
         let locs = availableLocations.flatMap((i) => i.loc_name);
         user.location = { selected_locations: locs, accessable_locations: locs };
@@ -139,7 +140,7 @@ module.exports = {
         const token = await userServices.createPasswordToken(userData);
         const name = userData.first_name + ' ' + userData.last_name;
         const originalUrl =
-          process.env.FE_SITE_BASE_URL + 'set-password?' + 'token=' + token + '&type=user';
+          process.env.FE_SITE_BASE_URL + 'set-password?' + 'token=' + token;
         // const short_url = await TinyURL.shorten(originalUrl);
 
         await sendRegistrationMailforUser(name, userData.email, originalUrl);
@@ -547,7 +548,7 @@ module.exports = {
           const token = await userServices.createPasswordToken(userData);
           const name = userData.first_name + ' ' + userData.last_name;
           const originalUrl =
-            process.env.FE_SITE_BASE_URL + 'set-password?' + 'token=' + token + '&type=user';
+            process.env.FE_SITE_BASE_URL + 'set-password?' + 'token=' + token;
           // const short_url = await TinyURL.shorten(originalUrl);
           await sendForgetPasswordMail(name, email, originalUrl);
           await userServices.editUserProfile(user, { password_link: 'active' }, t);
@@ -555,7 +556,7 @@ module.exports = {
           const token = await familyServices.createPasswordToken(userData);
           const name = userData.first_name + ' ' + userData.last_name;
           const originalUrl =
-            process.env.FE_SITE_BASE_URL + 'set-password?' + 'token=' + token + '&type=family';
+            process.env.FE_SITE_BASE_URL + 'set-password?' + 'token=' + token;
           // const short_url = await TinyURL.shorten(originalUrl);
           await sendForgetPasswordMail(name, email, originalUrl);
           await familyServices.editFamily(
@@ -1080,7 +1081,27 @@ module.exports = {
         } else {
           res.status(400).json({ IsSuccess: true, Data: {}, Message: CONSTANTS.USER_NOT_FOUND });
         }
-      } else {
+      }
+      else if (decodeToken?.familyMemberId) {
+        let user;
+
+        user = await familyServices.getFamilyMemberById(decodeToken.familyMemberId);
+
+        if (user) {
+          if (user?.password_link === 'active') {
+            res.status(200).json({ IsSuccess: true, Data: 'active', Message: 'Link is valid' });
+          } else {
+            res.status(400).json({
+              IsSuccess: false,
+              Data: 'inactive',
+              Message: CONSTANTS.LINK_EXPIRED
+            });
+          }
+        } else {
+          res.status(400).json({ IsSuccess: true, Data: {}, Message: CONSTANTS.USER_NOT_FOUND });
+        }
+      }
+      else {
         res.status(400).json({ IsSuccess: true, Data: {}, Message: CONSTANTS.LINK_EXPIRED });
       }
       next();

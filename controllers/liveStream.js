@@ -13,6 +13,7 @@ const fcmTokensServices = require('../services/fcmTokens');
 const logServices = require('../services/logs');
 const liveStramcameraServices = require('../services/livestreamCameras');
 const dashboardServices = require('../services/dashboard');
+const userServices = require('../services/users');
 const notificationSender = require('../lib/firebase-services');
 const CONSTANTS = require('../lib/constants');
 const sequelize = require('../lib/database');
@@ -326,7 +327,8 @@ module.exports = {
     try {
       const params = req.body;
       const recentViewer = await liveStreamServices.addRecentViewers(params);
-
+      const user = await userServices.getUserById(req?.body?.recent_user_id);
+      await dashboardServices.updateDashboardData(user?.cust_id);
       res.status(200).json({
         IsSuccess: true,
         Data: recentViewer,
