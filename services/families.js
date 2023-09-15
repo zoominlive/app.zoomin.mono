@@ -181,7 +181,7 @@ module.exports = {
         });
       });
     }
-  
+
     familiesCount = result;
     families = await Family.findAll(
       {
@@ -578,65 +578,78 @@ module.exports = {
   //   return familyMembersIds;
   // },
 
-  getAllFamilyMembers: async(custId, location = ["Select All"], t) => {
+  getAllFamilyMembers: async (custId, location = ["Select All"], t) => {
     const { Family } = await connectToDatabase();
-    let allFamilyMembers = await Family.findAll({
-      where: {cust_id: custId},
-      attributes: ['family_member_id', "location"], raw: true, 
-    },  { transaction: t });
+    let allFamilyMembers = await Family.findAll(
+      {
+        where: { cust_id: custId },
+        attributes: ["family_member_id", "location"],
+        raw: true,
+      },
+      { transaction: t }
+    );
 
-    if(!location.includes("Select All")){
-      let filterResult = []
-      allFamilyMembers.map(i => {
-          if(i.location?.accessable_locations.every(it => location.includes(it))){
-            filterResult.push(i)
-          }
-      })
-      allFamilyMembers = filterResult
+    if (!location.includes("Select All")) {
+      let filterResult = [];
+      allFamilyMembers.map((i) => {
+        if (
+          i.location?.accessable_locations.every((it) => location.includes(it))
+        ) {
+          filterResult.push(i);
+        }
+      });
+      allFamilyMembers = filterResult;
     }
 
-    return allFamilyMembers
+    return allFamilyMembers;
   },
 
-  getAllFamilyIds: async( custId, location = ["Select All"], t) => {
+  getAllFamilyIds: async (custId, location = ["Select All"], t) => {
     const { Family } = await connectToDatabase();
-    let familyIds = await Family.findAll({
-      where: {cust_id: custId},
-      attributes: ['family_id', "location"], group: ['family_id'], raw: true
-    }, { transaction: t });
- 
+    let familyIds = await Family.findAll(
+      {
+        where: { cust_id: custId },
+        attributes: ["family_id", "location"],
+        group: ["family_id"],
+        raw: true,
+      },
+      { transaction: t }
+    );
 
-    if(!location.includes("Select All")){
-      let filterResult = []
-      familyIds.map(i => {
-          if(i.location?.accessable_locations.every(it => location.includes(it))){
-            filterResult.push(i)
-          }
-      })
-      familyIds = filterResult
+    if (!location.includes("Select All")) {
+      let filterResult = [];
+      familyIds.map((i) => {
+        if (
+          i.location?.accessable_locations.every((it) => location.includes(it))
+        ) {
+          filterResult.push(i);
+        }
+      });
+      familyIds = filterResult;
     }
 
-    return familyIds
+    return familyIds;
   },
 
   getSEAChilds: async (custId, location = "All", enable = false, t) => {
-    const {Family, Child, RoomsInChild, Room } = await connectToDatabase();
-    console.log('====enable',enable)
-    let whereObj =  enable ? {
-      scheduled_enable_date: {
-        [Sequelize.Op.between]: [
-          moment().toISOString(),
-          moment().add(1, "w").toISOString(),
-        ],
-      }
-    } :{
-      scheduled_disable_date: {
-        [Sequelize.Op.between]: [
-          moment().toISOString(),
-          moment().add(1, "w").toISOString(),
-        ],
-      }
-    }
+    const { Family, Child, RoomsInChild, Room } = await connectToDatabase();
+    let whereObj = enable
+      ? {
+          scheduled_enable_date: {
+            [Sequelize.Op.between]: [
+              moment().toISOString(),
+              moment().add(1, "w").toISOString(),
+            ],
+          },
+        }
+      : {
+          scheduled_disable_date: {
+            [Sequelize.Op.between]: [
+              moment().toISOString(),
+              moment().add(1, "w").toISOString(),
+            ],
+          },
+        };
     let families = await Family.findAll(
       {
         attributes: {
@@ -652,12 +665,12 @@ module.exports = {
           {
             model: Child,
             where: { cust_id: custId },
-      attributes: [
-        "first_name",
-        "last_name",
-        "scheduled_end_date",
-        "scheduled_enable_date",
-      ],
+            attributes: [
+              "first_name",
+              "last_name",
+              "scheduled_end_date",
+              "scheduled_enable_date",
+            ],
             include: [
               {
                 model: RoomsInChild,
@@ -710,13 +723,13 @@ module.exports = {
       });
     });
 
-    return familyArray
+    return familyArray;
   },
 
-  getFamilyDetailsById: async(familyId) => {
-    const {Family, Child, RoomsInChild, Room } = await connectToDatabase();
+  getFamilyDetailsById: async (familyId) => {
+    const { Family, Child, RoomsInChild, Room } = await connectToDatabase();
 
-     let family = await Family.findOne(
+    let family = await Family.findOne(
       {
         attributes: {
           exclude: [
@@ -769,28 +782,27 @@ module.exports = {
       { transaction: t }
     );
 
-  //   let familyArray = [];
-  //   families?.forEach((familyMember) => {
-  //     familyArray.push({
-  //       primary: _.omit(JSON.parse(JSON.stringify(familyMember)), [
-  //         "secondary",
-  //         "children",
-  //       ]),
-  //       secondary: familyMember.secondary,
-  //       children: familyMember.children,
-  //     });
-  // });
-  return family
-},
+    //   let familyArray = [];
+    //   families?.forEach((familyMember) => {
+    //     familyArray.push({
+    //       primary: _.omit(JSON.parse(JSON.stringify(familyMember)), [
+    //         "secondary",
+    //         "children",
+    //       ]),
+    //       secondary: familyMember.secondary,
+    //       children: familyMember.children,
+    //     });
+    // });
+    return family;
+  },
 
-deleteFamilyMember: async (familyMemberId, t) => {
-  const { Family } = await connectToDatabase();
-  let deletedFamilyMember = await Family.destroy(
-    { where: { family_member_id: familyMemberId } },
-    { transaction: t }
-  );
+  deleteFamilyMember: async (familyMemberId, t) => {
+    const { Family } = await connectToDatabase();
+    let deletedFamilyMember = await Family.destroy(
+      { where: { family_member_id: familyMemberId } },
+      { transaction: t }
+    );
 
-  return deletedFamilyMember;
-},
-
-}
+    return deletedFamilyMember;
+  },
+};

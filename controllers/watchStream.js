@@ -184,6 +184,7 @@ module.exports = {
     try {
       const params = req.body;
       const custId = req?.user?.cust_id || req?.body?.cust_id;
+      console.log('=====custId==',custId)
       const recentViewer = await watchStreamServices.reportViewers(params);
       await dashboardServices.updateDashboardData(custId);
       res.status(200).json({

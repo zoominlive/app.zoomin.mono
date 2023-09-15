@@ -703,4 +703,26 @@ module.exports = {
       next(error);
     }
   },
+
+  deletePrimaryFamilyMember: async (req, res, next) => {
+    const t = await sequelize.transaction();
+    try {
+      const { primary_family_member_id, secondary_family_member_id } = req.body;
+
+      await familyServices.editFamily({family_member_id: primary_family_member_id, status: "Disabled"}, t);
+      await familyServices.deleteFamilyMember(primary_family_member_id, t);
+      
+      let params= { family_member_id: secondary_family_member_id, member_type:"primary" }
+      await familyServices.editFamily(params, t);
+      await t.commit();
+      res.status(200).json({ IsSuccess: true, Data: {}, Message: CONSTANTS.FAMILY_MEMBER_DELETED });
+      next();
+    } catch (error) {
+      await t.rollback();
+      res
+        .status(500)
+        .json({ IsSuccess: false, error_log: error, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
+      next(error);
+    }
+  },
 };
