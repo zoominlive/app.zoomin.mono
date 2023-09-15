@@ -42,6 +42,7 @@ import { Plus } from 'react-feather';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import NewDeleteDialog from '../common/newdeletedialog';
+import PrimaryMemberDeleteDialog from './primaryMemberDeleteDialog';
 const FamilyDrawer = (props) => {
   const authCtx = useContext(AuthContext);
   const { enqueueSnackbar } = useSnackbar();
@@ -78,7 +79,7 @@ const FamilyDrawer = (props) => {
 
   const [isDeleteTitle, setIsDeleteTitle] = useState('');
   const [isDeleteContext, setIsDeleteContext] = useState('');
-
+  const [isPrimaryMemberDeleteOpen, setIsPrimaryMemberDeleteOpen] = useState(false);
   useEffect(() => {
     if (!isDisableDialogOpen) {
       setChildToDisable();
@@ -114,7 +115,6 @@ const FamilyDrawer = (props) => {
 
   // Method to delete child
   const handleChildDelete = () => {
-    console.log(isDeleteTitle, toDeleteRoom);
     let data = {
       [isDeleteTitle == 'Delete Child' || isDeleteTitle == "Delete Child's Room"
         ? 'child_id'
@@ -123,7 +123,6 @@ const FamilyDrawer = (props) => {
     if (isDeleteTitle == "Delete Child's Room") {
       data = { ...data, room_id: toDeleteRoom };
     }
-    console.log(data);
     setDeleteLoading(true);
     API.delete(
       `family/${
@@ -538,7 +537,7 @@ const FamilyDrawer = (props) => {
       });
     }
   };
-  console.log('==props?.family==', props?.family);
+
   return (
     <Drawer
       className="family-drawer"
@@ -697,10 +696,15 @@ const FamilyDrawer = (props) => {
           </IconButton>
           <IconButton
             onClick={() => {
-              setIsDeleteChildDialogOpen(true);
-              setIsDeleteTitle('Delete Primary Member');
-              setIsDeleteContext('Are you sure you want to delete this primary member?');
-              setToDelete(props?.family?.primary?.family_member_id);
+              setIsPrimaryMemberDeleteOpen(true);
+              // setIsDeleteChildDialogOpen(true);
+              // setIsDeleteTitle('Delete Primary Member');
+              // setIsDeleteContext(
+              //   props.family.secondary.length > 0
+              //     ? 'Select new primary member'
+              //     : 'You can not delete the primary family member without another family member to take its place'
+              // );
+              // setToDelete(props?.family?.primary?.family_member_id);
             }}>
             <DeleteOutlineIcon />
           </IconButton>
@@ -1187,6 +1191,13 @@ const FamilyDrawer = (props) => {
           getFamiliesList={props.getFamiliesList}
         />
       )}
+
+      <PrimaryMemberDeleteDialog
+        open={isPrimaryMemberDeleteOpen}
+        setOpen={setIsPrimaryMemberDeleteOpen}
+        family={props?.family}
+        getFamiliesList={props.getFamiliesList}
+      />
     </Drawer>
   );
 };

@@ -60,6 +60,7 @@ const MainApp = () => {
       socket.addEventListener('message', (event) => {
         let data = JSON.parse(event.data);
         if (data?.update_dashboard_data) {
+          console.log('===updateDashboardData', data?.update_dashboard_data);
           localStorage.setItem('updateDashboardData', true);
           authCtx.setUpdateDashboardData(true);
         } else {
