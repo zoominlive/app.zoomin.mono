@@ -642,9 +642,14 @@
   }
 
   
-
+.table-pagination{
+  .MuiToolbar-root{
+    p{
+      font-size: 0.875rem;
+    }
+  }
+}
   
- 
 }
 
 .MuiSvgIcon-root {
@@ -1505,6 +1510,11 @@
     width: 88px;
     height: 88px;
     font-size: 20px;
+      @media only screen and (max-width: 1550px) {
+      width: 74px !important;
+      height: 74px !important;
+      font-size: 15px !important;
+    }
     span {
       font-size: 10px;
       color: #737373;

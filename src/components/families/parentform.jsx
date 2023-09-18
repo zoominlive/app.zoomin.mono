@@ -347,7 +347,7 @@ const ParentsForm = (props) => {
                       background: '#5A53DD',
                       color: '#fff',
                       textTransform: 'capitalize',
-                      maxWidth: 184
+                      width: 'auto'
                     }}>
                     Save Changes
                   </LoadingButton>

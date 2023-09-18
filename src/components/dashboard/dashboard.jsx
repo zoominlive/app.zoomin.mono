@@ -488,7 +488,12 @@ const Dashboard = () => {
                     </Stack>
                   </Grid>
                   <Grid item lg={7} md={7} sm={7} xs={12}>
-                    <Stack direction={'row'} spacing={1} className="family-circle-wrap" gap={0}>
+                    <Stack
+                      direction={'row'}
+                      spacing={1}
+                      className="family-circle-wrap"
+                      gap={0}
+                      justifyContent={'flex-end'}>
                       <Box
                         className="report-circle familiy-circle"
                         style={{ borderColor: '#A855F7' }}>

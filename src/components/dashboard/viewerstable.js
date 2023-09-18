@@ -215,6 +215,7 @@ export default function ViewersTable({ rows, columns, title, pagination, isLoadi
           page={page}
           onPageChange={handleChangePage}
           onRowsPerPageChange={handleChangeRowsPerPage}
+          className="table-pagination"
         />
       ) : null}
     </Paper>
