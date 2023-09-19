@@ -121,6 +121,7 @@ const WatchStream = () => {
     let roomsToAdd = [{ room_name: 'Select All', room_id: 'select-all' }];
     roomsToSet?.forEach((room) => roomsToAdd.push(room));
     setRooms(roomsToAdd);
+    setSelectedRoom(roomsToAdd);
     if (selectedRoom.length == 0) {
       setSelectedRoom([roomsToSet?.[0]]);
       let camsToAdd = [
@@ -166,7 +167,11 @@ const WatchStream = () => {
     });
 
     setCameras(cameras1);
-    setAllCamsChecked(false);
+
+    //setAllCamsChecked(false);
+    // setSelectedCameras(cameras1.length > 0 ? cameras1.slice(1, cameras1.length) : []);
+    //setAllCamsChecked(true);
+
     camLabel.current.rooms = selectedRoom;
   }, [selectedRoom]);
 
@@ -174,6 +179,23 @@ const WatchStream = () => {
     camLabel.current.cameras = selectedCameras;
   }, [selectedCameras]);
 
+  useEffect(() => {
+    if (
+      (authCtx.user.role == 'Admin' || authCtx.user.role == 'Super Admin') &&
+      cameras.length > 17
+    ) {
+      setSelectedCameras(cameras.slice(1, 17));
+    } else if (
+      !(authCtx.user.role == 'Admin' || authCtx.user.role == 'Super Admin') &&
+      cameras.length > 3
+    ) {
+      setSelectedCameras(cameras.slice(1, 3));
+    } else {
+      setSelectedCameras(cameras.slice(1, cameras.length));
+    }
+    setSubmitted(true);
+    setAllCamsChecked(true);
+  }, [cameras]);
   const getAvailableStreams = () => {
     API.get('watchstream', {
       params: {

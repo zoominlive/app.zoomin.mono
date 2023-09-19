@@ -5,8 +5,10 @@ import CustomPlayer from './customplayer';
 const FullScreenDialog = (props) => {
   return (
     <Card
+      className="player-card"
       style={{
-        backgroundColor: props.isFullScreenDialogOpen ? 'black' : '#cfc9c9',
+        //backgroundColor: props.isFullScreenDialogOpen ? 'black' : '#cfc9c9',
+        backgroundColor: props.isFullScreenDialogOpen ? 'black' : '',
         borderTopLeftRadius: '0',
         borderTopRightRadius: '0'
       }}>
@@ -15,7 +17,8 @@ const FullScreenDialog = (props) => {
           container
           alignContent={'center'}
           spacing={props.isFullScreenDialogOpen ? 0 : 1}
-          sx={{ border: props.isFullScreenDialogOpen ? '' : '16px solid white', height: '100vh' }}>
+          sx={{ border: props.isFullScreenDialogOpen ? '' : '16px solid white' }}
+          className="player-grid-container">
           <Grid item md={12} sm={12} sx={{ display: 'flex', justifyContent: 'center' }}>
             <Box mt={2} height={'75%'} width="75%">
               <CustomPlayer

@@ -263,7 +263,15 @@ const Cameras = () => {
                           </TableCell>
                           <TableCell component="th" scope="row">
                             <Stack direction="row" alignItems="center" spacing={3}>
-                              <Typography>{`${row.cam_uri}`}</Typography>
+                              {/* <Typography>{`${row.cam_uri}`}</Typography> */}
+
+                              <Typography>{`${row.cam_uri.replace(
+                                row.cam_uri.substring(
+                                  row.cam_uri.indexOf('//') + 2,
+                                  row.cam_uri.indexOf('@')
+                                ),
+                                '************'
+                              )}`}</Typography>
                             </Stack>
                           </TableCell>
                           <TableCell align="right">
