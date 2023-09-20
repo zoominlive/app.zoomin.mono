@@ -24,14 +24,16 @@ module.exports = {
         defaultWatchStream = watchStream || {};
       }
       const token = req.userToken;
-  
+      
       let streams = await listAvailableStreams(token, custId);
       const totalStreams =
-        await cameraServices.getAllCameraForCustomerDashboard(custId, req?.query?.location, t);
+      await cameraServices.getAllCameraForCustomerDashboard(custId, req?.query?.location, t);
+      //const numberofMountedCameraViewers =  await cameraServices.getAllMountedCameraViewers(custId, req?.query?.location, t);
+      const numberofMountedCameraViewers =  totalStreams?.length > 0 ? await cameraServices.getAllMountedCameraViewers(totalStreams.flatMap(i => i.cam_id), t) : 0;
       let totalActiveStreams = streams?.data?.filter((stream) => {
         return stream.running === true;
       });
-
+      
       let activeStreams = [];
       totalStreams?.forEach((stream) => {
         totalActiveStreams?.forEach((obj) => {
@@ -139,8 +141,7 @@ module.exports = {
       const familyMembers = await familyServices.getAllFamilyMembers(custId, req?.query?.location, t);
       const families = await familyServices.getAllFamilyIds(custId, req?.query?.location,t);
       const recentLiveStreams = await liveStreamServices.getRecentStreams(custId, req?.query?.location, t);
-      const numberofMountedCameraViewers = totalStreams.length > 0 ? await cameraServices.getAllMountedCameraViewers(totalStreams.flatMap(i => i.cam_id)) : 0
-      //const numberofMountedCameraViewers = 0;
+      //const numberofMountedCameraViewers = totalStreams.length > 0 ? await cameraServices.getAllMountedCameraViewers(totalStreams.flatMap(i => i.cam_id)) : 0
       await t.commit();
       res.status(200).json({
         IsSuccess: true,
@@ -149,7 +150,7 @@ module.exports = {
           enrolledStreams: totalStreams ? totalStreams.length : 0,
           activeStreams: activeStreams ? activeStreams.length : 0,
           numberofActiveStreamViewers: numberofActiveStreamViewers ? numberofActiveStreamViewers.length : 0,
-          numberofMountedCameraViewers: numberofMountedCameraViewers ? numberofMountedCameraViewers.length : 0,
+          numberofMountedCameraViewers: numberofMountedCameraViewers || 0,
           activeLiveStreams: activeLiveStreams ? activeLiveStreams : [],
           recentLiveStreams: recentLiveStreams ? recentLiveStreams : [],
           childrens: childrens ? childrens.length : 0,

@@ -3,6 +3,7 @@ const connectToDatabase = require("../models/index");
 const Sequelize = require("sequelize");
 
 const sequelize = require("../lib/database");
+const { isArray } = require("lodash");
 
 module.exports = {
   /* Create new camera */
@@ -172,8 +173,8 @@ module.exports = {
     return { cams: cams.rows, count: cams.count };
   },
 
-  getAllMountedCameraViewers: async (camIds) => {
-    //const { MountedCameraRecentViewers, Camera } = await connectToDatabase();
+  getAllMountedCameraViewers: async (camIds, t) => {
+    const { MountedCameraRecentViewers, Camera } = await connectToDatabase();
 
     // let recentViewers = await MountedCameraRecentViewers.findAll(
     //   { where: {function: "start"}, 
@@ -186,22 +187,58 @@ module.exports = {
 
     // return recentViewers;
     // console.log('===camIds',camIds)
-    const recentViewers = await sequelize.query(`SELECT COUNT(DISTINCT sub.viewer_id) AS total_start_only_viewers
-    FROM (
-        SELECT viewer_id
-        FROM mounted_camera_recent_viewers
-        WHERE 'function' = 'start' AND cam_id IN (:camIds)
-        GROUP BY viewer_id
-    ) AS sub
-    WHERE NOT EXISTS (
-        SELECT 1
-        FROM mounted_camera_recent_viewers
-        WHERE 'function' = 'stop' AND viewer_id = sub.viewer_id
-    );`, {
-      replacements: { camIds },
-      type: Sequelize.QueryTypes.SELECT
-    });
-    return recentViewers
+    // const recentViewers = await sequelize.query(`SELECT COUNT(DISTINCT sub.viewer_id) AS total_start_only_viewers
+    // FROM (
+    //     SELECT viewer_id
+    //     FROM mounted_camera_recent_viewers
+    //     WHERE 'function' = 'start' AND cam_id IN (:camIds)
+    //     GROUP BY viewer_id
+    // ) AS sub
+    // WHERE NOT EXISTS (
+    //     SELECT 1
+    //     FROM mounted_camera_recent_viewers
+    //     WHERE 'function' = 'stop' AND viewer_id = sub.viewer_id
+    // );`, {
+    //   replacements: { camIds },
+    //   type: Sequelize.QueryTypes.SELECT
+    // });
+    //console.log('==camIds==',camIds, typeof camIds, typeof camIds[0], isArray(camIds));
+//     let locs = []
+//     if(!location.includes("Select All")){
+//       locs = location
+//  }
+
+    const totalStartOnlyViewers = await MountedCameraRecentViewers.findAll({
+      // include: [
+      //   {
+      //     model: Camera,
+      //     as: 'camera',
+      //     where: {
+      //       cust_id: custId,
+      //       location: locs
+      //     },
+      //     attributes: ['cam_id']
+      //   }
+      // ],
+      attributes: [
+          [sequelize.fn('COUNT', sequelize.fn('DISTINCT', sequelize.col('viewer_id'))), 'total_start_only_viewers']
+      ],
+      where: {
+          cam_id: { [Sequelize.Op.in]: camIds },
+          function: 'start',
+          viewer_id: {
+              [Sequelize.Op.notIn]: MountedCameraRecentViewers.findAll({
+                  attributes: ['viewer_id'],
+                  where: {
+                      function: 'stop'
+                  }
+              })
+          }
+      },
+      raw: true,
+  }, { transaction: t });
+  
+    return totalStartOnlyViewers[0]?.total_start_only_viewers
   },
 
 };
