@@ -805,4 +805,16 @@ module.exports = {
 
     return deletedFamilyMember;
   },
+
+  getFailyMemberById: async (familyMemberId, t) => {
+    const { Family } = await connectToDatabase();
+    let familyMember = await Family.findOne(
+      {
+        where: { family_member_id: familyMemberId },
+      },
+      { transaction: t }
+    );
+    return familyMember ? familyMember.toJSON() : null;
+  },
+
 };

@@ -110,7 +110,7 @@ module.exports = {
           oneHourBefore.toISOString(),
           currentTime.toISOString(),
         ],
-      }, }, attributes:["stream_id", "stream_start_time"],
+      }, }, attributes:["stream_id", "stream_name", "stream_start_time"],
       include: [{
         model: Room,
         as: "room",

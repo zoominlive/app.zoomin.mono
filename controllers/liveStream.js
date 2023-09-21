@@ -2,22 +2,22 @@ process.on("uncaughtException", function (err) {
   console.error("Error:", err);
 });
 
-const _ = require('lodash');
-const moment = require('moment');
-const customerServices = require('../services/customers');
-const liveStreamServices = require('../services/liveStream');
-const childServices = require('../services/children');
-const familyServices = require('../services/families');
-const socketServices = require('../services/socket');
-const fcmTokensServices = require('../services/fcmTokens');
-const logServices = require('../services/logs');
-const liveStramcameraServices = require('../services/livestreamCameras');
-const dashboardServices = require('../services/dashboard');
-const userServices = require('../services/users');
-const notificationSender = require('../lib/firebase-services');
-const CONSTANTS = require('../lib/constants');
-const sequelize = require('../lib/database');
-const { v4: uuidv4 } = require('uuid');
+const _ = require("lodash");
+const moment = require("moment");
+const customerServices = require("../services/customers");
+const liveStreamServices = require("../services/liveStream");
+const childServices = require("../services/children");
+const familyServices = require("../services/families");
+const socketServices = require("../services/socket");
+const fcmTokensServices = require("../services/fcmTokens");
+const logServices = require("../services/logs");
+const liveStramcameraServices = require("../services/livestreamCameras");
+const dashboardServices = require("../services/dashboard");
+const userServices = require("../services/users");
+const notificationSender = require("../lib/firebase-services");
+const CONSTANTS = require("../lib/constants");
+const sequelize = require("../lib/database");
+const { v4: uuidv4 } = require("uuid");
 module.exports = {
   // get endpoint
   getEndpoint: async (req, res, next) => {
@@ -51,7 +51,7 @@ module.exports = {
         response = { serverEndPoint: endPoint };
         // try {
         // const { streamID } = req.query;
-        
+
         // } catch (error) {
         //   await t.rollback();
         //   res.status(500).json({
@@ -64,12 +64,12 @@ module.exports = {
         res.status(200).json({
           IsSuccess: true,
           Data: response,
-          Message: CONSTANTS.RTMP_ENDPOINT
+          Message: CONSTANTS.RTMP_ENDPOINT,
         });
       } else {
         res.status(200).json({
           IsSuccess: true,
-          Data: {room_id: roomID},
+          Data: { room_id: roomID },
           Message: CONSTANTS.LIVE_STREAM_UNAUTHORIZE,
         });
       }
@@ -110,7 +110,7 @@ module.exports = {
         await t.commit();
         res.status(200).json({
           IsSuccess: true,
-          Data: {stream_id: streamID},
+          Data: { stream_id: streamID },
           Message: CONSTANTS.LIVE_STREAM_ALREADY_STARTED,
         });
         return;
@@ -154,14 +154,20 @@ module.exports = {
               stream_id: streamID,
               room_id: roomID,
               //stream_uri: camObj?.stream_uri,
-              stream_uri: `${camObj?.stream_uri}?uid=${req?.user?.family_member_id || req?.user?.user_id}&sid=${camObj?.stream_uri.split('/')[camObj?.stream_uri.split('/').length - 1].split('.')[0]}&uuid=${uuidv4()}`
+              stream_uri: `${camObj?.stream_uri}?uid=${
+                req?.user?.family_member_id || req?.user?.user_id
+              }&sid=${
+                camObj?.stream_uri
+                  .split("/")
+                  [camObj?.stream_uri.split("/").length - 1].split(".")[0]
+              }&uuid=${uuidv4()}`,
             }
           );
         }
         if (!_.isEmpty(socketIds)) {
           await Promise.all(
             socketIds.map(async (id) => {
-              await socketServices.emitResponse(id, {"message": message});
+              await socketServices.emitResponse(id, { message: message });
             })
           );
         }
@@ -172,7 +178,7 @@ module.exports = {
         await t.commit();
         res.status(200).json({
           IsSuccess: true,
-          Data: {stream_id: streamID},
+          Data: { stream_id: streamID },
           Message: CONSTANTS.LIVE_STREAM_STARTED,
         });
       }
@@ -213,7 +219,7 @@ module.exports = {
       let updateObj = {
         stream_running: false,
         stream_stop_time: moment().toISOString(),
-        s3_url: s3_url
+        s3_url: s3_url,
       };
 
       await liveStreamServices.updateLiveStream(streamID, updateObj, t);
@@ -265,7 +271,7 @@ module.exports = {
       await t.commit();
       res.status(200).json({
         IsSuccess: true,
-        Data: {stream_id: streamID},
+        Data: { stream_id: streamID },
         Message: CONSTANTS.LIVE_STREAM_STOPPED,
       });
       next();
@@ -296,7 +302,7 @@ module.exports = {
       }
     }
   },
-  
+
   getstreamDetails: async (req, res, next) => {
     const t = await sequelize.transaction();
     try {
@@ -310,7 +316,9 @@ module.exports = {
       res.status(200).json({
         IsSuccess: streamObj ? true : false,
         Data: response,
-        Message: streamObj ? CONSTANTS.LIVE_STREAM_DETAILS : CONSTANTS.LIVE_STREAM_DETAILS_NOT_FOUND,
+        Message: streamObj
+          ? CONSTANTS.LIVE_STREAM_DETAILS
+          : CONSTANTS.LIVE_STREAM_DETAILS_NOT_FOUND,
       });
     } catch (error) {
       await t.rollback();
@@ -324,26 +332,39 @@ module.exports = {
   },
 
   addRecentViewers: async (req, res, next) => {
+    const t = await sequelize.transaction();
     try {
       const params = req.body;
       const recentViewer = await liveStreamServices.addRecentViewers(params);
-      const user = await userServices.getUserById(req?.body?.recent_user_id);
-      await dashboardServices.updateDashboardData(user?.cust_id);
+      let user_family_obj = await userServices.getUserById(
+        params?.recent_user_id,
+        t
+      );
+      if (!user_family_obj) {
+        user_family_obj = await familyServices.getFailyMemberById(
+          params?.recent_user_id,
+          t
+        );
+      }
+      if (user_family_obj?.cust_id) {
+        await dashboardServices.updateDashboardData(user_family_obj?.cust_id);
+      }
+      await t.commit();
       res.status(200).json({
         IsSuccess: true,
         Data: recentViewer,
-        Message: CONSTANTS.RECENT_VIEWER_ADDED
+        Message: CONSTANTS.RECENT_VIEWER_ADDED,
       });
 
       next();
     } catch (error) {
+      await t.rollback();
       res.status(500).json({
         IsSuccess: false,
         error_log: error,
-        Message: CONSTANTS.INTERNAL_SERVER_ERROR
+        Message: CONSTANTS.INTERNAL_SERVER_ERROR,
       });
       next(error);
     }
   },
-  
 };
