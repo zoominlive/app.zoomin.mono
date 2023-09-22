@@ -373,8 +373,10 @@ module.exports = {
 
   updateDashboardData: async (cust_id) => {
     let usersSocketIds = await userServices.getUsersSocketIds(cust_id);
+    console.log('===cust_id===',cust_id,)
         usersSocketIds = usersSocketIds.flatMap((i) => i.socket_connection_id).filter((i) => i !== null);
         if (!_.isEmpty(usersSocketIds)) {
+          console.log('==usersSocketIds==',usersSocketIds);
           await Promise.all(
             usersSocketIds.map(async (id) => {
               await socketServices.emitResponse(id, {"update_dashboard_data": true});

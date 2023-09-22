@@ -2,6 +2,7 @@ const connectToDatabase = require('../models/index');
 const jwt = require('jsonwebtoken');
 const Sequelize = require('sequelize');
 const moment = require('moment');
+const sequelize = require("../lib/database");
 
 module.exports = {
   /* Create stream ID token */
@@ -141,17 +142,21 @@ module.exports = {
   },
 
   getAllActiveStreamViewers: async (streamIds, t) => {
-    const { LiveStreamRecentViewers, LiveStreams } = await connectToDatabase();
-    let recentViewers = await LiveStreamRecentViewers.findAll(
-      { where: {function: "start"}, 
-      include:[{
-        model: LiveStreams,
-        where: { stream_id: { [Sequelize.Op.in]: streamIds } }
-      }], group: ["viewer_id"] },
-      { transaction: t }
-    );
-
-    return recentViewers;
+    // const { LiveStreamRecentViewers, LiveStreams } = await connectToDatabase();
+    // let recentViewers = await LiveStreamRecentViewers.findAll(
+    //   { where: {function: "start"}, 
+    //   include:[{
+    //     model: LiveStreams,
+    //     where: { stream_id: { [Sequelize.Op.in]: streamIds } }
+    //   }], group: ["viewer_id"] },
+    //   { transaction: t }
+    // );
+let result = await sequelize
+ .query(
+    'SELECT COUNT(DISTINCT sub.viewer_id) AS total_start_only_viewers FROM (SELECT viewer_id FROM live_stream_recent_viewers WHERE `function` = "start" AND stream_id IN (:streamIds) GROUP BY viewer_id) AS sub WHERE NOT EXISTS (SELECT 1 FROM live_stream_recent_viewers WHERE `function` = "stop" AND viewer_id = sub.viewer_id)',
+    { replacements: { streamIds }, type: sequelize.QueryTypes.SELECT }
+ )
+return result[0].total_start_only_viewers;
   },
 
   getRecordedStreams: async(cust_id, started_at =  moment().format('YYYY-MM-DD 00:00'), location='All', rooms="All", live = true, vod = true, t)=> {

@@ -15,7 +15,7 @@ provider:
   websocketsApiName: websockets-api
   websocketsApiRouteSelectionExpression: $request.body.action
   environment:
-    AWS_BUCKET_NAME: zoomin-stage-images
+    AWS_BUCKET_NAME: zoomin-dev-images
     ACCESS_KEY_ID: AKIAYEUNNGGXZZWD3RES
     SECRET_ACCESS_KEY: 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
     EMAIL_SOURCE_ACCOUNT: "support@zoominlive.com"
@@ -23,7 +23,7 @@ provider:
     RDS_PORT: 3306
     RDS_USER: zoomin_dbuser
     RDS_PASSWORD: Wk8$b6!xR
-    RDS_DB_NAME: zoomin_stage
+    RDS_DB_NAME: zoomin
     #RDS_HOST: 127.0.0.1
     #RDS_PORT: 3306
     #RDS_USER: root
@@ -34,7 +34,7 @@ provider:
     ACCESS_TOKEN_EXPIRY: 1d
     REFRESH_TOKEN_EXPIRY: 1d
     NODE_ENV: productioncd
-    FE_SITE_BASE_URL: https://staging.zoominlive.com/
+    FE_SITE_BASE_URL: https://app2.zoominlive.com/
     type: "service_account"
     project_id: "zoomin-push-notifications"
     private_key_id: "1103eee93f0e16663970b897519c219dfef17831"
@@ -45,11 +45,11 @@ provider:
     token_uri: "https://oauth2.googleapis.com/token"
     auth_provider_x509_cert_url: "https://www.googleapis.com/oauth2/v1/certs"
     client_x509_cert_url: "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-eg6hb%40zoomin-push-notifications.iam.gserviceaccount.com"
-    websocket_endpoint: "https://6i6bw7p391.execute-api.us-east-1.amazonaws.com/stage"
+    websocket_endpoint: "https://2o6tmqu275.execute-api.us-west-2.amazonaws.com/dev"
     #websocket_endpoint: "http://localhost:3001"
     
-  stage: stage
-  region: us-east-1
+  stage: dev
+  region: us-west-2
 custom:
   prune:
     automatic: true

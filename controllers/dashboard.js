@@ -136,7 +136,8 @@ module.exports = {
         cameras[camIndex].permit_audio = customerDetails.permit_audio;
       });
       const activeLiveStreams = await liveStreamServices.getAllActiveStreams(custId, req?.query?.location, t);
-      const numberofActiveStreamViewers = await liveStreamServices.getAllActiveStreamViewers(activeLiveStreams.flatMap(i => i.stream_id), t);
+      const numberofActiveStreamViewers = activeLiveStreams.length > 0 ? await liveStreamServices.getAllActiveStreamViewers(activeLiveStreams.flatMap(i => i.stream_id), t) : 0;
+      //const numberofActiveStreamViewers = await liveStreamServices.getAllActiveStreamViewers();
       const childrens = await childrenServices.getAllChildren(custId, req?.query?.location,t);
       const familyMembers = await familyServices.getAllFamilyMembers(custId, req?.query?.location, t);
       const families = await familyServices.getAllFamilyIds(custId, req?.query?.location,t);
@@ -149,7 +150,7 @@ module.exports = {
           totalStreams: totalStreams ? totalStreams : [],
           enrolledStreams: totalStreams ? totalStreams.length : 0,
           activeStreams: activeStreams ? activeStreams.length : 0,
-          numberofActiveStreamViewers: numberofActiveStreamViewers ? numberofActiveStreamViewers.length : 0,
+          numberofActiveStreamViewers: numberofActiveStreamViewers || 0,
           numberofMountedCameraViewers: numberofMountedCameraViewers || 0,
           activeLiveStreams: activeLiveStreams ? activeLiveStreams : [],
           recentLiveStreams: recentLiveStreams ? recentLiveStreams : [],
