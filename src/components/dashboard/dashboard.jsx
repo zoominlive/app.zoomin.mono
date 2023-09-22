@@ -567,78 +567,107 @@ const Dashboard = () => {
             lg={5}
             style={{ paddingTop: 0 }}
             className="watch-stream-main">
-            <Card className="watch-stream-card">
-              <Grid
-                container
-                justifyContent={'space-between'}
-                alignContent={'center'}
-                sx={{ backgroundColor: '#fff', padding: '8px 24px' }}>
-                <Typography style={{ paddingTop: 10 }}>Watch Stream</Typography>
-                <IconButton id="video-button" onClick={handleOpen}>
-                  <Video />
-                </IconButton>
+            <Stack direction={'column'} gap={5}>
+              <Card className="watch-stream-card">
+                <Grid
+                  container
+                  justifyContent={'space-between'}
+                  alignContent={'center'}
+                  sx={{ backgroundColor: '#fff', padding: '8px 24px' }}>
+                  <Typography style={{ paddingTop: 10 }}>Watch Stream</Typography>
+                  <IconButton id="video-button" onClick={handleOpen}>
+                    <Video />
+                  </IconButton>
 
-                <WatchStreamDialogBox
-                  open={openWatchStreamDialog}
-                  close={handleClose}
-                  submit={handleSubmit}
-                  defaultWatchStream={defaultWatchStream}
-                />
-              </Grid>
-
-              <Box className={`video-wrap ${isDeleteDialogOpen ? 'modal-overlay' : ''}`}>
-                {_.isEmpty(selectedCamera) || !playing ? (
-                  <Stack
-                    height={'85%'}
-                    color={'#fff'}
-                    spacing={1}
-                    alignItems="center"
-                    justifyContent="center">
-                    <img src={VideoOff} />
-                    <Typography>
-                      {!playing ? 'Stream stopped due to Inactivity' : `Camera not selected`}
-                    </Typography>
-                  </Stack>
-                ) : (
-                  <CustomPlayer
-                    noOfCameras={2}
-                    streamUri={selectedCamera?.stream_uri}
-                    camDetails={selectedCamera}
-                    timeOut={timeOut}
-                    setTimeOut={setTimeOut}
-                    setPlaying={setPlaying}
-                    setIsDeleteDialogOpen={setIsDeleteDialogOpen}
+                  <WatchStreamDialogBox
+                    open={openWatchStreamDialog}
+                    close={handleClose}
+                    submit={handleSubmit}
+                    defaultWatchStream={defaultWatchStream}
                   />
-                )}
+                </Grid>
 
-                {isDeleteDialogOpen ? (
-                  <Box id="open-modal" className="modal-window">
-                    <Box>
-                      <Typography variant="h2">Are you still watching?</Typography>
-                      <Divider />
-                      <Box className="modal-content">Press Yes to continue watching</Box>
-                      <Divider />
-                      <Box className="modal-button-wrap">
-                        <Button
-                          variant="text"
-                          onClick={() => {
-                            setIsDeleteDialogOpen(false);
-                          }}>
-                          NO
-                        </Button>
-                        <LoadingButton
-                          onClick={() => {
-                            setPlaying(true);
-                            setIsDeleteDialogOpen(false);
-                          }}>
-                          YES
-                        </LoadingButton>
+                <Box className={`video-wrap ${isDeleteDialogOpen ? 'modal-overlay' : ''}`}>
+                  {_.isEmpty(selectedCamera) || !playing ? (
+                    <Stack
+                      height={'85%'}
+                      color={'#fff'}
+                      spacing={1}
+                      alignItems="center"
+                      justifyContent="center">
+                      <img src={VideoOff} />
+                      <Typography>
+                        {!playing ? 'Stream stopped due to Inactivity' : `Camera not selected`}
+                      </Typography>
+                    </Stack>
+                  ) : (
+                    <>
+                      <CustomPlayer
+                        noOfCameras={2}
+                        streamUri={selectedCamera?.stream_uri}
+                        camDetails={selectedCamera}
+                        timeOut={timeOut}
+                        setTimeOut={setTimeOut}
+                        setPlaying={setPlaying}
+                        setIsDeleteDialogOpen={setIsDeleteDialogOpen}
+                      />
+                    </>
+                  )}
+
+                  {isDeleteDialogOpen ? (
+                    <Box id="open-modal" className="modal-window">
+                      <Box>
+                        <Typography variant="h2">Are you still watching?</Typography>
+                        <Divider />
+                        <Box className="modal-content">Press Yes to continue watching</Box>
+                        <Divider />
+                        <Box className="modal-button-wrap">
+                          <Button
+                            variant="text"
+                            onClick={() => {
+                              setIsDeleteDialogOpen(false);
+                            }}>
+                            NO
+                          </Button>
+                          <LoadingButton
+                            onClick={() => {
+                              setPlaying(true);
+                              setIsDeleteDialogOpen(false);
+                            }}>
+                            YES
+                          </LoadingButton>
+                        </Box>
                       </Box>
                     </Box>
+                  ) : null}
+                </Box>
+              </Card>
+              <Card>
+                <Stack
+                  direction={'row'}
+                  justifyContent={'space-between'}
+                  alignItems={'center'}
+                  padding={4}>
+                  <Box>
+                    <Typography>Multi-Camera Viewing</Typography>
+                    <Typography variant="p" sx={{ color: '#828282' }}>
+                      Watch multiple cameras at once
+                    </Typography>
                   </Box>
-                ) : null}
-              </Box>
-            </Card>
+                  <Button
+                    onClick={() => navigate('/watch-stream')}
+                    className="add-btn dashboard-btn dashboard-cam-btn"
+                    sx={{
+                      borderRadius: 20,
+                      background: '#5A53DD',
+                      color: '#fff',
+                      textTransform: 'capitalize'
+                    }}>
+                    Multiple Cameras
+                  </Button>
+                </Stack>
+              </Card>
+            </Stack>
           </Grid>
         </Grid>
         <Grid container spacing={3}>

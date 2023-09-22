@@ -52,7 +52,7 @@ const MainApp = () => {
 
       // Connection opened
       socket.addEventListener('open', (event) => {
-        console.log('Connected');
+        console.log('Connected', event);
         socket.send(JSON.stringify(data), event);
       });
 

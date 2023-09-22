@@ -40,7 +40,7 @@ const AddFamily = (props) => {
   const authCtx = useContext(AuthContext);
   const { enqueueSnackbar } = useSnackbar();
   const [activeStep, setActiveStep] = useState(0);
-  const [submitLoading, setSubmitLoading] = useState(true);
+  const [submitLoading, setSubmitLoading] = useState(false);
   const formikRef = useRef();
   const [isCloseDialog, setIsCloseDialog] = useState(false);
 
