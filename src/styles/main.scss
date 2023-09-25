@@ -1532,7 +1532,7 @@
   }
 
   .watch-stream-card {
-    //height: 100%;
+    height: 100%;
     // background-color: #000000;
 
     svg {
@@ -1555,7 +1555,7 @@
     }
 
     .video-wrap {
-      height: 54%;
+      height: 100%;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -1563,6 +1563,7 @@
       margin: 0 24px 24px 24px;
       border-radius: 10px;
       overflow: hidden;
+      height: 300px;
   
       h2 {
         padding: 16px 24px;
@@ -1941,8 +1942,8 @@
 }
 .watch-stream-main {
   @media (max-width: 1199px) {
-    margin-top: 32px;
-    height: 360px;
+    margin-top: 24px !important;
+    // height: 360px;
   }
 }
 
@@ -2104,5 +2105,11 @@
     .MuiLoadingButton-loadingIndicator{
       left: 24px;
     }
+  }
+}
+
+.camera-viewing-card{
+  p{
+    padding: 0
   }
 }

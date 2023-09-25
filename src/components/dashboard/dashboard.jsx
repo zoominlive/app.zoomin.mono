@@ -642,7 +642,7 @@ const Dashboard = () => {
                   ) : null}
                 </Box>
               </Card>
-              <Card>
+              <Card className="camera-viewing-card">
                 <Stack
                   direction={'row'}
                   justifyContent={'space-between'}
