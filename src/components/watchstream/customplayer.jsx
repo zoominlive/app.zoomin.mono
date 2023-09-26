@@ -67,6 +67,12 @@ const CustomPlayer = (props) => {
     screenfull.toggle(playerContainerRef.current);
     setFullScreen((fullscreen) => !fullscreen);
   };
+  console.log(
+    props.streamUri.includes('https://live.zoominlive.com') ||
+      props.streamUri.includes('zoomin-recordings-rtmp.s3.amazonaws.com')
+      ? props?.streamUri
+      : `${authCtx.user.transcoderBaseUrl}${props?.streamUri}`
+  );
   return (
     <>
       {!_.isEmpty(url) && (
@@ -100,7 +106,7 @@ const CustomPlayer = (props) => {
                 ? props?.streamUri
                 : `${authCtx.user.transcoderBaseUrl}${props?.streamUri}`
             }
-            //url={props.streamUri}
+            url={props.streamUri}
             className="react-player"
             height={'100%'}
             width={'100%'}

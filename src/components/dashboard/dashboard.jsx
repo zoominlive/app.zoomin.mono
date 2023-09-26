@@ -567,7 +567,7 @@ const Dashboard = () => {
             lg={5}
             style={{ paddingTop: 0 }}
             className="watch-stream-main">
-            <Stack direction={'column'} gap={5}>
+            <Stack direction={'column'} gap={2.2} className="watch-stream-main-stack">
               <Card className="watch-stream-card">
                 <Grid
                   container
@@ -647,7 +647,7 @@ const Dashboard = () => {
                   direction={'row'}
                   justifyContent={'space-between'}
                   alignItems={'center'}
-                  padding={4}>
+                  padding={2}>
                   <Box>
                     <Typography>Multi-Camera Viewing</Typography>
                     <Typography variant="p" sx={{ color: '#828282' }}>

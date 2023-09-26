@@ -1514,25 +1514,26 @@
   .familiy-circle {
     // width: 88px;
     // height: 88px;
-    font-size: 20px;
+    font-size: 24px;
     width: 33%;
     height: 100%;
     aspect-ratio: 1 / 1;
+    font-weight: 700;
       @media only screen and (max-width: 1550px) {
       // width: 74px !important;
       // height: 74px !important;
-      font-size: 15px !important;
+      font-size: 20px !important;
     }
     span {
-      font-size: 10px;
-      color: #737373;
-      font-weight: 400;
+      font-size: 13px;
+      color: #1d1d1d;
+      font-weight: 500;
       margin-bottom: 4px;
     }
   }
 
   .watch-stream-card {
-    height: 100%;
+    height: 75%;
     // background-color: #000000;
 
     svg {
@@ -1563,7 +1564,7 @@
       margin: 0 24px 24px 24px;
       border-radius: 10px;
       overflow: hidden;
-      height: 300px;
+      height: 325px;
   
       h2 {
         padding: 16px 24px;
@@ -1941,6 +1942,9 @@
   }
 }
 .watch-stream-main {
+  .watch-stream-main-stack{
+    height: 100%;
+  }
   @media (max-width: 1199px) {
     margin-top: 24px !important;
     // height: 360px;
@@ -2109,6 +2113,7 @@
 }
 
 .camera-viewing-card{
+  height: 25%;
   p{
     padding: 0
   }
