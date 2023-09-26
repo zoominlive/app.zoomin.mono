@@ -5,6 +5,7 @@ const dashboardServices = require("../services/dashboard");
 const watchStreamServices = require("../services/watchStream");
 const customerServices = require("../services/customers");
 const liveStreamServices = require("../services/liveStream");
+const s3BucketImageUploader = require("../lib/aws-services");
 const { listAvailableStreams } = require("../lib/rtsp-stream");
 const _ = require("lodash");
 const sequelize = require("../lib/database");
@@ -141,7 +142,17 @@ module.exports = {
       const childrens = await childrenServices.getAllChildren(custId, req?.query?.location,t);
       const familyMembers = await familyServices.getAllFamilyMembers(custId, req?.query?.location, t);
       const families = await familyServices.getAllFamilyIds(custId, req?.query?.location,t);
-      const recentLiveStreams = await liveStreamServices.getRecentStreams(custId, req?.query?.location, t);
+      let recentLiveStreams = await liveStreamServices.getRecentStreams(custId, req?.query?.location, t);
+      if(recentLiveStreams.length > 0){
+
+        recentLiveStreams = await Promise.all(recentLiveStreams.map(async item => {
+          const presigned_url = await s3BucketImageUploader.getPresignedUrl(item?.dataValues?.s3_url)
+          let newDataValue = item.dataValues;
+          newDataValue.presigned_url = presigned_url;
+          item.dataValues = newDataValue;
+          return item
+          }))
+        }
       //const numberofMountedCameraViewers = totalStreams.length > 0 ? await cameraServices.getAllMountedCameraViewers(totalStreams.flatMap(i => i.cam_id)) : 0
       await t.commit();
       res.status(200).json({

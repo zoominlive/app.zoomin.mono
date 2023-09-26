@@ -103,7 +103,7 @@ module.exports = {
       const params = req.body;
       params.user = req.user;
       const recentViewer = await watchStreamServices.addRecentViewers(params);
-      await dashboardServices.updateDashboardData(params.user.cust_id);
+      //await dashboardServices.updateDashboardData(params.user.cust_id);
       res.status(200).json({
         IsSuccess: true,
         Data: recentViewer,
