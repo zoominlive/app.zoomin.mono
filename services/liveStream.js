@@ -107,12 +107,12 @@ module.exports = {
 
     let recentLiveStreams = await LiveStreams.findAll(
       { where: { stream_running: false, cust_id: cust_id,  
-      //   stream_start_time: {
-      //   [Sequelize.Op.between]: [
-      //     oneHourBefore.toISOString(),
-      //     currentTime.toISOString(),
-      //   ],
-      // }, 
+        stream_start_time: {
+        [Sequelize.Op.between]: [
+          oneHourBefore.toISOString(),
+          currentTime.toISOString(),
+        ],
+      }, 
     }, attributes:["stream_id", "stream_name", "stream_start_time", "s3_url"],
       include: [{
         model: Room,
