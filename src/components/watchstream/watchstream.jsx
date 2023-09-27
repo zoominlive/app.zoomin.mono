@@ -38,6 +38,7 @@ import { Maximize } from 'react-feather';
 const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
 const checkedIcon = <CheckBoxIcon fontSize="small" />;
 import { FullScreen, useFullScreenHandle } from 'react-full-screen';
+import CustomPlayer from './customplayer';
 const WatchStream = () => {
   const layoutCtx = useContext(LayoutContext);
   const authCtx = useContext(AuthContext);
@@ -109,70 +110,79 @@ const WatchStream = () => {
   };
 
   useEffect(() => {
-    const roomsToSet = camerasPayload?.room?.filter((room) => {
-      let count = 0;
-      selectedLocation?.forEach((loc) => {
-        if (loc == room?.location) {
-          count = 1;
-        }
+    if (!location.state.streamUrl?.includes('zoomin-recordings-rtmp.s3.amazonaws.com')) {
+      const roomsToSet = camerasPayload?.room?.filter((room) => {
+        let count = 0;
+        selectedLocation?.forEach((loc) => {
+          if (loc == room?.location) {
+            count = 1;
+          }
+        });
+        return count == 1;
       });
-      return count == 1;
-    });
-    let roomsToAdd = [{ room_name: 'Select All', room_id: 'select-all' }];
-    roomsToSet?.forEach((room) => roomsToAdd.push(room));
-    setRooms(roomsToAdd);
-    setSelectedRoom(roomsToAdd);
-    if (selectedRoom.length == 0) {
-      setSelectedRoom([roomsToSet?.[0]]);
-      let camsToAdd = [
-        { cam_id: 'select-all', cam_name: 'Select All', room_id: 'roomid', room_name: 'room_name' }
-      ];
-      roomsToSet?.[0]?.cameras.forEach((cam) =>
-        camsToAdd.push({
-          ...cam,
-          room_id: roomsToSet?.[0]?.room_id,
-          room_name: roomsToSet?.[0]?.room_name
-        })
-      );
-      setCameras(camsToAdd);
-    }
+      let roomsToAdd = [{ room_name: 'Select All', room_id: 'select-all' }];
+      roomsToSet?.forEach((room) => roomsToAdd.push(room));
+      setRooms(roomsToAdd);
+      setSelectedRoom(roomsToAdd);
+      if (selectedRoom.length == 0) {
+        setSelectedRoom([roomsToSet?.[0]]);
+        let camsToAdd = [
+          {
+            cam_id: 'select-all',
+            cam_name: 'Select All',
+            room_id: 'roomid',
+            room_name: 'room_name'
+          }
+        ];
+        roomsToSet?.[0]?.cameras.forEach((cam) =>
+          camsToAdd.push({
+            ...cam,
+            room_id: roomsToSet?.[0]?.room_id,
+            room_name: roomsToSet?.[0]?.room_name
+          })
+        );
+        setCameras(camsToAdd);
+      }
 
-    setAllCamsChecked(false);
-    setAllRoomChecked(false);
-    camLabel.current.locations = selectedLocation;
+      setAllCamsChecked(false);
+      setAllRoomChecked(false);
+      camLabel.current.locations = selectedLocation;
+    }
   }, [selectedLocation]);
 
   useEffect(() => {
-    const rooms = camerasPayload?.room?.filter((room) => {
-      let count = 0;
-      selectedRoom?.forEach((room1) => {
-        if (room1?.room_id == room?.room_id) {
-          count = 1;
-        }
+    if (!location.state.streamUrl?.includes('zoomin-recordings-rtmp.s3.amazonaws.com')) {
+      const rooms = camerasPayload?.room?.filter((room) => {
+        let count = 0;
+        selectedRoom?.forEach((room1) => {
+          if (room1?.room_id == room?.room_id) {
+            count = 1;
+          }
+        });
+
+        return count == 1;
       });
 
-      return count == 1;
-    });
-
-    let cameras1 = [{ cam_id: 'select-all', cam_name: 'Select All' }];
-    rooms?.forEach((room) => {
-      room?.cameras?.forEach((cam) => {
-        cameras1?.push({
-          ...cam,
-          room_name: room.room_name,
-          room_id: room.room_id,
-          location: room.location
+      let cameras1 = [{ cam_id: 'select-all', cam_name: 'Select All' }];
+      rooms?.forEach((room) => {
+        room?.cameras?.forEach((cam) => {
+          cameras1?.push({
+            ...cam,
+            room_name: room.room_name,
+            room_id: room.room_id,
+            location: room.location
+          });
         });
       });
-    });
 
-    setCameras(cameras1);
+      setCameras(cameras1);
 
-    //setAllCamsChecked(false);
-    // setSelectedCameras(cameras1.length > 0 ? cameras1.slice(1, cameras1.length) : []);
-    //setAllCamsChecked(true);
+      //setAllCamsChecked(false);
+      // setSelectedCameras(cameras1.length > 0 ? cameras1.slice(1, cameras1.length) : []);
+      //setAllCamsChecked(true);
 
-    camLabel.current.rooms = selectedRoom;
+      camLabel.current.rooms = selectedRoom;
+    }
   }, [selectedRoom]);
 
   useEffect(() => {
@@ -477,223 +487,262 @@ const WatchStream = () => {
   return (
     <>
       <Box className="listing-wrapper">
-        <Card className="filter">
-          <CardContent>
-            <Grid container spacing={2} alignItems={'self-end'}>
-              <Grid item md={3} sm={12}>
-                <InputLabel id="locations">Locations</InputLabel>
-                <Autocomplete
-                  labelId="locations"
-                  multiple
-                  limitTags={1}
-                  id="tags-standard"
-                  options={locations?.length !== 0 ? locations : []}
-                  value={selectedLocation ? selectedLocation : []}
-                  getOptionLabel={(option) => option}
-                  onChange={(_, value, reason, option) => {
-                    handleSetLocations(_, value, reason, option);
-                  }}
-                  renderTags={(value, getTagProps) =>
-                    value?.map((option, index) => (
-                      <Chip key={index} label={option} {...getTagProps({ index })} />
-                    ))
-                  }
-                  renderOption={(props, option, { selected }) => (
-                    <li {...props}>
-                      <Checkbox
-                        icon={icon}
-                        checkedIcon={checkedIcon}
-                        style={{ marginRight: 8 }}
-                        checked={allLocationChecked ? allLocationChecked : selected}
+        {!location.state.streamUrl?.includes('zoomin-recordings-rtmp.s3.amazonaws.com') ? (
+          <Card className="filter">
+            <CardContent>
+              <Grid container spacing={2} alignItems={'self-end'}>
+                <Grid item md={3} sm={12}>
+                  <InputLabel id="locations">Locations</InputLabel>
+                  <Autocomplete
+                    labelId="locations"
+                    multiple
+                    limitTags={1}
+                    id="tags-standard"
+                    options={locations?.length !== 0 ? locations : []}
+                    value={selectedLocation ? selectedLocation : []}
+                    getOptionLabel={(option) => option}
+                    onChange={(_, value, reason, option) => {
+                      handleSetLocations(_, value, reason, option);
+                    }}
+                    renderTags={(value, getTagProps) =>
+                      value?.map((option, index) => (
+                        <Chip key={index} label={option} {...getTagProps({ index })} />
+                      ))
+                    }
+                    renderOption={(props, option, { selected }) => (
+                      <li {...props}>
+                        <Checkbox
+                          icon={icon}
+                          checkedIcon={checkedIcon}
+                          style={{ marginRight: 8 }}
+                          checked={allLocationChecked ? allLocationChecked : selected}
+                        />
+                        {option}
+                      </li>
+                    )}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        fullWidth
+                        InputProps={{
+                          ...params.InputProps,
+                          endAdornment: (
+                            <React.Fragment>
+                              {dropdownLoading ? (
+                                <CircularProgress color="inherit" size={20} />
+                              ) : null}
+                              {params.InputProps.endAdornment}
+                            </React.Fragment>
+                          )
+                        }}
                       />
-                      {option}
-                    </li>
-                  )}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      fullWidth
-                      InputProps={{
-                        ...params.InputProps,
-                        endAdornment: (
-                          <React.Fragment>
-                            {dropdownLoading ? (
-                              <CircularProgress color="inherit" size={20} />
-                            ) : null}
-                            {params.InputProps.endAdornment}
-                          </React.Fragment>
-                        )
-                      }}
-                    />
-                  )}
-                />
-              </Grid>
-              <Grid item md={3} sm={12}>
-                <InputLabel id="rooms">Rooms</InputLabel>
-                <Autocomplete
-                  labelId="rooms"
-                  multiple
-                  limitTags={1}
-                  id="tags-standard"
-                  options={rooms ? rooms : []}
-                  value={selectedRoom?.length !== 0 ? selectedRoom : []}
-                  getOptionLabel={(option) => option?.room_name}
-                  isOptionEqualToValue={(option, value) => option?.room_id === value?.room_id}
-                  onChange={(_, value, reason, option) => {
-                    handleSetRooms(_, value, reason, option);
-                  }}
-                  renderTags={(value, getTagProps) =>
-                    value?.map((option, index) => (
-                      <Chip key={index} label={option?.room_name} {...getTagProps({ index })} />
-                    ))
-                  }
-                  renderOption={(props, option, { selected }) => (
-                    <li {...props}>
-                      <Checkbox
-                        icon={icon}
-                        checkedIcon={checkedIcon}
-                        style={{ marginRight: 8 }}
-                        checked={allRoomChecked ? allRoomChecked : selected}
+                    )}
+                  />
+                </Grid>
+                <Grid item md={3} sm={12}>
+                  <InputLabel id="rooms">Rooms</InputLabel>
+                  <Autocomplete
+                    labelId="rooms"
+                    multiple
+                    limitTags={1}
+                    id="tags-standard"
+                    options={rooms ? rooms : []}
+                    value={selectedRoom?.length !== 0 ? selectedRoom : []}
+                    getOptionLabel={(option) => option?.room_name}
+                    isOptionEqualToValue={(option, value) => option?.room_id === value?.room_id}
+                    onChange={(_, value, reason, option) => {
+                      handleSetRooms(_, value, reason, option);
+                    }}
+                    renderTags={(value, getTagProps) =>
+                      value?.map((option, index) => (
+                        <Chip key={index} label={option?.room_name} {...getTagProps({ index })} />
+                      ))
+                    }
+                    renderOption={(props, option, { selected }) => (
+                      <li {...props}>
+                        <Checkbox
+                          icon={icon}
+                          checkedIcon={checkedIcon}
+                          style={{ marginRight: 8 }}
+                          checked={allRoomChecked ? allRoomChecked : selected}
+                        />
+                        {option?.room_name}
+                      </li>
+                    )}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        fullWidth
+                        InputProps={{
+                          ...params.InputProps,
+                          endAdornment: (
+                            <React.Fragment>
+                              {dropdownLoading ? (
+                                <CircularProgress color="inherit" size={20} />
+                              ) : null}
+                              {params.InputProps.endAdornment}
+                            </React.Fragment>
+                          )
+                        }}
                       />
-                      {option?.room_name}
-                    </li>
-                  )}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      fullWidth
-                      InputProps={{
-                        ...params.InputProps,
-                        endAdornment: (
-                          <React.Fragment>
-                            {dropdownLoading ? (
-                              <CircularProgress color="inherit" size={20} />
-                            ) : null}
-                            {params.InputProps.endAdornment}
-                          </React.Fragment>
-                        )
-                      }}
-                    />
-                  )}
-                />
-              </Grid>
-              <Grid item md={4.2} sm={20}>
-                <InputLabel id="cameras">Cameras</InputLabel>
-                <Autocomplete
-                  labelId="cameras"
-                  multiple
-                  limitTags={1}
-                  disableCloseOnSelect
-                  id="tags-standard"
-                  options={cameras ? cameras : []}
-                  value={selectedCameras?.length !== 0 ? selectedCameras : []}
-                  getOptionLabel={(option) => option?.cam_name}
-                  isOptionEqualToValue={(option, value) => option?.cam_id === value?.cam_id}
-                  onChange={(_, values, situation, option) => {
-                    handleChangeCameras(_, values, situation, option);
-                  }}
-                  renderTags={(value, getTagProps) =>
-                    value?.map((option, index) => (
-                      <Chip
-                        key={index}
-                        label={
-                          option?.cam_name == 'Select All'
-                            ? option?.cam_name
-                            : option?.location + '/' + option?.room_name + ' - ' + option?.cam_name
+                    )}
+                  />
+                </Grid>
+                <Grid item md={4.2} sm={20}>
+                  <InputLabel id="cameras">Cameras</InputLabel>
+                  <Autocomplete
+                    labelId="cameras"
+                    multiple
+                    limitTags={1}
+                    disableCloseOnSelect
+                    id="tags-standard"
+                    options={cameras ? cameras : []}
+                    value={selectedCameras?.length !== 0 ? selectedCameras : []}
+                    getOptionLabel={(option) => option?.cam_name}
+                    isOptionEqualToValue={(option, value) => option?.cam_id === value?.cam_id}
+                    onChange={(_, values, situation, option) => {
+                      handleChangeCameras(_, values, situation, option);
+                    }}
+                    renderTags={(value, getTagProps) =>
+                      value?.map((option, index) => (
+                        <Chip
+                          key={index}
+                          label={
+                            option?.cam_name == 'Select All'
+                              ? option?.cam_name
+                              : option?.location +
+                                '/' +
+                                option?.room_name +
+                                ' - ' +
+                                option?.cam_name
+                          }
+                          {...getTagProps({ index })}
+                        />
+                      ))
+                    }
+                    renderOption={(props, option, { selected }) => (
+                      <li {...props}>
+                        <Checkbox
+                          icon={icon}
+                          checkedIcon={checkedIcon}
+                          style={{ marginRight: 8 }}
+                          checked={allCamsChecked ? allCamsChecked : selected}
+                        />
+                        {option?.cam_name == 'Select All'
+                          ? option?.cam_name
+                          : option.location + '/' + option.room_name + ' - ' + option?.cam_name}
+                      </li>
+                    )}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        fullWidth
+                        helperText={
+                          limitReached &&
+                          `Maxmimum ${
+                            authCtx.user.role === 'Admin' || authCtx.user.role === 'Super Admin'
+                              ? 'sixteen'
+                              : 'two'
+                          } cameras can be selected`
                         }
-                        {...getTagProps({ index })}
+                        InputProps={{
+                          ...params.InputProps,
+                          endAdornment: (
+                            <React.Fragment>
+                              {dropdownLoading ? (
+                                <CircularProgress color="inherit" size={20} />
+                              ) : null}
+                              {params.InputProps.endAdornment}
+                            </React.Fragment>
+                          )
+                        }}
                       />
-                    ))
-                  }
-                  renderOption={(props, option, { selected }) => (
-                    <li {...props}>
-                      <Checkbox
-                        icon={icon}
-                        checkedIcon={checkedIcon}
-                        style={{ marginRight: 8 }}
-                        checked={allCamsChecked ? allCamsChecked : selected}
-                      />
-                      {option?.cam_name == 'Select All'
-                        ? option?.cam_name
-                        : option.location + '/' + option.room_name + ' - ' + option?.cam_name}
-                    </li>
-                  )}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      fullWidth
-                      helperText={
-                        limitReached &&
-                        `Maxmimum ${
-                          authCtx.user.role === 'Admin' || authCtx.user.role === 'Super Admin'
-                            ? 'sixteen'
-                            : 'two'
-                        } cameras can be selected`
-                      }
-                      InputProps={{
-                        ...params.InputProps,
-                        endAdornment: (
-                          <React.Fragment>
-                            {dropdownLoading ? (
-                              <CircularProgress color="inherit" size={20} />
-                            ) : null}
-                            {params.InputProps.endAdornment}
-                          </React.Fragment>
-                        )
-                      }}
-                    />
-                  )}
-                />
+                    )}
+                  />
+                </Grid>
+                <Grid item md={1.7} sm={12} sx={{ marginTop: '6px' }}>
+                  <Button
+                    className="add-button stream-btn"
+                    variant="contained"
+                    startIcon={<PlayArrowSharpIcon />}
+                    onClick={() => setSubmitted(true)}>
+                    {' '}
+                    Play Stream
+                  </Button>
+                </Grid>
               </Grid>
-              <Grid item md={1.7} sm={12} sx={{ marginTop: '6px' }}>
-                <Button
-                  className="add-button stream-btn"
-                  variant="contained"
-                  startIcon={<PlayArrowSharpIcon />}
-                  onClick={() => setSubmitted(true)}>
-                  {' '}
-                  Play Stream
-                </Button>
+            </CardContent>
+          </Card>
+        ) : null}
+        {location.state.streamUrl?.includes('zoomin-recordings-rtmp.s3.amazonaws.com') ? (
+          <FullScreen
+            handle={handle}
+            onChange={(state) => {
+              if (state == false) {
+                setIsFullScreenDialogOpen(false);
+              }
+            }}>
+            <Grid
+              container
+              alignContent={'center'}
+              spacing={isFullScreenDialogOpen ? 0 : 1}
+              sx={{ border: isFullScreenDialogOpen ? '' : '16px solid white' }}
+              className="player-grid-container">
+              <Grid
+                item
+                md={12}
+                sm={12}
+                sx={{ display: 'flex', justifyContent: 'center', padding: 1 }}>
+                <CustomPlayer
+                  streamUri={location.state.streamUrl}
+                  camDetails={{}}
+                  timeOut={timeOut}
+                  setTimeOut={setTimeOut}
+                  setPlaying={setPlaying}
+                  setIsDeleteDialogOpen={setIsDeleteDialogOpen}
+                  cam_id={null}
+                />
               </Grid>
             </Grid>
-          </CardContent>
-        </Card>
-
-        {(selectedCameras.length == 0 || !playing) && (
-          <Card>
-            <CardContent>
-              <Box mt={2} sx={{ height: '600px' }} className="no-camera-wrapper">
-                <Stack
-                  className="no-camera-stack"
-                  spacing={1}
-                  alignItems="center"
-                  justifyContent="center">
-                  <img src={VideoOff} />
-                  <Typography>
-                    {!playing ? 'Stream stopped due to Inactivity' : `Camera not selected`}
-                  </Typography>
-                </Stack>
-              </Box>
-            </CardContent>
-          </Card>
+          </FullScreen>
+        ) : (
+          <>
+            {(selectedCameras.length == 0 || !playing) && (
+              <Card>
+                <CardContent>
+                  <Box mt={2} sx={{ height: '600px' }} className="no-camera-wrapper">
+                    <Stack
+                      className="no-camera-stack"
+                      spacing={1}
+                      alignItems="center"
+                      justifyContent="center">
+                      <img src={VideoOff} />
+                      <Typography>
+                        {!playing ? 'Stream stopped due to Inactivity' : `Camera not selected`}
+                      </Typography>
+                    </Stack>
+                  </Box>
+                </CardContent>
+              </Card>
+            )}
+            {!submitted && selectedCameras.length != 0 && (
+              <Card>
+                <CardContent>
+                  <Box mt={2} sx={{ height: '600px' }} className="no-camera-wrapper">
+                    <Stack
+                      className="no-camera-stack"
+                      spacing={1}
+                      alignItems="center"
+                      justifyContent="center">
+                      <img src={VideoOff} />
+                      <Typography>{'Submit selected cams to start the stream'}</Typography>
+                    </Stack>
+                  </Box>
+                </CardContent>
+              </Card>
+            )}
+          </>
         )}
-        {!submitted && selectedCameras.length != 0 && (
-          <Card>
-            <CardContent>
-              <Box mt={2} sx={{ height: '600px' }} className="no-camera-wrapper">
-                <Stack
-                  className="no-camera-stack"
-                  spacing={1}
-                  alignItems="center"
-                  justifyContent="center">
-                  <img src={VideoOff} />
-                  <Typography>{'Submit selected cams to start the stream'}</Typography>
-                </Stack>
-              </Box>
-            </CardContent>
-          </Card>
-        )}
-
         <DeleteDialog
           open={isDeleteDialogOpen}
           title="Are you still watching?"
@@ -707,26 +756,27 @@ const WatchStream = () => {
             setIsDeleteDialogOpen(false);
           }}
         />
-
-        <FullScreen
-          handle={handle}
-          onChange={(state) => {
-            if (state == false) {
-              setIsFullScreenDialogOpen(false);
-            }
-          }}>
-          <FullScreenDialog
-            isFullScreenDialogOpen={isFullScreenDialogOpen}
-            selectedCameras={selectedCameras}
-            playing={playing}
-            submitted={submitted}
-            camLabel={selectedCameras}
-            timeOut={timeOut}
-            setTimeOut={setTimeOut}
-            setPlaying={setPlaying}
-            setIsDeleteDialogOpen={setIsDeleteDialogOpen}
-          />
-        </FullScreen>
+        {!location.state.streamUrl?.includes('zoomin-recordings-rtmp.s3.amazonaws.com') ? (
+          <FullScreen
+            handle={handle}
+            onChange={(state) => {
+              if (state == false) {
+                setIsFullScreenDialogOpen(false);
+              }
+            }}>
+            <FullScreenDialog
+              isFullScreenDialogOpen={isFullScreenDialogOpen}
+              selectedCameras={selectedCameras}
+              playing={playing}
+              submitted={submitted}
+              camLabel={selectedCameras}
+              timeOut={timeOut}
+              setTimeOut={setTimeOut}
+              setPlaying={setPlaying}
+              setIsDeleteDialogOpen={setIsDeleteDialogOpen}
+            />
+          </FullScreen>
+        ) : null}
       </Box>
       <Button
         // style={{ position: 'sticky', bottom: '5%', marginLeft: '95%' }}

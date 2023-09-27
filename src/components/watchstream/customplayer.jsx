@@ -67,25 +67,20 @@ const CustomPlayer = (props) => {
     screenfull.toggle(playerContainerRef.current);
     setFullScreen((fullscreen) => !fullscreen);
   };
-  console.log(
-    props.streamUri.includes('https://live.zoominlive.com') ||
-      props.streamUri.includes('zoomin-recordings-rtmp.s3.amazonaws.com')
-      ? props?.streamUri
-      : `${authCtx.user.transcoderBaseUrl}${props?.streamUri}`
-  );
   return (
     <>
       {!_.isEmpty(url) && (
         <Box className="video-player-wrapper" ref={playerContainerRef}>
           <Loader loading={!ready} />
-
-          <label style={{ position: 'absolute', color: 'white', paddingLeft: 30 }}>
-            {props?.camDetails?.location +
-              '/' +
-              props?.camDetails?.room_name +
-              ' - ' +
-              props?.camDetails?.cam_name}
-          </label>
+          {!_.isEmpty(props?.camDetails) ? (
+            <label style={{ position: 'absolute', color: 'white', paddingLeft: 30 }}>
+              {props?.camDetails?.location +
+                '/' +
+                props?.camDetails?.room_name +
+                ' - ' +
+                props?.camDetails?.cam_name}
+            </label>
+          ) : null}
 
           <ReactPlayer
             // url={
@@ -102,11 +97,11 @@ const CustomPlayer = (props) => {
             //       }&sid=${props?.cam_id}&uuid=${uuidv4()}`
             // }
             url={
-              props.streamUri.includes('https://live.zoominlive.com')
+              props.streamUri.includes('https://live.zoominlive.com') ||
+              props.streamUri.includes('zoomin-recordings-rtmp.s3.amazonaws.com')
                 ? props?.streamUri
                 : `${authCtx.user.transcoderBaseUrl}${props?.streamUri}`
             }
-            url={props.streamUri}
             className="react-player"
             height={'100%'}
             width={'100%'}

@@ -37,6 +37,10 @@ export default function StreamTable({ rows, columns, title, isLoading }) {
               .map((row, index) => {
                 return (
                   <>
+                    {console.log(
+                      '====',
+                      row?.presigned_url || row?.room?.live_stream_cameras[0]?.stream_uri
+                    )}
                     <Box className="div-row" key={`${row?.room?.room_name}-${index}`}>
                       <Box style={{ width: '35%' }}>{row?.stream_name}</Box>
                       <Box style={{ width: '35%' }}>
@@ -62,7 +66,7 @@ export default function StreamTable({ rows, columns, title, isLoading }) {
                             camName: row?.room?.live_stream_cameras[0]?.cam_name,
                             camId: row?.room?.live_stream_cameras[0]?.cam_id,
                             streamUrl:
-                              row?.room?.live_stream_cameras[0]?.stream_uri || row?.presigned_url
+                              row?.presigned_url || row?.room?.live_stream_cameras[0]?.stream_uri
                           }}>
                           <Video />
                         </Link>
