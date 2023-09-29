@@ -110,7 +110,7 @@ const WatchStream = () => {
   };
 
   useEffect(() => {
-    if (!location.state.streamUrl?.includes('zoomin-recordings-rtmp.s3.amazonaws.com')) {
+    if (!location.state?.streamUrl?.includes('zoomin-recordings-rtmp.s3.amazonaws.com')) {
       const roomsToSet = camerasPayload?.room?.filter((room) => {
         let count = 0;
         selectedLocation?.forEach((loc) => {
@@ -151,7 +151,7 @@ const WatchStream = () => {
   }, [selectedLocation]);
 
   useEffect(() => {
-    if (!location.state.streamUrl?.includes('zoomin-recordings-rtmp.s3.amazonaws.com')) {
+    if (!location.state?.streamUrl?.includes('zoomin-recordings-rtmp.s3.amazonaws.com')) {
       const rooms = camerasPayload?.room?.filter((room) => {
         let count = 0;
         selectedRoom?.forEach((room1) => {
@@ -487,7 +487,7 @@ const WatchStream = () => {
   return (
     <>
       <Box className="listing-wrapper">
-        {!location.state.streamUrl?.includes('zoomin-recordings-rtmp.s3.amazonaws.com') ? (
+        {!location.state?.streamUrl?.includes('zoomin-recordings-rtmp.s3.amazonaws.com') ? (
           <Card className="filter">
             <CardContent>
               <Grid container spacing={2} alignItems={'self-end'}>
@@ -674,7 +674,7 @@ const WatchStream = () => {
             </CardContent>
           </Card>
         ) : null}
-        {location.state.streamUrl?.includes('zoomin-recordings-rtmp.s3.amazonaws.com') ? (
+        {location.state?.streamUrl?.includes('zoomin-recordings-rtmp.s3.amazonaws.com') ? (
           <FullScreen
             handle={handle}
             onChange={(state) => {
@@ -694,7 +694,7 @@ const WatchStream = () => {
                 sm={12}
                 sx={{ display: 'flex', justifyContent: 'center', padding: 1 }}>
                 <CustomPlayer
-                  streamUri={location.state.streamUrl}
+                  streamUri={location.state?.streamUrl}
                   camDetails={{}}
                   timeOut={timeOut}
                   setTimeOut={setTimeOut}
@@ -756,7 +756,7 @@ const WatchStream = () => {
             setIsDeleteDialogOpen(false);
           }}
         />
-        {!location.state.streamUrl?.includes('zoomin-recordings-rtmp.s3.amazonaws.com') ? (
+        {!location.state?.streamUrl?.includes('zoomin-recordings-rtmp.s3.amazonaws.com') ? (
           <FullScreen
             handle={handle}
             onChange={(state) => {

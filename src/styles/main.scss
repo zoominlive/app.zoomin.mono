@@ -636,8 +636,10 @@
     }
 
     .MuiPaper-root {
+      // min-height: 338px;
+      // max-height: 338px;
       min-height: 338px;
-      max-height: 338px;
+      max-height: 100%;
     }
   }
 
@@ -1466,10 +1468,13 @@
 .main-map-wraper {
   position: relative;
   .map-wrapper {
-    height: calc(100vh - 771px) !important;
-    margin: 0 24px 24px 24px;
+   margin: 0 24px 24px 24px;
     overflow: hidden;
     border-radius: 10px;
+    height: calc(100vh - 568px);
+    @media (max-width: 1537px) {
+        height: calc(100vh - 352px);
+    }
   }
 }
 
@@ -1480,7 +1485,7 @@
   background-color: rgb(241, 235, 235) !important;
   position: absolute !important;
   top: 83%;
-  left: 88%;
+  left: 84%;
   transform: translate(-50%, -50%);
   box-shadow: 0px 10px 20px 0px rgba(0, 0, 0, 0.25);
 
@@ -1533,7 +1538,7 @@
   }
 
   .watch-stream-card {
-    height: 75%;
+    height: 80%;
     // background-color: #000000;
 
     svg {
@@ -1564,7 +1569,7 @@
       margin: 0 24px 24px 24px;
       border-radius: 10px;
       overflow: hidden;
-      height: 300px;
+      height: 370px;
   
       h2 {
         padding: 16px 24px;
@@ -2113,8 +2118,18 @@
 }
 
 .camera-viewing-card{
-  height: 25%;
+  height: 20%;
   p{
     padding: 0
+  }
+  >div{
+    height: 100%;
+    box-sizing: border-box;
+  }
+}
+.viewers-table{
+  min-height: 352px;
+  @media (min-width: 1535px) {
+    min-height: 352px;
   }
 }

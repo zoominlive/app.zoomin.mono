@@ -48,10 +48,10 @@ export default function ViewersTable({ rows, columns, title, pagination, isLoadi
           <Box
             style={{
               width: '100%',
-              minHeight: pagination && rows?.length > 0 ? '196px' : '230px',
+              minHeight: pagination && rows?.length > 0 ? '196px' : '',
               overflowY: 'auto'
             }}
-            className="table-body">
+            className={`table-body ${!pagination ? 'viewers-table' : ''}`}>
             {pagination
               ? rows
                   .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
@@ -201,7 +201,10 @@ export default function ViewersTable({ rows, columns, title, pagination, isLoadi
                 })}
           </Box>
         ) : !isLoading ? (
-          <Stack alignItems="center" justifyContent="center" sx={{ paddingTop: 2 }}>
+          <Stack
+            alignItems="center"
+            justifyContent="center"
+            sx={{ paddingTop: 2, minHeight: !pagination ? '335px' : '' }}>
             <NoDataDiv />
           </Stack>
         ) : null}
