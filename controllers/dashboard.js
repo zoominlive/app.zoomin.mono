@@ -125,7 +125,6 @@ module.exports = {
         req.query?.cust_id,
         req.query?.location
       );
-      
       let cameras = await watchStreamServices.getAllCamForLocation({
         ...req.user,
         cust_id: custId,

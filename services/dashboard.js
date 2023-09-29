@@ -210,9 +210,9 @@ module.exports = {
           }
         }
       })
-      result = filterResult
+      result = filterResult;
     }
-    return result;
+    return result.slice(0, 5);
   },
 
   getChildrenWithSEA: async (custId, location = ["Select All"]) => {
