@@ -101,17 +101,19 @@ module.exports = {
   getRecentStreams: async(cust_id, location='All', t)=> {
     const { LiveStreams, Room, LiveStreamCameras } = await connectToDatabase();
     let loc_obj = location === "All" ? {} : {location: location}
-    let oneHourBefore = new Date();
-    oneHourBefore.setHours(oneHourBefore.getHours() - 1);
-    const currentTime = new Date();
+    // let oneHourBefore = new Date();
+    // oneHourBefore.setHours(oneHourBefore.getHours() - 24);
+    const currentDate = new Date();
+    const last24Hours = new Date(currentDate.getTime() - (24 * 60 * 60 * 1000));
 
     let recentLiveStreams = await LiveStreams.findAll(
       { where: { stream_running: false, cust_id: cust_id,  
-        stream_start_time: {
-        [Sequelize.Op.between]: [
-          oneHourBefore.toISOString(),
-          currentTime.toISOString(),
-        ],
+        stream_stop_time: {
+          [Sequelize.Op.gte]: last24Hours
+        // [Sequelize.Op.between]: [
+        //   oneHourBefore.toISOString(),
+        //   currentTime.toISOString(),
+        // ],
       }, 
     }, attributes:["stream_id", "stream_name", "stream_start_time", "s3_url"],
       include: [{
