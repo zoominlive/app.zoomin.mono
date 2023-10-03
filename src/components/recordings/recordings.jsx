@@ -105,7 +105,6 @@ const Recordings = () => {
   const [recentLiveStreamList, setRecentLivestreamList] = useState([]);
   const [recordedStreamList, setRecordedStreamList] = useState([]);
 
-  console.log('===selectedRooms', selectedRooms);
   useEffect(() => {
     layoutCtx.setActive(7);
     layoutCtx.setBreadcrumb([
@@ -180,7 +179,7 @@ const Recordings = () => {
     const [playing, setPlaying] = useState(true);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [isFullScreenDialogOpen, setIsFullScreenDialogOpen] = useState(false);
-    console.log('=isDeleteDialogOpen=', isDeleteDialogOpen);
+    console.log('=isDeleteDialogOpen=', isDeleteDialogOpen, selectedRooms);
     return (
       <>
         <TableRow hover>

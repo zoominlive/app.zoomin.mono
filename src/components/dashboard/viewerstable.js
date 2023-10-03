@@ -22,7 +22,9 @@ export default function ViewersTable({ rows, columns, title, pagination, isLoadi
     setPage(0);
   };
   return (
-    <Paper sx={{ marginTop: 2, height: '96%', minHeight: !pagination ? '338px' : '' }}>
+    <Paper
+      sx={{ height: '96%', minHeight: !pagination ? '338px' : '', marginTop: !pagination ? 0 : 2 }}
+      className={!pagination ? 'top-viewers' : ''}>
       <Box>
         {/* <Typography style={{ padding: '20px 24px' }}>{title}</Typography> */}
         <Stack
@@ -49,7 +51,9 @@ export default function ViewersTable({ rows, columns, title, pagination, isLoadi
             style={{
               width: '100%',
               minHeight: pagination && rows?.length > 0 ? '196px' : '',
-              overflowY: 'auto'
+              overflowY: 'auto',
+              height: 'auto',
+              paddingBottom: '20px'
             }}
             className={`table-body ${!pagination ? 'viewers-table' : ''}`}>
             {pagination

@@ -226,6 +226,11 @@ const Dashboard = () => {
   }, [authCtx.location, localStorage.getItem('updateDashboardData'), authCtx.updateDashboardData]);
 
   const getDashboardData = () => {
+    // console.log(
+    //   '========dashboard======',
+    //   localStorage.getItem('updateDashboardData'),
+    //   localStorage.getItem('updateDashboardData') == undefined ? true : false
+    // );
     setIsLoading(true);
     API.get('dashboard', {
       params: {
@@ -531,7 +536,7 @@ const Dashboard = () => {
         </Grid>
         <Grid container spacing={3} mt={2} className="stream-table-main">
           <Grid item md={12} sm={12} xs={12} lg={7} style={{ paddingTop: 0 }}>
-            <Card>
+            <Card sx={{ height: '100%' }}>
               <CardContent>
                 <StreamTable
                   style={{ borderRadius: 5 }}
@@ -716,10 +721,10 @@ const Dashboard = () => {
             />
           </Grid>
         </Grid>
-        <Grid container spacing={3} mt={1}>
-          <Grid item md={12} sm={12} xs={12} lg={7}>
-            <Box className="location">
-              <Card>
+        <Grid container spacing={3} mt={2}>
+          <Grid item md={12} sm={12} xs={12} lg={7} style={{ paddingTop: 0 }}>
+            <Box className="location" style={{ height: '100%' }}>
+              <Card className="map-card-wrapper">
                 <CardHeader
                   title={
                     <>
@@ -756,8 +761,8 @@ const Dashboard = () => {
               </Card>
             </Box>
           </Grid>
-          <Grid item md={12} sm={12} xs={12} lg={5} style={{ paddingTop: 9 }}>
-            <Paper sx={{ marginTop: 2 }}>
+          <Grid item md={12} sm={12} xs={12} lg={5} style={{ paddingTop: 0 }}>
+            <Paper sx={{ marginTop: 0 }}>
               <ViewersTable
                 rows={
                   statisticsData?.topViewers?.length > 0

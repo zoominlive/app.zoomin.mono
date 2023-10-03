@@ -65,7 +65,7 @@
       height: 54px;
       text-transform: capitalize;
       //width: 441px;
-      .MuiCircularProgress-root{
+      .MuiCircularProgress-root {
         color: #ffff;
       }
     }
@@ -74,7 +74,7 @@
       a {
         color: #909090 !important;
       }
-      span{
+      span {
         display: inline-block;
         width: 6px;
         height: 6px;
@@ -87,9 +87,9 @@
     .reset-text {
       text-align: center;
       color: #8899b4;
-      img{
+      img {
         width: 75.31px;
-        height: 79.63px
+        height: 79.63px;
       }
     }
   }
@@ -120,7 +120,7 @@
   border-color: #5a53dd !important;
   text-transform: capitalize !important;
 }
-.family_enable_btn{
+.family_enable_btn {
   width: 160px;
 }
 
@@ -417,7 +417,7 @@
         color: rgba(0, 0, 0, 0.87);
       }
     }
-    .header-location-select{
+    .header-location-select {
       width: 54%;
     }
     .header-right {
@@ -434,22 +434,22 @@
         justify-content: flex-start;
         display: inline-flex;
       }
-      p.profile-name{
+      p.profile-name {
         max-width: 110px;
         text-overflow: ellipsis;
         white-space: nowrap;
         display: inline-block;
         overflow: hidden;
       }
-      button{
+      button {
         padding: 0;
       }
-      >div{
+      > div {
         width: 100%;
       }
     }
 
-    >.MuiGrid-root {
+    > .MuiGrid-root {
       padding: 0px 45px 0px 45px;
     }
     .header-location {
@@ -484,7 +484,7 @@
   }
 
   .content-area {
-    padding:32px 45px 30px 45px;
+    padding: 32px 45px 30px 45px;
     background-color: #eae9ff;
   }
 }
@@ -643,34 +643,32 @@
     }
   }
 
-  
-.table-pagination{
-  .MuiToolbar-root{
-    p{
-      font-size: 0.875rem;
+  .table-pagination {
+    .MuiToolbar-root {
+      p {
+        font-size: 0.875rem;
+      }
     }
   }
-}
-  
 }
 
 .MuiSvgIcon-root {
   color: #5a53dd !important;
 }
 
-.MuiPickersPopper-paper{
+.MuiPickersPopper-paper {
   border-radius: 20px;
-.MuiCalendarPicker-root{
-  .MuiPickersDay-root.Mui-selected {
-    background-color: #5a53dd !important;
-  }
-
-  .MuiYearPicker-root{
-    button.Mui-selected{
+  .MuiCalendarPicker-root {
+    .MuiPickersDay-root.Mui-selected {
       background-color: #5a53dd !important;
     }
+
+    .MuiYearPicker-root {
+      button.Mui-selected {
+        background-color: #5a53dd !important;
+      }
+    }
   }
-}
 }
 .date-picker .Mui-focused fieldset.MuiOutlinedInput-notchedOutline {
   border-color: #5a53dd;
@@ -715,7 +713,7 @@
     background-color: #5a53dd !important;
     height: 32px !important;
     padding: 8px 12px;
-    svg{
+    svg {
       width: 21px;
       height: 21px;
     }
@@ -724,7 +722,7 @@
     display: inline-block;
     cursor: pointer;
     margin-bottom: 4px;
-}
+  }
   .MuiTableCell-root {
     .MuiAvatar-root {
       background-color: #5a53dd;
@@ -739,43 +737,43 @@
     height: 54px;
     width: 170px;
   }
-  .MuiButton-text{
+  .MuiButton-text {
     color: #5a53dd;
   }
   span.seprator {
-    background-color: #EBE8FF;
+    background-color: #ebe8ff;
     width: 1px;
     display: flex;
     height: 100%;
     margin: 0 auto;
   }
-  .video-in-table{
+  .video-in-table {
     position: relative;
-    .no-camera-wrapper{
-      .video-player-wrapper{
+    .no-camera-wrapper {
+      .video-player-wrapper {
         height: 310px;
         border-radius: 13px;
         overflow: hidden;
         margin-bottom: 12px;
       }
     }
-    .full-screen-button{
+    .full-screen-button {
       position: absolute !important;
       right: 40px;
       bottom: 40px;
     }
   }
-  .green-chip-color{
-    background-color: #3BF342 !important;
-    color: #0A5211;
+  .green-chip-color {
+    background-color: #3bf342 !important;
+    color: #0a5211;
   }
-  .red-chip-color{
-    background-color: #FED08B !important;
-    color: #B96518;
+  .red-chip-color {
+    background-color: #fed08b !important;
+    color: #b96518;
   }
-  .room-chip{
-      background-color: #dcdbf8 !important;
-      color: #000000;
+  .room-chip {
+    background-color: #dcdbf8 !important;
+    color: #000000;
   }
 }
 
@@ -902,9 +900,9 @@
       background: #d21919;
     }
 
-      .MuiSvgIcon-root {
-        color: #ffff !important;
-      }
+    .MuiSvgIcon-root {
+      color: #ffff !important;
+    }
   }
 
   .row-add-btn {
@@ -1109,7 +1107,7 @@
     .MuiSvgIcon-root {
       color: #455a64 !important;
     }
-    .add-room-btn{
+    .add-room-btn {
       width: 138px !important;
       color: #455a64 !important;
     }
@@ -1211,7 +1209,7 @@
   color: #fff;
 }
 
-.dashboard-cam-btn{
+.dashboard-cam-btn {
   width: 213px;
 }
 
@@ -1248,7 +1246,6 @@
       height: 54px;
     }
   }
-  
 }
 
 .MuiButton-contained {
@@ -1263,7 +1260,7 @@
   outline: 0 none !important;
 }
 
-#yes-btn{
+#yes-btn {
   background-color: #5a53dd !important;
   color: #ffff !important;
 }
@@ -1465,15 +1462,30 @@
   }
 }
 
-.main-map-wraper {
-  position: relative;
-  .map-wrapper {
-   margin: 0 24px 24px 24px;
-    overflow: hidden;
-    border-radius: 10px;
-    height: calc(100vh - 568px);
-    @media (max-width: 1537px) {
-        height: calc(100vh - 352px);
+.map-card-wrapper {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  .MuiCardContent-root {
+    flex: 1;
+    padding: 0 16px 24px !important;
+    .main-map-wraper {
+      position: relative;
+      height: 100%;
+      .map-wrapper {
+        margin: 0;
+        overflow: hidden;
+        border-radius: 10px;
+        // height: calc(100vh - 568px);
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        // @media (max-width: 1537px) {
+        //     height: calc(100vh - 352px);
+        // }
+      }
     }
   }
 }
@@ -1484,9 +1496,9 @@
   padding: 10px !important;
   background-color: rgb(241, 235, 235) !important;
   position: absolute !important;
-  top: 83%;
-  left: 84%;
-  transform: translate(-50%, -50%);
+  bottom: 30px;
+  right: 70px;
+  // transform: translate(-50%, -50%);
   box-shadow: 0px 10px 20px 0px rgba(0, 0, 0, 0.25);
 
   svg {
@@ -1512,10 +1524,6 @@
   //   }
   // }
 
-  
-
-  
-
   .familiy-circle {
     // width: 88px;
     // height: 88px;
@@ -1524,7 +1532,7 @@
     height: 100%;
     aspect-ratio: 1 / 1;
     font-weight: 700;
-      @media only screen and (max-width: 1550px) {
+    @media only screen and (max-width: 1550px) {
       // width: 74px !important;
       // height: 74px !important;
       font-size: 20px !important;
@@ -1552,7 +1560,7 @@
       transition: opacity 225ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
       //background-color: rgb(0 0 0 / 60%);
       // z-index: 1300;
-      background-color: #C8C6F1;
+      background-color: #c8c6f1;
       content: '';
       top: 0;
       left: 0;
@@ -1570,7 +1578,7 @@
       border-radius: 10px;
       overflow: hidden;
       height: 370px;
-  
+
       h2 {
         padding: 16px 24px;
         font-family: 'Roboto', 'Helvetica', 'Arial', sans-serif;
@@ -1660,8 +1668,6 @@
       }
     }
   }
-
- 
 }
 
 @media (max-width: 1199px) {
@@ -1776,7 +1782,7 @@
     font-size: 32px !important;
   }
 }
-.btn-radius{
+.btn-radius {
   border-radius: 30px !important;
 }
 
@@ -1800,7 +1806,7 @@
   text-transform: capitalize !important;
   height: 54px;
 }
-.auth-img-div{
+.auth-img-div {
   height: 100vh;
   background-repeat: no-repeat;
   width: 100%;
@@ -1809,16 +1815,15 @@
   background-position: right;
   background-size: cover;
 }
-.login-img{
-  background-image:url(../assets/auth-bg.png) ;
-
+.login-img {
+  background-image: url(../assets/auth-bg.png);
 }
 
-.forgot-pwd-img{
-  background-image:url(../assets/forgot-pw.png) ;
+.forgot-pwd-img {
+  background-image: url(../assets/forgot-pw.png);
 }
 
-.card-content{
+.card-content {
   height: 100vh;
   box-sizing: border-box;
   display: flex;
@@ -1827,33 +1832,30 @@
   justify-content: center;
 }
 
-.date-location-row{
+.date-location-row {
   margin-top: 20px !important;
-  .MuiGrid-root{
-    .MuiFormControl-root{
+  .MuiGrid-root {
+    .MuiFormControl-root {
       width: 100%;
-        .MuiInputBase-root{
-          border-radius: 15px;
-          height: 60px;
-        }
+      .MuiInputBase-root {
+        border-radius: 15px;
+        height: 60px;
+      }
     }
   }
 }
-.stream-details-wraper{
-
-
-.MuiPaper-root{
-  border-radius: 21px !important;
-  h6{
-    font-weight: 500;
-    color: #797d8c;
+.stream-details-wraper {
+  .MuiPaper-root {
+    border-radius: 21px !important;
+    h6 {
+      font-weight: 500;
+      color: #797d8c;
+    }
+    .subtitle {
+      color: #212121;
+      margin-top: 25px;
+    }
   }
-  .subtitle{
-    color: #212121;
-    margin-top: 25px;
-  }
-}
-
 }
 .p-30 {
   padding: 30px !important;
@@ -1947,7 +1949,7 @@
   }
 }
 .watch-stream-main {
-  .watch-stream-main-stack{
+  .watch-stream-main-stack {
     height: 100%;
   }
   @media (max-width: 1199px) {
@@ -1976,7 +1978,6 @@
 
 .stream-table-wrap {
   min-height: 140px;
-  
 }
 .div-header {
   display: flex;
@@ -2077,13 +2078,12 @@
   }
 }
 
-
-.MuiBackdrop-root{
-    opacity: 1;
-    transition: opacity 225ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
-    z-index: 3;
+.MuiBackdrop-root {
+  opacity: 1;
+  transition: opacity 225ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
+  z-index: 3;
 }
-.linear-loader{
+.linear-loader {
   background-color: #bbb7ff;
   border-radius: 60px;
   height: 5px;
@@ -2091,43 +2091,43 @@
   top: 0%;
   width: 100% !important;
   right: 0px;
-  .MuiLinearProgress-bar{
+  .MuiLinearProgress-bar {
     background-color: #5a53dd;
   }
 }
 
-.customer-loader{
-.linear-loader{
-  width: 100% !important;
-  left: 0;
-}
+.customer-loader {
+  .linear-loader {
+    width: 100% !important;
+    left: 0;
+  }
 }
 
-.player-card{
-  .MuiGrid-root{
+.player-card {
+  .MuiGrid-root {
     height: auto !important;
   }
 }
 
-.MuiDialogActions-root{
-  .MuiButtonBase-root{
-    .MuiLoadingButton-loadingIndicator{
+.MuiDialogActions-root {
+  .MuiButtonBase-root {
+    .MuiLoadingButton-loadingIndicator {
       left: 24px;
     }
   }
 }
 
-.camera-viewing-card{
+.camera-viewing-card {
   height: 20%;
-  p{
-    padding: 0
+  p {
+    padding: 0;
   }
-  >div{
+  > div {
     height: 100%;
     box-sizing: border-box;
   }
 }
-.viewers-table{
+.viewers-table {
   min-height: 352px;
   @media (min-width: 1535px) {
     min-height: 352px;
