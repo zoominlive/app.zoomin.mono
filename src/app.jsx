@@ -36,57 +36,57 @@ const MainApp = () => {
   useEffect(() => {
     console.log('build date:', getBuildDate(packageJson.buildDate));
   }, []);
-  useEffect(() => {
-    if (authCtx.token) {
-      let { user_id, family_member_id } = JSON.parse(localStorage.getItem('user'));
+  // useEffect(() => {
+  //   if (authCtx.token) {
+  //     let { user_id, family_member_id } = JSON.parse(localStorage.getItem('user'));
 
-      let data = {};
-      if (family_member_id) {
-        data = { family_member_id: family_member_id };
-      } else {
-        data = { user_id: user_id };
-      }
-      //navigate('/dashboard');
+  //     let data = {};
+  //     if (family_member_id) {
+  //       data = { family_member_id: family_member_id };
+  //     } else {
+  //       data = { user_id: user_id };
+  //     }
+  //     //navigate('/dashboard');
 
-      let socket = new WebSocket(process.env.REACT_APP_SOCKET_URL);
+  //     let socket = new WebSocket(process.env.REACT_APP_SOCKET_URL);
 
-      // Connection opened
-      socket.addEventListener('open', (event) => {
-        console.log('Connected', event);
-        socket.send(JSON.stringify(data), event);
-      });
+  //     // Connection opened
+  //     socket.addEventListener('open', (event) => {
+  //       console.log('Connected', event);
+  //       socket.send(JSON.stringify(data), event);
+  //     });
 
-      // Listen for messages
-      socket.addEventListener('message', (event) => {
-        let data = JSON.parse(event.data);
-        if (data?.update_dashboard_data) {
-          console.log('===updateDashboardData', data?.update_dashboard_data);
-          localStorage.setItem('updateDashboardData', true);
-          authCtx.setUpdateDashboardData(true);
-        } else {
-          enqueueSnackbar(data?.message, { variant: 'success' });
-        }
-      });
+  //     // Listen for messages
+  //     socket.addEventListener('message', (event) => {
+  //       let data = JSON.parse(event.data);
+  //       console.log('===updateDashboardData', data);
+  //       if (data?.update_dashboard_data) {
+  //         localStorage.setItem('updateDashboardData', true);
+  //         authCtx.setUpdateDashboardData(true);
+  //       } else {
+  //         enqueueSnackbar(data?.message, { variant: 'success' });
+  //       }
+  //     });
 
-      socket.addEventListener('error', (event) => {
-        console.error('WebSocket error:', event);
-        socket = new WebSocket(process.env.REACT_APP_SOCKET_URL);
-        socket.addEventListener('Open', (event) => {
-          console.log('Reconnected');
-          socket.send(JSON.stringify(data), event);
-        });
-      });
+  //     socket.addEventListener('error', (event) => {
+  //       console.error('WebSocket error:', event);
+  //       socket = new WebSocket(process.env.REACT_APP_SOCKET_URL);
+  //       socket.addEventListener('Open', (event) => {
+  //         console.log('Reconnected');
+  //         socket.send(JSON.stringify(data), event);
+  //       });
+  //     });
 
-      socket.addEventListener('close', (event) => {
-        console.log('WebSocket connection closed with code:', event.code, 'reason:', event.reason);
-        socket = new WebSocket(process.env.REACT_APP_SOCKET_URL);
-        socket.addEventListener('open', (event) => {
-          console.log('Reconnected');
-          socket.send(JSON.stringify(data), event);
-        });
-      });
-    }
-  }, [authCtx.token]);
+  //     socket.addEventListener('close', (event) => {
+  //       console.log('WebSocket connection closed with code:', event.code, 'reason:', event.reason);
+  //       socket = new WebSocket(process.env.REACT_APP_SOCKET_URL);
+  //       socket.addEventListener('open', (event) => {
+  //         console.log('Reconnected');
+  //         socket.send(JSON.stringify(data), event);
+  //       });
+  //     });
+  //   }
+  // }, [authCtx.token]);
   return (
     <Routes>
       <Route element={<PublicRoute />}>

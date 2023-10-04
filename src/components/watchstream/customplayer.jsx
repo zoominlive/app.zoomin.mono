@@ -97,8 +97,8 @@ const CustomPlayer = (props) => {
             //       }&sid=${props?.cam_id}&uuid=${uuidv4()}`
             // }
             url={
-              props.streamUri.includes('https://live.zoominlive.com') ||
-              props.streamUri.includes('zoomin-recordings-rtmp.s3.amazonaws.com')
+              props?.streamUri?.includes('https://live.zoominlive.com') ||
+              props?.streamUri?.includes('zoomin-recordings-rtmp.s3.amazonaws.com')
                 ? props?.streamUri
                 : `${authCtx.user.transcoderBaseUrl}${props?.streamUri}`
             }
