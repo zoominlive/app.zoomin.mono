@@ -108,7 +108,7 @@ module.exports = {
       });
 
       children = await childServices.createChildren(childObjs, t);
-      await dashboardServices.updateDashboardData(custId);
+      //await dashboardServices.updateDashboardData(custId);
       await t.commit();
 
       res.status(201).json({

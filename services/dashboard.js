@@ -7,6 +7,7 @@ const Room = require("../models/room");
 const customerServices = require("../services/customers");
 const userServices = require("../services/users");
 const socketServices = require('../services/socket');
+const liveStreamServices = require('../services/liveStream');
 
 module.exports = {
   /* get recent viewers */
@@ -371,17 +372,8 @@ module.exports = {
     return prefrenceDetails?.dashboard_cam
   },
 
-  updateDashboardData: async (cust_id) => {
-    let usersSocketIds = await userServices.getUsersSocketIds(cust_id);
-    console.log('===cust_id===',cust_id,)
-        usersSocketIds = usersSocketIds.flatMap((i) => i.socket_connection_id).filter((i) => i !== null);
-        if (!_.isEmpty(usersSocketIds)) {
-          console.log('==usersSocketIds==',usersSocketIds);
-          await Promise.all(
-            usersSocketIds.map(async (id) => {
-              await socketServices.emitResponse(id, {"update_dashboard_data": true});
-            })
-          );
-        }
+  updateDashboardData: async (cust_id, data) => {
+    let usersdata = await userServices.getUsersSocketIds(cust_id);
+    return usersdata
   },
 };

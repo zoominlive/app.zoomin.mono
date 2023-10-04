@@ -15,6 +15,7 @@ const liveStramcameraServices = require("../services/livestreamCameras");
 const dashboardServices = require("../services/dashboard");
 const userServices = require("../services/users");
 const notificationSender = require("../lib/firebase-services");
+const s3BucketImageUploader = require("../lib/aws-services");
 const CONSTANTS = require("../lib/constants");
 const sequelize = require("../lib/database");
 const { v4: uuidv4 } = require("uuid");
@@ -173,7 +174,20 @@ module.exports = {
         }
 
         // update dashboard details
-        await dashboardServices.updateDashboardData(streamObj.cust_id);
+        // let usersLocations = await userServices.getUsersSocketIds(streamObj.cust_id);
+        // const activeLiveStreams = await liveStreamServices.getAllActiveStreams(streamObj.cust_id, usersLocations?.dashboard_locations, t);
+        // await dashboardServices.updateDashboardData(streamObj.cust_id, {activeLiveStreams: activeLiveStreams});
+        let usersdata = await userServices.getUsersSocketIds(streamObj?.cust_id);
+        usersdata = usersdata.filter(user => user.socket_connection_id && user.dashboard_locations);
+        
+       if(!_.isEmpty(usersdata)){
+        await Promise.all(
+          usersdata.map(async (user) => {
+            const activeLiveStreams = await liveStreamServices.getAllActiveStreams(streamObj?.cust_id, user?.dashboard_locations, t);
+            await socketServices.emitResponse(user?.socket_connection_id, {"activeLiveStreams": activeLiveStreams});
+          })
+        );
+       }
 
         await t.commit();
         res.status(200).json({
@@ -230,6 +244,7 @@ module.exports = {
       await liveStramcameraServices.deleteLivestreamCamera(roomID);
 
       let streamObj = await liveStreamServices.getstreamObj(streamID, t);
+       
 
       let childs = await childServices.getChildOfAssignedRoomId(roomID, t);
       let childIds = childs.flatMap((i) => i.child_id);
@@ -267,7 +282,53 @@ module.exports = {
           })
         );
       }
-      await dashboardServices.updateDashboardData(streamObj.cust_id);
+      //console.log('====streamObj.cust_id===',streamObj.cust_id)
+      // await dashboardServices.updateDashboardData(streamObj.cust_id);
+      // console.log('====streamObj====',streamObj);
+      // let usersLocations = await userServices.getUsersSocketIds(streamObj.cust_id);
+      // const activeLiveStreams = await liveStreamServices.getAllActiveStreams(streamObj.cust_id, usersLocations?.dashboard_locations, t);
+      // await dashboardServices.updateDashboardData(streamObj.cust_id, {activeLiveStreams: activeLiveStreams});
+
+      let usersdata = await userServices.getUsersSocketIds(streamObj?.cust_id);
+        usersdata = usersdata.filter(user => user.socket_connection_id && user.dashboard_locations);
+        
+       if (!_.isEmpty(usersdata)) {
+         await Promise.all(
+           usersdata.map(async (user) => {
+             const activeLiveStreams =
+               await liveStreamServices.getAllActiveStreams(
+                 streamObj?.cust_id,
+                 user?.dashboard_locations,
+                 t
+               );
+             let recentLiveStreams = await liveStreamServices.getRecentStreams(
+              streamObj?.cust_id,
+              user?.dashboard_locations,
+               t
+             );
+             if (recentLiveStreams.length > 0) {
+               recentLiveStreams = await Promise.all(
+                 recentLiveStreams.map(async (item) => {
+                   const presigned_url =
+                     await s3BucketImageUploader.getPresignedUrl(
+                       item?.dataValues?.s3_url
+                     );
+                   let newDataValue = item.dataValues;
+                   newDataValue.presigned_url = presigned_url;
+                   item.dataValues = newDataValue;
+                   return item;
+                 })
+               );
+             }
+
+             await socketServices.emitResponse(user?.socket_connection_id, {
+               activeLiveStreams: activeLiveStreams,
+               recentLiveStreams: recentLiveStreams
+             });
+           })
+         );
+       }
+       
       await t.commit();
       res.status(200).json({
         IsSuccess: true,
@@ -347,7 +408,32 @@ module.exports = {
         );
       }
       if (user_family_obj?.cust_id) {
-        await dashboardServices.updateDashboardData(user_family_obj?.cust_id);
+        // const activeLiveStreams = await liveStreamServices.getAllActiveStreams(user_family_obj?.cust_id, req?.query?.location, t);
+        // const numberofActiveStreamViewers = activeLiveStreams.length > 0 ? await liveStreamServices.getAllActiveStreamViewers(activeLiveStreams.flatMap(i => i.stream_id), t) : 0;
+        
+        // let usersLocations = await userServices.getUsersSocketIds(streamObj.cust_id);
+        // const activeLiveStreams = await liveStreamServices.getAllActiveStreams(streamObj.cust_id, usersLocations?.dashboard_locations, t);
+        
+        // await dashboardServices.updateDashboardData(user_family_obj?.cust_id);
+
+        // let usersLocations = await userServices.getUsersSocketIds(user_family_obj?.cust_id);
+        // console.log('===usersLocations',usersLocations)
+        //const activeLiveStreams = await liveStreamServices.getAllActiveStreams(user_family_obj?.cust_id, usersLocations?.dashboard_locations, t);
+        //const numberofActiveStreamViewers = activeLiveStreams.length > 0 ? await liveStreamServices.getAllActiveStreamViewers(activeLiveStreams.flatMap(i => i.stream_id), t) : 0;
+        
+        let usersdata = await userServices.getUsersSocketIds(user_family_obj?.cust_id);
+        usersdata = usersdata.filter(user => user.socket_connection_id && user.dashboard_locations);
+        
+       if(!_.isEmpty(usersdata)){
+        await Promise.all(
+          usersdata.map(async (user) => {
+            const activeLiveStreams = await liveStreamServices.getAllActiveStreams(user_family_obj?.cust_id, user?.dashboard_locations, t);
+            const numberofActiveStreamViewers = activeLiveStreams.length > 0 ? await liveStreamServices.getAllActiveStreamViewers(activeLiveStreams.flatMap(i => i.stream_id), t) : 0;
+            await socketServices.emitResponse(user?.socket_connection_id, {"numberofActiveStreamViewers" : numberofActiveStreamViewers});
+          })
+        );
+       }
+
       }
       await t.commit();
       res.status(200).json({

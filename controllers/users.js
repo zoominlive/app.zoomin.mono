@@ -149,7 +149,7 @@ module.exports = {
           const imageUrl = await s3BucketImageUploader._upload(req.body.image, userData.user_id);
           userData = await userServices.editUserProfile(userData, { image: imageUrl }, t);
         }
-        await dashboardServices.updateDashboardData(params.cust_id);
+        //await dashboardServices.updateDashboardData(params.cust_id);
         // await t.commit();
         res.status(201).json({
           IsSuccess: true,

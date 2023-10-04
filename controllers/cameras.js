@@ -3,6 +3,8 @@ const { startEncodingStream, deleteEncodingStream } = require('../lib/rtsp-strea
 const _ = require('lodash');
 const customerServices = require('../services/customers');
 const logServices = require('../services/logs');
+const userServices = require('../services/users');
+const socketServices = require('../services/socket');
 const CONSTANTS = require('../lib/constants');
 const sequelize = require('../lib/database');
 module.exports = {
@@ -33,6 +35,19 @@ module.exports = {
           availableCameras - 1,
           t
         );
+
+        let usersdata = await userServices.getUsersSocketIds(params.cust_id);
+            usersdata = usersdata.filter(user => user.socket_connection_id && user.dashboard_locations);
+  
+       if(!_.isEmpty(usersdata)){
+        await Promise.all(
+          usersdata.map(async (user) => {
+            const enrolledStreams = await cameraServices.getAllCameraForCustomerDashboard(params.cust_id, user?.dashboard_locations, t);
+            await socketServices.emitResponse(user?.socket_connection_id, {"enrolledStreams": enrolledStreams});
+          })
+        );
+       }
+
         await t.commit();
         res.status(201).json({
           IsSuccess: true,

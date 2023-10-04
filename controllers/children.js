@@ -20,7 +20,7 @@ module.exports = {
         params?.rooms?.rooms,
         t
       );
-      await dashboardServices.updateDashboardData(custId);
+      //await dashboardServices.updateDashboardData(custId);
       await t.commit();
       res.status(201).json({
         IsSuccess: true,

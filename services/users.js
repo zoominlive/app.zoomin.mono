@@ -220,6 +220,7 @@ module.exports = {
         params?.socket_connection_id !== undefined
           ? params?.socket_connection_id
           : user.socket_connection_id,
+      dashboard_locations: params?.dashboard_locations
     };
 
     let updateUserProfile = await Users.update(
@@ -459,7 +460,7 @@ module.exports = {
     const { Users } = await connectToDatabase();
     let socketIds = await Users.findAll({
      where: { role : {[Sequelize.Op.notIn]:["Teacher"]}, cust_id: {[Sequelize.Op.or]: [cust_id, null]} },
-     attributes: ["socket_connection_id"],
+     attributes: ["socket_connection_id", "dashboard_locations"],
      raw: true
     });
 

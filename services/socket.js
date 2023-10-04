@@ -16,7 +16,7 @@ module.exports = {
         (err, data) => {
           if (err) {
             console.log("emitResponse err is", err);
-            // return reject(err);
+            //return reject(err);
           }
           return resolve(data);
         }

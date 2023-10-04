@@ -6,6 +6,8 @@ const logServices = require("../services/logs");
 const dashboardServices = require("../services/dashboard");
 const userServices = require("../services/users");
 const familyServices = require("../services/families");
+const cameraServices = require('../services/cameras');
+const socketServices = require('../services/socket');
 const sequelize = require("../lib/database");
 module.exports = {
   // encode stream and create new camera
@@ -214,6 +216,7 @@ module.exports = {
   },
 
   ReportViewers: async (req, res, next) => {
+    const t = await sequelize.transaction();
     try {
       const params = req.body;
       const recentViewer = await watchStreamServices.reportViewers(params);
@@ -226,9 +229,22 @@ module.exports = {
         );
       }
       if (user_family_obj?.cust_id) {
-        await dashboardServices.updateDashboardData(user_family_obj?.cust_id);
-      }
+        //await dashboardServices.updateDashboardData(user_family_obj?.cust_id);
+        let usersdata = await userServices.getUsersSocketIds(user_family_obj?.cust_id);
+            usersdata = usersdata.filter(user => user.socket_connection_id && user.dashboard_locations);
+        
+       if(!_.isEmpty(usersdata)){
+        await Promise.all(
+          usersdata.map(async (user) => {
+            const totalStreams = await cameraServices.getAllCameraForCustomerDashboard(user_family_obj?.cust_id, user.dashboard_locations, t); 
+            const numberofMountedCameraViewers =  totalStreams?.length > 0 ? await cameraServices.getAllMountedCameraViewers(totalStreams.flatMap(i => i.cam_id), t) : 0;
+            await socketServices.emitResponse(user?.socket_connection_id, {"numberofMountedCameraViewers": numberofMountedCameraViewers});
+          })
+        );
+       }
 
+      }
+      await t.commit();
       res.status(200).json({
         IsSuccess: true,
         Data: recentViewer,
@@ -237,6 +253,7 @@ module.exports = {
 
       next();
     } catch (error) {
+      await t.rollback();
       res.status(500).json({
         IsSuccess: false,
         error_log: error,

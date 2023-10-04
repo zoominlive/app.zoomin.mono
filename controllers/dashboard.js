@@ -5,6 +5,7 @@ const dashboardServices = require("../services/dashboard");
 const watchStreamServices = require("../services/watchStream");
 const customerServices = require("../services/customers");
 const liveStreamServices = require("../services/liveStream");
+const userServices = require("../services/users");
 const s3BucketImageUploader = require("../lib/aws-services");
 const { listAvailableStreams } = require("../lib/rtsp-stream");
 const _ = require("lodash");
@@ -23,6 +24,10 @@ module.exports = {
       if (req.user.role === "Super Admin") {
         let watchStream = await dashboardServices.getCamPreference(custId);
         defaultWatchStream = watchStream || {};
+      }
+      if(req.user.role !== "Super Admin"){
+        let updateObj = { user_id: userId, dashboard_locations: req?.query?.location };
+        await userServices.editUserProfile( updateObj, _.omit(updateObj, ["user_id"]), t);
       }
       const token = req.userToken;
       
