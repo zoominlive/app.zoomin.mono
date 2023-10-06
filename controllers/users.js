@@ -219,6 +219,7 @@ module.exports = {
             Data: [],
             Message: !user.is_verified ? CONSTANTS.USER_NOT_VERIFIED : CONSTANTS.USER_DEACTIVATED
           });
+          return
         } else {
           const validPassword = await bcrypt.compare(password, user.password);
 
@@ -245,6 +246,7 @@ module.exports = {
             res
               .status(400)
               .json({ IsSuccess: true, Data: {}, Message: CONSTANTS.INVALID_PASSWORD });
+            return
           }
         }
       } else if (familyUser) {
@@ -258,6 +260,7 @@ module.exports = {
               ? CONSTANTS.USER_NOT_VERIFIED
               : CONSTANTS.USER_DEACTIVATED
           });
+          return
         } else {
           const validPassword = await bcrypt.compare(password, familyUser.password);
 
@@ -284,15 +287,18 @@ module.exports = {
             res
               .status(400)
               .json({ IsSuccess: true, Data: {}, Message: CONSTANTS.INVALID_PASSWORD });
+            return
           }
         }
       } else {
         //await t.commit();
+        console.log('calling=====================')
         res.status(400).json({
           IsSuccess: true,
           Data: {},
           Message: CONSTANTS.USER_NOT_FOUND
         });
+        return
       }
       await t.commit();
       next();
@@ -388,7 +394,6 @@ module.exports = {
       const decodeToken = engine.decrypt(token);
 
       if (decodeToken?.userId) {
-        console.log('calling if=============')
         let user;
 
         user = await userServices.getUserById(decodeToken.userId, t);
@@ -445,7 +450,6 @@ module.exports = {
         }
       }
       else if (decodeToken.familyMemberId) {
-        console.log('calling else if=============')
         let familyMember;
 
         familyMember = await familyServices.getFamilyMemberById(decodeToken.familyMemberId, t);
