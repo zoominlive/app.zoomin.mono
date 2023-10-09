@@ -286,11 +286,7 @@ const Layout = () => {
                       return true;
                     } else if (authCtx.user.role === 'Admin' && item.key !== 9 && item.key !== 10) {
                       return true;
-                    } else if (
-                      authCtx.user.role == 'Teacher' &&
-                      (item.key == 5 || item.key == 7) &&
-                      item.key !== 10
-                    ) {
+                    } else if (authCtx.user.role == 'Teacher' && item.key == 5 && item.key !== 10) {
                       return true;
                     } else if (
                       authCtx.user.role === 'Super Admin' &&

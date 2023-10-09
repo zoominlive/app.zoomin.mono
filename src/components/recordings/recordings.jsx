@@ -63,7 +63,9 @@ const Recordings = () => {
   const { enqueueSnackbar } = useSnackbar();
   const [isLoading, setIsLoading] = useState(false);
   const [isDatePickerOpen1, setIsDatePickerOpen1] = useState(false);
-  const [fromDate, setFromDate] = useState(moment());
+  const [isDatePickerOpen2, setIsDatePickerOpen2] = useState(false);
+  const [fromDate, setFromDate] = useState(moment().subtract(7, 'days'));
+  const [toDate, setToDate] = useState(moment());
   const [location, setLocation] = useState('All');
   const [roomsList, setRoomsList] = useState([]);
   const [roomsDropdownLoading, setRoomsDropdownLoading] = useState(false);
@@ -99,7 +101,8 @@ const Recordings = () => {
     cust_id: localStorage.getItem('cust_id'),
     live: true,
     vod: true,
-    started_at: moment().format('YYYY-MM-DD 00:00')
+    from: moment().subtract(7, 'days').format('YYYY-MM-DD'),
+    to: moment().format('YYYY-MM-DD')
   });
   const [activeLiveStreamList, setActiveLivestreamList] = useState([]);
   const [recentLiveStreamList, setRecentLivestreamList] = useState([]);
@@ -185,7 +188,7 @@ const Recordings = () => {
         <TableRow hover>
           <TableCell component="th" scope="row">
             <Stack direction="row" alignItems="center" spacing={3}>
-              <Typography>{`${moment(created_at).format('YYYY-MM-DD')}`}</Typography>
+              <Typography>{`${moment(created_at).format('MM-DD-YYYY')}`}</Typography>
             </Stack>
           </TableCell>
           <TableCell align="left">
@@ -327,6 +330,14 @@ const Recordings = () => {
     getRecordingData();
   }, []);
 
+  useEffect(() => {
+    setRecordingsPayload({
+      ...recordingsPayload,
+      from: moment(fromDate).format('YYYY-MM-DD'),
+      to: moment(toDate).format('YYYY-MM-DD')
+    });
+  }, [fromDate, toDate]);
+
   return (
     // <Box style={{ height: '80vh' }}>
     //   <Card style={{ height: '100%' }}>
@@ -424,9 +435,9 @@ const Recordings = () => {
         <Card className="filter">
           <CardContent>
             <Grid container alignContent={'center'}>
-              <Grid item lg={6} md={6} sm={12} xs={12}>
+              <Grid item lg={7} md={7} sm={12} xs={12}>
                 <Grid container spacing={2}>
-                  <Grid item md={3.5} sm={6}>
+                  {/* <Grid item md={3.5} sm={6}>
                     <LocalizationProvider dateAdapter={AdapterMoment}>
                       <InputLabel id="from">Date</InputLabel>
                       <DesktopDatePicker
@@ -445,6 +456,51 @@ const Recordings = () => {
                         }}
                         onChange={(value) => {
                           setFromDate(value);
+                        }}
+                      />
+                    </LocalizationProvider>
+                  </Grid> */}
+                  <Grid item md={2}>
+                    <LocalizationProvider dateAdapter={AdapterMoment}>
+                      <InputLabel id="from">From</InputLabel>
+                      <DesktopDatePicker
+                        open={isDatePickerOpen1}
+                        maxDate={moment()}
+                        labelId="from"
+                        autoOk={true}
+                        value={fromDate}
+                        inputFormat="MM/DD/YY"
+                        onClose={() => setIsDatePickerOpen1(false)}
+                        renderInput={(params) => (
+                          <TextField onClick={() => setIsDatePickerOpen1(true)} {...params} />
+                        )}
+                        components={{
+                          OpenPickerIcon: !isDatePickerOpen1 ? ArrowDropDownIcon : ArrowDropUpIcon
+                        }}
+                        onChange={(value) => {
+                          setFromDate(value);
+                        }}
+                      />
+                    </LocalizationProvider>
+                  </Grid>
+                  <Grid item md={2}>
+                    <InputLabel id="to">To</InputLabel>
+                    <LocalizationProvider dateAdapter={AdapterMoment}>
+                      <DesktopDatePicker
+                        labelId="to"
+                        open={isDatePickerOpen2}
+                        maxDate={moment()}
+                        value={toDate}
+                        inputFormat="MM/DD/YY"
+                        onClose={() => setIsDatePickerOpen2(false)}
+                        renderInput={(params) => (
+                          <TextField onClick={() => setIsDatePickerOpen2(true)} {...params} />
+                        )}
+                        components={{
+                          OpenPickerIcon: !isDatePickerOpen2 ? ArrowDropDownIcon : ArrowDropUpIcon
+                        }}
+                        onChange={(value) => {
+                          setToDate(value);
                         }}
                       />
                     </LocalizationProvider>
@@ -509,10 +565,10 @@ const Recordings = () => {
                   </Grid>
                 </Grid>
               </Grid>
-              <Grid item md={1} sm={1} sx={{ textAlign: 'center' }}>
+              <Grid item lg={1} md={1} sm={1} sx={{ textAlign: 'center' }}>
                 <Box component={'span'} className="seprator"></Box>
               </Grid>
-              <Grid item lg={5} md={5} sm={12} xs={12}>
+              <Grid item lg={4} md={4} sm={12} xs={12}>
                 <>
                   <Grid container spacing={2}>
                     <Grid item md={6} sm={6}>
