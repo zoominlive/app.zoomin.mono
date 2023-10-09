@@ -150,7 +150,7 @@ module.exports = {
       if(recentLiveStreams.length > 0){
 
         recentLiveStreams = await Promise.all(recentLiveStreams.map(async item => {
-          const presigned_url = await s3BucketImageUploader.getPresignedUrl(item?.dataValues?.s3_url)
+          const presigned_url = item?.dataValues?.s3_url ? await s3BucketImageUploader.getPresignedUrl(item?.dataValues?.s3_url) : ""
           let newDataValue = item.dataValues;
           newDataValue.presigned_url = presigned_url;
           item.dataValues = newDataValue;

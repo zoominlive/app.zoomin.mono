@@ -12,7 +12,7 @@ module.exports = {
       custId = req.user.cust_id || req.query.cust_id;
       const activeLiveStreams = await liveStreamServices.getAllActiveStreams(custId, req?.query?.location, t);
       const recentLiveStreams = await liveStreamServices.getRecentStreams(custId, req?.query?.location, t);
-      const recordedStreams = await liveStreamServices.getRecordedStreams(custId, req?.query?.started_at, req?.query?.location,req?.query?.rooms,req.query?.live,req.query?.vod, t);
+      const recordedStreams = await liveStreamServices.getRecordedStreams(custId, req?.query?.from, req?.query?.to, req?.query?.location,req?.query?.rooms,req.query?.live,req.query?.vod, t);
      // `${cam?.stream_uri}?uid=${user?.family_member_id || user?.user_id}&sid=${cam?.stream_uri.split('/') [cam?.stream_uri.split('/').length - 1].split('.')[0]}&uuid=${uuidv4()}`
      recordedStreams.forEach(element => {
       //element.stream_uri = `${cam?.stream_uri}?uid=${req.user?.family_member_id || req.user?.user_id}&sid=${cam?.stream_uri.split('/') [cam?.stream_uri.split('/').length - 1].split('.')[0]}&uuid=${uuidv4()}`

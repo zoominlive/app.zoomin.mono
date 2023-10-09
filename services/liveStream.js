@@ -107,14 +107,15 @@ module.exports = {
     const last24Hours = new Date(currentDate.getTime() - (24 * 60 * 60 * 1000));
 
     let recentLiveStreams = await LiveStreams.findAll(
-      { where: { stream_running: false, cust_id: cust_id,  
+      { where: { stream_running: false, 
+        cust_id: cust_id,  
         stream_stop_time: {
           [Sequelize.Op.gte]: last24Hours
         // [Sequelize.Op.between]: [
         //   oneHourBefore.toISOString(),
         //   currentTime.toISOString(),
         // ],
-      }, 
+       }, 
     }, attributes:["stream_id", "stream_name", "stream_start_time", "s3_url"],
       include: [{
         model: Room,
@@ -125,7 +126,9 @@ module.exports = {
             model: LiveStreamCameras,
           }
         ]
-      }]},
+      }],
+      limit: 5
+    },
       { transaction: t }
     );
     return recentLiveStreams;
@@ -163,7 +166,7 @@ let result = await sequelize
 return result[0].total_start_only_viewers;
   },
 
-  getRecordedStreams: async(cust_id, started_at =  moment().format('YYYY-MM-DD 00:00'), location='All', rooms="All", live = true, vod = true, t)=> {
+  getRecordedStreams: async(cust_id, from =  moment().format('YYYY-MM-DD 00:00'), to =  moment(to).format('YYYY-MM-DD 23:59'), location='All', rooms="All", live = true, vod = true, t)=> {
     const { LiveStreams, Room, LiveStreamCameras } = await connectToDatabase();
     let where_obj = location === "All" ? {} : {location: location}
     let status_obj = live == "true" && vod == "true" ? {}: {stream_running: live == "true" ? true : false}
@@ -175,7 +178,7 @@ return result[0].total_start_only_viewers;
     let recordedStreams = await LiveStreams.findAll(
       { where: { cust_id: cust_id, ...status_obj,
       stream_start_time: {
-        [Sequelize.Op.between]: [started_at, moment(started_at).format('YYYY-MM-DD 23:59')],
+        [Sequelize.Op.between]: [from, to],
       },
      }, 
        attributes:["stream_id", "stream_name","stream_running", "s3_url", "created_at"],
