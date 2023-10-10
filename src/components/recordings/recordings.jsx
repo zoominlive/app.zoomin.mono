@@ -166,17 +166,17 @@ const Recordings = () => {
   };
 
   const Row = ({ row }) => {
-    const { created_at, room, s3_url, stream_running } = row;
+    const { created_at, room, presigned_url, stream_running } = row;
     const handle = useFullScreenHandle();
     const [open, setOpen] = useState(false);
     const [timeOut, setTimeOut] = useState(2);
     const [selectedCamera, setSelectedCamera] = useState({
       camLabel: '',
-      stream_uri: 'https://www.youtube.com/watch?v=ysz5S6PUM-U',
+      stream_uri: presigned_url || room?.live_stream_cameras[0].stream_uri,
       cam_id: null,
-      location: '',
-      room_name: '',
-      cam_name: ''
+      location: room?.location,
+      room_name: room?.room_name,
+      cam_name: presigned_url ? room?.live_stream_cameras[0]?.cam_name : ''
     });
     const [submitted] = useState(true);
     const [playing, setPlaying] = useState(true);
@@ -245,7 +245,7 @@ const Recordings = () => {
                         }}>
                         <CustomPlayer
                           noOfCameras={2}
-                          streamUri={s3_url || room?.live_stream_cameras[0].stream_uri}
+                          streamUri={presigned_url || room?.live_stream_cameras[0].stream_uri}
                           camDetails={selectedCamera}
                           timeOut={timeOut}
                           setTimeOut={setTimeOut}
@@ -297,7 +297,7 @@ const Recordings = () => {
       created_at: PropTypes.string,
       stream_running: PropTypes.bool,
       room: PropTypes.object,
-      s3_url: PropTypes.string
+      presigned_url: PropTypes.string
     })
   };
 

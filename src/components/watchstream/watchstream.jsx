@@ -77,6 +77,7 @@ const WatchStream = () => {
     const locs = ['Select All'];
     authCtx?.user?.location?.accessable_locations.forEach((loc) => locs.push(loc));
     setLocations(locs);
+    setSelectedLocation(locs);
     setDropdownLoading(true);
     onSelect();
     getAvailableStreams();
@@ -125,7 +126,7 @@ const WatchStream = () => {
       setRooms(roomsToAdd);
       setSelectedRoom(roomsToAdd);
       if (selectedRoom.length == 0) {
-        setSelectedRoom([roomsToSet?.[0]]);
+        setSelectedRoom([roomsToSet]);
         let camsToAdd = [
           {
             cam_id: 'select-all',
@@ -228,7 +229,7 @@ const WatchStream = () => {
           let roomsToAdd = [{ room_name: 'Select All', room_id: 'select-all' }];
           rooms?.forEach((room) => roomsToAdd.push(room));
           setRooms(roomsToAdd);
-          setSelectedRoom([rooms[0]]);
+          setSelectedRoom(rooms);
           let camsToAdd = [{ cam_id: 'select-all', cam_name: 'Select All' }];
           rooms[0]?.cameras?.forEach((cam) =>
             camsToAdd.push({
@@ -240,17 +241,16 @@ const WatchStream = () => {
           );
           setCameras(camsToAdd);
           if (response?.data?.Data?.defaultCams?.cameras) {
-            const camsToAdd = response?.data?.Data?.defaultCams?.cameras.map((cam) => cam);
-            let defaultLocations = response?.data?.Data?.defaultCams?.locations
-              ? response?.data?.Data?.defaultCams?.locations
-              : [];
-            let defaultRooms = response?.data?.Data?.defaultCams?.rooms
-              ? response?.data?.Data?.defaultCams?.rooms
-              : [];
-
-            setSelectedRoom(defaultRooms);
-            setSelectedLocation(defaultLocations);
-            setSelectedCameras(camsToAdd);
+            // const camsToAdd = response?.data?.Data?.defaultCams?.cameras.map((cam) => cam);
+            // let defaultLocations = response?.data?.Data?.defaultCams?.locations
+            //   ? response?.data?.Data?.defaultCams?.locations
+            //   : [];
+            // let defaultRooms = response?.data?.Data?.defaultCams?.rooms
+            //   ? response?.data?.Data?.defaultCams?.rooms
+            //   : [];
+            // setSelectedRoom(defaultRooms);
+            // setSelectedLocation(defaultLocations);
+            // setSelectedCameras(camsToAdd);
           } else {
             setSelectedCameras([
               {
