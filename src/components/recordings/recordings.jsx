@@ -172,7 +172,7 @@ const Recordings = () => {
     const [timeOut, setTimeOut] = useState(2);
     const [selectedCamera, setSelectedCamera] = useState({
       camLabel: '',
-      stream_uri: presigned_url || room?.live_stream_cameras[0].stream_uri,
+      stream_uri: presigned_url || room?.live_stream_cameras[0]?.stream_uri,
       cam_id: null,
       location: room?.location,
       room_name: room?.room_name,

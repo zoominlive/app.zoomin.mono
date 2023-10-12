@@ -34,6 +34,7 @@ import DeleteDialog from '../common/deletedialog';
 import PlayArrowSharpIcon from '@mui/icons-material/PlayArrowSharp';
 import FullScreenDialog from './fullscreendialog';
 import { Maximize } from 'react-feather';
+import _ from 'lodash';
 
 const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
 const checkedIcon = <CheckBoxIcon fontSize="small" />;
@@ -191,22 +192,34 @@ const WatchStream = () => {
   }, [selectedCameras]);
 
   useEffect(() => {
+    let liveStreamCameras = _.filter(cameras, { cam_name: 'Live Stream' });
     if (
       (authCtx.user.role == 'Admin' || authCtx.user.role == 'Super Admin') &&
       cameras.length > 17
     ) {
-      setSelectedCameras(cameras.slice(1, 17));
+      setSelectedCameras(location?.state?.livStream ? liveStreamCameras : cameras.slice(1, 17));
     } else if (
       !(authCtx.user.role == 'Admin' || authCtx.user.role == 'Super Admin') &&
       cameras.length > 3
     ) {
-      setSelectedCameras(cameras.slice(1, 3));
+      setSelectedCameras(location?.state?.livStream ? liveStreamCameras : cameras.slice(1, 3));
     } else {
-      setSelectedCameras(cameras.slice(1, cameras.length));
+      setSelectedCameras(
+        location?.state?.livStream ? liveStreamCameras : cameras.slice(1, cameras.length)
+      );
     }
     setSubmitted(true);
-    setAllCamsChecked(true);
+    // if (location?.state?.livStream && liveStreamCameras.length == 1) {
+    //   setAllCamsChecked(true);
+    // } else {
+    //   setAllCamsChecked(false);
+    // }
   }, [cameras]);
+  useEffect(() => {
+    console.log(selectedCameras);
+    setAllCamsChecked(selectedCameras.length == cameras.length ? true : false);
+  }, [selectedCameras]);
+
   const getAvailableStreams = () => {
     API.get('watchstream', {
       params: {
@@ -483,7 +496,7 @@ const WatchStream = () => {
       setSelectedCameras(values);
     }
   };
-
+  // console.log('==location.state?.==', location.state.livStream);
   return (
     <>
       <Box className="listing-wrapper">

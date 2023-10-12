@@ -599,7 +599,7 @@ const Dashboard = () => {
                       ? statisticsData?.activeLiveStreams
                       : []
                   }
-                  title={'Streams'}
+                  title={'Live Streams'}
                   isLoading={isLoading}
                 />
 
@@ -611,7 +611,7 @@ const Dashboard = () => {
                       ? statisticsData?.recentLiveStreams
                       : []
                   }
-                  title={'Streams'}
+                  title={'Recent Streams'}
                   isLoading={isLoading}
                 />
               </CardContent>
