@@ -31,28 +31,42 @@ export default function StreamTable({ rows, columns, title, isLoading }) {
           <Box key={'action'} style={{ width: '5%' }}></Box>
         </Box>
         {rows && rows?.length > 0 ? (
-          <Box style={{ width: '100%', height: '116px', overflowY: 'auto' }} className="table-body">
+          <Box style={{ width: '100%', height: '174px', overflowY: 'auto' }} className="table-body">
             {rows
               //.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
               .map((row, index) => {
                 return (
-                  <>
-                    <Box className="div-row" key={`${row?.room?.room_name}-${index}`}>
-                      <Box style={{ width: '35%' }}>{row?.stream_name}</Box>
-                      <Box style={{ width: '35%' }}>
-                        <Stack
-                          direction={'row'}
-                          alignItems="center"
-                          justifyContent={'flex-start'}
-                          gap={0.5}>
-                          <AccessTimeIcon /> {moment(row?.stream_start_time).format('hh:mm A')}
-                        </Stack>{' '}
-                      </Box>
-                      <Box style={{ width: '45%' }}>
-                        <Chip label={row?.room?.room_name} />{' '}
-                      </Box>
-                      <Box style={{ width: '5%' }}>
-                        <Link
+                  <Box key={`${row?.room?.room_name}-${index}`}>
+                    <Link
+                      to="/watch-stream"
+                      state={{
+                        roomName: row?.room?.room_name,
+                        // eslint-disable-next-line react/prop-types
+                        roomId: row?.room?.room_id,
+                        location: row?.room?.location,
+                        camName: row?.room?.live_stream_cameras[0]?.cam_name,
+                        camId: row?.room?.live_stream_cameras[0]?.cam_id,
+                        streamUrl:
+                          row?.presigned_url || row?.room?.live_stream_cameras[0]?.stream_uri,
+                        livStream: true
+                      }}>
+                      <>
+                        <Box className="div-row">
+                          <Box style={{ width: '35%' }}>{row?.stream_name}</Box>
+                          <Box style={{ width: '35%' }}>
+                            <Stack
+                              direction={'row'}
+                              alignItems="center"
+                              justifyContent={'flex-start'}
+                              gap={0.5}>
+                              <AccessTimeIcon /> {moment(row?.stream_start_time).format('hh:mm A')}
+                            </Stack>{' '}
+                          </Box>
+                          <Box style={{ width: '45%' }}>
+                            <Chip label={row?.room?.room_name} />{' '}
+                          </Box>
+                          <Box style={{ width: '5%' }}>
+                            {/* <Link
                           to="/watch-stream"
                           state={{
                             roomName: row?.room?.room_name,
@@ -64,12 +78,14 @@ export default function StreamTable({ rows, columns, title, isLoading }) {
                             streamUrl:
                               row?.presigned_url || row?.room?.live_stream_cameras[0]?.stream_uri,
                             livStream: true
-                          }}>
-                          <Video />
-                        </Link>
-                      </Box>
-                    </Box>
-                  </>
+                          }}> */}
+                            <Video />
+                            {/* </Link> */}
+                          </Box>
+                        </Box>
+                      </>
+                    </Link>
+                  </Box>
                 );
               })}
           </Box>
