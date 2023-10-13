@@ -184,7 +184,19 @@ module.exports = {
         await Promise.all(
           usersdata.map(async (user) => {
             const activeLiveStreams = await liveStreamServices.getAllActiveStreams(streamObj?.cust_id, user?.dashboard_locations, t);
-            await socketServices.emitResponse(user?.socket_connection_id, {"activeLiveStreams": activeLiveStreams});
+            let recentLiveStreams = await liveStreamServices.getRecentStreams(streamObj?.cust_id,user?.dashboard_locations,t);
+             if (recentLiveStreams.length > 0) {
+               recentLiveStreams = await Promise.all(
+                 recentLiveStreams.map(async (item) => {
+                   const presigned_url = item?.dataValues?.s3_url ?await s3BucketImageUploader.getPresignedUrl(item?.dataValues?.s3_url) : "";
+                   let newDataValue = item.dataValues;
+                   newDataValue.presigned_url = presigned_url;
+                   item.dataValues = newDataValue;
+                   return item;
+                 })
+               );
+             }
+            await socketServices.emitResponse(user?.socket_connection_id, {"activeLiveStreams": activeLiveStreams, "recentLiveStreams": recentLiveStreams});
           })
         );
        }
@@ -309,10 +321,10 @@ module.exports = {
              if (recentLiveStreams.length > 0) {
                recentLiveStreams = await Promise.all(
                  recentLiveStreams.map(async (item) => {
-                   const presigned_url =
+                   const presigned_url = item?.dataValues?.s3_url ?
                      await s3BucketImageUploader.getPresignedUrl(
                        item?.dataValues?.s3_url
-                     );
+                     ) : "";
                    let newDataValue = item.dataValues;
                    newDataValue.presigned_url = presigned_url;
                    item.dataValues = newDataValue;

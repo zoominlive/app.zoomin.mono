@@ -81,18 +81,20 @@ module.exports = {
     let loc_obj = location === "All" ? {} : {location: location};
     
     let activeLiveStreams = await LiveStreams.findAll(
-      { where: { stream_running: true, cust_id: cust_id }, attributes:["stream_id","stream_name", "stream_start_time", "room_id"], 
-      include: [{
-        model: Room,
-        as: "room",
-        where: loc_obj,
-        include: [
-          {
-            model: LiveStreamCameras,
-          }
-        ]
-      }],
-    },
+      { where: { stream_running: true, cust_id: cust_id }, 
+        order: [ ['stream_start_time', 'DESC'] ], 
+        attributes:["stream_id","stream_name", "stream_start_time", "room_id"], 
+        include: [{
+         model: Room,
+         as: "room",
+         where: loc_obj,
+         include: [
+           {
+             model: LiveStreamCameras,
+           }
+         ]
+        }]
+      },
       { transaction: t }
     );
     return activeLiveStreams;
@@ -107,28 +109,21 @@ module.exports = {
     const last24Hours = new Date(currentDate.getTime() - (24 * 60 * 60 * 1000));
 
     let recentLiveStreams = await LiveStreams.findAll(
-      { where: { stream_running: false, 
-        cust_id: cust_id,  
-        stream_stop_time: {
-          [Sequelize.Op.gte]: last24Hours
-        // [Sequelize.Op.between]: [
-        //   oneHourBefore.toISOString(),
-        //   currentTime.toISOString(),
-        // ],
-       }, 
-    }, attributes:["stream_id", "stream_name", "stream_start_time", "s3_url"],
-      include: [{
-        model: Room,
-        as: "room",
-        where: loc_obj,
-        include: [
-          {
-            model: LiveStreamCameras,
-          }
-        ]
-      }],
-      limit: 5
-    },
+      { where: { stream_running: false, cust_id: cust_id, stream_stop_time: {[Sequelize.Op.gte]: last24Hours} },  
+        order: [ ['stream_stop_time', 'DESC'] ],
+        attributes:["stream_id", "stream_name", "stream_start_time", "stream_stop_time", "s3_url"],
+        include: [{
+         model: Room,
+         as: "room",
+         where: loc_obj,
+         include: [
+           {
+             model: LiveStreamCameras,
+           }
+         ]
+        }],
+        limit: 5
+      },
       { transaction: t }
     );
     return recentLiveStreams;
