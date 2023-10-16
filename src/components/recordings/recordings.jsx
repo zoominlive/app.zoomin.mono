@@ -8,7 +8,7 @@ import PlayArrowSharpIcon from '@mui/icons-material/PlayArrowSharp';
 //import VideoOff from '../../assets/video-off.svg';
 import PropTypes from 'prop-types';
 // import _ from 'lodash';
-import { Maximize } from 'react-feather';
+// import { Maximize } from 'react-feather';
 import {
   Box,
   Card,
@@ -239,7 +239,7 @@ const Recordings = () => {
                         className="no-camera-wrapper"
                         pt={2}
                         sx={{
-                          height: 300,
+                          height: 330,
                           backgroundColor: '#C8C6F1',
                           borderRadius: 4
                         }}>
@@ -255,14 +255,14 @@ const Recordings = () => {
                       </Box>
                     </CardContent>
                   </Card>
-                  <Button
+                  {/* <Button
                     className="full-screen-button"
                     onClick={() => {
                       setIsFullScreenDialogOpen(true);
                       handle.enter();
                     }}>
                     <Maximize />
-                  </Button>
+                  </Button> */}
                 </>
               )}
             </Box>

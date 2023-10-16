@@ -59,7 +59,7 @@ export default function StreamTable({ rows, columns, title, isLoading }) {
                               alignItems="center"
                               justifyContent={'flex-start'}
                               gap={0.5}>
-                              <AccessTimeIcon /> {moment(row?.stream_start_time).format('hh:mm A')}
+                              <AccessTimeIcon /> {moment(row?.stream_start_time).format('h:mm A')}
                             </Stack>{' '}
                           </Box>
                           <Box style={{ width: '45%' }}>

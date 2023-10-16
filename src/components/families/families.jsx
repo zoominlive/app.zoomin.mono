@@ -470,24 +470,32 @@ const Families = () => {
                             </AvatarGroup>
                           </TableCell>
                           <TableCell align="left">
-                            {' '}
-                            <AvatarGroup>
-                              {row.children.map((child, index) => (
-                                <>
-                                  <Tooltip
-                                    id="button-report"
-                                    placement="top"
-                                    title={child?.first_name + ' ' + child?.last_name}>
-                                    {/* <Box className="profile-img"> */}
+                            {row.children.length > 1 ? (
+                              <AvatarGroup>
+                                {row.children.map((child, index) => (
+                                  <>
+                                    <Tooltip
+                                      id="button-report"
+                                      placement="top"
+                                      title={child?.first_name + ' ' + child?.last_name}>
+                                      {/* <Box className="profile-img"> */}
 
-                                    <Avatar
-                                      key={
-                                        index
-                                      }>{`${child?.first_name[0]?.toUpperCase()}`}</Avatar>
-                                  </Tooltip>
-                                </>
-                              ))}
-                            </AvatarGroup>
+                                      <Avatar
+                                        key={
+                                          index
+                                        }>{`${child?.first_name[0]?.toUpperCase()}`}</Avatar>
+                                    </Tooltip>
+                                  </>
+                                ))}
+                              </AvatarGroup>
+                            ) : (
+                              <Typography>
+                                {row.children[0]?.first_name &&
+                                  capitalizeFirstLetter(row.children[0]?.first_name)}{' '}
+                                {row.children[0]?.last_name &&
+                                  capitalizeFirstLetter(row.children[0]?.last_name)}
+                              </Typography>
+                            )}
                           </TableCell>
 
                           <TableCell>
