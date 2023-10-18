@@ -2,8 +2,8 @@
 FROM amazonlinux:2 as build
 RUN yum install -y initscripts bash g++ gcc icu git
 # Install as Root
-RUN curl -sL https://rpm.nodesource.com/setup_16.x | bash -
-RUN yum install -y nodejs 
+RUN yum install https://rpm.nodesource.com/pub_16.x/nodistro/repo/nodesource-release-nodistro-1.noarch.rpm -y
+RUN yum install nodejs -y --setopt=nodesource-nodejs.module_hotfixes=1
 RUN npm i -g yarn
 WORKDIR /app
 COPY ./package.json /app/
