@@ -2,21 +2,23 @@ process.on("uncaughtException", function (err) {
   console.error("Error:", err);
 });
 
-const _ = require('lodash');
-const moment = require('moment');
-const customerServices = require('../services/customers');
-const liveStreamServices = require('../services/liveStream');
-const childServices = require('../services/children');
-const familyServices = require('../services/families');
-const socketServices = require('../services/socket');
-const fcmTokensServices = require('../services/fcmTokens');
-const logServices = require('../services/logs');
-const liveStramcameraServices = require('../services/livestreamCameras');
-const dashboardServices = require('../services/dashboard');
-const notificationSender = require('../lib/firebase-services');
-const CONSTANTS = require('../lib/constants');
-const sequelize = require('../lib/database');
-const { v4: uuidv4 } = require('uuid');
+const _ = require("lodash");
+const moment = require("moment");
+const customerServices = require("../services/customers");
+const liveStreamServices = require("../services/liveStream");
+const childServices = require("../services/children");
+const familyServices = require("../services/families");
+const socketServices = require("../services/socket");
+const fcmTokensServices = require("../services/fcmTokens");
+const logServices = require("../services/logs");
+const liveStramcameraServices = require("../services/livestreamCameras");
+const dashboardServices = require("../services/dashboard");
+const userServices = require("../services/users");
+const notificationSender = require("../lib/firebase-services");
+const s3BucketImageUploader = require("../lib/aws-services");
+const CONSTANTS = require("../lib/constants");
+const sequelize = require("../lib/database");
+const { v4: uuidv4 } = require("uuid");
 module.exports = {
   // get endpoint
   getEndpoint: async (req, res, next) => {
@@ -50,7 +52,7 @@ module.exports = {
         response = { serverEndPoint: endPoint };
         // try {
         // const { streamID } = req.query;
-        
+
         // } catch (error) {
         //   await t.rollback();
         //   res.status(500).json({
@@ -63,12 +65,12 @@ module.exports = {
         res.status(200).json({
           IsSuccess: true,
           Data: response,
-          Message: CONSTANTS.RTMP_ENDPOINT
+          Message: CONSTANTS.RTMP_ENDPOINT,
         });
       } else {
         res.status(200).json({
           IsSuccess: true,
-          Data: {room_id: roomID},
+          Data: { room_id: roomID },
           Message: CONSTANTS.LIVE_STREAM_UNAUTHORIZE,
         });
       }
@@ -109,7 +111,7 @@ module.exports = {
         await t.commit();
         res.status(200).json({
           IsSuccess: true,
-          Data: {stream_id: streamID},
+          Data: { stream_id: streamID },
           Message: CONSTANTS.LIVE_STREAM_ALREADY_STARTED,
         });
         return;
@@ -153,25 +155,56 @@ module.exports = {
               stream_id: streamID,
               room_id: roomID,
               //stream_uri: camObj?.stream_uri,
-              stream_uri: `${camObj?.stream_uri}?uid=${req?.user?.family_member_id || req?.user?.user_id}&sid=${camObj?.stream_uri.split('/')[camObj?.stream_uri.split('/').length - 1].split('.')[0]}&uuid=${uuidv4()}`
+              stream_uri: `${camObj?.stream_uri}?uid=${
+                req?.user?.family_member_id || req?.user?.user_id
+              }&sid=${
+                camObj?.stream_uri
+                  .split("/")
+                  [camObj?.stream_uri.split("/").length - 1].split(".")[0]
+              }&uuid=${uuidv4()}`,
             }
           );
         }
         if (!_.isEmpty(socketIds)) {
           await Promise.all(
             socketIds.map(async (id) => {
-              await socketServices.emitResponse(id, {"message": message});
+              await socketServices.emitResponse(id, { message: message });
             })
           );
         }
 
         // update dashboard details
-        await dashboardServices.updateDashboardData(streamObj.cust_id);
+        // let usersLocations = await userServices.getUsersSocketIds(streamObj.cust_id);
+        // const activeLiveStreams = await liveStreamServices.getAllActiveStreams(streamObj.cust_id, usersLocations?.dashboard_locations, t);
+        // await dashboardServices.updateDashboardData(streamObj.cust_id, {activeLiveStreams: activeLiveStreams});
+        let usersdata = await userServices.getUsersSocketIds(streamObj?.cust_id);
+        usersdata = usersdata.filter(user => user.socket_connection_id && user.dashboard_locations);
+        
+       if(!_.isEmpty(usersdata)){
+        await Promise.all(
+          usersdata.map(async (user) => {
+            const activeLiveStreams = await liveStreamServices.getAllActiveStreams(streamObj?.cust_id, user?.dashboard_locations, t);
+            let recentLiveStreams = await liveStreamServices.getRecentStreams(streamObj?.cust_id,user?.dashboard_locations,t);
+             if (recentLiveStreams.length > 0) {
+               recentLiveStreams = await Promise.all(
+                 recentLiveStreams.map(async (item) => {
+                   const presigned_url = item?.dataValues?.s3_url ?await s3BucketImageUploader.getPresignedUrl(item?.dataValues?.s3_url) : "";
+                   let newDataValue = item.dataValues;
+                   newDataValue.presigned_url = presigned_url;
+                   item.dataValues = newDataValue;
+                   return item;
+                 })
+               );
+             }
+            await socketServices.emitResponse(user?.socket_connection_id, {"activeLiveStreams": activeLiveStreams, "recentLiveStreams": recentLiveStreams});
+          })
+        );
+       }
 
         await t.commit();
         res.status(200).json({
           IsSuccess: true,
-          Data: {stream_id: streamID},
+          Data: { stream_id: streamID },
           Message: CONSTANTS.LIVE_STREAM_STARTED,
         });
       }
@@ -212,7 +245,7 @@ module.exports = {
       let updateObj = {
         stream_running: false,
         stream_stop_time: moment().toISOString(),
-        s3_url: s3_url
+        s3_url: s3_url,
       };
 
       await liveStreamServices.updateLiveStream(streamID, updateObj, t);
@@ -223,6 +256,7 @@ module.exports = {
       await liveStramcameraServices.deleteLivestreamCamera(roomID);
 
       let streamObj = await liveStreamServices.getstreamObj(streamID, t);
+       
 
       let childs = await childServices.getChildOfAssignedRoomId(roomID, t);
       let childIds = childs.flatMap((i) => i.child_id);
@@ -260,11 +294,57 @@ module.exports = {
           })
         );
       }
-      await dashboardServices.updateDashboardData(streamObj.cust_id);
+      //console.log('====streamObj.cust_id===',streamObj.cust_id)
+      // await dashboardServices.updateDashboardData(streamObj.cust_id);
+      // console.log('====streamObj====',streamObj);
+      // let usersLocations = await userServices.getUsersSocketIds(streamObj.cust_id);
+      // const activeLiveStreams = await liveStreamServices.getAllActiveStreams(streamObj.cust_id, usersLocations?.dashboard_locations, t);
+      // await dashboardServices.updateDashboardData(streamObj.cust_id, {activeLiveStreams: activeLiveStreams});
+
+      let usersdata = await userServices.getUsersSocketIds(streamObj?.cust_id);
+        usersdata = usersdata.filter(user => user.socket_connection_id && user.dashboard_locations);
+        
+       if (!_.isEmpty(usersdata)) {
+         await Promise.all(
+           usersdata.map(async (user) => {
+             const activeLiveStreams =
+               await liveStreamServices.getAllActiveStreams(
+                 streamObj?.cust_id,
+                 user?.dashboard_locations,
+                 t
+               );
+             let recentLiveStreams = await liveStreamServices.getRecentStreams(
+              streamObj?.cust_id,
+              user?.dashboard_locations,
+               t
+             );
+             if (recentLiveStreams.length > 0) {
+               recentLiveStreams = await Promise.all(
+                 recentLiveStreams.map(async (item) => {
+                   const presigned_url = item?.dataValues?.s3_url ?
+                     await s3BucketImageUploader.getPresignedUrl(
+                       item?.dataValues?.s3_url
+                     ) : "";
+                   let newDataValue = item.dataValues;
+                   newDataValue.presigned_url = presigned_url;
+                   item.dataValues = newDataValue;
+                   return item;
+                 })
+               );
+             }
+
+             await socketServices.emitResponse(user?.socket_connection_id, {
+               activeLiveStreams: activeLiveStreams,
+               recentLiveStreams: recentLiveStreams
+             });
+           })
+         );
+       }
+       
       await t.commit();
       res.status(200).json({
         IsSuccess: true,
-        Data: {stream_id: streamID},
+        Data: { stream_id: streamID },
         Message: CONSTANTS.LIVE_STREAM_STOPPED,
       });
       next();
@@ -295,7 +375,7 @@ module.exports = {
       }
     }
   },
-  
+
   getstreamDetails: async (req, res, next) => {
     const t = await sequelize.transaction();
     try {
@@ -309,7 +389,9 @@ module.exports = {
       res.status(200).json({
         IsSuccess: streamObj ? true : false,
         Data: response,
-        Message: streamObj ? CONSTANTS.LIVE_STREAM_DETAILS : CONSTANTS.LIVE_STREAM_DETAILS_NOT_FOUND,
+        Message: streamObj
+          ? CONSTANTS.LIVE_STREAM_DETAILS
+          : CONSTANTS.LIVE_STREAM_DETAILS_NOT_FOUND,
       });
     } catch (error) {
       await t.rollback();
@@ -323,25 +405,64 @@ module.exports = {
   },
 
   addRecentViewers: async (req, res, next) => {
+    const t = await sequelize.transaction();
     try {
       const params = req.body;
       const recentViewer = await liveStreamServices.addRecentViewers(params);
+      let user_family_obj = await userServices.getUserById(
+        params?.recent_user_id,
+        t
+      );
+      if (!user_family_obj) {
+        user_family_obj = await familyServices.getFailyMemberById(
+          params?.recent_user_id,
+          t
+        );
+      }
+      if (user_family_obj?.cust_id) {
+        // const activeLiveStreams = await liveStreamServices.getAllActiveStreams(user_family_obj?.cust_id, req?.query?.location, t);
+        // const numberofActiveStreamViewers = activeLiveStreams.length > 0 ? await liveStreamServices.getAllActiveStreamViewers(activeLiveStreams.flatMap(i => i.stream_id), t) : 0;
+        
+        // let usersLocations = await userServices.getUsersSocketIds(streamObj.cust_id);
+        // const activeLiveStreams = await liveStreamServices.getAllActiveStreams(streamObj.cust_id, usersLocations?.dashboard_locations, t);
+        
+        // await dashboardServices.updateDashboardData(user_family_obj?.cust_id);
 
+        // let usersLocations = await userServices.getUsersSocketIds(user_family_obj?.cust_id);
+        // console.log('===usersLocations',usersLocations)
+        //const activeLiveStreams = await liveStreamServices.getAllActiveStreams(user_family_obj?.cust_id, usersLocations?.dashboard_locations, t);
+        //const numberofActiveStreamViewers = activeLiveStreams.length > 0 ? await liveStreamServices.getAllActiveStreamViewers(activeLiveStreams.flatMap(i => i.stream_id), t) : 0;
+        
+        let usersdata = await userServices.getUsersSocketIds(user_family_obj?.cust_id);
+        usersdata = usersdata.filter(user => user.socket_connection_id && user.dashboard_locations);
+        
+       if(!_.isEmpty(usersdata)){
+        await Promise.all(
+          usersdata.map(async (user) => {
+            const activeLiveStreams = await liveStreamServices.getAllActiveStreams(user_family_obj?.cust_id, user?.dashboard_locations, t);
+            const numberofActiveStreamViewers = activeLiveStreams.length > 0 ? await liveStreamServices.getAllActiveStreamViewers(activeLiveStreams.flatMap(i => i.stream_id), t) : 0;
+            await socketServices.emitResponse(user?.socket_connection_id, {"numberofActiveStreamViewers" : numberofActiveStreamViewers});
+          })
+        );
+       }
+
+      }
+      await t.commit();
       res.status(200).json({
         IsSuccess: true,
         Data: recentViewer,
-        Message: CONSTANTS.RECENT_VIEWER_ADDED
+        Message: CONSTANTS.RECENT_VIEWER_ADDED,
       });
 
       next();
     } catch (error) {
+      await t.rollback();
       res.status(500).json({
         IsSuccess: false,
         error_log: error,
-        Message: CONSTANTS.INTERNAL_SERVER_ERROR
+        Message: CONSTANTS.INTERNAL_SERVER_ERROR,
       });
       next(error);
     }
   },
-  
 };

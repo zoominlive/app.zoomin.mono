@@ -75,7 +75,7 @@ module.exports = {
         const token = await familyServices.createPasswordToken(primaryParent);
         const name = primaryParent.first_name + ' ' + primaryParent.last_name;
         const originalUrl =
-          process.env.FE_SITE_BASE_URL + 'set-password?' + 'token=' + token + '&type=family';
+          process.env.FE_SITE_BASE_URL + 'set-password?' + 'token=' + token;
         // const short_url = await TinyURL.shorten(originalUrl);
 
         await sendRegistrationMailforFamilyMember(name, primaryParent.email, originalUrl);
@@ -85,7 +85,7 @@ module.exports = {
             const token = await familyServices.createPasswordToken(secondaryParent);
             const name = secondaryParent.first_name + ' ' + secondaryParent.last_name;
             const originalUrl =
-              process.env.FE_SITE_BASE_URL + 'set-password?' + 'token=' + token + '&type=family';
+              process.env.FE_SITE_BASE_URL + 'set-password?' + 'token=' + token;
             // const short_url = await TinyURL.shorten(originalUrl);
 
             await sendRegistrationMailforFamilyMember(name, secondaryParent.email, originalUrl);
@@ -108,7 +108,7 @@ module.exports = {
       });
 
       children = await childServices.createChildren(childObjs, t);
-      await dashboardServices.updateDashboardData(custId);
+      //await dashboardServices.updateDashboardData(custId);
       await t.commit();
 
       res.status(201).json({
@@ -197,7 +197,7 @@ module.exports = {
           const token = await familyServices.createEmailToken(editedFamily, params.email);
           const name = editedFamily.first_name + ' ' + editedFamily.last_name;
           const originalUrl =
-            process.env.FE_SITE_BASE_URL + 'email-change?' + 'token=' + token + '&type=family';
+            process.env.FE_SITE_BASE_URL + 'email-change?' + 'token=' + token;
           // const short_url = await TinyURL.shorten(originalUrl);
           const response = await sendEmailChangeMail(name, params?.email, originalUrl);
         }
@@ -305,7 +305,7 @@ module.exports = {
         const token = await familyServices.createPasswordToken(parent);
         const name = parent.first_name + ' ' + parent.last_name;
         const originalUrl =
-          process.env.FE_SITE_BASE_URL + 'set-password?' + 'token=' + token + '&type=family';
+          process.env.FE_SITE_BASE_URL + 'set-password?' + 'token=' + token;
         // const short_url = await TinyURL.shorten(originalUrl);
 
         await sendRegistrationMailforFamilyMember(name, parent.email, originalUrl);
@@ -496,8 +496,8 @@ module.exports = {
     try {
       const { token, password } = req.body;
       const decodeToken = engine.decrypt(token);
-
       if (decodeToken.familyMemberId) {
+        console.log('calling if=============')
         let familyMember;
 
         familyMember = await familyServices.getFamilyMemberById(decodeToken.familyMemberId, t);
@@ -684,5 +684,45 @@ module.exports = {
         .json({ IsSuccess: false, error_log: error, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
       next(error);
     }
-  }
+  },
+
+  deleteFamilyMember: async (req, res, next) => {
+    const t = await sequelize.transaction();
+    try {
+      const { family_member_id } = req.body;
+
+      await familyServices.deleteFamilyMember(family_member_id, t);
+      await t.commit();
+      res.status(200).json({ IsSuccess: true, Data: {}, Message: CONSTANTS.FAMILY_MEMBER_DELETED });
+      next();
+    } catch (error) {
+      await t.rollback();
+      res
+        .status(500)
+        .json({ IsSuccess: false, error_log: error, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
+      next(error);
+    }
+  },
+
+  deletePrimaryFamilyMember: async (req, res, next) => {
+    const t = await sequelize.transaction();
+    try {
+      const { primary_family_member_id, secondary_family_member_id } = req.body;
+
+      await familyServices.editFamily({family_member_id: primary_family_member_id, status: "Disabled"}, t);
+      await familyServices.deleteFamilyMember(primary_family_member_id, t);
+      
+      let params= { family_member_id: secondary_family_member_id, member_type:"primary" }
+      await familyServices.editFamily(params, t);
+      await t.commit();
+      res.status(200).json({ IsSuccess: true, Data: {}, Message: CONSTANTS.FAMILY_MEMBER_DELETED });
+      next();
+    } catch (error) {
+      await t.rollback();
+      res
+        .status(500)
+        .json({ IsSuccess: false, error_log: error, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
+      next(error);
+    }
+  },
 };

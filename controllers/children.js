@@ -20,7 +20,7 @@ module.exports = {
         params?.rooms?.rooms,
         t
       );
-      await dashboardServices.updateDashboardData(custId);
+      //await dashboardServices.updateDashboardData(custId);
       await t.commit();
       res.status(201).json({
         IsSuccess: true,
@@ -346,5 +346,45 @@ module.exports = {
         console.log(e);
       }
     }
-  }
+  },
+
+  deleteRoomInChild: async (req, res, next) => {
+    const t = await sequelize.transaction();
+    try {
+      const params = req.body;
+
+      const roomsDeleted = await childServices.deleteRoomInChild(params.child_id, params.room_id, t);
+
+      //const child = await childServices.deleteChild(params.child_id, t);
+
+      await t.commit();
+      res.status(200).json({
+        IsSuccess: true,
+        Data: {},
+        Message: CONSTANTS.CHILD_ROOM_DELETED
+      });
+
+      next();
+    } catch (error) {
+      await t.rollback();
+      res.status(500).json({
+        IsSuccess: false,
+        error_log: error,
+        Message: CONSTANTS.INTERNAL_SERVER_ERROR
+      });
+      next(error);
+    } finally {
+      let logObj = {
+        user_id: req?.user?.user_id ? req?.user?.user_id : 'Not Found',
+        function: 'Child',
+        function_type: 'Delete',
+        request: req.body
+      };
+      try {
+        await logServices.addChangeLog(logObj);
+      } catch (e) {
+        console.log(e);
+      }
+    }
+  },
 };

@@ -14,6 +14,7 @@ router.put('/disable', authController, childController.disableChild);
 router.put('/enable', authController, childController.enableChild);
 router.delete('/delete', authController, childController.deleteChild);
 router.post('/addroom', authController, childController.addRoomInChild);
+router.delete('/deleteroom', authController, childController.deleteRoomInChild);
 router.put('/roomschedule', authController, childController.changeRoomScheduler);
 
 module.exports = router;

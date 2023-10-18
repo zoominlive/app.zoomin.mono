@@ -18,4 +18,6 @@ router.post('/setPassword', familyController.validateFamilyMember);
 router.post('/emailChange', familyController.changeRegisteredEmail);
 router.post('/checkLinkValid', familyController.checkLinkValid);
 router.get('/location', authController, familyController.getAllUsersForLocation);
+router.delete('/delete-member', authController, familyController.deleteFamilyMember);
+router.delete('/delete-primary-member', authController, familyController.deletePrimaryFamilyMember);
 module.exports = router;

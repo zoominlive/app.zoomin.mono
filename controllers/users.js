@@ -73,6 +73,7 @@ module.exports = {
       const user = req.user;
       const custId = req.user.cust_id || req.query?.cust_id;
       if(!req.user.cust_id){
+        console.log('calling===================')
         let availableLocations = await customerServices.getLocationDetails(custId)
         let locs = availableLocations.flatMap((i) => i.loc_name);
         user.location = { selected_locations: locs, accessable_locations: locs };
@@ -139,7 +140,7 @@ module.exports = {
         const token = await userServices.createPasswordToken(userData);
         const name = userData.first_name + ' ' + userData.last_name;
         const originalUrl =
-          process.env.FE_SITE_BASE_URL + 'set-password?' + 'token=' + token + '&type=user';
+          process.env.FE_SITE_BASE_URL + 'set-password?' + 'token=' + token;
         // const short_url = await TinyURL.shorten(originalUrl);
 
         await sendRegistrationMailforUser(name, userData.email, originalUrl);
@@ -148,7 +149,7 @@ module.exports = {
           const imageUrl = await s3BucketImageUploader._upload(req.body.image, userData.user_id);
           userData = await userServices.editUserProfile(userData, { image: imageUrl }, t);
         }
-        await dashboardServices.updateDashboardData(params.cust_id);
+        //await dashboardServices.updateDashboardData(params.cust_id);
         // await t.commit();
         res.status(201).json({
           IsSuccess: true,
@@ -218,6 +219,7 @@ module.exports = {
             Data: [],
             Message: !user.is_verified ? CONSTANTS.USER_NOT_VERIFIED : CONSTANTS.USER_DEACTIVATED
           });
+          return
         } else {
           const validPassword = await bcrypt.compare(password, user.password);
 
@@ -244,6 +246,7 @@ module.exports = {
             res
               .status(400)
               .json({ IsSuccess: true, Data: {}, Message: CONSTANTS.INVALID_PASSWORD });
+            return
           }
         }
       } else if (familyUser) {
@@ -257,6 +260,7 @@ module.exports = {
               ? CONSTANTS.USER_NOT_VERIFIED
               : CONSTANTS.USER_DEACTIVATED
           });
+          return
         } else {
           const validPassword = await bcrypt.compare(password, familyUser.password);
 
@@ -283,15 +287,18 @@ module.exports = {
             res
               .status(400)
               .json({ IsSuccess: true, Data: {}, Message: CONSTANTS.INVALID_PASSWORD });
+            return
           }
         }
       } else {
         //await t.commit();
+        console.log('calling=====================')
         res.status(400).json({
           IsSuccess: true,
           Data: {},
           Message: CONSTANTS.USER_NOT_FOUND
         });
+        return
       }
       await t.commit();
       next();
@@ -441,7 +448,76 @@ module.exports = {
         } else {
           res.status(400).json({ IsSuccess: true, Data: {}, Message: CONSTANTS.USER_NOT_FOUND });
         }
-      } else {
+      }
+      else if (decodeToken.familyMemberId) {
+        let familyMember;
+
+        familyMember = await familyServices.getFamilyMemberById(decodeToken.familyMemberId, t);
+
+        if (familyMember) {
+          if (!familyMember?.password) {
+            const salt = await bcrypt.genSaltSync(10);
+            let hashPassword = bcrypt.hashSync(password, salt);
+
+            const setPassword = await familyServices.resetPassword(
+              decodeToken.familyMemberId,
+              hashPassword,
+              t
+            );
+
+            await familyServices.editFamily(
+              {
+                family_member_id: familyMember.family_member_id,
+                password_link: 'inactive'
+              },
+              t
+            );
+            res.status(200).json({
+              IsSuccess: true,
+              Data: {},
+              Message: CONSTANTS.FAMIY_MEMBER_PASS_RESET
+            });
+          } else if (familyMember?.password) {
+            if (familyMember.password === decodeToken?.password) {
+              const salt = await bcrypt.genSaltSync(10);
+              let hashPassword = bcrypt.hashSync(password, salt);
+              const setPassword = await familyServices.resetPassword(
+                decodeToken.familyMemberId,
+                hashPassword,
+                t
+              );
+
+              await familyServices.editFamily(
+                {
+                  family_member_id: familyMember.family_member_id,
+                  password_link: 'inactive'
+                },
+                t
+              );
+              res.status(200).json({
+                IsSuccess: true,
+                Data: {},
+                Message: CONSTANTS.FAMIY_MEMBER_PASS_RESET
+              });
+            } else {
+              res.status(400).json({
+                IsSuccess: false,
+                Data: {},
+                Message: CONSTANTS.PASSWORD_ALREADY_CHANGED
+              });
+            }
+          } else {
+            res.status(400).json({
+              IsSuccess: false,
+              Data: {},
+              Message: CONSTANTS.INVALID_TOKEN
+            });
+          }
+        } else {
+          res.status(400).json({ IsSuccess: true, Data: {}, Message: CONSTANTS.USER_NOT_FOUND });
+        }
+      }
+      else {
         res.status(400).json({ IsSuccess: true, Data: {}, Message: CONSTANTS.LINK_EXPIRED });
       }
       await t.commit();
@@ -476,7 +552,7 @@ module.exports = {
           const token = await userServices.createPasswordToken(userData);
           const name = userData.first_name + ' ' + userData.last_name;
           const originalUrl =
-            process.env.FE_SITE_BASE_URL + 'set-password?' + 'token=' + token + '&type=user';
+            process.env.FE_SITE_BASE_URL + 'set-password?' + 'token=' + token;
           // const short_url = await TinyURL.shorten(originalUrl);
           await sendForgetPasswordMail(name, email, originalUrl);
           await userServices.editUserProfile(user, { password_link: 'active' }, t);
@@ -484,7 +560,7 @@ module.exports = {
           const token = await familyServices.createPasswordToken(userData);
           const name = userData.first_name + ' ' + userData.last_name;
           const originalUrl =
-            process.env.FE_SITE_BASE_URL + 'set-password?' + 'token=' + token + '&type=family';
+            process.env.FE_SITE_BASE_URL + 'set-password?' + 'token=' + token;
           // const short_url = await TinyURL.shorten(originalUrl);
           await sendForgetPasswordMail(name, email, originalUrl);
           await familyServices.editFamily(
@@ -1009,7 +1085,27 @@ module.exports = {
         } else {
           res.status(400).json({ IsSuccess: true, Data: {}, Message: CONSTANTS.USER_NOT_FOUND });
         }
-      } else {
+      }
+      else if (decodeToken?.familyMemberId) {
+        let user;
+
+        user = await familyServices.getFamilyMemberById(decodeToken.familyMemberId);
+
+        if (user) {
+          if (user?.password_link === 'active') {
+            res.status(200).json({ IsSuccess: true, Data: 'active', Message: 'Link is valid' });
+          } else {
+            res.status(400).json({
+              IsSuccess: false,
+              Data: 'inactive',
+              Message: CONSTANTS.LINK_EXPIRED
+            });
+          }
+        } else {
+          res.status(400).json({ IsSuccess: true, Data: {}, Message: CONSTANTS.USER_NOT_FOUND });
+        }
+      }
+      else {
         res.status(400).json({ IsSuccess: true, Data: {}, Message: CONSTANTS.LINK_EXPIRED });
       }
       next();

@@ -2,6 +2,7 @@ const connectToDatabase = require('../models/index');
 const jwt = require('jsonwebtoken');
 const Sequelize = require('sequelize');
 const moment = require('moment');
+const sequelize = require("../lib/database");
 
 module.exports = {
   /* Create stream ID token */
@@ -80,18 +81,20 @@ module.exports = {
     let loc_obj = location === "All" ? {} : {location: location};
     
     let activeLiveStreams = await LiveStreams.findAll(
-      { where: { stream_running: true, cust_id: cust_id }, attributes:["stream_id","stream_name", "stream_start_time", "room_id"], 
-      include: [{
-        model: Room,
-        as: "room",
-        where: loc_obj,
-        include: [
-          {
-            model: LiveStreamCameras,
-          }
-        ]
-      }],
-    },
+      { where: { stream_running: true, cust_id: cust_id }, 
+        order: [ ['stream_start_time', 'DESC'] ], 
+        attributes:["stream_id","stream_name", "stream_start_time", "room_id"], 
+        include: [{
+         model: Room,
+         as: "room",
+         where: loc_obj,
+         include: [
+           {
+             model: LiveStreamCameras,
+           }
+         ]
+        }]
+      },
       { transaction: t }
     );
     return activeLiveStreams;
@@ -100,27 +103,27 @@ module.exports = {
   getRecentStreams: async(cust_id, location='All', t)=> {
     const { LiveStreams, Room, LiveStreamCameras } = await connectToDatabase();
     let loc_obj = location === "All" ? {} : {location: location}
-    let oneHourBefore = new Date();
-    oneHourBefore.setHours(oneHourBefore.getHours() - 1);
-    const currentTime = new Date();
+    // let oneHourBefore = new Date();
+    // oneHourBefore.setHours(oneHourBefore.getHours() - 24);
+    const currentDate = new Date();
+    const last24Hours = new Date(currentDate.getTime() - (24 * 60 * 60 * 1000));
 
     let recentLiveStreams = await LiveStreams.findAll(
-      { where: { stream_running: false, cust_id: cust_id,  stream_start_time: {
-        [Sequelize.Op.between]: [
-          oneHourBefore.toISOString(),
-          currentTime.toISOString(),
-        ],
-      }, }, attributes:["stream_id", "stream_start_time"],
-      include: [{
-        model: Room,
-        as: "room",
-        where: loc_obj,
-        include: [
-          {
-            model: LiveStreamCameras,
-          }
-        ]
-      }], },
+      { where: { stream_running: false, cust_id: cust_id, stream_stop_time: {[Sequelize.Op.gte]: last24Hours} },  
+        order: [ ['stream_stop_time', 'DESC'] ],
+        attributes:["stream_id", "stream_name", "stream_start_time", "stream_stop_time", "s3_url"],
+        include: [{
+         model: Room,
+         as: "room",
+         where: loc_obj,
+         include: [
+           {
+             model: LiveStreamCameras,
+           }
+         ]
+        }],
+        limit: 5
+      },
       { transaction: t }
     );
     return recentLiveStreams;
@@ -141,20 +144,24 @@ module.exports = {
   },
 
   getAllActiveStreamViewers: async (streamIds, t) => {
-    const { LiveStreamRecentViewers, LiveStreams } = await connectToDatabase();
-    let recentViewers = await LiveStreamRecentViewers.findAll(
-      { where: {function: "start"}, 
-      include:[{
-        model: LiveStreams,
-        where: { stream_id: { [Sequelize.Op.in]: streamIds } }
-      }], group: ["viewer_id"] },
-      { transaction: t }
-    );
-
-    return recentViewers;
+    // const { LiveStreamRecentViewers, LiveStreams } = await connectToDatabase();
+    // let recentViewers = await LiveStreamRecentViewers.findAll(
+    //   { where: {function: "start"}, 
+    //   include:[{
+    //     model: LiveStreams,
+    //     where: { stream_id: { [Sequelize.Op.in]: streamIds } }
+    //   }], group: ["viewer_id"] },
+    //   { transaction: t }
+    // );
+let result = await sequelize
+ .query(
+    'SELECT COUNT(DISTINCT sub.viewer_id) AS total_start_only_viewers FROM (SELECT viewer_id FROM live_stream_recent_viewers WHERE `function` = "start" AND stream_id IN (:streamIds) GROUP BY viewer_id) AS sub WHERE NOT EXISTS (SELECT 1 FROM live_stream_recent_viewers WHERE `function` = "stop" AND viewer_id = sub.viewer_id)',
+    { replacements: { streamIds }, type: sequelize.QueryTypes.SELECT }
+ )
+return result[0].total_start_only_viewers;
   },
 
-  getRecordedStreams: async(cust_id, started_at =  moment().format('YYYY-MM-DD 00:00'), location='All', rooms="All", live = true, vod = true, t)=> {
+  getRecordedStreams: async(cust_id, from =  moment().format('YYYY-MM-DD 00:00'), to =  moment(to).format('YYYY-MM-DD 23:59'), location='All', rooms="All", live = true, vod = true, t)=> {
     const { LiveStreams, Room, LiveStreamCameras } = await connectToDatabase();
     let where_obj = location === "All" ? {} : {location: location}
     let status_obj = live == "true" && vod == "true" ? {}: {stream_running: live == "true" ? true : false}
@@ -166,7 +173,7 @@ module.exports = {
     let recordedStreams = await LiveStreams.findAll(
       { where: { cust_id: cust_id, ...status_obj,
       stream_start_time: {
-        [Sequelize.Op.between]: [started_at, moment(started_at).format('YYYY-MM-DD 23:59')],
+        [Sequelize.Op.between]: [from, to],
       },
      }, 
        attributes:["stream_id", "stream_name","stream_running", "s3_url", "created_at"],

@@ -33,7 +33,7 @@ provider:
     JWT_REFRESH_SECRET_KEY: 2d
     ACCESS_TOKEN_EXPIRY: 1d
     REFRESH_TOKEN_EXPIRY: 1d
-    NODE_ENV: productioncd
+    NODE_ENV: production
     FE_SITE_BASE_URL: https://staging.zoominlive.com/
     type: "service_account"
     project_id: "zoomin-push-notifications"
@@ -47,7 +47,7 @@ provider:
     client_x509_cert_url: "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-eg6hb%40zoomin-push-notifications.iam.gserviceaccount.com"
     websocket_endpoint: "https://6i6bw7p391.execute-api.us-east-1.amazonaws.com/stage"
     #websocket_endpoint: "http://localhost:3001"
-    
+
   stage: stage
   region: us-east-1
 custom:
@@ -210,6 +210,5 @@ functions:
 plugins:
   - serverless-offline
   - serverless-prune-versions
-
 
   

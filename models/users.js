@@ -78,6 +78,10 @@ const Users = sequelize.define(
       default: null,
       allowNull: true
     },
+    dashboard_locations: {
+      type: Sequelize.JSON,
+      defaultValue: {}
+    },
     createdAt: { type: Sequelize.DATE, field: 'created_at' },
     updatedAt: { type: Sequelize.DATE, field: 'updated_at' },
     deletedAt: { type: Sequelize.DATE, field: 'deleted_at' }
