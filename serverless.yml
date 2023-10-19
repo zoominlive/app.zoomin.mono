@@ -76,6 +76,16 @@ functions:
     events:
       - httpApi: "*"
 
+  dashboardFunction:
+    handler: handler.handler
+    events:
+      - httpApi:
+          method: "*"
+          path: /api/dashboard
+      - httpApi:
+          method: "*"
+          path: /api/dashboard/setPreference
+  
   cameraFunction:
     handler: handler.handler
     events:

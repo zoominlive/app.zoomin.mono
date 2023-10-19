@@ -12,7 +12,7 @@ var bodyParser = require('body-parser');
 const cors = require('cors');
 
 app.use(cors());
-// To create DB tables from modules and sync DB
+// To create DB tables from models and sync DB
 sequelize.sync();
 
 app.use(bodyParser.json({ limit: '50mb' }));

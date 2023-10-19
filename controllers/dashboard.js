@@ -39,7 +39,7 @@ module.exports = {
       let totalActiveStreams = streams?.data?.filter((stream) => {
         return stream.running === true;
       });
-      
+      console.log("==reached-dashboard==");
       let activeStreams = [];
       totalStreams?.forEach((stream) => {
         totalActiveStreams?.forEach((obj) => {
