@@ -16,8 +16,8 @@ provider:
   websocketsApiRouteSelectionExpression: $request.body.action
   environment:
     AWS_BUCKET_NAME: zoomin-stage-images
-    ACCESS_KEY_ID: AKIAYEUNNGGXZZWD3RES
-    SECRET_ACCESS_KEY: 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
+    ACCESS_KEY_ID: AKIAYEUNNGGXSZ5LFG4C
+    SECRET_ACCESS_KEY: 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
     EMAIL_SOURCE_ACCOUNT: "support@zoominlive.com"
     RDS_HOST: zoomin-1.crzgnnp8iqzv.us-west-2.rds.amazonaws.com
     RDS_PORT: 3306
