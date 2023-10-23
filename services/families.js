@@ -69,6 +69,35 @@ module.exports = {
     return updateFamilyDetails;
   },
 
+  /* Edit family details */
+  updateFamily: async (user, params, t) => {
+    const { Family } = await connectToDatabase();
+    const familyObj = _.omit(user, ["family_member_id"]);
+    let update = {
+      ...familyObj,
+      params
+    };
+    let updateFamilyDetails = await Family.update(
+      update.params,
+      {
+        where: { family_member_id: user.family_member_id },
+      },
+      { transaction: t }
+    );
+    console.log('updateFamilyDetails-->', updateFamilyDetails);
+
+    if (updateFamilyDetails) {
+      updateFamilyDetails = await Family.findOne(
+        {
+          where: { family_member_id: user.family_member_id },
+        },
+        { transaction: t }
+      );
+    }
+
+    return updateFamilyDetails;
+  },
+
   /* Delete Existing family */
   deleteFamily: async (familyId, t) => {
     const { Family, Child } = await connectToDatabase();
