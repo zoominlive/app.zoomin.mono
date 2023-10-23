@@ -19,7 +19,6 @@ const dashboardServices = require('../services/dashboard');
 const CONSTANTS = require('../lib/constants');
 const sequelize = require('../lib/database');
 const notificationSender = require('../lib/firebase-services');
-const { editFamily } = require('./families');
 
 module.exports = {
   sendNotification: async (req, res, next) => {
