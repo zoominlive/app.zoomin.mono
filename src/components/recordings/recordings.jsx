@@ -350,7 +350,7 @@ const Recordings = () => {
     // </Box>
     <>
       <Grid container spacing={3} className="stream-details-wraper ">
-        <Grid item lg={3} md={3} sm={12} xs={12}>
+        <Grid item xl={3} lg={3} md={3} sm={12} xs={12} className="live-mobile-stream">
           <Card sx={{ height: '100%' }}>
             <CardContent className="p-30">
               <Typography variant="subtitle1">Live Mobile Streams</Typography>
@@ -409,7 +409,7 @@ const Recordings = () => {
             </CardContent>
           </Card>
         </Grid>
-        <Grid item lg={9} md={9} sm={12} xs={12}>
+        <Grid item xl={9} lg={9} md={9} sm={12} xs={12} className="active-stream">
           <Card>
             <CardContent>
               <StreamTable
@@ -570,7 +570,7 @@ const Recordings = () => {
               </Grid>
               <Grid item lg={4} md={4} sm={12} xs={12}>
                 <>
-                  <Grid container spacing={2}>
+                  <Grid container spacing={2} sx={{ marginTop: '0px' }}>
                     <Grid item md={6} sm={6}>
                       <FormGroup
                         onChange={(e) => {

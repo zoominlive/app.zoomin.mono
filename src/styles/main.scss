@@ -1864,6 +1864,17 @@
       margin-top: 25px;
     }
   }
+  .live-mobile-stream {
+    @media (min-width: 1920px) {
+      max-width: 20%;
+    }
+  }
+  .active-stream {
+    @media (min-width: 1920px) {
+      max-width: 80%;
+      flex-basis: 80%;
+    }
+  }
 }
 .p-30 {
   padding: 30px !important;
