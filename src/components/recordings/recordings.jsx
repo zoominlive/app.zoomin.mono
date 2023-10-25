@@ -352,10 +352,10 @@ const Recordings = () => {
       <Grid container spacing={3} className="stream-details-wraper ">
         <Grid item xl={3} lg={3} md={3} sm={12} xs={12} className="live-mobile-stream">
           <Card sx={{ height: '100%' }}>
-            <CardContent className="p-30">
+            <CardContent className="p-30 live-stream-card">
               <Typography variant="subtitle1">Live Mobile Streams</Typography>
 
-              <Stack direction={'column'} gap={15} py={5}>
+              <Stack direction={'column'} gap={10} py={3}>
                 <Box>
                   <Typography variant="subtitle2" gutterBottom className="sub-title">
                     Number of Streams

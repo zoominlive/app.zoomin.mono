@@ -1864,15 +1864,23 @@
       margin-top: 25px;
     }
   }
+  .live-stream-card {
+    @media (min-width: 1920px) {
+      padding-top: 30px !important;
+      padding-right: 60px !important;
+      padding-bottom: 30px !important;
+      padding-left: 30px !important;
+    }
+  }
   .live-mobile-stream {
     @media (min-width: 1920px) {
-      max-width: 20%;
+      max-width: fit-content;
     }
   }
   .active-stream {
     @media (min-width: 1920px) {
-      max-width: 80%;
-      flex-basis: 80%;
+      max-width: 100%;
+      flex-grow: 1;
     }
   }
 }

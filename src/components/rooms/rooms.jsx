@@ -261,6 +261,7 @@ const Rooms = () => {
         enqueueSnackbar(response.data.Message, {
           variant: 'success'
         });
+        setDeleteLoading(false);
       } else {
         errorMessageHandler(
           enqueueSnackbar,
