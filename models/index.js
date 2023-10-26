@@ -49,6 +49,14 @@ AccessLogs.hasOne(Users, {
   }
 });
 
+Family.belongsTo(AccessLogs, { foreignKey: 'family_member_id' });
+AccessLogs.hasOne(Family, {
+  sourceKey: 'user_id',
+  foreignKey: {
+    name: 'family_member_id'
+  }
+});
+
 Users.belongsTo(ChangeLogs, { foreignKey: 'user_id' });
 ChangeLogs.hasOne(Users, {
   sourceKey: 'user_id',
