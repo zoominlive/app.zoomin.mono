@@ -600,8 +600,10 @@ const Logs = () => {
           <TableCell component="th" scope="row">
             <Stack direction="row" alignItems="center" spacing={3}>
               <Typography>{`${
-                row?.user?.first_name
+                row?.user
                   ? row?.user?.first_name + ' ' + row?.user?.last_name
+                  : row.family
+                  ? row?.family?.first_name + ' ' + row?.family?.last_name
                   : 'Not Found'
               }`}</Typography>
             </Stack>
@@ -649,6 +651,7 @@ const Logs = () => {
     row: PropTypes.shape({
       createdAt: PropTypes.string,
       user: PropTypes.obj,
+      family: PropTypes.obj,
       function_type: PropTypes.string,
       function: PropTypes.string,
       request: PropTypes.object,
