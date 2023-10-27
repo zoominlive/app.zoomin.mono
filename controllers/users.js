@@ -727,42 +727,145 @@ module.exports = {
       const params = req.body;
       const user = req.user;
 
-      let editedProfile = await userServices.editUserProfile(user, _.omit(params, ['email']), t); // user should not be allowed to edit email directly.
+      if(params.role === 'Family'){
+        let familyMember;
+        try {
+          let emailExist = false;
+          familyMember = await familyServices.getFamilyMemberById(
+            user.family_member_id,
+            t
+          );
+          if (params.email !== familyMember.email) {
+            emailExist = await userServices.checkEmailExist(params.email, t);
+          }
 
-      if (editedProfile) {
-        if (params?.email && params?.email !== user.email) {
-          const newEmail = params.email;
-          const emailExist = await userServices.getUser(newEmail, t);
           if (emailExist) {
             res.status(409).json({
-              IsSuccess: true,
+              IsSuccess: false,
               Data: {},
-              Message: CONSTANTS.PROFILE_UPDATED_EMAIL_ALREADY_EXIST
+              Message: CONSTANTS.EMAIL_EXIST,
             });
           } else {
-            const token = await userServices.createEmailToken(user, newEmail);
-            const name = user.first_name + ' ' + user.last_name;
-            const originalUrl =
-              process.env.FE_SITE_BASE_URL + 'email-change?' + 'token=' + token + '&type=user';
-            // const short_url = await TinyURL.shorten(originalUrl);
+            // params.is_verified =
+            //   familyMember.email != params.email ? false : true;
+            let editedFamily;
+            if (user.is_verified) {
+              editedFamily = await familyServices.updateFamily(user, params, t);
+            } else {
+              editedFamily = await familyServices.editFamily(
+                _.omit(params, ["email"]),
+                t
+              );
+            }
 
-            const response = await sendEmailChangeMail(name, params?.email, originalUrl);
+            if (!user.is_verified) {
+              const token = await familyServices.createEmailToken(
+                editedFamily,
+                params.email
+              );
+              const name =
+                editedFamily.first_name + " " + editedFamily.last_name;
+              const originalUrl =
+                process.env.FE_SITE_BASE_URL +
+                "email-change?" +
+                "token=" +
+                token;
+              // const short_url = await TinyURL.shorten(originalUrl);
+              const response = await sendEmailChangeMail(
+                name,
+                params?.email,
+                originalUrl
+              );
+            }
+
+            if (editedFamily) {
+              res.status(200).json({
+                IsSuccess: true,
+                Data: editedFamily,
+                Message:
+                  CONSTANTS.FAMILY_UPDATED +
+                  ". " +
+                  ` ${
+                    user.is_verified ? "" : CONSTANTS.VEIRFY_UPDATED_EMAIL
+                  }`,
+              });
+            } else {
+              res.status(404).json({
+                IsSuccess: false,
+                Data: {},
+                Message: CONSTANTS.FAMILY_MEMBER_NOT_FOUND,
+              });
+            }
+          }
+        } catch (error) {
+          await t.rollback();
+          res.status(500).json({
+            IsSuccess: false,
+            error_log: error,
+            Message:
+              error.message === "Validation error"
+                ? CONSTANTS.EMAIL_EXIST
+                : CONSTANTS.INTERNAL_SERVER_ERROR,
+          });
+          next(error);
+        } finally {
+          let logObj = {
+            user_id: familyMember?.family_member_id
+              ? familyMember?.family_member_id
+              : "Not Found",
+            function:
+              familyMember?.member_type == "primary"
+                ? "Primary_Family"
+                : "Second_Family",
+            function_type: "Edit",
+            request: req?.body,
+          };
+
+          try {
+            await logServices.addChangeLog(logObj);
+          } catch (e) {
+            console.log(e);
+          }
+        }
+      }else{
+        let editedProfile = await userServices.editUserProfile(user, _.omit(params, ['email']), t); // user should not be allowed to edit email directly.
+  
+        if (editedProfile) {
+          if (params?.email && params?.email !== user.email) {
+            const newEmail = params.email;
+            const emailExist = await userServices.getUser(newEmail, t);
+            if (emailExist) {
+              res.status(409).json({
+                IsSuccess: true,
+                Data: {},
+                Message: CONSTANTS.PROFILE_UPDATED_EMAIL_ALREADY_EXIST
+              });
+            } else {
+              const token = await userServices.createEmailToken(user, newEmail);
+              const name = user.first_name + ' ' + user.last_name;
+              const originalUrl =
+                process.env.FE_SITE_BASE_URL + 'email-change?' + 'token=' + token + '&type=user';
+              // const short_url = await TinyURL.shorten(originalUrl);
+  
+              const response = await sendEmailChangeMail(name, params?.email, originalUrl);
+              res.status(200).json({
+                IsSuccess: true,
+                Data: _.omit(editedProfile, ['password']),
+                Message: CONSTANTS.PROFILE_EDITED_VERIFY_EMAIL
+              });
+            }
+          } else {
             res.status(200).json({
               IsSuccess: true,
               Data: _.omit(editedProfile, ['password']),
-              Message: CONSTANTS.PROFILE_EDITED_VERIFY_EMAIL
+              Message: CONSTANTS.PROFILE_EDITED
             });
           }
         } else {
-          res.status(200).json({
-            IsSuccess: true,
-            Data: _.omit(editedProfile, ['password']),
-            Message: CONSTANTS.PROFILE_EDITED
-          });
+          res.status(400).json({ IsSuccess: true, Data: {}, Message: CONSTANTS.USER_NOT_FOUND });
         }
-      } else {
-        res.status(400).json({ IsSuccess: true, Data: {}, Message: CONSTANTS.USER_NOT_FOUND });
       }
+
       await t.commit();
       next();
     } catch (error) {

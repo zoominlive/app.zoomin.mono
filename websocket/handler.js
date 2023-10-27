@@ -8,6 +8,9 @@ const _ = require("lodash");
 
 module.exports.connectHandler = async (event, context, callback) => {
   try {
+    console.log('==event==', event);
+    console.log('***');
+    console.log('==context==', context);
     return {
       statusCode: 200,
       body: 'Connected.',

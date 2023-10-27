@@ -3,7 +3,7 @@ const Sequelize = require("sequelize");
 const sequelize = require("../lib/database");
 const jwt = require("jsonwebtoken");
 const encrypter = require("object-encrypter");
-const engine = encrypter(process.env.JWT_SECRET_KEY, { ttl: false });
+const engine = encrypter(process.env.JWT_SECRET_KEY, { ttl: true });
 const _ = require("lodash");
 const { v4: uuidv4 } = require("uuid");
 
@@ -144,7 +144,7 @@ module.exports = {
 
   /* Create user token to reset password */
   createPasswordToken: async (user, registerFlag) => {
-    const duration = registerFlag ? 60 * 1000 * 60 * 96 : 900000;
+    const duration = registerFlag ? 60 * 1000 * 60 * 96 : 604800000;
     const token = engine.encrypt(
       { userId: user.user_id, password: user.password },
       duration

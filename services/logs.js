@@ -48,7 +48,7 @@ module.exports = {
       actions
     } = filter;
 
-    const { ChangeLogs, AccessLogs, Users } = await connectToDatabase();
+    const { ChangeLogs, AccessLogs, Users, Family } = await connectToDatabase();
     let locArray = locations.map((loc) => {
       return {
         location: {
@@ -84,9 +84,14 @@ module.exports = {
               [Sequelize.Op.or]: locArray
             },
             attributes: ['first_name', 'last_name'],
-            required: true
+            required: false
+          },
+          {
+            model: Family,
+            attributes: ['first_name', 'last_name'],
+            required: false
           }
-        ]
+        ],
       });
       return { logs: log.rows, count: log.count };
     } else {
