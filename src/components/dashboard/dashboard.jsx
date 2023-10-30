@@ -715,7 +715,18 @@ const Dashboard = () => {
                     defaultWatchStream={defaultWatchStream}
                   />
                 </Grid>
-
+                <Box sx={{ marginBottom: '5px' }}>
+                  {!_.isEmpty(selectedCamera) ? (
+                    <label style={{ color: '#000', paddingLeft: 30 }}>
+                      {'Watching - ' +
+                        selectedCamera?.location +
+                        '/' +
+                        selectedCamera?.room_name +
+                        ' - ' +
+                        selectedCamera?.cam_name}
+                    </label>
+                  ) : null}
+                </Box>
                 <Box className={`video-wrap ${isDeleteDialogOpen ? 'modal-overlay' : ''}`}>
                   {_.isEmpty(selectedCamera) || !playing ? (
                     <Stack
@@ -774,7 +785,7 @@ const Dashboard = () => {
               <Card className="camera-viewing-card">
                 <Stack
                   direction={'row'}
-                  justifyContent={'space-between'}
+                  justifyContent={'space-around'}
                   alignItems={'center'}
                   padding={2}>
                   <Box>

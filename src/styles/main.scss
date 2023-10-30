@@ -1415,7 +1415,7 @@
   }
   video{
     object-fit: none;
-    object-fit: contain;
+    // object-fit: contain;
     background-color: #d9d7ff;
   }
 }
@@ -1554,7 +1554,7 @@
   }
 
   .watch-stream-card {
-    height: 68%;
+    height: 78%;
     // background-color: #000000;
 
     svg {
@@ -2144,7 +2144,7 @@
 }
 
 .camera-viewing-card {
-  height: 29%;
+  height: 28%;
   p {
     padding: 0;
   }
