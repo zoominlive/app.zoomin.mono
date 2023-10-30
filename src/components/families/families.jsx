@@ -392,12 +392,12 @@ const Families = () => {
               <Table sx={{ minWidth: 650 }} aria-label="simple table">
                 <TableHead>
                   <TableRow>
+                    <TableCell align="left">Children</TableCell>
                     <TableCell style={{ minWidth: '150px' }}>Primary Parent</TableCell>
+                    <TableCell align="left">Family</TableCell>
                     <TableCell style={{ minWidth: '100px' }} align="left">
                       Location
                     </TableCell>
-                    <TableCell align="left">Family</TableCell>
-                    <TableCell align="left">Children</TableCell>
                     <TableCell align="left">Schedule End Date</TableCell>
                     <TableCell align="right"></TableCell>
                   </TableRow>
@@ -413,6 +413,34 @@ const Families = () => {
                             setFamilyIndex(index);
                             setFamily(row);
                           }}>
+                          <TableCell align="left">
+                            {row.children.length > 1 ? (
+                              <AvatarGroup>
+                                {row.children.map((child, index) => (
+                                  <>
+                                    <Tooltip
+                                      id="button-report"
+                                      placement="top"
+                                      title={child?.first_name + ' ' + child?.last_name}>
+                                      {/* <Box className="profile-img"> */}
+
+                                      <Avatar
+                                        key={
+                                          index
+                                        }>{`${child?.first_name[0]?.toUpperCase()}`}</Avatar>
+                                    </Tooltip>
+                                  </>
+                                ))}
+                              </AvatarGroup>
+                            ) : (
+                              <Typography>
+                                {row.children[0]?.first_name &&
+                                  capitalizeFirstLetter(row.children[0]?.first_name)}{' '}
+                                {row.children[0]?.last_name &&
+                                  capitalizeFirstLetter(row.children[0]?.last_name)}
+                              </Typography>
+                            )}
+                          </TableCell>
                           <TableCell component="th" scope="row">
                             {/* <Stack direction="row" alignItems="center" spacing={3}>
                               {row?.primary?.profile_image ? (
@@ -455,9 +483,6 @@ const Families = () => {
                             </Box>
                           </TableCell>
                           <TableCell align="left">
-                            <Stack direction="row">{renderFamilyLocations(row.children)}</Stack>
-                          </TableCell>
-                          <TableCell align="left">
                             <AvatarGroup>
                               {row.secondary.map((person, index) => (
                                 <Avatar
@@ -470,32 +495,7 @@ const Families = () => {
                             </AvatarGroup>
                           </TableCell>
                           <TableCell align="left">
-                            {row.children.length > 1 ? (
-                              <AvatarGroup>
-                                {row.children.map((child, index) => (
-                                  <>
-                                    <Tooltip
-                                      id="button-report"
-                                      placement="top"
-                                      title={child?.first_name + ' ' + child?.last_name}>
-                                      {/* <Box className="profile-img"> */}
-
-                                      <Avatar
-                                        key={
-                                          index
-                                        }>{`${child?.first_name[0]?.toUpperCase()}`}</Avatar>
-                                    </Tooltip>
-                                  </>
-                                ))}
-                              </AvatarGroup>
-                            ) : (
-                              <Typography>
-                                {row.children[0]?.first_name &&
-                                  capitalizeFirstLetter(row.children[0]?.first_name)}{' '}
-                                {row.children[0]?.last_name &&
-                                  capitalizeFirstLetter(row.children[0]?.last_name)}
-                              </Typography>
-                            )}
+                            <Stack direction="row">{renderFamilyLocations(row.children)}</Stack>
                           </TableCell>
 
                           <TableCell>

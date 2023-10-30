@@ -72,16 +72,6 @@ const CustomPlayer = (props) => {
       {!_.isEmpty(url) && (
         <Box className="video-player-wrapper" ref={playerContainerRef}>
           <Loader loading={!ready} />
-          {!_.isEmpty(props?.camDetails) ? (
-            <label style={{ position: 'absolute', color: 'white', paddingLeft: 30 }}>
-              {props?.camDetails?.location +
-                '/' +
-                props?.camDetails?.room_name +
-                ' - ' +
-                props?.camDetails?.cam_name}
-            </label>
-          ) : null}
-
           <ReactPlayer
             // url={
             //   props.streamUri.includes('https://live.zoominlive.com')
