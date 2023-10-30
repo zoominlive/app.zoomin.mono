@@ -159,7 +159,7 @@ module.exports = {
         include: [
           {
             model: Child,
-            attributes: ["location", "first_name"],
+            attributes: ["location"],
             where: {
               [Sequelize.Op.and]: {
                 location: {
@@ -179,7 +179,6 @@ module.exports = {
                 ],
               },
             ],
-            order: [["first_name", "ASC"]],
           },
         ],
         where: whereObj,
