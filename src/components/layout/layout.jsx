@@ -108,6 +108,10 @@ const Layout = () => {
         response?.data?.Data?.location?.accessable_locations.forEach((loc) => locs.push(loc));
         setLocations(locs);
         setSelectedLocation(selected_locaions);
+      } else if (response.status !== 200 && response.status !== 500) {
+        setTimeout(() => {
+          getUsers();
+        }, 60000);
       } else {
         errorMessageHandler(
           enqueueSnackbar,
@@ -127,6 +131,37 @@ const Layout = () => {
       window.removeEventListener('resize', handleDrawerToggleOnResize);
     };
   }, []);
+
+  const getUsers = () => {
+    API.get('users', { params: { cust_id: localStorage.getItem('cust_id') } }).then((response) => {
+      if (response.status === 200) {
+        setSelectedLocation(response?.data?.Data?.location?.accessable_locations);
+        authCtx.setLocation(response?.data?.Data?.location?.accessable_locations);
+        authCtx.setUser({
+          ...response.data.Data,
+          location: response.data.Data.location
+        });
+        localStorage.setItem(
+          'user',
+          JSON.stringify({ ...response.data.Data, location: response.data.Data.location })
+        );
+
+        let selected_locaions = response?.data?.Data?.location?.accessable_locations;
+        response?.data?.Data?.location?.accessable_locations.forEach((loc) => locs.push(loc));
+        setLocations(locs);
+        setSelectedLocation(selected_locaions);
+      } else {
+        errorMessageHandler(
+          enqueueSnackbar,
+          response?.response?.data?.Message || 'Something Went Wrong in second trial.',
+          response?.response?.status,
+          authCtx.setAuthError
+        );
+      }
+      setIsLoading(false);
+      setDropdownLoading(false);
+    });
+  };
 
   // Method to toggle drawer when the window size changes
   const handleDrawerToggleOnResize = () => {

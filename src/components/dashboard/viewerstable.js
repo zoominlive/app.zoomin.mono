@@ -46,6 +46,7 @@ export default function ViewersTable({ rows, columns, title, pagination, isLoadi
           ))}
           <Box key={'action'} style={{ width: '5%' }}></Box>
         </Box>
+        {console.log('rows==>', rows)}
         {rows && rows?.length > 0 ? (
           <Box
             style={{
@@ -85,7 +86,7 @@ export default function ViewersTable({ rows, columns, title, pagination, isLoadi
                                 {
                                   first_name: row?.family?.first_name,
                                   last_name: row?.family?.last_name,
-                                  family_member_id: row?.family?.family_member_id
+                                  family_member_id: row?.recent_user_id
                                 }
                               ]
                             : [],
@@ -172,7 +173,7 @@ export default function ViewersTable({ rows, columns, title, pagination, isLoadi
                             ]
                           : [],
                         location: [authCtx?.location],
-                        lastHoursUsers: true
+                        lastHoursUsers: false
                       }}>
                       <Box className="div-row row-marging">
                         <Box style={{ width: '50%' }}>

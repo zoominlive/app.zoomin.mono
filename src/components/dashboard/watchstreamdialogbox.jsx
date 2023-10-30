@@ -74,6 +74,10 @@ const WatchStreamDialogBox = (props) => {
           } else {
             setSelectedLocation([location?.state?.location]);
           }
+        } else if (response.status !== 200 && response.status !== 500) {
+          setTimeout(() => {
+            getAvailableStreamsAgain();
+          }, 60000);
         } else {
           errorMessageHandler(
             enqueueSnackbar,
@@ -86,6 +90,34 @@ const WatchStreamDialogBox = (props) => {
       }
     );
   };
+
+  const getAvailableStreamsAgain = () => {
+    API.get('watchstream', { params: { cust_id: localStorage.getItem('cust_id') } }).then(
+      (response) => {
+        if (response.status === 200) {
+          setCamerasPayload({
+            location: [response?.data?.Data.streamDetails[0]?.location],
+            rooms: response?.data?.Data.streamDetails
+          });
+          if (!location.state) {
+            !selectedLocation.length &&
+              setSelectedLocation([authCtx?.user?.location?.accessable_locations[0]]);
+          } else {
+            setSelectedLocation([location?.state?.location]);
+          }
+        } else {
+          errorMessageHandler(
+            enqueueSnackbar,
+            response?.response?.data?.Message || 'Something Went Wrong2.',
+            response?.response?.status,
+            authCtx.setAuthError
+          );
+        }
+        setDropdownLoading(false);
+      }
+    );
+  };
+
   const handleSetLocations = (_, value, reason, option) => {
     if (reason == 'selectOption' && option?.option == 'Select All' && !allLocationChecked) {
       setSelectedLocation(reason === 'selectOption' ? locations.slice(1, locations.length) : []);

@@ -172,8 +172,9 @@ const Logs = () => {
     { id: 'User_Change_Password', name: 'Change Password' },
     { id: 'Live_Stream', name: 'Live Stream' }
   ];
-
+  console.log('location?.state==>', location?.state);
   useEffect(() => {
+    console.log('inside');
     if (location?.state?.lastHoursUsers) {
       setFromDate(moment());
       setToDate(moment());
@@ -218,39 +219,69 @@ const Logs = () => {
               let familyToAdd;
               if (location?.state?.family) {
                 familyToAdd = location?.state?.family.map((user) => user?.family_member_id);
+                console.log('familyToAdd in if', families);
               } else {
                 familyToAdd = response.data.Data?.map((user) => user?.family_member_id);
+                console.log('familyToAdd in else', families);
               }
               setFamilies([families[0], ...response.data.Data]);
+              console.log('location->', location);
               setSelectedFamilies(
                 location?.state
                   ? response.data.Data.filter((user) => familyToAdd.includes(user.family_member_id))
                   : response.data.Data
               );
-
-              API.get('logs/', {
-                params: {
-                  ...logsPayload,
-                  locations: [authCtx.user.location.accessable_locations[0]],
-                  users: userToAdd,
-                  familyMemberIds: familyToAdd
-                }
-              }).then((response) => {
-                if (response.status === 200) {
-                  setResponseData(response.data.Data.logs);
-                  setcsvGenerated(false);
-                  setLogsList(response.data.Data.logs);
-                  setTotalLogs(response.data.Data.count);
-                } else {
-                  errorMessageHandler(
-                    enqueueSnackbar,
-                    response?.response?.data?.Message || 'Something Went Wrong.',
-                    response?.response?.status,
-                    authCtx.setAuthError
-                  );
-                }
-                setIsLoading(false);
-              });
+              console.log('logsPayload==>', logsPayload);
+              if (location?.state?.lastHoursUsers) {
+                API.get('logs/', {
+                  params: {
+                    ...logsPayload,
+                    from: moment().format('YYYY-MM-DD'),
+                    locations: [authCtx.user.location.accessable_locations[0]],
+                    users: userToAdd,
+                    familyMemberIds: familyToAdd
+                  }
+                }).then((response) => {
+                  if (response.status === 200) {
+                    setResponseData(response.data.Data.logs);
+                    setcsvGenerated(false);
+                    setLogsList(response.data.Data.logs);
+                    setTotalLogs(response.data.Data.count);
+                  } else {
+                    errorMessageHandler(
+                      enqueueSnackbar,
+                      response?.response?.data?.Message || 'Something Went Wrong.',
+                      response?.response?.status,
+                      authCtx.setAuthError
+                    );
+                  }
+                  setIsLoading(false);
+                });
+              } else {
+                API.get('logs/', {
+                  params: {
+                    ...logsPayload,
+                    locations: [authCtx.user.location.accessable_locations[0]],
+                    users: userToAdd,
+                    familyMemberIds: familyToAdd
+                  }
+                }).then((response) => {
+                  if (response.status === 200) {
+                    setResponseData(response.data.Data.logs);
+                    setcsvGenerated(false);
+                    setLogsList(response.data.Data.logs);
+                    setTotalLogs(response.data.Data.count);
+                  } else {
+                    errorMessageHandler(
+                      enqueueSnackbar,
+                      response?.response?.data?.Message || 'Something Went Wrong.',
+                      response?.response?.status,
+                      authCtx.setAuthError
+                    );
+                  }
+                  setIsLoading(false);
+                });
+              }
             } else {
               setIsLoading(false);
               errorMessageHandler(
@@ -299,7 +330,7 @@ const Logs = () => {
     if (familySelected) {
       functionList.push('Second_Family');
     }
-
+    console.log('==reached==');
     setLogsPayload({
       ...logsPayload,
       from: moment(fromDate).format('YYYY-MM-DD'),
@@ -311,6 +342,7 @@ const Logs = () => {
       familyMemberIds: FamilyMemberIds,
       actions: selectedAction
     });
+    console.log('logsPayload after update', logsPayload);
   }, [
     selectedLocation,
     fromDate,
