@@ -159,7 +159,7 @@ module.exports = {
         include: [
           {
             model: Child,
-            attributes: ["location"],
+            attributes: ["location", "first_name"],
             where: {
               [Sequelize.Op.and]: {
                 location: {
@@ -179,6 +179,7 @@ module.exports = {
                 ],
               },
             ],
+            order: [["first_name", "ASC"]],
           },
         ],
         where: whereObj,
@@ -274,6 +275,15 @@ module.exports = {
       { transaction: t }
     );
 
+    families.sort((a, b) => {
+      // Get an array of all first names of children in each family
+      const firstNamesA = a.children.map(child => child.first_name).sort().join(', ');
+      const firstNamesB = b.children.map(child => child.first_name).sort().join(', ');
+    
+      // Compare the concatenated first names
+      return firstNamesA.localeCompare(firstNamesB);
+    });
+    
     let familyArray = [];
     families?.forEach((familyMember) => {
       familyArray.push({
