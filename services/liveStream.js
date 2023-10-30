@@ -109,7 +109,7 @@ module.exports = {
     const last24Hours = new Date(currentDate.getTime() - (24 * 60 * 60 * 1000));
 
     let recentLiveStreams = await LiveStreams.findAll(
-      { where: { stream_running: false, cust_id: cust_id, stream_stop_time: {[Sequelize.Op.gte]: last24Hours} },  
+      { where: { stream_running: false, cust_id: cust_id },  
         order: [ ['stream_stop_time', 'DESC'] ],
         attributes:["stream_id", "stream_name", "stream_start_time", "stream_stop_time", "s3_url"],
         include: [{
@@ -122,7 +122,7 @@ module.exports = {
            }
          ]
         }],
-        limit: 5
+        limit: 10
       },
       { transaction: t }
     );
