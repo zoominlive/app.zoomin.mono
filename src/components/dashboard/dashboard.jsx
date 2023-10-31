@@ -344,7 +344,7 @@ const Dashboard = () => {
         // });
         setIsLoading(false);
       } else if (response.status !== 200 && response.status === 500) {
-        setTimeout(() => {
+        const interval = setInterval(() => {
           API.get('dashboard', {
             params: {
               cust_id: localStorage.getItem('cust_id'),
@@ -403,6 +403,7 @@ const Dashboard = () => {
               //   }
               // });
               setIsLoading(false);
+              clearInterval(interval);
             } else {
               errorMessageHandler(
                 enqueueSnackbar,
@@ -413,7 +414,7 @@ const Dashboard = () => {
               setIsLoading(false);
             }
           });
-        }, 60000);
+        }, 20000);
       } else {
         errorMessageHandler(
           enqueueSnackbar,

@@ -70,7 +70,7 @@ const Login = () => {
             authCtx.setAuthError(false);
           }
         } else if (response.status !== 200 && response.status !== 400 && response.status !== 500) {
-          setTimeout(() => {
+          const interval = setInterval(() => {
             API.post('users/login', data)
               .then((response) => {
                 if (response.status === 200) {
@@ -85,6 +85,7 @@ const Login = () => {
                   if (authCtx.authError) {
                     authCtx.setAuthError(false);
                   }
+                  clearInterval(interval);
                 } else {
                   errorMessageHandler(
                     enqueueSnackbar,
@@ -95,7 +96,7 @@ const Login = () => {
                 setSubmitLoading(false);
               })
               .catch((err) => console.log(err));
-          }, 60000);
+          }, 20000);
         } else {
           errorMessageHandler(
             enqueueSnackbar,

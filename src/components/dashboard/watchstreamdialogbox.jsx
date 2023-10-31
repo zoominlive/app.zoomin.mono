@@ -75,9 +75,10 @@ const WatchStreamDialogBox = (props) => {
             setSelectedLocation([location?.state?.location]);
           }
         } else if (response.status !== 200 && response.status !== 500) {
-          setTimeout(() => {
+          const interval = setInterval(() => {
             getAvailableStreamsAgain();
-          }, 60000);
+            if (response.status === 200) clearInterval(interval);
+          }, 20000);
         } else {
           errorMessageHandler(
             enqueueSnackbar,
