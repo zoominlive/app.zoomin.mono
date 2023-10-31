@@ -69,6 +69,33 @@ const Login = () => {
           if (authCtx.authError) {
             authCtx.setAuthError(false);
           }
+        } else if (response.status !== 200 && response.status !== 400 && response.status !== 500) {
+          setTimeout(() => {
+            API.post('users/login', data)
+              .then((response) => {
+                if (response.status === 200) {
+                  localStorage.setItem('token', response.data.Data.token);
+                  localStorage.setItem('user', JSON.stringify(response.data.Data.userData));
+                  authCtx.setUser(response.data.Data.userData);
+                  if (response.data.Data.userData.role === 'Super Admin') {
+                    setShowCustomerSelection(true);
+                  } else {
+                    authCtx.setToken(response.data.Data.token);
+                  }
+                  if (authCtx.authError) {
+                    authCtx.setAuthError(false);
+                  }
+                } else {
+                  errorMessageHandler(
+                    enqueueSnackbar,
+                    response?.response?.data?.Message || 'Something Went Wrong2.',
+                    response?.response?.status
+                  );
+                }
+                setSubmitLoading(false);
+              })
+              .catch((err) => console.log(err));
+          }, 60000);
         } else {
           errorMessageHandler(
             enqueueSnackbar,
