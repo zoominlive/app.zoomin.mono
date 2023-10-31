@@ -91,6 +91,7 @@ const Dashboard = () => {
   const [parentType, setParentType] = useState('');
   const [roomsList, setRoomsList] = useState([]);
   const [disableLoading, setDisableLoading] = useState(false);
+  const [attemptCount, setAttemptCount] = useState(0);
 
   // const [roomsDropdownLoading, setRoomsDropdownLoading] = useState(false);
   useEffect(() => {
@@ -405,6 +406,11 @@ const Dashboard = () => {
               setIsLoading(false);
               clearInterval(interval);
             } else {
+              setAttemptCount((prevCount) => prevCount + 1);
+              if (attemptCount >= 5) {
+                clearInterval(interval); // Stop after 5 attempts
+                console.log('Maximum attempts reached');
+              }
               errorMessageHandler(
                 enqueueSnackbar,
                 response?.response?.data?.Message || 'Something Went Wrong2.',

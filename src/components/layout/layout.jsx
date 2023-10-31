@@ -62,6 +62,7 @@ const Layout = () => {
   const [locations, setLocations] = useState([]);
   const [selectedLocation, setSelectedLocation] = useState([]);
   const [dropdownLoading, setDropdownLoading] = useState(false);
+  const [attemptCount, setAttemptCount] = useState(0);
 
   const locs = ['Select All'];
   //authCtx?.user?.location?.accessable_locations.forEach((loc) => locs.push(loc));
@@ -111,7 +112,15 @@ const Layout = () => {
       } else if (response.status !== 200 && response.status !== 500) {
         const interval = setInterval(() => {
           getUsers();
-          if (response.status === 200) clearInterval(interval);
+          if (response.status === 200) {
+            clearInterval(interval);
+          } else {
+            setAttemptCount((prevCount) => prevCount + 1);
+            if (attemptCount >= 5) {
+              clearInterval(interval); // Stop after 5 attempts
+              console.log('Maximum attempts reached');
+            }
+          }
         }, 20000);
       } else {
         errorMessageHandler(

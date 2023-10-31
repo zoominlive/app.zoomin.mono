@@ -45,6 +45,7 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showCustomerSelection, setShowCustomerSelection] = useState(false);
   const { enqueueSnackbar } = useSnackbar();
+  const [attemptCount, setAttemptCount] = useState(0);
 
   useEffect(() => {
     if (authCtx.token) {
@@ -87,6 +88,11 @@ const Login = () => {
                   }
                   clearInterval(interval);
                 } else {
+                  setAttemptCount((prevCount) => prevCount + 1);
+                  if (attemptCount >= 5) {
+                    clearInterval(interval); // Stop after 5 attempts
+                    console.log('Maximum attempts reached');
+                  }
                   errorMessageHandler(
                     enqueueSnackbar,
                     response?.response?.data?.Message || 'Something Went Wrong2.',
