@@ -92,7 +92,7 @@ const CustomPlayer = (props) => {
                 ? props?.streamUri
                 : `${authCtx.user.transcoderBaseUrl}${props?.streamUri}`
             }
-            className="react-player"
+            className="react-player custom-wrapper"
             height={'100%'}
             width={'100%'}
             controls={false}

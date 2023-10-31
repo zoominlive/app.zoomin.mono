@@ -703,7 +703,20 @@ const Dashboard = () => {
                   justifyContent={'space-between'}
                   alignContent={'center'}
                   sx={{ backgroundColor: '#fff', padding: '8px 24px' }}>
-                  <Typography style={{ paddingTop: 10 }}>Watch Stream</Typography>
+                  <Stack direction={'row'} alignItems={'center'}>
+                    <Typography style={{ paddingTop: 10 }}> Watch Stream </Typography>
+                    {!_.isEmpty(selectedCamera) ? (
+                      <label className="watching-stream" style={{ color: '#000', paddingTop: 5 }}>
+                        {' | ' +
+                          'Watching - ' +
+                          selectedCamera?.location +
+                          '/' +
+                          selectedCamera?.room_name +
+                          ' - ' +
+                          selectedCamera?.cam_name}
+                      </label>
+                    ) : null}
+                  </Stack>
                   <IconButton id="video-button" onClick={handleOpen}>
                     <Video />
                   </IconButton>
@@ -715,9 +728,11 @@ const Dashboard = () => {
                     defaultWatchStream={defaultWatchStream}
                   />
                 </Grid>
-                <Box sx={{ marginBottom: '5px' }}>
+                <Box sx={{ marginBottom: '10px', marginTop: '-10px' }}>
                   {!_.isEmpty(selectedCamera) ? (
-                    <label style={{ color: '#000', paddingLeft: 30 }}>
+                    <label
+                      className="watching-stream-under-watch-stream"
+                      style={{ color: '#000', paddingLeft: 30 }}>
                       {'Watching - ' +
                         selectedCamera?.location +
                         '/' +
@@ -801,7 +816,8 @@ const Dashboard = () => {
                       borderRadius: 20,
                       background: '#5A53DD',
                       color: '#fff',
-                      textTransform: 'capitalize'
+                      textTransform: 'capitalize',
+                      height: '49px'
                     }}>
                     Multiple Cameras
                   </Button>

@@ -484,6 +484,14 @@ const Families = () => {
                           </TableCell>
                           <TableCell align="left">
                             <AvatarGroup>
+                              {row.secondary.length === 0 && (
+                                <Avatar
+                                  key={index}
+                                  title={`${row.primary?.first_name[0]?.toUpperCase()}${row.primary?.last_name[0]?.toUpperCase()}`}
+                                  src={
+                                    row.primary?.profile_image
+                                  }>{`${row.primary?.first_name[0]?.toUpperCase()}${row.primary?.last_name[0]?.toUpperCase()}`}</Avatar>
+                              )}
                               {row.secondary.map((person, index) => (
                                 <Avatar
                                   key={index}
