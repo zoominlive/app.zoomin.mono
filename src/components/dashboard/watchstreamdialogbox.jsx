@@ -51,6 +51,7 @@ const WatchStreamDialogBox = (props) => {
   const [allLocationChecked, setAllLocationChecked] = useState(false);
   const [selectedCameras, setSelectedCameras] = useState(null);
   const [attemptCount, setAttemptCount] = useState(0);
+  const [intervalId, setIntervalId] = useState(null);
 
   const camLabel = useRef([]);
   const locs = ['Select All'];
@@ -80,15 +81,16 @@ const WatchStreamDialogBox = (props) => {
           const interval = setInterval(() => {
             getAvailableStreamsAgain();
             if (response.status === 200) {
-              clearInterval(interval);
+              clearInterval(intervalId);
             } else {
               setAttemptCount((prevCount) => prevCount + 1);
               if (attemptCount >= 5) {
-                clearInterval(interval); // Stop after 5 attempts
+                clearInterval(intervalId); // Stop after 5 attempts
                 console.log('Maximum attempts reached');
               }
             }
           }, 20000);
+          setIntervalId(interval);
         } else {
           errorMessageHandler(
             enqueueSnackbar,
@@ -199,7 +201,9 @@ const WatchStreamDialogBox = (props) => {
     const locs = ['Select All'];
     authCtx?.user?.location?.accessable_locations.forEach((loc) => locs.push(loc));
     setLocations(locs);
-    getAvailableStreams();
+    if (authCtx.login) {
+      getAvailableStreams();
+    }
     setDropdownLoading(false);
   }, []);
 

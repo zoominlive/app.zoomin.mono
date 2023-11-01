@@ -63,6 +63,7 @@ const Layout = () => {
   const [selectedLocation, setSelectedLocation] = useState([]);
   const [dropdownLoading, setDropdownLoading] = useState(false);
   const [attemptCount, setAttemptCount] = useState(0);
+  const [intervalId, setIntervalId] = useState(null);
 
   const locs = ['Select All'];
   //authCtx?.user?.location?.accessable_locations.forEach((loc) => locs.push(loc));
@@ -92,47 +93,53 @@ const Layout = () => {
     setIsLoading(true);
     setDropdownLoading(true);
     // API Call for Fetching Logged in user detail
-    API.get('users', { params: { cust_id: localStorage.getItem('cust_id') } }).then((response) => {
-      if (response.status === 200) {
-        setSelectedLocation(response?.data?.Data?.location?.accessable_locations);
-        authCtx.setLocation(response?.data?.Data?.location?.accessable_locations);
-        authCtx.setUser({
-          ...response.data.Data,
-          location: response.data.Data.location
-        });
-        localStorage.setItem(
-          'user',
-          JSON.stringify({ ...response.data.Data, location: response.data.Data.location })
-        );
-
-        let selected_locaions = response?.data?.Data?.location?.accessable_locations;
-        response?.data?.Data?.location?.accessable_locations.forEach((loc) => locs.push(loc));
-        setLocations(locs);
-        setSelectedLocation(selected_locaions);
-      } else if (response.status !== 200 && response.status !== 500) {
-        const interval = setInterval(() => {
-          getUsers();
+    // let status = localStorage.getItem('login');
+    if (authCtx.login) {
+      API.get('users', { params: { cust_id: localStorage.getItem('cust_id') } }).then(
+        (response) => {
           if (response.status === 200) {
-            clearInterval(interval);
+            setSelectedLocation(response?.data?.Data?.location?.accessable_locations);
+            authCtx.setLocation(response?.data?.Data?.location?.accessable_locations);
+            authCtx.setUser({
+              ...response.data.Data,
+              location: response.data.Data.location
+            });
+            localStorage.setItem(
+              'user',
+              JSON.stringify({ ...response.data.Data, location: response.data.Data.location })
+            );
+
+            let selected_locaions = response?.data?.Data?.location?.accessable_locations;
+            response?.data?.Data?.location?.accessable_locations.forEach((loc) => locs.push(loc));
+            setLocations(locs);
+            setSelectedLocation(selected_locaions);
+          } else if (response.status !== 200 && response.status !== 500) {
+            const interval = setInterval(() => {
+              getUsers();
+              if (response.status === 200) {
+                clearInterval(intervalId);
+              } else {
+                setAttemptCount((prevCount) => prevCount + 1);
+                if (attemptCount >= 5) {
+                  clearInterval(intervalId); // Stop after 5 attempts
+                  console.log('Maximum attempts reached');
+                }
+              }
+            }, 20000);
+            setIntervalId(interval);
           } else {
-            setAttemptCount((prevCount) => prevCount + 1);
-            if (attemptCount >= 5) {
-              clearInterval(interval); // Stop after 5 attempts
-              console.log('Maximum attempts reached');
-            }
+            errorMessageHandler(
+              enqueueSnackbar,
+              response?.response?.data?.Message || 'Something Went Wrong.',
+              response?.response?.status,
+              authCtx.setAuthError
+            );
           }
-        }, 20000);
-      } else {
-        errorMessageHandler(
-          enqueueSnackbar,
-          response?.response?.data?.Message || 'Something Went Wrong.',
-          response?.response?.status,
-          authCtx.setAuthError
-        );
-      }
-      setIsLoading(false);
-      setDropdownLoading(false);
-    });
+          setIsLoading(false);
+          setDropdownLoading(false);
+        }
+      );
+    }
   }, []);
 
   useEffect(() => {

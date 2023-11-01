@@ -9,7 +9,8 @@ const defaultState = {
     previosPagePath: '',
     custName: localStorage.getItem('cust_name'),
     location: ['Select All'],
-    updateDashboardData: false
+    updateDashboardData: false,
+    login: false
   }
 };
 
@@ -26,6 +27,7 @@ export const AuthContextProvider = (props) => {
   const [previosPagePath, setPreviosPagePath] = useState(defaultState.auth.previosPagePath);
   const [custName, setCustName] = useState(defaultState.auth.custName);
   const [location, setLocation] = useState(defaultState.auth.location);
+  const [login, setLogin] = useState(defaultState.auth.login);
   const [updateDashboardData, setUpdateDashboardData] = useState(
     defaultState.auth.updateDashboardData
   );
@@ -44,6 +46,7 @@ export const AuthContextProvider = (props) => {
   const handleCustName = (name) => setCustName(name);
   const handleLocation = (loc) => setLocation(loc);
   const handleUpdateDashboardData = (value) => setUpdateDashboardData(value);
+  const handleLogin = (value) => setLogin(value);
 
   const context = {
     token,
@@ -53,13 +56,15 @@ export const AuthContextProvider = (props) => {
     custName,
     location,
     updateDashboardData,
+    login,
     setToken: handleToken,
     setUser: handleUser,
     setAuthError: handleAuthError,
     setPreviosPagePath: handlePageChange,
     setCustName: handleCustName,
     setLocation: handleLocation,
-    setUpdateDashboardData: handleUpdateDashboardData
+    setUpdateDashboardData: handleUpdateDashboardData,
+    setLogin: handleLogin
   };
 
   return <AuthContext.Provider value={context}>{props.children}</AuthContext.Provider>;

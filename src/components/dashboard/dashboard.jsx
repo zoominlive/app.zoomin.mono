@@ -92,6 +92,7 @@ const Dashboard = () => {
   const [roomsList, setRoomsList] = useState([]);
   const [disableLoading, setDisableLoading] = useState(false);
   const [attemptCount, setAttemptCount] = useState(0);
+  const [intervalId, setIntervalId] = useState(null);
 
   // const [roomsDropdownLoading, setRoomsDropdownLoading] = useState(false);
   useEffect(() => {
@@ -206,21 +207,23 @@ const Dashboard = () => {
 
   useEffect(() => {
     // setRoomsDropdownLoading(true);
-    API.get('rooms/list', { params: { cust_id: localStorage.getItem('cust_id') } }).then(
-      (response) => {
-        if (response.status === 200) {
-          setRoomsList(response.data.Data);
-        } else {
-          errorMessageHandler(
-            enqueueSnackbar,
-            response?.response?.data?.Message || 'Something Went Wrong.',
-            response?.response?.status,
-            authCtx.setAuthError
-          );
+    if (authCtx.login) {
+      API.get('rooms/list', { params: { cust_id: localStorage.getItem('cust_id') } }).then(
+        (response) => {
+          if (response.status === 200) {
+            setRoomsList(response.data.Data);
+          } else {
+            errorMessageHandler(
+              enqueueSnackbar,
+              response?.response?.data?.Message || 'Something Went Wrong.',
+              response?.response?.status,
+              authCtx.setAuthError
+            );
+          }
+          // setRoomsDropdownLoading(false);
         }
-        // setRoomsDropdownLoading(false);
-      }
-    );
+      );
+    }
   }, []);
 
   const handleOpen = () => {
@@ -276,7 +279,9 @@ const Dashboard = () => {
   }, []);
 
   useEffect(() => {
-    getDashboardData();
+    if (authCtx.login) {
+      getDashboardData();
+    }
   }, [authCtx.location, localStorage.getItem('updateDashboardData'), authCtx.updateDashboardData]);
 
   const getDashboardData = () => {
@@ -404,11 +409,11 @@ const Dashboard = () => {
               //   }
               // });
               setIsLoading(false);
-              clearInterval(interval);
+              clearInterval(intervalId);
             } else {
               setAttemptCount((prevCount) => prevCount + 1);
               if (attemptCount >= 5) {
-                clearInterval(interval); // Stop after 5 attempts
+                clearInterval(intervalId); // Stop after 5 attempts
                 console.log('Maximum attempts reached');
               }
               errorMessageHandler(
@@ -421,6 +426,7 @@ const Dashboard = () => {
             }
           });
         }, 20000);
+        setIntervalId(interval);
       } else {
         errorMessageHandler(
           enqueueSnackbar,

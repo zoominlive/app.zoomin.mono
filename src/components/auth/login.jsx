@@ -46,6 +46,7 @@ const Login = () => {
   const [showCustomerSelection, setShowCustomerSelection] = useState(false);
   const { enqueueSnackbar } = useSnackbar();
   const [attemptCount, setAttemptCount] = useState(0);
+  const [intervalId, setIntervalId] = useState(null);
 
   useEffect(() => {
     if (authCtx.token) {
@@ -66,6 +67,7 @@ const Login = () => {
             setShowCustomerSelection(true);
           } else {
             authCtx.setToken(response.data.Data.token);
+            authCtx.setLogin(true);
           }
           if (authCtx.authError) {
             authCtx.setAuthError(false);
@@ -86,11 +88,11 @@ const Login = () => {
                   if (authCtx.authError) {
                     authCtx.setAuthError(false);
                   }
-                  clearInterval(interval);
+                  clearInterval(intervalId);
                 } else {
                   setAttemptCount((prevCount) => prevCount + 1);
                   if (attemptCount >= 5) {
-                    clearInterval(interval); // Stop after 5 attempts
+                    clearInterval(intervalId); // Stop after 5 attempts
                     console.log('Maximum attempts reached');
                   }
                   errorMessageHandler(
@@ -103,6 +105,7 @@ const Login = () => {
               })
               .catch((err) => console.log(err));
           }, 20000);
+          setIntervalId(interval);
         } else {
           errorMessageHandler(
             enqueueSnackbar,
