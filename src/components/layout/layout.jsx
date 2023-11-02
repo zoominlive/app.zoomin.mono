@@ -62,7 +62,7 @@ const Layout = () => {
   const [locations, setLocations] = useState([]);
   const [selectedLocation, setSelectedLocation] = useState([]);
   const [dropdownLoading, setDropdownLoading] = useState(false);
-  const [attemptCount, setAttemptCount] = useState(0);
+  // eslint-disable-next-line no-unused-vars
   const [intervalId, setIntervalId] = useState(null);
 
   const locs = ['Select All'];
@@ -92,9 +92,61 @@ const Layout = () => {
   useEffect(() => {
     setIsLoading(true);
     setDropdownLoading(true);
+    localStorage.removeItem('RETRYCOUNTER_LAYOUT');
+    localStorage.setItem('RETRYCOUNTER_LAYOUT', 0);
     // API Call for Fetching Logged in user detail
     // let status = localStorage.getItem('login');
-    if (authCtx.login) {
+    API.get('users', { params: { cust_id: localStorage.getItem('cust_id') } }).then((response) => {
+      if (response.status === 200) {
+        setSelectedLocation(response?.data?.Data?.location?.accessable_locations);
+        authCtx.setLocation(response?.data?.Data?.location?.accessable_locations);
+        authCtx.setUser({
+          ...response.data.Data,
+          location: response.data.Data.location
+        });
+        localStorage.setItem(
+          'user',
+          JSON.stringify({ ...response.data.Data, location: response.data.Data.location })
+        );
+
+        let selected_locaions = response?.data?.Data?.location?.accessable_locations;
+        response?.data?.Data?.location?.accessable_locations.forEach((loc) => locs.push(loc));
+        setLocations(locs);
+        setSelectedLocation(selected_locaions);
+      } else if (
+        response.status !== 200 &&
+        response.status !== 500 &&
+        Number(localStorage.getItem('RETRYCOUNTER_LAYOUT') || 0) < 5
+      ) {
+        const interval = setInterval(getUsers, 10000);
+        setIntervalId(interval);
+      } else {
+        errorMessageHandler(
+          enqueueSnackbar,
+          response?.response?.data?.Message || 'Something Went Wrong.',
+          response?.response?.status,
+          authCtx.setAuthError
+        );
+      }
+      setIsLoading(false);
+      setDropdownLoading(false);
+    });
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener('resize', handleDrawerToggleOnResize);
+    return () => {
+      window.removeEventListener('resize', handleDrawerToggleOnResize);
+    };
+  }, []);
+
+  const getUsers = () => {
+    if (Number(localStorage.getItem('RETRYCOUNTER_LAYOUT')) >= 5) {
+      return;
+    } else {
+      const counter = localStorage.getItem('RETRYCOUNTER_LAYOUT');
+      localStorage.setItem('RETRYCOUNTER_LAYOUT', Number(counter) + 1);
+      console.log('RETRYCOUNTER_LAYOUT===>', localStorage.getItem('RETRYCOUNTER_LAYOUT'));
       API.get('users', { params: { cust_id: localStorage.getItem('cust_id') } }).then(
         (response) => {
           if (response.status === 200) {
@@ -113,24 +165,10 @@ const Layout = () => {
             response?.data?.Data?.location?.accessable_locations.forEach((loc) => locs.push(loc));
             setLocations(locs);
             setSelectedLocation(selected_locaions);
-          } else if (response.status !== 200 && response.status !== 500) {
-            const interval = setInterval(() => {
-              getUsers();
-              if (response.status === 200) {
-                clearInterval(intervalId);
-              } else {
-                setAttemptCount((prevCount) => prevCount + 1);
-                if (attemptCount >= 5) {
-                  clearInterval(intervalId); // Stop after 5 attempts
-                  console.log('Maximum attempts reached');
-                }
-              }
-            }, 20000);
-            setIntervalId(interval);
           } else {
             errorMessageHandler(
               enqueueSnackbar,
-              response?.response?.data?.Message || 'Something Went Wrong.',
+              response?.response?.data?.Message || 'Something Went Wrong in second trial.',
               response?.response?.status,
               authCtx.setAuthError
             );
@@ -140,44 +178,6 @@ const Layout = () => {
         }
       );
     }
-  }, []);
-
-  useEffect(() => {
-    window.addEventListener('resize', handleDrawerToggleOnResize);
-    return () => {
-      window.removeEventListener('resize', handleDrawerToggleOnResize);
-    };
-  }, []);
-
-  const getUsers = () => {
-    API.get('users', { params: { cust_id: localStorage.getItem('cust_id') } }).then((response) => {
-      if (response.status === 200) {
-        setSelectedLocation(response?.data?.Data?.location?.accessable_locations);
-        authCtx.setLocation(response?.data?.Data?.location?.accessable_locations);
-        authCtx.setUser({
-          ...response.data.Data,
-          location: response.data.Data.location
-        });
-        localStorage.setItem(
-          'user',
-          JSON.stringify({ ...response.data.Data, location: response.data.Data.location })
-        );
-
-        let selected_locaions = response?.data?.Data?.location?.accessable_locations;
-        response?.data?.Data?.location?.accessable_locations.forEach((loc) => locs.push(loc));
-        setLocations(locs);
-        setSelectedLocation(selected_locaions);
-      } else {
-        errorMessageHandler(
-          enqueueSnackbar,
-          response?.response?.data?.Message || 'Something Went Wrong in second trial.',
-          response?.response?.status,
-          authCtx.setAuthError
-        );
-      }
-      setIsLoading(false);
-      setDropdownLoading(false);
-    });
   };
 
   // Method to toggle drawer when the window size changes

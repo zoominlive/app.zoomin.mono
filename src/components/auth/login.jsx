@@ -45,7 +45,7 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showCustomerSelection, setShowCustomerSelection] = useState(false);
   const { enqueueSnackbar } = useSnackbar();
-  const [attemptCount, setAttemptCount] = useState(0);
+  // const [attemptCount, setAttemptCount] = useState(0);
   const [intervalId, setIntervalId] = useState(null);
 
   useEffect(() => {
@@ -57,6 +57,8 @@ const Login = () => {
   // Method to handle login
   const handleSubmit = (data) => {
     setSubmitLoading(true);
+    localStorage.removeItem('RETRYCOUNTER');
+    localStorage.setItem('RETRYCOUNTER', 0);
     API.post('users/login', data)
       .then((response) => {
         if (response.status === 200) {
@@ -67,45 +69,19 @@ const Login = () => {
             setShowCustomerSelection(true);
           } else {
             authCtx.setToken(response.data.Data.token);
-            authCtx.setLogin(true);
           }
           if (authCtx.authError) {
             authCtx.setAuthError(false);
           }
-        } else if (response.status !== 200 && response.status !== 400 && response.status !== 500) {
-          const interval = setInterval(() => {
-            API.post('users/login', data)
-              .then((response) => {
-                if (response.status === 200) {
-                  localStorage.setItem('token', response.data.Data.token);
-                  localStorage.setItem('user', JSON.stringify(response.data.Data.userData));
-                  authCtx.setUser(response.data.Data.userData);
-                  if (response.data.Data.userData.role === 'Super Admin') {
-                    setShowCustomerSelection(true);
-                  } else {
-                    authCtx.setToken(response.data.Data.token);
-                  }
-                  if (authCtx.authError) {
-                    authCtx.setAuthError(false);
-                  }
-                  clearInterval(intervalId);
-                } else {
-                  setAttemptCount((prevCount) => prevCount + 1);
-                  if (attemptCount >= 5) {
-                    clearInterval(intervalId); // Stop after 5 attempts
-                    console.log('Maximum attempts reached');
-                  }
-                  errorMessageHandler(
-                    enqueueSnackbar,
-                    response?.response?.data?.Message || 'Something Went Wrong2.',
-                    response?.response?.status
-                  );
-                }
-                setSubmitLoading(false);
-              })
-              .catch((err) => console.log(err));
-          }, 20000);
+        } else if (
+          response.status !== 200 &&
+          response.status !== 400 &&
+          response.status !== 500 &&
+          Number(localStorage.getItem('RETRYCOUNTER') || 0) < 5
+        ) {
+          const interval = setInterval(retryLogin, 10000);
           setIntervalId(interval);
+          console.log('intervalId=====>', intervalId);
         } else {
           errorMessageHandler(
             enqueueSnackbar,
@@ -118,6 +94,41 @@ const Login = () => {
       .catch((err) => console.log(err));
   };
 
+  const retryLogin = (data) => {
+    if (Number(localStorage.getItem('RETRYCOUNTER')) >= 5) {
+      // console.log('intervalId==>', intervalId);
+      // clearInterval(intervalId);
+      return;
+    } else {
+      const counter = localStorage.getItem('RETRYCOUNTER');
+      localStorage.setItem('RETRYCOUNTER', Number(counter) + 1);
+      console.log('RETRYCOUNTER===>', localStorage.getItem('RETRYCOUNTER'));
+      API.post('users/login', data)
+        .then((response) => {
+          if (response.status === 200) {
+            localStorage.setItem('token', response.data.Data.token);
+            localStorage.setItem('user', JSON.stringify(response.data.Data.userData));
+            authCtx.setUser(response.data.Data.userData);
+            if (response.data.Data.userData.role === 'Super Admin') {
+              setShowCustomerSelection(true);
+            } else {
+              authCtx.setToken(response.data.Data.token);
+            }
+            if (authCtx.authError) {
+              authCtx.setAuthError(false);
+            }
+          } else {
+            errorMessageHandler(
+              enqueueSnackbar,
+              response?.response?.data?.Message || 'Something Went Wrong2.',
+              response?.response?.status
+            );
+          }
+          setSubmitLoading(false);
+        })
+        .catch((err) => console.log(err));
+    }
+  };
   return (
     <>
       {/* <div style={{}}>

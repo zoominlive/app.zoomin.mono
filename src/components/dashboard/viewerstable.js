@@ -46,7 +46,7 @@ export default function ViewersTable({ rows, columns, title, pagination, isLoadi
           ))}
           <Box key={'action'} style={{ width: '5%' }}></Box>
         </Box>
-        {console.log('rows==>', rows)}
+
         {rows && rows?.length > 0 ? (
           <Box
             style={{

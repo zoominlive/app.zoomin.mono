@@ -50,7 +50,7 @@ const WatchStreamDialogBox = (props) => {
   const [limitReached, setLimitReached] = useState(false);
   const [allLocationChecked, setAllLocationChecked] = useState(false);
   const [selectedCameras, setSelectedCameras] = useState(null);
-  const [attemptCount, setAttemptCount] = useState(0);
+  // eslint-disable-next-line no-unused-vars
   const [intervalId, setIntervalId] = useState(null);
 
   const camLabel = useRef([]);
@@ -64,6 +64,8 @@ const WatchStreamDialogBox = (props) => {
   }, [props?.defaultWatchStream]);
 
   const getAvailableStreams = () => {
+    localStorage.removeItem('RETRYCOUNTER_AVAILABLESTREAMS');
+    localStorage.setItem('RETRYCOUNTER_AVAILABLESTREAMS', 0);
     API.get('watchstream', { params: { cust_id: localStorage.getItem('cust_id') } }).then(
       (response) => {
         if (response.status === 200) {
@@ -77,19 +79,12 @@ const WatchStreamDialogBox = (props) => {
           } else {
             setSelectedLocation([location?.state?.location]);
           }
-        } else if (response.status !== 200 && response.status !== 500) {
-          const interval = setInterval(() => {
-            getAvailableStreamsAgain();
-            if (response.status === 200) {
-              clearInterval(intervalId);
-            } else {
-              setAttemptCount((prevCount) => prevCount + 1);
-              if (attemptCount >= 5) {
-                clearInterval(intervalId); // Stop after 5 attempts
-                console.log('Maximum attempts reached');
-              }
-            }
-          }, 20000);
+        } else if (
+          response.status !== 200 &&
+          response.status !== 500 &&
+          Number(localStorage.getItem('RETRYCOUNTER_AVAILABLESTREAMS') || 0) < 5
+        ) {
+          const interval = setInterval(getAvailableStreamsAgain, 10000);
           setIntervalId(interval);
         } else {
           errorMessageHandler(
@@ -105,30 +100,40 @@ const WatchStreamDialogBox = (props) => {
   };
 
   const getAvailableStreamsAgain = () => {
-    API.get('watchstream', { params: { cust_id: localStorage.getItem('cust_id') } }).then(
-      (response) => {
-        if (response.status === 200) {
-          setCamerasPayload({
-            location: [response?.data?.Data.streamDetails[0]?.location],
-            rooms: response?.data?.Data.streamDetails
-          });
-          if (!location.state) {
-            !selectedLocation.length &&
-              setSelectedLocation([authCtx?.user?.location?.accessable_locations[0]]);
+    if (Number(localStorage.getItem('RETRYCOUNTER_AVAILABLESTREAMS')) >= 5) {
+      return;
+    } else {
+      const counter = localStorage.getItem('RETRYCOUNTER_AVAILABLESTREAMS');
+      localStorage.setItem('RETRYCOUNTER_AVAILABLESTREAMS', Number(counter) + 1);
+      console.log(
+        'RETRYCOUNTER_AVAILABLESTREAMS===>',
+        localStorage.getItem('RETRYCOUNTER_AVAILABLESTREAMS')
+      );
+      API.get('watchstream', { params: { cust_id: localStorage.getItem('cust_id') } }).then(
+        (response) => {
+          if (response.status === 200) {
+            setCamerasPayload({
+              location: [response?.data?.Data.streamDetails[0]?.location],
+              rooms: response?.data?.Data.streamDetails
+            });
+            if (!location.state) {
+              !selectedLocation.length &&
+                setSelectedLocation([authCtx?.user?.location?.accessable_locations[0]]);
+            } else {
+              setSelectedLocation([location?.state?.location]);
+            }
           } else {
-            setSelectedLocation([location?.state?.location]);
+            errorMessageHandler(
+              enqueueSnackbar,
+              response?.response?.data?.Message || 'Something Went Wrong2.',
+              response?.response?.status,
+              authCtx.setAuthError
+            );
           }
-        } else {
-          errorMessageHandler(
-            enqueueSnackbar,
-            response?.response?.data?.Message || 'Something Went Wrong2.',
-            response?.response?.status,
-            authCtx.setAuthError
-          );
+          setDropdownLoading(false);
         }
-        setDropdownLoading(false);
-      }
-    );
+      );
+    }
   };
 
   const handleSetLocations = (_, value, reason, option) => {
@@ -201,9 +206,7 @@ const WatchStreamDialogBox = (props) => {
     const locs = ['Select All'];
     authCtx?.user?.location?.accessable_locations.forEach((loc) => locs.push(loc));
     setLocations(locs);
-    if (authCtx.login) {
-      getAvailableStreams();
-    }
+    getAvailableStreams();
     setDropdownLoading(false);
   }, []);
 

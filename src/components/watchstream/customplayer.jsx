@@ -70,7 +70,15 @@ const CustomPlayer = (props) => {
   return (
     <>
       {!_.isEmpty(url) && (
-        <Box className="video-player-wrapper" ref={playerContainerRef}>
+        <Box
+          className={
+            location.pathname === '/recordings'
+              ? 'video-player-wrapper-recordings-page'
+              : location.pathname === '/watch-stream'
+              ? 'video-player-wrapper-watch-stream-page'
+              : 'video-player-wrapper'
+          }
+          ref={playerContainerRef}>
           <Loader loading={!ready} />
           <ReactPlayer
             // url={
@@ -92,7 +100,9 @@ const CustomPlayer = (props) => {
                 ? props?.streamUri
                 : `${authCtx.user.transcoderBaseUrl}${props?.streamUri}`
             }
-            className="react-player custom-wrapper"
+            className={
+              location.pathname === '/watch-stream' ? 'react-player' : 'react-player custom-wrapper'
+            }
             height={'100%'}
             width={'100%'}
             controls={false}

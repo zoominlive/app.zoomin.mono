@@ -91,7 +91,7 @@ const Dashboard = () => {
   const [parentType, setParentType] = useState('');
   const [roomsList, setRoomsList] = useState([]);
   const [disableLoading, setDisableLoading] = useState(false);
-  const [attemptCount, setAttemptCount] = useState(0);
+  // eslint-disable-next-line no-unused-vars
   const [intervalId, setIntervalId] = useState(null);
 
   // const [roomsDropdownLoading, setRoomsDropdownLoading] = useState(false);
@@ -207,23 +207,21 @@ const Dashboard = () => {
 
   useEffect(() => {
     // setRoomsDropdownLoading(true);
-    if (authCtx.login) {
-      API.get('rooms/list', { params: { cust_id: localStorage.getItem('cust_id') } }).then(
-        (response) => {
-          if (response.status === 200) {
-            setRoomsList(response.data.Data);
-          } else {
-            errorMessageHandler(
-              enqueueSnackbar,
-              response?.response?.data?.Message || 'Something Went Wrong.',
-              response?.response?.status,
-              authCtx.setAuthError
-            );
-          }
-          // setRoomsDropdownLoading(false);
+    API.get('rooms/list', { params: { cust_id: localStorage.getItem('cust_id') } }).then(
+      (response) => {
+        if (response.status === 200) {
+          setRoomsList(response.data.Data);
+        } else {
+          errorMessageHandler(
+            enqueueSnackbar,
+            response?.response?.data?.Message || 'Something Went Wrong.',
+            response?.response?.status,
+            authCtx.setAuthError
+          );
         }
-      );
-    }
+        // setRoomsDropdownLoading(false);
+      }
+    );
   }, []);
 
   const handleOpen = () => {
@@ -279,9 +277,7 @@ const Dashboard = () => {
   }, []);
 
   useEffect(() => {
-    if (authCtx.login) {
-      getDashboardData();
-    }
+    getDashboardData();
   }, [authCtx.location, localStorage.getItem('updateDashboardData'), authCtx.updateDashboardData]);
 
   const getDashboardData = () => {
@@ -291,6 +287,8 @@ const Dashboard = () => {
     //   localStorage.getItem('updateDashboardData') == undefined ? true : false
     // );
     setIsLoading(true);
+    localStorage.removeItem('RETRYCOUNTER_DASHBOARD');
+    localStorage.setItem('RETRYCOUNTER_DASHBOARD', 0);
     API.get('dashboard', {
       params: {
         cust_id: localStorage.getItem('cust_id'),
@@ -349,83 +347,12 @@ const Dashboard = () => {
         //   }
         // });
         setIsLoading(false);
-      } else if (response.status !== 200 && response.status === 500) {
-        const interval = setInterval(() => {
-          API.get('dashboard', {
-            params: {
-              cust_id: localStorage.getItem('cust_id'),
-              location: authCtx?.location
-            }
-          }).then((response) => {
-            if (response.status === 200) {
-              localStorage.setItem('updateDashboardData', false);
-              authCtx.setUpdateDashboardData(false);
-              setStatisticsData(response.data.Data);
-              const points = response?.data?.Data?.enroledStreamsDetails.map((point) => ({
-                type: 'Feature',
-                properties: { cluster: false, rv_id: point.rv_id, label: point.location_name },
-                geometry: {
-                  type: 'Point',
-                  coordinates: [parseFloat(point.long), parseFloat(point.lat)]
-                }
-              }));
-              setMapsData(points);
-              if (
-                response?.data?.Data?.defaultWatchStream?.locations?.length > 0 &&
-                response?.data?.Data?.defaultWatchStream?.rooms &&
-                response?.data?.Data?.defaultWatchStream?.cameras
-              ) {
-                setDefaultWatchStream(response?.data?.Data?.defaultWatchStream);
-                setSelectedCamera(
-                  response?.data?.Data?.defaultWatchStream?.cameras
-                    ? response?.data?.Data?.defaultWatchStream?.cameras
-                    : {}
-                );
-              } else {
-                setDefaultWatchStream({
-                  locations: [response?.data?.Data?.watchStreamDetails?.location],
-                  rooms: [response?.data?.Data?.watchStreamDetails],
-                  cameras: response?.data?.Data?.watchStreamDetails?.cameras[0]
-                });
-                setSelectedCamera(
-                  response?.data?.Data?.watchStreamDetails?.cameras[0]
-                    ? {
-                        ...response?.data?.Data?.watchStreamDetails,
-                        ...response?.data?.Data?.watchStreamDetails?.cameras[0]
-                      }
-                    : {}
-                );
-              }
-              setTimeOut(response?.data?.Data?.watchStreamDetails?.timeout);
-              // setFamily((prevState) => {
-              //   const tempFamily = { ...prevState };
-              //   if (tempFamily) {
-              //     let obj = response?.data?.Data?.childrenWithEnableDate?.find(
-              //       (o) => o?.primary?.family_id === tempFamily?.primary?.family_id
-              //     );
-              //     return obj;
-              //   } else {
-              //     return null;
-              //   }
-              // });
-              setIsLoading(false);
-              clearInterval(intervalId);
-            } else {
-              setAttemptCount((prevCount) => prevCount + 1);
-              if (attemptCount >= 5) {
-                clearInterval(intervalId); // Stop after 5 attempts
-                console.log('Maximum attempts reached');
-              }
-              errorMessageHandler(
-                enqueueSnackbar,
-                response?.response?.data?.Message || 'Something Went Wrong2.',
-                response?.response?.status,
-                authCtx.setAuthError
-              );
-              setIsLoading(false);
-            }
-          });
-        }, 20000);
+      } else if (
+        response.status !== 200 &&
+        response.status !== 500 &&
+        Number(localStorage.getItem('RETRYCOUNTER_AVAILABLESTREAMS') || 0) < 5
+      ) {
+        const interval = setInterval(getDashboardDataAgain, 10000);
         setIntervalId(interval);
       } else {
         errorMessageHandler(
@@ -437,6 +364,84 @@ const Dashboard = () => {
         setIsLoading(false);
       }
     });
+  };
+
+  const getDashboardDataAgain = () => {
+    if (Number(localStorage.getItem('RETRYCOUNTER_DASHBOARD')) >= 5) {
+      return;
+    } else {
+      const counter = localStorage.getItem('RETRYCOUNTER_DASHBOARD');
+      localStorage.setItem('RETRYCOUNTER_DASHBOARD', Number(counter) + 1);
+      console.log('RETRYCOUNTER_DASHBOARD===>', localStorage.getItem('RETRYCOUNTER_DASHBOARD'));
+      API.get('dashboard', {
+        params: {
+          cust_id: localStorage.getItem('cust_id'),
+          location: authCtx?.location
+        }
+      }).then((response) => {
+        if (response.status === 200) {
+          localStorage.setItem('updateDashboardData', false);
+          authCtx.setUpdateDashboardData(false);
+          setStatisticsData(response.data.Data);
+          const points = response?.data?.Data?.enroledStreamsDetails.map((point) => ({
+            type: 'Feature',
+            properties: { cluster: false, rv_id: point.rv_id, label: point.location_name },
+            geometry: {
+              type: 'Point',
+              coordinates: [parseFloat(point.long), parseFloat(point.lat)]
+            }
+          }));
+          setMapsData(points);
+          if (
+            response?.data?.Data?.defaultWatchStream?.locations?.length > 0 &&
+            response?.data?.Data?.defaultWatchStream?.rooms &&
+            response?.data?.Data?.defaultWatchStream?.cameras
+          ) {
+            setDefaultWatchStream(response?.data?.Data?.defaultWatchStream);
+            setSelectedCamera(
+              response?.data?.Data?.defaultWatchStream?.cameras
+                ? response?.data?.Data?.defaultWatchStream?.cameras
+                : {}
+            );
+          } else {
+            setDefaultWatchStream({
+              locations: [response?.data?.Data?.watchStreamDetails?.location],
+              rooms: [response?.data?.Data?.watchStreamDetails],
+              cameras: response?.data?.Data?.watchStreamDetails?.cameras[0]
+            });
+            setSelectedCamera(
+              response?.data?.Data?.watchStreamDetails?.cameras[0]
+                ? {
+                    ...response?.data?.Data?.watchStreamDetails,
+                    ...response?.data?.Data?.watchStreamDetails?.cameras[0]
+                  }
+                : {}
+            );
+          }
+          setTimeOut(response?.data?.Data?.watchStreamDetails?.timeout);
+          // setFamily((prevState) => {
+          //   const tempFamily = { ...prevState };
+          //   if (tempFamily) {
+          //     let obj = response?.data?.Data?.childrenWithEnableDate?.find(
+          //       (o) => o?.primary?.family_id === tempFamily?.primary?.family_id
+          //     );
+          //     return obj;
+          //   } else {
+          //     return null;
+          //   }
+          // });
+          setIsLoading(false);
+        } else {
+          errorMessageHandler(
+            enqueueSnackbar,
+            response?.response?.data?.Message || 'Something Went Wrong.',
+            response?.response?.status,
+            authCtx.setAuthError
+          );
+          setIsLoading(false);
+        }
+      });
+    }
   };
 
   return (
