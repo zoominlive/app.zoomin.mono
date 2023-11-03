@@ -10,7 +10,7 @@ import {
   InputLabel
 } from '@mui/material';
 import { Form, Formik } from 'formik';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import * as yup from 'yup';
@@ -26,6 +26,7 @@ import { errorMessageHandler } from '../../utils/errormessagehandler';
 import CustomerSelection from './customerSelection';
 import TitleDiv from './titlediv';
 import LinkDiv from './linkdiv';
+import Logger from '../../utils/logger';
 // import AuthBg from '../../assets/auth-bg.png';
 const validationSchema = yup.object({
   email: yup
@@ -46,7 +47,8 @@ const Login = () => {
   const [showCustomerSelection, setShowCustomerSelection] = useState(false);
   const { enqueueSnackbar } = useSnackbar();
   // const [attemptCount, setAttemptCount] = useState(0);
-  const [intervalId, setIntervalId] = useState(null);
+  // const [intervalId, setIntervalId] = useState(null);
+  let timer = useRef(null);
 
   useEffect(() => {
     if (authCtx.token) {
@@ -74,14 +76,13 @@ const Login = () => {
             authCtx.setAuthError(false);
           }
         } else if (
-          response.status !== 200 &&
-          response.status !== 400 &&
-          response.status !== 500 &&
+          response.response.status !== 400 &&
+          response.response.status !== 500 &&
           Number(localStorage.getItem('RETRYCOUNTER') || 0) < 5
         ) {
-          const interval = setInterval(retryLogin, 10000);
-          setIntervalId(interval);
-          console.log('intervalId=====>', intervalId);
+          timer = setInterval(retryLogin, 15000);
+          // setIntervalId(timer);
+          Logger.log('timer=====>', timer);
         } else {
           errorMessageHandler(
             enqueueSnackbar,
@@ -96,13 +97,13 @@ const Login = () => {
 
   const retryLogin = (data) => {
     if (Number(localStorage.getItem('RETRYCOUNTER')) >= 5) {
-      // console.log('intervalId==>', intervalId);
-      // clearInterval(intervalId);
+      Logger.log('timer==>', timer);
+      clearInterval(timer);
       return;
     } else {
       const counter = localStorage.getItem('RETRYCOUNTER');
       localStorage.setItem('RETRYCOUNTER', Number(counter) + 1);
-      console.log('RETRYCOUNTER===>', localStorage.getItem('RETRYCOUNTER'));
+      Logger.log('RETRYCOUNTER===>', localStorage.getItem('RETRYCOUNTER'));
       API.post('users/login', data)
         .then((response) => {
           if (response.status === 200) {
@@ -116,6 +117,9 @@ const Login = () => {
             }
             if (authCtx.authError) {
               authCtx.setAuthError(false);
+            }
+            if (timer) {
+              clearInterval(timer);
             }
           } else {
             errorMessageHandler(

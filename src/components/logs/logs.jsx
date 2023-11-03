@@ -46,6 +46,7 @@ import NoDataDiv from '../common/nodatadiv';
 import PropTypes from 'prop-types';
 import { useLocation } from 'react-router-dom';
 import LinerLoader from '../common/linearLoader';
+import Logger from '../../utils/logger';
 const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
 const checkedIcon = <CheckBoxIcon fontSize="small" />;
 
@@ -172,9 +173,9 @@ const Logs = () => {
     { id: 'User_Change_Password', name: 'Change Password' },
     { id: 'Live_Stream', name: 'Live Stream' }
   ];
-  console.log('location?.state==>', location?.state);
+  Logger.log('location?.state==>', location?.state);
   useEffect(() => {
-    console.log('inside');
+    Logger.log('inside');
     if (location?.state?.lastHoursUsers) {
       setFromDate(moment());
       setToDate(moment());
@@ -225,13 +226,13 @@ const Logs = () => {
                 console.log('familyToAdd in else', families);
               }
               setFamilies([families[0], ...response.data.Data]);
-              console.log('location->', location);
+              Logger.log('location->', location);
               setSelectedFamilies(
                 location?.state
                   ? response.data.Data.filter((user) => familyToAdd.includes(user.family_member_id))
                   : response.data.Data
               );
-              console.log('logsPayload==>', logsPayload);
+              Logger.log('logsPayload==>', logsPayload);
               if (location?.state?.lastHoursUsers) {
                 API.get('logs/', {
                   params: {
@@ -330,7 +331,7 @@ const Logs = () => {
     if (familySelected) {
       functionList.push('Second_Family');
     }
-    console.log('==reached==');
+    Logger.log('==reached==');
     setLogsPayload({
       ...logsPayload,
       from: moment(fromDate).format('YYYY-MM-DD'),
@@ -342,7 +343,7 @@ const Logs = () => {
       familyMemberIds: FamilyMemberIds,
       actions: selectedAction
     });
-    console.log('logsPayload after update', logsPayload);
+    Logger.log('logsPayload after update', logsPayload);
   }, [
     selectedLocation,
     fromDate,

@@ -54,6 +54,7 @@ import CustomPlayer from '../watchstream/customplayer';
 import { FullScreen, useFullScreenHandle } from 'react-full-screen';
 import FullScreenDialog from '../watchstream/fullscreendialog';
 import LinerLoader from '../common/linearLoader';
+import Logger from '../../utils/logger';
 //import FullScreenDialog from '../watchstream/fullscreendialog';
 const streamColumns = ['Stream Name', 'Time', 'Room'];
 
@@ -182,7 +183,7 @@ const Recordings = () => {
     const [playing, setPlaying] = useState(true);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [isFullScreenDialogOpen, setIsFullScreenDialogOpen] = useState(false);
-    console.log('=isDeleteDialogOpen=', isDeleteDialogOpen, selectedRooms);
+    Logger.log('=isDeleteDialogOpen=', isDeleteDialogOpen, selectedRooms);
     return (
       <>
         <TableRow hover>

@@ -26,6 +26,7 @@ import AuthContext from '../../context/authcontext';
 import { useSnackbar } from 'notistack';
 import CloseIcon from '@mui/icons-material/Close';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
+import Logger from '../../utils/logger';
 
 const icon = <RadioButtonUncheckedIcon fontSize="small" />;
 const checkedIcon = <CheckCircleOutlineIcon fontSize="small" style={{ color: '#5A53DD' }} />;
@@ -51,8 +52,8 @@ const WatchStreamDialogBox = (props) => {
   const [allLocationChecked, setAllLocationChecked] = useState(false);
   const [selectedCameras, setSelectedCameras] = useState(null);
   // eslint-disable-next-line no-unused-vars
-  const [intervalId, setIntervalId] = useState(null);
-
+  // const [intervalId, setIntervalId] = useState(null);
+  let timer = useRef(null);
   const camLabel = useRef([]);
   const locs = ['Select All'];
   authCtx?.user?.location?.accessable_locations.forEach((loc) => locs.push(loc));
@@ -80,12 +81,11 @@ const WatchStreamDialogBox = (props) => {
             setSelectedLocation([location?.state?.location]);
           }
         } else if (
-          response.status !== 200 &&
-          response.status !== 500 &&
+          response.response.status !== 500 &&
           Number(localStorage.getItem('RETRYCOUNTER_AVAILABLESTREAMS') || 0) < 5
         ) {
-          const interval = setInterval(getAvailableStreamsAgain, 10000);
-          setIntervalId(interval);
+          timer = setInterval(getAvailableStreamsAgain, 15000);
+          // setIntervalId(interval);
         } else {
           errorMessageHandler(
             enqueueSnackbar,
@@ -101,11 +101,12 @@ const WatchStreamDialogBox = (props) => {
 
   const getAvailableStreamsAgain = () => {
     if (Number(localStorage.getItem('RETRYCOUNTER_AVAILABLESTREAMS')) >= 5) {
+      clearInterval(timer);
       return;
     } else {
       const counter = localStorage.getItem('RETRYCOUNTER_AVAILABLESTREAMS');
       localStorage.setItem('RETRYCOUNTER_AVAILABLESTREAMS', Number(counter) + 1);
-      console.log(
+      Logger.log(
         'RETRYCOUNTER_AVAILABLESTREAMS===>',
         localStorage.getItem('RETRYCOUNTER_AVAILABLESTREAMS')
       );
@@ -121,6 +122,9 @@ const WatchStreamDialogBox = (props) => {
                 setSelectedLocation([authCtx?.user?.location?.accessable_locations[0]]);
             } else {
               setSelectedLocation([location?.state?.location]);
+            }
+            if (timer) {
+              clearInterval(timer);
             }
           } else {
             errorMessageHandler(

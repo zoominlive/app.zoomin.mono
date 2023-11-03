@@ -14,7 +14,7 @@ import {
 } from '@mui/material';
 import dayjs from 'dayjs';
 import { useSnackbar } from 'notistack';
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useEffect } from 'react';
 import { useContext } from 'react';
 import API from '../../api';
@@ -44,6 +44,7 @@ import ChildForm from '../families/childform';
 import DisableDialog from '../families/disabledialog';
 import RoomAddForm from '../families/roomaddform';
 import LinerLoader from '../common/linearLoader';
+import Logger from '../../utils/logger';
 
 const AccessColumns = [
   { label: 'Children', width: '70%' },
@@ -92,7 +93,8 @@ const Dashboard = () => {
   const [roomsList, setRoomsList] = useState([]);
   const [disableLoading, setDisableLoading] = useState(false);
   // eslint-disable-next-line no-unused-vars
-  const [intervalId, setIntervalId] = useState(null);
+  // const [intervalId, setIntervalId] = useState(null);
+  let timer = useRef(null);
 
   // const [roomsDropdownLoading, setRoomsDropdownLoading] = useState(false);
   useEffect(() => {
@@ -348,12 +350,12 @@ const Dashboard = () => {
         // });
         setIsLoading(false);
       } else if (
-        response.status !== 200 &&
-        response.status !== 500 &&
+        response.response.status !== 500 &&
         Number(localStorage.getItem('RETRYCOUNTER_AVAILABLESTREAMS') || 0) < 5
       ) {
-        const interval = setInterval(getDashboardDataAgain, 10000);
-        setIntervalId(interval);
+        timer = setInterval(getDashboardDataAgain, 15000);
+        Logger.log('timer', timer);
+        // setIntervalId(interval);
       } else {
         errorMessageHandler(
           enqueueSnackbar,
@@ -368,11 +370,13 @@ const Dashboard = () => {
 
   const getDashboardDataAgain = () => {
     if (Number(localStorage.getItem('RETRYCOUNTER_DASHBOARD')) >= 5) {
+      Logger.log('timer after 5 trials', timer);
+      clearInterval(timer);
       return;
     } else {
       const counter = localStorage.getItem('RETRYCOUNTER_DASHBOARD');
       localStorage.setItem('RETRYCOUNTER_DASHBOARD', Number(counter) + 1);
-      console.log('RETRYCOUNTER_DASHBOARD===>', localStorage.getItem('RETRYCOUNTER_DASHBOARD'));
+      Logger.log('RETRYCOUNTER_DASHBOARD===>', localStorage.getItem('RETRYCOUNTER_DASHBOARD'));
       API.get('dashboard', {
         params: {
           cust_id: localStorage.getItem('cust_id'),
@@ -431,10 +435,13 @@ const Dashboard = () => {
           //   }
           // });
           setIsLoading(false);
+          if (timer) {
+            clearInterval(timer);
+          }
         } else {
           errorMessageHandler(
             enqueueSnackbar,
-            response?.response?.data?.Message || 'Something Went Wrong.',
+            response?.response?.data?.Message || 'Something Went Wrong2.',
             response?.response?.status,
             authCtx.setAuthError
           );
