@@ -40,8 +40,9 @@ module.exports = {
               include: [
                 {
                   model: RoomsInChild,
-                  attributes: ["room_id"],
+                  attributes: ["room_id", "disabled"],
                   as: "roomsInChild",
+                  where: {disabled: "false"},
                   include: [
                     {
                       attributes: ["room_name"],
@@ -87,21 +88,24 @@ module.exports = {
         if (item.family) {
           user.location.accessable_locations.forEach((i) => {
             if (item.family?.location?.accessable_locations.includes(i)) {
-              result.push(item);
+              if(!result.includes(item)){
+                result.push(item);
+              }
             }
           });
         } else {
           user.location.accessable_locations.forEach((i) => {
             if (item.user?.location?.accessable_locations.includes(i)) {
-              result.push(item);
+              if(!result.includes(item)){
+                result.push(item);
+              }
             }
           });
         }
       });
     }
-
+    let filterResult = []
     if(!location.includes("Select All")){
-      let filterResult = []
        result.map(i => {
         if(i.family){
           if(i.family?.location?.accessable_locations.every(i => location.includes(i))){
