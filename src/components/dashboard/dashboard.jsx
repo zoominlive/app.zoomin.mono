@@ -733,7 +733,6 @@ const Dashboard = () => {
                     {!_.isEmpty(selectedCamera) ? (
                       <label className="watching-stream" style={{ color: '#000', paddingTop: 5 }}>
                         {' | ' +
-                          'Watching - ' +
                           selectedCamera?.location +
                           '/' +
                           selectedCamera?.room_name +

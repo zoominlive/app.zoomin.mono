@@ -1407,6 +1407,15 @@
     position: absolute;
     bottom: 0;
     width: 100%;
+    @media (min-width: 1945px) {
+      bottom: 10px; 
+    }
+    @media (min-width: 2048px) {
+      bottom: 15px; 
+    }
+    @media (min-width: 2304px) {
+      bottom: 40px; 
+    }
 .MuiGrid-root{
   padding-bottom: 5px;
 }
