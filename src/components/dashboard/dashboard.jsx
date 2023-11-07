@@ -731,7 +731,7 @@ const Dashboard = () => {
                   <Stack direction={'row'} alignItems={'center'}>
                     <Typography style={{ paddingTop: 10 }}> Watch Stream </Typography>
                     {!_.isEmpty(selectedCamera) ? (
-                      <label className="watching-stream" style={{ color: '#000', paddingTop: 5 }}>
+                      <label style={{ color: '#000', paddingTop: 5 }}>
                         {' | ' +
                           selectedCamera?.location +
                           '/' +
@@ -752,7 +752,7 @@ const Dashboard = () => {
                     defaultWatchStream={defaultWatchStream}
                   />
                 </Grid>
-                <Box sx={{ marginBottom: '10px', marginTop: '-10px' }}>
+                {/* <Box sx={{ marginBottom: '10px', marginTop: '-10px' }}>
                   {!_.isEmpty(selectedCamera) ? (
                     <label
                       className="watching-stream-under-watch-stream"
@@ -765,7 +765,7 @@ const Dashboard = () => {
                         selectedCamera?.cam_name}
                     </label>
                   ) : null}
-                </Box>
+                </Box> */}
                 <Box className={`video-wrap ${isDeleteDialogOpen ? 'modal-overlay' : ''}`}>
                   {_.isEmpty(selectedCamera) || !playing ? (
                     <Stack
