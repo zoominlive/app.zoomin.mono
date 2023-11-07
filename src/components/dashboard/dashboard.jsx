@@ -648,28 +648,34 @@ const Dashboard = () => {
                       className="family-circle-wrap"
                       gap={0}
                       justifyContent={'flex-end'}>
-                      <Box
-                        className="report-circle familiy-circle"
-                        style={{ borderColor: '#A855F7' }}>
-                        <Stack direction={'column'} alignItems={'center'}>
+                      <Box className="familiy-circle">
+                        <Stack
+                          className="report-circle"
+                          style={{ borderColor: '#A855F7' }}
+                          direction={'column'}
+                          alignItems={'center'}>
                           <Box component={'span'}>Children</Box>
                           {statisticsData?.families !== undefined ? statisticsData?.families : ' '}
                         </Stack>
                       </Box>
-                      <Box
-                        className="report-circle familiy-circle"
-                        style={{ borderColor: '#FAD203' }}>
-                        <Stack direction={'column'} alignItems={'center'}>
+                      <Box className="familiy-circle">
+                        <Stack
+                          className="report-circle"
+                          style={{ borderColor: '#FAD203' }}
+                          direction={'column'}
+                          alignItems={'center'}>
                           <Box component={'span'}>Users</Box>
                           {statisticsData?.childrens !== undefined
                             ? statisticsData?.childrens
                             : ' '}
                         </Stack>
                       </Box>
-                      <Box
-                        className="report-circle familiy-circle"
-                        style={{ borderColor: '#FF8762' }}>
-                        <Stack direction={'column'} alignItems={'center'}>
+                      <Box className="familiy-circle">
+                        <Stack
+                          className="report-circle"
+                          style={{ borderColor: '#FF8762' }}
+                          direction={'column'}
+                          alignItems={'center'}>
                           <Box component={'span'}>Famillies</Box>
                           {statisticsData?.familyMembers !== undefined
                             ? statisticsData?.familyMembers
