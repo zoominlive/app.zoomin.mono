@@ -72,7 +72,7 @@ const Logs = () => {
     'Stop'
   ]);
   const [selectedFunction, setSelectedFunction] = useState([
-    { id: 'Watch_Stream', name: 'Request Stream' },
+    { id: 'Watch_Stream', name: 'Watch Stream' },
     { id: 'Primary_Family', name: 'Family' },
     { id: 'Child', name: 'Child' },
     { id: 'Room', name: 'Room' },
@@ -160,17 +160,17 @@ const Logs = () => {
     'Stop'
   ];
   const functions = [
-    { id: 'Select All', name: 'Select All' },
-    { id: 'Watch_Stream', name: 'Request Stream' },
+    { id: 'Profile_Photo', name: 'Profile Photo' },
+    { id: 'Users', name: 'Users' },
     { id: 'Primary_Family', name: 'Family' },
+    { id: 'Select All', name: 'Select All' },
     { id: 'Child', name: 'Child' },
     { id: 'Room', name: 'Room' },
     { id: 'Camera', name: 'Camera' },
-    { id: 'Users', name: 'Users' },
-    { id: 'Profile_Photo', name: 'Profile Photo' },
     { id: 'User_Change_Email', name: 'Change Email' },
     { id: 'User_Forgot_Password', name: 'Forgot Password' },
     { id: 'User_Change_Password', name: 'Change Password' },
+    { id: 'Watch_Stream', name: 'Watch Stream' },
     { id: 'Live_Stream', name: 'Live Stream' }
   ];
   Logger.log('location?.state==>', location?.state);
@@ -410,6 +410,24 @@ const Logs = () => {
       selectedType == 'Access Log' ? actions.slice(1, 3) : actions.slice(3, actions.length)
     );
   }, [selectedType]);
+
+  useEffect(() => {
+    if (
+      selectedAction[0] === 'Login' &&
+      selectedAction.length === 1 &&
+      selectedType === 'Access Log'
+    ) {
+      setSelectedFunction(functions.slice(1, 3));
+    } else if (
+      selectedAction[0] === 'Get' &&
+      selectedAction.length === 1 &&
+      selectedType === 'Access Log'
+    ) {
+      setSelectedFunction(functions.slice(10, functions.length));
+    } else {
+      setSelectedFunction(functions);
+    }
+  }, [selectedAction]);
 
   //   Method to fetch user list for table
   const getLogsList = () => {
@@ -859,7 +877,7 @@ const Logs = () => {
                           id="tags-standard"
                           options={
                             selectedType == 'Access Log'
-                              ? [actions[0], ...actions.slice(1, 3)]
+                              ? actions.slice(1, 3)
                               : [actions[0], ...actions.slice(3, actions.length)]
                           }
                           value={selectedAction ? selectedAction : []}
@@ -927,7 +945,17 @@ const Logs = () => {
                           multiple
                           limitTags={1}
                           id="tags-standard"
-                          options={functions}
+                          options={
+                            selectedType == 'Access Log' &&
+                            selectedAction.length === 1 &&
+                            selectedAction[0] === 'Login'
+                              ? functions.slice(1, 3)
+                              : selectedType == 'Access Log' &&
+                                selectedAction.length === 1 &&
+                                selectedAction[0] === 'Get'
+                              ? functions.slice(10, functions.length)
+                              : functions
+                          }
                           value={selectedFunction ? selectedFunction : []}
                           getOptionLabel={(option) => option?.name}
                           onChange={(_, value, reason, option) => {
