@@ -353,7 +353,7 @@ const Dashboard = () => {
         response.response.status !== 500 &&
         Number(localStorage.getItem('RETRYCOUNTER_AVAILABLESTREAMS') || 0) < 5
       ) {
-        timer = setInterval(getDashboardDataAgain, 15000);
+        timer = setInterval(getDashboardDataAgain, 20000);
         Logger.log('timer', timer);
         // setIntervalId(interval);
       } else {

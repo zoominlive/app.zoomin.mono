@@ -59,8 +59,8 @@ const Login = () => {
   // Method to handle login
   const handleSubmit = (data) => {
     setSubmitLoading(true);
-    localStorage.removeItem('RETRYCOUNTER');
-    localStorage.setItem('RETRYCOUNTER', 0);
+    // localStorage.removeItem('RETRYCOUNTER');
+    // localStorage.setItem('RETRYCOUNTER', 0);
     API.post('users/login', data)
       .then((response) => {
         if (response.status === 200) {
@@ -75,15 +75,17 @@ const Login = () => {
           if (authCtx.authError) {
             authCtx.setAuthError(false);
           }
-        } else if (
-          response.response.status !== 400 &&
-          response.response.status !== 500 &&
-          Number(localStorage.getItem('RETRYCOUNTER') || 0) < 5
-        ) {
-          timer = setInterval(retryLogin, 15000);
-          // setIntervalId(timer);
-          Logger.log('timer=====>', timer);
-        } else {
+        }
+        // else if (
+        //   response.response.status !== 400 &&
+        //   response.response.status !== 500 &&
+        //   Number(localStorage.getItem('RETRYCOUNTER') || 0) < process.env.RETRY_COUNTER
+        // ) {
+        //   timer = setInterval(retryLogin, process.env.RETRY_TIMEOUT);
+        //   // setIntervalId(timer);
+        //   Logger.log('timer=====>', timer);
+        // }
+        else {
           errorMessageHandler(
             enqueueSnackbar,
             response?.response?.data?.Message || 'Something Went Wrong.',
@@ -95,8 +97,9 @@ const Login = () => {
       .catch((err) => console.log(err));
   };
 
+  // eslint-disable-next-line no-unused-vars
   const retryLogin = (data) => {
-    if (Number(localStorage.getItem('RETRYCOUNTER')) >= 5) {
+    if (Number(localStorage.getItem('RETRYCOUNTER')) >= process.env.RETRY_COUNTER) {
       Logger.log('timer==>', timer);
       clearInterval(timer);
       return;

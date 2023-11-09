@@ -119,7 +119,7 @@ const Layout = () => {
         response.response.status !== 500 &&
         Number(localStorage.getItem('RETRYCOUNTER_LAYOUT') || 0) < 5
       ) {
-        timer = setInterval(getUsers, 15000);
+        timer = setInterval(getUsers, 20000);
         // setIntervalId(interval);
       } else {
         errorMessageHandler(

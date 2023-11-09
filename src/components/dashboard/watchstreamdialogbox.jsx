@@ -84,7 +84,7 @@ const WatchStreamDialogBox = (props) => {
           response.response.status !== 500 &&
           Number(localStorage.getItem('RETRYCOUNTER_AVAILABLESTREAMS') || 0) < 5
         ) {
-          timer = setInterval(getAvailableStreamsAgain, 15000);
+          timer = setInterval(getAvailableStreamsAgain, 20000);
           // setIntervalId(interval);
         } else {
           errorMessageHandler(
