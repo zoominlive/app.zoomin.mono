@@ -631,7 +631,7 @@ module.exports = {
       let filterResult = [];
       allFamilyMembers.map((i) => {
         if (
-          i.location?.accessable_locations.every((it) => location.includes(it))
+          i.location?.accessable_locations?.every((it) => location.includes(it))
         ) {
           filterResult.push(i);
         }
@@ -658,7 +658,7 @@ module.exports = {
       let filterResult = [];
       familyIds.map((i) => {
         if (
-          i.location?.accessable_locations.every((it) => location.includes(it))
+          i.location?.accessable_locations?.every((it) => location.includes(it))
         ) {
           filterResult.push(i);
         }

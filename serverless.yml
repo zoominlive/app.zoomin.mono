@@ -55,6 +55,29 @@ custom:
     automatic: true
     includeLayers: true
     number: 3
+  warmup:
+    default:
+      enabled: true # Whether to warm up functions by default or not
+      folderName: '.warmup' # Name of the folder created for the generated warmup 
+      cleanFolder: false
+      memorySize: 256
+      name: warmer-default
+      vpc: false
+      events:
+        - schedule: 'cron(0/5 8-17 ? * MON-FRI *)' # Run WarmUp every 5 minutes Mon-Fri between 8:00am and 5:55pm (UTC)
+      package:
+        individually: true
+        patterns:
+          - '!../**'
+          - '!../../**'
+          - ./**
+      timeout: 20
+      tracing: true
+      verbose: false # Disable the logs
+      prewarm: true # Run WarmUp immediately after a deploymentlambda
+      payloadRaw: true # Won't JSON.stringify() the payload, may be necessary for Go/AppSync deployments
+      concurrency: 5 # Warm up 5 concurrent instances
+
 functions:
   connectHandler:
     handler: websocket/handler.connectHandler
@@ -75,6 +98,9 @@ functions:
     handler: handler.handler
     events:
       - httpApi: "*"
+    warmup:
+      default:
+        enabled: true
 
   dashboardFunction:
     handler: handler.handler
@@ -220,5 +246,6 @@ functions:
 plugins:
   - serverless-offline
   - serverless-prune-versions
+  - serverless-plugin-warmup
 
   

@@ -335,7 +335,7 @@ module.exports = {
       let locs = availableLocations.flatMap((i) => i.loc_name);
       allusers.map((item) => {
         locs.forEach((i) => {
-          if (item.location.accessable_locations.includes(i)) {
+          if (item.location.accessable_locations?.includes(i)) {
             userIds.push(item);
           }
         });
@@ -344,7 +344,7 @@ module.exports = {
     else{
       allusers.map((item) => {
         user.location.accessable_locations.forEach((i) => {
-          if (item.location.accessable_locations.includes(i)) {
+          if (item.location.accessable_locations?.includes(i)) {
             userIds.push(item);
           }
         });
