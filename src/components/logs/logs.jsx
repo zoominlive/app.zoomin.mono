@@ -66,13 +66,13 @@ const Logs = () => {
     'Delete',
     'Disable',
     'Enable',
-    'Get',
+    'Watch',
     'Login',
     'Start',
     'Stop'
   ]);
   const [selectedFunction, setSelectedFunction] = useState([
-    { id: 'Watch_Stream', name: 'Watch Stream' },
+    { id: 'Watch_Stream', name: 'Mounted Camera' },
     { id: 'Primary_Family', name: 'Family' },
     { id: 'Child', name: 'Child' },
     { id: 'Room', name: 'Room' },
@@ -133,7 +133,7 @@ const Logs = () => {
     familyMemberIds: [],
     actions: [
       'Select All',
-      'Get',
+      'Watch',
       'Login',
       'Add',
       'Edit',
@@ -149,7 +149,7 @@ const Logs = () => {
   const types = ['Access Log', 'Change Log'];
   const actions = [
     'Select All',
-    'Get',
+    'Watch',
     'Login',
     'Add',
     'Edit',
@@ -163,15 +163,15 @@ const Logs = () => {
     { id: 'Profile_Photo', name: 'Profile Photo' },
     { id: 'Users', name: 'Users' },
     { id: 'Primary_Family', name: 'Family' },
+    { id: 'Watch_Stream', name: 'Mounted Camera' },
+    { id: 'Live_Stream', name: 'Live Stream' },
     { id: 'Select All', name: 'Select All' },
     { id: 'Child', name: 'Child' },
     { id: 'Room', name: 'Room' },
     { id: 'Camera', name: 'Camera' },
     { id: 'User_Change_Email', name: 'Change Email' },
     { id: 'User_Forgot_Password', name: 'Forgot Password' },
-    { id: 'User_Change_Password', name: 'Change Password' },
-    { id: 'Watch_Stream', name: 'Watch Stream' },
-    { id: 'Live_Stream', name: 'Live Stream' }
+    { id: 'User_Change_Password', name: 'Change Password' }
   ];
   Logger.log('location?.state==>', location?.state);
   useEffect(() => {
@@ -341,7 +341,7 @@ const Logs = () => {
       users: userIds,
       locations: selectedLocation,
       familyMemberIds: FamilyMemberIds,
-      actions: selectedAction
+      actions: selectedAction[0] === 'Watch' ? 'Get' : selectedAction
     });
     Logger.log('logsPayload after update', logsPayload);
   }, [
@@ -419,13 +419,13 @@ const Logs = () => {
     ) {
       setSelectedFunction(functions.slice(1, 3));
     } else if (
-      selectedAction[0] === 'Get' &&
+      selectedAction[0] === 'Watch' &&
       selectedAction.length === 1 &&
       selectedType === 'Access Log'
     ) {
-      setSelectedFunction(functions.slice(10, functions.length));
+      setSelectedFunction(functions.slice(3, 5));
     } else {
-      setSelectedFunction(functions);
+      setSelectedFunction(functions.slice(1, 5));
     }
   }, [selectedAction]);
 
@@ -449,6 +449,7 @@ const Logs = () => {
         usersToAdd = users.slice(1, users.length);
         usersToAdd = usersToAdd?.map((user) => user.user_id);
       }
+      console.log('logsPayload', logsPayload);
       API.get('logs/', {
         params: {
           ...logsPayload,
@@ -882,7 +883,7 @@ const Logs = () => {
                           }
                           value={selectedAction ? selectedAction : []}
                           getOptionLabel={(option) => {
-                            if (option === 'Get') {
+                            if (option === 'Watch') {
                               return 'Request';
                             } else {
                               return option;
@@ -952,9 +953,9 @@ const Logs = () => {
                               ? functions.slice(1, 3)
                               : selectedType == 'Access Log' &&
                                 selectedAction.length === 1 &&
-                                selectedAction[0] === 'Get'
-                              ? functions.slice(10, functions.length)
-                              : functions
+                                selectedAction[0] === 'Watch'
+                              ? functions.slice(3, 5)
+                              : functions.slice(1, 5)
                           }
                           value={selectedFunction ? selectedFunction : []}
                           getOptionLabel={(option) => option?.name}
