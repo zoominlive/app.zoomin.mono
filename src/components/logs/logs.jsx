@@ -156,8 +156,8 @@ const Logs = () => {
     'Delete',
     'Disable',
     'Enable',
-    'Start',
-    'Stop'
+    'Start Live Stream',
+    'Stop Live Stream'
   ];
   const functions = [
     { id: 'Profile_Photo', name: 'Profile Photo' },
@@ -328,9 +328,27 @@ const Logs = () => {
       }
       return fun.id;
     });
+    // Items to find and replace
+    let itemsToReplace = ['Start Live Stream', 'Stop Live Stream'];
+
+    // New values
+    let newValues = ['Start', 'Stop'];
     if (familySelected) {
       functionList.push('Second_Family');
     }
+    // Create a new array with replaced values
+    let newArray = selectedAction.map((item) => {
+      // Check if the current item is in the itemsToReplace array
+      let index = itemsToReplace.indexOf(item);
+
+      // If the item is found, replace it with the corresponding new value
+      if (index !== -1) {
+        return newValues[index];
+      }
+
+      // If the item is not in the itemsToReplace array, keep it unchanged
+      return item;
+    });
     Logger.log('==reached==');
     setLogsPayload({
       ...logsPayload,
@@ -341,7 +359,7 @@ const Logs = () => {
       users: userIds,
       locations: selectedLocation,
       familyMemberIds: FamilyMemberIds,
-      actions: selectedAction[0] === 'Watch' ? 'Get' : selectedAction
+      actions: selectedAction[0] === 'Watch' ? 'Get' : newArray
     });
     Logger.log('logsPayload after update', logsPayload);
   }, [
