@@ -71,6 +71,7 @@ const Logs = () => {
     'Start',
     'Stop'
   ]);
+  const [selectedloginWatchAction, setSelectedloginWatchAction] = useState('Watch');
   const [selectedFunction, setSelectedFunction] = useState([
     { id: 'Watch_Stream', name: 'Mounted Camera' },
     { id: 'Primary_Family', name: 'Family' },
@@ -116,32 +117,32 @@ const Logs = () => {
     type: 'Access Log',
     functions: [
       'Watch_Stream',
-      'Primary_Family',
-      'Child',
-      'Room',
-      'Camera',
-      'Users',
-      'Profile_Photo',
-      'User_Change_Email',
-      'User_Forgot_Password',
-      'User_Change_Password',
-      'User_Reg_Accout',
+      // 'Primary_Family',
+      // 'Child',
+      // 'Room',
+      // 'Camera',
+      // 'Users',
+      // 'Profile_Photo',
+      // 'User_Change_Email',
+      // 'User_Forgot_Password',
+      // 'User_Change_Password',
+      // 'User_Reg_Accout',
       'Live_Stream'
     ],
     users: [],
     locations: [],
     familyMemberIds: [],
     actions: [
-      'Select All',
+      // 'Select All',
       'Watch',
-      'Login',
-      'Add',
-      'Edit',
-      'Delete',
-      'Disable',
-      'Enable',
-      'Start',
-      'Stop'
+      'Login'
+      // 'Add',
+      // 'Edit',
+      // 'Delete',
+      // 'Disable',
+      // 'Enable',
+      // 'Start',
+      // 'Stop'
     ]
   });
   const [isDatePickerOpen1, setIsDatePickerOpen1] = useState(false);
@@ -159,6 +160,7 @@ const Logs = () => {
     'Start Live Stream',
     'Stop Live Stream'
   ];
+  const loginWatchActions = ['Watch', 'Login'];
   const functions = [
     { id: 'Profile_Photo', name: 'Profile Photo' },
     { id: 'Users', name: 'Users' },
@@ -350,17 +352,31 @@ const Logs = () => {
       return item;
     });
     Logger.log('==reached==');
-    setLogsPayload({
-      ...logsPayload,
-      from: moment(fromDate).format('YYYY-MM-DD'),
-      to: moment(toDate).format('YYYY-MM-DD'),
-      type: selectedType,
-      functions: functionList,
-      users: userIds,
-      locations: selectedLocation,
-      familyMemberIds: FamilyMemberIds,
-      actions: selectedAction[0] === 'Watch' ? 'Get' : newArray
-    });
+    if (selectedType == 'Access Log') {
+      setLogsPayload({
+        ...logsPayload,
+        from: moment(fromDate).format('YYYY-MM-DD'),
+        to: moment(toDate).format('YYYY-MM-DD'),
+        type: selectedType,
+        functions: functionList,
+        users: userIds,
+        locations: selectedLocation,
+        familyMemberIds: FamilyMemberIds,
+        actions: selectedloginWatchAction === 'Watch' ? 'Get' : 'Login'
+      });
+    } else {
+      setLogsPayload({
+        ...logsPayload,
+        from: moment(fromDate).format('YYYY-MM-DD'),
+        to: moment(toDate).format('YYYY-MM-DD'),
+        type: selectedType,
+        functions: functionList,
+        users: userIds,
+        locations: selectedLocation,
+        familyMemberIds: FamilyMemberIds,
+        actions: newArray
+      });
+    }
     Logger.log('logsPayload after update', logsPayload);
   }, [
     selectedLocation,
@@ -370,7 +386,8 @@ const Logs = () => {
     selectedFunction,
     selectedUsers,
     selectedFamilies,
-    selectedAction
+    selectedAction,
+    selectedloginWatchAction
   ]);
 
   useEffect(() => {
@@ -424,28 +441,20 @@ const Logs = () => {
   }, [selectedLocation]);
 
   useEffect(() => {
-    setSelectedAction(
-      selectedType == 'Access Log' ? actions.slice(1, 3) : actions.slice(3, actions.length)
-    );
+    if (selectedType === 'Change Log') {
+      setSelectedAction(actions.slice(3, actions.length));
+    }
   }, [selectedType]);
 
   useEffect(() => {
-    if (
-      selectedAction[0] === 'Login' &&
-      selectedAction.length === 1 &&
-      selectedType === 'Access Log'
-    ) {
+    if (selectedloginWatchAction === 'Login' && selectedType === 'Access Log') {
       setSelectedFunction(functions.slice(1, 3));
-    } else if (
-      selectedAction[0] === 'Watch' &&
-      selectedAction.length === 1 &&
-      selectedType === 'Access Log'
-    ) {
+    } else if (selectedloginWatchAction === 'Watch' && selectedType === 'Access Log') {
       setSelectedFunction(functions.slice(3, 5));
     } else {
       setSelectedFunction(functions.slice(1, 5));
     }
-  }, [selectedAction]);
+  }, [selectedloginWatchAction]);
 
   //   Method to fetch user list for table
   const getLogsList = () => {
@@ -532,7 +541,7 @@ const Logs = () => {
       setSelectedAction(
         reason === 'selectOption'
           ? selectedType == 'Access Log'
-            ? actions.slice(1, 3)
+            ? loginWatchActions[0]
             : actions.slice(3, actions.length)
           : []
       );
@@ -887,65 +896,108 @@ const Logs = () => {
                           )}
                         />
                       </Grid>
-                      <Grid item md={3} sm={6}>
-                        <InputLabel id="action">Action</InputLabel>
-                        <Autocomplete
-                          labelId="action"
-                          multiple
-                          limitTags={1}
-                          id="tags-standard"
-                          options={
-                            selectedType == 'Access Log'
-                              ? actions.slice(1, 3)
-                              : [actions[0], ...actions.slice(3, actions.length)]
-                          }
-                          value={selectedAction ? selectedAction : []}
-                          getOptionLabel={(option) => {
-                            if (option === 'Watch') {
-                              return 'Request';
-                            } else {
-                              return option;
+                      {selectedType == 'Access Log' ? (
+                        <Grid item md={3} sm={6}>
+                          <InputLabel id="loginWatchAction">Action</InputLabel>
+                          <Autocomplete
+                            labelId="loginWatchAction"
+                            limitTags={1}
+                            id="tags-standard"
+                            options={loginWatchActions}
+                            disableClearable
+                            value={selectedloginWatchAction}
+                            getOptionLabel={(option) => option}
+                            onChange={(_, value) => {
+                              setSelectedloginWatchAction(value);
+                            }}
+                            renderTags={(value, getTagProps) =>
+                              value?.map((option, index) => (
+                                <Chip key={index} label={option} {...getTagProps({ index })} />
+                              ))
                             }
-                          }}
-                          onChange={(_, value, reason, option) => {
-                            handleActionTypeChange(_, value, reason, option);
-                          }}
-                          renderTags={(value, getTagProps) =>
-                            value?.map((option, index) => (
-                              <Chip key={index} label={option} {...getTagProps({ index })} />
-                            ))
-                          }
-                          renderOption={(props, option, { selected }) => (
-                            <li {...props}>
-                              <Checkbox
-                                icon={icon}
-                                checkedIcon={checkedIcon}
-                                style={{ marginRight: 8 }}
-                                checked={allActionsChecked ? allActionsChecked : selected}
-                              />
-                              {option}
-                            </li>
-                          )}
-                          renderInput={(params) => (
-                            <TextField
-                              {...params}
-                              fullWidth
-                              error={selectedAction?.length == 0 ? true : false}
-                              InputProps={{
-                                ...params.InputProps,
-                                endAdornment: (
-                                  <React.Fragment>
-                                    {/* {dropdownLoading ? (
+                            renderOption={(props, option, { selected }) => (
+                              <li {...props}>
+                                <Radio style={{ marginRight: 8 }} checked={selected} />
+                                {option}
+                              </li>
+                            )}
+                            renderInput={(params) => (
+                              <TextField
+                                {...params}
+                                fullWidth
+                                InputProps={{
+                                  ...params.InputProps,
+                                  endAdornment: (
+                                    <React.Fragment>
+                                      {/* {dropdownLoading ? (
                                     <CircularProgress color="inherit" size={20} />
                                   ) : null} */}
-                                    {params.InputProps.endAdornment}
-                                  </React.Fragment>
-                                )
-                              }}
-                            />
-                          )}
-                        />
-                      </Grid>
+                                      {params.InputProps.endAdornment}
+                                    </React.Fragment>
+                                  )
+                                }}
+                              />
+                            )}
+                          />
+                        </Grid>
+                      ) : (
+                        <Grid item md={3} sm={6}>
+                          {console.log('selecetedAction==>', selectedAction)}
+                          <InputLabel id="action">Action</InputLabel>
+                          <Autocomplete
+                            labelId="action"
+                            multiple
+                            limitTags={1}
+                            id="tags-standard"
+                            options={[actions[0], ...actions.slice(3, actions.length)]}
+                            value={selectedAction ? selectedAction : []}
+                            getOptionLabel={(option) => {
+                              if (option === 'Watch') {
+                                return 'Request';
+                              } else {
+                                return option;
+                              }
+                            }}
+                            onChange={(_, value, reason, option) => {
+                              handleActionTypeChange(_, value, reason, option);
+                            }}
+                            renderTags={(value, getTagProps) =>
+                              value?.map((option, index) => (
+                                <Chip key={index} label={option} {...getTagProps({ index })} />
+                              ))
+                            }
+                            renderOption={(props, option, { selected }) => (
+                              <li {...props}>
+                                <Checkbox
+                                  icon={icon}
+                                  checkedIcon={checkedIcon}
+                                  style={{ marginRight: 8 }}
+                                  checked={allActionsChecked ? allActionsChecked : selected}
+                                />
+                                {option}
+                              </li>
+                            )}
+                            renderInput={(params) => (
+                              <TextField
+                                {...params}
+                                fullWidth
+                                error={selectedAction?.length == 0 ? true : false}
+                                InputProps={{
+                                  ...params.InputProps,
+                                  endAdornment: (
+                                    <React.Fragment>
+                                      {/* {dropdownLoading ? (
+                                    <CircularProgress color="inherit" size={20} />
+                                  ) : null} */}
+                                      {params.InputProps.endAdornment}
+                                    </React.Fragment>
+                                  )
+                                }}
+                              />
+                            )}
+                          />
+                        </Grid>
+                      )}
                     </Grid>
                     <Grid></Grid>
                   </Box>
@@ -965,13 +1017,9 @@ const Logs = () => {
                           limitTags={1}
                           id="tags-standard"
                           options={
-                            selectedType == 'Access Log' &&
-                            selectedAction.length === 1 &&
-                            selectedAction[0] === 'Login'
+                            selectedType == 'Access Log' && selectedloginWatchAction === 'Login'
                               ? functions.slice(1, 3)
-                              : selectedType == 'Access Log' &&
-                                selectedAction.length === 1 &&
-                                selectedAction[0] === 'Watch'
+                              : selectedType == 'Access Log' && selectedloginWatchAction === 'Watch'
                               ? functions.slice(3, 5)
                               : functions.slice(1, 5)
                           }
