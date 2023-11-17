@@ -26,12 +26,14 @@ import AuthContext from '../../context/authcontext';
 import { useSnackbar } from 'notistack';
 import { errorMessageHandler } from '../../utils/errormessagehandler';
 import { LoadingButton } from '@mui/lab';
+// eslint-disable-next-line no-unused-vars
 import SaveIcon from '@mui/icons-material/Save';
 import { DesktopDatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import ArrowDropUpIcon from '@mui/icons-material/ArrowDropUp';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import dayjs from 'dayjs';
+import moment from 'moment';
 
 const validationSchema = yup.object({
   rooms: yup.array().min(1, 'Atleast one room is required'),
@@ -244,8 +246,9 @@ const AddRoomForm = (props) => {
                     {' '}
                     <LocalizationProvider dateAdapter={AdapterDayjs}>
                       <DesktopDatePicker
+                        disableHighlightToday
                         open={isDatePickerOpen}
-                        minDate={new Date()}
+                        minDate={moment().add(1, 'days')}
                         label={'Enable date'}
                         value={values?.date}
                         inputFormat="MM/DD/YYYY"
@@ -279,11 +282,11 @@ const AddRoomForm = (props) => {
                 </Button>
                 <LoadingButton
                   loading={submitLoading || isValidating}
-                  loadingPosition={submitLoading || isValidating ? 'start' : undefined}
-                  startIcon={(submitLoading || isValidating) && <SaveIcon />}
+                  loadingPosition={submitLoading || isValidating ? 'center' : undefined}
+                  // startIcon={(submitLoading || isValidating) && <SaveIcon />}
                   variant="text"
                   type="submit">
-                  SAVE CHANGES
+                  {!submitLoading && 'SAVE CHANGES'}
                 </LoadingButton>
               </DialogActions>
             </Form>
