@@ -10,6 +10,9 @@ import { AuthContextProvider } from './context/authcontext';
 import { SnackbarProvider } from 'notistack';
 import SnackbarCloseButton from './components/common/snackbarclosrbutton';
 import * as serviceWorker from './serviceWorker';
+import { LicenseInfo } from '@mui/x-license-pro';
+
+LicenseInfo.setLicenseKey(process.env.REACT_APP_MUI_LICENSE_KEY);
 
 ReactDOM.render(
   <AuthContextProvider>

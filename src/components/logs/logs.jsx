@@ -37,18 +37,63 @@ import AuthContext from '../../context/authcontext';
 import { useSnackbar } from 'notistack';
 // import Loader from '../common/loader';
 import moment from 'moment';
-import { DesktopDatePicker, LocalizationProvider } from '@mui/x-date-pickers';
-import { AdapterMoment } from '@mui/x-date-pickers/AdapterMoment';
-import ArrowDropUpIcon from '@mui/icons-material/ArrowDropUp';
-import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+import dayjs from 'dayjs';
 import LoadingButton from '@mui/lab/LoadingButton';
 import NoDataDiv from '../common/nodatadiv';
 import PropTypes from 'prop-types';
 import { useLocation } from 'react-router-dom';
 import LinerLoader from '../common/linearLoader';
 import Logger from '../../utils/logger';
+import { DesktopDateRangePicker } from '@mui/x-date-pickers-pro';
+import { LocalizationProvider } from '@mui/x-date-pickers-pro';
+import { AdapterDayjs } from '@mui/x-date-pickers-pro/AdapterDayjs';
+
 const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
 const checkedIcon = <CheckBoxIcon fontSize="small" />;
+
+let defaultStartDay = dayjs().subtract(7, 'day');
+let defaultEndDay = dayjs();
+
+const shortcutsItems = [
+  {
+    label: 'This Week',
+    getValue: () => {
+      const today = dayjs();
+      return [today.startOf('week'), today.endOf('week')];
+    }
+  },
+  {
+    label: 'Last Week',
+    getValue: () => {
+      const today = dayjs();
+      const prevWeek = today.subtract(7, 'day');
+      return [prevWeek.startOf('week'), prevWeek.endOf('week')];
+    }
+  },
+  {
+    label: 'Last 7 Days',
+    getValue: () => {
+      const today = dayjs();
+      return [today.subtract(7, 'day'), today];
+    }
+  },
+  {
+    label: 'Current Month',
+    getValue: () => {
+      const today = dayjs();
+      return [today.startOf('month'), today.endOf('month')];
+    }
+  },
+  {
+    label: 'Next Month',
+    getValue: () => {
+      const today = dayjs();
+      const startOfNextMonth = today.endOf('month').add(1, 'day');
+      return [startOfNextMonth, startOfNextMonth.endOf('month')];
+    }
+  },
+  { label: 'Reset', getValue: () => [null, null] }
+];
 
 const Logs = () => {
   const layoutCtx = useContext(LayoutContext);
@@ -88,6 +133,7 @@ const Logs = () => {
   ]);
   const [fromDate, setFromDate] = useState(moment().subtract(7, 'days'));
   const [toDate, setToDate] = useState(moment());
+  const [rangeDate, setRangeDate] = useState([defaultStartDay, defaultEndDay]);
   const [pageNumber, setPageNumber] = useState(0);
   const [pageSize, setPageSize] = useState(process.env.REACT_APP_PAGINATION_LIMIT);
   const [users, setUsers] = useState([
@@ -134,8 +180,9 @@ const Logs = () => {
     familyMemberIds: [],
     actions: [
       // 'Select All',
-      'Watch',
-      'Login'
+      // 'Watch',
+      // 'Login',
+      'Get'
       // 'Add',
       // 'Edit',
       // 'Delete',
@@ -145,8 +192,6 @@ const Logs = () => {
       // 'Stop'
     ]
   });
-  const [isDatePickerOpen1, setIsDatePickerOpen1] = useState(false);
-  const [isDatePickerOpen2, setIsDatePickerOpen2] = useState(false);
   const types = ['Access Log', 'Change Log'];
   const actions = [
     'Select All',
@@ -355,8 +400,8 @@ const Logs = () => {
     if (selectedType == 'Access Log') {
       setLogsPayload({
         ...logsPayload,
-        from: moment(fromDate).format('YYYY-MM-DD'),
-        to: moment(toDate).format('YYYY-MM-DD'),
+        from: dayjs(rangeDate[0]).format('YYYY-MM-DD'),
+        to: dayjs(rangeDate[1]).format('YYYY-MM-DD'),
         type: selectedType,
         functions: functionList,
         users: userIds,
@@ -367,8 +412,8 @@ const Logs = () => {
     } else {
       setLogsPayload({
         ...logsPayload,
-        from: moment(fromDate).format('YYYY-MM-DD'),
-        to: moment(toDate).format('YYYY-MM-DD'),
+        from: dayjs(rangeDate[0]).format('YYYY-MM-DD'),
+        to: dayjs(rangeDate[1]).format('YYYY-MM-DD'),
         type: selectedType,
         functions: functionList,
         users: userIds,
@@ -382,6 +427,7 @@ const Logs = () => {
     selectedLocation,
     fromDate,
     toDate,
+    rangeDate,
     selectedType,
     selectedFunction,
     selectedUsers,
@@ -750,7 +796,7 @@ const Logs = () => {
                 <Grid item md={18} sm={16}>
                   <Box>
                     <Grid container spacing={2}>
-                      <Grid item md={1.5} sm={6}>
+                      {/* <Grid item md={1.5} sm={6}>
                         <LocalizationProvider dateAdapter={AdapterMoment}>
                           <InputLabel id="from">From</InputLabel>
                           <DesktopDatePicker
@@ -799,6 +845,24 @@ const Logs = () => {
                           />
                         </LocalizationProvider>
                         <Grid />
+                      </Grid> */}
+                      <Grid item md={3} sm={6}>
+                        <Box sx={{ marginTop: '20px' }}>
+                          <LocalizationProvider dateAdapter={AdapterDayjs}>
+                            <DesktopDateRangePicker
+                              localeText={{ start: 'From', end: 'To' }}
+                              value={rangeDate}
+                              onChange={(newVal) => setRangeDate(newVal)}
+                              slotProps={{
+                                shortcuts: {
+                                  items: shortcutsItems
+                                },
+                                actionBar: { actions: [] }
+                              }}
+                              calendars={2}
+                            />
+                          </LocalizationProvider>
+                        </Box>
                       </Grid>
                       <Grid item md={3} sm={6}>
                         <InputLabel id="location">Location</InputLabel>

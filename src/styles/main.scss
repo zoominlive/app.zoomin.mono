@@ -656,6 +656,18 @@
   color: #5a53dd !important;
 }
 
+.MuiDayCalendar-weekContainer {
+  .MuiPickersDay-root.Mui-selected {
+    background-color: #5a53dd !important;
+  }
+  .MuiDateRangePickerDay-rangeIntervalDayHighlight{
+    background-color: #eae9ff !important;
+  }
+  .MuiDateRangePickerDay-outsideCurrentMonth{
+    background-color: transparent !important;
+  }
+}
+
 .MuiPickersPopper-paper {
   border-radius: 20px;
   .MuiCalendarPicker-root {
