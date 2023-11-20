@@ -56,7 +56,7 @@ import FullScreenDialog from '../watchstream/fullscreendialog';
 import LinerLoader from '../common/linearLoader';
 import Logger from '../../utils/logger';
 //import FullScreenDialog from '../watchstream/fullscreendialog';
-const streamColumns = ['Stream Name', 'Time', 'Room'];
+const streamColumns = ['Stream Name', 'Time', 'Location', 'Room'];
 
 const Recordings = () => {
   const layoutCtx = useContext(LayoutContext);
@@ -167,7 +167,7 @@ const Recordings = () => {
   };
 
   const Row = ({ row }) => {
-    const { created_at, room, presigned_url, stream_running } = row;
+    const { created_at, room, presigned_url, stream_running, stream_name } = row;
     const handle = useFullScreenHandle();
     const [open, setOpen] = useState(false);
     const [timeOut, setTimeOut] = useState(2);
@@ -192,26 +192,35 @@ const Recordings = () => {
               <Typography>{`${moment(created_at).format('MM-DD-YYYY')}`}</Typography>
             </Stack>
           </TableCell>
-          <TableCell align="left">
-            <Stack direction="row">
-              <Chip label={room?.location} color="primary" className="chip-color" />
-            </Stack>
+          <TableCell align="center">
+            {/* <Stack direction="row"> */}
+            <Chip
+              label={stream_name ? stream_name : 'No Data'}
+              color="primary"
+              className="chip-color"
+            />
+            {/* </Stack> */}
           </TableCell>
-          <TableCell align="left">
-            <Stack direction="row">
-              <Chip label={room?.room_name} color="primary" className="room-chip" />
-            </Stack>
+          <TableCell align="center">
+            {/* <Stack direction="row"> */}
+            <Chip label={room?.location} color="primary" className="chip-color" />
+            {/* </Stack> */}
           </TableCell>
-          <TableCell align="left">
-            <Stack direction="row">
-              <Chip
-                label={`${stream_running ? 'Live' : 'VOD'} Stream`}
-                color="primary"
-                className={`${stream_running ? 'green' : 'red'}-chip-color`}
-              />
-            </Stack>
+          <TableCell align="center">
+            {/* <Stack direction="row"> */}
+            <Chip label={room?.room_name} color="primary" className="room-chip" />
+            {/* </Stack> */}
           </TableCell>
-          <TableCell>
+          <TableCell align="center">
+            {/* <Stack direction="row"> */}
+            <Chip
+              label={`${stream_running ? 'Live' : 'VOD'} Stream`}
+              color="primary"
+              className={`${stream_running ? 'green' : 'red'}-chip-color`}
+            />
+            {/* </Stack> */}
+          </TableCell>
+          <TableCell align="center">
             <Button
               className="add-button stream-btn btn-radius"
               variant="contained"
@@ -297,6 +306,7 @@ const Recordings = () => {
     row: PropTypes.shape({
       created_at: PropTypes.string,
       stream_running: PropTypes.bool,
+      stream_name: PropTypes.string,
       room: PropTypes.object,
       presigned_url: PropTypes.string
     })
@@ -572,8 +582,9 @@ const Recordings = () => {
               <Grid item lg={4} md={4} sm={12} xs={12}>
                 <>
                   <Grid container spacing={2} sx={{ marginTop: '0px' }}>
-                    <Grid item md={6} sm={6}>
+                    <Grid item md={6} sm={6} sx={{ marginTop: '0px', textAlign: 'right' }}>
                       <FormGroup
+                        sx={{ marginRight: '24px' }}
                         onChange={(e) => {
                           setRecordingsPayload(
                             e.target.value === 'Live'
@@ -581,8 +592,8 @@ const Recordings = () => {
                               : { ...recordingsPayload, vod: e.target.checked }
                           );
                         }}>
-                        <InputLabel>Status</InputLabel>
-                        <Stack direction={'row'}>
+                        <InputLabel sx={{ position: 'relative', left: -115 }}>Status</InputLabel>
+                        <Stack direction={'row'} justifyContent={'end'}>
                           <FormControlLabel
                             control={
                               <Checkbox
@@ -608,7 +619,7 @@ const Recordings = () => {
                       </FormGroup>
                     </Grid>
 
-                    <Grid item md={6} sm={6} sx={{ textAlign: 'right' }}>
+                    <Grid item md={6} sm={6}>
                       <Button
                         className="add-button"
                         variant="contained"
@@ -632,10 +643,11 @@ const Recordings = () => {
                   <TableHead>
                     <TableRow>
                       <TableCell>Date</TableCell>
-                      <TableCell align="left">Location</TableCell>
-                      <TableCell align="left">Rooms</TableCell>
-                      <TableCell align="left">Status</TableCell>
-                      <TableCell align="left">Stream</TableCell>
+                      <TableCell align="center">Stream Name</TableCell>
+                      <TableCell align="center">Location</TableCell>
+                      <TableCell align="center">Rooms</TableCell>
+                      <TableCell align="center">Status</TableCell>
+                      <TableCell align="center">Stream</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>

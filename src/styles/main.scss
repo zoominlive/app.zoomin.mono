@@ -1640,6 +1640,8 @@
 
   .watch-stream-card {
     height: 78%;
+    // height: auto;
+    // overflow: unset;
     // background-color: #000000;
     @media (min-width:1920px) {
       height: 66%;
@@ -1672,6 +1674,7 @@
       margin: 0 24px 24px 24px;
       border-radius: 20px;
       overflow: hidden;
+      // height: auto;
       height: 293px;
 
       h2 {

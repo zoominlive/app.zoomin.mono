@@ -17,9 +17,9 @@ export default function StreamTable({ rows, columns, title, isLoading }) {
         style={{ padding: 10 }}
         className="table-title">
         <Typography>{title}</Typography>
-        <Link to="/recordings" sx={{ fontFamily: 'small', color: '#5A53DD' }}>
+        {/* <Link to="/recordings" sx={{ fontFamily: 'small', color: '#5A53DD' }}>
           View More
-        </Link>
+        </Link> */}
       </Stack>
       <Box className="stream-table-wrap">
         <Box className="div-header">
@@ -45,10 +45,16 @@ export default function StreamTable({ rows, columns, title, isLoading }) {
                           alignItems="center"
                           justifyContent={'flex-start'}
                           gap={0.5}>
-                          <AccessTimeIcon /> {moment(row?.stream_start_time).format('hh:mm A')}
+                          <AccessTimeIcon />{' '}
+                          {row?.stream_start_time
+                            ? moment(row?.stream_start_time).format('hh:mm A')
+                            : 'No data'}
                         </Stack>{' '}
                       </Box>
-                      <Box style={{ width: '45%' }}>
+                      <Box style={{ width: '35%' }}>
+                        <Chip label={row?.room?.location} />{' '}
+                      </Box>
+                      <Box style={{ width: '35%' }}>
                         <Chip label={row?.room?.room_name} />{' '}
                       </Box>
                       <Box style={{ width: '5%' }}>
