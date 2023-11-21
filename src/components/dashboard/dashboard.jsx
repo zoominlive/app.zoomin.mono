@@ -896,7 +896,7 @@ const Dashboard = () => {
                   : []
               }
               columns={lastHourViewersColumns}
-              title={'Viewers In The Last Hour'}
+              title={'Latest Viewers'}
               pagination={true}
               isLoading={isLoading}
             />
@@ -954,7 +954,7 @@ const Dashboard = () => {
                     : []
                 }
                 columns={topViewersColumns}
-                title={'Top 5 Viewers Last 7 Days'}
+                title={'Top 5 Viewers'}
                 pagination={false}
                 isLoading={isLoading}
               />

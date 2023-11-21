@@ -51,14 +51,18 @@ const CustomPlayer = (props) => {
   useEffect(() => {
     setUrl(props?.streamUri);
   }, [props.streamUri]);
-
+  const staticTimeOut = 20 * 1000 * 60;
+  const defaultTimeOut = props?.timeOut * 1000 * 60;
   const startTimer = () => {
     if (timer.current.timerId == 0) {
-      const timer1 = setTimeout(() => {
-        setPlayerPlaying(false);
-        props.setPlaying(false);
-        props.setIsDeleteDialogOpen(true);
-      }, props?.timeOut * 1000 * 60);
+      const timer1 = setTimeout(
+        () => {
+          setPlayerPlaying(false);
+          props.setPlaying(false);
+          props.setIsDeleteDialogOpen(true);
+        },
+        props?.timeOut ? defaultTimeOut : staticTimeOut
+      );
       timer.current.timerId = timer1;
     }
   };
