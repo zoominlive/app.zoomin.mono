@@ -115,6 +115,14 @@ module.exports = {
           Message: CONSTANTS.LIVE_STREAM_ALREADY_STARTED,
         });
         return;
+      } else if (streamObj.stream_stop_time !== null) {
+        await t.commit();
+        res.status(200).json({
+          IsSuccess: true,
+          Data: { stream_id: streamID },
+          Message: CONSTANTS.LIVE_STREAM_ALREADY_ENDED,
+        });
+        return;
       } else {
         let updateObj = {
           stream_running: true,
