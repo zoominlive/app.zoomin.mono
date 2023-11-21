@@ -51,15 +51,20 @@ import { AdapterDayjs } from '@mui/x-date-pickers-pro/AdapterDayjs';
 const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
 const checkedIcon = <CheckBoxIcon fontSize="small" />;
 
-let defaultStartDay = dayjs().subtract(7, 'day');
-let defaultEndDay = dayjs();
-
 const shortcutsItems = [
   {
-    label: 'This Week',
+    label: 'Today',
     getValue: () => {
       const today = dayjs();
-      return [today.startOf('week'), today.endOf('week')];
+      return [today, today];
+    }
+  },
+  {
+    label: 'Yesterday',
+    getValue: () => {
+      const today = dayjs();
+      const yesterday = today.subtract(1, 'day');
+      return [yesterday, yesterday];
     }
   },
   {
@@ -71,10 +76,18 @@ const shortcutsItems = [
     }
   },
   {
-    label: 'Last 7 Days',
+    label: 'Last Month',
     getValue: () => {
       const today = dayjs();
-      return [today.subtract(7, 'day'), today];
+      const startOfLastMonth = today.startOf('month').subtract(1, 'day');
+      return [startOfLastMonth.startOf('month'), startOfLastMonth.endOf('month')];
+    }
+  },
+  {
+    label: 'Last 30 Days',
+    getValue: () => {
+      const today = dayjs();
+      return [today.subtract(30, 'day'), today];
     }
   },
   {
@@ -92,7 +105,7 @@ const shortcutsItems = [
       return [startOfNextMonth, startOfNextMonth.endOf('month')];
     }
   },
-  { label: 'Reset', getValue: () => [null, null] }
+  { label: 'Reset', getValue: () => [dayjs(), dayjs()] }
 ];
 
 const Logs = () => {
@@ -133,7 +146,7 @@ const Logs = () => {
   ]);
   const [fromDate, setFromDate] = useState(moment().subtract(7, 'days'));
   const [toDate, setToDate] = useState(moment());
-  const [rangeDate, setRangeDate] = useState([defaultStartDay, defaultEndDay]);
+  const [rangeDate, setRangeDate] = useState([dayjs(), dayjs()]);
   const [pageNumber, setPageNumber] = useState(0);
   const [pageSize, setPageSize] = useState(process.env.REACT_APP_PAGINATION_LIMIT);
   const [users, setUsers] = useState([
