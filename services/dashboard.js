@@ -15,19 +15,20 @@ module.exports = {
     let loc_obj = location === "All" ? {} : {location: location};
     const { RecentViewers, Family, Child, Room, RoomsInChild, Users } =
       await connectToDatabase();
-    let oneHourBefore = new Date();
-    oneHourBefore.setHours(oneHourBefore.getHours() - 1);
-    const currentTime = new Date();
+    // let oneHourBefore = new Date();
+    // oneHourBefore.setHours(oneHourBefore.getHours() - 1);
+    // const currentTime = new Date();
 
     let recentViewers = await RecentViewers.findAll({
-      where: {
-        requested_at: {
-          [Sequelize.Op.between]: [
-            oneHourBefore.toISOString(),
-            currentTime.toISOString(),
-          ],
-        },
-      },
+      // where: {
+      //   requested_at: {
+      //     [Sequelize.Op.between]: [
+      //       oneHourBefore.toISOString(),
+      //       currentTime.toISOString(),
+      //     ],
+      //   },
+      // },
+      order:[["requested_at", "DESC"]],
       group: ["recent_user_id"],
       include: [
         {
@@ -120,21 +121,22 @@ module.exports = {
       })
       result = filterResult
     }
-
+    result.slice(0,10);
     return result;
   },
 
   topViewersOfTheWeek: async (user, custId = null, location = "All") => {
     const { RecentViewers, Family, Users } = await connectToDatabase();
     let recentViewers = await RecentViewers.findAll({
-      where: {
-        requested_at: {
-          [Sequelize.Op.between]: [
-            moment().subtract(1, "w").startOf("day").toISOString(),
-            moment().toISOString(),
-          ],
-        },
-      },
+      // where: {
+      //   requested_at: {
+      //     [Sequelize.Op.between]: [
+      //       moment().subtract(1, "w").startOf("day").toISOString(),
+      //       moment().toISOString(),
+      //     ],
+      //   },
+      // },
+      order: [['requested_at', 'DESC']],
       attributes: {
         include: [
           [Sequelize.fn("COUNT", Sequelize.col("recent_user_id")), "count"],
@@ -188,13 +190,17 @@ module.exports = {
         if (item.family) {
            user.location.accessable_locations.forEach((i) => {
             if (item.family?.location?.accessable_locations.includes(i)) {
-              result.push(item);
+              if(!result.includes(item)){
+                result.push(item);
+              }
             }
           });
         } else {
            user.location.accessable_locations.forEach((i) => {
             if (item.user?.location?.accessable_locations.includes(i)) {
-              result.push(item);
+              if(!result.includes(item)){
+                result.push(item);
+              }
             }
           });
         }
