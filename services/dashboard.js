@@ -72,14 +72,18 @@ module.exports = {
       recentViewers.map((item) => {
         if (item.family) {
           locs.forEach((i) => {
-            if (item.family.location.accessable_locations.includes(i)) {
-              result.push(item);
+            if (item.family?.location?.accessable_locations.includes(i)) {
+              if(!result.includes(item)){
+                result.push(item);
+              }
             }
           });
         } else {
           locs.forEach((i) => {
-            if (item.user.location.accessable_locations.includes(i)) {
-              result.push(item);
+            if (item.user?.location?.accessable_locations.includes(i)) {
+              if(!result.includes(item)){
+                result.push(item);
+              }
             }
           });
         }

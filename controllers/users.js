@@ -214,6 +214,7 @@ module.exports = {
         user.transcoderBaseUrl = await customerServices.getTranscoderUrl(user.cust_id) ;
         user.max_stream_live_license = await customerServices.getMaxLiveStramAvailable(user.cust_id) ;
         if (!user.is_verified || user.status == 'inactive') {
+          await t.rollback();
           res.status(400).json({
             IsSuccess: true,
             Data: [],
@@ -235,7 +236,7 @@ module.exports = {
             }
             await fcmTokensServices.createFcmToken(fcmObj, t);
           }
-            //await t.commit();
+            await t.commit();
             res.status(200).json({
               IsSuccess: true,
               Data: { userData, ...token },
@@ -243,6 +244,7 @@ module.exports = {
             });
           } else {
             //await t.commit();
+            await t.rollback();
             res
               .status(400)
               .json({ IsSuccess: true, Data: {}, Message: CONSTANTS.INVALID_PASSWORD });
@@ -253,6 +255,7 @@ module.exports = {
         familyUser.transcoderBaseUrl = await customerServices.getTranscoderUrl(familyUser.cust_id);
         if (!familyUser.is_verified || familyUser.status == 'Disabled') {
           //await t.commit();
+          await t.rollback();
           res.status(400).json({
             IsSuccess: true,
             Data: [],
@@ -274,7 +277,7 @@ module.exports = {
             }
             await fcmTokensServices.createFcmToken(fcmObj, t);
           }
-            //await t.commit();
+            await t.commit();
             success = true;
             res.status(200).json({
               IsSuccess: true,
@@ -292,6 +295,7 @@ module.exports = {
         }
       } else {
         //await t.commit();
+        await t.rollback();
         console.log('calling=====================')
         res.status(400).json({
           IsSuccess: true,
@@ -300,12 +304,12 @@ module.exports = {
         });
         return
       }
-      await t.commit();
+      // await t.commit();
       next();
     } catch (error) {
       await logServices.addAccessErrorLog(logDetails?.log_id ?? 'not found', error);
       //await t.commit();
-      //await t.rollback();
+      await t.rollback();
       res
         .status(500)
         .json({ IsSuccess: false, error_log: error, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
