@@ -62,7 +62,7 @@ export default function StreamTable({ rows, columns, title, isLoading }) {
                               <AccessTimeIcon /> {moment(row?.stream_start_time).format('h:mm A')}
                             </Stack>{' '}
                           </Box>
-                          <Box style={{ width: '45%' }}>
+                          <Box style={{ width: '35%' }}>
                             <Chip label={row?.room?.room_name} />{' '}
                           </Box>
                           <Box style={{ width: '5%' }}>

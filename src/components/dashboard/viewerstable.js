@@ -51,9 +51,9 @@ export default function ViewersTable({ rows, columns, title, pagination, isLoadi
           <Box
             style={{
               width: '100%',
-              minHeight: pagination && rows?.length > 0 ? '196px' : '',
+              minHeight: pagination && rows?.length > 0 ? '147px' : '',
               overflowY: 'auto',
-              height: 'auto',
+              // height: 'auto',
               paddingBottom: '20px'
             }}
             className={`table-body ${!pagination ? 'viewers-table' : ''}`}>
@@ -115,25 +115,29 @@ export default function ViewersTable({ rows, columns, title, pagination, isLoadi
                             </Box>
                           </Box>
 
-                          <Box style={{ width: '20%' }}>
-                            {row.family?.children?.length > 0
-                              ? row?.family?.children?.map(
-                                  (child, index) =>
-                                    child?.first_name +
-                                    (index == row?.family?.children?.length - 1 ? '' : `,`)
-                                )
-                              : '--'}
+                          <Box style={{ width: '30%' }}>
+                            {row.family?.children?.length > 0 ? (
+                              row?.family?.children?.map(
+                                (child, index) =>
+                                  child?.first_name +
+                                  (index == row?.family?.children?.length - 1 ? '' : `,`)
+                              )
+                            ) : (
+                              <Box sx={{ marginLeft: '15px' }}>{'--'}</Box>
+                            )}
                           </Box>
-                          <Box style={{ width: '40%' }}>
+                          <Box style={{ width: '30%' }}>
                             {row?.family?.children[0]?.roomsInChild &&
-                            row?.family?.children[0]?.roomsInChild.length > 0
-                              ? row?.family?.children[0]?.roomsInChild?.map((room, index) => (
-                                  <Chip
-                                    key={room?.room.room_name + '-' + index}
-                                    label={room?.room.room_name}
-                                  />
-                                ))
-                              : '--'}
+                            row?.family?.children[0]?.roomsInChild.length > 0 ? (
+                              row?.family?.children[0]?.roomsInChild?.map((room, index) => (
+                                <Chip
+                                  key={room?.room.room_name + '-' + index}
+                                  label={room?.room.room_name}
+                                />
+                              ))
+                            ) : (
+                              <Box sx={{ marginLeft: '15px' }}>{'--'}</Box>
+                            )}
                           </Box>
                           <Box style={{ width: '5%' }}>
                             <KeyboardArrowRightIcon />
@@ -176,7 +180,7 @@ export default function ViewersTable({ rows, columns, title, pagination, isLoadi
                         lastHoursUsers: false
                       }}>
                       <Box className="div-row row-marging">
-                        <Box style={{ width: '50%' }}>
+                        <Box style={{ width: '55%' }}>
                           <Box className="viewer-profile">
                             <Box className="profile-img">
                               {row.family?.profile_image || row.user?.profile_image ? (
@@ -196,7 +200,7 @@ export default function ViewersTable({ rows, columns, title, pagination, isLoadi
                               (row?.family?.last_name || row?.user?.last_name)}
                           </Box>
                         </Box>
-                        <Box style={{ width: '45%' }}>{row?.count}</Box>
+                        <Box style={{ width: '35%' }}>{row?.count}</Box>
                         <Box style={{ width: '5%' }}>
                           <KeyboardArrowRightIcon />
                         </Box>

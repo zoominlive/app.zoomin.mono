@@ -56,7 +56,7 @@ const topViewersColumns = [
 ];
 const lastHourViewersColumns = [
   { label: 'Viewers', width: '30%' },
-  { label: 'Children', width: '20%' },
+  { label: 'Children', width: '30%' },
   { label: 'Room', width: '40%' }
 ];
 const streamColumns = ['Stream Name', 'Time', 'Room'];
