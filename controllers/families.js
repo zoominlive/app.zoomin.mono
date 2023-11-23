@@ -174,6 +174,21 @@ module.exports = {
       let emailExist = false;
       familyMember = await familyServices.getFamilyMemberById(params.family_member_id, t);
 
+      if(params.inviteFamily) {
+        try {
+          const token = await familyServices.createPasswordToken(familyMember);
+          const name = familyMember?.first_name + ' ' + familyMember?.last_name;
+          const originalUrl = process.env.FE_SITE_BASE_URL + 'set-password?' + 'token=' + token;
+          await sendRegistrationMailforFamilyMember(name, familyMember.email, originalUrl);
+          res.status(200).json({
+            IsSuccess: true,
+            Message: CONSTANTS.RESEND_INVITE
+          });
+        } catch (error) {
+          console.log(error);
+        }
+      }
+
       if (params.email !== familyMember.email) {
         emailExist = await userServices.checkEmailExist(params.email, t);
       }
