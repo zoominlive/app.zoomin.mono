@@ -900,6 +900,20 @@ module.exports = {
       const params = req.body;
 
       const user = await userServices.getUserById(params.userId, t);
+      if(params.inviteUser) {
+        try {
+          const token = await userServices.createPasswordToken(user);
+          const name = user?.first_name + ' ' + user?.last_name;
+          const originalUrl = process.env.FE_SITE_BASE_URL + 'set-password?' + 'token=' + token;
+          await sendRegistrationMailforUser(name, user.email, originalUrl);
+          res.status(200).json({
+            IsSuccess: true,
+            Message: CONSTANTS.RESEND_INVITE
+          });
+        } catch (error) {
+          console.log(error);
+        }
+      }
 
       if (params?.image) {
         const imageUrl = await s3BucketImageUploader._upload(req.body.image, user.user_id);
