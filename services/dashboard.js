@@ -240,8 +240,14 @@ module.exports = {
         "scheduled_end_date",
         "scheduled_enable_date",
         "family_id",
-        "location"
+        "location",
+        "status"
       ],
+      order: [
+        ['scheduled_end_date', 'desc'],
+        ['scheduled_enable_date', 'desc']
+      ],
+      limit: 15,
       include: [
         {
           model: Family,
@@ -293,26 +299,26 @@ module.exports = {
           model: RoomsInChild,
           as: "roomsInChild",
           attributes: ["scheduled_disable_date", "scheduled_enable_date"],
-          where: {
-            [Sequelize.Op.or]: [
-              {
-                scheduled_disable_date: {
-                  [Sequelize.Op.between]: [
-                    moment().toISOString(),
-                    moment().add(1, "w").toISOString(),
-                  ],
-                },
-              },
-              {
-                scheduled_enable_date: {
-                  [Sequelize.Op.between]: [
-                    moment().toISOString(),
-                    moment().add(1, "w").toISOString(),
-                  ],
-                },
-              },
-            ],
-          },
+          // where: {
+          //   [Sequelize.Op.or]: [
+          //     {
+          //       scheduled_disable_date: {
+          //         [Sequelize.Op.between]: [
+          //           moment().toISOString(),
+          //           moment().add(1, "w").toISOString(),
+          //         ],
+          //       },
+          //     },
+          //     {
+          //       scheduled_enable_date: {
+          //         [Sequelize.Op.between]: [
+          //           moment().toISOString(),
+          //           moment().add(1, "w").toISOString(),
+          //         ],
+          //       },
+          //     },
+          //   ],
+          // },
           include: [
             {
               model: Room,
