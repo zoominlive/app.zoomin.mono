@@ -47,8 +47,10 @@ import LinerLoader from '../common/linearLoader';
 import Logger from '../../utils/logger';
 
 const AccessColumns = [
-  { label: 'Children', width: '70%' },
-  { label: 'Rooms', width: '30%' }
+  { label: 'Children', width: '25%' },
+  { label: 'Rooms', width: '25%' },
+  { label: 'Date', width: '25%' },
+  { label: 'Status', width: '25%' }
 ];
 const topViewersColumns = [
   { label: 'Viewers', width: '50%' },
@@ -862,7 +864,7 @@ const Dashboard = () => {
               <AccessTable
                 rows={statisticsData?.childrenWithEnableDate || []}
                 columns={AccessColumns}
-                title={'Gaining Access This Week'}
+                title={'Gaining Access'}
                 isLoading={isLoading}
                 getDashboardData={getDashboardData}
                 setFamily={setFamily}
@@ -877,7 +879,7 @@ const Dashboard = () => {
               <AccessTable
                 rows={statisticsData?.childrenWithDisableDate || []}
                 columns={AccessColumns}
-                title={'Loosing Access This Week'}
+                title={'Loosing Access'}
                 isLoading={isLoading}
                 getDashboardData={getDashboardData}
                 setFamily={setFamily}

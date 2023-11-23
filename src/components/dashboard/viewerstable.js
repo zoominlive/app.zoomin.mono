@@ -32,7 +32,9 @@ export default function ViewersTable({ rows, columns, title, pagination, isLoadi
           spacing={2}
           justifyContent={'space-between'}
           style={{ padding: '20px 24px' }}>
-          <Typography>{title}</Typography>
+          <Typography sx={{ padding: title === 'Latest Viewers' && 'unset !important' }}>
+            {title}
+          </Typography>
           <Link href="#" sx={{ fontFamily: 'small', color: '#5A53DD' }}>
             View More
           </Link>
@@ -93,7 +95,9 @@ export default function ViewersTable({ rows, columns, title, pagination, isLoadi
                           location: [authCtx?.location],
                           lastHoursUsers: true
                         }}>
-                        <Box className="div-row row-marging">
+                        <Box
+                          sx={{ padding: title === 'Latest Viewers' && '5px 16px !important' }}
+                          className="div-row row-marging">
                           <Box style={{ width: '30%' }}>
                             <Box className="viewer-profile">
                               <Box className="profile-img">

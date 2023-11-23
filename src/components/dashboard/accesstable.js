@@ -59,7 +59,7 @@ export default function AccessTable({
                     className="div-row row-marging"
                     key={`${row?.childFirstName}-${index}`}
                     onClick={() => hanldeRowClick(row?.family, index)}>
-                    <Box style={{ width: '70%' }}>
+                    <Box style={{ width: '25%' }}>
                       <Stack direction={'row'} alignItems={'center'} gap={1}>
                         <Box className="viewer-profile">
                           <Box className="profile-img">
@@ -69,16 +69,18 @@ export default function AccessTable({
                             </Avatar>
                           </Box>
                         </Box>
-                        {row?.childFirstName + ' ' + row.childLastName}
+                        {/* {row?.childFirstName + ' ' + row.childLastName} */}
                       </Stack>
                     </Box>
-                    <Box className="child-rooms">
+                    <Box style={{ width: '25%' }} className="child-rooms">
                       <Box>
                         {row?.rooms?.map((r) => (
                           <Chip key={r} label={r} />
                         ))}
                       </Box>
                     </Box>
+                    <Box style={{ width: '30%' }}>{row.date}</Box>
+                    <Box style={{ width: '15%' }}>{row.status}</Box>
                   </Box>
                 );
               })}
