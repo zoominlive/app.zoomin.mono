@@ -19,7 +19,7 @@ import {
 import CloseIcon from '@mui/icons-material/Close';
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
-import { Form, Formik } from 'formik';
+import { Form, Formik, useFormik } from 'formik';
 import * as yup from 'yup';
 import PhoneNumberInput from '../common/phonenumberinput';
 import { LoadingButton } from '@mui/lab';
@@ -47,6 +47,8 @@ const ParentsForm = (props) => {
   const [submitLoading, setSubmitLoading] = useState(false);
   const [isCloseDialog, setIsCloseDialog] = useState(false);
 
+  let verifiedPrimaryParent = props.primaryParent?.is_verified;
+  let verifiedSecondaryParent = props.secondaryParent?.is_verified;
   // Method to create/edit parent
   const handleSubmit = (data) => {
     setSubmitLoading(true);
@@ -128,6 +130,87 @@ const ParentsForm = (props) => {
   const handleClose = () => {
     setIsCloseDialog(!isCloseDialog);
   };
+
+  const resendInvite = (newData) => {
+    if (props.primaryParent || props.secondaryParent) {
+      const family_member_id = props.primaryParent
+        ? props.primaryParent.family_member_id
+        : props.secondaryParent.family_member_id;
+      setSubmitLoading(true);
+      API.put('family/edit', { ...newData, family_member_id, inviteFamily: true }).then(
+        (response) => {
+          if (response.status === 200) {
+            enqueueSnackbar(response.data.Message, { variant: 'success' });
+            props.getFamiliesList();
+            if (props.primaryParent) {
+              props.setFamily((prevState) => {
+                const tempFamily = { ...prevState };
+                tempFamily.primary = {
+                  family_member_id: props.primaryParent.family_member_id,
+                  ...newData
+                };
+                console.log('tempFamily', tempFamily);
+                return tempFamily;
+              });
+            } else {
+              props.setFamily((prevState) => {
+                const tempFamily = { ...prevState };
+                const index = tempFamily.secondary.findIndex(
+                  (parent) => parent.family_member_id === props.secondaryParent.family_member_id
+                );
+                tempFamily.secondary[index] = {
+                  family_member_id: props.secondaryParent.family_member_id,
+                  ...newData
+                };
+                console.log('tempFamily', tempFamily);
+                return tempFamily;
+              });
+            }
+            handleDialogClose();
+          } else {
+            errorMessageHandler(
+              enqueueSnackbar,
+              response?.response?.data?.Message || 'Something Went Wrong.',
+              response?.response?.status,
+              authCtx.setAuthError
+            );
+          }
+          setSubmitLoading(false);
+        }
+      );
+    }
+  };
+
+  const formik = useFormik({
+    initialValues: {
+      first_name: props.primaryParent
+        ? props.primaryParent.first_name
+        : props.secondaryParent
+        ? props.secondaryParent.first_name
+        : '',
+      last_name: props.primaryParent
+        ? props.primaryParent.last_name
+        : props.secondaryParent
+        ? props.secondaryParent.last_name
+        : '',
+      relationship: props.primaryParent
+        ? props.primaryParent.relationship
+        : props.secondaryParent
+        ? props.secondaryParent.relationship
+        : '',
+      phone: props.primaryParent
+        ? props.primaryParent.phone
+        : props.secondaryParent
+        ? props.secondaryParent.phone
+        : '',
+      email: props.primaryParent
+        ? props.primaryParent.email
+        : props.secondaryParent
+        ? props.secondaryParent.email
+        : ''
+    }
+  });
+
   return (
     <Dialog open={props.open} onClose={handleClose} fullWidth className="add-parentdialog">
       <DialogTitle sx={{ paddingTop: 3.5 }}>
@@ -207,33 +290,7 @@ const ParentsForm = (props) => {
           enableReinitialize
           validateOnChange
           validationSchema={validationSchema}
-          initialValues={{
-            first_name: props.primaryParent
-              ? props.primaryParent.first_name
-              : props.secondaryParent
-              ? props.secondaryParent.first_name
-              : '',
-            last_name: props.primaryParent
-              ? props.primaryParent.last_name
-              : props.secondaryParent
-              ? props.secondaryParent.last_name
-              : '',
-            relationship: props.primaryParent
-              ? props.primaryParent.relationship
-              : props.secondaryParent
-              ? props.secondaryParent.relationship
-              : '',
-            phone: props.primaryParent
-              ? props.primaryParent.phone
-              : props.secondaryParent
-              ? props.secondaryParent.phone
-              : '',
-            email: props.primaryParent
-              ? props.primaryParent.email
-              : props.secondaryParent
-              ? props.secondaryParent.email
-              : ''
-          }}
+          initialValues={formik.initialValues}
           onSubmit={handleSubmit}>
           {({ values, setFieldValue, touched, errors, isValidating }) => {
             return (
@@ -329,13 +386,30 @@ const ParentsForm = (props) => {
                   </Grid>
                 </DialogContent>
                 <Divider />
-                <DialogActions>
+                <DialogActions
+                  sx={{
+                    justifyContent:
+                      verifiedPrimaryParent || verifiedSecondaryParent
+                        ? 'flex-end'
+                        : 'space-between'
+                  }}>
                   {/* <Button
                   disabled={submitLoading || isValidating}
                   variant="text"
                   onClick={handleDialogClose}>
                   CANCEL
                 </Button> */}
+                  {verifiedPrimaryParent || verifiedSecondaryParent ? (
+                    ''
+                  ) : (
+                    <LoadingButton
+                      loadingPosition={submitLoading ? 'start' : undefined}
+                      startIcon={submitLoading && <SaveIcon />}
+                      loading={submitLoading}
+                      onClick={() => resendInvite(formik.values)}>
+                      {submitLoading === false && 'Resend Invite'}
+                    </LoadingButton>
+                  )}
                   <LoadingButton
                     className="add-btn dashboard-btn"
                     loading={submitLoading || isValidating}

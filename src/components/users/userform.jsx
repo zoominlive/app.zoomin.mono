@@ -27,7 +27,7 @@ import {
 } from '@mui/material';
 import { useDropzone } from 'react-dropzone';
 import { toBase64 } from '../../utils/base64converter';
-import { Form, Formik } from 'formik';
+import { Form, Formik, useFormik } from 'formik';
 import * as yup from 'yup';
 import { LoadingButton } from '@mui/lab';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -72,6 +72,30 @@ const UserForm = (props) => {
             .min(1, 'Select at least one room')
             .required('required')
         : yup.array()
+  });
+  let isUserVerified = props.user?.is_verified;
+  const formik = useFormik({
+    initialValues: {
+      first_name: props?.user?.first_name || '',
+      last_name: props?.user?.last_name || '',
+      email: props?.user?.email || '',
+      role: props?.user?.role || '',
+      locations: props?.user?.location?.selected_locations
+        ? props?.user?.location?.selected_locations?.sort((a, b) => (a > b ? 1 : -1))
+        : [],
+      rooms: props?.user?.roomsInTeacher
+        ? props.user?.roomsInTeacher.map((room) => {
+            return {
+              room_name: room.room.room_name,
+              location: room.room.location,
+              room_id: room.room_id
+            };
+          })
+        : [],
+      stream_live_license: !_.isNil(props?.user?.stream_live_license)
+        ? props?.user?.stream_live_license
+        : false
+    }
   });
 
   useEffect(() => {
@@ -198,6 +222,33 @@ const UserForm = (props) => {
       );
     }
   };
+  const resendInvite = (newData) => {
+    const payload = {
+      ...newData,
+      inviteUser: true,
+      userId: props.user && props.user.user_id,
+      cust_id: props.user && props.user.cust_id
+    };
+    setSubmitLoading(true);
+    API.put('users/edit', payload).then((response) => {
+      if (response.status === 200) {
+        enqueueSnackbar(response?.data?.Message, {
+          variant: 'success'
+        });
+        props.getUsersList();
+        handleFormDialogClose();
+        handleLivestream();
+      } else {
+        errorMessageHandler(
+          enqueueSnackbar,
+          response?.response?.data?.Message || 'Something Went Wrong.',
+          response?.response?.status,
+          authCtx.setAuthError
+        );
+      }
+      setSubmitLoading(false);
+    });
+  };
 
   // Method to remove profile photo
   const handlePhotoDelete = () => {
@@ -283,27 +334,7 @@ const UserForm = (props) => {
           enableReinitialize
           validateOnChange
           validationSchema={validationSchema}
-          initialValues={{
-            first_name: props?.user?.first_name || '',
-            last_name: props?.user?.last_name || '',
-            email: props?.user?.email || '',
-            role: props?.user?.role || '',
-            locations: props?.user?.location?.selected_locations
-              ? props?.user?.location?.selected_locations?.sort((a, b) => (a > b ? 1 : -1))
-              : [],
-            rooms: props?.user?.roomsInTeacher
-              ? props.user?.roomsInTeacher.map((room) => {
-                  return {
-                    room_name: room.room.room_name,
-                    location: room.room.location,
-                    room_id: room.room_id
-                  };
-                })
-              : [],
-            stream_live_license: !_.isNil(props?.user?.stream_live_license)
-              ? props?.user?.stream_live_license
-              : false
-          }}
+          initialValues={formik.initialValues}
           onSubmit={handleSubmit}>
           {({ values, setFieldValue, touched, errors }) => {
             return (
@@ -528,10 +559,25 @@ const UserForm = (props) => {
                   </Grid>
                 </DialogContent>
 
-                <DialogActions sx={{ paddingRight: 4, paddingBottom: 3 }}>
+                <DialogActions
+                  sx={{
+                    paddingRight: 4,
+                    paddingBottom: 3,
+                    justifyContent:
+                      isUserVerified || isUserVerified === undefined ? 'flex-end' : 'space-between'
+                  }}>
                   {/* <Button disabled={submitLoading} variant="text" onClick={handleFormDialogClose}>
                   CANCEL
                 </Button> */}
+                  {props.user && isUserVerified === false && (
+                    <LoadingButton
+                      loadingPosition={submitLoading ? 'start' : undefined}
+                      startIcon={submitLoading && <SaveIcon />}
+                      loading={submitLoading}
+                      onClick={() => resendInvite(formik.values)}>
+                      {submitLoading === false && 'Resend Invite'}
+                    </LoadingButton>
+                  )}
                   <LoadingButton
                     className="add-btn save-changes-btn"
                     loading={submitLoading}
