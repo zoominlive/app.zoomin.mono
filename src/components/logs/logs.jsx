@@ -171,7 +171,7 @@ const Logs = () => {
   const [logsPayload, setLogsPayload] = useState({
     pageNumber: 0,
     pageSize: parseInt(process.env.REACT_APP_PAGINATION_LIMIT, 10),
-    from: moment().subtract(7, 'days').format('YYYY-MM-DD'),
+    from: moment().format('YYYY-MM-DD'),
     to: moment().format('YYYY-MM-DD'),
     type: 'Access Log',
     functions: [
@@ -1250,7 +1250,7 @@ const Logs = () => {
                           />
                         </Grid>
                       ) : null}
-                      <Grid item md={1.5} sm={6} sx={{ marginTop: '10px' }}>
+                      <Grid item md={1.5} sm={6} sx={{ marginTop: '20px' }}>
                         <Button
                           className="log-btn"
                           variant="outlined"

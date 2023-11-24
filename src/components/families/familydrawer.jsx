@@ -1164,6 +1164,7 @@ const FamilyDrawer = (props) => {
         locationsToDisable={locationsToDisable}
         handleDialogClose={handleDisableDialogClose}
         handleDisable={handleDisable}
+        setOpen={setIsDisableDialogOpen}
       />
       <RoomDialog
         open={isRoomDialogOpen}
