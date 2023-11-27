@@ -52,8 +52,8 @@ export default function StreamTable({ rows, columns, title, isLoading }) {
                       }}>
                       <>
                         <Box className="div-row">
-                          <Box style={{ width: '35%' }}>{row?.stream_name}</Box>
-                          <Box style={{ width: '35%' }}>
+                          <Box style={{ width: '36%' }}>{row?.stream_name}</Box>
+                          <Box style={{ width: '36%' }}>
                             <Stack
                               direction={'row'}
                               alignItems="center"

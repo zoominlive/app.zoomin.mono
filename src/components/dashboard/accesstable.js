@@ -35,15 +35,17 @@ export default function AccessTable({
 
   return (
     <>
-      <Paper sx={{ marginTop: 2, height: '96%', minHeight: '338px' }}>
-        <Box>
-          <Typography style={{ padding: '20px 24px' }}>{title}</Typography>
-          <Box className="div-header">
-            {columns.map((column, index) => (
-              <Box key={index} style={{ width: column.width }}>
-                {column.label}
-              </Box>
-            ))}
+      <Paper sx={{ marginTop: 2, height: '96%', minHeight: '338px', boxShadow: 'unset' }}>
+        <Box className="zl__table-block">
+          <Typography style={{ padding: '20px 14px' }}>{title}</Typography>
+          <Box className="div-header zl__th-wrap">
+            <Box className="zl__th-block">
+              {columns.map((column, index) => (
+                <Box key={index} style={{ width: column.width }}>
+                  {column.label}
+                </Box>
+              ))}
+            </Box>
           </Box>
           {rows && rows?.length > 0 ? (
             <Box
@@ -52,14 +54,14 @@ export default function AccessTable({
                 minHeight: '230px',
                 overflowY: 'auto'
               }}
-              className="table-body">
+              className="table-body zl__tr-grp">
               {rows.map((row, index) => {
                 return (
                   <Box
-                    className="div-row row-marging"
+                    className="div-row row-marging zl__tr-block"
                     key={`${row?.childFirstName}-${index}`}
                     onClick={() => hanldeRowClick(row?.family, index)}>
-                    <Box style={{ width: '25%' }}>
+                    <Box className="zl__td-block" style={{ width: '25%' }}>
                       <Stack direction={'row'} alignItems={'center'} gap={1}>
                         <Box className="viewer-profile">
                           <Box className="profile-img">
@@ -72,15 +74,19 @@ export default function AccessTable({
                         {/* {row?.childFirstName + ' ' + row.childLastName} */}
                       </Stack>
                     </Box>
-                    <Box style={{ width: '25%' }} className="child-rooms">
+                    <Box style={{ width: '25%' }} className="child-rooms zl__td-block">
                       <Box>
                         {row?.rooms?.map((r) => (
                           <Chip key={r} label={r} />
                         ))}
                       </Box>
                     </Box>
-                    <Box style={{ width: '30%' }}>{row.date}</Box>
-                    <Box style={{ width: '15%' }}>{row.status}</Box>
+                    <Box className="zl__td-block" style={{ width: '25%' }}>
+                      {row.date}
+                    </Box>
+                    <Box className="zl__td-block" style={{ width: '25%' }}>
+                      {row.status}
+                    </Box>
                   </Box>
                 );
               })}

@@ -25,38 +25,39 @@ export default function ViewersTable({ rows, columns, title, pagination, isLoadi
     <Paper
       sx={{ height: '96%', minHeight: !pagination ? '338px' : '', marginTop: !pagination ? 0 : 2 }}
       className={!pagination ? 'top-viewers' : ''}>
-      <Box>
+      <Box className="zl__table-block">
         {/* <Typography style={{ padding: '20px 24px' }}>{title}</Typography> */}
         <Stack
           direction="row"
           spacing={2}
           justifyContent={'space-between'}
-          style={{ padding: '20px 24px' }}>
-          <Typography sx={{ padding: title === 'Latest Viewers' && 'unset !important' }}>
-            {title}
-          </Typography>
-          <Link href="#" sx={{ fontFamily: 'small', color: '#5A53DD' }}>
+          style={{ padding: '20px 14px' }}>
+          <Typography sx={{ padding: 'unset !important' }}>{title}</Typography>
+          <Link to="/logs" sx={{ fontFamily: 'small', color: '#5A53DD' }}>
             View More
           </Link>
         </Stack>
 
-        <Box className="div-header">
-          {columns.map((column, index) => (
-            <Box key={index} style={{ width: column.width }}>
-              {column.label}
-            </Box>
-          ))}
-          <Box key={'action'} style={{ width: '5%' }}></Box>
+        <Box className="div-header zl__th-wrap">
+          <Box className="zl__th-block">
+            {columns.map((column, index) => (
+              <Box key={index} style={{ width: column.width }}>
+                {column.label}
+              </Box>
+            ))}
+            <Box key={'action'} style={{ width: '25%' }}></Box>
+          </Box>
         </Box>
 
         {rows && rows?.length > 0 ? (
           <Box
             style={{
               width: '100%',
-              minHeight: pagination && rows?.length > 0 ? '147px' : '',
+              minHeight: pagination && rows?.length > 0 ? '161px' : '',
               overflowY: 'auto',
               // height: 'auto',
-              paddingBottom: '20px'
+              paddingBottom: '20px',
+              overflowX: 'hidden'
             }}
             className={`table-body ${!pagination ? 'viewers-table' : ''}`}>
             {pagination
@@ -95,10 +96,8 @@ export default function ViewersTable({ rows, columns, title, pagination, isLoadi
                           location: [authCtx?.location],
                           lastHoursUsers: true
                         }}>
-                        <Box
-                          sx={{ padding: title === 'Latest Viewers' && '5px 16px !important' }}
-                          className="div-row row-marging">
-                          <Box style={{ width: '30%' }}>
+                        <Box className="div-row row-marging zl__tr-viewers-block">
+                          <Box className="zl__td-block" style={{ width: '25%' }}>
                             <Box className="viewer-profile">
                               <Box className="profile-img">
                                 {row.family?.profile_image || row.user?.profile_image ? (
@@ -119,7 +118,7 @@ export default function ViewersTable({ rows, columns, title, pagination, isLoadi
                             </Box>
                           </Box>
 
-                          <Box style={{ width: '30%' }}>
+                          <Box className="zl__td-block" style={{ width: '25%' }}>
                             {row.family?.children?.length > 0 ? (
                               row?.family?.children?.map(
                                 (child, index) =>
@@ -127,10 +126,10 @@ export default function ViewersTable({ rows, columns, title, pagination, isLoadi
                                   (index == row?.family?.children?.length - 1 ? '' : `,`)
                               )
                             ) : (
-                              <Box sx={{ marginLeft: '15px' }}>{'--'}</Box>
+                              <Box>{'--'}</Box>
                             )}
                           </Box>
-                          <Box style={{ width: '30%' }}>
+                          <Box className="zl__td-block" style={{ width: '25%' }}>
                             {row?.family?.children[0]?.roomsInChild &&
                             row?.family?.children[0]?.roomsInChild.length > 0 ? (
                               row?.family?.children[0]?.roomsInChild?.map((room, index) => (
@@ -140,10 +139,10 @@ export default function ViewersTable({ rows, columns, title, pagination, isLoadi
                                 />
                               ))
                             ) : (
-                              <Box sx={{ marginLeft: '15px' }}>{'--'}</Box>
+                              <Box>{'--'}</Box>
                             )}
                           </Box>
-                          <Box style={{ width: '5%' }}>
+                          <Box className="zl__td-block" style={{ width: '25%' }}>
                             <KeyboardArrowRightIcon />
                           </Box>
                         </Box>
@@ -183,8 +182,8 @@ export default function ViewersTable({ rows, columns, title, pagination, isLoadi
                         location: [authCtx?.location],
                         lastHoursUsers: false
                       }}>
-                      <Box className="div-row row-marging">
-                        <Box style={{ width: '55%' }}>
+                      <Box className="div-row row-marging zl__tr-viewers-block">
+                        <Box className="zl__td-block" style={{ width: '50%' }}>
                           <Box className="viewer-profile">
                             <Box className="profile-img">
                               {row.family?.profile_image || row.user?.profile_image ? (
@@ -204,8 +203,10 @@ export default function ViewersTable({ rows, columns, title, pagination, isLoadi
                               (row?.family?.last_name || row?.user?.last_name)}
                           </Box>
                         </Box>
-                        <Box style={{ width: '35%' }}>{row?.count}</Box>
-                        <Box style={{ width: '5%' }}>
+                        <Box className="zl__td-block" style={{ width: '45%' }}>
+                          {row?.count}
+                        </Box>
+                        <Box className="zl__td-block" style={{ width: '25%' }}>
                           <KeyboardArrowRightIcon />
                         </Box>
                       </Box>
@@ -217,7 +218,7 @@ export default function ViewersTable({ rows, columns, title, pagination, isLoadi
           <Stack
             alignItems="center"
             justifyContent="center"
-            sx={{ paddingTop: 2, minHeight: !pagination ? '335px' : '' }}>
+            sx={{ paddingTop: 2, minHeight: !pagination ? '335px' : '165px' }}>
             <NoDataDiv />
           </Stack>
         ) : null}

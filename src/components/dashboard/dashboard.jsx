@@ -57,9 +57,9 @@ const topViewersColumns = [
   { label: 'Views', width: '45%' }
 ];
 const lastHourViewersColumns = [
-  { label: 'Viewers', width: '30%' },
-  { label: 'Children', width: '30%' },
-  { label: 'Room', width: '40%' }
+  { label: 'Viewers', width: '25%' },
+  { label: 'Children', width: '25%' },
+  { label: 'Room', width: '25%' }
 ];
 const streamColumns = ['Stream Name', 'Time', 'Room'];
 
@@ -860,7 +860,7 @@ const Dashboard = () => {
         </Grid>
         <Grid container spacing={3}>
           <Grid item md={12} sm={12} xs={12} lg={3.5}>
-            <Paper sx={{ marginTop: 2 }}>
+            <Paper sx={{ marginTop: 2 }} className="zl__table-res">
               <AccessTable
                 rows={statisticsData?.childrenWithEnableDate || []}
                 columns={AccessColumns}
@@ -875,7 +875,7 @@ const Dashboard = () => {
             </Paper>
           </Grid>
           <Grid item md={12} sm={12} xs={12} lg={3.5}>
-            <Paper sx={{ marginTop: 2 }}>
+            <Paper sx={{ marginTop: 2 }} className="zl__table-res">
               <AccessTable
                 rows={statisticsData?.childrenWithDisableDate || []}
                 columns={AccessColumns}
@@ -890,18 +890,20 @@ const Dashboard = () => {
             </Paper>
           </Grid>
           <Grid item md={12} sm={12} xs={12} lg={5}>
-            <ViewersTable
-              rows={
-                statisticsData?.enroledStreamsDetails?.length > 0 &&
-                statisticsData?.enroledStreamsDetails?.some((it) => !_.isNil(it?.family))
-                  ? statisticsData?.enroledStreamsDetails
-                  : []
-              }
-              columns={lastHourViewersColumns}
-              title={'Latest Viewers'}
-              pagination={true}
-              isLoading={isLoading}
-            />
+            <Paper sx={{ marginTop: 2 }} className="zl__table-res">
+              <ViewersTable
+                rows={
+                  statisticsData?.enroledStreamsDetails?.length > 0 &&
+                  statisticsData?.enroledStreamsDetails?.some((it) => !_.isNil(it?.family))
+                    ? statisticsData?.enroledStreamsDetails
+                    : []
+                }
+                columns={lastHourViewersColumns}
+                title={'Latest Viewers'}
+                pagination={true}
+                isLoading={isLoading}
+              />
+            </Paper>
           </Grid>
         </Grid>
         <Grid container spacing={3} mt={2}>
@@ -945,7 +947,7 @@ const Dashboard = () => {
             </Box>
           </Grid>
           <Grid item md={12} sm={12} xs={12} lg={5} style={{ paddingTop: 0 }}>
-            <Paper sx={{ marginTop: 0 }}>
+            <Paper sx={{ marginTop: 0 }} className="zl__table-res">
               <ViewersTable
                 rows={
                   statisticsData?.topViewers?.length > 0
