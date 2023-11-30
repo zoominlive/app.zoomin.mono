@@ -116,14 +116,19 @@ const Dashboard = () => {
       // Connection opened
       socket.addEventListener('open', (event) => {
         console.log('Connected', event);
+        console.log('Date.now()', new Date().toLocaleString());
+        // Send a ping message to the server
+        setInterval(() => {
+          socket.send('ping');
+        }, 60000); // Send a ping every 60 seconds
         socket.send(JSON.stringify(data), event);
       });
 
       // Listen for messages
       socket.addEventListener('message', (event) => {
         let data = JSON.parse(event.data);
-        console.log('===updateDashboardData', data);
-        if (data?.message) {
+        if (data.message !== 'pong') console.log('===updateDashboardData', data);
+        if (data?.message && data?.message !== 'pong') {
           enqueueSnackbar(data?.message, { variant: 'success' });
         } else {
           setStatisticsData((prevState) => ({
@@ -143,6 +148,7 @@ const Dashboard = () => {
       });
 
       socket.addEventListener('close', (event) => {
+        console.log('==Disconnected==', new Date().toLocaleString());
         console.log('WebSocket connection closed with code:', event.code, 'reason:', event.reason);
         socket = new WebSocket(process.env.REACT_APP_SOCKET_URL);
         socket.addEventListener('open', (event) => {
