@@ -88,7 +88,9 @@ module.exports = {
             childFirstName: child.first_name,
             childLastName: child.last_name,
             rooms: roomsToDisable,
-            family: child.family
+            family: child.family,
+            date: child.scheduled_end_date,
+            status: child.status
           });
         }
         if (roomsToEnable.length != 0) {
@@ -96,7 +98,9 @@ module.exports = {
             childFirstName: child.first_name,
             childLastName: child.last_name,
             rooms: roomsToEnable,
-            family: child.family
+            family: child.family,
+            date: child.scheduled_enable_date,
+            status: child.status
           });
         }
         if (roomsToEnable.length == 0 && roomsToDisable.length == 0) {
@@ -105,7 +109,9 @@ module.exports = {
               childFirstName: child.first_name,
               childLastName: child.last_name,
               rooms: roomsToDisable,
-              family: child.family
+              family: child.family,
+              date: child.scheduled_end_date,
+              status: child.status
             });
           }
           if (child.scheduled_enable_date != null) {
@@ -113,7 +119,9 @@ module.exports = {
               childFirstName: child.first_name,
               childLastName: child.last_name,
               rooms: roomsToEnable,
-              family: child.family
+              family: child.family,
+              date: child.scheduled_enable_date,
+              status: child.status
             });
           }
         }

@@ -15,15 +15,15 @@ provider:
   websocketsApiName: websockets-api
   websocketsApiRouteSelectionExpression: $request.body.action
   environment:
-    AWS_BUCKET_NAME: zoomin-dev-images
-    ACCESS_KEY_ID: AKIAYEUNNGGXSZ5LFG4C
-    SECRET_ACCESS_KEY: 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
+    AWS_BUCKET_NAME: ${file(./env.json):${opt:stage, 'stage'}.AWS_BUCKET_NAME}
+    ACCESS_KEY_ID: ${file(./env.json):${opt:stage, 'stage'}.ACCESS_KEY_ID}
+    SECRET_ACCESS_KEY: ${file(./env.json):${opt:stage, 'stage'}.SECRET_ACCESS_KEY}
     EMAIL_SOURCE_ACCOUNT: "support@zoominlive.com"
     RDS_HOST: zoomin-1.crzgnnp8iqzv.us-west-2.rds.amazonaws.com
     RDS_PORT: 3306
     RDS_USER: zoomin_dbuser
-    RDS_PASSWORD: Wk8$b6!xR
-    RDS_DB_NAME: zoomin
+    RDS_PASSWORD: ${file(./env.json):${opt:stage, 'stage'}.RDS_PASSWORD}
+    RDS_DB_NAME: ${file(./env.json):${opt:stage, 'stage'}.RDS_DB_NAME}
     #RDS_HOST: 127.0.0.1
     #RDS_PORT: 3306
     #RDS_USER: root
@@ -34,7 +34,7 @@ provider:
     ACCESS_TOKEN_EXPIRY: 1d
     REFRESH_TOKEN_EXPIRY: 1d
     NODE_ENV: production
-    FE_SITE_BASE_URL: https://app2.zoominlive.com/
+    FE_SITE_BASE_URL: ${file(./env.json):${opt:stage, 'stage'}.FE_SITE_BASE_URL}
     type: "service_account"
     project_id: "zoomin-push-notifications"
     private_key_id: "1103eee93f0e16663970b897519c219dfef17831"
@@ -45,11 +45,11 @@ provider:
     token_uri: "https://oauth2.googleapis.com/token"
     auth_provider_x509_cert_url: "https://www.googleapis.com/oauth2/v1/certs"
     client_x509_cert_url: "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-eg6hb%40zoomin-push-notifications.iam.gserviceaccount.com"
-    websocket_endpoint: "https://2o6tmqu275.execute-api.us-west-2.amazonaws.com/dev"
+    websocket_endpoint: ${file(./env.json):${opt:stage, 'stage'}.WS_ENDPOINT}
     #websocket_endpoint: "http://localhost:3001"
     
-  stage: dev
-  region: us-west-2
+  stage: ${opt:stage, 'stage'}
+  region: ${file(./env.json):${opt:stage, 'stage'}.REGION}
 custom:
   prune:
     automatic: true

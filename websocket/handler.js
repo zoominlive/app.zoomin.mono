@@ -3,6 +3,7 @@ const sequelize = require("../lib/database");
 const userServices = require("../services/users");
 const familyServices = require("../services/families");
 const _ = require("lodash");
+const { emitResponse } = require("../services/socket");
 
 // sequelize.sync();
 
@@ -38,6 +39,10 @@ module.exports.disconnectHandler = (event, context, callback) => {
 };
 
 module.exports.defaultHandler = async (event, context, callback) => {
+  console.log('event==>', event);
+  if(event.body === "ping") {
+    await emitResponse(event?.requestContext?.connectionId, {message: "pong"})
+  }
   const t = await sequelize.transaction();
   try {
     let { family_member_id, user_id } = JSON.parse(event?.body);
