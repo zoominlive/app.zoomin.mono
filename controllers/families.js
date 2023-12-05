@@ -184,6 +184,8 @@ module.exports = {
             IsSuccess: true,
             Message: CONSTANTS.RESEND_INVITE
           });
+          await t.commit(); // Commit the transaction after successful response
+          return; // Return to exit the function after sending the response
         } catch (error) {
           console.log(error);
         }
@@ -199,46 +201,45 @@ module.exports = {
           Data: {},
           Message: CONSTANTS.EMAIL_EXIST
         });
+        await t.rollback(); // Rollback the transaction after sending the response
+        return; // Return to exit the function after sending the response
+      }
+  
+      params.is_verified = familyMember.email != params.email ? false : true;
+      let editedFamily;
+      if (params.is_verified) {
+        editedFamily = await familyServices.editFamily(params, t);
       } else {
-        params.is_verified = familyMember.email != params.email ? false : true;
-        let editedFamily;
-        if (params.is_verified) {
-          editedFamily = await familyServices.editFamily(params, t);
-        } else {
-          editedFamily = await familyServices.editFamily(_.omit(params, ['email']), t);
-        }
-
-        if (!params.is_verified) {
-          const token = await familyServices.createEmailToken(editedFamily, params.email);
-          const name = editedFamily.first_name + ' ' + editedFamily.last_name;
-          const originalUrl =
-            process.env.FE_SITE_BASE_URL + 'email-change?' + 'token=' + token;
-          // const short_url = await TinyURL.shorten(originalUrl);
-          const response = await sendEmailChangeMail(name, params?.email, originalUrl);
-        }
-
-        await t.commit();
-        if (editedFamily) {
-          res.status(200).json({
-            IsSuccess: true,
-            Data: editedFamily,
-            Message:
-              CONSTANTS.FAMILY_UPDATED +
-              '. ' +
-              ` ${params.is_verified ? '' : CONSTANTS.VEIRFY_UPDATED_EMAIL}`
-          });
-        } else {
-          res.status(404).json({
-            IsSuccess: false,
-            Data: {},
-            Message: CONSTANTS.FAMILY_MEMBER_NOT_FOUND
-          });
-        }
+        editedFamily = await familyServices.editFamily(_.omit(params, ['email']), t);
+      }
+  
+      if (!params.is_verified) {
+        const token = await familyServices.createEmailToken(editedFamily, params.email);
+        const name = editedFamily.first_name + ' ' + editedFamily.last_name;
+        const originalUrl = process.env.FE_SITE_BASE_URL + 'email-change?' + 'token=' + token;
+        const response = await sendEmailChangeMail(name, params?.email, originalUrl);
+      }
+  
+      await t.commit(); // Commit the transaction after successful update
+      if (editedFamily) {
+        res.status(200).json({
+          IsSuccess: true,
+          Data: editedFamily,
+          Message: CONSTANTS.FAMILY_UPDATED +
+            '. ' +
+            ` ${params.is_verified ? '' : CONSTANTS.VEIRFY_UPDATED_EMAIL}`
+        });
+      } else {
+        res.status(404).json({
+          IsSuccess: false,
+          Data: {},
+          Message: CONSTANTS.FAMILY_MEMBER_NOT_FOUND
+        });
       }
 
       next();
     } catch (error) {
-      await t.rollback();
+      await t.rollback(); // Rollback the transaction in case of an error
       res.status(500).json({
         IsSuccess: false,
         error_log: error,
@@ -418,6 +419,12 @@ module.exports = {
           IsSuccess: true,
           Data: { scheduled: true },
           Message: CONSTANTS.FAMILY_SCHEDULED
+        });
+      } else if(params?.member_type === "secondary") {
+        res.status(200).json({
+          IsSuccess: true,
+          Data: {},
+          Message: CONSTANTS.FAMILY_MEMBER_DISABLED
         });
       } else {
         res.status(200).json({
