@@ -49,8 +49,8 @@ import Logger from '../../utils/logger';
 const AccessColumns = [
   { label: 'Children', width: '25%' },
   { label: 'Rooms', width: '25%' },
-  { label: 'Date', width: '25%' },
-  { label: 'Status', width: '25%' }
+  { label: 'Date', width: '25%' }
+  // { label: 'Status', width: '25%' }
 ];
 const topViewersColumns = [
   { label: 'Viewers', width: '50%' },
@@ -885,7 +885,7 @@ const Dashboard = () => {
               <AccessTable
                 rows={statisticsData?.childrenWithDisableDate || []}
                 columns={AccessColumns}
-                title={'Loosing Access'}
+                title={'Losing Access'}
                 isLoading={isLoading}
                 getDashboardData={getDashboardData}
                 setFamily={setFamily}

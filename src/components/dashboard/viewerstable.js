@@ -56,7 +56,7 @@ export default function ViewersTable({ rows, columns, title, pagination, isLoadi
               minHeight: pagination && rows?.length > 0 ? '161px' : '',
               overflowY: 'auto',
               // height: 'auto',
-              paddingBottom: '20px',
+              paddingBottom: '16px',
               overflowX: 'hidden'
             }}
             className={`table-body ${!pagination ? 'viewers-table' : ''}`}>
@@ -98,24 +98,26 @@ export default function ViewersTable({ rows, columns, title, pagination, isLoadi
                         }}>
                         <Box className="div-row row-marging zl__tr-viewers-block">
                           <Box className="zl__td-block" style={{ width: '25%' }}>
-                            <Box className="viewer-profile">
-                              <Box className="profile-img">
-                                {row.family?.profile_image || row.user?.profile_image ? (
-                                  <Avatar
-                                    src={row.family?.profile_image || row.user?.profile_image}
-                                  />
-                                ) : (
-                                  <Avatar>
-                                    {row.family
-                                      ? `${row.family?.first_name[0].toUpperCase()}${row.family?.last_name[0].toUpperCase()}`
-                                      : `${row.user?.first_name[0].toUpperCase()}${row.user?.last_name[0].toUpperCase()}`}
-                                  </Avatar>
-                                )}
+                            <Stack direction={'row'} alignItems={'center'} gap={1}>
+                              <Box className="viewer-profile">
+                                <Box className="profile-img">
+                                  {row.family?.profile_image || row.user?.profile_image ? (
+                                    <Avatar
+                                      src={row.family?.profile_image || row.user?.profile_image}
+                                    />
+                                  ) : (
+                                    <Avatar>
+                                      {row.family
+                                        ? `${row.family?.first_name[0].toUpperCase()}${row.family?.last_name[0].toUpperCase()}`
+                                        : `${row.user?.first_name[0].toUpperCase()}${row.user?.last_name[0].toUpperCase()}`}
+                                    </Avatar>
+                                  )}
+                                </Box>
                               </Box>
                               {(row?.family?.first_name || row?.user?.first_name) +
                                 ' ' +
                                 (row?.family?.last_name || row?.user?.last_name)}
-                            </Box>
+                            </Stack>
                           </Box>
 
                           <Box className="zl__td-block" style={{ width: '25%' }}>
@@ -142,7 +144,7 @@ export default function ViewersTable({ rows, columns, title, pagination, isLoadi
                               <Box>{'--'}</Box>
                             )}
                           </Box>
-                          <Box className="zl__td-block" style={{ width: '25%' }}>
+                          <Box className="zl__td-block" style={{ width: '25%', textAlign: 'end' }}>
                             <KeyboardArrowRightIcon />
                           </Box>
                         </Box>
@@ -184,29 +186,31 @@ export default function ViewersTable({ rows, columns, title, pagination, isLoadi
                       }}>
                       <Box className="div-row row-marging zl__tr-viewers-block">
                         <Box className="zl__td-block" style={{ width: '50%' }}>
-                          <Box className="viewer-profile">
-                            <Box className="profile-img">
-                              {row.family?.profile_image || row.user?.profile_image ? (
-                                <Avatar
-                                  src={row.family?.profile_image || row.user?.profile_image}
-                                />
-                              ) : (
-                                <Avatar>
-                                  {row.family
-                                    ? `${row.family?.first_name[0].toUpperCase()}${row.family?.last_name[0].toUpperCase()}`
-                                    : `${row.user?.first_name[0].toUpperCase()}${row.user?.last_name[0].toUpperCase()}`}
-                                </Avatar>
-                              )}
+                          <Stack direction={'row'} alignItems={'center'} gap={1}>
+                            <Box className="viewer-profile">
+                              <Box className="profile-img">
+                                {row.family?.profile_image || row.user?.profile_image ? (
+                                  <Avatar
+                                    src={row.family?.profile_image || row.user?.profile_image}
+                                  />
+                                ) : (
+                                  <Avatar>
+                                    {row.family
+                                      ? `${row.family?.first_name[0].toUpperCase()}${row.family?.last_name[0].toUpperCase()}`
+                                      : `${row.user?.first_name[0].toUpperCase()}${row.user?.last_name[0].toUpperCase()}`}
+                                  </Avatar>
+                                )}
+                              </Box>
                             </Box>
                             {(row?.family?.first_name || row?.user?.first_name) +
                               ' ' +
                               (row?.family?.last_name || row?.user?.last_name)}
-                          </Box>
+                          </Stack>
                         </Box>
                         <Box className="zl__td-block" style={{ width: '45%' }}>
                           {row?.count}
                         </Box>
-                        <Box className="zl__td-block" style={{ width: '25%' }}>
+                        <Box className="zl__td-block" style={{ width: '25%', textAlign: 'end' }}>
                           <KeyboardArrowRightIcon />
                         </Box>
                       </Box>

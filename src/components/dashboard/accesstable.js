@@ -71,11 +71,11 @@ export default function AccessTable({
                             </Avatar>
                           </Box>
                         </Box>
-                        {/* {row?.childFirstName + ' ' + row.childLastName} */}
+                        {row?.childFirstName + ' ' + row.childLastName}
                       </Stack>
                     </Box>
                     <Box style={{ width: '25%' }} className="child-rooms zl__td-block">
-                      <Box>
+                      <Box style={{ display: 'flex' }}>
                         {row?.rooms?.map((r) => (
                           <Chip key={r} label={r} />
                         ))}
@@ -84,9 +84,9 @@ export default function AccessTable({
                     <Box className="zl__td-block" style={{ width: '25%' }}>
                       {row.date}
                     </Box>
-                    <Box className="zl__td-block" style={{ width: '25%' }}>
+                    {/* <Box className="zl__td-block" style={{ width: '25%' }}>
                       {row.status}
-                    </Box>
+                    </Box> */}
                   </Box>
                 );
               })}

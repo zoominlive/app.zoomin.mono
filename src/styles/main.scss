@@ -1573,7 +1573,7 @@
   flex-direction: column;
   .MuiCardContent-root {
     flex: 1;
-    padding: 0 16px 24px !important;
+    padding: 0 16px 16px !important;
     .main-map-wraper {
       position: relative;
       height: 100%;
@@ -2259,9 +2259,9 @@
   }
 }
 .viewers-table {
-  min-height: 352px;
+  min-height: 310px;
   @media (min-width: 1535px) {
-    min-height: 352px;
+    min-height: 310px;
   }
 }
 
@@ -2375,7 +2375,7 @@
 .zl__tr-viewers-block{
   height: 55px;
   display: table !important;
-  width: 100%;
+  width: 99%;
   table-layout: fixed;
   margin: 0 0 5px!important;
   padding: 0 !important;
