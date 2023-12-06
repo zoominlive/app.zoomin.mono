@@ -293,11 +293,15 @@ const Logs = () => {
                   : response.data.Data
               );
               Logger.log('logsPayload==>', logsPayload);
-              if (location?.state?.lastHoursUsers) {
+              if (location?.state?.lastHoursUsers || location?.state?.viewMore) {
+                if (location?.state?.viewMore) {
+                  setRangeDate([dayjs().startOf('week'), dayjs().endOf('week')]);
+                }
                 API.get('logs/', {
                   params: {
                     ...logsPayload,
-                    from: moment().format('YYYY-MM-DD'),
+                    from: moment().startOf('week').format('YYYY-MM-DD'),
+                    to: moment().endOf('week').format('YYYY-MM-DD'),
                     locations: [authCtx.user.location.accessable_locations[0]],
                     users: userToAdd,
                     familyMemberIds: familyToAdd
@@ -527,11 +531,11 @@ const Logs = () => {
       setIsLoading(true);
       let familiesToAdd;
       let usersToAdd;
-      if (selectedFamilies.length == 0) {
+      if (selectedFamilies?.length == 0) {
         familiesToAdd = families.slice(1, families.length);
         familiesToAdd = familiesToAdd?.map((user) => user.family_member_id);
       }
-      if (selectedUsers.length == 0) {
+      if (selectedUsers?.length == 0) {
         usersToAdd = users.slice(1, users.length);
         usersToAdd = usersToAdd?.map((user) => user.user_id);
       }

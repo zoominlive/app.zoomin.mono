@@ -33,7 +33,13 @@ export default function ViewersTable({ rows, columns, title, pagination, isLoadi
           justifyContent={'space-between'}
           style={{ padding: '20px 14px' }}>
           <Typography sx={{ padding: 'unset !important' }}>{title}</Typography>
-          <Link to="/logs" sx={{ fontFamily: 'small', color: '#5A53DD' }}>
+          <Link
+            to="/logs"
+            state={{
+              location: authCtx?.location,
+              viewMore: true
+            }}
+            sx={{ fontFamily: 'small', color: '#5A53DD' }}>
             View More
           </Link>
         </Stack>
