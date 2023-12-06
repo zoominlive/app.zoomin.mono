@@ -2396,3 +2396,8 @@
     overflow-x: auto;
   }
 }
+@media (max-width: 1199px){
+  .zl__tr-block{
+    display: table !important;
+  }
+}

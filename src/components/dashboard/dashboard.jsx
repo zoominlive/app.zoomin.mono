@@ -663,7 +663,9 @@ const Dashboard = () => {
                           direction={'column'}
                           alignItems={'center'}>
                           <Box component={'span'}>Children</Box>
-                          {statisticsData?.families !== undefined ? statisticsData?.families : ' '}
+                          {statisticsData?.childrens !== undefined
+                            ? statisticsData?.childrens
+                            : ' '}
                         </Stack>
                       </Box>
                       <Box className="familiy-circle">
@@ -673,8 +675,8 @@ const Dashboard = () => {
                           direction={'column'}
                           alignItems={'center'}>
                           <Box component={'span'}>Users</Box>
-                          {statisticsData?.childrens !== undefined
-                            ? statisticsData?.childrens
+                          {statisticsData?.familyMembers !== undefined
+                            ? statisticsData?.familyMembers
                             : ' '}
                         </Stack>
                       </Box>
@@ -685,9 +687,7 @@ const Dashboard = () => {
                           direction={'column'}
                           alignItems={'center'}>
                           <Box component={'span'}>Famillies</Box>
-                          {statisticsData?.familyMembers !== undefined
-                            ? statisticsData?.familyMembers
-                            : ' '}
+                          {statisticsData?.families !== undefined ? statisticsData?.families : ' '}
                         </Stack>
                       </Box>
                     </Stack>
