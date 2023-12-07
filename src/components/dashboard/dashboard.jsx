@@ -120,7 +120,7 @@ const Dashboard = () => {
         // Send a ping message to the server
         setInterval(() => {
           socket.send('ping');
-        }, 60000); // Send a ping every 60 seconds
+        }, 120000); // Send a ping every 120 seconds
         socket.send(JSON.stringify(data), event);
       });
 
