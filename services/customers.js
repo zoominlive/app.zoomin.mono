@@ -206,6 +206,7 @@ module.exports = {
     let createLocations = Promise.all(
       locations.map(async (loc) => {
         const obj = { loc_name: loc, cust_id: custId };
+        obj.loc_id = uuidv4();
         await CustomerLocations.create(obj, {
           transaction: t,
         });
