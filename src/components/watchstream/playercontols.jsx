@@ -1,4 +1,4 @@
-import { Box, Grid, IconButton } from '@mui/material';
+import { Box, Grid, IconButton, Slider } from '@mui/material';
 import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
 import PictureInPictureAltRoundedIcon from '@mui/icons-material/PictureInPictureAltRounded';
 import FullscreenRoundedIcon from '@mui/icons-material/FullscreenRounded';
@@ -37,6 +37,11 @@ const PlayerControls = (props) => {
             {props.fullscreen ? <FullscreenExitRoundedIcon /> : <FullscreenRoundedIcon />}
           </IconButton>
         </Grid>
+        {props.streamRunning === false && (
+          <Grid item md={12} sm={12}>
+            <Slider min={0} max={100} onChange={props.onSeek} value={props.played * 100} />
+          </Grid>
+        )}
       </Grid>
     </Box>
   );
@@ -53,5 +58,8 @@ PlayerControls.propTypes = {
   handleFullscreenToggle: PropTypes.func,
   noOfCameras: PropTypes.number,
   isMuted: PropTypes.bool,
-  setIsMuted: PropTypes.func
+  setIsMuted: PropTypes.func,
+  onSeek: PropTypes.func,
+  played: PropTypes.number,
+  streamRunning: PropTypes.bool
 };

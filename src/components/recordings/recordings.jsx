@@ -261,6 +261,7 @@ const Recordings = () => {
                           setTimeOut={setTimeOut}
                           setPlaying={setPlaying}
                           setIsDeleteDialogOpen={setIsDeleteDialogOpen}
+                          streamRunning={stream_running}
                         />
                       </Box>
                     </CardContent>

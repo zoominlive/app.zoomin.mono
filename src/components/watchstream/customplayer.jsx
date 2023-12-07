@@ -24,6 +24,11 @@ const CustomPlayer = (props) => {
   const timer = useRef({
     timerId: 0
   });
+  const [videoState, setVideoState] = useState({
+    played: 0,
+    seeking: false
+  });
+  const { played, seeking } = videoState;
 
   useEffect(() => {
     function exitHandler() {
@@ -71,6 +76,18 @@ const CustomPlayer = (props) => {
     screenfull.toggle(playerContainerRef.current);
     setFullScreen((fullscreen) => !fullscreen);
   };
+
+  const progressHandler = (state) => {
+    if (!seeking) {
+      setVideoState({ ...videoState, ...state });
+    }
+  };
+
+  const seekHandler = (e, value) => {
+    setVideoState({ ...videoState, played: parseFloat(value) / 100 });
+    playerRef.current.seekTo(parseFloat(value / 100));
+  };
+
   return (
     <>
       {!_.isEmpty(url) && (
@@ -145,6 +162,7 @@ const CustomPlayer = (props) => {
               }
             }}
             muted={isMuted}
+            onProgress={progressHandler}
           />
 
           <PlayerControls
@@ -157,6 +175,9 @@ const CustomPlayer = (props) => {
             noOfCameras={props.noOfCameras}
             isMuted={isMuted}
             setIsMuted={setIsMuted}
+            played={played}
+            onSeek={seekHandler}
+            streamRunning={props.streamRunning}
           />
         </Box>
       )}
@@ -174,5 +195,6 @@ CustomPlayer.propTypes = {
   setPlaying: PropTypes.func,
   setIsDeleteDialogOpen: PropTypes.func,
   camDetails: PropTypes.object,
-  cam_id: PropTypes.number
+  cam_id: PropTypes.number,
+  streamRunning: PropTypes.bool
 };
