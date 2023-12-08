@@ -5,7 +5,7 @@ const CustomerLocations = sequelize.define(
   'customer_locations',
   {
     loc_id: {
-      type: Sequelize.STRING(50),
+      type: Sequelize.INTEGER,
       allowNull: false,
       primaryKey: true,
       autoIncrement: true
