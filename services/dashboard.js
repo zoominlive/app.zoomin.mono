@@ -15,20 +15,20 @@ module.exports = {
     let loc_obj = location === "All" ? {} : {location: location};
     const { RecentViewers, Family, Child, Room, RoomsInChild, Users } =
       await connectToDatabase();
-    // let oneHourBefore = new Date();
-    // oneHourBefore.setHours(oneHourBefore.getHours() - 1);
-    // const currentTime = new Date();
+    let oneHourBefore = new Date();
+    oneHourBefore.setHours(oneHourBefore.getHours() - 1);
+    const currentTime = new Date();
 
     let recentViewers = await RecentViewers.findAll({
-      // where: {
-      //   requested_at: {
-      //     [Sequelize.Op.between]: [
-      //       oneHourBefore.toISOString(),
-      //       currentTime.toISOString(),
-      //     ],
-      //   },
-      // },
-      order:[["requested_at", "DESC"]],
+      where: {
+        requested_at: {
+          [Sequelize.Op.between]: [
+            oneHourBefore.toISOString(),
+            currentTime.toISOString(),
+          ],
+        },
+      },
+      // order:[["requested_at", "DESC"]],
       group: ["recent_user_id"],
       include: [
         {
@@ -73,17 +73,17 @@ module.exports = {
         if (item.family) {
           locs.forEach((i) => {
             if (item.family?.location?.accessable_locations.includes(i)) {
-              if(!result.includes(item)){
+              // if(!result.includes(item)){
                 result.push(item);
-              }
+              // }
             }
           });
         } else {
           locs.forEach((i) => {
             if (item.user?.location?.accessable_locations.includes(i)) {
-              if(!result.includes(item)){
+              // if(!result.includes(item)){
                 result.push(item);
-              }
+              // }
             }
           });
         }
@@ -125,7 +125,7 @@ module.exports = {
       })
       result = filterResult
     }
-    result.slice(0,10);
+    // result.slice(0,10);
     return result;
   },
 
