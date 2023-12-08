@@ -42,7 +42,7 @@ module.exports.defaultHandler = async (event, context, callback) => {
   console.log('event==>', event);
   if(event.body === "ping") {
     await emitResponse(event?.requestContext?.connectionId, {message: "pong"})
-    return { statusCode: 200, body: "pong response sent" };
+    // return { statusCode: 200, body: "pong response sent" };
   }
   const t = await sequelize.transaction();
   try {
