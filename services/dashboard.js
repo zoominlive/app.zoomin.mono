@@ -8,6 +8,7 @@ const customerServices = require("../services/customers");
 const userServices = require("../services/users");
 const socketServices = require('../services/socket');
 const liveStreamServices = require('../services/liveStream');
+const sequelize = require("../lib/database");
 
 module.exports = {
   /* get recent viewers */
@@ -16,7 +17,7 @@ module.exports = {
     const { RecentViewers, Family, Child, Room, RoomsInChild, Users } =
       await connectToDatabase();
     let oneHourBefore = new Date();
-    oneHourBefore.setHours(oneHourBefore.getHours() - 1);
+    oneHourBefore.setHours(oneHourBefore.getHours() - 336);
     const currentTime = new Date();
 
     let recentViewers = await RecentViewers.findAll({
@@ -28,7 +29,15 @@ module.exports = {
           ],
         },
       },
-      // order:[["requested_at", "DESC"]],
+      logging: console.log,
+      subQuery: false,
+      attributes: [
+        "rv_id",
+        "recent_user_id",
+        [sequelize.literal('MAX(requested_at)'), 'latest_requested_at'],
+      ],
+      order:[["latest_requested_at", "DESC"]],
+      limit: 10,
       group: ["recent_user_id"],
       include: [
         {
@@ -73,17 +82,17 @@ module.exports = {
         if (item.family) {
           locs.forEach((i) => {
             if (item.family?.location?.accessable_locations.includes(i)) {
-              // if(!result.includes(item)){
+              if(!result.includes(item)){
                 result.push(item);
-              // }
+              }
             }
           });
         } else {
           locs.forEach((i) => {
             if (item.user?.location?.accessable_locations.includes(i)) {
-              // if(!result.includes(item)){
+              if(!result.includes(item)){
                 result.push(item);
-              // }
+              }
             }
           });
         }
