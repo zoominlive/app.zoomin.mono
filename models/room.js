@@ -25,6 +25,10 @@ const Room = sequelize.define(
       type: Sequelize.STRING(50),
       allowNull: false
     },
+    stream_live_license: {
+      type: Sequelize.BOOLEAN(),
+      defaultValue: false,
+     },
     createdAt: { type: Sequelize.DATE, field: 'created_at' },
     updatedAt: { type: Sequelize.DATE, field: 'updated_at' }
   },

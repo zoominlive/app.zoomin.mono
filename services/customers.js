@@ -19,6 +19,21 @@ module.exports = {
     return customer?.max_stream_live_license || null;
   },
 
+  getMaxLiveStreamRoomAvailable: async (custId, t) => {
+    const { Customers } = await connectToDatabase();
+    let customer = await Customers.findOne(
+      {
+        raw: true,
+        where: {
+          cust_id: custId,
+        },
+      },
+      { transaction: t }
+    );
+
+    return customer?.max_stream_live_license_room || null;
+  },
+
   getRTMPTranscoderUrl: async (custId, t) => {
     const { Customers } = await connectToDatabase();
     let customer = await Customers.findOne(
@@ -223,14 +238,16 @@ module.exports = {
       update,
       {
         where: { cust_id: customerId },
+        transaction: t 
       },
-      { transaction: t }
     );
 
     if (updateCustomerProfile) {
       updateCustomerProfile = await Customers.findOne(
-        { where: { cust_id: customerId } },
-        { transaction: t }
+        { 
+          where: { cust_id: customerId },
+          transaction: t 
+        },
       );
     }
 

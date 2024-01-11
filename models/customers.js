@@ -61,6 +61,9 @@ const Customers = sequelize.define(
     max_stream_live_license: {
       type: Sequelize.INTEGER(3)
     },
+    max_stream_live_license_room: {
+      type: Sequelize.INTEGER(3)
+    },
     createdAt: { type: Sequelize.DATE, field: 'created_at' },
     updatedAt: { type: Sequelize.DATE, field: 'updated_at' }
   },
