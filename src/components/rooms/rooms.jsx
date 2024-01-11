@@ -90,7 +90,7 @@ const Row = (props) => {
           ))}
           {/* </Stack> */}
         </TableCell>
-
+        <TableCell align="left">{row.stream_live_license ? 'Yes' : 'No'}</TableCell>
         <TableCell align="right">
           <RoomActions
             room={row}
@@ -151,7 +151,8 @@ Row.propTypes = {
     room_name: PropTypes.string,
     location: PropTypes.string,
     number_of_cam: PropTypes.number,
-    cameras: PropTypes.array
+    cameras: PropTypes.array,
+    stream_live_license: PropTypes.string
   }),
   setRoom: PropTypes.func,
   setIsRoomFormDialogOpen: PropTypes.func,
@@ -246,7 +247,17 @@ const Rooms = () => {
   // Method to delete room
   const handleRoomDelete = () => {
     setDeleteLoading(true);
-    API.delete('rooms/delete', { data: { room_id: room.room_id } }).then((response) => {
+    let payload = {
+      room_id: room.room_id
+    };
+    if (room.stream_live_license) {
+      payload = {
+        ...payload,
+        custId: authCtx.user.cust_id || localStorage.getItem('cust_id'),
+        max_stream_live_license_room: authCtx.user.max_stream_live_license_room + 1
+      };
+    }
+    API.delete('rooms/delete', { data: { ...payload } }).then((response) => {
       if (response.status === 200) {
         setDropdownList((prevList) => {
           let tempList = [...prevList];
@@ -445,6 +456,7 @@ const Rooms = () => {
                     <TableCell sx={{ width: '200px' }}>Rooms</TableCell>
                     <TableCell sx={{ width: '200px' }}>Location</TableCell>
                     <TableCell>Cams</TableCell>
+                    <TableCell align="left">Live Streaming</TableCell>
                     <TableCell align="right" sx={{ width: '50px' }} />
                   </TableRow>
                 </TableHead>

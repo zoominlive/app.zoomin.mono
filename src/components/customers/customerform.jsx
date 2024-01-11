@@ -84,6 +84,9 @@ const CustomerForm = (props) => {
       timeout: yup.number('Enter timeout cameras').required('Timeout is required'),
       max_stream_live_license: yup
         .number('Enter maximum stream live license')
+        .required('Maximum stream live license is required'),
+      max_stream_live_license_room: yup
+        .number('Enter maximum stream live license')
         .required('Maximum stream live license is required')
     }),
     // yup.object().shape({
@@ -452,7 +455,7 @@ const CustomerForm = (props) => {
                 fullWidth
               />
             </Grid>
-            <Grid item md={6} xs={12}>
+            <Grid item md={4} xs={12}>
               <InputLabel id="timeout">Timeout</InputLabel>
               <TextField
                 labelId="timeout"
@@ -473,8 +476,10 @@ const CustomerForm = (props) => {
                 fullWidth
               />
             </Grid>
-            <Grid item md={6} xs={12}>
-              <InputLabel id="max_stream_live_license">Maximum Stream Live License</InputLabel>
+            <Grid item md={4} xs={12}>
+              <InputLabel id="max_stream_live_license">
+                Max Per-User Live Streaming Licenses
+              </InputLabel>
               <TextField
                 labelId="max_stream_live_license"
                 type="number"
@@ -493,6 +498,36 @@ const CustomerForm = (props) => {
                 }}
                 helperText={touched.max_stream_live_license && errors.max_stream_live_license}
                 error={touched.max_stream_live_license && Boolean(errors.max_stream_live_license)}
+                fullWidth
+              />
+            </Grid>
+            <Grid item md={4} xs={12}>
+              <InputLabel id="max_stream_live_license_room">
+                Max Per-Room Live Streaming Licenses
+              </InputLabel>
+              <TextField
+                labelId="max_stream_live_license_room"
+                type="number"
+                InputProps={{
+                  inputProps: { min: 0 }
+                }}
+                onKeyPress={(event) => {
+                  if (event?.key === '-' || event?.key === '+') {
+                    event.preventDefault();
+                  }
+                }}
+                name="max_stream_live_license_room"
+                value={values?.max_stream_live_license_room}
+                onChange={(event) => {
+                  setFieldValue('max_stream_live_license_room', event.target.value);
+                }}
+                helperText={
+                  touched.max_stream_live_license_room && errors.max_stream_live_license_room
+                }
+                error={
+                  touched.max_stream_live_license_room &&
+                  Boolean(errors.max_stream_live_license_room)
+                }
                 fullWidth
               />
             </Grid>
@@ -879,6 +914,7 @@ const CustomerForm = (props) => {
             rtmp_transcoder_endpoint: props?.customer?.rtmp_transcoder_endpoint || '',
             timeout: props?.customer?.timeout || '',
             max_stream_live_license: props?.customer?.max_stream_live_license || '',
+            max_stream_live_license_room: props?.customer?.max_stream_live_license_room || '',
             audio_permission: !_.isNil(props?.customer?.audio_permission)
               ? props?.customer?.audio_permission
               : true,
