@@ -311,6 +311,26 @@ module.exports = {
     return { finalRoomDetails: rooms, count: count };
   },
 
+  getRoomDetailsByRoomId: async(roomId, t) => {
+    const { Room, Camera } = await connectToDatabase();
+
+    room = await Room.findOne(
+      {
+        where: {
+          room_id: roomId,
+        },
+        attributes: ["room_id", "room_name", "location", "stream_live_license"],
+      },
+      { transaction: t }
+    );
+    return {
+      room_id: room.room_id,
+      room_name: room.room_name,
+      location: room.location,
+      stream_live_license: room.stream_live_license
+    };
+  },
+    
   // get all room's list for loggedin user
   getAllRoomsList: async (userId, user, cust_id = null, t) => {
     const { Room, CustomerLocations } = await connectToDatabase();
