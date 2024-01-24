@@ -69,9 +69,9 @@ const CustomerForm = (props) => {
       country: yup.string('Enter country').required('Country is required'),
       postal: yup.string('Enter postal').required('Postal is required'),
       max_cameras: yup.number('Enter maximum cameras').required('Maximum cameras is required'),
-      available_cameras: yup
-        .number('Enter available cameras')
-        .required('Available cameras is required'),
+      // available_cameras: yup
+      //   .number('Enter available cameras')
+      //   .required('Available cameras is required'),
       max_locations: yup
         .number('Enter maximum locations')
         .required('Maximum locations is required'),
@@ -380,7 +380,7 @@ const CustomerForm = (props) => {
                 fullWidth
               />
             </Grid>
-            <Grid item md={4} xs={12}>
+            {/* <Grid item md={4} xs={12}>
               <InputLabel id="available_cameras">Available Cameras</InputLabel>
               <TextField
                 labelId="available_cameras"
@@ -402,7 +402,7 @@ const CustomerForm = (props) => {
                 error={touched.available_cameras && Boolean(errors.available_cameras)}
                 fullWidth
               />
-            </Grid>
+            </Grid> */}
             <Grid item md={4} xs={12}>
               <InputLabel id="max_locations">Maximum Locations</InputLabel>
               <TextField
@@ -908,7 +908,7 @@ const CustomerForm = (props) => {
             country: props?.customer?.country || '',
             postal: props?.customer?.postal || '',
             max_cameras: props?.customer?.max_cameras || '',
-            available_cameras: props?.customer?.available_cameras || '',
+            // available_cameras: props?.customer?.available_cameras || '',
             max_locations: props?.customer?.max_locations || '',
             transcoder_endpoint: props?.customer?.transcoder_endpoint || '',
             rtmp_transcoder_endpoint: props?.customer?.rtmp_transcoder_endpoint || '',
