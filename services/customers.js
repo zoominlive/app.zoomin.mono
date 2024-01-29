@@ -203,7 +203,7 @@ module.exports = {
       });
       custDetails = await Customers.findOne({
         where: {
-          cust_id: user.cust_id,
+          cust_id: user.cust_id || cust_id,
         },
       })
     }
