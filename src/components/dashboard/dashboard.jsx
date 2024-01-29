@@ -14,7 +14,7 @@ import {
 } from '@mui/material';
 import dayjs from 'dayjs';
 import { useSnackbar } from 'notistack';
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { useEffect } from 'react';
 import { useContext } from 'react';
 import API from '../../api';
@@ -44,7 +44,6 @@ import ChildForm from '../families/childform';
 import DisableDialog from '../families/disabledialog';
 import RoomAddForm from '../families/roomaddform';
 import LinerLoader from '../common/linearLoader';
-import Logger from '../../utils/logger';
 
 const AccessColumns = [
   { label: 'Children', width: '25%' },
@@ -94,9 +93,6 @@ const Dashboard = () => {
   const [parentType, setParentType] = useState('');
   const [roomsList, setRoomsList] = useState([]);
   const [disableLoading, setDisableLoading] = useState(false);
-  // eslint-disable-next-line no-unused-vars
-  // const [intervalId, setIntervalId] = useState(null);
-  let timer = useRef(null);
 
   // const [roomsDropdownLoading, setRoomsDropdownLoading] = useState(false);
   useEffect(() => {
@@ -357,13 +353,6 @@ const Dashboard = () => {
         //   }
         // });
         setIsLoading(false);
-      } else if (
-        response.response.status !== 500 &&
-        Number(localStorage.getItem('RETRYCOUNTER_AVAILABLESTREAMS') || 0) < 5
-      ) {
-        timer = setInterval(getDashboardDataAgain, 20000);
-        Logger.log('timer', timer);
-        // setIntervalId(interval);
       } else {
         errorMessageHandler(
           enqueueSnackbar,
@@ -374,89 +363,6 @@ const Dashboard = () => {
         setIsLoading(false);
       }
     });
-  };
-
-  const getDashboardDataAgain = () => {
-    if (Number(localStorage.getItem('RETRYCOUNTER_DASHBOARD')) >= 5) {
-      Logger.log('timer after 5 trials', timer);
-      clearInterval(timer);
-      return;
-    } else {
-      const counter = localStorage.getItem('RETRYCOUNTER_DASHBOARD');
-      localStorage.setItem('RETRYCOUNTER_DASHBOARD', Number(counter) + 1);
-      Logger.log('RETRYCOUNTER_DASHBOARD===>', localStorage.getItem('RETRYCOUNTER_DASHBOARD'));
-      API.get('dashboard', {
-        params: {
-          cust_id: localStorage.getItem('cust_id'),
-          location: authCtx?.location
-        }
-      }).then((response) => {
-        if (response.status === 200) {
-          localStorage.setItem('updateDashboardData', false);
-          authCtx.setUpdateDashboardData(false);
-          setStatisticsData(response.data.Data);
-          const points = response?.data?.Data?.enroledStreamsDetails.map((point) => ({
-            type: 'Feature',
-            properties: { cluster: false, rv_id: point.rv_id, label: point.location_name },
-            geometry: {
-              type: 'Point',
-              coordinates: [parseFloat(point.long), parseFloat(point.lat)]
-            }
-          }));
-          setMapsData(points);
-          if (
-            response?.data?.Data?.defaultWatchStream?.locations?.length > 0 &&
-            response?.data?.Data?.defaultWatchStream?.rooms &&
-            response?.data?.Data?.defaultWatchStream?.cameras
-          ) {
-            setDefaultWatchStream(response?.data?.Data?.defaultWatchStream);
-            setSelectedCamera(
-              response?.data?.Data?.defaultWatchStream?.cameras
-                ? response?.data?.Data?.defaultWatchStream?.cameras
-                : {}
-            );
-          } else {
-            setDefaultWatchStream({
-              locations: [response?.data?.Data?.watchStreamDetails?.location],
-              rooms: [response?.data?.Data?.watchStreamDetails],
-              cameras: response?.data?.Data?.watchStreamDetails?.cameras[0]
-            });
-            setSelectedCamera(
-              response?.data?.Data?.watchStreamDetails?.cameras[0]
-                ? {
-                    ...response?.data?.Data?.watchStreamDetails,
-                    ...response?.data?.Data?.watchStreamDetails?.cameras[0]
-                  }
-                : {}
-            );
-          }
-          setTimeOut(response?.data?.Data?.watchStreamDetails?.timeout);
-          // setFamily((prevState) => {
-          //   const tempFamily = { ...prevState };
-          //   if (tempFamily) {
-          //     let obj = response?.data?.Data?.childrenWithEnableDate?.find(
-          //       (o) => o?.primary?.family_id === tempFamily?.primary?.family_id
-          //     );
-          //     return obj;
-          //   } else {
-          //     return null;
-          //   }
-          // });
-          setIsLoading(false);
-          if (timer) {
-            clearInterval(timer);
-          }
-        } else {
-          errorMessageHandler(
-            enqueueSnackbar,
-            response?.response?.data?.Message || 'Something Went Wrong2.',
-            response?.response?.status,
-            authCtx.setAuthError
-          );
-          setIsLoading(false);
-        }
-      });
-    }
   };
 
   return (

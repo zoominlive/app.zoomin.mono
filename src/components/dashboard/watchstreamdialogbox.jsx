@@ -26,7 +26,6 @@ import AuthContext from '../../context/authcontext';
 import { useSnackbar } from 'notistack';
 import CloseIcon from '@mui/icons-material/Close';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
-import Logger from '../../utils/logger';
 
 const icon = <RadioButtonUncheckedIcon fontSize="small" />;
 const checkedIcon = <CheckCircleOutlineIcon fontSize="small" style={{ color: '#5A53DD' }} />;
@@ -51,9 +50,6 @@ const WatchStreamDialogBox = (props) => {
   const [limitReached, setLimitReached] = useState(false);
   const [allLocationChecked, setAllLocationChecked] = useState(false);
   const [selectedCameras, setSelectedCameras] = useState(null);
-  // eslint-disable-next-line no-unused-vars
-  // const [intervalId, setIntervalId] = useState(null);
-  let timer = useRef(null);
   const camLabel = useRef([]);
   const locs = ['Select All'];
   authCtx?.user?.location?.accessable_locations.forEach((loc) => locs.push(loc));
@@ -80,12 +76,6 @@ const WatchStreamDialogBox = (props) => {
           } else {
             setSelectedLocation([location?.state?.location]);
           }
-        } else if (
-          response.response.status !== 500 &&
-          Number(localStorage.getItem('RETRYCOUNTER_AVAILABLESTREAMS') || 0) < 5
-        ) {
-          timer = setInterval(getAvailableStreamsAgain, 20000);
-          // setIntervalId(interval);
         } else {
           errorMessageHandler(
             enqueueSnackbar,
@@ -97,47 +87,6 @@ const WatchStreamDialogBox = (props) => {
         setDropdownLoading(false);
       }
     );
-  };
-
-  const getAvailableStreamsAgain = () => {
-    if (Number(localStorage.getItem('RETRYCOUNTER_AVAILABLESTREAMS')) >= 5) {
-      clearInterval(timer);
-      return;
-    } else {
-      const counter = localStorage.getItem('RETRYCOUNTER_AVAILABLESTREAMS');
-      localStorage.setItem('RETRYCOUNTER_AVAILABLESTREAMS', Number(counter) + 1);
-      Logger.log(
-        'RETRYCOUNTER_AVAILABLESTREAMS===>',
-        localStorage.getItem('RETRYCOUNTER_AVAILABLESTREAMS')
-      );
-      API.get('watchstream', { params: { cust_id: localStorage.getItem('cust_id') } }).then(
-        (response) => {
-          if (response.status === 200) {
-            setCamerasPayload({
-              location: [response?.data?.Data.streamDetails[0]?.location],
-              rooms: response?.data?.Data.streamDetails
-            });
-            if (!location.state) {
-              !selectedLocation.length &&
-                setSelectedLocation([authCtx?.user?.location?.accessable_locations[0]]);
-            } else {
-              setSelectedLocation([location?.state?.location]);
-            }
-            if (timer) {
-              clearInterval(timer);
-            }
-          } else {
-            errorMessageHandler(
-              enqueueSnackbar,
-              response?.response?.data?.Message || 'Something Went Wrong2.',
-              response?.response?.status,
-              authCtx.setAuthError
-            );
-          }
-          setDropdownLoading(false);
-        }
-      );
-    }
   };
 
   const handleSetLocations = (_, value, reason, option) => {

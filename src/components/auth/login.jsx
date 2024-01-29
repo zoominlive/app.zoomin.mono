@@ -10,7 +10,7 @@ import {
   InputLabel
 } from '@mui/material';
 import { Form, Formik } from 'formik';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import * as yup from 'yup';
@@ -26,7 +26,6 @@ import { errorMessageHandler } from '../../utils/errormessagehandler';
 import CustomerSelection from './customerSelection';
 import TitleDiv from './titlediv';
 import LinkDiv from './linkdiv';
-import Logger from '../../utils/logger';
 // import AuthBg from '../../assets/auth-bg.png';
 const validationSchema = yup.object({
   email: yup
@@ -46,9 +45,6 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showCustomerSelection, setShowCustomerSelection] = useState(false);
   const { enqueueSnackbar } = useSnackbar();
-  // const [attemptCount, setAttemptCount] = useState(0);
-  // const [intervalId, setIntervalId] = useState(null);
-  let timer = useRef(null);
 
   useEffect(() => {
     if (authCtx.token) {
@@ -75,17 +71,7 @@ const Login = () => {
           if (authCtx.authError) {
             authCtx.setAuthError(false);
           }
-        }
-        // else if (
-        //   response.response.status !== 400 &&
-        //   response.response.status !== 500 &&
-        //   Number(localStorage.getItem('RETRYCOUNTER') || 0) < process.env.RETRY_COUNTER
-        // ) {
-        //   timer = setInterval(retryLogin, process.env.RETRY_TIMEOUT);
-        //   // setIntervalId(timer);
-        //   Logger.log('timer=====>', timer);
-        // }
-        else {
+        } else {
           errorMessageHandler(
             enqueueSnackbar,
             response?.response?.data?.Message || 'Something Went Wrong.',
@@ -97,45 +83,6 @@ const Login = () => {
       .catch((err) => console.log(err));
   };
 
-  // eslint-disable-next-line no-unused-vars
-  const retryLogin = (data) => {
-    if (Number(localStorage.getItem('RETRYCOUNTER')) >= process.env.RETRY_COUNTER) {
-      Logger.log('timer==>', timer);
-      clearInterval(timer);
-      return;
-    } else {
-      const counter = localStorage.getItem('RETRYCOUNTER');
-      localStorage.setItem('RETRYCOUNTER', Number(counter) + 1);
-      Logger.log('RETRYCOUNTER===>', localStorage.getItem('RETRYCOUNTER'));
-      API.post('users/login', data)
-        .then((response) => {
-          if (response.status === 200) {
-            localStorage.setItem('token', response.data.Data.token);
-            localStorage.setItem('user', JSON.stringify(response.data.Data.userData));
-            authCtx.setUser(response.data.Data.userData);
-            if (response.data.Data.userData.role === 'Super Admin') {
-              setShowCustomerSelection(true);
-            } else {
-              authCtx.setToken(response.data.Data.token);
-            }
-            if (authCtx.authError) {
-              authCtx.setAuthError(false);
-            }
-            if (timer) {
-              clearInterval(timer);
-            }
-          } else {
-            errorMessageHandler(
-              enqueueSnackbar,
-              response?.response?.data?.Message || 'Something Went Wrong2.',
-              response?.response?.status
-            );
-          }
-          setSubmitLoading(false);
-        })
-        .catch((err) => console.log(err));
-    }
-  };
   return (
     <>
       {/* <div style={{}}>
