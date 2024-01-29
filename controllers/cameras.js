@@ -61,7 +61,7 @@ module.exports = {
         res.status(400).json({
           IsSuccess: false,
           Data: {},
-          Message: `Maximum ${customer.max_cameras}` + CONSTANTS.MAX_CAMERA_ALLOWED
+          Message: CONSTANTS.MAX_CAMERA_ALLOWED
         });
       }
 
