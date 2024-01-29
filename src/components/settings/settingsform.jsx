@@ -49,7 +49,10 @@ const SettingsForm = (props) => {
   const handleSubmit = (data, { setSubmitting }) => {
     const { customer_locations } = data;
     const payload = {
-      user: authCtx.user && authCtx.user.cust_id,
+      user:
+        authCtx.user && authCtx.user.cust_id !== null
+          ? authCtx.user.cust_id
+          : localStorage.getItem('cust_id'),
       customer_locations: customer_locations
     };
     if (props.location !== undefined && props.location?.loc_name) {
