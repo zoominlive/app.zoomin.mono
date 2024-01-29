@@ -264,6 +264,7 @@ const SettingsForm = (props) => {
                                           Location Name
                                         </InputLabel>
                                         <TextField
+                                          disabled={values?.customer_locations[index]}
                                           labelId={`customer_locations.${index}`}
                                           name={`customer_locations.${index}`}
                                           value={values?.customer_locations[index]}
