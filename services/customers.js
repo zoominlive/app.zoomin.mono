@@ -165,14 +165,14 @@ module.exports = {
 
   getAllLocations: async (filter) => {
     const { Customers, CustomerLocations } = await connectToDatabase();
-    let { pageNumber = 0, pageSize = 10, searchBy = "", all = false, user } = filter;
+    let { pageNumber = 0, pageSize = 10, searchBy = "", all = false, user, cust_id } = filter;
     let locations;
     let custDetails;
     console.log("user==>", user);
     if (all) {
       locations = await CustomerLocations.findAndCountAll({
         where: {
-          cust_id: user.cust_id,
+          cust_id: user.cust_id || cust_id,
           [Sequelize.Op.or]: [
             {
               loc_name: {
@@ -188,7 +188,7 @@ module.exports = {
     } else {
       locations = await CustomerLocations.findAndCountAll({
         where: {
-          cust_id: user.cust_id,
+          cust_id: user.cust_id || cust_id,
           [Sequelize.Op.or]: [
             {
               loc_name: {

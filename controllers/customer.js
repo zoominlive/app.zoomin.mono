@@ -48,7 +48,8 @@ module.exports = {
         pageCount: req.query?.pageCount,
         orderBy: req.query?.orderBy,
         all: req.query?.all,
-        user: req.user
+        user: req.user,
+        cust_id: req.query?.cust_id
       };
 
       const locationsDetails = await customerServices.getAllLocations(filter);
