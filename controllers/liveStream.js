@@ -70,6 +70,7 @@ module.exports = {
           //   });
           //   next(error);
           // }
+          await t.commit();
           res.status(200).json({
             IsSuccess: true,
             Data: response,
@@ -77,7 +78,7 @@ module.exports = {
           });
         }
         else{
-          res.status(200).json({
+          res.status(400).json({
             IsSuccess: true,
             Data: { room_id: roomID },
             Message: CONSTANTS.LIVE_STREAM_NOT_ALLOWED,
@@ -119,6 +120,7 @@ module.exports = {
           //   });
           //   next(error);
           // }
+          await t.commit();
           res.status(200).json({
             IsSuccess: true,
             Data: response,
@@ -126,14 +128,14 @@ module.exports = {
           });
         } 
         else{
-          res.status(200).json({
+          res.status(400).json({
             IsSuccess: true,
             Data: { room_id: roomID },
             Message: CONSTANTS.LIVE_STREAM_ROOM_NOT_ALLOWED,
           });
         }
       } else {
-        res.status(200).json({
+        res.status(401).json({
           IsSuccess: true,
           Data: { room_id: roomID },
           Message: CONSTANTS.LIVE_STREAM_UNAUTHORIZE,
