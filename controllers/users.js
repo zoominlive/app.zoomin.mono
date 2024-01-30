@@ -211,17 +211,18 @@ module.exports = {
         familyUser = await familyServices.getFamilyMember(emailIs);
         userFound = familyUser;
       }
-      let userLocations = user.location.accessable_locations || user.location.locations;
-      const locations = await CustomerLocations.findAll({
-        attributes: ['loc_name', 'status'],
-        where: {
-          loc_name: userLocations,
-        },
-      });
-      const locationStatusMap = locations.map(location => location.status);
-      const allFalse = locationStatusMap.every(status => status === false);
-
+      
       if (user) {
+        let userLocations = user.location.accessable_locations || user.location.locations;
+        const locations = await CustomerLocations.findAll({
+          attributes: ['loc_name', 'status'],
+          where: {
+            loc_name: userLocations,
+          },
+        });
+        const locationStatusMap = locations.map(location => location.status);
+        const allFalse = locationStatusMap.every(status => status === false);
+
         user.transcoderBaseUrl = await customerServices.getTranscoderUrl(user.cust_id) ;
         user.max_stream_live_license = await customerServices.getMaxLiveStramAvailable(user.cust_id) ;
         if (!user.is_verified || user.status == 'inactive') {
@@ -239,7 +240,7 @@ module.exports = {
             Data: [],
             Message: CONSTANTS.NO_ACTIVE_LOCATION_FOUND
           });
-        }else {
+        } else {
           const validPassword = await bcrypt.compare(password, user.password);
 
           if (validPassword) {
@@ -270,6 +271,16 @@ module.exports = {
           }
         }
       } else if (familyUser) {
+        let userLocations = familyUser.location?.accessable_locations;
+        const locations = await CustomerLocations.findAll({
+          attributes: ['loc_name', 'status'],
+          where: {
+            loc_name: userLocations,
+          },
+        });
+        const locationStatusMap = locations.map(location => location.status);
+        const allFalse = locationStatusMap.every(status => status === false)
+
         familyUser.transcoderBaseUrl = await customerServices.getTranscoderUrl(familyUser.cust_id);
         if (!familyUser.is_verified || familyUser.status == 'Disabled') {
           //await t.commit();
@@ -282,6 +293,13 @@ module.exports = {
               : CONSTANTS.USER_DEACTIVATED
           });
           return
+        } else if(familyUser.role !== 'Super Admin' && allFalse) {
+          await t.rollback();
+          res.status(400).json({
+            IsSuccess: true,
+            Data: [],
+            Message: CONSTANTS.NO_ACTIVE_LOCATION_FOUND
+          });
         } else {
           const validPassword = await bcrypt.compare(password, familyUser.password);
 
