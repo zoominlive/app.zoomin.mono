@@ -207,7 +207,19 @@ module.exports = {
         },
       })
     }
-    return { locations: locations.rows, count: locations.count, customer: custDetails  };
+    let activeLocations = await CustomerLocations.findAndCountAll({
+      where: {
+        cust_id: user.cust_id || cust_id,
+        status: 1,
+      },
+      attributes: { exclude: ["createdAt", "updatedAt"] },
+    });
+    return { 
+      locations: locations.rows, 
+      count: locations.count,
+      activeLocations: activeLocations.count, 
+      customer: custDetails  
+    };
   },
 
   createCustomer: async (customerObj, t) => {
