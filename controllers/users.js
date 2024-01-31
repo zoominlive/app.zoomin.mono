@@ -82,6 +82,16 @@ module.exports = {
       user.transcoderBaseUrl = await customerServices.getTranscoderUrl(custId);
       user.max_stream_live_license = await customerServices.getMaxLiveStramAvailable(custId);
       user.max_stream_live_license_room = await customerServices.getMaxLiveStreamRoomAvailable(custId);
+      if(user.role !== 'Super Admin') {
+        let activeLocations = await customerServices.getActiveLocationDetails(custId)
+        activeLocations = activeLocations.flatMap((i) => i.loc_name)
+        // Filter locations that are both in user's accessable_locations and activeLocations
+        const updatedAccessableLocations = user.location.accessable_locations.filter((location) => activeLocations.includes(location));
+        const updatedSelectedLocations = user.location.selected_locations.filter((location) => activeLocations.includes(location));
+        // Update user's location.accessable_locations with the filtered array
+        user.location.accessable_locations = updatedAccessableLocations;
+        user.location.selected_locations = updatedSelectedLocations;
+      }
       res.status(200).json({
         IsSuccess: true,
         Data: _.omit(user, ['password']),

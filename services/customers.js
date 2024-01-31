@@ -276,6 +276,19 @@ module.exports = {
     return availableLocations;
   },
 
+  getActiveLocationDetails: async (custId) => {
+    const { CustomerLocations } = await connectToDatabase();
+    let availableLocations = await CustomerLocations.findAll({
+      where: { 
+        cust_id: custId, 
+        status: 1
+      },
+      raw: true,
+    });
+
+    return availableLocations;
+  },
+
   createLocation: async (custId, locations, t) => {
     const { CustomerLocations } = await connectToDatabase();
 
