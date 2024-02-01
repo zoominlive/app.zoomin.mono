@@ -78,6 +78,7 @@ module.exports = {
           });
         }
         else{
+          await t.rollback();
           res.status(400).json({
             IsSuccess: true,
             Data: { room_id: roomID },
@@ -128,6 +129,7 @@ module.exports = {
           });
         } 
         else{
+          await t.rollback();
           res.status(400).json({
             IsSuccess: true,
             Data: { room_id: roomID },
@@ -135,6 +137,7 @@ module.exports = {
           });
         }
       } else {
+        await t.rollback();
         res.status(401).json({
           IsSuccess: true,
           Data: { room_id: roomID },
