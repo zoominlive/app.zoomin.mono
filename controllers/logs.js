@@ -8,16 +8,16 @@ module.exports = {
   getAllLogs: async (req, res, next) => {
     try {
       const filter = {
-        pageNumber: req.query?.pageNumber,
-        pageSize: req.query?.pageSize,
-        startDate: req.query?.from ? req.query?.from : moment(),
-        endDate: req.query?.to ? req.query?.to : moment(),
-        type: req.query?.type,
-        functions: req.query?.functions,
-        userIds: req.query?.users || [],
-        locations: req.query?.locations,
-        familyMemberIds: req.query?.familyMemberIds || [],
-        actions: req.query?.actions
+        pageNumber: req.body?.pageNumber,
+        pageSize: req.body?.pageSize,
+        startDate: req.body?.from ? req.body?.from : moment(),
+        endDate: req.body?.to ? req.body?.to : moment(),
+        type: req.body?.type,
+        functions: req.body?.functions,
+        userIds: req.body?.users || [],
+        locations: req.body?.locations,
+        familyMemberIds: req.body?.familyMemberIds || [],
+        actions: req.body?.actions
       };
 
       const logs = await logServices.getAllLogs(req.user, filter);

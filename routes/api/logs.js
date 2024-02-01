@@ -7,6 +7,6 @@ const authController = require('../../middleware/auth');
 const logsController = require('../../controllers/logs');
 
 /* room end points */
-router.get('/', authController, logsController.getAllLogs);
+router.post('/', authController, logsController.getAllLogs);
 
 module.exports = router;
