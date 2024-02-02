@@ -302,7 +302,11 @@ const Dashboard = () => {
     API.get('dashboard', {
       params: {
         cust_id: localStorage.getItem('cust_id'),
-        location: authCtx?.location
+        location:
+          authCtx.user?.location?.accessable_locations?.length == 1 &&
+          authCtx.user.role !== 'Super Admin'
+            ? authCtx.user?.location?.accessable_locations
+            : authCtx?.location
       }
     }).then((response) => {
       if (response.status === 200) {
