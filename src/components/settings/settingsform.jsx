@@ -233,8 +233,8 @@ const SettingsForm = (props) => {
                 props.location?.loc_name === undefined ? (
                   <DialogContent>
                     <p>
-                      You have reached the max allowed locations limit. <br /> Please remove a
-                      location or contact Super Admin to increase the limit
+                      You have exceeded the maximum number of allowed locations. <br /> Please
+                      remove a location to proceed.
                     </p>
                   </DialogContent>
                 ) : (
@@ -297,7 +297,15 @@ const SettingsForm = (props) => {
                                       {props.location?.loc_name !== undefined && (
                                         <Grid item md={2} sm={12}>
                                           <Box className="row-button-wrapper">
+                                            <InputLabel>
+                                              {statusChecked ? 'Disable' : 'Enable'}
+                                            </InputLabel>
                                             <Switch
+                                              disabled={
+                                                authCtx.user.role === 'Admin' &&
+                                                props.activeLocations === 1 &&
+                                                props.location.status === true
+                                              }
                                               className={`switch-disable`}
                                               checked={statusChecked}
                                               onChange={() => {
@@ -396,5 +404,6 @@ SettingsForm.propTypes = {
   customer: PropTypes.object,
   getLocationsList: PropTypes.func,
   setLocation: PropTypes.func,
-  loc_name: PropTypes.string
+  loc_name: PropTypes.string,
+  activeLocations: PropTypes.number
 };

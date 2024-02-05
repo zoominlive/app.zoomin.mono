@@ -49,6 +49,7 @@ const Settings = () => {
   const [customerDetails, setCustomerDetails] = useState(null);
   const [totalLocations, setTotalLocations] = useState(0);
   const [location, setLocation] = useState();
+  const [activeLocations, setActiveLocations] = useState(0);
   const [usersPayload, setUsersPayload] = useState({
     pageNumber: 0,
     pageSize: parseInt(process.env.REACT_APP_PAGINATION_LIMIT, 10),
@@ -83,6 +84,7 @@ const Settings = () => {
         setLocationsList(response.data.Data.locations);
         setTotalLocations(response.data.Data.count);
         setCustomerDetails(response.data.Data.customer);
+        setActiveLocations(response.data.Data.activeLocations);
       } else {
         errorMessageHandler(
           enqueueSnackbar,
@@ -264,6 +266,7 @@ const Settings = () => {
           location={location}
           locationsList={locationsList}
           customer={customerDetails}
+          activeLocations={activeLocations}
           setOpen={setIsUserFormDialogOpen}
           getLocationsList={getLocationsList}
           setLocation={setLocation}

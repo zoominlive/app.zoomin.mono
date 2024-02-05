@@ -297,15 +297,13 @@ const Logs = () => {
                 if (location?.state?.viewMore) {
                   setRangeDate([dayjs().startOf('week'), dayjs().endOf('week')]);
                 }
-                API.get('logs/', {
-                  params: {
-                    ...logsPayload,
-                    from: moment().startOf('week').format('YYYY-MM-DD'),
-                    to: moment().endOf('week').format('YYYY-MM-DD'),
-                    locations: [authCtx.user.location.accessable_locations[0]],
-                    users: userToAdd,
-                    familyMemberIds: familyToAdd
-                  }
+                API.post('logs/', {
+                  ...logsPayload,
+                  from: moment().startOf('week').format('YYYY-MM-DD'),
+                  to: moment().endOf('week').format('YYYY-MM-DD'),
+                  locations: [authCtx.user.location.accessable_locations[0]],
+                  users: userToAdd,
+                  familyMemberIds: familyToAdd
                 }).then((response) => {
                   if (response.status === 200) {
                     setResponseData(response.data.Data.logs);
@@ -323,13 +321,11 @@ const Logs = () => {
                   setIsLoading(false);
                 });
               } else {
-                API.get('logs/', {
-                  params: {
-                    ...logsPayload,
-                    locations: [authCtx.user.location.accessable_locations[0]],
-                    users: userToAdd,
-                    familyMemberIds: familyToAdd
-                  }
+                API.post('logs/', {
+                  ...logsPayload,
+                  locations: [authCtx.user.location.accessable_locations[0]],
+                  users: userToAdd,
+                  familyMemberIds: familyToAdd
                 }).then((response) => {
                   if (response.status === 200) {
                     setResponseData(response.data.Data.logs);
@@ -359,6 +355,26 @@ const Logs = () => {
           });
         } else {
           setIsLoading(false);
+          errorMessageHandler(
+            enqueueSnackbar,
+            response?.response?.data?.Message || 'Something Went Wrong.',
+            response?.response?.status,
+            authCtx.setAuthError
+          );
+        }
+      });
+    }
+    if (authCtx.user.role !== 'Super Admin') {
+      API.get('customers/all/locations', {
+        params: {
+          location: 'All',
+          cust_id: authCtx.user.cust_id || localStorage.getItem('cust_id')
+        }
+      }).then((response) => {
+        if (response.status === 200) {
+          let locations = response.data.Data.locations.flatMap((i) => i.loc_name);
+          setLocations(['Select All', ...locations]);
+        } else {
           errorMessageHandler(
             enqueueSnackbar,
             response?.response?.data?.Message || 'Something Went Wrong.',
@@ -540,14 +556,12 @@ const Logs = () => {
         usersToAdd = usersToAdd?.map((user) => user.user_id);
       }
       console.log('logsPayload', logsPayload);
-      API.get('logs/', {
-        params: {
-          ...logsPayload,
-          pageNumber,
-          pageSize,
-          users: usersToAdd ? usersToAdd : logsPayload.users,
-          familyMemberIds: familiesToAdd ? familiesToAdd : logsPayload.familyMemberIds
-        }
+      API.post('logs/', {
+        ...logsPayload,
+        pageNumber,
+        pageSize,
+        users: usersToAdd ? usersToAdd : logsPayload.users,
+        familyMemberIds: familiesToAdd ? familiesToAdd : logsPayload.familyMemberIds
       }).then((response) => {
         if (response.status === 200) {
           setResponseData(response.data.Data.logs);
@@ -691,12 +705,10 @@ const Logs = () => {
 
   const fetchAllLogsToGenerateCSV = async () => {
     setLoading(true);
-    let response = await API.get('logs/', {
-      params: {
-        ...logsPayload,
-        pageNumber: 0,
-        pageSize: totalLogs
-      }
+    let response = await API.post('logs/', {
+      ...logsPayload,
+      pageNumber: 0,
+      pageSize: totalLogs
     });
     setcsvGenerated(true);
     setLoading(false);
