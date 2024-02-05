@@ -19,6 +19,21 @@ module.exports = {
     return customer?.max_stream_live_license || null;
   },
 
+  getMaxLiveStreamRoomAvailable: async (custId, t) => {
+    const { Customers } = await connectToDatabase();
+    let customer = await Customers.findOne(
+      {
+        raw: true,
+        where: {
+          cust_id: custId,
+        },
+      },
+      { transaction: t }
+    );
+
+    return customer?.max_stream_live_license_room || null;
+  },
+
   getRTMPTranscoderUrl: async (custId, t) => {
     const { Customers } = await connectToDatabase();
     let customer = await Customers.findOne(
@@ -148,6 +163,53 @@ module.exports = {
     return { customers: customers.rows, count: customers.rows.length,  };
   },
 
+  getAllLocations: async (filter) => {
+    const { Customers, CustomerLocations } = await connectToDatabase();
+    let { pageNumber = 0, pageSize = 10, searchBy = "", all = false, user, cust_id } = filter;
+    let locations;
+    let custDetails;
+    console.log("user==>", user);
+    if (all) {
+      locations = await CustomerLocations.findAndCountAll({
+        where: {
+          cust_id: user.cust_id || cust_id,
+          [Sequelize.Op.or]: [
+            {
+              loc_name: {
+                [Sequelize.Op.like]: `%${searchBy}%`,
+              },
+            },
+          ],
+        },
+        attributes: { exclude: ["createdAt", "updatedAt"] },
+        // limit: parseInt(pageSize),
+        // offset: parseInt(pageNumber * pageSize),
+      });
+    } else {
+      locations = await CustomerLocations.findAndCountAll({
+        where: {
+          cust_id: user.cust_id || cust_id,
+          [Sequelize.Op.or]: [
+            {
+              loc_name: {
+                [Sequelize.Op.like]: `%${searchBy}%`,
+              },
+            },
+          ],
+        },
+        attributes: { exclude: ["createdAt", "updatedAt"] },
+        limit: parseInt(pageSize),
+        offset: parseInt(pageNumber * pageSize),
+      });
+      custDetails = await Customers.findOne({
+        where: {
+          cust_id: user.cust_id || cust_id,
+        },
+      })
+    }
+    return { locations: locations.rows, count: locations.count, customer: custDetails  };
+  },
+
   createCustomer: async (customerObj, t) => {
     const { Customers } = await connectToDatabase();
     customerObj.cust_id = uuidv4();
@@ -176,14 +238,16 @@ module.exports = {
       update,
       {
         where: { cust_id: customerId },
+        transaction: t 
       },
-      { transaction: t }
     );
 
     if (updateCustomerProfile) {
       updateCustomerProfile = await Customers.findOne(
-        { where: { cust_id: customerId } },
-        { transaction: t }
+        { 
+          where: { cust_id: customerId },
+          transaction: t 
+        },
       );
     }
 
@@ -218,6 +282,12 @@ module.exports = {
   deleteLocation: async (custId) => {
     const { CustomerLocations } = await connectToDatabase();
     let deletedLocations = await CustomerLocations.destroy({where: {cust_id: custId}});
+    return deletedLocations
+  },
+
+  deleteCustomerLocation: async (loc_id) => {
+    const { CustomerLocations } = await connectToDatabase();
+    let deletedLocations = await CustomerLocations.destroy({where: {loc_id: loc_id}});
     return deletedLocations
   }
 };

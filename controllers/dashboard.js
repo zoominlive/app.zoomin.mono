@@ -63,22 +63,22 @@ module.exports = {
         child.roomsInChild.forEach((room) => {
           if (room.scheduled_disable_date != null) {
            if(req.query?.location !== "All"){
-            if(req.query?.location == room.room.location){
-              roomsToDisable.push(room.room.room_name);
+            if(req.query?.location == room.room?.location){
+              roomsToDisable.push(room.room?.room_name);
             }
            }
            else{
-            roomsToDisable.push(room.room.room_name);
+            roomsToDisable.push(room.room?.room_name);
            }
            
           } else {
             if(req.query?.location !== "All"){
-              if(req.query?.location == room.room.location){
-                roomsToEnable.push(room.room.room_name);
+              if(req.query?.location == room.room?.location){
+                roomsToEnable.push(room.room?.room_name);
               }
              }
              else{
-            roomsToEnable.push(room.room.room_name);
+            roomsToEnable.push(room.room?.room_name);
              }
           }
         });

@@ -16,9 +16,12 @@ module.exports = {
       params.cust_id = req.user.cust_id || req.body.cust_id;
 
       const customer = await customerServices.getCustomerDetails(params.cust_id, t);
-      const availableCameras = customer?.available_cameras;
+      // const availableCameras = customer?.available_cameras;
+      const maxCameras = customer?.max_cameras;
 
-      if (availableCameras > 0) {
+      const cameras = await cameraServices.getAllCameraForCustomer(params.cust_id , req.user, {});
+      const diff = maxCameras - cameras.count;
+      if (diff > 0) {
         const token = req.userToken;
         const transcodedDetails = await startEncodingStream(
           params.cam_uri,
@@ -30,11 +33,11 @@ module.exports = {
         params.cam_alias = transcodedDetails?.data ? transcodedDetails.data?.alias : '';
         const camera = await cameraServices.createCamera(params, t);
 
-        const resetAvailableCameras = await customerServices.setAvailableCameras(
-          params.cust_id,
-          availableCameras - 1,
-          t
-        );
+        // const resetAvailableCameras = await customerServices.setAvailableCameras(
+        //   params.cust_id,
+        //   availableCameras - 1,
+        //   t
+        // );
 
         let usersdata = await userServices.getUsersSocketIds(params.cust_id);
             usersdata = usersdata.filter(user => user.socket_connection_id && user.dashboard_locations);
@@ -58,7 +61,7 @@ module.exports = {
         res.status(400).json({
           IsSuccess: false,
           Data: {},
-          Message: `Maximum ${customer.max_cameras}` + CONSTANTS.MAX_CAMERA_ALLOWED
+          Message: CONSTANTS.MAX_CAMERA_ALLOWED
         });
       }
 
@@ -94,7 +97,7 @@ module.exports = {
       const token = req.userToken;
 
       const customer = await customerServices.getCustomerDetails(req.user.cust_id, t);
-      const availableCameras = customer?.available_cameras;
+      // const availableCameras = customer?.available_cameras;
 
       const camEncodedDeleted = await deleteEncodingStream(
         params.streamId,
@@ -113,11 +116,11 @@ module.exports = {
           Message: CONSTANTS.CAMERA_NOT_FOUND
         });
       } else if (camEncodedDeleted.status === 200) {
-        const resetAvailableCameras = await customerServices.setAvailableCameras(
-          req.user.cust_id,
-          availableCameras + 1,
-          t
-        );
+        // const resetAvailableCameras = await customerServices.setAvailableCameras(
+        //   req.user.cust_id,
+        //   availableCameras + 1,
+        //   t
+        // );
 
         res.status(200).json({
           IsSuccess: true,
@@ -125,11 +128,11 @@ module.exports = {
           Message: CONSTANTS.CAMERA_DELETED
         });
       } else {
-        const resetAvailableCameras = await customerServices.setAvailableCameras(
-          req.user.cust_id,
-          availableCameras + 1,
-          t
-        );
+        // const resetAvailableCameras = await customerServices.setAvailableCameras(
+        //   req.user.cust_id,
+        //   availableCameras + 1,
+        //   t
+        // );
 
         res.status(200).json({
           IsSuccess: false,

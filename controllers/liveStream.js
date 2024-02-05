@@ -19,6 +19,7 @@ const s3BucketImageUploader = require("../lib/aws-services");
 const CONSTANTS = require("../lib/constants");
 const sequelize = require("../lib/database");
 const { v4: uuidv4 } = require("uuid");
+const rooms = require("../services/rooms");
 module.exports = {
   // get endpoint
   getEndpoint: async (req, res, next) => {
@@ -27,48 +28,114 @@ module.exports = {
     try {
       const { roomID, streamName } = req.query;
       const { user_id, stream_live_license, cust_id } = req.user;
+      const streams = await liveStreamServices.getstreamObjByUserId(user_id, t);
+      const hasRunningStream = streams.some(stream => stream.dataValues.stream_running); //check if atleast one of the streams is running
+
+      const streamsByRoom = await liveStreamServices.getstreamObjByRoomId(roomID, t);
+      const hasRunningStreamRooms = streamsByRoom.some(stream => stream.stream_running); //check if atleast one of the streams is running
+      const roomObj = await rooms.getRoomDetailsByRoomId(roomID, t);
       if (stream_live_license) {
-        let rtmpTranscoderBaseUrl = await customerServices.getRTMPTranscoderUrl(
-          cust_id
-        );
-        let current_time = moment().toISOString();
-        let streamID = uuidv4();
-        let streamKeyAuth = await liveStreamServices.createStreamKeyToken(
-          streamID
-        );
-
-        let endPoint = `${rtmpTranscoderBaseUrl}/stream/${streamID}?auth=${streamKeyAuth.token}`;
-        let liveStreamObj = {
-          stream_id: streamID,
-          cust_id: cust_id,
-          user_id: user_id,
-          room_id: roomID,
-          stream_name: streamName,
-          hls_url: `https://zoominstreamprocessing.s3.us-west-2.amazonaws.com/liveStream/${streamID}_${current_time}/index.m3u8`,
-        };
-        let livestream = await liveStreamServices.createLiveStream(
-          liveStreamObj
-        );
-        response = { serverEndPoint: endPoint };
-        // try {
-        // const { streamID } = req.query;
-
-        // } catch (error) {
-        //   await t.rollback();
-        //   res.status(500).json({
-        //     IsSuccess: false,
-        //     error_log: error,
-        //     Message: CONSTANTS.INTERNAL_SERVER_ERROR
-        //   });
-        //   next(error);
-        // }
-        res.status(200).json({
-          IsSuccess: true,
-          Data: response,
-          Message: CONSTANTS.RTMP_ENDPOINT,
-        });
+        if(!hasRunningStream){
+          let rtmpTranscoderBaseUrl = await customerServices.getRTMPTranscoderUrl(
+            cust_id
+          );
+          let current_time = moment().toISOString();
+          let streamID = uuidv4();
+          let streamKeyAuth = await liveStreamServices.createStreamKeyToken(
+            streamID
+          );
+  
+          let endPoint = `${rtmpTranscoderBaseUrl}/stream/${streamID}?auth=${streamKeyAuth.token}`;
+          let liveStreamObj = {
+            stream_id: streamID,
+            cust_id: cust_id,
+            user_id: user_id,
+            room_id: roomID,
+            stream_name: streamName,
+            hls_url: `https://zoominstreamprocessing.s3.us-west-2.amazonaws.com/liveStream/${streamID}_${current_time}/index.m3u8`,
+          };
+          let livestream = await liveStreamServices.createLiveStream(
+            liveStreamObj
+          );
+          response = { serverEndPoint: endPoint };
+          // try {
+          // const { streamID } = req.query;
+  
+          // } catch (error) {
+          //   await t.rollback();
+          //   res.status(500).json({
+          //     IsSuccess: false,
+          //     error_log: error,
+          //     Message: CONSTANTS.INTERNAL_SERVER_ERROR
+          //   });
+          //   next(error);
+          // }
+          await t.commit();
+          res.status(200).json({
+            IsSuccess: true,
+            Data: response,
+            Message: CONSTANTS.RTMP_ENDPOINT,
+          });
+        }
+        else{
+          res.status(400).json({
+            IsSuccess: true,
+            Data: { room_id: roomID },
+            Message: CONSTANTS.LIVE_STREAM_NOT_ALLOWED,
+          });
+        }
+      } else if(!stream_live_license && roomObj.stream_live_license) {
+        if(!hasRunningStreamRooms){
+          let rtmpTranscoderBaseUrl = await customerServices.getRTMPTranscoderUrl(
+            cust_id
+          );
+          let current_time = moment().toISOString();
+          let streamID = uuidv4();
+          let streamKeyAuth = await liveStreamServices.createStreamKeyToken(
+            streamID
+          );
+  
+          let endPoint = `${rtmpTranscoderBaseUrl}/stream/${streamID}?auth=${streamKeyAuth.token}`;
+          let liveStreamObj = {
+            stream_id: streamID,
+            cust_id: cust_id,
+            user_id: user_id,
+            room_id: roomID,
+            stream_name: streamName,
+            hls_url: `https://zoominstreamprocessing.s3.us-west-2.amazonaws.com/liveStream/${streamID}_${current_time}/index.m3u8`,
+          };
+          let livestream = await liveStreamServices.createLiveStream(
+            liveStreamObj
+          );
+          response = { serverEndPoint: endPoint };
+          // try {
+          // const { streamID } = req.query;
+  
+          // } catch (error) {
+          //   await t.rollback();
+          //   res.status(500).json({
+          //     IsSuccess: false,
+          //     error_log: error,
+          //     Message: CONSTANTS.INTERNAL_SERVER_ERROR
+          //   });
+          //   next(error);
+          // }
+          await t.commit();
+          res.status(200).json({
+            IsSuccess: true,
+            Data: response,
+            Message: CONSTANTS.RTMP_ENDPOINT,
+          });
+        } 
+        else{
+          res.status(400).json({
+            IsSuccess: true,
+            Data: { room_id: roomID },
+            Message: CONSTANTS.LIVE_STREAM_ROOM_NOT_ALLOWED,
+          });
+        }
       } else {
-        res.status(200).json({
+        res.status(401).json({
           IsSuccess: true,
           Data: { room_id: roomID },
           Message: CONSTANTS.LIVE_STREAM_UNAUTHORIZE,

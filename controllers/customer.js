@@ -6,6 +6,7 @@ const _ = require("lodash");
 const {
   sendEmailChangeMail, sendRegistrationMailforUser
 } = require('../lib/ses-mail-sender');
+const CustomerLocations = require("../models/customer_locations");
 module.exports = {
   /* Get  customer's details */
   getAllCustomerDetails: async (req, res, next) => {
@@ -34,6 +35,84 @@ module.exports = {
           error_log: error,
           Message: CONSTANTS.INTERNAL_SERVER_ERROR,
         });
+      next(error);
+    }
+  },
+
+  getAllCustomerLocations: async (req, res, next) => {
+    try {
+      const filter = {
+        pageNumber: req.query?.pageNumber,
+        pageSize: req.query?.pageSize,
+        searchBy: req.query?.searchBy?.replace(/'/g, "\\'"),
+        pageCount: req.query?.pageCount,
+        orderBy: req.query?.orderBy,
+        all: req.query?.all,
+        user: req.user,
+        cust_id: req.query?.cust_id
+      };
+
+      const locationsDetails = await customerServices.getAllLocations(filter);
+      res.status(200).json({
+        IsSuccess: true,
+        Data: locationsDetails,
+        Message: CONSTANTS.LOCATION_FOUND,
+      });
+      next();
+    } catch (error) {
+      res
+        .status(500)
+        .json({
+          IsSuccess: false,
+          error_log: error,
+          Message: CONSTANTS.INTERNAL_SERVER_ERROR,
+        });
+      next(error);
+    }
+  },
+
+  createCustomerLocations: async(req, res, next) => {
+    const t = await sequelize.transaction();
+    try {
+      const params = req.body;
+      const { user, customer_locations } = params;
+
+      let locations = customer_locations.flatMap((i) => i);
+      console.log(user);
+      console.log(locations);
+      let addLocations = await customerServices.createLocation(
+        user,
+        locations,
+        t
+      );
+      
+      if (addLocations) {
+        await res.status(201).json({
+          IsSuccess: true,
+          Data: { addLocations },
+          Message: CONSTANTS.LOCATION_ADDED,
+        });
+      } else {
+        res
+          .status(400)
+          .json({
+            IsSuccess: true,
+            Data: {},
+            Message: CONSTANTS.LOCATION_ADD_FAILED,
+          });
+      }
+      await t.commit();
+      next();
+    } catch (error) {
+      await t.rollback();
+      res.status(500).json({
+        IsSuccess: false,
+        error_log: error,
+        Message:
+          error?.name === "SequelizeUniqueConstraintError"
+            ? error.errors[0].message
+            : CONSTANTS.INTERNAL_SERVER_ERROR,
+      });
       next(error);
     }
   },
@@ -135,6 +214,100 @@ module.exports = {
       next(error);
     }
   },
+
+  deleteCustomerLocation: async (req, res, next) => {
+    const t = await sequelize.transaction();
+    try {
+      const { loc_id } = req.body;
+
+      let deleted = await customerServices.deleteCustomerLocation(loc_id, t);
+
+      if (deleted) {
+        res
+          .status(200)
+          .json({
+            IsSuccess: true,
+            Data: deleted,
+            Message: CONSTANTS.LOCATION_DELETED,
+          });
+      } else {
+        res
+          .status(400)
+          .json({
+            IsSuccess: true,
+            Data: {},
+            Message: CONSTANTS.CUSTOMER_NOT_FOUND,
+          });
+      }
+      await t.commit();
+      next();
+    } catch (error) {
+      await t.rollback();
+      res
+        .status(500)
+        .json({
+          IsSuccess: false,
+          error_log: error,
+          Message: CONSTANTS.INTERNAL_SERVER_ERROR,
+        });
+      next(error);
+    }
+  },
+
+  updateCustomerLocation: async (req, res, next) => {
+    const t = await sequelize.transaction();
+    try {
+      const params = req.body;
+      const { loc_id, loc_name, status } = params;
+      console.log('loc_id', loc_id);
+      console.log('loc_name', loc_name);
+      let update = {
+        loc_name: loc_name,
+        status: status
+      };
+
+      let updateLocation = await CustomerLocations.update(
+        update,
+        {
+          where: { loc_id: loc_id },
+        },
+        { transaction: t }
+      );
+  
+      if (updateLocation) {
+        updateLocation = await CustomerLocations.findOne(
+          { where: { loc_id: loc_id } },
+          { transaction: t }
+        );
+        res.status(200).json({
+          IsSuccess: true,
+          Data: updateLocation.toJSON(),
+          Message: CONSTANTS.LOCATION_EDITED,
+        });
+        await t.commit();
+        next();
+      } else {
+        res
+          .status(400)
+          .json({
+            IsSuccess: true,
+            Data: {},
+            Message: CONSTANTS.CUSTOMER_NOT_FOUND,
+          });
+      }
+    } catch (error) {
+      await t.rollback();
+      res
+        .status(500)
+        .json({
+          IsSuccess: false,
+          error_log: error,
+          Message: CONSTANTS.INTERNAL_SERVER_ERROR,
+        });
+      next(error);
+    }
+  },
+
   updateCustomerProfile: async (req, res, next) => {
     const t = await sequelize.transaction();
     try {
@@ -145,8 +318,6 @@ module.exports = {
         _.omit(customeDetails, ["cust_id"]),
         t
       );
-
-      
 
       const userDetails = await userServices.getUserById(user.user_id, t);
 

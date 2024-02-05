@@ -76,6 +76,28 @@ module.exports = {
     return roomObj?.dataValues;
   },
 
+  getstreamObjByUserId: async (user_id, t) => {
+    const { LiveStreams } = await connectToDatabase();
+    let streamsArray = await LiveStreams.findAll(
+      { 
+        where: { user_id: user_id },
+      },
+      { transaction: t }
+    );
+    return streamsArray;
+  },
+
+  getstreamObjByRoomId: async (room_id, t) => {
+    const { LiveStreams } = await connectToDatabase();
+    let streamsArray = await LiveStreams.findAll(
+      { 
+        where: { room_id: room_id },
+      },
+      { transaction: t }
+    );
+    return streamsArray;
+  },
+
   getAllActiveStreams: async (cust_id, location='All', t) => {
     const { LiveStreams, Room, LiveStreamCameras } = await connectToDatabase();
     let loc_obj = location === "All" ? {} : {location: location};

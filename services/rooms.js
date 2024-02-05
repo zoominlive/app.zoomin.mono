@@ -4,6 +4,7 @@ const _ = require("lodash");
 const sequelize = require("../lib/database");
 const { v4: uuidv4 } = require("uuid");
 const CamerasInRooms = require("../models/cameras_assigned_to_rooms");
+const customerServices = require('../services/customers');
 
 module.exports = {
   /* Create new room */
@@ -40,7 +41,9 @@ module.exports = {
     if (params?.disabled) {
       update.location = params.disabled;
     }
-
+    if (params?.stream_live_license !== undefined) {
+      update.stream_live_license = params?.stream_live_license
+    }
     let updateRoomDetails = await Room.update(
       update,
       {
@@ -53,6 +56,11 @@ module.exports = {
       updateRoomDetails = await Room.findOne(
         { where: { room_id: params.room_id } },
         { transaction: t }
+      );
+      await customerServices.editCustomer(
+        params.cust_id,
+        {max_stream_live_license_room: params.max_stream_live_license_room},
+        t
       );
     }
 
@@ -211,7 +219,7 @@ module.exports = {
             },
             room_name: roomsList,
           },
-          attributes: ["room_id", "room_name", "location"],
+          attributes: ["room_id", "room_name", "location", "stream_live_license"],
           include: [
             {
               model: CamerasInRooms,
@@ -251,7 +259,7 @@ module.exports = {
               [Sequelize.Op.substring]: searchBy,
             },
           },
-          attributes: ["room_id", "room_name", "location"],
+          attributes: ["room_id", "room_name", "location", "stream_live_license"],
           include: [
             {
               model: CamerasInRooms,
@@ -296,12 +304,33 @@ module.exports = {
         room_name: room.room_name,
         location: room.location,
         cameras: cams,
+        stream_live_license: room.stream_live_license
       };
     });
 
     return { finalRoomDetails: rooms, count: count };
   },
 
+  getRoomDetailsByRoomId: async(roomId, t) => {
+    const { Room, Camera } = await connectToDatabase();
+
+    room = await Room.findOne(
+      {
+        where: {
+          room_id: roomId,
+        },
+        attributes: ["room_id", "room_name", "location", "stream_live_license"],
+      },
+      { transaction: t }
+    );
+    return {
+      room_id: room.room_id,
+      room_name: room.room_name,
+      location: room.location,
+      stream_live_license: room.stream_live_license
+    };
+  },
+    
   // get all room's list for loggedin user
   getAllRoomsList: async (userId, user, cust_id = null, t) => {
     const { Room, CustomerLocations } = await connectToDatabase();
@@ -322,7 +351,7 @@ module.exports = {
 
       roomList = await Room.findAll(
         {
-          attributes: ["room_name", "room_id", "location"],
+          attributes: ["room_name", "room_id", "location", "stream_live_license"],
           where: {
             cust_id: user.cust_id || cust_id,
             ...loc_obj
@@ -333,7 +362,7 @@ module.exports = {
     } else {
       roomList = await Room.findAll(
         {
-          attributes: ["room_name", "room_id", "location"],
+          attributes: ["room_name", "room_id", "location", "stream_live_license"],
           where: { user_id: userId },
         },
         { transaction: t }

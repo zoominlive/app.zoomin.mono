@@ -4,6 +4,7 @@ const logServices = require('../services/logs');
 const CONSTANTS = require('../lib/constants');
 const _ = require('lodash');
 const sequelize = require('../lib/database');
+const customerServices = require('../services/customers');
 
 module.exports = {
   // create new room
@@ -15,6 +16,13 @@ module.exports = {
       params.cust_id = req.user.cust_id || req.body.cust_id;
       const room = await roomServices.createRoom(params, t);
 
+      if (room) {
+        await customerServices.editCustomer(
+          params.cust_id,
+          {max_stream_live_license_room: params.max_stream_live_license_room},
+          t
+        );
+      }
       params?.cameras?.forEach(async (camera) => {
         let rooms = [];
 
@@ -101,8 +109,15 @@ module.exports = {
     const t = await sequelize.transaction();
     try {
       const params = req.body;
+      const { custId, max_stream_live_license_room } = params;
       const room = await roomServices.deleteRoom(params.room_id, t);
-
+      if(room && custId && max_stream_live_license_room){
+        await customerServices.editCustomer(
+          custId,
+          {max_stream_live_license_room: max_stream_live_license_room},
+          t
+          );
+        }
       await t.commit();
       res.status(200).json({
         IsSuccess: true,

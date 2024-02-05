@@ -80,6 +80,7 @@ module.exports = {
       }
       user.transcoderBaseUrl = await customerServices.getTranscoderUrl(custId);
       user.max_stream_live_license = await customerServices.getMaxLiveStramAvailable(custId);
+      user.max_stream_live_license_room = await customerServices.getMaxLiveStreamRoomAvailable(custId);
       res.status(200).json({
         IsSuccess: true,
         Data: _.omit(user, ['password']),
