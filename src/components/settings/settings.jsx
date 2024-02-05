@@ -21,7 +21,21 @@ import {
 import React, { useEffect, useMemo, useState } from 'react';
 import { useContext } from 'react';
 import { Plus } from 'react-feather';
+import { Plus } from 'react-feather';
 import LayoutContext from '../../context/layoutcontext';
+import SettingsForm from './settingsform';
+import SettingsActions from './settingsactions';
+// import DeleteDialog from '../common/deletedialog';
+import API from '../../api';
+import { errorMessageHandler } from '../../utils/errormessagehandler';
+import AuthContext from '../../context/authcontext';
+import { useSnackbar } from 'notistack';
+// import Loader from '../common/loader';
+import debounce from 'lodash.debounce';
+import NoDataDiv from '../common/nodatadiv';
+import SearchIcon from '@mui/icons-material/Search';
+import NewDeleteDialog from '../common/newdeletedialog';
+import LinerLoader from '../common/linearLoader';
 import SettingsForm from './settingsform';
 import SettingsActions from './settingsactions';
 // import DeleteDialog from '../common/deletedialog';
@@ -49,6 +63,7 @@ const Settings = () => {
   const [customerDetails, setCustomerDetails] = useState(null);
   const [totalLocations, setTotalLocations] = useState(0);
   const [location, setLocation] = useState();
+  const [activeLocations, setActiveLocations] = useState(0);
   const [usersPayload, setUsersPayload] = useState({
     pageNumber: 0,
     pageSize: parseInt(process.env.REACT_APP_PAGINATION_LIMIT, 10),
@@ -83,6 +98,7 @@ const Settings = () => {
         setLocationsList(response.data.Data.locations);
         setTotalLocations(response.data.Data.count);
         setCustomerDetails(response.data.Data.customer);
+        setActiveLocations(response.data.Data.activeLocations);
       } else {
         errorMessageHandler(
           enqueueSnackbar,
@@ -264,6 +280,7 @@ const Settings = () => {
           location={location}
           locationsList={locationsList}
           customer={customerDetails}
+          activeLocations={activeLocations}
           setOpen={setIsUserFormDialogOpen}
           getLocationsList={getLocationsList}
           setLocation={setLocation}
