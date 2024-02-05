@@ -228,7 +228,7 @@ export default function ViewersTable({ rows, columns, title, pagination, isLoadi
           <Stack
             alignItems="center"
             justifyContent="center"
-            sx={{ paddingTop: 2, minHeight: !pagination ? '335px' : '165px' }}>
+            sx={{ paddingTop: 2, minHeight: !pagination ? '335px' : '217px' }}>
             <NoDataDiv />
           </Stack>
         ) : null}

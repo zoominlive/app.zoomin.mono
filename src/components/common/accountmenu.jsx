@@ -15,7 +15,7 @@ import {
 } from '@mui/material';
 import React, { useContext } from 'react';
 import PermIdentityIcon from '@mui/icons-material/PermIdentity';
-// import SettingsIcon from '@mui/icons-material/Settings';
+import SettingsIcon from '@mui/icons-material/Settings';
 import { useNavigate } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import AuthContext from '../../context/authcontext';
@@ -90,16 +90,21 @@ const AccountMenu = (props) => {
             </ListItemText>
           </MenuItem>
           <Divider />
-          {/* <MenuItem
-            onClick={(event) => {
-              navigate('/settings');
-              handleClose(event);
-            }}>
-            <ListItemIcon>
-              <SettingsIcon />
-            </ListItemIcon>
-            <ListItemText sx={{ ml: 2 }}>Settings</ListItemText>
-          </MenuItem> */}
+          {(authCtx.user?.role === 'Admin' || authCtx.user?.role === 'Super Admin') && (
+            <>
+              <MenuItem
+                onClick={(event) => {
+                  navigate('/settings');
+                  handleClose(event);
+                }}>
+                <ListItemIcon>
+                  <SettingsIcon />
+                </ListItemIcon>
+                <ListItemText sx={{ ml: 2 }}>Settings</ListItemText>
+              </MenuItem>
+              <Divider />
+            </>
+          )}
           <MenuItem
             onClick={(event) => {
               navigate('/profile');

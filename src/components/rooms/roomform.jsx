@@ -18,7 +18,9 @@ import {
   DialogContentText,
   IconButton,
   Button,
-  Stack
+  Stack,
+  FormControlLabel,
+  Checkbox
 } from '@mui/material';
 import React from 'react';
 import PropTypes from 'prop-types';
@@ -34,6 +36,7 @@ import { errorMessageHandler } from '../../utils/errormessagehandler';
 import { LoadingButton } from '@mui/lab';
 import SaveIcon from '@mui/icons-material/Save';
 import { useEffect } from 'react';
+import _ from 'lodash';
 import CloseIcon from '@mui/icons-material/Close';
 
 const validationSchema = yup.object({
@@ -48,7 +51,10 @@ const RoomForm = (props) => {
   const [initialState, setInitialState] = useState({
     room_name: props?.room?.room_name ? props?.room?.room_name : '',
     location: props?.room?.location ? props?.room?.location : '',
-    cameras: props?.room?.cameras ? props?.room?.cameras : []
+    cameras: props?.room?.cameras ? props?.room?.cameras : [],
+    stream_live_license: !_.isNil(props?.room?.stream_live_license)
+      ? props?.room?.stream_live_license
+      : false
   });
 
   const [submitLoading, setSubmitLoading] = useState(false);
@@ -59,6 +65,9 @@ const RoomForm = (props) => {
   const [locationSelected, setLocationSelected] = useState(false);
   const [cameraOptions, setCameraOptions] = useState([]);
   const [isCloseDialog, setIsCloseDialog] = useState(false);
+  const [liveStreamLicense, setLiveStreamLicense] = useState(
+    authCtx?.user?.max_stream_live_license_room || 0
+  );
   // const [isInitialLocation, setIsInitialLocation] = useState(false);
   // const maximumCams = 15;
 
@@ -98,15 +107,32 @@ const RoomForm = (props) => {
     }
   }, [cameraSaveLoading]);
 
+  const handleLivestream = () => {
+    authCtx.setUser({
+      ...authCtx.user,
+      max_stream_live_license_room: liveStreamLicense
+    });
+    localStorage.setItem(
+      'user',
+      JSON.stringify({
+        ...authCtx.user,
+        max_stream_live_license_room: liveStreamLicense
+      })
+    );
+  };
+
   // Method to add/edit room
   const handleSubmit = (data) => {
     setSubmitLoading(true);
-
+    let customer_id =
+      authCtx.user.role === 'Super Admin' ? localStorage.getItem('cust_id') : authCtx.user.cust_id;
     if (props.room) {
       API.put('rooms/edit', {
         ...data,
         room_id: props.room.room_id,
-        camerasToAdd: data.cameras
+        camerasToAdd: data.cameras,
+        max_stream_live_license_room: liveStreamLicense,
+        cust_id: customer_id
       }).then((response) => {
         if (response.status === 200) {
           enqueueSnackbar(response.data.Message, { variant: 'success' });
@@ -129,6 +155,7 @@ const RoomForm = (props) => {
             props.getRoomsList();
             props.getDropDownRoomList();
           }
+          handleLivestream();
         } else {
           errorMessageHandler(
             enqueueSnackbar,
@@ -141,24 +168,27 @@ const RoomForm = (props) => {
         handleFormDialogClose();
       });
     } else {
-      API.post('rooms/add', { ...data, cust_id: localStorage.getItem('cust_id') }).then(
-        (response) => {
-          if (response.status === 201) {
-            enqueueSnackbar(response.data.Message, { variant: 'success' });
-            props.getRoomsList();
-            props.getDropDownRoomList();
-          } else {
-            errorMessageHandler(
-              enqueueSnackbar,
-              response?.response?.data?.Message || 'Something Went Wrong.',
-              response?.response?.status,
-              authCtx.setAuthError
-            );
-          }
-          setSubmitLoading(false);
-          handleFormDialogClose();
+      API.post('rooms/add', {
+        ...data,
+        cust_id: localStorage.getItem('cust_id'),
+        max_stream_live_license_room: liveStreamLicense
+      }).then((response) => {
+        if (response.status === 201) {
+          enqueueSnackbar(response.data.Message, { variant: 'success' });
+          props.getRoomsList();
+          props.getDropDownRoomList();
+          handleLivestream();
+        } else {
+          errorMessageHandler(
+            enqueueSnackbar,
+            response?.response?.data?.Message || 'Something Went Wrong.',
+            response?.response?.status,
+            authCtx.setAuthError
+          );
         }
-      );
+        setSubmitLoading(false);
+        handleFormDialogClose();
+      });
     }
   };
 
@@ -376,6 +406,34 @@ const RoomForm = (props) => {
                           )}
                         />
                       </Grid>
+                      <Grid item xs={12} md={6}>
+                        <FormControl>
+                          <FormControlLabel
+                            disabled={
+                              (props?.user &&
+                                liveStreamLicense === 0 &&
+                                !values.stream_live_license) ||
+                              (!props?.user && liveStreamLicense === 0)
+                                ? true
+                                : false
+                            }
+                            control={
+                              <Checkbox
+                                checked={values.stream_live_license}
+                                onChange={(event) => {
+                                  setFieldValue('stream_live_license', event.target.checked);
+                                  setLiveStreamLicense(
+                                    event.target.checked
+                                      ? liveStreamLicense - 1
+                                      : liveStreamLicense + 1
+                                  );
+                                }}
+                              />
+                            }
+                            label={`Assign Live Streaming License (${liveStreamLicense} Available)`}
+                          />
+                        </FormControl>
+                      </Grid>
                     </Grid>
                   </Box>
                 </DialogContent>
@@ -424,5 +482,6 @@ RoomForm.propTypes = {
   getDropDownRoomList: PropTypes.func,
   setRoomsPayload: PropTypes.func,
   setDropdownList: PropTypes.func,
-  roomsPayload: PropTypes.object
+  roomsPayload: PropTypes.object,
+  user: PropTypes.object
 };

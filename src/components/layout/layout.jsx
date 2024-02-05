@@ -27,7 +27,7 @@ import logo from '../../assets/app-capital.svg';
 import collapsedLogo from '../../assets/white-logo-collapsed.png';
 import collapseButton from '../../assets/collapse-button.svg';
 import openButton from '../../assets/open-button.svg';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Monitor, Users, Copy, User, Video, Book, Shield, Camera, Film, Code } from 'react-feather';
 import AccountMenu from '../common/accountmenu';
 import { Outlet, useNavigate } from 'react-router-dom';
@@ -45,7 +45,6 @@ import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
 import buildingIcon from '../../assets/building.svg';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
-import Logger from '../../utils/logger';
 
 const icon = <RadioButtonUncheckedIcon fontSize="small" />;
 const checkedIcon = <CheckCircleOutlineIcon fontSize="small" style={{ color: '#5A53DD' }} />;
@@ -63,9 +62,6 @@ const Layout = () => {
   const [locations, setLocations] = useState([]);
   const [selectedLocation, setSelectedLocation] = useState([]);
   const [dropdownLoading, setDropdownLoading] = useState(false);
-  // eslint-disable-next-line no-unused-vars
-  // const [intervalId, setIntervalId] = useState(null);
-  let timer = useRef(null);
 
   const locs = ['Select All'];
   //authCtx?.user?.location?.accessable_locations.forEach((loc) => locs.push(loc));
@@ -115,12 +111,6 @@ const Layout = () => {
         response?.data?.Data?.location?.accessable_locations.forEach((loc) => locs.push(loc));
         setLocations(locs);
         setSelectedLocation(selected_locaions);
-      } else if (
-        response.response.status !== 500 &&
-        Number(localStorage.getItem('RETRYCOUNTER_LAYOUT') || 0) < 5
-      ) {
-        timer = setInterval(getUsers, 20000);
-        // setIntervalId(interval);
       } else {
         errorMessageHandler(
           enqueueSnackbar,
@@ -140,50 +130,6 @@ const Layout = () => {
       window.removeEventListener('resize', handleDrawerToggleOnResize);
     };
   }, []);
-
-  const getUsers = () => {
-    if (Number(localStorage.getItem('RETRYCOUNTER_LAYOUT')) >= 5) {
-      clearInterval(timer);
-      return;
-    } else {
-      const counter = localStorage.getItem('RETRYCOUNTER_LAYOUT');
-      localStorage.setItem('RETRYCOUNTER_LAYOUT', Number(counter) + 1);
-      Logger.log('RETRYCOUNTER_LAYOUT===>', localStorage.getItem('RETRYCOUNTER_LAYOUT'));
-      API.get('users', { params: { cust_id: localStorage.getItem('cust_id') } }).then(
-        (response) => {
-          if (response.status === 200) {
-            setSelectedLocation(response?.data?.Data?.location?.accessable_locations);
-            authCtx.setLocation(response?.data?.Data?.location?.accessable_locations);
-            authCtx.setUser({
-              ...response.data.Data,
-              location: response.data.Data.location
-            });
-            localStorage.setItem(
-              'user',
-              JSON.stringify({ ...response.data.Data, location: response.data.Data.location })
-            );
-
-            let selected_locaions = response?.data?.Data?.location?.accessable_locations;
-            response?.data?.Data?.location?.accessable_locations.forEach((loc) => locs.push(loc));
-            setLocations(locs);
-            setSelectedLocation(selected_locaions);
-            if (timer) {
-              clearInterval(timer);
-            }
-          } else {
-            errorMessageHandler(
-              enqueueSnackbar,
-              response?.response?.data?.Message || 'Something Went Wrong in second trial.',
-              response?.response?.status,
-              authCtx.setAuthError
-            );
-          }
-          setIsLoading(false);
-          setDropdownLoading(false);
-        }
-      );
-    }
-  };
 
   // Method to toggle drawer when the window size changes
   const handleDrawerToggleOnResize = () => {
