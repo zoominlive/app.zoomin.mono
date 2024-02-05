@@ -57,8 +57,8 @@ module.exports = {
       };
     });
     if (type == 'Access Log') {
-      if (!pageNumber || !pageSize) {
-        pageSize = count;
+      if (pageNumber === null && pageNumber === undefined && pageSize === null && pageSize === undefined) {
+        pageSize = 10;
         pageNumber = 0;
       }
       let log = await AccessLogs.findAndCountAll({
@@ -95,8 +95,8 @@ module.exports = {
       });
       return { logs: log.rows, count: log.count };
     } else {
-      if (!pageNumber || !pageSize) {
-        pageSize = count;
+      if (pageNumber === null && pageNumber === undefined && pageSize === null && pageSize === undefined) {
+        pageSize = 10;
         pageNumber = 0;
       }
       let log = await ChangeLogs.findAndCountAll({

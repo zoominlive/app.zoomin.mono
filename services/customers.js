@@ -34,6 +34,21 @@ module.exports = {
     return customer?.max_stream_live_license_room || null;
   },
 
+  getMaxLiveStreamRoomAvailable: async (custId, t) => {
+    const { Customers } = await connectToDatabase();
+    let customer = await Customers.findOne(
+      {
+        raw: true,
+        where: {
+          cust_id: custId,
+        },
+      },
+      { transaction: t }
+    );
+
+    return customer?.max_stream_live_license_room || null;
+  },
+
   getRTMPTranscoderUrl: async (custId, t) => {
     const { Customers } = await connectToDatabase();
     let customer = await Customers.findOne(
@@ -207,7 +222,19 @@ module.exports = {
         },
       })
     }
-    return { locations: locations.rows, count: locations.count, customer: custDetails  };
+    let activeLocations = await CustomerLocations.findAndCountAll({
+      where: {
+        cust_id: user.cust_id || cust_id,
+        status: 1,
+      },
+      attributes: { exclude: ["createdAt", "updatedAt"] },
+    });
+    return { 
+      locations: locations.rows, 
+      count: locations.count,
+      activeLocations: activeLocations.count, 
+      customer: custDetails  
+    };
   },
 
   createCustomer: async (customerObj, t) => {
@@ -258,6 +285,19 @@ module.exports = {
     const { CustomerLocations } = await connectToDatabase();
     let availableLocations = await CustomerLocations.findAll({
       where: { cust_id: custId },
+      raw: true,
+    });
+
+    return availableLocations;
+  },
+
+  getActiveLocationDetails: async (custId) => {
+    const { CustomerLocations } = await connectToDatabase();
+    let availableLocations = await CustomerLocations.findAll({
+      where: { 
+        cust_id: custId, 
+        status: 1
+      },
       raw: true,
     });
 

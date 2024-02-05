@@ -19,6 +19,7 @@ const dashboardServices = require('../services/dashboard');
 const CONSTANTS = require('../lib/constants');
 const sequelize = require('../lib/database');
 const notificationSender = require('../lib/firebase-services');
+const CustomerLocations = require('../models/customer_locations');
 
 module.exports = {
   sendNotification: async (req, res, next) => {
@@ -81,6 +82,16 @@ module.exports = {
       user.transcoderBaseUrl = await customerServices.getTranscoderUrl(custId);
       user.max_stream_live_license = await customerServices.getMaxLiveStramAvailable(custId);
       user.max_stream_live_license_room = await customerServices.getMaxLiveStreamRoomAvailable(custId);
+      if(user.role !== 'Super Admin') {
+        let activeLocations = await customerServices.getActiveLocationDetails(custId)
+        activeLocations = activeLocations.flatMap((i) => i.loc_name)
+        // Filter locations that are both in user's accessable_locations and activeLocations
+        const updatedAccessableLocations = user.location.accessable_locations.filter((location) => activeLocations.includes(location));
+        const updatedSelectedLocations = user.location.selected_locations.filter((location) => activeLocations.includes(location));
+        // Update user's location.accessable_locations with the filtered array
+        user.location.accessable_locations = updatedAccessableLocations;
+        user.location.selected_locations = updatedSelectedLocations;
+      }
       res.status(200).json({
         IsSuccess: true,
         Data: _.omit(user, ['password']),
@@ -210,8 +221,18 @@ module.exports = {
         familyUser = await familyServices.getFamilyMember(emailIs);
         userFound = familyUser;
       }
-
+      
       if (user) {
+        let userLocations = user.location.accessable_locations || user.location.locations;
+        const locations = await CustomerLocations.findAll({
+          attributes: ['loc_name', 'status'],
+          where: {
+            loc_name: userLocations,
+          },
+        });
+        const locationStatusMap = locations.map(location => location.status);
+        const allFalse = locationStatusMap.every(status => status === false);
+
         user.transcoderBaseUrl = await customerServices.getTranscoderUrl(user.cust_id) ;
         user.max_stream_live_license = await customerServices.getMaxLiveStramAvailable(user.cust_id) ;
         if (!user.is_verified || user.status == 'inactive') {
@@ -222,6 +243,13 @@ module.exports = {
             Message: !user.is_verified ? CONSTANTS.USER_NOT_VERIFIED : CONSTANTS.USER_DEACTIVATED
           });
           return
+        } else if(user.role !== 'Super Admin' && allFalse) {
+          await t.rollback();
+          res.status(400).json({
+            IsSuccess: true,
+            Data: [],
+            Message: CONSTANTS.NO_ACTIVE_LOCATION_FOUND
+          });
         } else {
           const validPassword = await bcrypt.compare(password, user.password);
 
@@ -253,6 +281,16 @@ module.exports = {
           }
         }
       } else if (familyUser) {
+        let userLocations = familyUser.location?.accessable_locations;
+        const locations = await CustomerLocations.findAll({
+          attributes: ['loc_name', 'status'],
+          where: {
+            loc_name: userLocations,
+          },
+        });
+        const locationStatusMap = locations.map(location => location.status);
+        const allFalse = locationStatusMap.every(status => status === false)
+
         familyUser.transcoderBaseUrl = await customerServices.getTranscoderUrl(familyUser.cust_id);
         if (!familyUser.is_verified || familyUser.status == 'Disabled') {
           //await t.commit();
@@ -265,6 +303,13 @@ module.exports = {
               : CONSTANTS.USER_DEACTIVATED
           });
           return
+        } else if(familyUser.role !== 'Super Admin' && allFalse) {
+          await t.rollback();
+          res.status(400).json({
+            IsSuccess: true,
+            Data: [],
+            Message: CONSTANTS.NO_ACTIVE_LOCATION_FOUND
+          });
         } else {
           const validPassword = await bcrypt.compare(password, familyUser.password);
 
