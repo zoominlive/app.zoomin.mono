@@ -93,7 +93,7 @@ module.exports = {
             status: child.status
           });
         }
-        if (roomsToEnable.length != 0) {
+        if (roomsToEnable.length != 0 && child.scheduled_enable_date !== null) {
           childrenWithEnableDate.push({
             childFirstName: child.first_name,
             childLastName: child.last_name,
