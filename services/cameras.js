@@ -36,7 +36,7 @@ module.exports = {
     let update = {
       ...camObj,
     };
-    let deletedCam = await Camera.update(
+    let updatedCam = await Camera.update(
       update,
       {
         where: { cam_id: camId },
@@ -44,7 +44,7 @@ module.exports = {
       { transaction: t }
     );
 
-    return deletedCam;
+    return updatedCam;
   },
 
   /* Fetch all the camera's details for given room */

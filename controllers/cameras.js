@@ -171,20 +171,20 @@ module.exports = {
     const t = await sequelize.transaction();
     try {
       const params = req.body;
-      const token = req.userToken;
 
       const cameraUpdated = await cameraServices.editCamera(
+        params.cam_id,
         {
-          cam_id: params.camId,
-          cam_name: params.camName
+          cam_id: params.cam_id,
+          cam_name: params.cam_name
         },
         t
       );
 
       await t.commit();
       res.status(200).json({
-        IsSuccess: false,
-        Data: {},
+        IsSuccess: true,
+        Data: cameraUpdated,
         Message: CONSTANTS.CAMERA_UPDATED
       });
 
