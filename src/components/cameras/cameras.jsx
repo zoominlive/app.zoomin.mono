@@ -281,6 +281,7 @@ const Cameras = () => {
                               setIsDeleteDialogOpen={(e) => {
                                 setIsCameraDeleteDialogOpen(e);
                               }}
+                              setIsCameraFormDialogOpen={setIsCameraFormDialogOpen}
                             />
                           </TableCell>
                         </TableRow>

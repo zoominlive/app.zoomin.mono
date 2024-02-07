@@ -45,12 +45,13 @@ const CameraForm = (props) => {
   // Method to update the user profile
   const handleSubmit = (data) => {
     const payload = {
+      cam_id: props?.camera?.cam_id,
       ...data
     };
     delete payload.locations;
     setSubmitLoading(true);
     if (props.camera) {
-      API.put('users/edit', payload).then((response) => {
+      API.put('cams/edit', payload).then((response) => {
         if (response.status === 200) {
           enqueueSnackbar(response?.data?.Message, {
             variant: 'success'
@@ -191,7 +192,17 @@ const CameraForm = (props) => {
                       <TextField
                         labelId="cam_uri"
                         name="cam_uri"
-                        value={values?.cam_uri}
+                        disabled={props.camera}
+                        value={
+                          props.camera &&
+                          values?.cam_uri.replace(
+                            values?.cam_uri.substring(
+                              values?.cam_uri.indexOf('//') + 2,
+                              values?.cam_uri.indexOf('@')
+                            ),
+                            '************'
+                          )
+                        }
                         onChange={(event) => {
                           setFieldValue('cam_uri', event.target.value);
                         }}
@@ -200,7 +211,7 @@ const CameraForm = (props) => {
                         fullWidth
                       />
                     </Grid>
-                    <Grid item md={6} xs={12}>
+                    <Grid item md={6} xs={12} display={props.camera && 'none'}>
                       <InputLabel id="description">description</InputLabel>
                       <TextField
                         labelId="description"
@@ -214,7 +225,7 @@ const CameraForm = (props) => {
                         fullWidth
                       />
                     </Grid>
-                    <Grid item md={6} xs={12}>
+                    <Grid item md={6} xs={12} display={props.camera && 'none'}>
                       <InputLabel id="location">Location</InputLabel>
                       <Autocomplete
                         labelId="location"
