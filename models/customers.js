@@ -55,6 +55,10 @@ const Customers = sequelize.define(
       type: Sequelize.BOOLEAN,
       defaultValue: true
     },
+    invite_user: {
+      type: Sequelize.BOOLEAN,
+      defaultValue: true
+    },
     rtmp_transcoder_endpoint: {
       type: Sequelize.STRING(155)
     },

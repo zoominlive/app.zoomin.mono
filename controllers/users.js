@@ -73,6 +73,7 @@ module.exports = {
     try {
       const user = req.user;
       const custId = req.user.cust_id || req.query?.cust_id;
+      const t = await sequelize.transaction();
       if(!req.user.cust_id){
         console.log('calling===================')
         let availableLocations = await customerServices.getLocationDetails(custId)
@@ -92,6 +93,11 @@ module.exports = {
         user.location.accessable_locations = updatedAccessableLocations;
         user.location.selected_locations = updatedSelectedLocations;
       }
+      if(user.role == 'Family') {
+        let customerDetail = await customerServices.getCustomerDetails(custId, t);
+        user.invite_family = customerDetail.invite_user ? true : false;
+      }
+      await t.commit();
       res.status(200).json({
         IsSuccess: true,
         Data: _.omit(user, ['password']),
@@ -99,6 +105,7 @@ module.exports = {
       });
       next();
     } catch (error) {
+      await t.rollback();
       res
         .status(500)
         .json({ IsSuccess: false, error_log: error, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
@@ -217,8 +224,10 @@ module.exports = {
       const user = await userServices.getUser(emailIs);
       userFound = user;
       let familyUser;
+      let customer;
       if (!user) {
         familyUser = await familyServices.getFamilyMember(emailIs);
+        customer = await customerServices.getCustomerDetails(familyUser.cust_id, t)
         userFound = familyUser;
       }
       
@@ -292,6 +301,7 @@ module.exports = {
         const allFalse = locationStatusMap.every(status => status === false)
 
         familyUser.transcoderBaseUrl = await customerServices.getTranscoderUrl(familyUser.cust_id);
+        familyUser.invite_family = customer.invite_user ? true : false
         if (!familyUser.is_verified || familyUser.status == 'Disabled') {
           //await t.commit();
           await t.rollback();
