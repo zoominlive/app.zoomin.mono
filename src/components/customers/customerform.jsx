@@ -547,6 +547,21 @@ const CustomerForm = (props) => {
                 />
               </FormControl>
             </Grid>
+            <Grid item xs={12} md={12}>
+              <FormControl>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={values.invite_user}
+                      onChange={(event) => {
+                        setFieldValue('invite_user', event.target.checked);
+                      }}
+                    />
+                  }
+                  label={`Allow Invite User`}
+                />
+              </FormControl>
+            </Grid>
           </Grid>
         );
       case 1:
@@ -917,6 +932,9 @@ const CustomerForm = (props) => {
             max_stream_live_license_room: props?.customer?.max_stream_live_license_room || '',
             audio_permission: !_.isNil(props?.customer?.audio_permission)
               ? props?.customer?.audio_permission
+              : true,
+            invite_user: !_.isNil(props?.customer?.invite_user)
+              ? props?.customer?.invite_user
               : true,
             first_name: props?.customer?.users[0]?.first_name || '',
             last_name: props?.customer?.users[0]?.last_name || '',

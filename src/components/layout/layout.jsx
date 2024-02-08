@@ -283,7 +283,7 @@ const Layout = () => {
                       return true;
                     } else if (
                       authCtx.user.role === 'Family' &&
-                      (item.key === 5 || item.key === 9) &&
+                      (item.key === 5 || (item.key === 9 && authCtx.user.invite_family === true)) &&
                       item.key !== 10
                     ) {
                       return true;
