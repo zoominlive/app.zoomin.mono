@@ -18,6 +18,10 @@ import {
   TableRow,
   TextField
 } from '@mui/material';
+import Tab from '@mui/material/Tab';
+import TabContext from '@mui/lab/TabContext';
+import TabList from '@mui/lab/TabList';
+import TabPanel from '@mui/lab/TabPanel';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useContext } from 'react';
 import { Plus } from 'react-feather';
@@ -35,6 +39,8 @@ import NoDataDiv from '../common/nodatadiv';
 import SearchIcon from '@mui/icons-material/Search';
 import NewDeleteDialog from '../common/newdeletedialog';
 import LinerLoader from '../common/linearLoader';
+// import SchedulerDialog from '../families/scheduler';
+import DefaultScheduler from '../families/defaultScheduler';
 
 const Settings = () => {
   const layoutCtx = useContext(LayoutContext);
@@ -57,10 +63,17 @@ const Settings = () => {
     location: 'All',
     cust_id: localStorage.getItem('cust_id')
   });
+  const [value, setValue] = useState('1');
+  const [timer, setTimer] = useState([]);
+  const [selectedDays, setSelectedDays] = useState([]);
+
+  const handleChange = (event, newValue) => {
+    setValue(newValue);
+  };
   // console.log('authCTX==>', authCtx);
   useEffect(() => {
     layoutCtx.setActive(null);
-    layoutCtx.setBreadcrumb(['Locations', 'Manage locations ']);
+    layoutCtx.setBreadcrumb(['Settings', 'Manage Settings']);
     return () => {
       authCtx.setPreviosPagePath(window.location.pathname);
     };
@@ -76,6 +89,10 @@ const Settings = () => {
     getLocationsList();
   }, [usersPayload]);
 
+  useEffect(() => {
+    getDefaultScheduleSettings();
+  }, []);
+
   // Method to fetch location list for table
   const getLocationsList = () => {
     setIsLoading(true);
@@ -85,6 +102,31 @@ const Settings = () => {
         setTotalLocations(response.data.Data.count);
         setCustomerDetails(response.data.Data.customer);
         setActiveLocations(response.data.Data.activeLocations);
+      } else {
+        errorMessageHandler(
+          enqueueSnackbar,
+          response?.response?.data?.Message || 'Something Went Wrong.',
+          response?.response?.status,
+          authCtx.setAuthError
+        );
+      }
+      setIsLoading(false);
+    });
+  };
+
+  // Method to fetch Default Settings for Schedule
+  const getDefaultScheduleSettings = () => {
+    setIsLoading(true);
+    API.get('family/child/schedule', {
+      params: {
+        cust_id: authCtx.user.cust_id || localStorage.getItem('cust_id')
+      }
+    }).then((response) => {
+      if (response.status === 200) {
+        console.log('res', response.data);
+        setTimer(response.data.Data.schedule.timeRange);
+        setSelectedDays(response.data.Data.schedule.timeRange[0][1]);
+        // setLocationsList(response.data.Data.locations);
       } else {
         errorMessageHandler(
           enqueueSnackbar,
@@ -154,147 +196,170 @@ const Settings = () => {
   }, []);
 
   return (
-    <Box className="listing-wrapper">
-      <Card className="filter">
-        <CardContent>
-          <Box>
-            <Grid container spacing={2}>
-              <Grid item md={9} sm={12}>
+    <Box sx={{ width: '100%' }}>
+      <TabContext value={value}>
+        <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+          <TabList onChange={handleChange} aria-label="lab API tabs example">
+            <Tab sx={{ textTransform: 'none', fontSize: '16px' }} label="Locations" value="1" />
+            <Tab sx={{ textTransform: 'none', fontSize: '16px' }} label="Cameras" value="2" />
+          </TabList>
+        </Box>
+        <TabPanel value="1">
+          <Box className="listing-wrapper">
+            <Card className="filter">
+              <CardContent>
                 <Box>
                   <Grid container spacing={2}>
-                    <Grid item md={4} sm={12}>
-                      <InputLabel id="search">Search</InputLabel>
-                      <TextField
-                        labelId="search"
-                        placeholder="Location"
-                        onChange={debouncedResults}
-                        InputProps={{
-                          startAdornment: (
-                            <InputAdornment position="start">
-                              <SearchIcon />
-                            </InputAdornment>
-                          )
-                        }}
-                      />
+                    <Grid item md={9} sm={12}>
+                      <Box>
+                        <Grid container spacing={2}>
+                          <Grid item md={4} sm={12}>
+                            <InputLabel id="search">Search</InputLabel>
+                            <TextField
+                              labelId="search"
+                              placeholder="Location"
+                              onChange={debouncedResults}
+                              InputProps={{
+                                startAdornment: (
+                                  <InputAdornment position="start">
+                                    <SearchIcon />
+                                  </InputAdornment>
+                                )
+                              }}
+                            />
+                          </Grid>
+                        </Grid>
+                      </Box>
+                    </Grid>
+                    <Grid
+                      item
+                      md={3}
+                      sm={12}
+                      sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
+                      <Box>
+                        <Button
+                          className="add-button"
+                          variant="contained"
+                          startIcon={<Plus />}
+                          onClick={() => setIsUserFormDialogOpen(true)}>
+                          {' '}
+                          Add Location
+                        </Button>
+                      </Box>
                     </Grid>
                   </Grid>
                 </Box>
-              </Grid>
-              <Grid
-                item
-                md={3}
-                sm={12}
-                sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
-                <Box>
-                  <Button
-                    className="add-button"
-                    variant="contained"
-                    startIcon={<Plus />}
-                    onClick={() => setIsUserFormDialogOpen(true)}>
-                    {' '}
-                    Add Location
-                  </Button>
-                </Box>
-              </Grid>
-            </Grid>
-          </Box>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardContent>
-          <Box mt={2} position="relative">
-            <LinerLoader loading={isLoading} />
-            <TableContainer component={Paper}>
-              <Table sx={{ minWidth: 650 }} aria-label="simple table">
-                <TableHead>
-                  <TableRow>
-                    <TableCell style={{ minWidth: '100px' }} align="left">
-                      Location
-                    </TableCell>
-                    <TableCell align="left">Status</TableCell>
-                    <TableCell align="right"></TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {locationsList?.length > 0
-                    ? locationsList?.map((row, index) => (
-                        <TableRow key={index} hover>
-                          <TableCell align="left">
-                            <Stack direction="row">
-                              <Chip
-                                key={index}
-                                label={row.loc_name}
-                                color="primary"
-                                className="chip-color"
-                              />
-                            </Stack>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent>
+                <Box mt={2} position="relative">
+                  <LinerLoader loading={isLoading} />
+                  <TableContainer component={Paper}>
+                    <Table sx={{ minWidth: 650 }} aria-label="simple table">
+                      <TableHead>
+                        <TableRow>
+                          <TableCell style={{ minWidth: '100px' }} align="left">
+                            Location
                           </TableCell>
-                          <TableCell align="left">{row.status ? 'Active' : 'Inactive'}</TableCell>
-                          <TableCell align="right">
-                            <SettingsActions
-                              location={row}
-                              setLocation={setLocation}
-                              setIsUserFormDialogOpen={setIsUserFormDialogOpen}
-                              setIsDeleteDialogOpen={setIsDeleteDialogOpen}
-                            />
-                          </TableCell>
+                          <TableCell align="left">Status</TableCell>
+                          <TableCell align="right"></TableCell>
                         </TableRow>
-                      ))
-                    : null}
-                </TableBody>
-              </Table>
-              {!isLoading && locationsList?.length == 0 ? <NoDataDiv /> : null}
-              {locationsList?.length > 0 ? (
-                <TablePagination
-                  rowsPerPageOptions={[5, 10, 20, 25, 50]}
-                  onPageChange={handlePageChange}
-                  onRowsPerPageChange={handleChangeRowsPerPage}
-                  component="div"
-                  count={totalLocations}
-                  rowsPerPage={usersPayload?.pageSize}
-                  page={usersPayload?.pageNumber}
-                  sx={{ flex: '1 1 auto' }}
-                />
-              ) : null}
-            </TableContainer>
-          </Box>
-        </CardContent>
-      </Card>
-      {isUserFormDialogOpen && (
-        <SettingsForm
-          open={isUserFormDialogOpen}
-          location={location}
-          locationsList={locationsList}
-          customer={customerDetails}
-          activeLocations={activeLocations}
-          setOpen={setIsUserFormDialogOpen}
-          getLocationsList={getLocationsList}
-          setLocation={setLocation}
-        />
-      )}
-      {/* <DeleteDialog
-        open={isDeleteDialogOpen}
-        title="Delete User"
-        contentText={'Are you sure you want to delete this location?'}
-        loading={deleteLoading}
-        handleDialogClose={() => {
-          setLocation();
-          setIsDeleteDialogOpen(false);
-        }}
-        handleDelete={handleLocationDelete}
-      /> */}
+                      </TableHead>
+                      <TableBody>
+                        {locationsList?.length > 0
+                          ? locationsList?.map((row, index) => (
+                              <TableRow key={index} hover>
+                                <TableCell align="left">
+                                  <Stack direction="row">
+                                    <Chip
+                                      key={index}
+                                      label={row.loc_name}
+                                      color="primary"
+                                      className="chip-color"
+                                    />
+                                  </Stack>
+                                </TableCell>
+                                <TableCell align="left">
+                                  {row.status ? 'Active' : 'Inactive'}
+                                </TableCell>
+                                <TableCell align="right">
+                                  <SettingsActions
+                                    location={row}
+                                    setLocation={setLocation}
+                                    setIsUserFormDialogOpen={setIsUserFormDialogOpen}
+                                    setIsDeleteDialogOpen={setIsDeleteDialogOpen}
+                                  />
+                                </TableCell>
+                              </TableRow>
+                            ))
+                          : null}
+                      </TableBody>
+                    </Table>
+                    {!isLoading && locationsList?.length == 0 ? <NoDataDiv /> : null}
+                    {locationsList?.length > 0 ? (
+                      <TablePagination
+                        rowsPerPageOptions={[5, 10, 20, 25, 50]}
+                        onPageChange={handlePageChange}
+                        onRowsPerPageChange={handleChangeRowsPerPage}
+                        component="div"
+                        count={totalLocations}
+                        rowsPerPage={usersPayload?.pageSize}
+                        page={usersPayload?.pageNumber}
+                        sx={{ flex: '1 1 auto' }}
+                      />
+                    ) : null}
+                  </TableContainer>
+                </Box>
+              </CardContent>
+            </Card>
+            {isUserFormDialogOpen && (
+              <SettingsForm
+                open={isUserFormDialogOpen}
+                location={location}
+                locationsList={locationsList}
+                customer={customerDetails}
+                activeLocations={activeLocations}
+                setOpen={setIsUserFormDialogOpen}
+                getLocationsList={getLocationsList}
+                setLocation={setLocation}
+              />
+            )}
+            {/* <DeleteDialog
+              open={isDeleteDialogOpen}
+              title="Delete User"
+              contentText={'Are you sure you want to delete this location?'}
+              loading={deleteLoading}
+              handleDialogClose={() => {
+                setLocation();
+                setIsDeleteDialogOpen(false);
+              }}
+              handleDelete={handleLocationDelete}
+            /> */}
 
-      <NewDeleteDialog
-        open={isDeleteDialogOpen}
-        title="Delete location"
-        contentText="Are you sure you want to delete this location?"
-        loading={deleteLoading}
-        handleDialogClose={() => {
-          setLocation();
-          setIsDeleteDialogOpen(false);
-        }}
-        handleDelete={handleLocationDelete}
-      />
+            <NewDeleteDialog
+              open={isDeleteDialogOpen}
+              title="Delete location"
+              contentText="Are you sure you want to delete this location?"
+              loading={deleteLoading}
+              handleDialogClose={() => {
+                setLocation();
+                setIsDeleteDialogOpen(false);
+              }}
+              handleDelete={handleLocationDelete}
+            />
+          </Box>
+        </TabPanel>
+        <TabPanel value="2">
+          <DefaultScheduler
+            // settings={true}
+            custId={authCtx.user.cust_id || localStorage.getItem('cust_id')}
+            timer={timer}
+            selectedDays={selectedDays}
+            getDefaultScheduleSettings={getDefaultScheduleSettings}
+          />
+        </TabPanel>
+      </TabContext>
     </Box>
   );
 };

@@ -32,6 +32,7 @@ import AuthContext from '../../context/authcontext';
 import { useSnackbar } from 'notistack';
 import { useContext } from 'react';
 import { errorMessageHandler } from '../../utils/errormessagehandler';
+import DefaultScheduler from './defaultScheduler';
 
 const validationSchema = yup.object().shape({
   selectedOption: yup.string().required('Please select atleast one option')
@@ -40,7 +41,10 @@ const Days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'
 const SchedulerDialog = (props) => {
   const [daytimers, setDayTimers] = useState([]);
   const [selectedDays, setSelectedDays] = useState([]);
+  const [newSelectedDays, setNewSelectedDays] = useState([]);
   const [timer, setTimer] = useState([0, 100]);
+  const [newTimer, setNewTimer] = useState([]);
+  const [defaultSettings, setDefaultSettings] = useState(false);
   const [allCheckBoxClicked, setallDaysCheckBoxClicked] = useState(false);
   const [loading, setLoading] = useState(false);
   const authCtx = useContext(AuthContext);
@@ -66,9 +70,9 @@ const SchedulerDialog = (props) => {
   };
 
   const handleTimerChange = (event, newValue) => {
-    if (newValue[1] - newValue[0] > 3) {
-      setTimer(newValue);
-    }
+    // if (newValue[1] - newValue[0] > 3) {
+    setTimer(newValue);
+    // }
   };
 
   const handleAddTimerforSelectedDays = () => {
@@ -114,6 +118,10 @@ const SchedulerDialog = (props) => {
     }
   }, []);
 
+  useEffect(() => {
+    getDefaultScheduleSettings();
+  }, [defaultSettings]);
+
   const handleSubmit = () => {
     setLoading(true);
 
@@ -143,152 +151,202 @@ const SchedulerDialog = (props) => {
     });
   };
 
+  // Method to fetch Default Settings for Schedule
+  const getDefaultScheduleSettings = () => {
+    API.get('family/child/schedule', {
+      params: {
+        cust_id: authCtx.user.cust_id || localStorage.getItem('cust_id')
+      }
+    }).then((response) => {
+      if (response.status === 200) {
+        console.log('res', response.data);
+        setNewTimer(response.data.Data.schedule.timeRange);
+        setNewSelectedDays(response.data.Data.schedule.timeRange[0][1]);
+        // setLocationsList(response.data.Data.locations);
+      } else {
+        errorMessageHandler(
+          enqueueSnackbar,
+          response?.response?.data?.Message || 'Something Went Wrong.',
+          response?.response?.status,
+          authCtx.setAuthError
+        );
+      }
+    });
+  };
+
   return (
     <Dialog open={props.open} fullWidth className="disable-family-dialog scheduler-dialog">
-      <DialogTitle>{'Schedule'}</DialogTitle>
-      <Divider />
-      <Formik
-        enableReinitialize
-        validationSchema={validationSchema}
-        initialValues={{
-          selectedOption: 'All'
-        }}
-        onSubmit={(e) => handleSubmit(e)}>
-        {({ errors, touched }) => (
-          <Form>
-            <DialogContent>
-              <Stack>
-                <FormControl>
-                  <Stack spacing={1} className="schduler-stack">
-                    <Card className={'scheduler-selected-option'}>
-                      <label className={'scheduler-label'}>Available Times</label>
-                    </Card>
+      {!defaultSettings && (
+        <>
+          <DialogTitle>{'Schedule'}</DialogTitle>
+          <Divider />
+          <Formik
+            enableReinitialize
+            validationSchema={validationSchema}
+            initialValues={{
+              selectedOption: 'All'
+            }}
+            onSubmit={(e) => handleSubmit(e)}>
+            {({ errors, touched }) => (
+              <Form>
+                <DialogContent>
+                  <Stack>
+                    <FormControl>
+                      <Stack spacing={1} className="schduler-stack">
+                        <Card className={'scheduler-selected-option'}>
+                          <label className={'scheduler-label'}>Available Times</label>
+                        </Card>
 
-                    <Stack spacing={3} pb={3}>
-                      <Container>
-                        <FormControlLabel
-                          control={
-                            <Checkbox
-                              checked={allCheckBoxClicked}
-                              onClick={() => handleAddRemoveAllDays()}
+                        <Stack spacing={3} pb={3}>
+                          <Container>
+                            <FormControlLabel
+                              control={
+                                <Checkbox
+                                  checked={allCheckBoxClicked}
+                                  onClick={() => handleAddRemoveAllDays()}
+                                />
+                              }
+                              label="All Days"
                             />
-                          }
-                          label="All Days"
-                        />
-                        <AvatarGroup max={7}>
-                          {Days.map((day, index) => (
-                            <Avatar
-                              className={`${
-                                selectedDays.includes(day) ? '' : 'scheduler-avatar-not-selected'
-                              }`}
-                              onClick={() => addRemoveDaySelectedDays(day)}
-                              key={index}>{`${day.slice(0, 2)}`}</Avatar>
-                          ))}
-                        </AvatarGroup>
-                      </Container>
-                      <Stack direction={'row'} pl={4} pb={3}>
-                        <Slider
-                          value={timer}
-                          valueLabelFormat={getValueLable}
-                          onChange={(event, newValue) => handleTimerChange(event, newValue)}
-                          valueLabelDisplay={'on'}
-                          aria-labelledby="non-linear-slider"
-                          getAriaValueText={getValueLable}
-                          disableSwap
-                        />
-
-                        <Container className="schduler-addtime-container">
-                          <Typography variant="caption" sx={{ marginLeft: '5px' }}>
-                            {getValueLable(timer[0]) + ' - ' + getValueLable(timer[1])}
-                          </Typography>
-                          <Button
-                            className={`add-btn ${selectedDays.length == 0 ? 'schedule-btn' : ''}`}
-                            disabled={selectedDays.length == 0}
-                            variant="contained"
-                            onClick={() => {
-                              handleAddTimerforSelectedDays();
-                            }}>
-                            Schedule
-                          </Button>
-                        </Container>
-                      </Stack>
-
-                      {daytimers?.map((timer, index) => (
-                        <Stack direction={'row'} key={index} className="list-timerange-item ">
-                          <Container className="list-item-container">
+                            <AvatarGroup max={7}>
+                              {Days.map((day, index) => (
+                                <Avatar
+                                  className={`${
+                                    selectedDays.includes(day)
+                                      ? ''
+                                      : 'scheduler-avatar-not-selected'
+                                  }`}
+                                  onClick={() => addRemoveDaySelectedDays(day)}
+                                  key={index}>{`${day.slice(0, 2)}`}</Avatar>
+                              ))}
+                            </AvatarGroup>
+                          </Container>
+                          <Stack direction={'row'} pl={4} pb={3}>
                             <Slider
-                              disabled
-                              value={timer[0]}
+                              value={timer}
                               valueLabelFormat={getValueLable}
-                              valueLabelDisplay={'auto'}
+                              onChange={(event, newValue) => handleTimerChange(event, newValue)}
+                              valueLabelDisplay={'on'}
                               aria-labelledby="non-linear-slider"
                               getAriaValueText={getValueLable}
                               disableSwap
                             />
-                            <AvatarGroup max={7}>
-                              {timer[1].map((day, index) => (
-                                <Avatar key={index}>{`${day.slice(0, 2)}`}</Avatar>
-                              ))}
-                            </AvatarGroup>
-                          </Container>
-                          <Container className="schduler-addtime-container-saved">
-                            <Typography variant="caption" sx={{ marginLeft: '5px' }}>
-                              {getValueLable(timer[0][0]) + ' - ' + getValueLable(timer[0][1])}
-                            </Typography>
 
-                            <IconButton
-                              sx={{ marginLeft: '5px' }}
-                              className=" schduler-delete-button "
-                              onClick={() => {
-                                handleDeleteTimer(index);
-                              }}>
-                              <DeleteIcon />
-                            </IconButton>
-                          </Container>
+                            <Container className="schduler-addtime-container">
+                              <Typography variant="caption" sx={{ marginLeft: '5px' }}>
+                                {getValueLable(timer[0]) + ' - ' + getValueLable(timer[1])}
+                              </Typography>
+                              <Button
+                                className={`add-btn ${
+                                  selectedDays.length == 0 ? 'schedule-btn' : ''
+                                }`}
+                                disabled={selectedDays.length == 0}
+                                variant="contained"
+                                onClick={() => {
+                                  handleAddTimerforSelectedDays();
+                                }}>
+                                Schedule
+                              </Button>
+                            </Container>
+                          </Stack>
+
+                          {daytimers?.map((timer, index) => (
+                            <Stack direction={'row'} key={index} className="list-timerange-item ">
+                              <Container className="list-item-container">
+                                <Slider
+                                  disabled
+                                  value={timer[0]}
+                                  valueLabelFormat={getValueLable}
+                                  valueLabelDisplay={'auto'}
+                                  aria-labelledby="non-linear-slider"
+                                  getAriaValueText={getValueLable}
+                                  disableSwap
+                                />
+                                <AvatarGroup max={7}>
+                                  {timer[1].map((day, index) => (
+                                    <Avatar key={index}>{`${day.slice(0, 2)}`}</Avatar>
+                                  ))}
+                                </AvatarGroup>
+                              </Container>
+                              <Container className="schduler-addtime-container-saved">
+                                <Typography variant="caption" sx={{ marginLeft: '5px' }}>
+                                  {getValueLable(timer[0][0]) + ' - ' + getValueLable(timer[0][1])}
+                                </Typography>
+
+                                <IconButton
+                                  sx={{ marginLeft: '5px' }}
+                                  className=" schduler-delete-button "
+                                  onClick={() => {
+                                    handleDeleteTimer(index);
+                                  }}>
+                                  <DeleteIcon />
+                                </IconButton>
+                              </Container>
+                            </Stack>
+                          ))}
+                          {(daytimers?.length == 0 || !daytimers) && (
+                            <Container className="no-custom-period-text">
+                              <p>
+                                24 x 7 Access Is Active <br></br>Until Custom Periods Are Added{' '}
+                                <br /> Or <br />
+                                <Button
+                                  className="add-btn"
+                                  variant="contained"
+                                  onClick={() => setDefaultSettings(true)}>
+                                  {' '}
+                                  Set Default Settings
+                                </Button>
+                              </p>
+                            </Container>
+                          )}
                         </Stack>
-                      ))}
-                      {(daytimers?.length == 0 || !daytimers) && (
-                        <Container className="no-custom-period-text">
-                          <p>
-                            24 x 7 Access Is Active <br></br>Until Custom Periods Are Added
-                          </p>
-                        </Container>
-                      )}
-                    </Stack>
-                  </Stack>
+                      </Stack>
 
-                  {touched.selectedOption && Boolean(errors.selectedOption) && (
-                    <FormHelperText sx={{ color: '#d32f2f' }}>
-                      {touched.selectedOption && errors.selectedOption}
-                    </FormHelperText>
-                  )}
-                </FormControl>
-              </Stack>
-            </DialogContent>
-            <Divider />
-            <DialogActions>
-              <Button
-                variant="text"
-                disabled={loading}
-                onClick={() => {
-                  if (!loading) {
-                    props.setOpen(false);
-                  }
-                }}>
-                CANCEL
-              </Button>
-              <LoadingButton
-                loading={loading}
-                loadingPosition={loading ? 'start' : undefined}
-                startIcon={loading && <SaveIcon />}
-                variant="text"
-                type="submit">
-                SAVE CHANGES
-              </LoadingButton>
-            </DialogActions>
-          </Form>
-        )}
-      </Formik>
+                      {touched.selectedOption && Boolean(errors.selectedOption) && (
+                        <FormHelperText sx={{ color: '#d32f2f' }}>
+                          {touched.selectedOption && errors.selectedOption}
+                        </FormHelperText>
+                      )}
+                    </FormControl>
+                  </Stack>
+                </DialogContent>
+                <Divider />
+                <DialogActions>
+                  <Button
+                    variant="text"
+                    disabled={loading}
+                    onClick={() => {
+                      if (!loading) {
+                        props.setOpen(false);
+                      }
+                    }}>
+                    CANCEL
+                  </Button>
+                  <LoadingButton
+                    loading={loading}
+                    loadingPosition={loading ? 'start' : undefined}
+                    startIcon={loading && <SaveIcon />}
+                    variant="text"
+                    type="submit">
+                    SAVE CHANGES
+                  </LoadingButton>
+                </DialogActions>
+              </Form>
+            )}
+          </Formik>
+        </>
+      )}
+      {defaultSettings && (
+        <DefaultScheduler
+          custId={authCtx.user.cust_id || localStorage.getItem('cust_id')}
+          timer={newTimer}
+          selectedDays={newSelectedDays}
+          defaultSettings={defaultSettings}
+          setOpen={props.setOpen}
+          getFamiliesList={props.getFamiliesList}
+          room_child_id={props.roomDetails.room_child_id}
+        />
+      )}
     </Dialog>
   );
 };
