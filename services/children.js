@@ -343,7 +343,51 @@ module.exports = {
     let schedule = await RoomsInChild.update(
       { schedule: update },
       {
-        where: { room_child_id: roomChildId }
+        where: { room_child_id: roomChildId },
+      },
+      { transaction: t }
+    );
+
+    return schedule;
+  },
+
+  changeDefaultRoomScheduler: async (custId, update, t) => {
+    const { DefaultSchedule } = await connectToDatabase();
+
+    // Check if a record with the given custId exists
+    let existingSchedule = await DefaultSchedule.findOne({
+      where: { cust_id: custId },
+    });
+    if (existingSchedule) {
+      let schedule = await DefaultSchedule.update(
+        {
+          schedule: update,
+        },
+        {
+          where: { cust_id: custId },
+        },
+        { transaction: t }
+      );
+      return schedule;
+    } else {
+      // If no record exists, create a new one
+      let newSchedule = await DefaultSchedule.create(
+        {
+          cust_id: custId,
+          schedule: update,
+        },
+        { transaction: t }
+      );
+      return newSchedule;
+    }
+  },
+
+  getScheduleByCustId: async (custId, t) => {
+    const { DefaultSchedule } = await connectToDatabase();
+
+    let schedule = await DefaultSchedule.findOne(
+      {
+        where: { cust_id: custId },
       },
       { transaction: t }
     );

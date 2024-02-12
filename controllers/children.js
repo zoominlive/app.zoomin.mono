@@ -348,6 +348,90 @@ module.exports = {
     }
   },
 
+  changeDefaultRoomScheduler: async (req, res, next) => {
+    const t = await sequelize.transaction();
+    try {
+      const { cust_id, timeRange } = req.body;
+
+      const schedulerAdded = await childServices.changeDefaultRoomScheduler(
+        cust_id,
+        { timeRange },
+        t
+      );
+
+      await t.commit();
+
+      res.status(200).json({
+        IsSuccess: true,
+        Data: schedulerAdded,
+        Message: CONSTANTS.DEFAULT_SETTINGS_UPDATED
+      });
+
+      next();
+    } catch (error) {
+      await t.rollback();
+      res.status(500).json({
+        IsSuccess: false,
+        error_log: error,
+        Message: CONSTANTS.INTERNAL_SERVER_ERROR
+      });
+      next(error);
+    } finally {
+      let logObj = {
+        user_id: req?.user?.user_id ? req?.user?.user_id : 'Not Found',
+        function: 'Child',
+        function_type: 'Edit',
+        request: req.body
+      };
+      try {
+        await logServices.addChangeLog(logObj);
+      } catch (e) {
+        console.log(e);
+      }
+    }
+  },
+
+  getScheduleDetails: async (req, res, next) => {
+    const t = await sequelize.transaction();
+    try {
+      const { cust_id } = req.query;
+
+      const schedulerAdded = await childServices.getScheduleByCustId(
+        cust_id,
+        t
+      );
+
+      await t.commit();
+      res.status(200).json({
+        IsSuccess: true,
+        Data: schedulerAdded,
+        Message: "Cust Schedule Fetched"
+      });
+
+      next();
+    } catch (error) {
+      await t.rollback();
+      res.status(500).json({
+        IsSuccess: false,
+        error_log: error,
+        Message: CONSTANTS.INTERNAL_SERVER_ERROR
+      });
+      next(error);
+    } finally {
+      let logObj = {
+        user_id: req?.user?.user_id ? req?.user?.user_id : 'Not Found',
+        function: 'Child',
+        function_type: 'Edit',
+        request: req.body
+      };
+      try {
+        await logServices.addChangeLog(logObj);
+      } catch (e) {
+        console.log(e);
+      }
+    }
+  },
+
   deleteRoomInChild: async (req, res, next) => {
     const t = await sequelize.transaction();
     try {

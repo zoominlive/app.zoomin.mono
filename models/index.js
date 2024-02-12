@@ -8,6 +8,7 @@ const RecentViewers = require('./recent_viewers');
 const Room = require('./room');
 const ScheduledToDisable = require('./scheluled_to_disable');
 const RoomsInChild = require('./rooms_assigned_to_child');
+const DefaultSchedule = require('./default_schedule');
 const RoomsInTeacher = require('./rooms_assigned_to_teacher');
 const CamerasInRooms = require('./cameras_assigned_to_rooms');
 const AccessLogs = require('./access_logs');
@@ -22,6 +23,14 @@ const sequelize = require('../lib/database');
 
 CustomerLocations.belongsTo(Customers, { foreignKey: 'cust_id' });
 Customers.hasMany(CustomerLocations, {
+  sourceKey: 'cust_id',
+  foreignKey: {
+    name: 'cust_id'
+  }
+});
+
+DefaultSchedule.belongsTo(Customers, { foreignKey: 'cust_id' });
+Customers.hasMany(DefaultSchedule, {
   sourceKey: 'cust_id',
   foreignKey: {
     name: 'cust_id'
@@ -199,6 +208,7 @@ module.exports = async () => {
       Users,
       Customers,
       CustomerLocations,
+      DefaultSchedule,
       Family,
       Child,
       RecentViewers,
@@ -227,6 +237,7 @@ module.exports = async () => {
     Users,
     Customers,
     CustomerLocations,
+    DefaultSchedule,
     Family,
     Child,
     RecentViewers,
