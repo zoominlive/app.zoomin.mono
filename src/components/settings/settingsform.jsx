@@ -41,23 +41,30 @@ const SettingsForm = (props) => {
   const handleClose = () => setIsCloseDialog(!isCloseDialog);
 
   const validationSchema = yup.object({
-    // customer_locations: yup.string('Enter location').required('Location Name is required')
+    customer_locations: yup
+      .array()
+      .of(yup.string('Enter location').required('Location Name is required')),
+    time_zone: yup
+      .array()
+      .of(yup.string('Enter timezone').required('Location Timezone is required'))
   });
 
   // console.log('props', props);
 
   const handleSubmit = (data, { setSubmitting }) => {
-    const { customer_locations } = data;
+    const { customer_locations, time_zone } = data;
     const payload = {
       user:
         authCtx.user && authCtx.user.cust_id !== null
           ? authCtx.user.cust_id
           : localStorage.getItem('cust_id'),
-      customer_locations: customer_locations
+      customer_locations: customer_locations,
+      time_zone: time_zone
     };
     if (props.location !== undefined && props.location?.loc_name) {
       API.put('customers/editCustomerLocation', {
         loc_name: data.customer_locations[0],
+        time_zone: data.time_zone[0],
         loc_id: props.location.loc_id,
         status: statusChecked
       }).then((response) => {
@@ -223,7 +230,8 @@ const SettingsForm = (props) => {
           validationSchema={validationSchema}
           initialValues={{
             customer_locations:
-              props.location?.loc_name !== undefined ? [props.location?.loc_name] : ['']
+              props.location?.loc_name !== undefined ? [props.location?.loc_name] : [''],
+            time_zone: props.location?.time_zone !== undefined ? [props.location?.time_zone] : ['']
           }}
           onSubmit={handleSubmit}>
           {({ values, setFieldValue, touched, errors }) => {
@@ -290,6 +298,39 @@ const SettingsForm = (props) => {
                                             errors &&
                                             errors.customer_locations &&
                                             errors.customer_locations[index]
+                                          }
+                                          fullWidth
+                                        />
+                                      </Grid>
+                                      <Grid item md={4} sm={12}>
+                                        <InputLabel id={`time_zone.${index}`}>Timezone</InputLabel>
+                                        <TextField
+                                          // disabled={props.location?.time_zone}
+                                          labelId={`time_zone.${index}`}
+                                          name={`time_zone.${index}`}
+                                          value={values?.time_zone[index]}
+                                          onChange={(event) => {
+                                            // console.log('val=> ', event.target.value);
+                                            setFieldValue(
+                                              `time_zone[${index}]`,
+                                              event.target.value
+                                            );
+                                          }}
+                                          helperText={
+                                            touched &&
+                                            touched.time_zone &&
+                                            touched.time_zone[index] &&
+                                            errors &&
+                                            errors.time_zone &&
+                                            errors.time_zone[index]
+                                          }
+                                          error={
+                                            touched &&
+                                            touched.time_zone &&
+                                            touched.time_zone[index] &&
+                                            errors &&
+                                            errors.time_zone &&
+                                            errors.time_zone[index]
                                           }
                                           fullWidth
                                         />
