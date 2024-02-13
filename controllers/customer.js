@@ -75,14 +75,16 @@ module.exports = {
     const t = await sequelize.transaction();
     try {
       const params = req.body;
-      const { user, customer_locations } = params;
+      const { user, customer_locations, time_zone } = params;
 
       let locations = customer_locations.flatMap((i) => i);
+      let timezone = time_zone.flatMap((i) => i);
       console.log(user);
       console.log(locations);
       let addLocations = await customerServices.createLocation(
         user,
         locations,
+        timezone,
         t
       );
       
@@ -258,11 +260,12 @@ module.exports = {
     const t = await sequelize.transaction();
     try {
       const params = req.body;
-      const { loc_id, loc_name, status } = params;
+      const { loc_id, loc_name, time_zone, status } = params;
       console.log('loc_id', loc_id);
       console.log('loc_name', loc_name);
       let update = {
         loc_name: loc_name,
+        time_zone: time_zone,
         status: status
       };
 

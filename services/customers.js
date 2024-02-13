@@ -304,12 +304,14 @@ module.exports = {
     return availableLocations;
   },
 
-  createLocation: async (custId, locations, t) => {
+  createLocation: async (custId, locations, timezone, t) => {
     const { CustomerLocations } = await connectToDatabase();
+    const zip = (locations, timezone) => locations.map((value, index) => [value, timezone[index]]);
+    const locationsWithTimezone = zip(locations, timezone);
 
     let createLocations = Promise.all(
-      locations.map(async (loc) => {
-        const obj = { loc_name: loc, cust_id: custId };
+      locationsWithTimezone.map(async ([loc, timezone]) => {
+        const obj = { loc_name: loc, cust_id: custId, time_zone: timezone };
         // obj.loc_id = uuidv4();
         await CustomerLocations.create(obj, {
           transaction: t,
