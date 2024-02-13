@@ -43,6 +43,7 @@ const DefaultScheduler = (props) => {
   const [timer, setTimer] = useState([0, 100]);
   const [allCheckBoxClicked, setallDaysCheckBoxClicked] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [disableSlider, setDisableSlider] = useState(false);
   const authCtx = useContext(AuthContext);
   const { enqueueSnackbar } = useSnackbar();
 
@@ -79,6 +80,16 @@ const DefaultScheduler = (props) => {
     setTimer([0, 100]);
     setSelectedDays([]);
     setallDaysCheckBoxClicked(false);
+    setDisableSlider(false);
+  };
+
+  const handleDisableSchedule = () => {
+    setDisableSlider(!disableSlider);
+    if (!disableSlider) {
+      setTimer([0, 0]);
+    } else {
+      setTimer([0, 100]);
+    }
   };
 
   const handleDeleteTimer = (index) => {
@@ -215,6 +226,7 @@ const DefaultScheduler = (props) => {
                             {console.log('timer props-->', props.timer)}
                             <Stack direction={'row'} pl={4} pb={3}>
                               <Slider
+                                disabled={disableSlider}
                                 value={timer}
                                 valueLabelFormat={getValueLable}
                                 onChange={(event, newValue) => handleTimerChange(event, newValue)}
@@ -241,7 +253,21 @@ const DefaultScheduler = (props) => {
                                 </Button>
                               </Container>
                             </Stack>
-
+                            <Stack direction={'row-reverse'}>
+                              <Button
+                                className={`add-btn ${
+                                  selectedDays.length == 0 ? 'schedule-btn' : ''
+                                }`}
+                                disabled={selectedDays.length == 0}
+                                variant="contained"
+                                onClick={() => {
+                                  handleDisableSchedule();
+                                }}>
+                                {disableSlider
+                                  ? 'Enable Schedule Slider'
+                                  : 'Disable Schedule Slider'}
+                              </Button>
+                            </Stack>
                             {daytimers?.map((timer, index) => (
                               <Stack direction={'row'} key={index} className="list-timerange-item ">
                                 <Container className="list-item-container">
