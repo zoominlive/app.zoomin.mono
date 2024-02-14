@@ -146,7 +146,7 @@
 }
 
 .schduler-delete-button {
-  background-color: #d21919 !important;
+  // background-color: #d21919 !important;
   color: white !important;
 
   &:hover {
@@ -2400,4 +2400,11 @@
   .zl__tr-block{
     display: table !important;
   }
+}
+
+.MuiTab-root.Mui-selected {
+  color: #5a53dd !important;
+}
+.MuiTabs-indicator	{
+  background-color: #5a53dd !important;
 }
