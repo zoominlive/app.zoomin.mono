@@ -49,12 +49,6 @@ const SettingsForm = (props) => {
     time_zone: yup
       .array()
       .of(yup.string('Enter timezone').required('Location Timezone is required'))
-    customer_locations: yup
-      .array()
-      .of(yup.string('Enter location').required('Location Name is required')),
-    time_zone: yup
-      .array()
-      .of(yup.string('Enter timezone').required('Location Timezone is required'))
   });
   const mappedTimezones = timezones.map((item) => item.timezone);
   // console.log('props', props);
@@ -238,8 +232,6 @@ const SettingsForm = (props) => {
           validationSchema={validationSchema}
           initialValues={{
             customer_locations:
-              props.location?.loc_name !== undefined ? [props.location?.loc_name] : [''],
-            time_zone: props.location?.time_zone !== undefined ? [props.location?.time_zone] : ['']
               props.location?.loc_name !== undefined ? [props.location?.loc_name] : [''],
             time_zone: props.location?.time_zone !== undefined ? [props.location?.time_zone] : ['']
           }}
