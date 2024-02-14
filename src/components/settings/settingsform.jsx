@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import {
+  Autocomplete,
   Box,
   Button,
   Dialog,
@@ -30,6 +31,7 @@ import { errorMessageHandler } from '../../utils/errormessagehandler';
 import { useContext } from 'react';
 import AuthContext from '../../context/authcontext';
 import CloseIcon from '@mui/icons-material/Close';
+import { timezones } from '../../utils/constants';
 
 const SettingsForm = (props) => {
   const { enqueueSnackbar } = useSnackbar();
@@ -48,7 +50,7 @@ const SettingsForm = (props) => {
       .array()
       .of(yup.string('Enter timezone').required('Location Timezone is required'))
   });
-
+  const mappedTimezones = timezones.map((item) => item.timezone);
   // console.log('props', props);
 
   const handleSubmit = (data, { setSubmitting }) => {
@@ -304,35 +306,27 @@ const SettingsForm = (props) => {
                                       </Grid>
                                       <Grid item md={4} sm={12}>
                                         <InputLabel id={`time_zone.${index}`}>Timezone</InputLabel>
-                                        <TextField
-                                          // disabled={props.location?.time_zone}
+                                        <Autocomplete
                                           labelId={`time_zone.${index}`}
-                                          name={`time_zone.${index}`}
-                                          value={values?.time_zone[index]}
-                                          onChange={(event) => {
-                                            // console.log('val=> ', event.target.value);
-                                            setFieldValue(
-                                              `time_zone[${index}]`,
-                                              event.target.value
-                                            );
-                                          }}
-                                          helperText={
-                                            touched &&
-                                            touched.time_zone &&
-                                            touched.time_zone[index] &&
-                                            errors &&
-                                            errors.time_zone &&
-                                            errors.time_zone[index]
-                                          }
-                                          error={
-                                            touched &&
-                                            touched.time_zone &&
-                                            touched.time_zone[index] &&
-                                            errors &&
-                                            errors.time_zone &&
-                                            errors.time_zone[index]
-                                          }
                                           fullWidth
+                                          id={`time_zone.${index}`}
+                                          options={mappedTimezones}
+                                          onChange={(_, value) => {
+                                            setFieldValue(`time_zone[${index}]`, value);
+                                          }}
+                                          value={
+                                            values?.time_zone[index]
+                                              ? values?.time_zone[index]
+                                              : 'America/New_York'
+                                          }
+                                          renderInput={(params) => (
+                                            <TextField
+                                              {...params}
+                                              helperText={touched.time_zone && errors.time_zone}
+                                              error={touched.time_zone && Boolean(errors.time_zone)}
+                                              fullWidth
+                                            />
+                                          )}
                                         />
                                       </Grid>
                                       {props.location?.loc_name !== undefined && (
