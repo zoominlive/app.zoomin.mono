@@ -170,18 +170,170 @@ const DefaultScheduler = (props) => {
     });
   };
 
-  return (
+  return props.defaultSettings ? (
+    <Formik
+      enableReinitialize
+      validationSchema={validationSchema}
+      initialValues={{
+        selectedOption: 'All'
+      }}
+      onSubmit={(e) => handleSubmitDefaultSettings(e)}>
+      {({ errors, touched }) => (
+        <Form>
+          <DialogContent>
+            <Stack>
+              <FormControl>
+                <Stack spacing={1} className="schduler-stack">
+                  <Card className={'scheduler-selected-option'}>
+                    <label className={'scheduler-label'}>Available Times</label>
+                  </Card>
+
+                  <Stack spacing={3} pb={3}>
+                    <Container>
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={allCheckBoxClicked}
+                            onClick={() => handleAddRemoveAllDays()}
+                          />
+                        }
+                        label="All Days"
+                      />
+                      <AvatarGroup max={7}>
+                        {Days.map((day, index) => (
+                          <Avatar
+                            className={`${
+                              selectedDays.includes(day) ? '' : 'scheduler-avatar-not-selected'
+                            }`}
+                            onClick={() => addRemoveDaySelectedDays(day)}
+                            key={index}>{`${day.slice(0, 2)}`}</Avatar>
+                        ))}
+                      </AvatarGroup>
+                    </Container>
+                    {console.log('timer props-->', props.timer)}
+                    <Stack direction={'row'} pl={4} pb={3}>
+                      <Slider
+                        disabled={disableSlider}
+                        value={timer}
+                        valueLabelFormat={getValueLable}
+                        onChange={(event, newValue) => handleTimerChange(event, newValue)}
+                        valueLabelDisplay={'on'}
+                        aria-labelledby="non-linear-slider"
+                        getAriaValueText={getValueLable}
+                        disableSwap
+                        sx={{ width: props.defaultSettings && '78%' }}
+                      />
+
+                      <Container className="schduler-addtime-container">
+                        {/* <Typography variant="caption" sx={{ marginLeft: '5px' }}>
+                              {getValueLable(timer[0]) + ' - ' + getValueLable(timer[1])}
+                            </Typography> */}
+                        {/* <Stack direction={'row'}> */}
+                        <Button
+                          className={`add-btn ${selectedDays.length == 0 ? 'schedule-btn' : ''}`}
+                          disabled={selectedDays.length == 0}
+                          variant="contained"
+                          onClick={() => {
+                            handleAddTimerforSelectedDays();
+                          }}>
+                          Schedule
+                        </Button>
+                        <Button
+                          className={`add-btn ${selectedDays.length == 0 ? 'schedule-btn' : ''}`}
+                          sx={'width: 126.76px'}
+                          disabled={selectedDays.length == 0}
+                          variant="contained"
+                          onClick={() => {
+                            handleDisableSchedule();
+                          }}>
+                          {disableSlider ? 'Enable' : 'Disable'}
+                        </Button>
+                        {/* </Stack> */}
+                      </Container>
+                    </Stack>
+                    {daytimers?.map((timer, index) => (
+                      <Stack direction={'row'} key={index} className="list-timerange-item ">
+                        <Container className="list-item-container">
+                          <Slider
+                            disabled
+                            value={timer[0]}
+                            valueLabelFormat={getValueLable}
+                            valueLabelDisplay={'auto'}
+                            aria-labelledby="non-linear-slider"
+                            getAriaValueText={getValueLable}
+                            disableSwap
+                          />
+                          <AvatarGroup max={7}>
+                            {timer[1].map((day, index) => (
+                              <Avatar key={index}>{`${day.slice(0, 2)}`}</Avatar>
+                            ))}
+                          </AvatarGroup>
+                        </Container>
+                        <Container className="schduler-addtime-container-saved">
+                          <Typography variant="caption" sx={{ marginLeft: '5px' }}>
+                            {getValueLable(timer[0][0]) + ' - ' + getValueLable(timer[0][1])}
+                          </Typography>
+
+                          <IconButton
+                            sx={{ marginLeft: '5px' }}
+                            className=" schduler-delete-button "
+                            onClick={() => {
+                              handleDeleteTimer(index);
+                            }}>
+                            <DeleteIcon />
+                          </IconButton>
+                        </Container>
+                      </Stack>
+                    ))}
+                    {(daytimers?.length == 0 || !daytimers) && (
+                      <Container className="no-custom-period-text">
+                        <p>
+                          24 x 7 Access Is Active <br></br>Until Custom Periods Are Added
+                        </p>
+                      </Container>
+                    )}
+                  </Stack>
+                </Stack>
+
+                {touched.selectedOption && Boolean(errors.selectedOption) && (
+                  <FormHelperText sx={{ color: '#d32f2f' }}>
+                    {touched.selectedOption && errors.selectedOption}
+                  </FormHelperText>
+                )}
+              </FormControl>
+            </Stack>
+          </DialogContent>
+          <Divider />
+          <DialogActions>
+            {props.defaultSettings && (
+              <Button
+                variant="text"
+                disabled={loading}
+                onClick={() => {
+                  if (!loading) {
+                    props.setOpen(false);
+                  }
+                }}>
+                CANCEL
+              </Button>
+            )}
+            <LoadingButton
+              loading={loading}
+              loadingPosition={loading ? 'start' : undefined}
+              startIcon={loading && <SaveIcon />}
+              variant="text"
+              type="submit">
+              SAVE CHANGES
+            </LoadingButton>
+          </DialogActions>
+        </Form>
+      )}
+    </Formik>
+  ) : (
     <Grid container className="stream-details-wraper">
-      <Grid
-        item
-        xl={props.defaultSettings ? 12 : 8}
-        lg={props.defaultSettings ? 12 : 8}
-        md={12}
-        sm={12}
-        xs={12}
-        className="live-mobile-stream">
+      <Grid item xl={9} lg={9} md={12} sm={12} xs={12} className="default-scheduler-settings">
         <Card sx={{ height: '100%' }}>
-          <CardContent className="p-30 live-stream-card">
+          <CardContent className="live-stream-card">
             <Formik
               enableReinitialize
               validationSchema={validationSchema}
@@ -234,12 +386,14 @@ const DefaultScheduler = (props) => {
                                 aria-labelledby="non-linear-slider"
                                 getAriaValueText={getValueLable}
                                 disableSwap
+                                sx={{ width: props.defaultSettings && '78%' }}
                               />
 
                               <Container className="schduler-addtime-container">
-                                <Typography variant="caption" sx={{ marginLeft: '5px' }}>
-                                  {getValueLable(timer[0]) + ' - ' + getValueLable(timer[1])}
-                                </Typography>
+                                {/* <Typography variant="caption" sx={{ marginLeft: '5px' }}>
+                              {getValueLable(timer[0]) + ' - ' + getValueLable(timer[1])}
+                            </Typography> */}
+                                {/* <Stack direction={'row'}> */}
                                 <Button
                                   className={`add-btn ${
                                     selectedDays.length == 0 ? 'schedule-btn' : ''
@@ -251,22 +405,20 @@ const DefaultScheduler = (props) => {
                                   }}>
                                   Schedule
                                 </Button>
+                                <Button
+                                  className={`add-btn ${
+                                    selectedDays.length == 0 ? 'schedule-btn' : ''
+                                  }`}
+                                  sx={'width: 126.76px'}
+                                  disabled={selectedDays.length == 0}
+                                  variant="contained"
+                                  onClick={() => {
+                                    handleDisableSchedule();
+                                  }}>
+                                  {disableSlider ? 'Enable' : 'Disable'}
+                                </Button>
+                                {/* </Stack> */}
                               </Container>
-                            </Stack>
-                            <Stack direction={'row-reverse'}>
-                              <Button
-                                className={`add-btn ${
-                                  selectedDays.length == 0 ? 'schedule-btn' : ''
-                                }`}
-                                disabled={selectedDays.length == 0}
-                                variant="contained"
-                                onClick={() => {
-                                  handleDisableSchedule();
-                                }}>
-                                {disableSlider
-                                  ? 'Enable Schedule Slider'
-                                  : 'Disable Schedule Slider'}
-                              </Button>
                             </Stack>
                             {daytimers?.map((timer, index) => (
                               <Stack direction={'row'} key={index} className="list-timerange-item ">

@@ -196,7 +196,8 @@
 
 .schduler-addtime-container {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
+  gap: 5%;
   align-items: center;
 }
 
@@ -1977,6 +1978,11 @@
   .live-mobile-stream {
     @media (min-width: 1920px) {
       max-width: fit-content;
+    }
+  }
+  .default-scheduler-settings {
+    @media (min-width: 1920px) {
+      max-width: 60%;
     }
   }
   .active-stream {

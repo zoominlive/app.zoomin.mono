@@ -47,6 +47,7 @@ const SchedulerDialog = (props) => {
   const [defaultSettings, setDefaultSettings] = useState(false);
   const [allCheckBoxClicked, setallDaysCheckBoxClicked] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [disableSlider, setDisableSlider] = useState(false);
   const authCtx = useContext(AuthContext);
   const { enqueueSnackbar } = useSnackbar();
 
@@ -87,6 +88,15 @@ const SchedulerDialog = (props) => {
   const handleDeleteTimer = (index) => {
     let days = daytimers.filter((val, idx) => idx != index);
     setDayTimers(days);
+  };
+
+  const handleDisableSchedule = () => {
+    setDisableSlider(!disableSlider);
+    if (!disableSlider) {
+      setTimer([0, 0]);
+    } else {
+      setTimer([0, 100]);
+    }
   };
 
   const getValueLable = (value) => {
@@ -230,12 +240,13 @@ const SchedulerDialog = (props) => {
                               aria-labelledby="non-linear-slider"
                               getAriaValueText={getValueLable}
                               disableSwap
+                              sx={{ width: '78%' }}
                             />
 
                             <Container className="schduler-addtime-container">
-                              <Typography variant="caption" sx={{ marginLeft: '5px' }}>
+                              {/* <Typography variant="caption" sx={{ marginLeft: '5px' }}>
                                 {getValueLable(timer[0]) + ' - ' + getValueLable(timer[1])}
-                              </Typography>
+                              </Typography> */}
                               <Button
                                 className={`add-btn ${
                                   selectedDays.length == 0 ? 'schedule-btn' : ''
@@ -246,6 +257,18 @@ const SchedulerDialog = (props) => {
                                   handleAddTimerforSelectedDays();
                                 }}>
                                 Schedule
+                              </Button>
+                              <Button
+                                className={`add-btn ${
+                                  selectedDays.length == 0 ? 'schedule-btn' : ''
+                                }`}
+                                sx={'width: 126.76px'}
+                                disabled={selectedDays.length == 0}
+                                variant="contained"
+                                onClick={() => {
+                                  handleDisableSchedule();
+                                }}>
+                                {disableSlider ? 'Enable' : 'Disable'}
                               </Button>
                             </Container>
                           </Stack>
@@ -337,15 +360,19 @@ const SchedulerDialog = (props) => {
         </>
       )}
       {defaultSettings && (
-        <DefaultScheduler
-          custId={authCtx.user.cust_id || localStorage.getItem('cust_id')}
-          timer={newTimer}
-          selectedDays={newSelectedDays}
-          defaultSettings={defaultSettings}
-          setOpen={props.setOpen}
-          getFamiliesList={props.getFamiliesList}
-          room_child_id={props.roomDetails.room_child_id}
-        />
+        <>
+          <DialogTitle>{'Default Schedule'}</DialogTitle>
+          <Divider />
+          <DefaultScheduler
+            custId={authCtx.user.cust_id || localStorage.getItem('cust_id')}
+            timer={newTimer}
+            selectedDays={newSelectedDays}
+            defaultSettings={defaultSettings}
+            setOpen={props.setOpen}
+            getFamiliesList={props.getFamiliesList}
+            room_child_id={props.roomDetails.room_child_id}
+          />
+        </>
       )}
     </Dialog>
   );
