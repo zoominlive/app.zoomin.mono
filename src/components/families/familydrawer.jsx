@@ -844,7 +844,7 @@ const FamilyDrawer = (props) => {
       {props?.family?.children && props?.family?.children?.length > 0 && (
         <>
           <Typography variant="h6" className="title">
-            Chilldren
+            Children
           </Typography>
           <Stack spacing={2}>
             {props?.family?.children.map((child, index) => (
@@ -1087,7 +1087,11 @@ const FamilyDrawer = (props) => {
                           />
 
                           <img
-                            src={_.isEmpty(room.schedule) ? Schedule : EditSchedule}
+                            src={
+                              _.isEmpty(room.schedule) || _.isEmpty(room.schedule?.timeRange)
+                                ? Schedule
+                                : EditSchedule
+                            }
                             onClick={() => {
                               setRoomOpenInScheduler(room);
                               setIsSchedulerOpen(true);
