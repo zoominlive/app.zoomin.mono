@@ -1835,11 +1835,6 @@ export const timezones = [
     offset_dst: 7200
   },
   {
-    timezone: 'CST6CDT',
-    offset: -21600,
-    offset_dst: -18000
-  },
-  {
     timezone: 'Canada/Atlantic',
     offset: -14400,
     offset_dst: -10800
@@ -1900,19 +1895,9 @@ export const timezones = [
     offset_dst: -14400
   },
   {
-    timezone: 'EET',
-    offset: 7200,
-    offset_dst: 10800
-  },
-  {
     timezone: 'EST',
     offset: -18000,
     offset_dst: -18000
-  },
-  {
-    timezone: 'EST5EDT',
-    offset: -18000,
-    offset_dst: -14400
   },
   {
     timezone: 'Egypt',
@@ -2395,42 +2380,7 @@ export const timezones = [
     offset_dst: 7200
   },
   {
-    timezone: 'Factory',
-    offset: 0,
-    offset_dst: 0
-  },
-  {
-    timezone: 'GB',
-    offset: 0,
-    offset_dst: 3600
-  },
-  {
-    timezone: 'GB-Eire',
-    offset: 0,
-    offset_dst: 3600
-  },
-  {
     timezone: 'GMT',
-    offset: 0,
-    offset_dst: 0
-  },
-  {
-    timezone: 'GMT+0',
-    offset: 0,
-    offset_dst: 0
-  },
-  {
-    timezone: 'GMT-0',
-    offset: 0,
-    offset_dst: 0
-  },
-  {
-    timezone: 'GMT0',
-    offset: 0,
-    offset_dst: 0
-  },
-  {
-    timezone: 'Greenwich',
     offset: 0,
     offset_dst: 0
   },
@@ -2535,21 +2485,6 @@ export const timezones = [
     offset_dst: 7200
   },
   {
-    timezone: 'MET',
-    offset: 3600,
-    offset_dst: 7200
-  },
-  {
-    timezone: 'MST',
-    offset: -25200,
-    offset_dst: -25200
-  },
-  {
-    timezone: 'MST7MDT',
-    offset: -25200,
-    offset_dst: -21600
-  },
-  {
     timezone: 'Mexico/BajaNorte',
     offset: -28800,
     offset_dst: -25200
@@ -2576,31 +2511,6 @@ export const timezones = [
   },
   {
     timezone: 'Mideast/Riyadh89',
-    offset: 0,
-    offset_dst: 0
-  },
-  {
-    timezone: 'NZ',
-    offset: 43200,
-    offset_dst: 46800
-  },
-  {
-    timezone: 'NZ-CHAT',
-    offset: 45900,
-    offset_dst: 49500
-  },
-  {
-    timezone: 'Navajo',
-    offset: 0,
-    offset_dst: 0
-  },
-  {
-    timezone: 'PRC',
-    offset: 0,
-    offset_dst: 0
-  },
-  {
-    timezone: 'PST8PDT',
     offset: 0,
     offset_dst: 0
   },
@@ -2825,16 +2735,6 @@ export const timezones = [
     offset_dst: 3600
   },
   {
-    timezone: 'ROC',
-    offset: 28800,
-    offset_dst: 28800
-  },
-  {
-    timezone: 'ROK',
-    offset: 32400,
-    offset_dst: 32400
-  },
-  {
     timezone: 'Singapore',
     offset: 28800,
     offset_dst: 28800
@@ -2916,26 +2816,6 @@ export const timezones = [
   },
   {
     timezone: 'UTC',
-    offset: 0,
-    offset_dst: 0
-  },
-  {
-    timezone: 'Universal',
-    offset: 0,
-    offset_dst: 0
-  },
-  {
-    timezone: 'W-SU',
-    offset: 10800,
-    offset_dst: 10800
-  },
-  {
-    timezone: 'WET',
-    offset: 0,
-    offset_dst: 3600
-  },
-  {
-    timezone: 'Zulu',
     offset: 0,
     offset_dst: 0
   }
