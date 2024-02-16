@@ -1,4 +1,4 @@
-import { Box } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import React, { useRef, useState } from 'react';
 import ReactPlayer from 'react-player';
 import PlayerControls from './playercontols';
@@ -164,7 +164,15 @@ const CustomPlayer = (props) => {
             muted={isMuted}
             onProgress={progressHandler}
           />
-
+          {location.pathname === '/watch-stream' && (
+            <Box className={'overlay'}>
+              <Typography
+                fontSize={'12px'}
+                color={
+                  'white'
+                }>{`${props?.camDetails?.room_name} - ${props?.camDetails?.cam_name}`}</Typography>
+            </Box>
+          )}
           <PlayerControls
             playing={playerPlaying}
             setPlaying={setPlayerPlaying}
@@ -196,5 +204,6 @@ CustomPlayer.propTypes = {
   setIsDeleteDialogOpen: PropTypes.func,
   camDetails: PropTypes.object,
   cam_id: PropTypes.number,
-  streamRunning: PropTypes.bool
+  streamRunning: PropTypes.bool,
+  cameras: PropTypes.array
 };

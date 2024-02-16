@@ -2414,3 +2414,9 @@
 .MuiTabs-indicator	{
   background-color: #5a53dd !important;
 }
+.overlay {
+  position:absolute;
+  top:5px;
+  left:5px;
+  z-index:1;
+}
