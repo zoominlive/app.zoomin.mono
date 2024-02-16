@@ -361,9 +361,12 @@ module.exports = {
   // delete family
   deleteFamily: async (req, res, next) => {
     const t = await sequelize.transaction();
+    let familyDetails;
+    let userDetails;
     try {
       params = req.body;
-
+      familyDetails = await familyServices.getFamilyDetailsById(params.family_id, t);
+      userDetails = await userServices.getUserById(req?.user?.user_id, t);
       let deleteFamily = await familyServices.deleteFamily(params.family_id, t);
 
       await t.commit();
@@ -387,7 +390,11 @@ module.exports = {
         user_id: req?.user?.user_id ? req?.user?.user_id : 'Not Found',
         function: 'Primary_Family',
         function_type: 'Delete',
-        request: req?.body
+        request: {
+          Deleted_by: userDetails.first_name + ' ' + userDetails.last_name,
+          Deleted_FamilyId: familyDetails?.dataValues?.family_id || req?.body,
+          Deleted_Family_Member_Name: familyDetails?.dataValues?.first_name + ' ' + familyDetails?.dataValues?.last_name,
+        }
       };
 
       try {

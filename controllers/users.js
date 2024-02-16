@@ -1090,9 +1090,12 @@ module.exports = {
   /* Edit user profile details */
   deleteUser: async (req, res, next) => {
     const t = await sequelize.transaction();
+    let userDetails;
+    let deletedByUserDetails;
     try {
       const { userId, custId, max_stream_live_license } = req.body;
-
+      userDetails = await userServices.getUserById(userId, t);
+      deletedByUserDetails = await userServices.getUserById(req?.user?.user_id, t);
       let deleted = await userServices.deleteUser(userId, t);
 
       if (deleted) {
@@ -1123,7 +1126,11 @@ module.exports = {
         user_id: req?.user?.user_id ? req?.user?.user_id : 'Not Found',
         function: 'Users',
         function_type: 'Delete',
-        request: req.body
+        request: {
+          Deleted_By: deletedByUserDetails.first_name + ' ' + deletedByUserDetails.last_name,
+          Deleted_UserId: userDetails?.user_id,
+          Deleted_User_Name: userDetails?.first_name + ' ' + userDetails?.last_name,
+        }
       };
       try {
         await logServices.addChangeLog(logObj);

@@ -765,7 +765,7 @@ module.exports = {
     return familyArray;
   },
 
-  getFamilyDetailsById: async (familyId) => {
+  getFamilyDetailsById: async (familyId, t) => {
     const { Family, Child, RoomsInChild, Room } = await connectToDatabase();
 
     let family = await Family.findOne(
