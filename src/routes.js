@@ -12,6 +12,7 @@ import Users from './components/users/users';
 import Customers from './components/customers/customers';
 import WatchStream from './components/watchstream/watchstream';
 import AuthContext from './context/authcontext';
+import Invoices from './components/billing/invoices';
 // import Alerts from './components/alerts/alerts';
 
 const AppRoutes = () => {
@@ -27,6 +28,7 @@ const AppRoutes = () => {
           <>
             <Route path="/logs" element={<Logs />} />
             <Route path="/users" element={<Users />} />
+            <Route path="/billing" element={<Invoices />} />
           </>
         )}
         {authCtx.user && authCtx.user.role !== 'Family' && authCtx.user.role !== 'Teacher' && (

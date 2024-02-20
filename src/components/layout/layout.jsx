@@ -28,7 +28,19 @@ import collapsedLogo from '../../assets/white-logo-collapsed.png';
 import collapseButton from '../../assets/collapse-button.svg';
 import openButton from '../../assets/open-button.svg';
 import React, { useEffect, useState } from 'react';
-import { Monitor, Users, Copy, User, Video, Book, Shield, Camera, Film, Code } from 'react-feather';
+import {
+  Monitor,
+  Users,
+  Copy,
+  User,
+  Video,
+  Book,
+  Shield,
+  Camera,
+  Film,
+  Code,
+  PieChart
+} from 'react-feather';
 import AccountMenu from '../common/accountmenu';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { useContext } from 'react';
@@ -203,6 +215,12 @@ const Layout = () => {
       icon: <Users style={{ color: 'white' }} />,
       link: '',
       key: 9
+    },
+    {
+      name: 'Billing',
+      icon: <PieChart style={{ color: 'white' }} />,
+      link: '/billing',
+      key: 10
     }
     // {
     //   name: 'AI Alerts',
@@ -287,7 +305,7 @@ const Layout = () => {
                       item.key !== 10
                     ) {
                       return true;
-                    } else if (authCtx.user.role === 'Admin' && item.key !== 9 && item.key !== 10) {
+                    } else if (authCtx.user.role === 'Admin' && item.key !== 9) {
                       return true;
                     } else if (authCtx.user.role == 'Teacher' && item.key == 5 && item.key !== 10) {
                       return true;
