@@ -46,7 +46,15 @@
   .auth-container {
     padding: 20px;
     width: 442px !important;
-
+    @media (max-width: 600px) {
+      width: 400px !important;
+    }
+    @media (max-width: 400px) {
+      width: 350px !important;
+    }
+    @media (max-width: 375px) {
+      width: 320px !important;
+    }
     h1 {
       display: flex;
       align-items: center;
