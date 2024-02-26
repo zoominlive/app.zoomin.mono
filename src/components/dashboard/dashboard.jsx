@@ -114,8 +114,12 @@ const Dashboard = () => {
         console.log('Connected', event);
         console.log('Date.now()', new Date().toLocaleString());
         // Send a ping message to the server
-        setInterval(() => {
-          socket.send('ping');
+        const pingInterval = setInterval(() => {
+          if (socket.readyState === socket.OPEN) {
+            socket.send('ping');
+          } else {
+            clearInterval(pingInterval); // Stop sending pings if socket is not open
+          }
         }, 120000); // Send a ping every 120 seconds
         socket.send(JSON.stringify(data), event);
       });
