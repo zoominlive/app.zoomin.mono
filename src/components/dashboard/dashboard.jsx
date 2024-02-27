@@ -8,7 +8,7 @@ import {
   IconButton,
   Button,
   Divider,
-  Link,
+  // Link,
   Paper,
   CardHeader
 } from '@mui/material';
@@ -27,6 +27,13 @@ import { Video } from 'react-feather';
 import _ from 'lodash';
 import WatchStreamDialogBox from './watchstreamdialogbox';
 import VideoOff from '../../assets/video-off.svg';
+import Children from '../../assets/children-stats.svg';
+import Users from '../../assets/users-stats.svg';
+import Families from '../../assets/families-stats.svg';
+import AddFamily from '../../assets/add-fam.svg';
+import AddStaff from '../../assets/add-staff.svg';
+import MultiCam from '../../assets/multi-cam.svg';
+import AccessLog from '../../assets/access-log.svg';
 // import StickyHeadTable from './stickyheadtable';
 import CustomPlayer from '../watchstream/customplayer';
 import { LoadingButton } from '@mui/lab';
@@ -34,7 +41,7 @@ import StreamTable from './streamtable';
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 import MapDialog from './mapDialog';
 import { useNavigate } from 'react-router-dom';
-import OutboundIcon from '@mui/icons-material/Outbound';
+// import OutboundIcon from '@mui/icons-material/Outbound';
 import ViewersTable from './viewerstable';
 import AccessTable from './accesstable';
 import moment from 'moment';
@@ -43,7 +50,9 @@ import ParentsForm from '../families/parentform';
 import ChildForm from '../families/childform';
 import DisableDialog from '../families/disabledialog';
 import RoomAddForm from '../families/roomaddform';
+import FamilyForm from '../families/familyform';
 import LinerLoader from '../common/linearLoader';
+import UserForm from '../users/userform';
 
 const AccessColumns = [
   { label: 'Children', width: '25%' },
@@ -83,6 +92,8 @@ const Dashboard = () => {
   const [familyIndex, setFamilyIndex] = useState();
 
   const [isFamilyDrawerOpen, setIsFamilyDrawerOpen] = useState(false);
+  const [isAddFamilyDialogOpen, setIsAddFamilyDialogOpen] = useState(false);
+  const [isUserFormDialogOpen, setIsUserFormDialogOpen] = useState(false);
   const [isParentFormDialogOpen, setIsParentFormDialogOpen] = useState(false);
   const [isChildFormDialogOpen, setIsChildFormDialogOpen] = useState(false);
   const [isRoomFormDialogOpen, setIsRoomFormDialogOpen] = useState(false);
@@ -93,6 +104,26 @@ const Dashboard = () => {
   const [parentType, setParentType] = useState('');
   const [roomsList, setRoomsList] = useState([]);
   const [disableLoading, setDisableLoading] = useState(false);
+  const [user, setUser] = useState(false);
+  // eslint-disable-next-line no-unused-vars
+  const [familiesPayload, setFamiliesPayload] = useState({
+    page: 0,
+    limit: parseInt(process.env.REACT_APP_PAGINATION_LIMIT, 10),
+    searchBy: '',
+    location: 'All',
+    rooms: [],
+    cust_id: localStorage.getItem('cust_id')
+  });
+  // eslint-disable-next-line no-unused-vars
+  const [usersPayload, setUsersPayload] = useState({
+    pageNumber: 0,
+    pageSize: parseInt(process.env.REACT_APP_PAGINATION_LIMIT, 10),
+    searchBy: '',
+    location: 'All',
+    role: 'All',
+    liveStreaming: 'All',
+    cust_id: localStorage.getItem('cust_id')
+  });
 
   // const [roomsDropdownLoading, setRoomsDropdownLoading] = useState(false);
   useEffect(() => {
@@ -114,8 +145,12 @@ const Dashboard = () => {
         console.log('Connected', event);
         console.log('Date.now()', new Date().toLocaleString());
         // Send a ping message to the server
-        setInterval(() => {
-          socket.send('ping');
+        const pingInterval = setInterval(() => {
+          if (socket.readyState === socket.OPEN) {
+            socket.send('ping');
+          } else {
+            clearInterval(pingInterval); // Stop sending pings if socket is not open
+          }
         }, 120000); // Send a ping every 120 seconds
         socket.send(JSON.stringify(data), event);
       });
@@ -137,7 +172,7 @@ const Dashboard = () => {
       socket.addEventListener('error', (event) => {
         console.error('WebSocket error:', event);
         socket = new WebSocket(process.env.REACT_APP_SOCKET_URL);
-        socket.addEventListener('Open', (event) => {
+        socket.addEventListener('open', (event) => {
           console.log('Reconnected');
           socket.send(JSON.stringify(data), event);
         });
@@ -369,6 +404,40 @@ const Dashboard = () => {
     });
   };
 
+  // Method to fetch families list
+  const getFamiliesList = () => {
+    setIsLoading(true);
+    API.get('family', { params: familiesPayload }).then((response) => {
+      if (response.status === 200) {
+        navigate('/families');
+      } else {
+        errorMessageHandler(
+          enqueueSnackbar,
+          response?.response?.data?.Message || 'Something Went Wrong.',
+          response?.response?.status,
+          authCtx.setAuthError
+        );
+      }
+      setIsLoading(false);
+    });
+  };
+
+  const getUsersList = () => {
+    setIsLoading(true);
+    API.get('users/all', { params: usersPayload }).then((response) => {
+      if (response.status === 200) {
+        navigate('/users');
+      } else {
+        errorMessageHandler(
+          enqueueSnackbar,
+          response?.response?.data?.Message || 'Something Went Wrong.',
+          response?.response?.status,
+          authCtx.setAuthError
+        );
+      }
+      setIsLoading(false);
+    });
+  };
   return (
     <>
       <Box className="dashboard">
@@ -377,7 +446,7 @@ const Dashboard = () => {
         <Grid container spacing={3} mt={2} alignItems={'stretch'}>
           <Grid item md={12} sm={12} xs={12} lg={7} style={{ paddingTop: 0 }}>
             <Card sx={{ borderRadius: 5, background: '#5A53DD' }}>
-              <CardContent style={{ padding: '6px 16px 6px 16px' }}>
+              <CardContent className="live-stream-stats" style={{ padding: '6px 16px 6px 16px' }}>
                 <Grid
                   container
                   rowSpacing={1}
@@ -385,66 +454,45 @@ const Dashboard = () => {
                   className="dashboard-analytics">
                   <Grid item xs={12} sm={12} md={6} lg={6}>
                     <Card sx={{ borderRadius: 5 }}>
-                      <CardContent className="p-10">
-                        <Typography className="label" variant="subtitle1" style={{ paddingTop: 0 }}>
-                          Live Mobile Streams
-                        </Typography>
+                      <CardContent className="analytics-card">
                         <Grid container spacing={1}>
-                          <Grid item xs={12} sm={6} md={6} lg={6}>
-                            <Typography
-                              variant="subtitle2"
-                              gutterBottom
-                              className="stream-sub-title">
-                              Number of Streams
-                            </Typography>
+                          <Grid item xs={12} sm={4} md={4} lg={4}>
                             <Grid container spacing={1} alignItems={'end'}>
-                              <Grid item className="report-div">
-                                <Stack
-                                  direction={'row'}
-                                  spacing={0.7}
-                                  alignItems={'center'}
-                                  className="strem-report">
-                                  <Box className="icon">
-                                    {' '}
-                                    <OutboundIcon />{' '}
-                                  </Box>{' '}
-                                  <Box component={'span'}>+15%</Box>
-                                </Stack>
-                                <Link href="#">View Report</Link>
+                              <Grid item>
+                                <Typography className="stream-labels" style={{ paddingTop: 0 }}>
+                                  Live <br /> Mobile <br /> Streams
+                                </Typography>
                               </Grid>
+                            </Grid>
+                          </Grid>
+                          <Grid item xs={12} sm={4} md={4} lg={4}>
+                            <Grid container spacing={1} alignItems={'end'}>
                               <Grid item>
                                 <Box className="report-circle">
                                   {statisticsData?.activeLiveStreams !== undefined
                                     ? statisticsData?.activeLiveStreams?.length
                                     : ' '}
+                                  <Typography
+                                    variant="subtitle2"
+                                    gutterBottom
+                                    className="stream-sub-title">
+                                    Number of Streams
+                                  </Typography>
                                 </Box>
                               </Grid>
                             </Grid>
                           </Grid>
-                          <Grid item xs={12} sm={6} md={6} lg={6}>
-                            <Typography
-                              variant="subtitle2"
-                              gutterBottom
-                              className="stream-sub-title">
-                              Number of Viewers
-                            </Typography>
+                          <Grid item xs={12} sm={4} md={4} lg={4}>
                             <Grid container spacing={1} alignItems={'end'}>
-                              <Grid item className="report-div">
-                                <Stack
-                                  direction={'row'}
-                                  alignItems={'center'}
-                                  spacing={0.7}
-                                  className="strem-report viewers-report">
-                                  <Box className="icon">
-                                    <OutboundIcon />{' '}
-                                  </Box>{' '}
-                                  <Box component={'span'}>-3.5%</Box>
-                                </Stack>
-                                <Link href="#">View Report</Link>
-                              </Grid>
                               <Grid item>
                                 <Box className="report-circle" style={{ borderColor: '#FFAB01' }}>
                                   {statisticsData?.numberofActiveStreamViewers}
+                                  <Typography
+                                    variant="subtitle2"
+                                    gutterBottom
+                                    className="stream-sub-title">
+                                    Number of Viewers
+                                  </Typography>
                                 </Box>
                               </Grid>
                             </Grid>
@@ -456,66 +504,44 @@ const Dashboard = () => {
                   <Grid item xs={12} sm={12} md={6} lg={6}>
                     <Card sx={{ borderRadius: 5 }}>
                       <CardContent className="p-10">
-                        <Typography className="label" variant="subtitle1" style={{ paddingTop: 0 }}>
-                          Live Mounted Cameras
-                        </Typography>
                         <Grid container spacing={1}>
-                          <Grid item xs={12} sm={6} md={6} lg={6}>
-                            <Typography
-                              variant="subtitle2"
-                              gutterBottom
-                              className="stream-sub-title">
-                              Number of Streams
-                            </Typography>
+                          <Grid item xs={12} sm={4} md={4} lg={4}>
                             <Grid container spacing={1} alignItems={'end'}>
-                              <Grid item className="report-div">
-                                <Stack
-                                  direction={'row'}
-                                  alignItems={'center'}
-                                  spacing={0.7}
-                                  className="strem-report">
-                                  <Box className="icon">
-                                    <OutboundIcon />{' '}
-                                  </Box>{' '}
-                                  <Box component={'span'}>+15%</Box>
-                                </Stack>
-                                <Link href="#">View Report</Link>
+                              <Grid item>
+                                <Typography className="stream-labels" style={{ paddingTop: 0 }}>
+                                  Live <br /> Mounted <br /> Cameras
+                                </Typography>
                               </Grid>
+                            </Grid>
+                          </Grid>
+                          <Grid item xs={12} sm={4} md={4} lg={4}>
+                            <Grid container spacing={1} alignItems={'end'}>
                               <Grid item>
                                 <Box className="report-circle" style={{ borderColor: '#F755D3' }}>
                                   {statisticsData?.enrolledStreams !== undefined
                                     ? statisticsData?.enrolledStreams
                                     : ' '}
+                                  <Typography
+                                    variant="subtitle2"
+                                    gutterBottom
+                                    className="stream-sub-title">
+                                    Number of Streams
+                                  </Typography>
                                 </Box>
                               </Grid>
                             </Grid>
                           </Grid>
-                          <Grid item xs={12} sm={6} md={6} lg={6}>
-                            <Typography
-                              variant="subtitle2"
-                              gutterBottom
-                              className="stream-sub-title">
-                              Number of Viewers
-                            </Typography>
+                          <Grid item xs={12} sm={4} md={4} lg={4}>
                             <Grid container spacing={1} alignItems={'end'}>
-                              <Grid item className="report-div">
-                                <Stack
-                                  direction={'row'}
-                                  alignItems={'center'}
-                                  spacing={0.7}
-                                  className="strem-report viewers-report">
-                                  <Box className="icon">
-                                    {' '}
-                                    <OutboundIcon />{' '}
-                                  </Box>{' '}
-                                  <Box component={'span'}>-3.5%</Box>
-                                </Stack>
-
-                                <Link href="#">View Report</Link>
-                              </Grid>
                               <Grid item>
                                 <Box className="report-circle" style={{ borderColor: '#01A4FF' }}>
                                   {statisticsData?.numberofMountedCameraViewers}
+                                  <Typography
+                                    variant="subtitle2"
+                                    gutterBottom
+                                    className="stream-sub-title">
+                                    Number of Viewers
+                                  </Typography>
                                 </Box>
                               </Grid>
                             </Grid>
@@ -568,36 +594,52 @@ const Dashboard = () => {
                       justifyContent={'flex-end'}>
                       <Box className="familiy-circle">
                         <Stack
-                          className="report-circle"
+                          className=""
                           style={{ borderColor: '#A855F7' }}
                           direction={'column'}
+                          gap={2.5}
                           alignItems={'center'}>
-                          <Box component={'span'}>Children</Box>
-                          {statisticsData?.childrens !== undefined
-                            ? statisticsData?.childrens
-                            : ' '}
+                          <img src={Children} alt="Children" width={32} height={32} />
+                          <Stack direction={'column'} textAlign={'center'}>
+                            <Box component={'span'}>Children</Box>
+                            {statisticsData?.childrens !== undefined
+                              ? statisticsData?.childrens
+                              : ' '}
+                          </Stack>
                         </Stack>
                       </Box>
+                      <Divider orientation="vertical" flexItem />
                       <Box className="familiy-circle">
                         <Stack
-                          className="report-circle"
+                          className=""
                           style={{ borderColor: '#FAD203' }}
                           direction={'column'}
+                          gap={3}
                           alignItems={'center'}>
-                          <Box component={'span'}>Users</Box>
-                          {statisticsData?.familyMembers !== undefined
-                            ? statisticsData?.familyMembers
-                            : ' '}
+                          <img src={Users} alt="Users" width={32} height={32} />
+                          <Stack direction={'column'} textAlign={'center'}>
+                            <Box component={'span'}>Users</Box>
+                            {statisticsData?.familyMembers !== undefined
+                              ? statisticsData?.familyMembers
+                              : ' '}
+                          </Stack>
                         </Stack>
                       </Box>
+                      <Divider orientation="vertical" flexItem />
                       <Box className="familiy-circle">
                         <Stack
-                          className="report-circle"
+                          className=""
                           style={{ borderColor: '#FF8762' }}
                           direction={'column'}
+                          gap={3}
                           alignItems={'center'}>
-                          <Box component={'span'}>Famillies</Box>
-                          {statisticsData?.families !== undefined ? statisticsData?.families : ' '}
+                          <img src={Families} alt="Families" width={32} height={32} />
+                          <Stack direction={'column'} textAlign={'center'}>
+                            <Box component={'span'}>Families</Box>
+                            {statisticsData?.families !== undefined
+                              ? statisticsData?.families
+                              : ' '}
+                          </Stack>
                         </Stack>
                       </Box>
                     </Stack>
@@ -746,6 +788,74 @@ const Dashboard = () => {
                 </Box>
               </Card>
               <Card className="camera-viewing-card">
+                <CardHeader
+                  sx={{ padding: '20px 24px 0 24px' }}
+                  title={
+                    <>
+                      <Stack
+                        direction="row"
+                        spacing={2}
+                        justifyContent={'space-between'}
+                        className="">
+                        <Typography>Quick Links</Typography>
+                      </Stack>
+                    </>
+                  }
+                />
+                <CardContent sx={{ display: 'flex' }}>
+                  <Stack direction={'row'} gap={1} sx={{ flexGrow: 1 }}>
+                    <Stack
+                      justifyContent={'center'}
+                      alignItems={'center'}
+                      gap={1}
+                      sx={{ cursor: 'pointer' }}
+                      onClick={() => {
+                        setIsAddFamilyDialogOpen(true);
+                      }}
+                      className="quick-link-wrap quick-links-add-fam">
+                      <img src={AddFamily} alt="add-fam" className="quick-link-img" />
+                      <Typography className="link-text">{'Add Family'}</Typography>
+                    </Stack>
+                    <Stack
+                      justifyContent={'center'}
+                      alignItems={'center'}
+                      gap={1}
+                      sx={{ cursor: 'pointer' }}
+                      onClick={() => {
+                        setIsUserFormDialogOpen(true);
+                      }}
+                      className="quick-link-wrap quick-links-add-staff">
+                      <img src={AddStaff} alt="add-fam" className="quick-link-img" />
+                      <Typography className="link-text">{'Add Staff'}</Typography>
+                    </Stack>
+                    <Stack
+                      justifyContent={'center'}
+                      alignItems={'center'}
+                      gap={1}
+                      sx={{ cursor: 'pointer' }}
+                      onClick={() => {
+                        navigate('/watch-stream');
+                      }}
+                      className="quick-link-wrap quick-links-multi-cam">
+                      <img src={MultiCam} alt="add-fam" className="quick-link-img" />
+                      <Typography className="link-text">{'Multi-Cam'}</Typography>
+                    </Stack>
+                    <Stack
+                      justifyContent={'center'}
+                      alignItems={'center'}
+                      gap={1}
+                      sx={{ cursor: 'pointer' }}
+                      onClick={() => {
+                        navigate('/logs');
+                      }}
+                      className="quick-link-wrap quick-links-access-logs">
+                      <img src={AccessLog} alt="add-fam" className="quick-link-img" />
+                      <Typography className="link-text">{'Access Log'}</Typography>
+                    </Stack>
+                  </Stack>
+                </CardContent>
+              </Card>
+              {/* <Card className="camera-viewing-card">
                 <Stack
                   direction={'row'}
                   justifyContent={'space-around'}
@@ -770,7 +880,7 @@ const Dashboard = () => {
                     Multiple Cameras
                   </Button>
                 </Stack>
-              </Card>
+              </Card> */}
             </Stack>
           </Grid>
         </Grid>
@@ -935,6 +1045,23 @@ const Dashboard = () => {
         />
       )}
 
+      {isAddFamilyDialogOpen && (
+        <FamilyForm
+          open={isAddFamilyDialogOpen}
+          setOpen={setIsAddFamilyDialogOpen}
+          roomsList={roomsList}
+          getFamiliesList={getFamiliesList}
+        />
+      )}
+      {isUserFormDialogOpen && (
+        <UserForm
+          open={isUserFormDialogOpen}
+          setOpen={setIsUserFormDialogOpen}
+          user={user}
+          setUser={setUser}
+          getUsersList={getUsersList}
+        />
+      )}
       <FamilyDrawer
         open={isFamilyDrawerOpen}
         setOpen={setIsFamilyDrawerOpen}

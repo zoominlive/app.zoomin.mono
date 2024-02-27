@@ -1,6 +1,6 @@
 import {
   Avatar,
-  Box,
+  // Box,
   Divider,
   Fade,
   IconButton,
@@ -48,18 +48,25 @@ const AccountMenu = (props) => {
 
       {/* </IconButton> */}
       <Stack direction={'row'} alignItems={'center'} justifyContent={'space-between'}>
-        <Stack direction={'row'}>
+        <Stack direction={'row'} alignItems={'center'}>
           <Avatar
             src={authCtx?.user?.profile_image}
             style={{
               border: '2px solid #eae9ff',
-              margin: '5px 5px 5px 0'
+              margin: '5px 5px 5px 0',
+              width: '56px',
+              height: '56px'
             }}
           />
 
-          <Box component={'p'} className="profile-name">
-            {authCtx?.user?.first_name} {authCtx?.user?.last_name}
-          </Box>
+          <Stack direction={'column'}>
+            <Typography component={'p'} className="profile-name">
+              {authCtx?.user?.first_name} {authCtx?.user?.last_name}
+            </Typography>
+            <Typography component={'p'} className="role">
+              {authCtx?.user?.role}
+            </Typography>
+          </Stack>
         </Stack>
         <IconButton onClick={handleClick} sx={{ ml: 1 }}>
           {/* <KeyboardArrowDownIcon style={{ ml: 3 }} onClick={handleClick} /> */}

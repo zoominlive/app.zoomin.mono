@@ -388,7 +388,7 @@ const Recordings = () => {
                       <Link href="#">View Report</Link>
                     </Grid>
                     <Grid item>
-                      <Box className="report-circle">{activeLiveStreamList?.length}</Box>
+                      <Box className="report-circle-recordings">{activeLiveStreamList?.length}</Box>
                     </Grid>
                   </Grid>
                 </Box>
@@ -411,7 +411,7 @@ const Recordings = () => {
                       <Link href="#">View Report</Link>
                     </Grid>
                     <Grid item>
-                      <Box className="report-circle" style={{ borderColor: '#FFAB01' }}>
+                      <Box className="report-circle-recordings" style={{ borderColor: '#FFAB01' }}>
                         {recentLiveStreamList?.length}
                       </Box>
                     </Grid>

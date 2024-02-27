@@ -42,7 +42,7 @@ import { errorMessageHandler } from '../../utils/errormessagehandler';
 import AddFamilyDialog from '../addfamily/addfamilydialog';
 //import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
 import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
-import buildingIcon from '../../assets/building.svg';
+import buildingIcon from '../../assets/new-building.svg';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 
@@ -168,7 +168,7 @@ const Layout = () => {
       key: 6
     },
     {
-      name: 'Users',
+      name: 'Staff',
       icon: <User style={{ color: 'white' }} />,
       link: '/users',
       key: 4
@@ -424,6 +424,9 @@ const Layout = () => {
                           '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
                             borderWidth: 0
                           },
+                          '& .MuiOutlinedInput-root .MuiAutocomplete-endAdornment': {
+                            right: '22px'
+                          },
                           '& fieldset': { borderRadius: 10, borderWidth: 0 }
                         }}
                         className="header-location-select"
@@ -459,7 +462,7 @@ const Layout = () => {
                               ...params.InputProps,
                               startAdornment: (
                                 <>
-                                  <InputAdornment position="start">
+                                  <InputAdornment position="start" sx={{ marginLeft: '22px' }}>
                                     <img src={buildingIcon} />
                                   </InputAdornment>
                                   {params.InputProps.startAdornment}
