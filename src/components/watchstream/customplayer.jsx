@@ -8,7 +8,8 @@ import PropTypes from 'prop-types';
 import Loader from '../common/loader';
 import { useContext } from 'react';
 import AuthContext from '../../context/authcontext';
-import _ from 'lodash';
+// import _ from 'lodash';
+import VideocamOffIcon from '@mui/icons-material/VideocamOff';
 
 const CustomPlayer = (props) => {
   const authCtx = useContext(AuthContext);
@@ -18,6 +19,7 @@ const CustomPlayer = (props) => {
   const playerContainerRef = useRef(null);
   const playerRef = useRef(null);
   const [showErrorMessage, setShowErrorMessage] = useState(true);
+  // eslint-disable-next-line no-unused-vars
   const [url, setUrl] = useState('');
   const [playerPlaying, setPlayerPlaying] = useState(true);
   const [isMuted, setIsMuted] = useState(true);
@@ -29,6 +31,7 @@ const CustomPlayer = (props) => {
     seeking: false
   });
   const { played, seeking } = videoState;
+  const [streamStatus, setStreamStatus] = useState(null);
 
   useEffect(() => {
     function exitHandler() {
@@ -72,6 +75,30 @@ const CustomPlayer = (props) => {
     }
   };
 
+  useEffect(() => {
+    const checkStreamStatus = async () => {
+      try {
+        const response = await fetch(props.streamUri);
+        if (response.status === 200) {
+          setStreamStatus('available');
+        } else if (response.status === 404) {
+          setStreamStatus('notFound');
+        } else {
+          setStreamStatus('error');
+        }
+      } catch (error) {
+        console.error('Error checking stream status:', error);
+        setStreamStatus('error');
+      }
+    };
+
+    if (props.streamUri) {
+      checkStreamStatus();
+    } else {
+      setStreamStatus(null); // Reset stream status if no URI provided
+    }
+  }, [props.streamUri]);
+
   const handleFullscreenToggle = () => {
     screenfull.toggle(playerContainerRef.current);
     setFullScreen((fullscreen) => !fullscreen);
@@ -90,7 +117,7 @@ const CustomPlayer = (props) => {
 
   return (
     <>
-      {!_.isEmpty(url) && (
+      {streamStatus === 'available' ? (
         <Box
           className={
             location.pathname === '/recordings'
@@ -187,6 +214,23 @@ const CustomPlayer = (props) => {
             onSeek={seekHandler}
             streamRunning={props.streamRunning}
           />
+        </Box>
+      ) : (
+        <Box
+          className={
+            location.pathname === '/recordings'
+              ? 'video-player-wrapper-recordings-page'
+              : location.pathname === '/watch-stream'
+              ? 'video-player-wrapper-watch-stream-page'
+              : 'video-player-wrapper'
+          }
+          sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            backgroundColor: '#000000'
+          }}>
+          <VideocamOffIcon sx={{ fontSize: '80px' }} />
         </Box>
       )}
     </>
