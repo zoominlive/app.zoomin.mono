@@ -52,10 +52,13 @@ import NoDataDiv from '../common/nodatadiv';
 import SearchIcon from '@mui/icons-material/Search';
 import NewDeleteDialog from '../common/newdeletedialog';
 import LinerLoader from '../common/linearLoader';
+import { useLocation } from 'react-router-dom';
 
 const Families = () => {
   const layoutCtx = useContext(LayoutContext);
   const authCtx = useContext(AuthContext);
+  const location = useLocation();
+  const receivedData = location.state?.data;
   const { enqueueSnackbar } = useSnackbar();
   const [isChildFormDialogOpen, setIsChildFormDialogOpen] = useState(false);
   const [isRoomFormDialogOpen, setIsRoomFormDialogOpen] = useState(false);
@@ -89,6 +92,9 @@ const Families = () => {
   useEffect(() => {
     layoutCtx.setActive(2);
     layoutCtx.setBreadcrumb(['Families', 'Manage Families and their camera authorization']);
+    if (receivedData) {
+      setFamiliesPayload({ ...familiesPayload, searchBy: receivedData });
+    }
     return () => {
       authCtx.setPreviosPagePath(window.location.pathname);
     };

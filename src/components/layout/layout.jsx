@@ -1,6 +1,6 @@
 import {
   Autocomplete,
-  Avatar,
+  // Avatar,
   Box,
   Checkbox,
   Chip,
@@ -43,6 +43,7 @@ import AddFamilyDialog from '../addfamily/addfamilydialog';
 //import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
 import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
 import buildingIcon from '../../assets/new-building.svg';
+import searchIcon from '../../assets/search.svg';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 
@@ -62,6 +63,26 @@ const Layout = () => {
   const [locations, setLocations] = useState([]);
   const [selectedLocation, setSelectedLocation] = useState([]);
   const [dropdownLoading, setDropdownLoading] = useState(false);
+  // eslint-disable-next-line no-unused-vars
+  const [familiesPayload, setFamiliesPayload] = useState({
+    page: 0,
+    limit: parseInt(process.env.REACT_APP_PAGINATION_LIMIT, 10),
+    searchBy: '',
+    location: 'All',
+    rooms: [],
+    cust_id: localStorage.getItem('cust_id')
+  });
+  const [usersPayload, setUsersPayload] = useState({
+    pageNumber: 0,
+    pageSize: parseInt(process.env.REACT_APP_PAGINATION_LIMIT, 10),
+    searchBy: '',
+    location: 'All',
+    role: 'All',
+    liveStreaming: 'All',
+    cust_id: localStorage.getItem('cust_id')
+  });
+  const [results, setResults] = useState([]);
+  const [showSearchResults, setShowSearchResults] = useState();
 
   const locs = ['Select All'];
   //authCtx?.user?.location?.accessable_locations.forEach((loc) => locs.push(loc));
@@ -131,6 +152,53 @@ const Layout = () => {
     };
   }, []);
 
+  useEffect(() => {
+    if (showSearchResults) {
+      getFamiliesList();
+      getUsersList();
+    }
+  }, [familiesPayload, usersPayload]);
+
+  // Method to fetch families list
+  const getFamiliesList = () => {
+    setIsLoading(true);
+    API.get('family', { params: familiesPayload }).then((response) => {
+      if (response.status === 200) {
+        console.log('familiesPayload.searchBy', familiesPayload.searchBy);
+        const famResults = response.data.Data.familyArray;
+        setResults(famResults);
+      } else {
+        errorMessageHandler(
+          enqueueSnackbar,
+          response?.response?.data?.Message || 'Something Went Wrong.',
+          response?.response?.status,
+          authCtx.setAuthError
+        );
+      }
+      setIsLoading(false);
+    });
+  };
+
+  // Method to fetch user list for table
+  const getUsersList = () => {
+    setIsLoading(true);
+    API.get('users/all', { params: usersPayload }).then((response) => {
+      if (response.status === 200) {
+        const userResults = response.data.Data.users;
+        // setUsersList(response.data.Data.users);
+        // setTotalUsers(response.data.Data.count);
+        setResults([...results, ...userResults]);
+      } else {
+        errorMessageHandler(
+          enqueueSnackbar,
+          response?.response?.data?.Message || 'Something Went Wrong.',
+          response?.response?.status,
+          authCtx.setAuthError
+        );
+      }
+      setIsLoading(false);
+    });
+  };
   // Method to toggle drawer when the window size changes
   const handleDrawerToggleOnResize = () => {
     if (window.innerWidth <= 900) {
@@ -251,6 +319,30 @@ const Layout = () => {
     } else {
       setAllLocationChecked(false);
       setSelectedLocation(value);
+    }
+  };
+
+  const handleChange = (value) => {
+    setShowSearchResults(value.target.value);
+    setFamiliesPayload((prevPayload) => ({
+      ...prevPayload,
+      searchBy: event.target.value,
+      page: 0
+    }));
+    setUsersPayload((prevPayload) => ({
+      ...prevPayload,
+      pageNumber: 0,
+      searchBy: event.target.value
+    }));
+  };
+
+  const handleResultClick = (value) => {
+    if (value.primary) {
+      navigate('/families', { state: { data: value.primary?.first_name } });
+      setResults([]);
+    } else {
+      navigate('/users', { state: { data: value?.first_name } });
+      setResults([]);
     }
   };
 
@@ -396,13 +488,13 @@ const Layout = () => {
                     alignItems={'center'}
                     gap={2}
                     className="breadcrumb">
-                    {layoutCtx?.breadcrumb?.length > 2 ? (
+                    {/* {layoutCtx?.breadcrumb?.length > 2 ? (
                       <Avatar
                         src={authCtx?.user?.profile_image}
                         sx={{ width: 85, height: 85 }}
                         alt='="profile-image'
                       />
-                    ) : null}
+                    ) : null} */}
                     <Stack direction={'column'} spacing={0.5}>
                       <Typography variant="h2">{layoutCtx?.breadcrumb[0]}</Typography>
                       {layoutCtx?.breadcrumb?.length > 1 && (
@@ -410,6 +502,48 @@ const Layout = () => {
                       )}
                     </Stack>
                   </Stack>
+                  {location.pathname == '/dashboard' ? (
+                    <>
+                      <TextField
+                        variant="standard"
+                        labelId="search"
+                        placeholder={'Search..'}
+                        sx={{
+                          backgroundColor: '#FFFFFF',
+                          borderRadius: '120px',
+                          padding: '16px 24px',
+                          width: '70%'
+                        }}
+                        onChange={(e) => handleChange(e)}
+                        InputProps={{
+                          disableUnderline: true,
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <img src={searchIcon} alt="search" width={24} height={24} />
+                            </InputAdornment>
+                          )
+                        }}
+                      />
+                      {showSearchResults && (
+                        <Box className="results-list">
+                          {results.map((result) => {
+                            return (
+                              <Box
+                                key={result?.user_id || result?.primary?.family_member_id}
+                                onClick={() => handleResultClick(result)}>
+                                <Box className="search-result">
+                                  {result?.first_name ||
+                                    result?.primary?.first_name ||
+                                    result?.children?.map((item) => item.first_name) ||
+                                    result?.secondary?.map((item) => item.first_name)}
+                                </Box>
+                              </Box>
+                            );
+                          })}
+                        </Box>
+                      )}
+                    </>
+                  ) : null}
                 </Grid>
 
                 <Grid item md={12} sm={12} xs={12} lg={5}>

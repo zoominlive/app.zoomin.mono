@@ -44,7 +44,7 @@ import { useNavigate } from 'react-router-dom';
 // import OutboundIcon from '@mui/icons-material/Outbound';
 import ViewersTable from './viewerstable';
 import AccessTable from './accesstable';
-import moment from 'moment';
+// import moment from 'moment';
 import FamilyDrawer from '../families/familydrawer';
 import ParentsForm from '../families/parentform';
 import ChildForm from '../families/childform';
@@ -78,7 +78,7 @@ const Dashboard = () => {
   const { enqueueSnackbar } = useSnackbar();
   const [statisticsData, setStatisticsData] = useState({});
   const [isLoading, setIsLoading] = useState(false);
-  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  // const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const [mapsData, setMapsData] = useState([]);
   const [selectedCamera, setSelectedCamera] = useState({});
   const [openWatchStreamDialog, setOpenWatchStreamDialog] = useState(false);
@@ -290,26 +290,26 @@ const Dashboard = () => {
       cust_id: localStorage.getItem('cust_id')
     });
   };
-  function greeting() {
-    const hour = moment().hour();
+  // function greeting() {
+  //   const hour = moment().hour();
 
-    if (hour > 16) {
-      return 'Good evening';
-    }
+  //   if (hour > 16) {
+  //     return 'Good evening';
+  //   }
 
-    if (hour > 11) {
-      return 'Good afternoon';
-    }
+  //   if (hour > 11) {
+  //     return 'Good afternoon';
+  //   }
 
-    return 'Good morning';
-  }
+  //   return 'Good morning';
+  // }
 
   useEffect(() => {
     layoutCtx.setActive(1);
     layoutCtx.setBreadcrumb([
-      `${greeting()}, ${authCtx?.user?.first_name}!`,
-      `${days[dayjs().day()]}, ${dayjs().format('DD MMMM YYYY')}`,
-      `${authCtx?.user?.profile_image}`
+      // `${greeting()}, ${authCtx?.user?.first_name}!`,
+      // `${days[dayjs().day()]}, ${dayjs().format('DD MMMM YYYY')}`,
+      // `${authCtx?.user?.profile_image}`
     ]);
 
     return () => {

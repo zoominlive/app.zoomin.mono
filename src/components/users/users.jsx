@@ -40,10 +40,13 @@ import NoDataDiv from '../common/nodatadiv';
 import SearchIcon from '@mui/icons-material/Search';
 import NewDeleteDialog from '../common/newdeletedialog';
 import LinerLoader from '../common/linearLoader';
+import { useLocation } from 'react-router-dom';
 
 const Users = () => {
   const layoutCtx = useContext(LayoutContext);
   const authCtx = useContext(AuthContext);
+  const location = useLocation();
+  const receivedData = location.state?.data;
   const { enqueueSnackbar } = useSnackbar();
   const [isUserFormDialogOpen, setIsUserFormDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -65,6 +68,9 @@ const Users = () => {
   useEffect(() => {
     layoutCtx.setActive(4);
     layoutCtx.setBreadcrumb(['Users', 'Manage Access and Privileges of users ']);
+    if (receivedData) {
+      setUsersPayload({ ...usersPayload, searchBy: receivedData });
+    }
     return () => {
       authCtx.setPreviosPagePath(window.location.pathname);
     };
