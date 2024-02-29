@@ -596,11 +596,6 @@
       }
     }
   }
-  .live-stream-stats {
-    @media only screen and (max-width: 1650px) {
-      padding: 19px !important;
-    }
-  }
 
   .subtitle {
     font-size: 16px !important;
@@ -633,13 +628,40 @@
       &:last-child {
         padding-bottom: 18px !important;
       }
+      @media (max-width: 1440px) {
+        padding: 12px;
+      }
     }
     .stream-sub-title {
       font-size: 13px;
       font-weight: 500;
       text-align: center;
-      @media (max-width: 1440px) {
+      @media (max-width: 1650px) {
         font-size: 12px;        
+      }
+    }
+
+    .mounted-cam-section {
+      width: calc(100% - 240px);
+      max-width: calc(100% - 240px);
+      flex: 0 0 calc(100% - 240px);
+      @media (max-width: 1650px) {
+        width: calc(100% - 180px);
+        max-width: calc(100% - 180px);
+        flex-basis: calc(100% - 180px);
+      }
+    }
+
+    .stats-circle-section {
+      width: 240px;
+      max-width: 240px;
+      flex: 0 0 240px;
+      display: flex;
+      justify-content: flex-end;
+      @media (max-width: 1650px) {
+        width: 180px;
+        max-width: 180px;
+        flex-basis: 180px;
       }
     }
   }
@@ -1462,7 +1484,7 @@
       bottom: 15px; 
     }
     @media (min-width: 2304px) {
-      bottom: 40px; 
+      bottom: 60px; 
     }
 .MuiGrid-root{
   padding-bottom: 5px;
@@ -1780,8 +1802,8 @@
           font-size: 20px;
         }
         @media (max-width: 1440px) {
-          font-size: 20px;
-          line-height: 28px;
+          font-size: 17px;
+          line-height: 25px;
         }
       }
     }
@@ -2089,10 +2111,17 @@
     padding: 5px;
     width: 90px;
     height: 90px;
+    font-size: 20px;
   }
-  @media (max-width: 1440px) {
+  @media (max-width: 1600px) {
     width: 85px;
     height: 85px;
+  }
+}
+
+.number-of-viewers {
+  @media (max-width: 1650px) {
+      margin-left: 8px !important;
   }
 }
 
@@ -2543,6 +2572,3 @@
   padding: 10px 20px;
 }
 
-.search-result:hover {
-  background-color: #efefef
-}

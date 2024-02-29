@@ -83,7 +83,7 @@ const Families = () => {
   const [familiesPayload, setFamiliesPayload] = useState({
     page: 0,
     limit: parseInt(process.env.REACT_APP_PAGINATION_LIMIT, 10),
-    searchBy: '',
+    searchBy: receivedData ? receivedData : '',
     location: 'All',
     rooms: [],
     cust_id: localStorage.getItem('cust_id')
@@ -92,9 +92,6 @@ const Families = () => {
   useEffect(() => {
     layoutCtx.setActive(2);
     layoutCtx.setBreadcrumb(['Families', 'Manage Families and their camera authorization']);
-    if (receivedData) {
-      setFamiliesPayload({ ...familiesPayload, searchBy: receivedData });
-    }
     return () => {
       authCtx.setPreviosPagePath(window.location.pathname);
     };

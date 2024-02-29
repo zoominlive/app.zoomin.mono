@@ -445,8 +445,16 @@ const Dashboard = () => {
 
         <Grid container spacing={3} mt={2} alignItems={'stretch'}>
           <Grid item md={12} sm={12} xs={12} lg={7} style={{ paddingTop: 0 }}>
-            <Card sx={{ borderRadius: 5, background: '#5A53DD' }}>
-              <CardContent className="live-stream-stats" style={{ padding: '6px 16px 6px 16px' }}>
+            <Card sx={{ borderRadius: 5, background: '#5A53DD', height: '100%' }}>
+              <CardContent
+                className="live-stream-stats"
+                style={{
+                  padding: '0px 16px 0px 16px',
+                  display: 'flex',
+                  height: '100%',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
                 <Grid
                   container
                   rowSpacing={1}
@@ -455,47 +463,35 @@ const Dashboard = () => {
                   <Grid item xs={12} sm={12} md={6} lg={6}>
                     <Card sx={{ borderRadius: 5 }}>
                       <CardContent className="analytics-card">
-                        <Grid container spacing={1}>
-                          <Grid item xs={12} sm={4} md={4} lg={4}>
-                            <Grid container spacing={1} alignItems={'end'}>
-                              <Grid item>
-                                <Typography className="stream-labels" style={{ paddingTop: 0 }}>
-                                  Live <br /> Mobile <br /> Streams
-                                </Typography>
-                              </Grid>
-                            </Grid>
+                        <Grid container spacing={1} alignItems={'center'}>
+                          <Grid item xs={12} className="mounted-cam-section">
+                            <Typography className="stream-labels" style={{ paddingTop: 0 }}>
+                              Live <br /> Mobile <br /> Streams
+                            </Typography>
                           </Grid>
-                          <Grid item xs={12} sm={4} md={4} lg={4}>
-                            <Grid container spacing={1} alignItems={'end'}>
-                              <Grid item>
-                                <Box className="report-circle">
-                                  {statisticsData?.activeLiveStreams !== undefined
-                                    ? statisticsData?.activeLiveStreams?.length
-                                    : ' '}
-                                  <Typography
-                                    variant="subtitle2"
-                                    gutterBottom
-                                    className="stream-sub-title">
-                                    Number of Streams
-                                  </Typography>
-                                </Box>
-                              </Grid>
-                            </Grid>
-                          </Grid>
-                          <Grid item xs={12} sm={4} md={4} lg={4}>
-                            <Grid container spacing={1} alignItems={'end'}>
-                              <Grid item>
-                                <Box className="report-circle" style={{ borderColor: '#FFAB01' }}>
-                                  {statisticsData?.numberofActiveStreamViewers}
-                                  <Typography
-                                    variant="subtitle2"
-                                    gutterBottom
-                                    className="stream-sub-title">
-                                    Number of Viewers
-                                  </Typography>
-                                </Box>
-                              </Grid>
-                            </Grid>
+                          <Grid item xs={12} className="stats-circle-section">
+                            <Box className="report-circle">
+                              {statisticsData?.activeLiveStreams !== undefined
+                                ? statisticsData?.activeLiveStreams?.length
+                                : ' '}
+                              <Typography
+                                variant="subtitle2"
+                                gutterBottom
+                                className="stream-sub-title">
+                                Number of Streams
+                              </Typography>
+                            </Box>
+                            <Box
+                              className="report-circle number-of-viewers"
+                              style={{ borderColor: '#FFAB01', marginLeft: '15px' }}>
+                              {statisticsData?.numberofActiveStreamViewers}
+                              <Typography
+                                variant="subtitle2"
+                                gutterBottom
+                                className="stream-sub-title">
+                                Number of Viewers
+                              </Typography>
+                            </Box>
                           </Grid>
                         </Grid>
                       </CardContent>
@@ -504,47 +500,35 @@ const Dashboard = () => {
                   <Grid item xs={12} sm={12} md={6} lg={6}>
                     <Card sx={{ borderRadius: 5 }}>
                       <CardContent className="p-10">
-                        <Grid container spacing={1}>
-                          <Grid item xs={12} sm={4} md={4} lg={4}>
-                            <Grid container spacing={1} alignItems={'end'}>
-                              <Grid item>
-                                <Typography className="stream-labels" style={{ paddingTop: 0 }}>
-                                  Live <br /> Mounted <br /> Cameras
-                                </Typography>
-                              </Grid>
-                            </Grid>
+                        <Grid container spacing={1} alignItems={'center'}>
+                          <Grid item xs={12} className="mounted-cam-section">
+                            <Typography className="stream-labels" style={{ paddingTop: 0 }}>
+                              Live <br /> Mounted <br /> Cameras
+                            </Typography>
                           </Grid>
-                          <Grid item xs={12} sm={4} md={4} lg={4}>
-                            <Grid container spacing={1} alignItems={'end'}>
-                              <Grid item>
-                                <Box className="report-circle" style={{ borderColor: '#F755D3' }}>
-                                  {statisticsData?.enrolledStreams !== undefined
-                                    ? statisticsData?.enrolledStreams
-                                    : ' '}
-                                  <Typography
-                                    variant="subtitle2"
-                                    gutterBottom
-                                    className="stream-sub-title">
-                                    Number of Streams
-                                  </Typography>
-                                </Box>
-                              </Grid>
-                            </Grid>
-                          </Grid>
-                          <Grid item xs={12} sm={4} md={4} lg={4}>
-                            <Grid container spacing={1} alignItems={'end'}>
-                              <Grid item>
-                                <Box className="report-circle" style={{ borderColor: '#01A4FF' }}>
-                                  {statisticsData?.numberofMountedCameraViewers}
-                                  <Typography
-                                    variant="subtitle2"
-                                    gutterBottom
-                                    className="stream-sub-title">
-                                    Number of Viewers
-                                  </Typography>
-                                </Box>
-                              </Grid>
-                            </Grid>
+                          <Grid item xs={12} className="stats-circle-section">
+                            <Box className="report-circle" style={{ borderColor: '#F755D3' }}>
+                              {statisticsData?.enrolledStreams !== undefined
+                                ? statisticsData?.enrolledStreams
+                                : ' '}
+                              <Typography
+                                variant="subtitle2"
+                                gutterBottom
+                                className="stream-sub-title">
+                                Number of Streams
+                              </Typography>
+                            </Box>
+                            <Box
+                              className="report-circle number-of-viewers"
+                              style={{ borderColor: '#01A4FF', marginLeft: '15px' }}>
+                              {statisticsData?.numberofMountedCameraViewers}
+                              <Typography
+                                variant="subtitle2"
+                                gutterBottom
+                                className="stream-sub-title">
+                                Number of Viewers
+                              </Typography>
+                            </Box>
                           </Grid>
                         </Grid>
                       </CardContent>

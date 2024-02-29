@@ -27,7 +27,7 @@ import logo from '../../assets/app-capital.svg';
 import collapsedLogo from '../../assets/white-logo-collapsed.png';
 import collapseButton from '../../assets/collapse-button.svg';
 import openButton from '../../assets/open-button.svg';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Monitor, Users, Copy, User, Video, Book, Shield, Camera, Film, Code } from 'react-feather';
 import AccountMenu from '../common/accountmenu';
 import { Outlet, useNavigate } from 'react-router-dom';
@@ -46,6 +46,7 @@ import buildingIcon from '../../assets/new-building.svg';
 import searchIcon from '../../assets/search.svg';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import debounce from 'lodash.debounce';
 
 const icon = <RadioButtonUncheckedIcon fontSize="small" />;
 const checkedIcon = <CheckCircleOutlineIcon fontSize="small" style={{ color: '#5A53DD' }} />;
@@ -63,26 +64,11 @@ const Layout = () => {
   const [locations, setLocations] = useState([]);
   const [selectedLocation, setSelectedLocation] = useState([]);
   const [dropdownLoading, setDropdownLoading] = useState(false);
-  // eslint-disable-next-line no-unused-vars
-  const [familiesPayload, setFamiliesPayload] = useState({
-    page: 0,
-    limit: parseInt(process.env.REACT_APP_PAGINATION_LIMIT, 10),
-    searchBy: '',
-    location: 'All',
-    rooms: [],
-    cust_id: localStorage.getItem('cust_id')
-  });
-  const [usersPayload, setUsersPayload] = useState({
-    pageNumber: 0,
-    pageSize: parseInt(process.env.REACT_APP_PAGINATION_LIMIT, 10),
-    searchBy: '',
-    location: 'All',
-    role: 'All',
-    liveStreaming: 'All',
-    cust_id: localStorage.getItem('cust_id')
-  });
-  const [results, setResults] = useState([]);
+  const [familiesResults, setFamiliesResults] = useState([]);
+  const [childrenResults, setChildrenResults] = useState([]);
+  const [usersResults, setUsersResults] = useState([]);
   const [showSearchResults, setShowSearchResults] = useState();
+  const resultsListRef = useRef(null);
 
   const locs = ['Select All'];
   //authCtx?.user?.location?.accessable_locations.forEach((loc) => locs.push(loc));
@@ -152,21 +138,59 @@ const Layout = () => {
     };
   }, []);
 
+  const newHandleChange = debounce((e) => {
+    const searchValue = e.target.value;
+    setShowSearchResults(searchValue);
+    const familyPayload = {
+      page: 0,
+      limit: parseInt(process.env.REACT_APP_PAGINATION_LIMIT, 10),
+      searchBy: searchValue,
+      location: 'All',
+      rooms: [],
+      cust_id: localStorage.getItem('cust_id')
+    };
+
+    const usersPlayload = {
+      pageNumber: 0,
+      pageSize: parseInt(process.env.REACT_APP_PAGINATION_LIMIT, 10),
+      searchBy: searchValue,
+      location: 'All',
+      role: 'All',
+      liveStreaming: 'All',
+      cust_id: localStorage.getItem('cust_id')
+    };
+
+    getFamiliesList(familyPayload);
+    getUsersList(usersPlayload);
+  }, 500);
+
   useEffect(() => {
-    if (showSearchResults) {
-      getFamiliesList();
-      getUsersList();
-    }
-  }, [familiesPayload, usersPayload]);
+    const handleOutsideClick = (event) => {
+      // Check if the click target is outside the results list
+      if (resultsListRef.current && !resultsListRef.current.contains(event.target)) {
+        setShowSearchResults(false); // Close the results list
+      }
+    };
+
+    // Add event listener for clicks on the document
+    document.addEventListener('click', handleOutsideClick);
+
+    // Clean up the event listener when component unmounts
+    return () => {
+      document.removeEventListener('click', handleOutsideClick);
+    };
+  }, []);
 
   // Method to fetch families list
-  const getFamiliesList = () => {
+  const getFamiliesList = (familiesPayload) => {
     setIsLoading(true);
     API.get('family', { params: familiesPayload }).then((response) => {
       if (response.status === 200) {
         console.log('familiesPayload.searchBy', familiesPayload.searchBy);
         const famResults = response.data.Data.familyArray;
-        setResults(famResults);
+        const childrenResults = response.data.Data.familyArray.map((item) => item.children);
+        setFamiliesResults(famResults);
+        setChildrenResults(childrenResults.flatMap((subArray) => subArray));
       } else {
         errorMessageHandler(
           enqueueSnackbar,
@@ -180,14 +204,12 @@ const Layout = () => {
   };
 
   // Method to fetch user list for table
-  const getUsersList = () => {
+  const getUsersList = (usersPlayload) => {
     setIsLoading(true);
-    API.get('users/all', { params: usersPayload }).then((response) => {
+    API.get('users/all', { params: usersPlayload }).then((response) => {
       if (response.status === 200) {
         const userResults = response.data.Data.users;
-        // setUsersList(response.data.Data.users);
-        // setTotalUsers(response.data.Data.count);
-        setResults([...results, ...userResults]);
+        setUsersResults(userResults);
       } else {
         errorMessageHandler(
           enqueueSnackbar,
@@ -322,27 +344,13 @@ const Layout = () => {
     }
   };
 
-  const handleChange = (value) => {
-    setShowSearchResults(value.target.value);
-    setFamiliesPayload((prevPayload) => ({
-      ...prevPayload,
-      searchBy: event.target.value,
-      page: 0
-    }));
-    setUsersPayload((prevPayload) => ({
-      ...prevPayload,
-      pageNumber: 0,
-      searchBy: event.target.value
-    }));
-  };
-
   const handleResultClick = (value) => {
     if (value.primary) {
       navigate('/families', { state: { data: value.primary?.first_name } });
-      setResults([]);
+      setFamiliesResults([]);
     } else {
       navigate('/users', { state: { data: value?.first_name } });
-      setResults([]);
+      setUsersResults([]);
     }
   };
 
@@ -514,7 +522,7 @@ const Layout = () => {
                           padding: '16px 24px',
                           width: '70%'
                         }}
-                        onChange={(e) => handleChange(e)}
+                        onChange={(e) => newHandleChange(e)}
                         InputProps={{
                           disableUnderline: true,
                           startAdornment: (
@@ -526,18 +534,70 @@ const Layout = () => {
                       />
                       {showSearchResults && (
                         <Box className="results-list">
-                          {results.map((result) => {
+                          {familiesResults.map((result) => {
                             return (
-                              <Box
+                              <Stack
+                                direction={'row'}
+                                justifyContent={'space-between'}
+                                alignItems={'center'}
+                                sx={{
+                                  ':hover': { backgroundColor: '#eae9ff80' }
+                                }}
                                 key={result?.user_id || result?.primary?.family_member_id}
                                 onClick={() => handleResultClick(result)}>
-                                <Box className="search-result">
-                                  {result?.first_name ||
-                                    result?.primary?.first_name ||
-                                    result?.children?.map((item) => item.first_name) ||
-                                    result?.secondary?.map((item) => item.first_name)}
+                                <Box ref={resultsListRef} className="search-result">
+                                  {result?.primary?.first_name + ' ' + result?.primary?.last_name}
                                 </Box>
-                              </Box>
+                                <Box>
+                                  <Chip
+                                    variant="outlined"
+                                    label={result?.role || result?.primary?.role}
+                                  />
+                                </Box>
+                              </Stack>
+                            );
+                          })}
+                          {usersResults.map((result) => {
+                            return (
+                              <Stack
+                                direction={'row'}
+                                justifyContent={'space-between'}
+                                alignItems={'center'}
+                                sx={{
+                                  ':hover': { backgroundColor: '#eae9ff80' }
+                                }}
+                                key={result?.user_id}
+                                onClick={() => handleResultClick(result)}>
+                                <Box ref={resultsListRef} className="search-result">
+                                  {result?.first_name + ' ' + result?.last_name}
+                                </Box>
+                                <Box>
+                                  <Chip
+                                    variant="outlined"
+                                    label={result?.role || result?.primary?.role}
+                                  />
+                                </Box>
+                              </Stack>
+                            );
+                          })}
+                          {childrenResults.map((result) => {
+                            return (
+                              <Stack
+                                direction={'row'}
+                                justifyContent={'space-between'}
+                                alignItems={'center'}
+                                sx={{
+                                  ':hover': { backgroundColor: '#eae9ff80' }
+                                }}
+                                key={result?.user_id}
+                                onClick={() => handleResultClick(result)}>
+                                <Box ref={resultsListRef} className="search-result">
+                                  {result?.first_name + ' ' + result?.last_name}
+                                </Box>
+                                <Box>
+                                  <Chip variant="outlined" label={'Child'} />
+                                </Box>
+                              </Stack>
                             );
                           })}
                         </Box>

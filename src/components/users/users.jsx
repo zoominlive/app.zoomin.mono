@@ -58,7 +58,7 @@ const Users = () => {
   const [usersPayload, setUsersPayload] = useState({
     pageNumber: 0,
     pageSize: parseInt(process.env.REACT_APP_PAGINATION_LIMIT, 10),
-    searchBy: '',
+    searchBy: receivedData ? receivedData : '',
     location: 'All',
     role: 'All',
     liveStreaming: 'All',
@@ -68,9 +68,6 @@ const Users = () => {
   useEffect(() => {
     layoutCtx.setActive(4);
     layoutCtx.setBreadcrumb(['Users', 'Manage Access and Privileges of users ']);
-    if (receivedData) {
-      setUsersPayload({ ...usersPayload, searchBy: receivedData });
-    }
     return () => {
       authCtx.setPreviosPagePath(window.location.pathname);
     };
