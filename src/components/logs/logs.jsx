@@ -47,6 +47,7 @@ import Logger from '../../utils/logger';
 import { DesktopDateRangePicker } from '@mui/x-date-pickers-pro';
 import { LocalizationProvider } from '@mui/x-date-pickers-pro';
 import { AdapterDayjs } from '@mui/x-date-pickers-pro/AdapterDayjs';
+import _ from 'lodash';
 
 const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
 const checkedIcon = <CheckBoxIcon fontSize="small" />;
@@ -221,7 +222,7 @@ const Logs = () => {
   const loginWatchActions = ['Watch', 'Login'];
   const functions = [
     { id: 'Profile_Photo', name: 'Profile Photo' },
-    { id: 'Users', name: 'Users' },
+    { id: 'Staff', name: 'Staff' },
     { id: 'Primary_Family', name: 'Family' },
     { id: 'Watch_Stream', name: 'Mounted Camera' },
     { id: 'Live_Stream', name: 'Live Stream' },
@@ -556,6 +557,10 @@ const Logs = () => {
         usersToAdd = usersToAdd?.map((user) => user.user_id);
       }
       console.log('logsPayload', logsPayload);
+      const newFunctions = _.map(logsPayload.functions, (item) =>
+        item === 'Staff' ? 'Users' : item
+      );
+      logsPayload.functions = newFunctions;
       API.post('logs/', {
         ...logsPayload,
         pageNumber,
@@ -1298,7 +1303,7 @@ const Logs = () => {
                       <TableCell style={{ minWidth: '100px' }} align="left">
                         Time
                       </TableCell>
-                      <TableCell align="left">User</TableCell>
+                      <TableCell align="left">Staff</TableCell>
                       <TableCell align="left">Event</TableCell>
                       <TableCell align="left">Function</TableCell>
                       <TableCell align="left">Event Description</TableCell>

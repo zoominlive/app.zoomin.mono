@@ -602,7 +602,7 @@ const Dashboard = () => {
                           alignItems={'center'}>
                           <img src={Users} alt="Users" width={32} height={32} />
                           <Stack direction={'column'} textAlign={'center'}>
-                            <Box component={'span'}>Users</Box>
+                            <Box component={'span'}>Staff</Box>
                             {statisticsData?.familyMembers !== undefined
                               ? statisticsData?.familyMembers
                               : ' '}

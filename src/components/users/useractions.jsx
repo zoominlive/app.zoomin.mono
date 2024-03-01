@@ -54,13 +54,13 @@ const UserActions = (props) => {
           <ListItemIcon>
             <EditIcon />
           </ListItemIcon>
-          <ListItemText>Edit User</ListItemText>
+          <ListItemText>Edit Staff</ListItemText>
         </MenuItem>
         <MenuItem onClick={handleUserDelete}>
           <ListItemIcon>
             <DeleteOutlineIcon />
           </ListItemIcon>
-          <ListItemText>Delete User</ListItemText>
+          <ListItemText>Delete Staff</ListItemText>
         </MenuItem>
       </Menu>
     </Box>

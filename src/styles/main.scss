@@ -350,7 +350,7 @@
   // background: #cae9ff;
   background: #eae9ff;
   transition: all 0.5s ease;
-
+  position: relative;
   &.open {
     width: calc(100% - 260px);
     margin-left: 260px;
@@ -2557,15 +2557,17 @@
 }
 
 .results-list {
-  width: 76%;
+  width: 42%;
   background-color: white;
   display: flex;
   flex-direction: column;
-  box-shadow: 0px 0px 8px #ddd;
+  box-shadow: 0px 8px 20px 10px rgba(0, 0, 0, 0.1882352941);
   border-radius: 10px;
   margin-top: 1rem;
   max-height: 300px;
   overflow-y: auto;
+  position: absolute;
+  z-index: 1;
 }
 
 .search-result {

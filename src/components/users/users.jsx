@@ -67,7 +67,7 @@ const Users = () => {
 
   useEffect(() => {
     layoutCtx.setActive(4);
-    layoutCtx.setBreadcrumb(['Users', 'Manage Access and Privileges of users ']);
+    layoutCtx.setBreadcrumb(['Staff', 'Manage Access and Privileges of staff members ']);
     return () => {
       authCtx.setPreviosPagePath(window.location.pathname);
     };
@@ -206,7 +206,7 @@ const Users = () => {
                       <InputLabel id="search">Search</InputLabel>
                       <TextField
                         labelId="search"
-                        placeholder="User Name, Email, Location"
+                        placeholder="Staff Name, Email, Location"
                         onChange={debouncedResults}
                         InputProps={{
                           startAdornment: (
@@ -247,7 +247,7 @@ const Users = () => {
                           <MenuItem value={'All'}>All</MenuItem>
                           <MenuItem value={'Admin'}>Admin</MenuItem>
                           <MenuItem value={'Teacher'}>Teacher</MenuItem>
-                          <MenuItem value={'User'}>User</MenuItem>
+                          <MenuItem value={'User'}>Staff</MenuItem>
                         </Select>
                       </FormControl>
                     </Grid>
@@ -280,7 +280,7 @@ const Users = () => {
                     startIcon={<Plus />}
                     onClick={() => setIsUserFormDialogOpen(true)}>
                     {' '}
-                    Add User
+                    Add Staff
                   </Button>
                 </Box>
               </Grid>
@@ -296,7 +296,7 @@ const Users = () => {
               <Table sx={{ minWidth: 650 }} aria-label="simple table">
                 <TableHead>
                   <TableRow>
-                    <TableCell style={{ minWidth: '150px' }}>User</TableCell>
+                    <TableCell style={{ minWidth: '150px' }}>Staff</TableCell>
                     <TableCell style={{ minWidth: '100px' }} align="left">
                       Location
                     </TableCell>
@@ -343,7 +343,9 @@ const Users = () => {
                             </Stack>
                           </TableCell>
                           <TableCell align="left">{row.email}</TableCell>
-                          <TableCell align="left">{row.role}</TableCell>
+                          <TableCell align="left">
+                            {row.role === 'User' ? 'Staff' : row.role}
+                          </TableCell>
                           <TableCell align="left">
                             {row.stream_live_license ? 'Yes' : 'No'}
                           </TableCell>

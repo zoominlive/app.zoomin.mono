@@ -280,7 +280,7 @@ const UserForm = (props) => {
   return (
     <Dialog open={props.open} onClose={handleClose} fullWidth className="add-user-drawer">
       <DialogTitle sx={{ paddingTop: 3.5 }}>
-        {props.user ? 'Edit User' : 'Add User'}
+        {props.user ? 'Edit Staff' : 'Add Staff'}
         <DialogContentText></DialogContentText>
         <IconButton
           aria-label="close"
@@ -423,7 +423,7 @@ const UserForm = (props) => {
                             setSelectedRole(event.target.value);
                           }}>
                           <MenuItem value={'Teacher'}>Teacher</MenuItem>
-                          <MenuItem value={'User'}>User</MenuItem>
+                          <MenuItem value={'User'}>Staff</MenuItem>
                           <MenuItem value={'Admin'}>Admin</MenuItem>
                         </Select>
                         {touched.role && Boolean(errors.role) && (

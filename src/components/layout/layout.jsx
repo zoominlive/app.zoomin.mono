@@ -19,7 +19,8 @@ import {
   InputAdornment,
   CircularProgress,
   //InputLabel,
-  Grid
+  Grid,
+  Divider
 } from '@mui/material';
 
 import logo from '../../assets/app-capital.svg';
@@ -515,7 +516,7 @@ const Layout = () => {
                       <TextField
                         variant="standard"
                         labelId="search"
-                        placeholder={'Search..'}
+                        placeholder={'Find Staff, Family, User'}
                         sx={{
                           backgroundColor: '#FFFFFF',
                           borderRadius: '120px',
@@ -534,6 +535,14 @@ const Layout = () => {
                       />
                       {showSearchResults && (
                         <Box className="results-list">
+                          <Stack
+                            className="search-result"
+                            direction={'row'}
+                            justifyContent={'space-between'}>
+                            <Typography>Name</Typography>
+                            <Typography>Role</Typography>
+                          </Stack>
+                          <Divider />
                           {familiesResults.map((result) => {
                             return (
                               <Stack

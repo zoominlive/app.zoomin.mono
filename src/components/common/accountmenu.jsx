@@ -64,7 +64,7 @@ const AccountMenu = (props) => {
               {authCtx?.user?.first_name} {authCtx?.user?.last_name}
             </Typography>
             <Typography component={'p'} className="role">
-              {authCtx?.user?.role}
+              {authCtx?.user?.role === 'User' && 'Director'}
             </Typography>
           </Stack>
         </Stack>
