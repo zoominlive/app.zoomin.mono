@@ -516,7 +516,7 @@ const Layout = () => {
                       <TextField
                         variant="standard"
                         labelId="search"
-                        placeholder={'Find Staff, Family, User'}
+                        placeholder={'Find Children, Families or Staff'}
                         sx={{
                           backgroundColor: '#FFFFFF',
                           borderRadius: '120px',
@@ -558,10 +558,7 @@ const Layout = () => {
                                   {result?.primary?.first_name + ' ' + result?.primary?.last_name}
                                 </Box>
                                 <Box>
-                                  <Chip
-                                    variant="outlined"
-                                    label={result?.role || result?.primary?.role}
-                                  />
+                                  <Chip variant="outlined" label={'Family'} />
                                 </Box>
                               </Stack>
                             );
@@ -583,7 +580,7 @@ const Layout = () => {
                                 <Box>
                                   <Chip
                                     variant="outlined"
-                                    label={result?.role || result?.primary?.role}
+                                    label={result?.role === 'User' ? 'Director' : result?.role}
                                   />
                                 </Box>
                               </Stack>

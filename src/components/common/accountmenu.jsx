@@ -64,11 +64,11 @@ const AccountMenu = (props) => {
               {authCtx?.user?.first_name} {authCtx?.user?.last_name}
             </Typography>
             <Typography component={'p'} className="role">
-              {authCtx?.user?.role === 'User' && 'Director'}
+              {authCtx?.user?.role === 'User' ? 'Director' : authCtx?.user?.role}
             </Typography>
           </Stack>
         </Stack>
-        <IconButton onClick={handleClick} sx={{ ml: 1 }}>
+        <IconButton onClick={handleClick} sx={{ ml: 1, mb: 3 }}>
           {/* <KeyboardArrowDownIcon style={{ ml: 3 }} onClick={handleClick} /> */}
           <KeyboardArrowDownIcon />
         </IconButton>
