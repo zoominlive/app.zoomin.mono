@@ -8,8 +8,10 @@ import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 import VolumeOffIcon from '@mui/icons-material/VolumeOff';
 import React from 'react';
 import PropTypes from 'prop-types';
+import { useLocation } from 'react-router-dom';
 
 const PlayerControls = (props) => {
+  const location = useLocation();
   return (
     <Box className="controls-wrapper">
       <Grid container spacing={2} p={2}>
@@ -37,7 +39,12 @@ const PlayerControls = (props) => {
             {props.fullscreen ? <FullscreenExitRoundedIcon /> : <FullscreenRoundedIcon />}
           </IconButton>
         </Grid>
-        {props.streamRunning === false && (
+        {props.streamRunning === false && location.pathname === '/recordings' && (
+          <Grid item md={12} sm={12}>
+            <Slider min={0} max={100} onChange={props.onSeek} value={props.played * 100} />
+          </Grid>
+        )}
+        {location?.state?.streamUrl && location.pathname === '/watch-stream' && (
           <Grid item md={12} sm={12}>
             <Slider min={0} max={100} onChange={props.onSeek} value={props.played * 100} />
           </Grid>
