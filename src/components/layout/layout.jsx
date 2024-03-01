@@ -346,8 +346,11 @@ const Layout = () => {
   };
 
   const handleResultClick = (value) => {
-    if (value.primary) {
+    if (value?.primary) {
       navigate('/families', { state: { data: value.primary?.first_name } });
+      setFamiliesResults([]);
+    } else if (value?.child_id) {
+      navigate('/families', { state: { data: value?.first_name } });
       setFamiliesResults([]);
     } else {
       navigate('/users', { state: { data: value?.first_name } });
