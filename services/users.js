@@ -380,6 +380,33 @@ module.exports = {
     return { users: users.rows, count: users.count };
   },
 
+  getAllUserIds: async (custId, location = ["Select All"], t) => {
+    const { Users } = await connectToDatabase();
+    let userIds = await Users.findAll(
+      {
+        where: { cust_id: custId },
+        attributes: [[Sequelize.fn('DISTINCT', Sequelize.col('user_id')) ,'user_id'], "location"],
+        group: ["user_id"], //user later if required
+        raw: true,
+      },
+      { transaction: t }
+    );
+
+    if (!location.includes("Select All")) {
+      let filterResult = [];
+      userIds.map((i) => {
+        if (
+          i.location?.accessable_locations?.every((it) => location.includes(it))
+        ) {
+          filterResult.push(i);
+        }
+      });
+      userIds = filterResult;
+    }
+
+    return userIds;
+  },
+
   // check if user already exist for given email
   checkEmailExist: async (email, t) => {
     const { Users, Family } = await connectToDatabase();

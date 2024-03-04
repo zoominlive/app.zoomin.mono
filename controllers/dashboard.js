@@ -152,8 +152,9 @@ module.exports = {
       const numberofActiveStreamViewers = activeLiveStreams.length > 0 ? await liveStreamServices.getAllActiveStreamViewers(activeLiveStreams.flatMap(i => i.stream_id), t) : 0;
       //const numberofActiveStreamViewers = await liveStreamServices.getAllActiveStreamViewers();
       const childrens = await childrenServices.getAllChildren(custId, req?.query?.location,t);
-      const familyMembers = await familyServices.getAllFamilyMembers(custId, req?.query?.location, t);
+      // const familyMembers = await familyServices.getAllFamilyMembers(custId, req?.query?.location, t);
       const families = await familyServices.getAllFamilyIds(custId, req?.query?.location,t);
+      const users = await userServices.getAllUserIds(custId, req?.query?.location,t);
       let recentLiveStreams = await liveStreamServices.getRecentStreams(custId, req?.query?.location, t);
       if(recentLiveStreams.length > 0){
 
@@ -178,7 +179,8 @@ module.exports = {
           activeLiveStreams: activeLiveStreams ? activeLiveStreams : [],
           recentLiveStreams: recentLiveStreams ? recentLiveStreams : [],
           childrens: childrens ? childrens.length : 0,
-          familyMembers: familyMembers ? familyMembers.length : 0,
+          // familyMembers: familyMembers ? familyMembers.length : 0,
+          users: users ? users.length : 0,
           families: families ? families.length : 0,
           SEAMembers: SEAMembers ? SEAMembers : 0,
           topViewers: topViewers ? topViewers : "",
