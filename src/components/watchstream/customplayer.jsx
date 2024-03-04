@@ -8,8 +8,8 @@ import PropTypes from 'prop-types';
 import Loader from '../common/loader';
 import { useContext } from 'react';
 import AuthContext from '../../context/authcontext';
-// import _ from 'lodash';
-import VideocamOffIcon from '@mui/icons-material/VideocamOff';
+import _ from 'lodash';
+// import VideocamOffIcon from '@mui/icons-material/VideocamOff';
 
 const CustomPlayer = (props) => {
   const authCtx = useContext(AuthContext);
@@ -31,7 +31,7 @@ const CustomPlayer = (props) => {
     seeking: false
   });
   const { played, seeking } = videoState;
-  const [streamStatus, setStreamStatus] = useState(null);
+  // const [streamStatus, setStreamStatus] = useState(null);
 
   useEffect(() => {
     function exitHandler() {
@@ -75,29 +75,31 @@ const CustomPlayer = (props) => {
     }
   };
 
-  useEffect(() => {
-    const checkStreamStatus = async () => {
-      try {
-        const response = await fetch(props.streamUri);
-        if (response.status === 200) {
-          setStreamStatus('available');
-        } else if (response.status === 404) {
-          setStreamStatus('notFound');
-        } else {
-          setStreamStatus('error');
-        }
-      } catch (error) {
-        console.error('Error checking stream status:', error);
-        setStreamStatus('error');
-      }
-    };
+  // useEffect(() => {
+  //   const checkStreamStatus = async () => {
+  //     try {
+  //       console.log('props.streamUri', props.streamUri);
+  //       const response = await fetch(props.streamUri);
+  //       console.log('res==>', response);
+  //       if (response.status === 200) {
+  //         setStreamStatus('available');
+  //       } else if (response.status === 404) {
+  //         setStreamStatus('notFound');
+  //       } else {
+  //         setStreamStatus('error');
+  //       }
+  //     } catch (error) {
+  //       console.error('Error checking stream status:', error);
+  //       setStreamStatus('error');
+  //     }
+  //   };
 
-    if (props.streamUri) {
-      checkStreamStatus();
-    } else {
-      setStreamStatus(null); // Reset stream status if no URI provided
-    }
-  }, [props.streamUri]);
+  //   if (props.streamUri) {
+  //     checkStreamStatus();
+  //   } else {
+  //     setStreamStatus(null); // Reset stream status if no URI provided
+  //   }
+  // }, [props.streamUri]);
 
   const handleFullscreenToggle = () => {
     screenfull.toggle(playerContainerRef.current);
@@ -117,7 +119,7 @@ const CustomPlayer = (props) => {
 
   return (
     <>
-      {streamStatus === 'available' ? (
+      {!_.isEmpty(url) && (
         <Box
           className={
             location.pathname === '/recordings'
@@ -214,23 +216,6 @@ const CustomPlayer = (props) => {
             onSeek={seekHandler}
             streamRunning={props.streamRunning}
           />
-        </Box>
-      ) : (
-        <Box
-          className={
-            location.pathname === '/recordings'
-              ? 'video-player-wrapper-recordings-page'
-              : location.pathname === '/watch-stream'
-              ? 'video-player-wrapper-watch-stream-page'
-              : 'video-player-wrapper'
-          }
-          sx={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            backgroundColor: '#000000'
-          }}>
-          <VideocamOffIcon sx={{ fontSize: '80px' }} />
         </Box>
       )}
     </>
