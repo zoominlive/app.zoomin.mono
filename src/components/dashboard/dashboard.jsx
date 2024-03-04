@@ -603,9 +603,7 @@ const Dashboard = () => {
                           <img src={Users} alt="Users" width={32} height={32} />
                           <Stack direction={'column'} textAlign={'center'}>
                             <Box component={'span'}>Staff</Box>
-                            {statisticsData?.familyMembers !== undefined
-                              ? statisticsData?.familyMembers
-                              : ' '}
+                            {statisticsData?.users !== undefined ? statisticsData?.users : ' '}
                           </Stack>
                         </Stack>
                       </Box>
