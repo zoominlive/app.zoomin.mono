@@ -215,6 +215,7 @@ const CustomPlayer = (props) => {
             played={played}
             onSeek={seekHandler}
             streamRunning={props.streamRunning}
+            streamUrl={props?.streamUri}
           />
         </Box>
       )}
