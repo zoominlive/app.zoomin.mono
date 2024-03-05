@@ -183,7 +183,7 @@ let result = await sequelize
 return result[0].total_start_only_viewers;
   },
 
-  getRecordedStreams: async(cust_id, from =  moment().format('YYYY-MM-DD 00:00'), to =  moment(to).format('YYYY-MM-DD 23:59'), location='All', rooms="All", live = true, vod = true, t)=> {
+  getRecordedStreams: async(cust_id, from, to, location='All', rooms="All", live = true, vod = true, sortBy = 'ASC', pageNumber, pageSize, pageCount, t)=> {
     const { LiveStreams, Room, LiveStreamCameras } = await connectToDatabase();
     let where_obj = location === "All" ? {} : {location: location}
     let status_obj = live == "true" && vod == "true" ? {}: {stream_running: live == "true" ? true : false}
@@ -192,12 +192,18 @@ return result[0].total_start_only_viewers;
       where_obj = {...where_obj, room_name: rooms}
     }
     
-    let recordedStreams = await LiveStreams.findAll(
+    let recordedStreams = await LiveStreams.findAndCountAll(
       { where: { cust_id: cust_id, ...status_obj,
       stream_start_time: {
-        [Sequelize.Op.between]: [from, to],
+        [Sequelize.Op.between]: [
+          moment(from).startOf('day').toISOString(),
+          moment(to).endOf('day').toISOString()
+        ],
       },
      }, 
+     order: [
+        ['created_at', sortBy],
+      ],
        attributes:["stream_id", "stream_name","stream_running", "s3_url", "created_at"],
       include: [{
         model: Room,
@@ -208,9 +214,12 @@ return result[0].total_start_only_viewers;
             model: LiveStreamCameras,
           }
         ]
-      }], },
+      }], 
+      limit: parseInt(pageSize),
+      offset: parseInt(pageNumber * pageSize),
+    },
       { transaction: t }
     );
-    return recordedStreams;
+    return {data: recordedStreams.rows, count: recordedStreams.count};
   }
 };
