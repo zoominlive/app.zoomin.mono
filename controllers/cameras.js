@@ -1,5 +1,5 @@
 const cameraServices = require('../services/cameras');
-const { startEncodingStream, deleteEncodingStream } = require('../lib/rtsp-stream');
+const { startEncodingStream, deleteEncodingStream, startEncodingStreamToFixCam, stopEncodingStream } = require('../lib/rtsp-stream');
 const _ = require('lodash');
 const customerServices = require('../services/customers');
 const logServices = require('../services/logs');
@@ -186,6 +186,66 @@ module.exports = {
         IsSuccess: true,
         Data: cameraUpdated,
         Message: CONSTANTS.CAMERA_UPDATED
+      });
+
+      next();
+    } catch (error) {
+      await t.rollback();
+      res.status(500).json({
+        IsSuccess: false,
+        error_log: error,
+        Message: CONSTANTS.INTERNAL_SERVER_ERROR
+      });
+      next(error);
+    } finally {
+      let logObj = {
+        user_id: req?.user?.user_id ? req?.user?.user_id : 'Not Found',
+        function: 'Camera',
+        function_type: 'Edit',
+        request: req.body
+      };
+      try {
+        await logServices.addChangeLog(logObj);
+      } catch (e) {
+        console.log(e);
+      }
+    }
+  },
+
+  // fix camera
+  fixCamera: async (req, res, next) => {
+    const t = await sequelize.transaction();
+    try {
+      const params = req.body;
+      const token = req.userToken;
+      // console.log('params-->', params);
+      const camEncodedStopped = await stopEncodingStream(
+        params.streamId,
+        params.wait,
+        token,
+        req.user.cust_id,
+        t
+      );
+      let camera;
+      if (camEncodedStopped) {
+        const token = req.userToken;
+        const transcodedDetails = await startEncodingStreamToFixCam(
+          params.cam_uri,
+          token,
+          req.user.cust_id,
+          params.streamId
+        );
+        // console.log('transcodedDetails-->', transcodedDetails);
+        params.stream_uri = transcodedDetails?.data ? transcodedDetails.data?.uri : '';
+        params.stream_uuid = transcodedDetails?.data ? transcodedDetails.data?.id : '';
+        params.cam_alias = transcodedDetails?.data ? transcodedDetails.data?.alias : '';
+        camera = await cameraServices.editCamera(params.cam_id, params, t);
+      }
+      await t.commit();
+      res.status(200).json({
+        IsSuccess: true,
+        Data: camera,
+        Message: CONSTANTS.CAMERA_FIXED
       });
 
       next();
