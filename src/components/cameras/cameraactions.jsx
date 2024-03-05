@@ -4,6 +4,7 @@ import MoreVertIcon from '@mui/icons-material/MoreVert';
 import PropTypes from 'prop-types';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import BuildOutlinedIcon from '@mui/icons-material/BuildOutlined';
 
 const CameraActions = (props) => {
   const [anchorEl, setAnchorEl] = React.useState(null);
@@ -37,6 +38,13 @@ const CameraActions = (props) => {
     handleClose(event);
   };
 
+  // Method to fix camera issue
+  const handleFixIssue = (event) => {
+    props.setCamera({ ...props.camera });
+    props.setIsFixIssueDialogOpen(true);
+    handleClose(event);
+  };
+
   return (
     <Box>
       <IconButton aria-controls="alpha-menu" aria-haspopup="true" onClick={handleClick}>
@@ -62,6 +70,12 @@ const CameraActions = (props) => {
           </ListItemIcon>
           <ListItemText>Delete Camera</ListItemText>
         </MenuItem>
+        <MenuItem onClick={handleFixIssue}>
+          <ListItemIcon>
+            <BuildOutlinedIcon />
+          </ListItemIcon>
+          <ListItemText>Fix Issue</ListItemText>
+        </MenuItem>
       </Menu>
     </Box>
   );
@@ -73,5 +87,6 @@ CameraActions.propTypes = {
   camera: PropTypes.object,
   setCamera: PropTypes.func,
   setIsCameraFormDialogOpen: PropTypes.func,
-  setIsDeleteDialogOpen: PropTypes.func
+  setIsDeleteDialogOpen: PropTypes.func,
+  setIsFixIssueDialogOpen: PropTypes.func
 };
