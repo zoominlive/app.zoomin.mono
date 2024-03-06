@@ -22,8 +22,8 @@ module.exports = {
       //element.stream_uri = `${cam?.stream_uri}?uid=${req.user?.family_member_id || req.user?.user_id}&sid=${cam?.stream_uri.split('/') [cam?.stream_uri.split('/').length - 1].split('.')[0]}&uuid=${uuidv4()}`
     // });
 
-     if(recordedStreams.length > 0){
-      recordedStreams = await Promise.all(recordedStreams.map(async item => {
+     if(recordedStreams.data.length > 0){
+      recordedStreams.data = await Promise.all(recordedStreams.data.map(async item => {
         const presigned_url = !item?.dataValues?.stream_running && item?.dataValues?.s3_url ? await s3BucketImageUploader.getPresignedUrl(item?.dataValues?.s3_url) : ""
         let newDataValue = item.dataValues;
         newDataValue.presigned_url = presigned_url;
