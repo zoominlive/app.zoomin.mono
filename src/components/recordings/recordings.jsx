@@ -160,7 +160,7 @@ const Recordings = () => {
   };
   const handlePageChange = (_, newPage) => {
     setRecordingsPayload((prevPayload) => ({ ...prevPayload, pageNumber: newPage }));
-    getRecordingData();
+    // getRecordingData();
   };
 
   // Method to change the row per page in table
@@ -169,7 +169,7 @@ const Recordings = () => {
       ...prevPayload,
       pageSize: parseInt(event.target.value, 10)
     }));
-    getRecordingData();
+    // getRecordingData();
   };
 
   const Row = ({ row }) => {
