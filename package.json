@@ -32,6 +32,7 @@
   },
   "devDependencies": {
     "eslint": "^8.23.1",
+    "graceful-fs": "^4.2.11",
     "nodemon": "^2.0.20",
     "sequelize-cli": "^6.5.2",
     "serverless-offline": "^10.1.0",
