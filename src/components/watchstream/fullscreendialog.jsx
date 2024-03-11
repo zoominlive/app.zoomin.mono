@@ -38,7 +38,7 @@ const FullScreenDialog = (props) => {
         <Grid
           container
           alignContent={'center'}
-          spacing={props.isFullScreenDialogOpen ? 0 : 2}
+          spacing={props.isFullScreenDialogOpen ? 0 : '5px'}
           sx={{ border: props.isFullScreenDialogOpen ? '' : '16px solid white', height: '100vh' }}>
           {props.selectedCameras?.map((value, index) => (
             <Grid key={index} item md={6} sm={12}>
@@ -63,7 +63,7 @@ const FullScreenDialog = (props) => {
           <Grid
             container
             alignContent={'center'}
-            spacing={props.isFullScreenDialogOpen ? 0 : 2}
+            spacing={props.isFullScreenDialogOpen ? 0 : '4px'}
             sx={{
               border: props.isFullScreenDialogOpen ? '' : '16px solid white',
               height: '100vh'
@@ -91,7 +91,7 @@ const FullScreenDialog = (props) => {
           <Grid
             container
             alignContent={'center'}
-            spacing={props.isFullScreenDialogOpen ? 0 : 2}
+            spacing={props.isFullScreenDialogOpen ? 0 : '3px'}
             sx={{
               border: props.isFullScreenDialogOpen ? '16px solid black' : '16px solid white',
               height: '100vh'
