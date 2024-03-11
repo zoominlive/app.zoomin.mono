@@ -34,6 +34,8 @@ module.exports = {
       attributes: [
         "rv_id",
         "recent_user_id",
+        "lat", 
+        "long",
         [sequelize.literal('MAX(requested_at)'), 'latest_requested_at'],
       ],
       order:[["latest_requested_at", "DESC"]],
