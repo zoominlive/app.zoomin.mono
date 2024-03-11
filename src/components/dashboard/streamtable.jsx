@@ -4,8 +4,8 @@ import PropTypes from 'prop-types';
 import moment from 'moment';
 import { Video } from 'react-feather';
 import { Link } from 'react-router-dom';
-import NoDataDiv from '../common/nodatadiv';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import NoLiveStreamDiv from '../common/nolivestreams';
 
 export default function StreamTable({ rows, columns, title, isLoading }) {
   return (
@@ -91,7 +91,7 @@ export default function StreamTable({ rows, columns, title, isLoading }) {
           </Box>
         ) : !isLoading ? (
           <Stack alignItems="center" justifyContent="center" sx={{ paddingTop: 2 }}>
-            <NoDataDiv />
+            <NoLiveStreamDiv />
           </Stack>
         ) : null}
       </Box>

@@ -31,7 +31,13 @@ import CloseIcon from '@mui/icons-material/Close';
 
 const validationSchema = yup.object({
   cam_name: yup.string('Enter camera name').required('Camera name is required'),
-  cam_uri: yup.string('Enter camera url').required('URL is required'),
+  cam_uri: yup
+    .string('Enter camera url')
+    .matches(
+      /^(rtsp:\/\/)(\w+:\S+@)?(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})(:\d+)?(\/\S*)*$/,
+      'Invalid RTSP URL'
+    )
+    .required('URL is required'),
   description: yup.string('Enter camera description').required('Description is required'),
   location: yup.string('Select Location').required('Location is required')
 });

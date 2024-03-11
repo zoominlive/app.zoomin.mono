@@ -67,7 +67,8 @@ export default function StreamTable({ rows, columns, title, isLoading }) {
                             location: row?.room?.location,
                             camName: row?.room?.cam_name,
                             camId: row?.room?.cam_id,
-                            streamUrl: row?.room?.stream_uri
+                            streamUrl:
+                              row?.presigned_url || row?.room?.live_stream_cameras[0]?.stream_uri
                           }}>
                           <Video />
                         </Link>

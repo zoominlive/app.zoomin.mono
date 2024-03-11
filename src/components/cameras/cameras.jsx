@@ -40,11 +40,13 @@ import SearchIcon from '@mui/icons-material/Search';
 // import NewDeleteDialog from '../common/newdeletedialog';
 import DeleteCamDialog from './deletecamdialog';
 import LinerLoader from '../common/linearLoader';
+import FixIssueDialog from './fixissuedialog';
 const Cameras = () => {
   const layoutCtx = useContext(LayoutContext);
   const authCtx = useContext(AuthContext);
   const { enqueueSnackbar } = useSnackbar();
   const [isCameraFormDialogOpen, setIsCameraFormDialogOpen] = useState(false);
+  const [isFixIssueDialogOpen, setIsFixIssueDialogOpen] = useState(false);
   const [isCameraDeleteDialogOpen, setIsCameraDeleteDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -97,7 +99,7 @@ const Cameras = () => {
     });
   };
 
-  // Method to delete user
+  // Method to delete camera
   const handleCameraDelete = (wait = false) => {
     setDeleteLoading(true);
     API.delete('cams/delete', {
@@ -119,6 +121,34 @@ const Cameras = () => {
       setCamera();
       setDeleteLoading(false);
       setIsCameraDeleteDialogOpen(false);
+    });
+  };
+
+  // Method to fix camera
+  const handleCameraFix = (wait = false) => {
+    setDeleteLoading(true);
+    API.post('cams/fix-camera', {
+      cam_uri: camera.cam_uri,
+      cam_id: camera.cam_id,
+      wait: wait,
+      streamId: camera.stream_uuid
+    }).then((response) => {
+      if (response.status === 200) {
+        getCamerasList();
+        enqueueSnackbar(response.data.Message, {
+          variant: 'success'
+        });
+      } else {
+        errorMessageHandler(
+          enqueueSnackbar,
+          response?.response?.data?.Message || 'Something Went Wrong.',
+          response?.response?.status,
+          authCtx.setAuthError
+        );
+      }
+      setCamera();
+      setDeleteLoading(false);
+      setIsFixIssueDialogOpen(false);
     });
   };
 
@@ -282,6 +312,9 @@ const Cameras = () => {
                                 setIsCameraDeleteDialogOpen(e);
                               }}
                               setIsCameraFormDialogOpen={setIsCameraFormDialogOpen}
+                              setIsFixIssueDialogOpen={(e) => {
+                                setIsFixIssueDialogOpen(e);
+                              }}
                             />
                           </TableCell>
                         </TableRow>
@@ -324,6 +357,14 @@ const Cameras = () => {
           setIsCameraDeleteDialogOpen(false);
         }}
         handleCamDelete={(e) => handleCameraDelete(e)}></DeleteCamDialog>
+      <FixIssueDialog
+        open={isFixIssueDialogOpen}
+        loading={deleteLoading}
+        handleDialogClose={() => {
+          setCamera();
+          setIsFixIssueDialogOpen(false);
+        }}
+        handleCameraFix={(e) => handleCameraFix(e)}></FixIssueDialog>
 
       {/* <NewDeleteDialog
         open={isCameraDeleteDialogOpen}

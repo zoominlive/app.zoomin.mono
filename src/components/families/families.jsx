@@ -52,10 +52,13 @@ import NoDataDiv from '../common/nodatadiv';
 import SearchIcon from '@mui/icons-material/Search';
 import NewDeleteDialog from '../common/newdeletedialog';
 import LinerLoader from '../common/linearLoader';
+import { useLocation } from 'react-router-dom';
 
 const Families = () => {
   const layoutCtx = useContext(LayoutContext);
   const authCtx = useContext(AuthContext);
+  const location = useLocation();
+  const receivedData = location.state?.data;
   const { enqueueSnackbar } = useSnackbar();
   const [isChildFormDialogOpen, setIsChildFormDialogOpen] = useState(false);
   const [isRoomFormDialogOpen, setIsRoomFormDialogOpen] = useState(false);
@@ -80,7 +83,7 @@ const Families = () => {
   const [familiesPayload, setFamiliesPayload] = useState({
     page: 0,
     limit: parseInt(process.env.REACT_APP_PAGINATION_LIMIT, 10),
-    searchBy: '',
+    searchBy: receivedData ? receivedData : '',
     location: 'All',
     rooms: [],
     cust_id: localStorage.getItem('cust_id')

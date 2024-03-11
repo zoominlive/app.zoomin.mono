@@ -178,7 +178,7 @@ const Profile = () => {
   return (
     <Box sx={{ position: 'relative' }}>
       <Card>
-        <CardHeader title="User Profile"></CardHeader>
+        <CardHeader title="Staff Profile"></CardHeader>
         <CardContent>
           <Stack direction="row" alignItems="center" spacing={3} mb={3}>
             <Avatar src={image} />

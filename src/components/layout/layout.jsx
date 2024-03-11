@@ -1,6 +1,6 @@
 import {
   Autocomplete,
-  Avatar,
+  // Avatar,
   Box,
   Checkbox,
   Chip,
@@ -19,7 +19,8 @@ import {
   InputAdornment,
   CircularProgress,
   //InputLabel,
-  Grid
+  Grid,
+  Divider
 } from '@mui/material';
 
 import logo from '../../assets/app-capital.svg';
@@ -27,7 +28,7 @@ import logo from '../../assets/app-capital.svg';
 import collapsedLogo from '../../assets/white-logo-collapsed.png';
 import collapseButton from '../../assets/collapse-button.svg';
 import openButton from '../../assets/open-button.svg';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Monitor,
   Users,
@@ -54,9 +55,11 @@ import { errorMessageHandler } from '../../utils/errormessagehandler';
 import AddFamilyDialog from '../addfamily/addfamilydialog';
 //import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
 import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
-import buildingIcon from '../../assets/building.svg';
+import buildingIcon from '../../assets/new-building.svg';
+import searchIcon from '../../assets/search.svg';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import debounce from 'lodash.debounce';
 
 const icon = <RadioButtonUncheckedIcon fontSize="small" />;
 const checkedIcon = <CheckCircleOutlineIcon fontSize="small" style={{ color: '#5A53DD' }} />;
@@ -74,6 +77,11 @@ const Layout = () => {
   const [locations, setLocations] = useState([]);
   const [selectedLocation, setSelectedLocation] = useState([]);
   const [dropdownLoading, setDropdownLoading] = useState(false);
+  const [familiesResults, setFamiliesResults] = useState([]);
+  const [childrenResults, setChildrenResults] = useState([]);
+  const [usersResults, setUsersResults] = useState([]);
+  const [showSearchResults, setShowSearchResults] = useState();
+  const resultsListRef = useRef(null);
 
   const locs = ['Select All'];
   //authCtx?.user?.location?.accessable_locations.forEach((loc) => locs.push(loc));
@@ -143,6 +151,89 @@ const Layout = () => {
     };
   }, []);
 
+  const newHandleChange = debounce((e) => {
+    const searchValue = e.target.value;
+    setShowSearchResults(searchValue);
+    const familyPayload = {
+      page: 0,
+      limit: parseInt(process.env.REACT_APP_PAGINATION_LIMIT, 10),
+      searchBy: searchValue,
+      location: 'All',
+      rooms: [],
+      cust_id: localStorage.getItem('cust_id')
+    };
+
+    const usersPlayload = {
+      pageNumber: 0,
+      pageSize: parseInt(process.env.REACT_APP_PAGINATION_LIMIT, 10),
+      searchBy: searchValue,
+      location: 'All',
+      role: 'All',
+      liveStreaming: 'All',
+      cust_id: localStorage.getItem('cust_id')
+    };
+
+    getFamiliesList(familyPayload);
+    getUsersList(usersPlayload);
+  }, 500);
+
+  useEffect(() => {
+    const handleOutsideClick = (event) => {
+      // Check if the click target is outside the results list
+      if (resultsListRef.current && !resultsListRef.current.contains(event.target)) {
+        setShowSearchResults(false); // Close the results list
+      }
+    };
+
+    // Add event listener for clicks on the document
+    document.addEventListener('click', handleOutsideClick);
+
+    // Clean up the event listener when component unmounts
+    return () => {
+      document.removeEventListener('click', handleOutsideClick);
+    };
+  }, []);
+
+  // Method to fetch families list
+  const getFamiliesList = (familiesPayload) => {
+    setIsLoading(true);
+    API.get('family', { params: familiesPayload }).then((response) => {
+      if (response.status === 200) {
+        console.log('familiesPayload.searchBy', familiesPayload.searchBy);
+        const famResults = response.data.Data.familyArray;
+        const childrenResults = response.data.Data.familyArray.map((item) => item.children);
+        setFamiliesResults(famResults);
+        setChildrenResults(childrenResults.flatMap((subArray) => subArray));
+      } else {
+        errorMessageHandler(
+          enqueueSnackbar,
+          response?.response?.data?.Message || 'Something Went Wrong.',
+          response?.response?.status,
+          authCtx.setAuthError
+        );
+      }
+      setIsLoading(false);
+    });
+  };
+
+  // Method to fetch user list for table
+  const getUsersList = (usersPlayload) => {
+    setIsLoading(true);
+    API.get('users/all', { params: usersPlayload }).then((response) => {
+      if (response.status === 200) {
+        const userResults = response.data.Data.users;
+        setUsersResults(userResults);
+      } else {
+        errorMessageHandler(
+          enqueueSnackbar,
+          response?.response?.data?.Message || 'Something Went Wrong.',
+          response?.response?.status,
+          authCtx.setAuthError
+        );
+      }
+      setIsLoading(false);
+    });
+  };
   // Method to toggle drawer when the window size changes
   const handleDrawerToggleOnResize = () => {
     if (window.innerWidth <= 900) {
@@ -180,7 +271,7 @@ const Layout = () => {
       key: 6
     },
     {
-      name: 'Users',
+      name: 'Staff',
       icon: <User style={{ color: 'white' }} />,
       link: '/users',
       key: 4
@@ -269,6 +360,19 @@ const Layout = () => {
     } else {
       setAllLocationChecked(false);
       setSelectedLocation(value);
+    }
+  };
+
+  const handleResultClick = (value) => {
+    if (value?.primary) {
+      navigate('/families', { state: { data: value.primary?.first_name } });
+      setFamiliesResults([]);
+    } else if (value?.child_id) {
+      navigate('/families', { state: { data: value?.first_name } });
+      setFamiliesResults([]);
+    } else {
+      navigate('/users', { state: { data: value?.first_name } });
+      setUsersResults([]);
     }
   };
 
@@ -414,13 +518,13 @@ const Layout = () => {
                     alignItems={'center'}
                     gap={2}
                     className="breadcrumb">
-                    {layoutCtx?.breadcrumb?.length > 2 ? (
+                    {/* {layoutCtx?.breadcrumb?.length > 2 ? (
                       <Avatar
                         src={authCtx?.user?.profile_image}
                         sx={{ width: 85, height: 85 }}
                         alt='="profile-image'
                       />
-                    ) : null}
+                    ) : null} */}
                     <Stack direction={'column'} spacing={0.5}>
                       <Typography variant="h2">{layoutCtx?.breadcrumb[0]}</Typography>
                       {layoutCtx?.breadcrumb?.length > 1 && (
@@ -428,6 +532,105 @@ const Layout = () => {
                       )}
                     </Stack>
                   </Stack>
+                  {location.pathname == '/dashboard' ? (
+                    <>
+                      <TextField
+                        variant="standard"
+                        labelId="search"
+                        placeholder={'Find Children, Families or Staff'}
+                        sx={{
+                          backgroundColor: '#FFFFFF',
+                          borderRadius: '120px',
+                          padding: '16px 24px',
+                          width: '70%'
+                        }}
+                        onChange={(e) => newHandleChange(e)}
+                        InputProps={{
+                          disableUnderline: true,
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <img src={searchIcon} alt="search" width={24} height={24} />
+                            </InputAdornment>
+                          )
+                        }}
+                      />
+                      {showSearchResults && (
+                        <Box className="results-list">
+                          <Stack
+                            className="search-result"
+                            direction={'row'}
+                            justifyContent={'space-between'}>
+                            <Typography>Name</Typography>
+                            <Typography>Role</Typography>
+                          </Stack>
+                          <Divider />
+                          {familiesResults.map((result) => {
+                            return (
+                              <Stack
+                                direction={'row'}
+                                justifyContent={'space-between'}
+                                alignItems={'center'}
+                                sx={{
+                                  ':hover': { backgroundColor: '#eae9ff80' }
+                                }}
+                                key={result?.user_id || result?.primary?.family_member_id}
+                                onClick={() => handleResultClick(result)}>
+                                <Box ref={resultsListRef} className="search-result">
+                                  {result?.primary?.first_name + ' ' + result?.primary?.last_name}
+                                </Box>
+                                <Box>
+                                  <Chip variant="outlined" label={'Family'} />
+                                </Box>
+                              </Stack>
+                            );
+                          })}
+                          {usersResults.map((result) => {
+                            return (
+                              <Stack
+                                direction={'row'}
+                                justifyContent={'space-between'}
+                                alignItems={'center'}
+                                sx={{
+                                  ':hover': { backgroundColor: '#eae9ff80' }
+                                }}
+                                key={result?.user_id}
+                                onClick={() => handleResultClick(result)}>
+                                <Box ref={resultsListRef} className="search-result">
+                                  {result?.first_name + ' ' + result?.last_name}
+                                </Box>
+                                <Box>
+                                  <Chip
+                                    variant="outlined"
+                                    label={result?.role === 'User' ? 'Director' : result?.role}
+                                  />
+                                </Box>
+                              </Stack>
+                            );
+                          })}
+                          {childrenResults.map((result) => {
+                            return (
+                              <Stack
+                                direction={'row'}
+                                justifyContent={'space-between'}
+                                alignItems={'center'}
+                                sx={{
+                                  ':hover': { backgroundColor: '#eae9ff80' }
+                                }}
+                                key={result?.user_id}
+                                onClick={() => handleResultClick(result)}>
+                                <Box ref={resultsListRef} className="search-result">
+                                  {result?.first_name + ' ' + result?.last_name}
+                                </Box>
+                                <Box>
+                                  <Chip variant="outlined" label={'Child'} />
+                                </Box>
+                              </Stack>
+                            );
+                          })}
+                        </Box>
+                      )}
+                    </>
+                  ) : null}
                 </Grid>
 
                 <Grid item md={12} sm={12} xs={12} lg={5}>
@@ -441,6 +644,9 @@ const Layout = () => {
                         sx={{
                           '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
                             borderWidth: 0
+                          },
+                          '& .MuiOutlinedInput-root .MuiAutocomplete-endAdornment': {
+                            right: '22px'
                           },
                           '& fieldset': { borderRadius: 10, borderWidth: 0 }
                         }}
@@ -477,7 +683,7 @@ const Layout = () => {
                               ...params.InputProps,
                               startAdornment: (
                                 <>
-                                  <InputAdornment position="start">
+                                  <InputAdornment position="start" sx={{ marginLeft: '22px' }}>
                                     <img src={buildingIcon} />
                                   </InputAdornment>
                                   {params.InputProps.startAdornment}

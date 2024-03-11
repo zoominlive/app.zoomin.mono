@@ -9,6 +9,7 @@ import Loader from '../common/loader';
 import { useContext } from 'react';
 import AuthContext from '../../context/authcontext';
 import _ from 'lodash';
+// import VideocamOffIcon from '@mui/icons-material/VideocamOff';
 
 const CustomPlayer = (props) => {
   const authCtx = useContext(AuthContext);
@@ -18,6 +19,7 @@ const CustomPlayer = (props) => {
   const playerContainerRef = useRef(null);
   const playerRef = useRef(null);
   const [showErrorMessage, setShowErrorMessage] = useState(true);
+  // eslint-disable-next-line no-unused-vars
   const [url, setUrl] = useState('');
   const [playerPlaying, setPlayerPlaying] = useState(true);
   const [isMuted, setIsMuted] = useState(true);
@@ -29,6 +31,7 @@ const CustomPlayer = (props) => {
     seeking: false
   });
   const { played, seeking } = videoState;
+  // const [streamStatus, setStreamStatus] = useState(null);
 
   useEffect(() => {
     function exitHandler() {
@@ -71,6 +74,32 @@ const CustomPlayer = (props) => {
       timer.current.timerId = timer1;
     }
   };
+
+  // useEffect(() => {
+  //   const checkStreamStatus = async () => {
+  //     try {
+  //       console.log('props.streamUri', props.streamUri);
+  //       const response = await fetch(props.streamUri);
+  //       console.log('res==>', response);
+  //       if (response.status === 200) {
+  //         setStreamStatus('available');
+  //       } else if (response.status === 404) {
+  //         setStreamStatus('notFound');
+  //       } else {
+  //         setStreamStatus('error');
+  //       }
+  //     } catch (error) {
+  //       console.error('Error checking stream status:', error);
+  //       setStreamStatus('error');
+  //     }
+  //   };
+
+  //   if (props.streamUri) {
+  //     checkStreamStatus();
+  //   } else {
+  //     setStreamStatus(null); // Reset stream status if no URI provided
+  //   }
+  // }, [props.streamUri]);
 
   const handleFullscreenToggle = () => {
     screenfull.toggle(playerContainerRef.current);
@@ -186,6 +215,7 @@ const CustomPlayer = (props) => {
             played={played}
             onSeek={seekHandler}
             streamRunning={props.streamRunning}
+            streamUrl={props?.streamUri}
           />
         </Box>
       )}

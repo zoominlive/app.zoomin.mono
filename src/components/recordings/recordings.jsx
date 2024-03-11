@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import React, { useEffect, useState } from 'react';
 import { useContext } from 'react';
 import LayoutContext from '../../context/layoutcontext';
@@ -35,7 +36,8 @@ import {
   TableRow,
   TableCell,
   TableBody,
-  TablePagination
+  TablePagination,
+  TableSortLabel
 } from '@mui/material';
 import { Link } from 'react-router-dom';
 import StreamTable from './streamtable';
@@ -94,10 +96,13 @@ const Recordings = () => {
   //     url: 'https://www.youtube.com/watch?v=ysz5S6PUM-U'
   //   }
   // ]);
+  const [order, setOrder] = useState('desc');
+  const [orderBy, setOrderBy] = useState('date');
   const [recordingsPayload, setRecordingsPayload] = useState({
     pageNumber: 0,
     pageSize: parseInt(process.env.REACT_APP_PAGINATION_LIMIT, 10),
     searchBy: '',
+    sortBy: order,
     location: 'All',
     cust_id: localStorage.getItem('cust_id'),
     live: true,
@@ -108,6 +113,7 @@ const Recordings = () => {
   const [activeLiveStreamList, setActiveLivestreamList] = useState([]);
   const [recentLiveStreamList, setRecentLivestreamList] = useState([]);
   const [recordedStreamList, setRecordedStreamList] = useState([]);
+  const [count, setCount] = useState(0);
 
   useEffect(() => {
     layoutCtx.setActive(7);
@@ -154,7 +160,7 @@ const Recordings = () => {
   };
   const handlePageChange = (_, newPage) => {
     setRecordingsPayload((prevPayload) => ({ ...prevPayload, pageNumber: newPage }));
-    getRecordingData();
+    // getRecordingData();
   };
 
   // Method to change the row per page in table
@@ -163,7 +169,7 @@ const Recordings = () => {
       ...prevPayload,
       pageSize: parseInt(event.target.value, 10)
     }));
-    getRecordingData();
+    // getRecordingData();
   };
 
   const Row = ({ row }) => {
@@ -324,7 +330,8 @@ const Recordings = () => {
       if (response.status === 200) {
         setActiveLivestreamList(response.data.Data.activeLiveStreams);
         setRecentLivestreamList(response.data.Data.recentLiveStreams);
-        setRecordedStreamList(response.data.Data.recordedStreams);
+        setRecordedStreamList(response.data.Data.recordedStreams.data);
+        setCount(response.data.Data.recordedStreams.count);
         setIsLoading(false);
       } else {
         errorMessageHandler(
@@ -338,9 +345,15 @@ const Recordings = () => {
     });
   };
 
+  const handleSorting = () => {
+    const newOrder = order === 'desc' ? 'asc' : 'desc';
+    setOrder(newOrder);
+    setRecordingsPayload({ ...recordingsPayload, sortBy: newOrder });
+  };
+
   useEffect(() => {
     getRecordingData();
-  }, []);
+  }, [recordingsPayload]);
 
   useEffect(() => {
     setRecordingsPayload({
@@ -388,7 +401,7 @@ const Recordings = () => {
                       <Link href="#">View Report</Link>
                     </Grid>
                     <Grid item>
-                      <Box className="report-circle">{activeLiveStreamList?.length}</Box>
+                      <Box className="report-circle-recordings">{activeLiveStreamList?.length}</Box>
                     </Grid>
                   </Grid>
                 </Box>
@@ -411,7 +424,7 @@ const Recordings = () => {
                       <Link href="#">View Report</Link>
                     </Grid>
                     <Grid item>
-                      <Box className="report-circle" style={{ borderColor: '#FFAB01' }}>
+                      <Box className="report-circle-recordings" style={{ borderColor: '#FFAB01' }}>
                         {recentLiveStreamList?.length}
                       </Box>
                     </Grid>
@@ -643,7 +656,17 @@ const Recordings = () => {
                 <Table sx={{ minWidth: 650 }} aria-label="simple table">
                   <TableHead>
                     <TableRow>
-                      <TableCell>Date</TableCell>
+                      <TableCell>
+                        <TableSortLabel
+                          active={orderBy}
+                          key={'date'}
+                          align={'left'}
+                          padding={'default'}
+                          direction={order}
+                          onClick={handleSorting}>
+                          Date
+                        </TableSortLabel>
+                      </TableCell>
                       <TableCell align="center">Stream Name</TableCell>
                       <TableCell align="center">Location</TableCell>
                       <TableCell align="center">Rooms</TableCell>
@@ -664,7 +687,7 @@ const Recordings = () => {
                     onPageChange={handlePageChange}
                     onRowsPerPageChange={handleChangeRowsPerPage}
                     component="div"
-                    count={recordedStreamList.length}
+                    count={count}
                     rowsPerPage={recordingsPayload?.pageSize}
                     page={recordingsPayload?.pageNumber}
                     sx={{ flex: '1 1 auto' }}

@@ -8,8 +8,20 @@ import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 import VolumeOffIcon from '@mui/icons-material/VolumeOff';
 import React from 'react';
 import PropTypes from 'prop-types';
+import { useLocation } from 'react-router-dom';
 
 const PlayerControls = (props) => {
+  const location = useLocation();
+
+  const isS3Url = (url) => {
+    // Define the pattern for an S3 URL
+    const s3Pattern =
+      /^https:\/\/[a-zA-Z0-9-]+\.s3\.amazonaws\.com\/[a-zA-Z0-9-]+\/[a-zA-Z0-9-]+\/[a-zA-Z0-9-]+\.mp4/;
+
+    // Test the URL against the pattern
+    return s3Pattern.test(url);
+  };
+
   return (
     <Box className="controls-wrapper">
       <Grid container spacing={2} p={2}>
@@ -37,11 +49,18 @@ const PlayerControls = (props) => {
             {props.fullscreen ? <FullscreenExitRoundedIcon /> : <FullscreenRoundedIcon />}
           </IconButton>
         </Grid>
-        {props.streamRunning === false && (
+        {props.streamRunning === false && location.pathname === '/recordings' && (
           <Grid item md={12} sm={12}>
             <Slider min={0} max={100} onChange={props.onSeek} value={props.played * 100} />
           </Grid>
         )}
+        {isS3Url(props?.streamUrl) &&
+          location?.state?.streamUrl &&
+          location.pathname === '/watch-stream' && (
+            <Grid item md={12} sm={12}>
+              <Slider min={0} max={100} onChange={props.onSeek} value={props.played * 100} />
+            </Grid>
+          )}
       </Grid>
     </Box>
   );
@@ -61,5 +80,6 @@ PlayerControls.propTypes = {
   setIsMuted: PropTypes.func,
   onSeek: PropTypes.func,
   played: PropTypes.number,
-  streamRunning: PropTypes.bool
+  streamRunning: PropTypes.bool,
+  streamUrl: PropTypes.string
 };
