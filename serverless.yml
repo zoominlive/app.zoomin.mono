@@ -47,7 +47,8 @@ provider:
     client_x509_cert_url: "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-eg6hb%40zoomin-push-notifications.iam.gserviceaccount.com"
     websocket_endpoint: ${file(./env.json):${opt:stage, 'stage'}.WS_ENDPOINT}
     #websocket_endpoint: "http://localhost:3001"
-    
+    STREAM_URL_SECRET_KEY: tNAbY0TfoCsKiS9TOijonkXkT
+
   stage: ${opt:stage, 'stage'}
   region: ${file(./env.json):${opt:stage, 'stage'}.REGION}
 custom:
