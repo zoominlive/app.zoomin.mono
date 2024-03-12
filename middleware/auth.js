@@ -4,7 +4,7 @@ const connectToDatabase = require('../models/index');
 const CONSTANTS = require('../lib/constants');
 // authentication middleware to check auth and give access based on user type
 module.exports = async function (req, res, next) {
-  const { Family, Child, Users } = await connectToDatabase();
+  const { Family, Child, Users, Customers } = await connectToDatabase();
   try {
     const token = req.header('Authorization')?.substring(7);
     if (!token) {
@@ -12,6 +12,7 @@ module.exports = async function (req, res, next) {
     } else {
       const decodeToken = jwt.verify(token, process.env.JWT_SECRET_KEY);
       let user;
+      let cust;
       if (decodeToken?.user_id) {
         user = await Users.findOne({ where: { user_id: decodeToken?.user_id } });
       }
@@ -51,6 +52,12 @@ module.exports = async function (req, res, next) {
           });
         }
       } else {
+        if(user.role === 'Admin') {
+          cust = await Customers.findOne({ where: { cust_id: user.cust_id } });
+          user.dataValues.stripe_cust_id = cust.dataValues.stripe_cust_id;
+          req.userToken = token;
+          req.user = user.toJSON();
+        }
         req.userToken = token;
         req.user = user.toJSON();
        

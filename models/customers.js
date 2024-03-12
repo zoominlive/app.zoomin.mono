@@ -9,6 +9,10 @@ const Customers = sequelize.define(
       allowNull: false,
       primaryKey: true
     },
+    stripe_cust_id: {
+      type: Sequelize.STRING(50),
+      allowNull: false,
+    },
     company_name: {
       type: Sequelize.STRING(50)
     },

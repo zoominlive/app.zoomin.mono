@@ -12,6 +12,7 @@ const watchStreamRoutes = require('./watchStream');
 const logRoutes = require('./logs');
 const liveStreamRoutes = require('./liveStream');
 const RecordingRoutes = require('./recording');
+const PaymentRoutes = require('./payment');
 /* user routes */
 router.use('/users', userRoutes);
 
@@ -44,5 +45,8 @@ router.use('/liveStream', liveStreamRoutes);
 
 /* recordings routes */
 router.use('/recordings', RecordingRoutes)
+
+/* payment routes */
+router.use('/payment', PaymentRoutes)
 
 module.exports = router;
