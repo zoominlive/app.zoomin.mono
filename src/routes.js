@@ -28,8 +28,10 @@ const AppRoutes = () => {
           <>
             <Route path="/logs" element={<Logs />} />
             <Route path="/users" element={<Users />} />
-            <Route path="/billing" element={<Invoices />} />
           </>
+        )}
+        {authCtx.user && authCtx.user.role === 'Admin' && (
+          <Route path="/billing" element={<Invoices />} />
         )}
         {authCtx.user && authCtx.user.role !== 'Family' && authCtx.user.role !== 'Teacher' && (
           <>

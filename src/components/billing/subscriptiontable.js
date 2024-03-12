@@ -35,7 +35,7 @@ export default function SubscriptionTable({
   console.log(rows);
   return (
     <>
-      <Paper sx={{ marginTop: 2, height: '96%', minHeight: '338px', boxShadow: 'unset' }}>
+      <Paper sx={{ marginTop: 2, boxShadow: 'unset' }}>
         <Box className="zl__table-block">
           <Typography style={{ padding: '20px 14px' }}>{title}</Typography>
           {rows && rows?.length > 0 ? (
@@ -73,31 +73,50 @@ export default function SubscriptionTable({
                   );
                 })}
               </Box>
-              {/* <Box className="div-row row-marging zl__tr-block">
+              <Box className="div-row row-marging zl__tr-block-subscription">
                 <Box className="zl__td-block" style={{ width: '60%' }}>
                   <Stack direction={'row'} alignItems={'center'} gap={1}>
-                    {'Total Subscription'}
+                    <Typography
+                      sx={{
+                        fontSize: '16px !important',
+                        fontWeight: '500 !important',
+                        lineHeight: '24px',
+                        color: '#000000DE !important'
+                      }}>
+                      {'Total Subscription'}
+                    </Typography>
                   </Stack>
                 </Box>
-                <Box style={{ width: '20%' }} className="child-rooms zl__td-block">
+                <Box style={{ width: '20%' }} className="zl__td-block">
                   <Box style={{ display: 'flex' }}>{''}</Box>
                 </Box>
-                <Box className="zl__td-block" style={{ width: '20%', color: '#6AD2A0' }}>
-                  {'$985'}
+                <Box className="zl__td-block" style={{ width: '20%' }}>
+                  <Typography
+                    sx={{ fontSize: '16px', fontWeight: 500, color: '#6AD2A0 !important' }}>
+                    {'$985'}
+                  </Typography>
                 </Box>
-              </Box> */}
-              {/* <Box style={{ width: '60%' }} display={'flex'} flexDirection={'row-reverse'}>
-                {' '}
-                <Typography
-                  sx={{
-                    fontSize: '12px !important',
-                    fontWeight: 400,
-                    lineHeight: '18px',
-                    color: '#00000052 !important'
-                  }}>
-                  *Plus all applicable taxes
-                </Typography>
-              </Box> */}
+              </Box>
+              <Box className="zl__tr-block-ts" marginTop={'-10px !important'}>
+                <Box className="zl__td-block-ts" style={{ width: '30%' }}></Box>
+                <Box style={{ width: '30%' }}>
+                  <Box style={{ display: 'flex' }}>{''}</Box>
+                </Box>
+                <Box
+                  className="zl__td-block-ts"
+                  style={{ width: '100%', color: '#6AD2A0', textAlign: 'right' }}>
+                  <Typography
+                    sx={{
+                      fontSize: '12px !important',
+                      fontWeight: 400,
+                      lineHeight: '18px',
+                      color: '#00000052 !important',
+                      paddingRight: '10px'
+                    }}>
+                    *Plus all applicable taxes
+                  </Typography>{' '}
+                </Box>
+              </Box>
             </>
           ) : !isLoading ? (
             <Stack alignItems="center" justifyContent="center" sx={{ paddingTop: 2 }}>

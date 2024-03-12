@@ -200,11 +200,16 @@ const Settings = () => {
       <TabContext value={value}>
         <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
           <TabList onChange={handleChange} aria-label="lab API tabs example">
-            <Tab sx={{ textTransform: 'none', fontSize: '16px' }} label="Locations" value="1" />
-            <Tab sx={{ textTransform: 'none', fontSize: '16px' }} label="Cameras" value="2" />
+            <Tab
+              sx={{ textTransform: 'none', fontSize: '16px' }}
+              label="Customer Profile"
+              value="1"
+            />
+            <Tab sx={{ textTransform: 'none', fontSize: '16px' }} label="Locations" value="2" />
+            <Tab sx={{ textTransform: 'none', fontSize: '16px' }} label="Cameras" value="3" />
           </TabList>
         </Box>
-        <TabPanel value="1">
+        <TabPanel value="2">
           <Box className="listing-wrapper">
             <Card className="filter">
               <CardContent>
@@ -350,7 +355,7 @@ const Settings = () => {
             />
           </Box>
         </TabPanel>
-        <TabPanel value="2">
+        <TabPanel value="3">
           <DefaultScheduler
             // settings={true}
             custId={authCtx.user.cust_id || localStorage.getItem('cust_id')}

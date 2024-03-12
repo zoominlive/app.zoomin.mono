@@ -31,9 +31,9 @@ const invoiceDetails = [
 ];
 
 const rows = [
-  { charge_id: 'CHG-1234567', desc: 'Project ABC', qty: '1', amt: '$130' },
-  { charge_id: 'CHG-1234567', desc: 'Project ABC', qty: '2', amt: '$260' },
-  { charge_id: 'CHG-1234567', desc: 'Project ABC', qty: '3', amt: '$320' }
+  { charge_id: 'CHG-1234567', desc: 'Project ABC', qty: '1', amt: '$130.00' },
+  { charge_id: 'CHG-1234567', desc: 'Project ABC', qty: '2', amt: '$260.00' },
+  { charge_id: 'CHG-1234567', desc: 'Project ABC', qty: '3', amt: '$320.00' }
 ];
 
 const InvoiceDrawer = (props) => {
@@ -159,7 +159,7 @@ const InvoiceDrawer = (props) => {
                       color: '#000000DE !important'
                     }}
                     align="right">
-                    {'$710'}
+                    {'$710.00'}
                   </TableCell>
                 </TableRow>
                 <TableRow>
@@ -183,7 +183,7 @@ const InvoiceDrawer = (props) => {
                       lineHeight: '20px !important',
                       color: '#000000DE !important'
                     }}>
-                    {'$10'}
+                    {'$10.00'}
                   </TableCell>
                 </TableRow>
                 <TableRow>
@@ -208,7 +208,7 @@ const InvoiceDrawer = (props) => {
                       color: '#27AE60 !important'
                     }}
                     align="right">
-                    {'$720'}
+                    {'$720.00'}
                   </TableCell>
                 </TableRow>
               </TableBody>

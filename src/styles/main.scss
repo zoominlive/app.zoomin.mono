@@ -2919,6 +2919,19 @@
   margin: 0 0 5px!important;
   padding: 0 !important;
 }
+.zl__tr-block-ts{
+  display: table !important;
+  width: 100%;
+  table-layout: fixed;
+  margin: 0 0 5px!important;
+  padding: 0 !important;
+}
+.zl__tr-block-subscription{
+  height: 10px;
+  display: table !important;
+  width: 100%;
+  table-layout: fixed;
+}
 .zl__tr-viewers-block{
   height: 55px;
   display: table !important;
@@ -2931,6 +2944,10 @@
   display: table-cell !important;
   vertical-align: middle;
   padding: 0 14px 0;
+}
+.zl__td-block-ts {
+  display: table-cell !important;
+  vertical-align: middle;
 }
 @media (max-width: 1800px){
   .zl__tr-block{
@@ -2980,3 +2997,93 @@
   padding: 10px 20px;
 }
 
+
+
+.dispute-textarea {
+  padding: 12px !important;
+  width: 428px;
+  // height: 200px;
+  border-radius: 15px;
+  border: 1px solid #D3CBFB; 
+  background-color: #FAFAFF;
+}
+
+.dispute-invoice {
+  border-radius: 60px !important;
+  background-color: #5a53dd !important;
+  height: 54px;
+  width: 100%;
+  text-transform: none !important;
+  font-size: 16px !important;
+  font-weight: 500 !important;
+  line-height: 24px !important;
+}
+
+.card-form {
+  width: 100%;
+  max-width: 400px; /* Adjust to your desired width */
+  margin: 0 auto;
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  
+}
+
+.input-fields {
+  padding: 20px;
+  border-radius: 15px;
+  border: 1px solid #D5CFFF;
+  gap: 8px;
+}
+
+.card-element-labels {
+  font-size: 16px;
+  font-weight: 500 !important;
+  line-height: 20px;
+  padding-bottom: 8px;
+}
+
+.add-payment-button {
+  border-radius: 60px !important;
+  background-color: #5a53dd !important;
+  height: 54px;
+  width: 100%;
+  text-transform: none !important;
+  font-size: 16px !important;
+  font-weight: 500 !important;
+  line-height: 24px !important;
+}
+
+.card-label {
+  display: block;
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+.card-element {
+  display: block;
+  // width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 16px;
+  outline: none;
+}
+
+.pay-button {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  margin-top: 20px;
+  border: none;
+  border-radius: 5px;
+  background-color: #007bff;
+  color: #fff;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.pay-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
