@@ -16,7 +16,7 @@ const PlayerControls = (props) => {
   const isS3Url = (url) => {
     // Define the pattern for an S3 URL
     const s3Pattern =
-      /^https:\/\/[a-zA-Z0-9-]+\.s3\.amazonaws\.com\/[a-zA-Z0-9-]+\/[a-zA-Z0-9-]+\/[a-zA-Z0-9-]+\.mp4/;
+      /^https:\/\/[a-zA-Z0-9-]+\.s3\.[a-z0-9-]+\.amazonaws\.com\/[a-zA-Z0-9-]+\/[a-zA-Z0-9-]+\/[a-zA-Z0-9-]+\.mp4/;
 
     // Test the URL against the pattern
     return s3Pattern.test(url);
