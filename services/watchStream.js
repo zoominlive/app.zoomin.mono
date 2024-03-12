@@ -94,22 +94,30 @@ module.exports = {
             if (hasAccess) {
               let cams = room?.room?.cameras_assigned_to_rooms
                 ?.map((cam) => {
+                  let uid = user?.family_member_id || user?.user_id;
+                  let sid = cam?.camera?.cam_id;
+                  let uuid = uuidv4();
+                  const token = jwt.sign({ user_id: uid, cam_id: sid, uuid: uuid }, process.env.STREAM_URL_SECRET_KEY);
                   return {
                     cam_id: cam?.camera?.cam_id,
                     cam_name: cam?.camera?.cam_name,
                     description: cam?.camera?.description,
-                    stream_uri: `${cam?.camera?.stream_uri}?uid=${user?.family_member_id || user?.user_id}&sid=${cam?.camera?.cam_id}&uuid=${uuidv4()}`
+                    stream_uri: `${cam?.camera?.stream_uri}?seckey=${token}`
                     
                   };
                 })
                 .filter((cam) => cam?.cam_id);
 
               let livStreamCams = room.room?.live_stream_cameras?.map((cam) => {
+                let uid = user?.family_member_id || user?.user_id;
+                let sid = cam?.stream_uri.split('/') [cam?.stream_uri.split('/').length - 1].split('.')[0];
+                let uuid = uuidv4();
+                const token = jwt.sign({ user_id: uid, cam_id: sid, uuid: uuid }, process.env.STREAM_URL_SECRET_KEY);
                 return {
                   cam_id: cam?.cam_id,
                   cam_name: cam?.cam_name,
                   description: cam?.description || "",
-                  stream_uri: `${cam?.stream_uri}?uid=${user?.family_member_id || user?.user_id}&sid=${cam?.stream_uri.split('/') [cam?.stream_uri.split('/').length - 1].split('.')[0]}&uuid=${uuidv4()}`,
+                  stream_uri: `${cam?.stream_uri}?seckey=${token}`,
                 };
               });
               cams = cams.concat(livStreamCams);
@@ -124,21 +132,29 @@ module.exports = {
           } else {
             let cams = room?.room?.cameras_assigned_to_rooms
               ?.map((cam) => {
+                let uid = user?.family_member_id || user?.user_id;
+                let sid = cam?.camera?.cam_id;
+                let uuid = uuidv4();
+                const token = jwt.sign({ user_id: uid, cam_id: sid, uuid: uuid }, process.env.STREAM_URL_SECRET_KEY);
                 return {
                   cam_id: cam?.camera?.cam_id,
                   cam_name: cam?.camera?.cam_name,
                   description: cam?.camera?.description,
-                  stream_uri: `${cam?.camera?.stream_uri}?uid=${user?.family_member_id || user?.user_id}&sid=${cam?.camera?.cam_id}&uuid=${uuidv4()}`,
+                  stream_uri: `${cam?.camera?.stream_uri}?seckey=${token}`,
                 };
               })
               .filter((cam) => cam?.cam_id);
 
             let livStreamCams = room.room?.live_stream_cameras?.map((cam) => {
+              let uid = user?.family_member_id || user?.user_id;
+              let sid = cam?.stream_uri.split('/') [cam?.stream_uri.split('/').length - 1].split('.')[0];
+              let uuid = uuidv4();
+              const token = jwt.sign({ user_id: uid, cam_id: sid, uuid: uuid }, process.env.STREAM_URL_SECRET_KEY);
               return {
                 cam_id: cam?.cam_id,
                 cam_name: cam?.cam_name,
                 description: cam?.description || "",
-                stream_uri: `${cam?.stream_uri}?uid=${user?.family_member_id || user?.user_id}&sid=${cam?.stream_uri.split('/') [cam?.stream_uri.split('/').length - 1].split('.')[0]}&uuid=${uuidv4()}`,
+                stream_uri: `${cam?.stream_uri}?seckey=${token}`,
               };
             });
             cams = cams.concat(livStreamCams);
