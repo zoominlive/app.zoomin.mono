@@ -131,6 +131,7 @@ const CustomPlayer = (props) => {
           ref={playerContainerRef}>
           <Loader loading={!ready} />
           <ReactPlayer
+            progressInterval={0}
             // url={
             //   props.streamUri.includes('https://live.zoominlive.com')
             //     ? `${props?.streamUri}?uid=${
