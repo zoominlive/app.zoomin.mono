@@ -37,10 +37,13 @@ export default function CheckoutForm(props) {
 
   const saveCardDetails = async (cardToken) => {
     try {
-      const response = await axios.post('http://localhost:3000/api/payment/save-card-details', {
-        cardToken: cardToken,
-        userId: authCtx.user.stripe_cust_id // Replace 'user_id' with the actual user ID
-      });
+      const response = await axios.post(
+        `${process.env.REACT_APP_BE_ENDPOINT}payment/save-card-details`,
+        {
+          cardToken: cardToken,
+          userId: authCtx.user.stripe_cust_id // Replace 'user_id' with the actual user ID
+        }
+      );
       props.closeDialog();
       props.getCustPaymentMethod();
       console.log(response.data.message); // Log success message
