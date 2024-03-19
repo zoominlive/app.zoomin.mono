@@ -31,6 +31,9 @@ const LiveStreams = sequelize.define(
         s3_url: {
             type: Sequelize.STRING(250)
         },
+        sendbird_channel_url: {
+            type: Sequelize.STRING(255),
+        },
         stream_start_time: {
             type: Sequelize.DATE,
             defaultValue: null
@@ -39,7 +42,6 @@ const LiveStreams = sequelize.define(
             type: Sequelize.DATE,
             defaultValue: null
         },
-
         createdAt: { type: Sequelize.DATE, field: 'created_at' },
         updatedAt: { type: Sequelize.DATE, field: 'updated_at' }
     },

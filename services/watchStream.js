@@ -4,6 +4,8 @@ const _ = require("lodash");
 const moment = require("moment-timezone");
 const customerServices = require("../services/customers");
 const { v4: uuidv4 } = require("uuid");
+const liveStream = require("./liveStream");
+const livestreamCameras = require("./livestreamCameras");
 // const livestreamCameras = require("./livestreamCameras");
 module.exports = {
   /* Create new camera */
@@ -281,6 +283,11 @@ module.exports = {
       raw: true,
     });
 
+    const liveStreamCameras = await livestreamCameras.getAllLivestreamCameras();
+    let liveStreamRoomID = liveStreamCameras[0].room_id;
+
+    const liveStreamObj = await liveStream.getActiveStreamObjByRoomId(liveStreamRoomID);
+    const sendbird_channel_url = liveStreamObj[0]?.sendbird_channel_url;
     if (user?.family_id) {
       let cameras = await Child.findAll({
         where: { family_id: user.family_id, status: "enabled" },
@@ -365,6 +372,7 @@ module.exports = {
                   cam_id: cam?.cam_id,
                   cam_name: cam?.cam_name,
                   description: cam?.description || "",
+                  sendbird_channel_url: sendbird_channel_url,
                   stream_uri:`${cam?.stream_uri}?uid=${user?.family_member_id || user?.user_id}&sid=${cam?.stream_uri.split('/') [cam?.stream_uri.split('/').length - 1].split('.')[0]}&uuid=${uuidv4()}`,
                 };
               });
@@ -393,6 +401,7 @@ module.exports = {
                 cam_id: cam?.cam_id,
                 cam_name: cam?.cam_name,
                 description: cam?.description || "",
+                sendbird_channel_url: sendbird_channel_url,
                 stream_uri: `${cam?.stream_uri}?uid=${user?.family_member_id || user?.user_id}&sid=${cam?.stream_uri.split('/') [cam?.stream_uri.split('/').length - 1].split('.')[0]}&uuid=${uuidv4()}`,
               };
             });
