@@ -284,10 +284,13 @@ module.exports = {
     });
 
     const liveStreamCameras = await livestreamCameras.getAllLivestreamCameras();
-    let liveStreamRoomID = liveStreamCameras[0].room_id;
-
-    const liveStreamObj = await liveStream.getActiveStreamObjByRoomId(liveStreamRoomID);
-    const sendbird_channel_url = liveStreamObj[0]?.sendbird_channel_url;
+    let liveStreamObj;
+    let sendbird_channel_url;
+    if(!_.isEmpty(liveStreamCameras)) {
+      let liveStreamRoomID = liveStreamCameras[0]?.room_id;
+      liveStreamObj = await liveStream.getActiveStreamObjByRoomId(liveStreamRoomID);
+      sendbird_channel_url = liveStreamObj[0]?.sendbird_channel_url;
+    }
     if (user?.family_id) {
       let cameras = await Child.findAll({
         where: { family_id: user.family_id, status: "enabled" },
