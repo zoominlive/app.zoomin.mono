@@ -4,6 +4,7 @@ const Sequelize = require('sequelize');
 const moment = require('moment');
 const sequelize = require("../lib/database");
 const axios = require('axios');
+const { uuidv4 } = require('@firebase/util');
 
 module.exports = {
   /* Create stream ID token */
@@ -243,7 +244,7 @@ return result[0].total_start_only_viewers;
     try {
       // Define the data for creating the open channel
       const requestData = {
-        name: 'start_chat',
+        name: `open-channel-${uuidv4()}`
         // Add other properties as needed
       };
   
@@ -265,6 +266,31 @@ return result[0].total_start_only_viewers;
     } catch (error) {
       // Handle errors
       console.error('Error creating open channel:', error);
+      throw error;
+    }
+  },
+
+  /* Service for deleting sendbird open channel */
+  deleteOpenChannel: async (channel_url) => {
+    const SEND_BIRD_API_URL = `https://api-${process.env.SEND_BIRD_APPLICATION_ID}.sendbird.com/v3/open_channels/${channel_url}`;
+    try {
+      // Set the authorization header with your Sendbird API token
+      const config = {
+        headers: {
+          'Content-Type': 'application/json',
+          'Api-Token': process.env.SEND_BIRD_API_TOKEN,
+        },
+      };
+      // Make a DELETE request to the Sendbird API endpoint
+      const response = await axios.delete(SEND_BIRD_API_URL, config);
+  
+      // Log the response data
+      console.log('Open channel deleted:', response.data);
+  
+      return response.data;
+    } catch (error) {
+      // Handle errors
+      console.error('Error deleting open channel:', error);
       throw error;
     }
   }

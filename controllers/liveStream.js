@@ -338,8 +338,7 @@ module.exports = {
       await liveStramcameraServices.deleteLivestreamCamera(roomID);
 
       let streamObj = await liveStreamServices.getstreamObj(streamID, t);
-       
-
+      let deleteChannel = await liveStreamServices.deleteOpenChannel(streamObj.sendbird_channel_url);
       let childs = await childServices.getChildOfAssignedRoomId(roomID, t);
       let childIds = childs.flatMap((i) => i.child_id);
       let familys = await childServices.getAllchildrensFamilyId(childIds, t);
