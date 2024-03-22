@@ -44,8 +44,8 @@ module.exports = {
           let streamKeyAuth = await liveStreamServices.createStreamKeyToken(
             streamID
           );
-  
-          let endPoint = `${rtmpTranscoderBaseUrl}/stream/${streamID}?auth=${streamKeyAuth.token}`;
+          let openChannelData = await liveStreamServices.createOpenChannel();
+          let endPoint = `${rtmpTranscoderBaseUrl}/stream/${streamID}?auth=${streamKeyAuth.token}&open_channel_url=${openChannelData.channel_url}`;
           let liveStreamObj = {
             stream_id: streamID,
             cust_id: cust_id,
@@ -58,7 +58,10 @@ module.exports = {
           let livestream = await liveStreamServices.createLiveStream(
             liveStreamObj
           );
-          response = { serverEndPoint: endPoint };
+          response = { 
+            serverEndPoint: endPoint,
+            openChannelData: openChannelData
+          };
           // try {
           // const { streamID } = req.query;
   

@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const Sequelize = require('sequelize');
 const moment = require('moment');
 const sequelize = require("../lib/database");
+const axios = require('axios');
 
 module.exports = {
   /* Create stream ID token */
@@ -233,5 +234,38 @@ return result[0].total_start_only_viewers;
       { transaction: t }
     );
     return {data: recordedStreams.rows, count: recordedStreams.count};
+  },
+
+  /* Service for creating sendbird open channel */
+  createOpenChannel: async () => {
+    const SEND_BIRD_API_URL = `https://api-${process.env.SEND_BIRD_APPLICATION_ID}.sendbird.com/v3/open_channels`;
+
+    try {
+      // Define the data for creating the open channel
+      const requestData = {
+        name: 'start_chat',
+        // Add other properties as needed
+      };
+  
+      // Set the authorization header with your Sendbird API token
+      const config = {
+        headers: {
+          'Content-Type': 'application/json',
+          'Api-Token': process.env.SEND_BIRD_API_TOKEN,
+        },
+      };
+  
+      // Make a POST request to the Sendbird API endpoint
+      const response = await axios.post(SEND_BIRD_API_URL, requestData, config);
+  
+      // Log the response data
+      console.log('Open channel created:', response.data);
+  
+      return response.data;
+    } catch (error) {
+      // Handle errors
+      console.error('Error creating open channel:', error);
+      throw error;
+    }
   }
 };
