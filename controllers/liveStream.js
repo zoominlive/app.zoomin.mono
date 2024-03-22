@@ -26,7 +26,7 @@ module.exports = {
     const t = await sequelize.transaction();
     let response;
     try {
-      const { roomID, streamName, sendbird_channel_url } = req.query;
+      const { roomID, streamName } = req.query;
       const { user_id, stream_live_license, cust_id } = req.user;
       const streams = await liveStreamServices.getstreamObjByUserId(user_id, t);
       const hasRunningStream = streams.some(stream => stream.dataValues.stream_running); //check if atleast one of the streams is running
@@ -52,7 +52,7 @@ module.exports = {
             user_id: user_id,
             room_id: roomID,
             stream_name: streamName,
-            sendbird_channel_url: sendbird_channel_url ? sendbird_channel_url : '',
+            sendbird_channel_url: openChannelData?.channel_url ? openChannelData?.channel_url : '',
             hls_url: `https://zoominstreamprocessing.s3.us-west-2.amazonaws.com/liveStream/${streamID}_${current_time}/index.m3u8`,
           };
           let livestream = await liveStreamServices.createLiveStream(
