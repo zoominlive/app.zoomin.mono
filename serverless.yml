@@ -246,7 +246,7 @@ functions:
       - schedule: rate(1 hour)
 
 plugins:
-  - serverless-offline
+  # - serverless-offline
   - serverless-prune-versions
   - serverless-plugin-warmup
 
