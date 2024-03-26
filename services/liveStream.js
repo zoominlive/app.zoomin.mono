@@ -237,14 +237,16 @@ return result[0].total_start_only_viewers;
     return {data: recordedStreams.rows, count: recordedStreams.count};
   },
 
-  /* Service for creating sendbird open channel */
-  createOpenChannel: async () => {
-    const SEND_BIRD_API_URL = `https://api-${process.env.SEND_BIRD_APPLICATION_ID}.sendbird.com/v3/open_channels`;
+  /* Service for creating sendbird group channel */
+  createGroupChannel: async () => {
+    const SEND_BIRD_API_URL = `https://api-${process.env.SEND_BIRD_APPLICATION_ID}.sendbird.com/v3/group_channels`;
 
     try {
-      // Define the data for creating the open channel
+      // Define the data for creating the group channel
       const requestData = {
-        name: `open-channel-${uuidv4()}`
+        name: `group-${uuidv4()}`,
+        is_public: true,
+        // is_super: true
         // Add other properties as needed
       };
   
@@ -260,19 +262,19 @@ return result[0].total_start_only_viewers;
       const response = await axios.post(SEND_BIRD_API_URL, requestData, config);
   
       // Log the response data
-      console.log('Open channel created:', response.data);
+      console.log('Group channel created:', response.data);
   
       return response.data;
     } catch (error) {
       // Handle errors
-      console.error('Error creating open channel:', error);
+      console.error('Error creating group channel:', error);
       throw error;
     }
   },
 
-  /* Service for deleting sendbird open channel */
-  deleteOpenChannel: async (channel_url) => {
-    const SEND_BIRD_API_URL = `https://api-${process.env.SEND_BIRD_APPLICATION_ID}.sendbird.com/v3/open_channels/${channel_url}`;
+  /* Service for deleting sendbird group channel */
+  deleteGroupChannel: async (channel_url) => {
+    const SEND_BIRD_API_URL = `https://api-${process.env.SEND_BIRD_APPLICATION_ID}.sendbird.com/v3/group_channels/${channel_url}`;
     try {
       // Set the authorization header with your Sendbird API token
       const config = {
@@ -285,12 +287,12 @@ return result[0].total_start_only_viewers;
       const response = await axios.delete(SEND_BIRD_API_URL, config);
   
       // Log the response data
-      console.log('Open channel deleted:', response.data);
+      console.log('Group channel deleted:', response.data);
   
       return response.data;
     } catch (error) {
       // Handle errors
-      console.error('Error deleting open channel:', error);
+      console.error('Error deleting group channel:', error);
       throw error;
     }
   }

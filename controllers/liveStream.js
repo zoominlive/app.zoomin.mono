@@ -44,7 +44,7 @@ module.exports = {
           let streamKeyAuth = await liveStreamServices.createStreamKeyToken(
             streamID
           );
-          let openChannelData = await liveStreamServices.createOpenChannel();
+          let groupChannelData = await liveStreamServices.createGroupChannel();
           let endPoint = `${rtmpTranscoderBaseUrl}/stream/${streamID}?auth=${streamKeyAuth.token}`;
           let liveStreamObj = {
             stream_id: streamID,
@@ -52,7 +52,7 @@ module.exports = {
             user_id: user_id,
             room_id: roomID,
             stream_name: streamName,
-            sendbird_channel_url: openChannelData?.channel_url ? openChannelData?.channel_url : '',
+            sendbird_channel_url: groupChannelData?.channel_url ? groupChannelData?.channel_url : '',
             hls_url: `https://zoominstreamprocessing.s3.us-west-2.amazonaws.com/liveStream/${streamID}_${current_time}/index.m3u8`,
           };
           let livestream = await liveStreamServices.createLiveStream(
@@ -60,7 +60,7 @@ module.exports = {
           );
           response = { 
             serverEndPoint: endPoint,
-            openChannelData: openChannelData
+            groupChannelData: groupChannelData
           };
           // try {
           // const { streamID } = req.query;
@@ -338,7 +338,7 @@ module.exports = {
       await liveStramcameraServices.deleteLivestreamCamera(roomID);
 
       let streamObj = await liveStreamServices.getstreamObj(streamID, t);
-      let deleteChannel = await liveStreamServices.deleteOpenChannel(streamObj.sendbird_channel_url);
+      let deleteChannel = await liveStreamServices.deleteGroupChannel(streamObj.sendbird_channel_url);
       let childs = await childServices.getChildOfAssignedRoomId(roomID, t);
       let childIds = childs.flatMap((i) => i.child_id);
       let familys = await childServices.getAllchildrensFamilyId(childIds, t);
