@@ -19,6 +19,8 @@ const LiveStreamRecentViewers = require('./live_stream_recent_viewers');
 const MountedCameraRecentViewers = require('./mounted_camera_recent_viewers');
 const FcmTokens = require('./fcm_tokens');
 const CamPreference = require('./cam_preference');
+const Subscriptions = require('./subscriptions');
+const SubscriptionItems = require('./subscriptions_items');;
 const sequelize = require('../lib/database');
 
 CustomerLocations.belongsTo(Customers, { foreignKey: 'cust_id' });
@@ -223,7 +225,9 @@ module.exports = async () => {
       LiveStreamRecentViewers,
       MountedCameraRecentViewers,
       FcmTokens,
-      CamPreference
+      CamPreference,
+      Subscriptions,
+      SubscriptionItems,
     };
   }
 
@@ -252,6 +256,8 @@ module.exports = async () => {
     LiveStreamRecentViewers,
     MountedCameraRecentViewers,
     FcmTokens,
-    CamPreference
+    CamPreference,
+    Subscriptions,
+    SubscriptionItems,
   };
 };

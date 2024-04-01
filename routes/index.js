@@ -2,6 +2,7 @@ let express = require('express');
 
 let router = express.Router();
 const apiRouter = require('./api/index');
+const webhookRouter = require('./webhook/index');
 
 /* GET home page. */
 router.get('/', (req, res, next) => {
@@ -10,5 +11,6 @@ router.get('/', (req, res, next) => {
 
 /* GET all api routes */
 router.use('/api', apiRouter);
+router.use('/webhook', webhookRouter);
 
 module.exports = router;

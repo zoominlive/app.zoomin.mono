@@ -1,4 +1,6 @@
-const stripe = require("stripe")('sk_test_51OGEnKERJiP7ChzSjk4dnfFCdgzLgDWpJHSeKjuF9hI8dmYFfZVZa00WxKuJKUetc9NTM2C5LxxS12MPZo6RBy7C00kTEy4pzF');
+const subscription = require("../services/subscription");
+
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
 module.exports = {
   createPaymentIntent: async(req, res) => {
@@ -23,7 +25,7 @@ module.exports = {
   },
 
   saveCardDetails: async(req, res) => {
-    const { cardToken, userId } = req.body;
+    const { cardToken, stripe_cust_id } = req.body;
 
     try {
       
@@ -37,9 +39,17 @@ module.exports = {
       // // }
       // console.log('newCustomer==>', newCustomer);
       const paymentMethod = await stripe.paymentMethods.attach(cardToken, {
-        customer: userId, // Assuming you have a user ID to associate the payment method with
+        customer: stripe_cust_id, // Assuming you have a user ID to associate the payment method with
       });
-  
+      const customer = await stripe.customers.update(
+        stripe_cust_id,
+        {
+          invoice_settings: {
+            default_payment_method: paymentMethod.id
+          }
+        }
+      );
+
       // Save payment method details in your database
       const savedCardDetails = {
         cardBrand: paymentMethod.card.brand,
@@ -60,7 +70,6 @@ module.exports = {
 
   listCustPaymentMethod: async(req, res) => {
     const { stripe_cust_id } = req.query;
-    console.log('stripe_cust_id==>', stripe_cust_id);
     try {
       const paymentMethods = await stripe.customers.listPaymentMethods(
         stripe_cust_id,
@@ -68,13 +77,19 @@ module.exports = {
           limit: 3,
         }
       );
+      const customer = await stripe.customers.retrieve(stripe_cust_id);
+      const defaultCard = paymentMethods.data.filter((item) => item.id === customer.invoice_settings.default_payment_method)
+      const backupCard = paymentMethods.data.filter((item) => item.id !== customer.invoice_settings.default_payment_method)
       res.status(200).json({ 
         data: paymentMethods,
+        customerDetails: customer,
+        defaultCard: defaultCard,
+        backupCard: backupCard,
         message: `Customer's Payment Method retrieved successfully` 
       });
     } catch (error) {
       console.error(error);
-      res.status(500).json({ message: `Failed to retrieve Customer's Payment Method` });
+      res.status(500).json({ message: `Failed to retrieve Customer's Payment Method/Details as customer might not exist. Please create a customer!` });
     }
   },
 
@@ -91,5 +106,207 @@ module.exports = {
       console.error(error);
       res.status(500).json({ message: `Failed to retrieve Customer's Payment Method` });
     }
-  }
+  },
+
+  createSubscription: async(req, res) => {
+    const {stripe_cust_id, products, startDate, trial_period_days, trialend} = req.body;
+    try {      
+      const subscriptions = await Promise.all(products.map(async (product) => {
+        const { price_id, qty } = product.product;
+        let subscriptionSchedule;
+        let subscription;
+        if (trial_period_days !== 0) {
+            subscriptionSchedule = await stripe.subscriptionSchedules.create({
+            customer: stripe_cust_id,
+            start_date: startDate,
+            end_behavior: 'release',
+            phases: [
+              {
+                items: [
+                  {
+                    price: price_id,
+                    quantity: qty,
+                  },
+                ],
+                trial_end: startDate + (parseInt(trial_period_days) * 24 * 60 * 60), // 10 days from the start date
+              },
+            ],
+          });
+          return subscriptionSchedule;
+        } else {
+          subscription = await stripe.subscriptions.create({
+            customer: stripe_cust_id,
+            items: [
+              {
+                price: price_id,
+                quantity: qty,
+              },
+            ],
+          });
+          return subscription;
+        }
+      }));
+      res.status(200).json({ 
+        data: subscriptions,
+        message: 'Subscripiton created' 
+      });
+    } catch (error) {
+      console.error('Error fetching product info:', error);
+      res.status(500).json({ 
+        message: 'Please Add a payment method in order to subscribe',
+        error: error
+      });
+      throw error;
+    }
+  },
+
+  listSubscriptions: async(req, res) => {
+    const { stripe_cust_id } = req.query;
+
+    try {
+      const subscriptions = await stripe.subscriptions.list({
+        customer: stripe_cust_id
+      });
+      const subscriptionsFromDB = await subscription.listSubscriptions(stripe_cust_id);
+      
+      // Function to get product information for subscriptions
+      async function getProductInfo(productId) {
+        try {
+          const product = await stripe.products.retrieve(productId);
+          return product;
+        } catch (error) {
+          console.error('Error fetching product info:', error);
+          throw error;
+        }
+      }
+
+      // Function to get products for subscriptions
+      async function getProductsForSubscriptions(subscriptions) {
+        try {
+          const productIds = subscriptions.map((subscription) => subscription.plan.product);
+          const productPromises = productIds.map((productId) => getProductInfo(productId));
+          const products = await Promise.all(productPromises);
+          const subscriptionsWithProducts = subscriptions.map((subscription, index) => ({
+            ...subscription,
+            product: products[index],
+          }));
+          return subscriptionsWithProducts;
+        } catch (error) {
+          console.error('Error fetching products for subscriptions:', error);
+          throw error;
+        }
+      }
+
+      // Get subscriptions with associated products
+      const subscriptionsWithProducts = await getProductsForSubscriptions(subscriptions.data);
+
+
+      res.status(200).json({ 
+        data: {
+          subscriptions: subscriptionsWithProducts,
+          subscriptionsFromDB: subscriptionsFromDB
+        },
+        message: 'Subscriptions retrieved' 
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: `Failed to retrieve Subscriptions` });
+    }
+  },
+
+  listInvoice: async(req, res) => {
+    const { stripe_cust_id } = req.query;
+
+    try {
+      const invoices = await stripe.invoices.list({
+        customer: stripe_cust_id
+      });
+
+      res.status(200).json({ 
+        data: invoices,
+        message: 'Invoice retrieved' 
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: `Failed to retrieve Invoice` });
+    }    
+  },
+
+  listScheduledSubscriptions: async(req, res) => {
+    const { stripe_cust_id } = req.query;
+    console.log('stripe_cust_id---', stripe_cust_id);
+    try {
+      const subscriptions = await stripe.subscriptionSchedules.list({
+        customer: stripe_cust_id,
+        limit:50
+      });
+      /* Filter out the subcriptions those aren't cancelled */
+      const filteredData = subscriptions.data.filter((item) => item.canceled_at == null);
+      const subscriptionsFromDB = await subscription.listSubscriptions(stripe_cust_id);
+      console.log('subscriptionsFromDB===', subscriptionsFromDB);
+      res.status(200).json({ 
+        data: {
+          subscriptions: filteredData,
+          localSubscriptions: subscriptionsFromDB
+        },
+        message: 'Subscriptions retrieved' 
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: `Failed to retrieve Subscriptions` });
+    }
+  },
+
+  listProducts: async(req, res) => {
+    try {
+      const productList = await stripe.products.list({
+        limit: 20
+      });
+      const priceList = await stripe.prices.list({
+        limit: 30
+      });
+      res.status(200).json({ 
+        data: {
+          products: productList,
+          priceList: priceList,
+          productList: productList.data.map((item) => item.default_price)
+        },
+        message: 'Products retrieved' 
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: `Failed to retrieve Products` });
+    }
+  },
+
+  updateCustomer: async(req, res) => {
+    const { stripe_cust_id, paymentMethodID, name, email, phone, description, city, state, country  } = req.body;
+
+    try {
+      const customer = await stripe.customers.update(
+        stripe_cust_id,
+        {
+          name: name,
+          email: email,
+          phone: phone,
+          description: description,
+          invoice_settings: {
+            default_payment_method: paymentMethodID
+          },
+          address: {
+            country: country,
+            state: state,
+            city: city
+          }
+        }
+      );
+      res.status(200).json({ 
+        data: customer,
+        message: 'Payment Method Updated' 
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: `Failed to retrieve Products` });
+    }
+  },
 };

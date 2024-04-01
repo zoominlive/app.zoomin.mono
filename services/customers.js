@@ -133,7 +133,7 @@ module.exports = {
             },
           ],
         },
-        attributes: { exclude: ["createdAt", "updatedAt"] },
+        attributes: { exclude: ["updatedAt"] },
         // limit: parseInt(pageSize),
         // offset: parseInt(pageNumber * pageSize),
       });
@@ -169,7 +169,7 @@ module.exports = {
             attributes: ['first_name', 'last_name','role','location','stream_live_license', 'email', 'user_id'],
           }
         ],
-        attributes: { exclude: ["createdAt", "updatedAt"] },
+        attributes: { exclude: ["updatedAt"] },
         limit: parseInt(pageSize),
         offset: parseInt(pageNumber * pageSize),
         order: [[{ model: Users }, 'created_at', 'ASC']]

@@ -7,6 +7,8 @@ const {
   sendEmailChangeMail, sendRegistrationMailforUser
 } = require('../lib/ses-mail-sender');
 const CustomerLocations = require("../models/customer_locations");
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+
 module.exports = {
   /* Get  customer's details */
   getAllCustomerDetails: async (req, res, next) => {
@@ -124,7 +126,42 @@ module.exports = {
     try {
       const params = req.body;
       const { user, customer_locations, ...customeDetails } = params;
+      let customer;
+      if(user.role === 'Admin') {
+        customer = await stripe.customers.create({
+          name: user.first_name +' '+ user.last_name,
+          email: user.email,
+        });
+        customeDetails.stripe_cust_id = customer.id;
+      }
+      // const productList = await stripe.products.list();
+      // const productPriceIDs = productList.data.map((item) => item.default_price);
+      // console.log('productPriceIDs-->', productPriceIDs);
+      
+      // async function createSubscriptions(customerId, priceIds) {
+      //   try {
+      //     // Create subscriptions for each product
+      //     const subscriptions = await Promise.all(priceIds.map(priceId => {
+      //       return stripe.subscriptions.create({
+      //         customer: customerId,
+      //         items: [{ price: priceId }], 
+      //       });
+      //     }));
 
+      //     // Return an array of subscription objects
+      //     return subscriptions;
+      //   } catch (error) {
+      //     console.error('Error creating subscriptions:', error);
+      //     throw error;
+      //   }
+      // }
+      // createSubscriptions(customer.id, productPriceIDs)
+      //   .then((subscriptions) => {
+      //     console.log("Subscriptions created:", subscriptions);
+      //   })
+      //   .catch((error) => {
+      //     console.error("Failed to create subscriptions:", error);
+      //   });
       let addCustomer = await customerServices.createCustomer(
         customeDetails,
         t
