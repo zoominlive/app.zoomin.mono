@@ -4,10 +4,13 @@ import EditIcon from '@mui/icons-material/Edit';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import PropTypes from 'prop-types';
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
+import { PieChart } from 'react-feather';
+import { useNavigate } from 'react-router-dom';
 
 const CustomerActions = (props) => {
   const [anchorEl, setAnchorEl] = React.useState(null);
   const open = Boolean(anchorEl);
+  const navigate = useNavigate();
 
   // Method to open the customer actions on table
   const handleClick = (event) => {
@@ -28,6 +31,10 @@ const CustomerActions = (props) => {
     props.setCustomer({ ...props.customer });
     props.setIsCustomerFormDialogOpen(true);
     handleClose(event);
+  };
+
+  const handleManageBilling = () => {
+    navigate('/settings');
   };
 
   // Method to set customer for the delete action
@@ -55,6 +62,12 @@ const CustomerActions = (props) => {
             <EditIcon />
           </ListItemIcon>
           <ListItemText>Edit Customer</ListItemText>
+        </MenuItem>
+        <MenuItem onClick={handleManageBilling}>
+          <ListItemIcon>
+            <PieChart />
+          </ListItemIcon>
+          <ListItemText>Manage Billing</ListItemText>
         </MenuItem>
         <MenuItem onClick={handleCustomerDelete}>
           <ListItemIcon>

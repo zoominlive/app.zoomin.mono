@@ -9,22 +9,26 @@ import {
 } from '@stripe/react-stripe-js';
 import PropTypes from 'prop-types';
 import AuthContext from '../../context/authcontext';
-import axios from 'axios';
 import { Autocomplete, Box, Button, Grid, TextField, Typography } from '@mui/material';
 import { Plus } from 'react-feather';
 import { countries } from '../../utils/constants';
+import API from '../../api';
 
 export default function CheckoutForm(props) {
   const stripe = useStripe();
   const elements = useElements();
   const [cardDetails, setCardDetails] = useState(null);
   const authCtx = useContext(AuthContext);
+  const [firstName, setFirstName] = useState(null);
 
   const handleAddPaymentMethod = async () => {
     console.log('cardElement', CardElement);
     const { error, paymentMethod } = await stripe.createPaymentMethod({
       type: 'card',
-      card: elements.getElement(CardNumberElement)
+      card: elements.getElement(CardNumberElement),
+      billing_details: {
+        name: firstName
+      }
     });
 
     if (error) {
@@ -37,13 +41,11 @@ export default function CheckoutForm(props) {
 
   const saveCardDetails = async (cardToken) => {
     try {
-      const response = await axios.post(
-        `${process.env.REACT_APP_BE_ENDPOINT}payment/save-card-details`,
-        {
-          cardToken: cardToken,
-          userId: authCtx.user.stripe_cust_id // Replace 'user_id' with the actual user ID
-        }
-      );
+      const response = await API.post(`payment/save-card-details`, {
+        cardToken: cardToken,
+        userId: authCtx.user.stripe_cust_id, // Replace 'user_id' with the actual user ID
+        cust_id: localStorage.getItem('cust_id')
+      });
       props.closeDialog();
       props.getCustPaymentMethod();
       console.log(response.data.message); // Log success message
@@ -59,6 +61,22 @@ export default function CheckoutForm(props) {
           <Box className="input-fields">
             <CardNumberElement />
           </Box>
+        </Grid>
+        <Grid item md={12} xs={12}>
+          <Typography className="card-element-labels">Card Holder Name</Typography>
+          <TextField
+            labelId="first_name"
+            placeholder="Enter Name as on the Card"
+            name="first_name"
+            value={firstName}
+            className="input-fields"
+            onChange={(event) => {
+              setFirstName(event.target.value);
+            }}
+            // helperText={touched.first_name && errors.first_name}
+            // error={touched.first_name && Boolean(errors.first_name)}
+            fullWidth
+          />
         </Grid>
         <Grid item md={6} xs={12}>
           <Typography className="card-element-labels">Expiration</Typography>

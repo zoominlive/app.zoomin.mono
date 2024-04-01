@@ -21,6 +21,7 @@ import PropTypes from 'prop-types';
 import AuthContext from '../../context/authcontext';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
+import { PieChart } from 'react-feather';
 
 const AccountMenu = (props) => {
   const navigate = useNavigate();
@@ -108,6 +109,21 @@ const AccountMenu = (props) => {
                   <SettingsIcon />
                 </ListItemIcon>
                 <ListItemText sx={{ ml: 2 }}>Settings</ListItemText>
+              </MenuItem>
+              <Divider />
+            </>
+          )}
+          {(authCtx.user?.role === 'Admin' || authCtx.user?.role === 'Super Admin') && (
+            <>
+              <MenuItem
+                onClick={(event) => {
+                  navigate('/billing');
+                  handleClose(event);
+                }}>
+                <ListItemIcon>
+                  <PieChart />
+                </ListItemIcon>
+                <ListItemText sx={{ ml: 2 }}>Billing</ListItemText>
               </MenuItem>
               <Divider />
             </>

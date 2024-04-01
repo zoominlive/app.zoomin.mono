@@ -30,7 +30,7 @@ const AppRoutes = () => {
             <Route path="/users" element={<Users />} />
           </>
         )}
-        {authCtx.user && authCtx.user.role === 'Admin' && (
+        {authCtx.user && (authCtx.user.role === 'Admin' || authCtx.user.role === 'Super Admin') && (
           <Route path="/billing" element={<Invoices />} />
         )}
         {authCtx.user && authCtx.user.role !== 'Family' && authCtx.user.role !== 'Teacher' && (

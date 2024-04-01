@@ -61,6 +61,7 @@ import visa_png from '../../assets/visa_png.png';
 import API from '../../api';
 import { errorMessageHandler } from '../../utils/errormessagehandler';
 import { useSnackbar } from 'notistack';
+import NoDataDiv from '../common/nodatadiv';
 // import ViewersTable from '../dashboard/viewerstable';
 
 const SubscriptionColumns = [
@@ -108,19 +109,6 @@ const invoiceList = [
   }
 ];
 
-const SubscriptionRows = [
-  {
-    Type: 'Fix Camera Live Streaming License',
-    Number: 16,
-    Charge: '$640.00'
-  },
-  {
-    Type: 'Mobile Live Stream Room License',
-    Number: 8,
-    Charge: '$200.00'
-  }
-];
-
 const stripePromise = loadStripe(
   'pk_test_51OGEnKERJiP7ChzSM3d7ey4jza1QvU6Ch040MDBMpVxqG656ytQip6v9f4vsYi4Zsfz09S1AFyVrOZYo9J3t0Vfi00Mu9LPpdw'
 );
@@ -132,8 +120,10 @@ const Invoices = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isPaymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [cardDetails, setCardDetails] = useState(null);
+  const [backupCardDetails, setBackupCardDetails] = useState(null);
   const [billingDetails, setBillingDetails] = useState(null);
   const [paymentMethodDetails, setPaymentMethodDetails] = useState(null);
+  const [backupPaymentMethodDetails, setBackupPaymentMethodDetails] = useState(null);
   const [isDatePickerOpen1, setIsDatePickerOpen1] = useState(false);
   const [isDatePickerOpen2, setIsDatePickerOpen2] = useState(false);
   const [fromDate, setFromDate] = useState(moment().subtract(7, 'days'));
@@ -143,12 +133,18 @@ const Invoices = () => {
   const [isDisputeFormDialogOpen, setIsDisputeFormDialogOpen] = useState(false);
   const [height, setHeight] = useState(0);
   const [cardHeight, setCardHeight] = useState(0);
+  const [subscriptionRows, setSubscriptionRows] = useState([]);
+  const [invoiceList, setInvoiceList] = useState([]);
+
   const ref = useRef(null);
+  console.log('authCtx.user.stripe_cust_id-->', authCtx.user);
   const stripe_cust_id = authCtx.user.stripe_cust_id;
-  console.log('stripe_cust_id==>', stripe_cust_id);
+
   useEffect(() => {
     // Retrieve Customer's Payment Method
     getCustPaymentMethod();
+    listSubscriptions();
+    listInvoice();
   }, []);
 
   useEffect(() => {
@@ -156,67 +152,17 @@ const Invoices = () => {
     setCardHeight(ref.current.clientHeight / 2 - 16);
   }, []);
 
+  useEffect(() => {
+    layoutCtx.setActive(10);
+    layoutCtx.setBreadcrumb(['Billing Account', 'Manage your all the paid, unpaid bills']);
+    return () => {
+      authCtx.setPreviosPagePath(window.location.pathname);
+    };
+  }, []);
+
   console.log('height-->', height);
-  const getCustPaymentMethod = () => {
-    API.get('payment/list-customer-payment-method', {
-      params: { stripe_cust_id: stripe_cust_id }
-    }).then((response) => {
-      if (response.status === 200) {
-        console.log('response.data.data[0]', response.data.data.data[0]);
-        setCardDetails(response.data.data.data[0].card);
-        setBillingDetails(response.data.data.data[0].billing_details);
-        setPaymentMethodDetails(response.data.data.data[0]);
-      } else {
-        errorMessageHandler(
-          enqueueSnackbar,
-          response?.response?.data?.Message || 'Something Went Wrong.',
-          response?.response?.status,
-          authCtx.setAuthError
-        );
-      }
-      setIsLoading(false);
-    });
-  };
-
-  const appearance = {
-    theme: 'stripe'
-  };
-  const options = {
-    // clientSecret,
-    appearance
-  };
-  const handleClose = () => setIsCloseDialog(!isCloseDialog);
-
-  const handleFormDialogClose = () => {
-    setPaymentDialogOpen(false);
-    setIsDisputeFormDialogOpen(false);
-  };
-  console.log('cardDetails==>', cardDetails);
-
-  const handleRemoveCard = () => {
-    // Retrieve Customer's Payment Method
-    console.log('reached', paymentMethodDetails);
-    API.post('payment/detach-payment-method', { pm_id: paymentMethodDetails.id }).then(
-      (response) => {
-        if (response.status === 200) {
-          setCardDetails(null);
-          setPaymentMethodDetails(null);
-          setBillingDetails(null);
-        } else {
-          errorMessageHandler(
-            enqueueSnackbar,
-            response?.response?.data?.Message || 'Something Went Wrong.',
-            response?.response?.status,
-            authCtx.setAuthError
-          );
-        }
-        setIsLoading(false);
-      }
-    );
-  };
-
   const Row = ({ row }) => {
-    const { invoice_date, description, method, amount, status } = row;
+    const { invoice_date, description, method, amount_paid, amount_due, status } = row;
     return (
       <>
         <TableRow hover>
@@ -250,7 +196,11 @@ const Invoices = () => {
               setInvoiceDrawerOpen(true);
             }}>
             {/* <Stack direction="row"> */}
-            <Typography>{amount}</Typography>
+            <Typography>
+              {status == 'paid'
+                ? '$' + ' ' + parseFloat(amount_paid / 100).toFixed(2)
+                : '$' + ' ' + parseFloat(amount_due / 100).toFixed(2)}
+            </Typography>
             {/* </Stack> */}
           </TableCell>
           <TableCell
@@ -266,10 +216,11 @@ const Invoices = () => {
             {/* </Stack> */}
           </TableCell>
           <TableCell align="left">
-            <Button className="add-button btn-radius" variant="contained">
-              {' '}
-              Pay Now
-            </Button>
+            {status !== 'paid' && (
+              <Button className="add-button btn-radius" variant="contained">
+                {'Pay Now'}
+              </Button>
+            )}
           </TableCell>
           <TableCell align="left">
             <DisputeActions setIsDisputeFormDialogOpen={setIsDisputeFormDialogOpen} />
@@ -278,22 +229,134 @@ const Invoices = () => {
       </>
     );
   };
+
   Row.propTypes = {
     row: PropTypes.shape({
       invoice_date: PropTypes.string,
       description: PropTypes.string,
       method: PropTypes.string,
-      amount: PropTypes.string,
+      amount_paid: PropTypes.number,
+      amount_due: PropTypes.number,
       status: PropTypes.string
     })
   };
-  useEffect(() => {
-    layoutCtx.setActive(10);
-    layoutCtx.setBreadcrumb(['Billing Account', 'Manage your all the paid, unpaid bills']);
-    return () => {
-      authCtx.setPreviosPagePath(window.location.pathname);
-    };
-  }, []);
+
+  const getCustPaymentMethod = () => {
+    API.get('payment/list-customer-payment-method', {
+      params: { stripe_cust_id: stripe_cust_id, cust_id: localStorage.getItem('cust_id') }
+    }).then((response) => {
+      if (response.status === 200) {
+        setCardDetails({
+          ...response.data.defaultCard[0].card,
+          billingDetails: response.data.defaultCard[0].billing_details
+        });
+        setBackupCardDetails(response.data.backupCard[0]?.card);
+        setBillingDetails(response.data.data.data[0].billing_details);
+        setPaymentMethodDetails(response.data.data.data[0]);
+        setBackupPaymentMethodDetails(response.data.backupCard[0]);
+      } else {
+        errorMessageHandler(
+          enqueueSnackbar,
+          response?.response?.data?.Message || 'Something Went Wrong.',
+          response?.response?.status,
+          authCtx.setAuthError
+        );
+      }
+      setIsLoading(false);
+    });
+  };
+
+  const listSubscriptions = () => {
+    API.get('payment/list-subscriptions', {
+      params: { stripe_cust_id: stripe_cust_id, cust_id: localStorage.getItem('cust_id') }
+    }).then((response) => {
+      if (response.status === 200) {
+        let mappedSubscriptionRes = response.data.data.subscriptionsFromDB.map((item) => ({
+          Type: item.product_name,
+          Number: item.quantity,
+          Charge: item.stripe_price
+        }));
+        setSubscriptionRows(mappedSubscriptionRes);
+      } else {
+        errorMessageHandler(
+          enqueueSnackbar,
+          response?.response?.data?.Message || 'Something Went Wrong.',
+          response?.response?.status,
+          authCtx.setAuthError
+        );
+      }
+      setIsLoading(false);
+    });
+  };
+
+  const listInvoice = () => {
+    API.get('payment/list-invoice', {
+      params: { stripe_cust_id: stripe_cust_id, cust_id: localStorage.getItem('cust_id') }
+    }).then((response) => {
+      if (response.status === 200) {
+        setInvoiceList(response.data.data);
+      } else {
+        errorMessageHandler(
+          enqueueSnackbar,
+          response?.response?.data?.Message || 'Something Went Wrong.',
+          response?.response?.status,
+          authCtx.setAuthError
+        );
+      }
+      setIsLoading(false);
+    });
+  };
+
+  const handleClose = () => setIsCloseDialog(!isCloseDialog);
+
+  const handleFormDialogClose = () => {
+    setPaymentDialogOpen(false);
+    setIsDisputeFormDialogOpen(false);
+  };
+
+  const handleRemoveCard = () => {
+    // Retrieve Customer's Payment Method
+    console.log('paymentMethodDetails-->', paymentMethodDetails);
+    API.post('payment/detach-payment-method', { pm_id: paymentMethodDetails.id }).then(
+      (response) => {
+        if (response.status === 200) {
+          setCardDetails(null);
+          setPaymentMethodDetails(null);
+          setBillingDetails(null);
+          getCustPaymentMethod();
+        } else {
+          errorMessageHandler(
+            enqueueSnackbar,
+            response?.response?.data?.message || 'Something Went Wrong.',
+            response?.response?.status,
+            authCtx.setAuthError
+          );
+        }
+        setIsLoading(false);
+      }
+    );
+  };
+
+  const handleMakePrimary = () => {
+    API.put('payment/update-customer', {
+      userId: authCtx.user.stripe_cust_id,
+      paymentMethodID: backupPaymentMethodDetails.id,
+      cust_id: localStorage.getItem('cust_id')
+    }).then((response) => {
+      if (response.status === 200) {
+        getCustPaymentMethod();
+      } else {
+        errorMessageHandler(
+          enqueueSnackbar,
+          response?.response?.data?.Message || 'Something Went Wrong.',
+          response?.response?.status,
+          authCtx.setAuthError
+        );
+      }
+      setIsLoading(false);
+    });
+  };
+  console.log('subscriptionRows==>', subscriptionRows);
   return (
     <Box className="invoice">
       <LinerLoader loading={isLoading} />
@@ -301,7 +364,7 @@ const Invoices = () => {
         <Grid item md={12} sm={12} xs={12} lg={4}>
           <Paper sx={{ marginTop: 2, height: '96%' }} className="zl__table-res">
             <SubscriptionTable
-              rows={SubscriptionRows}
+              rows={subscriptionRows}
               columns={SubscriptionColumns}
               title={'Subscriptions'}
               isLoading={isLoading}
@@ -344,7 +407,11 @@ const Invoices = () => {
                                 lineHeight: '22px',
                                 color: '#FFFFFF !important'
                               }}>
-                              {cardDetails?.funding === 'credit' ? 'Credit Card' : 'Debit Card'}
+                              {cardDetails?.funding === 'credit'
+                                ? 'Credit Card'
+                                : cardDetails?.funding === 'debit'
+                                ? 'Dedit Card'
+                                : `${cardDetails?.funding}`}
                             </Typography>
                           </Stack>
                           <Stack marginTop={3}>
@@ -356,7 +423,7 @@ const Invoices = () => {
                                 color: '#FFFFFF !important',
                                 opacity: '60% !important'
                               }}>
-                              {billingDetails?.name}
+                              {cardDetails?.billingDetails?.name}
                             </Typography>
                           </Stack>
                           <Stack>
@@ -393,20 +460,50 @@ const Invoices = () => {
                               }}>
                               Backup Payment Method
                             </Typography>
-                            <Button
-                              disableRipple
-                              sx={{
-                                fontSize: '14px !important',
-                                letterSpacing: '0px',
-                                padding: '0px',
-                                fontWeight: '500 !important',
-                                lineHeight: '20px !important',
-                                color: '#5A53DD !important',
-                                textTransform: 'none !important',
-                                ':hover': { backgroundColor: 'transparent' }
-                              }}>
-                              Add Backup Payment Method
-                            </Button>
+                            {backupCardDetails ? (
+                              <Stack>
+                                <Typography
+                                  sx={{
+                                    fontSize: '14px !important',
+                                    fontWeight: '500 !important',
+                                    lineHeight: '20px'
+                                  }}>
+                                  {`#### #### #### ${backupCardDetails?.last4}`}
+                                </Typography>
+                                <Button
+                                  disableRipple
+                                  onClick={handleMakePrimary}
+                                  sx={{
+                                    justifyContent: 'end !important',
+                                    fontSize: '14px !important',
+                                    letterSpacing: '0px',
+                                    padding: '0px',
+                                    fontWeight: '500 !important',
+                                    lineHeight: '20px !important',
+                                    color: '#5A53DD !important',
+                                    textTransform: 'none !important',
+                                    ':hover': { backgroundColor: 'transparent' }
+                                  }}>
+                                  Make Primary
+                                </Button>
+                              </Stack>
+                            ) : (
+                              <Button
+                                disableRipple
+                                onClick={() => setPaymentDialogOpen(true)}
+                                sx={{
+                                  fontSize: '14px !important',
+                                  letterSpacing: '0px',
+                                  padding: '0px',
+                                  fontWeight: '500 !important',
+                                  lineHeight: '20px !important',
+                                  color: '#5A53DD !important',
+                                  textTransform: 'none !important',
+                                  ':hover': { backgroundColor: 'transparent' }
+                                }}>
+                                Add Backup Payment Method
+                              </Button>
+                            )}
                           </Stack>
                         </Box>
                       </Stack>
@@ -679,9 +776,12 @@ const Invoices = () => {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {invoiceList?.length > 0
-                      ? invoiceList?.map((row, index) => <Row row={row} key={index} />)
-                      : null}
+                    {console.log(invoiceList)}
+                    {invoiceList?.data?.length > 0 ? (
+                      invoiceList?.data?.map((row, index) => <Row row={row} key={index} />)
+                    ) : (
+                      <NoDataDiv />
+                    )}
                   </TableBody>
                 </Table>
                 {/* {!isLoading && recordedStreamList?.length == 0 ? <NoDataDiv /> : null}

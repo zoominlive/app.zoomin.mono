@@ -39,8 +39,8 @@ import {
   Shield,
   Camera,
   Film,
-  Code,
-  PieChart
+  Code
+  // PieChart
 } from 'react-feather';
 import AccountMenu from '../common/accountmenu';
 import { Outlet, useNavigate } from 'react-router-dom';
@@ -306,13 +306,13 @@ const Layout = () => {
       icon: <Users style={{ color: 'white' }} />,
       link: '',
       key: 9
-    },
-    {
-      name: 'Billing',
-      icon: <PieChart style={{ color: 'white' }} />,
-      link: '/billing',
-      key: 10
     }
+    // {
+    //   name: 'Billing',
+    //   icon: <PieChart style={{ color: 'white' }} />,
+    //   link: '/billing',
+    //   key: 10
+    // }
     // {
     //   name: 'AI Alerts',
     //   icon: <Code style={{ color: 'white' }} />,

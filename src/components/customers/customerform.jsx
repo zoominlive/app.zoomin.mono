@@ -25,7 +25,8 @@ import {
   MenuItem,
   FormHelperText,
   IconButton,
-  DialogContentText
+  DialogContentText,
+  Typography
 } from '@mui/material';
 import { Plus } from 'react-feather';
 import { FieldArray, Form, Formik } from 'formik';
@@ -42,6 +43,11 @@ import PhoneNumberInput from '../common/phonenumberinput';
 // import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CloseIcon from '@mui/icons-material/Close';
+import { DesktopDatePicker, LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterMoment } from '@mui/x-date-pickers/AdapterMoment';
+import ArrowDropUpIcon from '@mui/icons-material/ArrowDropUp';
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+import moment from 'moment';
 
 const STEPS = ['Customer', 'Customer Locations', 'User'];
 
@@ -53,6 +59,8 @@ const CustomerForm = (props) => {
   const [roomList, setRoomList] = useState([]);
   const [selectedLocation, setSelectedLocation] = useState([]);
   const [isCloseDialog, setIsCloseDialog] = useState(false);
+  const [recurringChargeDate, setRecurringChargeDate] = useState(moment());
+  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
 
   const validationSchema = [
     yup.object().shape({
@@ -357,29 +365,6 @@ const CustomerForm = (props) => {
                 fullWidth
               />
             </Grid>
-            <Grid item md={4} xs={12}>
-              <InputLabel id="max_cameras">Maximum Cameras</InputLabel>
-              <TextField
-                labelId="max_cameras"
-                type="number"
-                InputProps={{
-                  inputProps: { min: 0 }
-                }}
-                onKeyPress={(event) => {
-                  if (event?.key === '-' || event?.key === '+') {
-                    event.preventDefault();
-                  }
-                }}
-                name="max_cameras"
-                value={values?.max_cameras}
-                onChange={(event) => {
-                  setFieldValue('max_cameras', event.target.value);
-                }}
-                helperText={touched.max_cameras && errors.max_cameras}
-                error={touched.max_cameras && Boolean(errors.max_cameras)}
-                fullWidth
-              />
-            </Grid>
             {/* <Grid item md={4} xs={12}>
               <InputLabel id="available_cameras">Available Cameras</InputLabel>
               <TextField
@@ -403,29 +388,6 @@ const CustomerForm = (props) => {
                 fullWidth
               />
             </Grid> */}
-            <Grid item md={4} xs={12}>
-              <InputLabel id="max_locations">Maximum Locations</InputLabel>
-              <TextField
-                labelId="max_locations"
-                type="number"
-                InputProps={{
-                  inputProps: { min: 0 }
-                }}
-                onKeyPress={(event) => {
-                  if (event?.key === '-' || event?.key === '+') {
-                    event.preventDefault();
-                  }
-                }}
-                name="max_locations"
-                value={values?.max_locations}
-                onChange={(event) => {
-                  setFieldValue('max_locations', event.target.value);
-                }}
-                helperText={touched.max_locations && errors.max_locations}
-                error={touched.max_locations && Boolean(errors.max_locations)}
-                fullWidth
-              />
-            </Grid>
 
             <Grid item xs={12} md={12}>
               <InputLabel id="transcoder_endpoint">Tanscoder Endpoint</InputLabel>
@@ -456,7 +418,59 @@ const CustomerForm = (props) => {
               />
             </Grid>
             <Grid item md={4} xs={12}>
-              <InputLabel id="timeout">Timeout</InputLabel>
+              <LocalizationProvider dateAdapter={AdapterMoment}>
+                <InputLabel id="recurring-charge-day">Recurring Charge Day</InputLabel>
+                <DesktopDatePicker
+                  open={isDatePickerOpen}
+                  maxDate={moment()}
+                  labelId="recurring-charge-day"
+                  autoOk={true}
+                  value={values?.recurring_charge_day}
+                  inputFormat="MM/DD/YY"
+                  onClose={() => setIsDatePickerOpen(false)}
+                  renderInput={(params) => (
+                    <TextField onClick={() => setIsDatePickerOpen(true)} {...params} />
+                  )}
+                  components={{
+                    OpenPickerIcon: !isDatePickerOpen ? ArrowDropDownIcon : ArrowDropUpIcon
+                  }}
+                  onChange={(value) => {
+                    setRecurringChargeDate(value);
+                  }}
+                />
+              </LocalizationProvider>
+            </Grid>
+            <Grid item xs={12} md={12}>
+              <Divider orientation="horizontal" variant="middle" flexItem />
+            </Grid>
+            <Grid item xs={12} md={12}>
+              <Typography variant="subtitle2">Licensing</Typography>
+            </Grid>
+            <Grid item md={4} xs={12}>
+              <InputLabel id="max_locations">Number of Locations</InputLabel>
+              <TextField
+                labelId="max_locations"
+                type="number"
+                InputProps={{
+                  inputProps: { min: 0 }
+                }}
+                onKeyPress={(event) => {
+                  if (event?.key === '-' || event?.key === '+') {
+                    event.preventDefault();
+                  }
+                }}
+                name="max_locations"
+                value={values?.max_locations}
+                onChange={(event) => {
+                  setFieldValue('max_locations', event.target.value);
+                }}
+                helperText={touched.max_locations && errors.max_locations}
+                error={touched.max_locations && Boolean(errors.max_locations)}
+                fullWidth
+              />
+            </Grid>
+            <Grid item md={4} xs={12}>
+              <InputLabel id="timeout">Viewing Timeout</InputLabel>
               <TextField
                 labelId="timeout"
                 type="number"
@@ -473,6 +487,29 @@ const CustomerForm = (props) => {
                 }}
                 helperText={touched.timeout && errors.timeout}
                 error={touched.timeout && Boolean(errors.timeout)}
+                fullWidth
+              />
+            </Grid>
+            <Grid item md={4} xs={12}>
+              <InputLabel id="max_cameras">Number of Fix Camera Licenses</InputLabel>
+              <TextField
+                labelId="max_cameras"
+                type="number"
+                InputProps={{
+                  inputProps: { min: 0 }
+                }}
+                onKeyPress={(event) => {
+                  if (event?.key === '-' || event?.key === '+') {
+                    event.preventDefault();
+                  }
+                }}
+                name="max_cameras"
+                value={values?.max_cameras}
+                onChange={(event) => {
+                  setFieldValue('max_cameras', event.target.value);
+                }}
+                helperText={touched.max_cameras && errors.max_cameras}
+                error={touched.max_cameras && Boolean(errors.max_cameras)}
                 fullWidth
               />
             </Grid>
@@ -959,7 +996,10 @@ const CustomerForm = (props) => {
               : true,
             customer_locations: props?.customer?.customer_locations
               ? props?.customer?.customer_locations
-              : [{ loc_name: '' }]
+              : [{ loc_name: '' }],
+            recurring_charge_day: props?.customer?.createdAt
+              ? moment(props?.customer?.createdAt).format('MM/DD/YY')
+              : recurringChargeDate
           }}
           onSubmit={handleSubmit}>
           {({ values, setFieldValue, touched, errors, isValidating, arrayHelpers }) => {

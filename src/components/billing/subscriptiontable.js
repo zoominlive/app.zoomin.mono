@@ -2,6 +2,7 @@ import { Box, Paper, Stack, Typography } from '@mui/material';
 import PropTypes from 'prop-types';
 import NoDataDiv from '../common/nodatadiv';
 import { useEffect } from 'react';
+import _ from 'lodash';
 // import { useContext } from 'react';
 // import AuthContext from '../../context/authcontext';
 
@@ -32,7 +33,8 @@ export default function SubscriptionTable({
       setFamily(familyDetails);
     }
   }, [rows]);
-  console.log(rows);
+  let amount = rows.map((item) => parseInt(item.Charge));
+  amount = _.sum(amount);
   return (
     <>
       <Paper sx={{ marginTop: 2, boxShadow: 'unset' }}>
@@ -63,7 +65,7 @@ export default function SubscriptionTable({
                           <Box style={{ display: 'flex' }}>{row?.Number}</Box>
                         </Box>
                         <Box className="zl__td-block" style={{ width: '20%', color: '#6AD2A0' }}>
-                          {row.Charge}
+                          {parseFloat(row.Charge).toFixed(2)}
                         </Box>
                         {/* <Box className="zl__td-block" style={{ width: '25%' }}>
                         {row.status}
@@ -93,7 +95,7 @@ export default function SubscriptionTable({
                 <Box className="zl__td-block" style={{ width: '20%' }}>
                   <Typography
                     sx={{ fontSize: '16px', fontWeight: 500, color: '#6AD2A0 !important' }}>
-                    {'$985'}
+                    {parseFloat(amount).toFixed(2)}
                   </Typography>
                 </Box>
               </Box>

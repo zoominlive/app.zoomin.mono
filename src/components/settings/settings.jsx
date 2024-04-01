@@ -1,9 +1,13 @@
+/* eslint-disable no-unused-vars */
 import {
   Box,
   Button,
   Card,
   CardContent,
+  CardHeader,
+  Checkbox,
   Chip,
+  Divider,
   Grid,
   InputAdornment,
   InputLabel,
@@ -16,7 +20,8 @@ import {
   TableHead,
   TablePagination,
   TableRow,
-  TextField
+  TextField,
+  Typography
 } from '@mui/material';
 import Tab from '@mui/material/Tab';
 import TabContext from '@mui/lab/TabContext';
@@ -41,6 +46,14 @@ import NewDeleteDialog from '../common/newdeletedialog';
 import LinerLoader from '../common/linearLoader';
 // import SchedulerDialog from '../families/scheduler';
 import DefaultScheduler from '../families/defaultScheduler';
+import { Form, Formik } from 'formik';
+import { LoadingButton } from '@mui/lab';
+import SaveIcon from '@mui/icons-material/Save';
+import { DesktopDatePicker, LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterMoment } from '@mui/x-date-pickers/AdapterMoment';
+import ArrowDropUpIcon from '@mui/icons-material/ArrowDropUp';
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+import moment from 'moment';
 
 const Settings = () => {
   const layoutCtx = useContext(LayoutContext);
@@ -66,11 +79,112 @@ const Settings = () => {
   const [value, setValue] = useState('1');
   const [timer, setTimer] = useState([]);
   const [selectedDays, setSelectedDays] = useState([]);
+  const [stripeCust, setStripeCust] = useState();
+  const [submitLoading, setSubmitLoading] = useState(false);
+  const [products, setProducts] = useState([]);
+  const [productQuantities, setProductQuantities] = useState({});
+  const [checked, setChecked] = useState([]);
+  const [selectedProducts, setSelectedProducts] = useState([]);
+  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+  const [startDate, setStartDate] = useState(moment());
+  const [endDate, setEndDate] = useState(moment());
+  const [trialDays, setTrialDays] = useState(0);
+  const [scheduledPrices, setScheduledPrices] = useState([]);
+  const [customerInfo, setCustomerInfo] = useState([]);
+  const stripe_cust_id = authCtx.user.stripe_cust_id;
+
+  // Fetch products from the backend
+  useEffect(() => {
+    fetchProducts();
+    fetchScheduledSubscriptions();
+    fetchSubscriptions();
+    getCustPaymentMethod();
+  }, []);
+
+  const fetchProducts = async () => {
+    try {
+      const response = await API.get('payment/list-products');
+      const data = await response.data;
+      const priceList = response.data.data.priceList.data;
+      const productList = response.data.data.products.data;
+      const updatedProductList = productList.map((product) => {
+        // Find the corresponding price in the priceList
+        const price = priceList.find((price) => price.id === product.default_price);
+        // If a matching price is found, attach its unit_amount to the product
+        if (price) {
+          return {
+            ...product,
+            price_id: price.id,
+            unit_amount: price.unit_amount
+          };
+        } else {
+          return product;
+        }
+      });
+      setProducts(updatedProductList);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+    }
+  };
+
+  const fetchScheduledSubscriptions = async () => {
+    try {
+      const response = await API.get('payment/list-scheduled-subscriptions', {
+        params: {
+          stripe_cust_id: authCtx.user.stripe_cust_id,
+          cust_id: localStorage.getItem('cust_id')
+        }
+      });
+      const data = await response.data.data.localSubscriptions;
+      // setScheduledPrices(data.map((item) => item.phases[0].items[0].price));
+      setScheduledPrices(data.map((item) => item.plan));
+    } catch (error) {
+      console.error('Error fetching products:', error);
+    }
+  };
+
+  const fetchSubscriptions = async () => {
+    try {
+      const response = await API.get('payment/list-subscriptions', {
+        params: {
+          stripe_cust_id: authCtx.user.stripe_cust_id,
+          cust_id: localStorage.getItem('cust_id')
+        }
+      });
+      const data = await response.data.data.subscriptions;
+    } catch (error) {
+      console.error('Error fetching products:', error);
+    }
+  };
 
   const handleChange = (event, newValue) => {
     setValue(newValue);
   };
-  // console.log('authCTX==>', authCtx);
+
+  const handleCheckChange = (event, productId, price_id = 123, qty) => {
+    console.log('productId-->', productId);
+    if (event.target.checked) {
+      setSelectedProducts((prevSelected) => [...prevSelected, productId]);
+      setChecked([
+        ...checked,
+        {
+          product: {
+            [event.target.name]: event.target.value,
+            qty: qty,
+            price_id: price_id
+          }
+        }
+      ]);
+    } else {
+      setSelectedProducts((prevSelected) => prevSelected.filter((id) => id !== productId));
+      setChecked((prevChecked) =>
+        prevChecked.filter((item) => {
+          item.product.price_id !== price_id;
+        })
+      );
+    }
+  };
+
   useEffect(() => {
     layoutCtx.setActive(null);
     layoutCtx.setBreadcrumb(['Settings', 'Manage Settings']);
@@ -123,7 +237,6 @@ const Settings = () => {
       }
     }).then((response) => {
       if (response.status === 200) {
-        console.log('res', response.data);
         setTimer(response.data.Data.schedule.timeRange);
         setSelectedDays(response.data.Data.schedule.timeRange[0][1]);
         // setLocationsList(response.data.Data.locations);
@@ -131,6 +244,26 @@ const Settings = () => {
         errorMessageHandler(
           enqueueSnackbar,
           response?.response?.data?.Message || 'Something Went Wrong.',
+          response?.response?.status,
+          authCtx.setAuthError
+        );
+      }
+      setIsLoading(false);
+    });
+  };
+
+  // Method to fetch Customer Payment Method along with Customer Details
+  const getCustPaymentMethod = () => {
+    API.get('payment/list-customer-payment-method', {
+      params: { stripe_cust_id: stripe_cust_id, cust_id: localStorage.getItem('cust_id') }
+    }).then((response) => {
+      if (response.status === 200) {
+        setStripeCust(response.data.customerDetails);
+      } else {
+        console.log('response', response);
+        errorMessageHandler(
+          enqueueSnackbar,
+          response?.response?.data?.message || 'Something Went Wrong.',
           response?.response?.status,
           authCtx.setAuthError
         );
@@ -195,20 +328,400 @@ const Settings = () => {
     return debounce(handleSearch, 500);
   }, []);
 
+  const handleSubmit = (data) => {
+    const payload = {
+      cust_id: localStorage.getItem('cust_id'),
+      userId: authCtx.user.stripe_cust_id,
+      name: data.name,
+      email: data.email,
+      phone: data.phone,
+      description: data.description,
+      country: data.country,
+      state: data.state,
+      city: data.city
+    };
+    setSubmitLoading(true);
+    API.put('payment/update-customer', payload).then((response) => {
+      if (response.status === 200) {
+        getCustPaymentMethod();
+      } else {
+        errorMessageHandler(
+          enqueueSnackbar,
+          response?.response?.data?.message || 'Something Went Wrong.',
+          response?.response?.status,
+          authCtx.setAuthError
+        );
+      }
+      setIsLoading(false);
+    });
+  };
+  const handleIncrement = (productId) => {
+    setProductQuantities((prevQuantities) => ({
+      ...prevQuantities,
+      [productId]: (prevQuantities[productId] || 0) + 1 // Increment quantity by 1
+    }));
+  };
+
+  const handleDecrement = (productId) => {
+    setProductQuantities((prevQuantities) => ({
+      ...prevQuantities,
+      [productId]: Math.max(0, prevQuantities[productId] - 1) // Ensure quantity doesn't go below 0
+    }));
+  };
+
+  const getProductQuantity = (productName) => {
+    switch (productName) {
+      case 'Mobile Live Stream Room License':
+        return authCtx.user.max_stream_live_license_room;
+      case 'Sentry Perimeter Monitoring License':
+        return authCtx.user.max_stream_live_license;
+      default:
+        return 1;
+    }
+  };
+
+  const handleCheckout = async (data) => {
+    // const stripe = await stripePromise;
+    // const lineItems = products
+    //   .filter((product) => product.quantity > 0)
+    //   .map((product) => ({
+    //     price: product.priceId,
+    //     quantity: product.quantity
+    //   }));
+    // console.log('lineItems==>', lineItems);
+    // const { error } = await stripe.redirectToCheckout({
+    //   lineItems,
+    //   mode: 'payment',
+    //   successUrl: 'https://example.com/success',
+    //   cancelUrl: 'https://example.com/cancel'
+    // });
+    // if (error) {
+    //   console.error('Error redirecting to checkout:', error);
+    // }
+    console.log('checked-->', checked);
+    // Given date
+    const givenDate = moment(startDate);
+    // Calculate the end date by adding days to the given date
+    const endDate = givenDate.clone().add(trialDays, 'days');
+
+    // Convert end date to Unix timestamp
+    const unixTimestamp = endDate.unix();
+    API.post('payment/create-checkout', {
+      cust_id: localStorage.getItem('cust_id'),
+      stripe_cust_id: authCtx.user?.stripe_cust_id,
+      products: checked,
+      startDate: moment(startDate).unix(),
+      trial_period_days: trialDays,
+      trial_end: unixTimestamp
+    }).then((response) => {
+      if (response.status === 200) {
+        console.log(response.data);
+        enqueueSnackbar('Successfully subscribed!', {
+          variant: 'success'
+        });
+        setTrialDays(0);
+        setStartDate(moment());
+        fetchProducts();
+        fetchScheduledSubscriptions();
+        setChecked([]);
+      } else {
+        errorMessageHandler(
+          enqueueSnackbar,
+          response?.response?.data?.message || 'Something Went Wrong.',
+          response?.response?.status,
+          authCtx.setAuthError
+        );
+      }
+      setIsLoading(false);
+    });
+  };
   return (
     <Box sx={{ width: '100%' }}>
       <TabContext value={value}>
         <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
           <TabList onChange={handleChange} aria-label="lab API tabs example">
-            <Tab
-              sx={{ textTransform: 'none', fontSize: '16px' }}
-              label="Customer Profile"
-              value="1"
-            />
+            {(authCtx.user.role === 'Admin' || authCtx.user.role === 'Super Admin') && (
+              <Tab
+                sx={{ textTransform: 'none', fontSize: '16px' }}
+                label="Customer Profile"
+                value="1"
+              />
+            )}
             <Tab sx={{ textTransform: 'none', fontSize: '16px' }} label="Locations" value="2" />
             <Tab sx={{ textTransform: 'none', fontSize: '16px' }} label="Cameras" value="3" />
           </TabList>
         </Box>
+        <TabPanel value="1">
+          <Box sx={{ position: 'relative' }}>
+            <Card>
+              <CardHeader title="Stripe Account Details"></CardHeader>
+              <CardContent>
+                <Formik
+                  enableReinitialize
+                  validateOnChange
+                  // validationSchema={validationSchema}
+                  initialValues={{
+                    name: stripeCust?.name || '',
+                    email: stripeCust?.email || '',
+                    phone: stripeCust?.phone || '',
+                    description: stripeCust?.description || '',
+                    city: stripeCust?.address?.city || '',
+                    state: stripeCust?.address?.state || '',
+                    country: stripeCust?.address?.country || ''
+                  }}
+                  onSubmit={handleSubmit}>
+                  {({ values, setFieldValue, touched, errors }) => {
+                    return (
+                      <Form>
+                        <Grid container spacing={2}>
+                          <Grid item md={6} xs={12}>
+                            <TextField
+                              label="Name"
+                              name="name"
+                              value={values?.name}
+                              onChange={(event) => {
+                                setFieldValue('name', event.target.value);
+                              }}
+                              helperText={touched.name && errors.name}
+                              error={touched.name && Boolean(errors.name)}
+                              fullWidth
+                            />
+                          </Grid>
+                          <Grid item md={6} xs={12}>
+                            <TextField
+                              label="Email"
+                              name="email"
+                              value={values?.email}
+                              onChange={(event) => {
+                                setFieldValue('email', event.target.value);
+                              }}
+                              helperText={touched.email && errors.email}
+                              error={touched.email && Boolean(errors.email)}
+                              fullWidth
+                            />
+                          </Grid>
+                          <Grid item md={6} xs={12}>
+                            <TextField
+                              label="Phone"
+                              name="phone"
+                              value={values?.phone}
+                              onChange={(event) => {
+                                setFieldValue('phone', event.target.value);
+                              }}
+                              helperText={touched.phone && errors.phone}
+                              error={touched.phone && Boolean(errors.phone)}
+                              fullWidth
+                            />
+                          </Grid>
+                          <Grid item md={6} xs={12}>
+                            <TextField
+                              label="Description"
+                              name="description"
+                              value={values?.description}
+                              onChange={(event) => {
+                                setFieldValue('description', event.target.value);
+                              }}
+                              helperText={touched.description && errors.description}
+                              error={touched.description && Boolean(errors.description)}
+                              fullWidth
+                            />
+                          </Grid>
+                          <Grid item xs={12} md={12}>
+                            <Divider />
+                          </Grid>
+                          <Grid item xs={12} md={12}>
+                            <Typography variant="subtitle1">Address</Typography>
+                          </Grid>
+                          <Grid item md={6} xs={12}>
+                            <TextField
+                              label="Country"
+                              name="country"
+                              value={values?.country}
+                              onChange={(event) => {
+                                setFieldValue('country', event.target.value);
+                              }}
+                              helperText={touched.description && errors.description}
+                              error={touched.description && Boolean(errors.description)}
+                              fullWidth
+                            />
+                          </Grid>
+                          <Grid item md={6} xs={12}>
+                            <TextField
+                              label="State"
+                              name="state"
+                              value={values?.state}
+                              onChange={(event) => {
+                                setFieldValue('state', event.target.value);
+                              }}
+                              helperText={touched.description && errors.description}
+                              error={touched.description && Boolean(errors.description)}
+                              fullWidth
+                            />
+                          </Grid>
+                          <Grid item md={6} xs={12}>
+                            <TextField
+                              label="City"
+                              name="city"
+                              value={values?.city}
+                              onChange={(event) => {
+                                setFieldValue('city', event.target.value);
+                              }}
+                              helperText={touched.description && errors.description}
+                              error={touched.description && Boolean(errors.description)}
+                              fullWidth
+                            />
+                          </Grid>
+                          <Grid item xs={12} md={12}>
+                            <Divider />
+                          </Grid>
+                          {authCtx.user.role === 'Super Admin' && (
+                            <>
+                              <Grid item xs={12} md={12}>
+                                <Typography variant="h5">Subscription Plans</Typography>
+                              </Grid>
+                              {console.log('checked-->', checked)}
+                              {console.log('products-->', products)}
+                              {console.log('scheduledPrices-->', scheduledPrices)}
+                              {products
+                                ?.filter((item) => item.active)
+                                .map((product, index) => (
+                                  <>
+                                    {console.log('checked[product.id]-->', checked[product.id])}
+                                    <Grid item xs={12} md={2}>
+                                      <Box
+                                        className="product-box"
+                                        // style={{ width: '250px' }}
+                                        key={product.id}>
+                                        <Checkbox
+                                          disabled={scheduledPrices?.includes(product.price_id)}
+                                          id={product.id}
+                                          name={product.name}
+                                          checked={
+                                            scheduledPrices?.includes(product.price_id) ||
+                                            checked[product.id]
+                                          }
+                                          onChange={(e) =>
+                                            handleCheckChange(
+                                              e,
+                                              product.id,
+                                              product.price_id || product.default_price,
+                                              getProductQuantity(product.name)
+                                            )
+                                          }
+                                          inputProps={{
+                                            'aria-label': 'controlled'
+                                          }}
+                                        />
+                                        <Typography variant="h6">{product.name}</Typography>
+                                        <Typography variant="subtitle1">
+                                          Price: ${' '}
+                                          {product.unit_amount
+                                            ? (product.unit_amount / 100) *
+                                              (product.name == 'Mobile Live Stream Room License'
+                                                ? authCtx.user.max_stream_live_license_room
+                                                : product.name ===
+                                                  'Sentry Perimeter Monitoring License'
+                                                ? authCtx.user.max_stream_live_license
+                                                : 1)
+                                            : '--'}
+                                        </Typography>
+                                        <Typography variant="subtitle1">
+                                          Qty: {getProductQuantity(product.name)}
+                                        </Typography>
+                                        {/* <Button onClick={() => handleDecrement(product.id)}>-</Button>
+                                      <Input
+                                        type="number"
+                                        value={productQuantities[product.id] || 0}
+                                      />
+                                      <Button onClick={() => handleIncrement(product.id)}>+</Button> */}
+                                      </Box>
+                                    </Grid>
+                                  </>
+                                ))}
+                              <Grid item xs={12} md={12}>
+                                <Divider />
+                              </Grid>
+                              <Grid item xs={12} md={12}>
+                                <Typography variant="h5">Set Free Trial Period</Typography>
+                              </Grid>
+                              <Grid item md={6}>
+                                <Stack direction={'row'} gap={2} alignItems={'center'}>
+                                  <Box>
+                                    <LocalizationProvider dateAdapter={AdapterMoment}>
+                                      <InputLabel id="from">Start Date</InputLabel>
+                                      <DesktopDatePicker
+                                        disablePast
+                                        open={isDatePickerOpen}
+                                        maxDate={moment().add(trialDays, 'days')}
+                                        labelId="start_date"
+                                        autoOk={true}
+                                        value={startDate}
+                                        inputFormat="MM/DD/YY"
+                                        onClose={() => setIsDatePickerOpen(false)}
+                                        renderInput={(params) => (
+                                          <TextField
+                                            onClick={() => setIsDatePickerOpen(true)}
+                                            {...params}
+                                          />
+                                        )}
+                                        components={{
+                                          OpenPickerIcon: !isDatePickerOpen
+                                            ? ArrowDropDownIcon
+                                            : ArrowDropUpIcon
+                                        }}
+                                        onChange={(value) => {
+                                          setStartDate(value);
+                                        }}
+                                      />
+                                    </LocalizationProvider>
+                                  </Box>
+                                  <Box>
+                                    <InputLabel id="from">No. of Days</InputLabel>
+                                    <TextField
+                                      name={'no_of_days'}
+                                      type="number"
+                                      value={trialDays}
+                                      InputProps={{ inputProps: { min: 0, max: 45, step: 1 } }}
+                                      onChange={(event) => {
+                                        setTrialDays(event.target.value);
+                                      }}
+                                      fullWidth
+                                    />
+                                  </Box>
+                                </Stack>
+                              </Grid>
+                            </>
+                          )}
+                          <Grid item xs={12} md={12}>
+                            <Stack
+                              direction="row"
+                              justifyContent="flex-end"
+                              alignItems="center"
+                              spacing={3}>
+                              {authCtx.user.role === 'Super Admin' && (
+                                <Button variant="contained" onClick={handleCheckout}>
+                                  Start Service
+                                </Button>
+                              )}
+                              <LoadingButton
+                                loading={submitLoading}
+                                loadingPosition={submitLoading ? 'start' : undefined}
+                                startIcon={submitLoading && <SaveIcon />}
+                                variant="contained"
+                                type="submit">
+                                SAVE
+                              </LoadingButton>
+                            </Stack>
+                          </Grid>
+                        </Grid>
+                      </Form>
+                    );
+                  }}
+                </Formik>
+              </CardContent>
+            </Card>
+          </Box>
+        </TabPanel>
         <TabPanel value="2">
           <Box className="listing-wrapper">
             <Card className="filter">
