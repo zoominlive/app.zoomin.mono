@@ -236,6 +236,7 @@ module.exports = {
             {
               stream_id: streamID,
               room_id: roomID,
+              sendbird_channel_url: streamObj.sendbird_channel_url,
               //stream_uri: camObj?.stream_uri,
               stream_uri: `${camObj?.stream_uri}?uid=${
                 req?.user?.family_member_id || req?.user?.user_id
