@@ -61,8 +61,8 @@ const AccessColumns = [
   // { label: 'Status', width: '25%' }
 ];
 const topViewersColumns = [
-  { label: 'Viewers', width: '50%' },
-  { label: 'Views', width: '45%' }
+  { label: 'Viewers', width: '50%' }
+  // { label: 'Views', width: '45%' }
 ];
 const lastHourViewersColumns = [
   { label: 'Viewers', width: '25%' },
