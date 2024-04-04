@@ -104,7 +104,7 @@ createInvoice: async (invoiceObj) => {
     stripe_cust_id: invoiceObj.customer,
     charge_id: invoiceObj.charge,
     invoice_date: invoice_created_at,
-    description: invoiceObj.description,
+    description: invoiceObj.lines.data.map((item) => item.description),
     quantity: invoiceObj.lines.data.map((item) => item.quantity),
     payment_method: invoiceObj.collection_method,
     amount_paid: parseFloat(invoiceObj.amount_paid / 100).toFixed(2),
