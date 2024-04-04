@@ -162,7 +162,6 @@ const Settings = () => {
   };
 
   const handleCheckChange = (event, productId, price_id = 123, qty) => {
-    console.log('productId-->', productId);
     if (event.target.checked) {
       setSelectedProducts((prevSelected) => [...prevSelected, productId]);
       setChecked([
@@ -177,11 +176,11 @@ const Settings = () => {
       ]);
     } else {
       setSelectedProducts((prevSelected) => prevSelected.filter((id) => id !== productId));
-      setChecked((prevChecked) =>
-        prevChecked.filter((item) => {
-          item.product.price_id !== price_id;
-        })
-      );
+
+      setChecked((prevChecked) => {
+        const arr = prevChecked.filter(({ product }) => product.price_id !== price_id);
+        return arr;
+      });
     }
   };
 
@@ -260,7 +259,6 @@ const Settings = () => {
       if (response.status === 200) {
         setStripeCust(response.data.customerDetails);
       } else {
-        console.log('response', response);
         errorMessageHandler(
           enqueueSnackbar,
           response?.response?.data?.message || 'Something Went Wrong.',
@@ -275,7 +273,6 @@ const Settings = () => {
   // Method to delete location
   const handleLocationDelete = () => {
     setDeleteLoading(true);
-    // console.log('location==>', location);
     let payload = {
       loc_id: location.loc_id
     };
@@ -380,25 +377,7 @@ const Settings = () => {
     }
   };
 
-  const handleCheckout = async (data) => {
-    // const stripe = await stripePromise;
-    // const lineItems = products
-    //   .filter((product) => product.quantity > 0)
-    //   .map((product) => ({
-    //     price: product.priceId,
-    //     quantity: product.quantity
-    //   }));
-    // console.log('lineItems==>', lineItems);
-    // const { error } = await stripe.redirectToCheckout({
-    //   lineItems,
-    //   mode: 'payment',
-    //   successUrl: 'https://example.com/success',
-    //   cancelUrl: 'https://example.com/cancel'
-    // });
-    // if (error) {
-    //   console.error('Error redirecting to checkout:', error);
-    // }
-    console.log('checked-->', checked);
+  const handleCheckout = async () => {
     // Given date
     const givenDate = moment(startDate);
     // Calculate the end date by adding days to the given date
@@ -579,14 +558,10 @@ const Settings = () => {
                               <Grid item xs={12} md={12}>
                                 <Typography variant="h5">Subscription Plans</Typography>
                               </Grid>
-                              {console.log('checked-->', checked)}
-                              {console.log('products-->', products)}
-                              {console.log('scheduledPrices-->', scheduledPrices)}
                               {products
                                 ?.filter((item) => item.active)
                                 .map((product, index) => (
                                   <>
-                                    {console.log('checked[product.id]-->', checked[product.id])}
                                     <Grid item xs={12} md={2}>
                                       <Box
                                         className="product-box"
@@ -597,8 +572,9 @@ const Settings = () => {
                                           id={product.id}
                                           name={product.name}
                                           checked={
-                                            scheduledPrices?.includes(product.price_id) ||
-                                            checked[product.id]
+                                            checked.find(
+                                              (item) => item.product.price_id === product.price_id
+                                            ) || scheduledPrices?.includes(product.price_id)
                                           }
                                           onChange={(e) =>
                                             handleCheckChange(

@@ -14,35 +14,60 @@ import {
   TableRow,
   Typography
 } from '@mui/material';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import PrintIcon from '@mui/icons-material/Print';
 import CloseIcon from '@mui/icons-material/Close';
 
-const invoiceDetails = [
-  { title: 'Invoice Date : ', value: 'Dec 21, 2023' },
-  { title: 'Invoice Number : ', value: '1234567890' },
-  { title: 'Customer Number : ', value: 'Selena Grande' },
-  { title: 'Company Name : ', value: 'ABC Corporation' },
-  {
-    title: 'Company Address : ',
-    value: '137 Shore Dr, Palm Harbor, Mazakin Street, Florida, 34683, US'
-  }
-];
+// const invoiceDetails = [
+//   { title: 'Invoice Date : ', value: 'Dec 21, 2023' },
+//   { title: 'Invoice Number : ', value: '1234567890' },
+//   { title: 'Customer Number : ', value: 'Selena Grande' },
+//   { title: 'Company Name : ', value: 'ABC Corporation' },
+//   {
+//     title: 'Company Address : ',
+//     value: '137 Shore Dr, Palm Harbor, Mazakin Street, Florida, 34683, US'
+//   }
+// ];
 
-const rows = [
-  { charge_id: 'CHG-1234567', desc: 'Project ABC', qty: '1', amt: '$130.00' },
-  { charge_id: 'CHG-1234567', desc: 'Project ABC', qty: '2', amt: '$260.00' },
-  { charge_id: 'CHG-1234567', desc: 'Project ABC', qty: '3', amt: '$320.00' }
-];
+// const rows = [
+//   { charge_id: 'CHG-1234567', desc: 'Project ABC', qty: '1', amt: '$130.00' },
+//   { charge_id: 'CHG-1234567', desc: 'Project ABC', qty: '2', amt: '$260.00' },
+//   { charge_id: 'CHG-1234567', desc: 'Project ABC', qty: '3', amt: '$320.00' }
+// ];
 
 const InvoiceDrawer = (props) => {
   // eslint-disable-next-line no-unused-vars
   const [disableDrawerClose, setDisableDrawerClose] = useState(false);
   const [isCloseDialog, setIsCloseDialog] = useState(false);
+  const [customerDetails, setCustomerDetails] = useState([]);
+  const [charges, setCharges] = useState([]);
+
+  useEffect(() => {
+    console.log('props-->', props);
+    if (props.customer && props.row) {
+      setCustomerDetails([
+        { title: 'Invoice Date : ', value: props.row.invoice_date },
+        { title: 'Invoice Number : ', value: props.row.invoice_id },
+        { title: 'Customer Number : ', value: props.customer.phone },
+        { title: 'Company Name : ', value: props.customer.name },
+        {
+          title: 'Company Address : ',
+          value:
+            props.customer.address.city +
+            ', ' +
+            props.customer.address.state +
+            ', ' +
+            props.customer.address.country
+        }
+      ]);
+      if (props.row) {
+        setCharges([props.row]);
+      }
+    }
+  }, []);
 
   const handleClose = () => setIsCloseDialog(!isCloseDialog);
-
   return (
     <Drawer
       className="invoice-drawer"
@@ -72,7 +97,7 @@ const InvoiceDrawer = (props) => {
       <Divider />
       <Stack direction={'column'} marginTop={2.5}>
         <Stack direction={'column'} gap={2}>
-          {invoiceDetails.map((item, index) => (
+          {customerDetails.map((item, index) => (
             <>
               <Stack key={index} direction={'row'} gap={1}>
                 <Typography
@@ -126,91 +151,93 @@ const InvoiceDrawer = (props) => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {rows.map((row) => (
-                  <TableRow key={row}>
-                    <TableCell sx={{ padding: '20px 24px !important' }}>{row.charge_id}</TableCell>
-                    <TableCell>{row.desc}</TableCell>
-                    <TableCell align="right">{row.qty}</TableCell>
-                    <TableCell sx={{ padding: '20px 24px !important' }} align="right">
-                      {row.amt}
-                    </TableCell>
-                  </TableRow>
+                {charges.map((_) => (
+                  <>
+                    <TableRow key={_.id}>
+                      <TableCell sx={{ padding: '20px 24px !important' }}>{_.charge_id}</TableCell>
+                      <TableCell>{_.description}</TableCell>
+                      <TableCell align="right">{_.quantity}</TableCell>
+                      <TableCell sx={{ padding: '20px 24px !important' }} align="right">
+                        {'$' + parseFloat(_.amount_paid).toFixed(2)}
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell
+                        sx={{
+                          borderBottom: 'none',
+                          padding: '16px 32px 0px !important',
+                          fontSize: '16px !important',
+                          fontWeight: '500 !important',
+                          lineHeight: '20px !important',
+                          color: '#000000DE !important'
+                        }}
+                        colSpan={3}>
+                        Subtotal
+                      </TableCell>
+                      <TableCell
+                        sx={{
+                          borderBottom: 'none',
+                          padding: '16px 32px 0px !important',
+                          fontSize: '16px !important',
+                          fontWeight: '500 !important',
+                          lineHeight: '20px !important',
+                          color: '#000000DE !important'
+                        }}
+                        align="right">
+                        {'$' + parseFloat(_.subtotal).toFixed(2)}
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell
+                        colSpan={3}
+                        sx={{
+                          padding: '16px 32px !important',
+                          fontSize: '16px !important',
+                          fontWeight: '500 !important',
+                          lineHeight: '20px !important',
+                          color: '#000000DE !important'
+                        }}>
+                        Tax
+                      </TableCell>
+                      <TableCell
+                        align="right"
+                        sx={{
+                          fontSize: '16px !important',
+                          padding: '16px 32px 0px !important',
+                          fontWeight: '500 !important',
+                          lineHeight: '20px !important',
+                          color: '#000000DE !important'
+                        }}>
+                        {_.tax ? parseFloat(_.tax).toFixed(2) : '$' + 0}
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell
+                        sx={{
+                          borderBottom: 'none',
+                          fontSize: '24px !important',
+                          fontWeight: '500 !important',
+                          lineHeight: '20px !important',
+                          padding: '24px !important'
+                        }}
+                        colSpan={3}>
+                        Total
+                      </TableCell>
+                      <TableCell
+                        sx={{
+                          borderBottom: 'none',
+                          fontSize: '24px !important',
+                          fontWeight: '500 !important',
+                          lineHeight: '20px !important',
+                          padding: '24px !important',
+                          color: '#27AE60 !important'
+                        }}
+                        align="right">
+                        {'$' + parseFloat(_.total).toFixed(2)}
+                      </TableCell>
+                    </TableRow>
+                  </>
                 ))}
-                <TableRow>
-                  <TableCell
-                    sx={{
-                      borderBottom: 'none',
-                      padding: '16px 32px 0px !important',
-                      fontSize: '16px !important',
-                      fontWeight: '500 !important',
-                      lineHeight: '20px !important',
-                      color: '#000000DE !important'
-                    }}
-                    colSpan={3}>
-                    Subtotal
-                  </TableCell>
-                  <TableCell
-                    sx={{
-                      borderBottom: 'none',
-                      padding: '16px 32px 0px !important',
-                      fontSize: '16px !important',
-                      fontWeight: '500 !important',
-                      lineHeight: '20px !important',
-                      color: '#000000DE !important'
-                    }}
-                    align="right">
-                    {'$710.00'}
-                  </TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell
-                    colSpan={3}
-                    sx={{
-                      padding: '16px 32px !important',
-                      fontSize: '16px !important',
-                      fontWeight: '500 !important',
-                      lineHeight: '20px !important',
-                      color: '#000000DE !important'
-                    }}>
-                    Tax
-                  </TableCell>
-                  <TableCell
-                    align="right"
-                    sx={{
-                      fontSize: '16px !important',
-                      padding: '16px 32px 0px !important',
-                      fontWeight: '500 !important',
-                      lineHeight: '20px !important',
-                      color: '#000000DE !important'
-                    }}>
-                    {'$10.00'}
-                  </TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell
-                    sx={{
-                      borderBottom: 'none',
-                      fontSize: '24px !important',
-                      fontWeight: '500 !important',
-                      lineHeight: '20px !important',
-                      padding: '24px !important'
-                    }}
-                    colSpan={3}>
-                    Total
-                  </TableCell>
-                  <TableCell
-                    sx={{
-                      borderBottom: 'none',
-                      fontSize: '24px !important',
-                      fontWeight: '500 !important',
-                      lineHeight: '20px !important',
-                      padding: '24px !important',
-                      color: '#27AE60 !important'
-                    }}
-                    align="right">
-                    {'$720.00'}
-                  </TableCell>
-                </TableRow>
               </TableBody>
             </Table>
           </TableContainer>
@@ -264,6 +291,8 @@ export default InvoiceDrawer;
 InvoiceDrawer.propTypes = {
   open: PropTypes.bool,
   setOpen: PropTypes.func,
+  customer: PropTypes.object,
+  row: PropTypes.object,
   setIsParentFormDialogOpen: PropTypes.func,
   setParentType: PropTypes.func,
   setIsDisableFamilyDialogOpen: PropTypes.func,
