@@ -1,5 +1,4 @@
 const connectToDatabase = require("../models/index");
-const Subscriptions = require("../models/subscriptions");
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
 module.exports = {
@@ -84,6 +83,7 @@ createSubscription: async (subscriptionObj) => {
 },
 
 listSubscriptions: async (stripe_cust_id) => {
+  const { Subscriptions } = await connectToDatabase();
   let subcriptions = await Subscriptions.findAll({
     logging: console.log,
     order: [["created_at", "DESC"]],
@@ -94,5 +94,43 @@ listSubscriptions: async (stripe_cust_id) => {
   });
   console.log('subcriptions---->', subcriptions);
   return subcriptions;
-}
+},
+
+createInvoice: async (invoiceObj) => {
+  const { Invoice } = await connectToDatabase();
+  let invoice_created_at = new Date(invoiceObj.created * 1000);
+  let invoiceCreated = await Invoice.create({
+    invoice_id: invoiceObj.id,
+    stripe_cust_id: invoiceObj.customer,
+    charge_id: invoiceObj.charge,
+    invoice_date: invoice_created_at,
+    description: invoiceObj.description,
+    quantity: invoiceObj.lines.data.map((item) => item.quantity),
+    payment_method: invoiceObj.collection_method,
+    amount_paid: parseFloat(invoiceObj.amount_paid / 100).toFixed(2),
+    amount_due: parseFloat(invoiceObj.amount_due / 100).toFixed(2),
+    subtotal: parseFloat(invoiceObj.subtotal / 100).toFixed(2),
+    tax: parseFloat(invoiceObj.tax / 100).toFixed(2),
+    total: parseFloat(invoiceObj.total / 100).toFixed(2),
+    metadata: invoiceObj,
+    status: invoiceObj.status,
+    created_at: invoice_created_at,
+  });
+
+  return invoiceCreated;
+},
+
+listInvoice: async (stripe_cust_id) => {
+  const { Invoice } = await connectToDatabase();
+  let invoiceList = await Invoice.findAll({
+    logging: console.log,
+    order: [["created_at", "DESC"]],
+    where: {
+      stripe_cust_id: stripe_cust_id
+    },
+    raw: true,
+  });
+  console.log('invoiceList---->', invoiceList);
+  return invoiceList;
+},
 };

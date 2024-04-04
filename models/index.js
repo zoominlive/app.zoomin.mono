@@ -20,6 +20,7 @@ const MountedCameraRecentViewers = require('./mounted_camera_recent_viewers');
 const FcmTokens = require('./fcm_tokens');
 const CamPreference = require('./cam_preference');
 const Subscriptions = require('./subscriptions');
+const Invoice = require('./invoice');
 const SubscriptionItems = require('./subscriptions_items');;
 const sequelize = require('../lib/database');
 
@@ -227,6 +228,7 @@ module.exports = async () => {
       FcmTokens,
       CamPreference,
       Subscriptions,
+      Invoice,
       SubscriptionItems,
     };
   }
@@ -258,6 +260,7 @@ module.exports = async () => {
     FcmTokens,
     CamPreference,
     Subscriptions,
+    Invoice,
     SubscriptionItems,
   };
 };

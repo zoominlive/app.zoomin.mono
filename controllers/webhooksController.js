@@ -38,6 +38,7 @@ const webhookController = async (req, res) => {
     case 'invoice.created':
       // Handle subscription created event
       console.log('Invoice created:', event.data.object);
+      let addInvoice = await subscription.createInvoice(event.data.object);
       break;
     case 'invoice.finalized':
       // Handle subscription created event

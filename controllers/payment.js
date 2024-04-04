@@ -221,9 +221,11 @@ module.exports = {
       const invoices = await stripe.invoices.list({
         customer: stripe_cust_id
       });
-
+      const invoiceFromDB = await subscription.listInvoice(stripe_cust_id);
+      
       res.status(200).json({ 
         data: invoices,
+        invoiceFromDB: invoiceFromDB,
         message: 'Invoice retrieved' 
       });
     } catch (error) {
