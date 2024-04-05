@@ -22,6 +22,7 @@ export default function CheckoutForm(props) {
   const [cardDetails, setCardDetails] = useState(null);
   const authCtx = useContext(AuthContext);
   const [firstName, setFirstName] = useState(null);
+  const [country, setCountry] = useState(null);
   const { enqueueSnackbar } = useSnackbar();
 
   const handleAddPaymentMethod = async () => {
@@ -30,7 +31,10 @@ export default function CheckoutForm(props) {
       type: 'card',
       card: elements.getElement(CardNumberElement),
       billing_details: {
-        name: firstName
+        name: firstName,
+        address: {
+          country: country.code
+        }
       }
     });
 
@@ -111,6 +115,7 @@ export default function CheckoutForm(props) {
             options={countries}
             autoHighlight
             getOptionLabel={(option) => option.label}
+            onChange={(_, value) => setCountry(value)}
             renderOption={(props, option) => (
               <Box component="li" sx={{ '& > img': { mr: 2, flexShrink: 0 } }} {...props}>
                 <img

@@ -672,7 +672,7 @@ const Settings = () => {
                                       <DesktopDatePicker
                                         disablePast
                                         open={isDatePickerOpen}
-                                        maxDate={moment().add(trialDays, 'days')}
+                                        // maxDate={moment().add(trialDays, 'days')}
                                         labelId="start_date"
                                         autoOk={true}
                                         value={startDate}
