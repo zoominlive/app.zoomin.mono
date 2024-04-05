@@ -92,7 +92,6 @@ listSubscriptions: async (stripe_cust_id) => {
     },
     raw: true,
   });
-  console.log('subcriptions---->', subcriptions);
   return subcriptions;
 },
 
@@ -133,4 +132,20 @@ listInvoice: async (stripe_cust_id) => {
   console.log('invoiceList---->', invoiceList);
   return invoiceList;
 },
+
+// Insert a webhook log into the database
+insertWebhookLog: async (event, payload) => {
+  const { Webhooks } = await connectToDatabase();
+
+  try {
+    const webhookLog = await Webhooks.create({
+      event: event,
+      payload: payload
+    });
+    return webhookLog.toJSON();
+  } catch (error) {
+    console.error('Error inserting webhook log:', error);
+  }
+}
+
 };

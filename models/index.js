@@ -21,6 +21,7 @@ const FcmTokens = require('./fcm_tokens');
 const CamPreference = require('./cam_preference');
 const Subscriptions = require('./subscriptions');
 const Invoice = require('./invoice');
+const Webhooks = require('./webhooks');
 const SubscriptionItems = require('./subscriptions_items');;
 const sequelize = require('../lib/database');
 
@@ -230,6 +231,7 @@ module.exports = async () => {
       Subscriptions,
       Invoice,
       SubscriptionItems,
+      Webhooks
     };
   }
 
@@ -262,5 +264,6 @@ module.exports = async () => {
     Subscriptions,
     Invoice,
     SubscriptionItems,
+    Webhooks
   };
 };
