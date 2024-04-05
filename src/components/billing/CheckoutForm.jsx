@@ -13,6 +13,8 @@ import { Autocomplete, Box, Button, Grid, TextField, Typography } from '@mui/mat
 import { Plus } from 'react-feather';
 import { countries } from '../../utils/constants';
 import API from '../../api';
+import { errorMessageHandler } from '../../utils/errormessagehandler';
+import { useSnackbar } from 'notistack';
 
 export default function CheckoutForm(props) {
   const stripe = useStripe();
@@ -20,6 +22,7 @@ export default function CheckoutForm(props) {
   const [cardDetails, setCardDetails] = useState(null);
   const authCtx = useContext(AuthContext);
   const [firstName, setFirstName] = useState(null);
+  const { enqueueSnackbar } = useSnackbar();
 
   const handleAddPaymentMethod = async () => {
     console.log('cardElement', CardElement);
@@ -46,9 +49,19 @@ export default function CheckoutForm(props) {
         userId: authCtx.user.stripe_cust_id, // Replace 'user_id' with the actual user ID
         cust_id: localStorage.getItem('cust_id')
       });
-      props.closeDialog();
-      props.getCustPaymentMethod();
-      console.log(response.data.message); // Log success message
+      if (response.status === 200) {
+        props.closeDialog();
+        props.getCustPaymentMethod();
+        props.setIsLoading(false);
+        console.log(response.data.message); // Log success message
+      } else {
+        errorMessageHandler(
+          enqueueSnackbar,
+          response?.response?.data?.message || 'Something Went Wrong.',
+          response?.response?.status,
+          authCtx.setAuthError
+        );
+      }
     } catch (error) {
       console.error('Error saving card details:', error);
     }
@@ -148,5 +161,6 @@ export default function CheckoutForm(props) {
 
 CheckoutForm.propTypes = {
   closeDialog: PropTypes.func,
-  getCustPaymentMethod: PropTypes.func
+  getCustPaymentMethod: PropTypes.func,
+  setIsLoading: PropTypes.func
 };

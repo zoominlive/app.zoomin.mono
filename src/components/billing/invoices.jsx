@@ -231,12 +231,6 @@ const Invoices = () => {
             <DisputeActions setIsDisputeFormDialogOpen={setIsDisputeFormDialogOpen} />
           </TableCell>
         </TableRow>
-        <InvoiceDrawer
-          open={isInvoiceDrawerOpen}
-          customer={customerDetails}
-          row={invoice}
-          setOpen={setInvoiceDrawerOpen}
-        />
       </>
     );
   };
@@ -253,6 +247,7 @@ const Invoices = () => {
   };
 
   const getCustPaymentMethod = () => {
+    setIsLoading(true);
     API.get('payment/list-customer-payment-method', {
       params: { stripe_cust_id: stripe_cust_id, cust_id: localStorage.getItem('cust_id') }
     }).then((response) => {
@@ -282,6 +277,7 @@ const Invoices = () => {
   };
 
   const listSubscriptions = () => {
+    setIsLoading(true);
     API.get('payment/list-subscriptions', {
       params: { stripe_cust_id: stripe_cust_id, cust_id: localStorage.getItem('cust_id') }
     }).then((response) => {
@@ -305,6 +301,7 @@ const Invoices = () => {
   };
 
   const listInvoice = () => {
+    setIsLoading(true);
     API.get('payment/list-invoice', {
       params: { stripe_cust_id: stripe_cust_id, cust_id: localStorage.getItem('cust_id') }
     }).then((response) => {
@@ -331,6 +328,7 @@ const Invoices = () => {
 
   const handleRemoveCard = (type) => {
     // Retrieve Customer's Payment Method
+    setIsLoading(true);
     API.post('payment/detach-payment-method', {
       pm_id: type == 'default' ? paymentMethodDetails.id : backupCardDetails.id
     }).then((response) => {
@@ -349,6 +347,7 @@ const Invoices = () => {
   };
 
   const handleMakePrimary = () => {
+    setIsLoading(true);
     API.put('payment/update-customer', {
       userId: authCtx.user.stripe_cust_id,
       paymentMethodID: backupPaymentMethodDetails.id,
@@ -804,7 +803,6 @@ const Invoices = () => {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {console.log('invoiceList->', invoiceList)}
                     {invoiceList?.length > 0 ? (
                       invoiceList?.map((row, index) => <Row row={row} key={index} />)
                     ) : (
@@ -830,6 +828,12 @@ const Invoices = () => {
           </CardContent>
         </Card>
       </Box>
+      <InvoiceDrawer
+        open={isInvoiceDrawerOpen}
+        customer={customerDetails && customerDetails}
+        row={invoice && invoice}
+        setOpen={setInvoiceDrawerOpen}
+      />
       {isPaymentDialogOpen && (
         <Dialog open={isPaymentDialogOpen} onClose={handleClose} fullWidth>
           <DialogTitle sx={{ padding: '40px 40px 24px 40px' }}>
@@ -886,6 +890,7 @@ const Invoices = () => {
                 <CheckoutForm
                   closeDialog={handleFormDialogClose}
                   getCustPaymentMethod={getCustPaymentMethod}
+                  setIsLoading={setIsLoading}
                 />
               </Elements>
             </DialogContent>

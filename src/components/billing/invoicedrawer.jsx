@@ -44,7 +44,6 @@ const InvoiceDrawer = (props) => {
   const [charges, setCharges] = useState([]);
 
   useEffect(() => {
-    console.log('props-->', props);
     if (props.customer && props.row) {
       setCustomerDetails([
         { title: 'Invoice Date : ', value: props.row.invoice_date },
@@ -65,9 +64,11 @@ const InvoiceDrawer = (props) => {
         setCharges([props.row]);
       }
     }
-  }, []);
-
-  const handleClose = () => setIsCloseDialog(!isCloseDialog);
+  }, [props.row]);
+  const handleClose = () => {
+    setIsCloseDialog(!isCloseDialog);
+    props.setOpen(false);
+  };
   return (
     <Drawer
       className="invoice-drawer"

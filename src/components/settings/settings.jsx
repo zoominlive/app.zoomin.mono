@@ -103,25 +103,35 @@ const Settings = () => {
 
   const fetchProducts = async () => {
     try {
+      setIsLoading(true);
       const response = await API.get('payment/list-products');
-      const data = await response.data;
-      const priceList = response.data.data.priceList.data;
-      const productList = response.data.data.products.data;
-      const updatedProductList = productList.map((product) => {
-        // Find the corresponding price in the priceList
-        const price = priceList.find((price) => price.id === product.default_price);
-        // If a matching price is found, attach its unit_amount to the product
-        if (price) {
-          return {
-            ...product,
-            price_id: price.id,
-            unit_amount: price.unit_amount
-          };
-        } else {
-          return product;
-        }
-      });
-      setProducts(updatedProductList);
+      if (response.status === 200) {
+        const data = await response.data;
+        const priceList = response.data.data.priceList.data;
+        const productList = response.data.data.products.data;
+        const updatedProductList = productList.map((product) => {
+          // Find the corresponding price in the priceList
+          const price = priceList.find((price) => price.id === product.default_price);
+          // If a matching price is found, attach its unit_amount to the product
+          if (price) {
+            return {
+              ...product,
+              price_id: price.id,
+              unit_amount: price.unit_amount
+            };
+          } else {
+            return product;
+          }
+        });
+        setProducts(updatedProductList);
+      } else {
+        errorMessageHandler(
+          enqueueSnackbar,
+          response?.response?.data?.Message || 'Something Went Wrong.',
+          response?.response?.status,
+          authCtx.setAuthError
+        );
+      }
     } catch (error) {
       console.error('Error fetching products:', error);
     }
@@ -129,15 +139,25 @@ const Settings = () => {
 
   const fetchScheduledSubscriptions = async () => {
     try {
+      setIsLoading(true);
       const response = await API.get('payment/list-scheduled-subscriptions', {
         params: {
           stripe_cust_id: authCtx.user.stripe_cust_id,
           cust_id: localStorage.getItem('cust_id')
         }
       });
-      const data = await response.data.data.localSubscriptions;
-      // setScheduledPrices(data.map((item) => item.phases[0].items[0].price));
-      setScheduledPrices(data.map((item) => item.plan));
+      if (response.status === 200) {
+        const data = await response.data.data.localSubscriptions;
+        // setScheduledPrices(data.map((item) => item.phases[0].items[0].price));
+        setScheduledPrices(data.map((item) => item.plan));
+      } else {
+        errorMessageHandler(
+          enqueueSnackbar,
+          response?.response?.data?.Message || 'Something Went Wrong.',
+          response?.response?.status,
+          authCtx.setAuthError
+        );
+      }
     } catch (error) {
       console.error('Error fetching products:', error);
     }
@@ -145,6 +165,7 @@ const Settings = () => {
 
   const fetchSubscriptions = async () => {
     try {
+      setIsLoading(true);
       const response = await API.get('payment/list-subscriptions', {
         params: {
           stripe_cust_id: authCtx.user.stripe_cust_id,
@@ -253,6 +274,7 @@ const Settings = () => {
 
   // Method to fetch Customer Payment Method along with Customer Details
   const getCustPaymentMethod = () => {
+    setIsLoading(true);
     API.get('payment/list-customer-payment-method', {
       params: { stripe_cust_id: stripe_cust_id, cust_id: localStorage.getItem('cust_id') }
     }).then((response) => {
@@ -337,6 +359,7 @@ const Settings = () => {
       state: data.state,
       city: data.city
     };
+    setIsLoading(true);
     setSubmitLoading(true);
     API.put('payment/update-customer', payload).then((response) => {
       if (response.status === 200) {
@@ -350,6 +373,7 @@ const Settings = () => {
         );
       }
       setIsLoading(false);
+      setSubmitLoading(false);
     });
   };
   const handleIncrement = (productId) => {
@@ -385,6 +409,7 @@ const Settings = () => {
 
     // Convert end date to Unix timestamp
     const unixTimestamp = endDate.unix();
+    setIsLoading(true);
     API.post('payment/create-checkout', {
       cust_id: localStorage.getItem('cust_id'),
       stripe_cust_id: authCtx.user?.stripe_cust_id,
@@ -432,6 +457,7 @@ const Settings = () => {
         </Box>
         <TabPanel value="1">
           <Box sx={{ position: 'relative' }}>
+            <LinerLoader loading={isLoading} />
             <Card>
               <CardHeader title="Stripe Account Details"></CardHeader>
               <CardContent>
@@ -549,6 +575,24 @@ const Settings = () => {
                               error={touched.description && Boolean(errors.description)}
                               fullWidth
                             />
+                          </Grid>
+                          <Grid item xs={12} md={12}>
+                            <Stack
+                              direction="row"
+                              justifyContent="flex-end"
+                              alignItems="center"
+                              spacing={3}>
+                              {authCtx.user.role === 'Super Admin' && (
+                                <LoadingButton
+                                  loading={submitLoading}
+                                  loadingPosition={submitLoading ? 'start' : undefined}
+                                  startIcon={submitLoading && <SaveIcon />}
+                                  variant="contained"
+                                  type="submit">
+                                  Save Changes
+                                </LoadingButton>
+                              )}
+                            </Stack>
                           </Grid>
                           <Grid item xs={12} md={12}>
                             <Divider />
@@ -675,18 +719,18 @@ const Settings = () => {
                               alignItems="center"
                               spacing={3}>
                               {authCtx.user.role === 'Super Admin' && (
-                                <Button variant="contained" onClick={handleCheckout}>
+                                <Button
+                                  sx={{
+                                    '&:disabled': {
+                                      backgroundColor: '#6e66c724 !important'
+                                    }
+                                  }}
+                                  variant="contained"
+                                  disabled={checked.length == 0}
+                                  onClick={handleCheckout}>
                                   Start Service
                                 </Button>
                               )}
-                              <LoadingButton
-                                loading={submitLoading}
-                                loadingPosition={submitLoading ? 'start' : undefined}
-                                startIcon={submitLoading && <SaveIcon />}
-                                variant="contained"
-                                type="submit">
-                                SAVE
-                              </LoadingButton>
                             </Stack>
                           </Grid>
                         </Grid>
