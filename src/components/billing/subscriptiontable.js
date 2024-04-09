@@ -56,20 +56,25 @@ export default function SubscriptionTable({
                         className="div-row row-marging zl__tr-block"
                         key={`${row?.childFirstName}-${index}`}
                         onClick={() => hanldeRowClick(row?.family, index)}>
-                        <Box className="zl__td-block" style={{ width: '60%' }}>
+                        <Box className="zl__td-block" style={{ width: '25%' }}>
                           <Stack direction={'row'} alignItems={'center'} gap={1}>
                             {row?.Type}
                           </Stack>
                         </Box>
-                        <Box style={{ width: '20%' }} className="child-rooms zl__td-block">
-                          <Box style={{ display: 'flex' }}>{row?.Number}</Box>
+                        <Box style={{ width: '15%' }} className="zl__td-block">
+                          {row?.Number}
                         </Box>
-                        <Box className="zl__td-block" style={{ width: '20%', color: '#6AD2A0' }}>
+                        <Box className="zl__td-block" style={{ width: '20%' }}>
+                          {row.Status}
+                        </Box>
+                        <Box className="zl__td-block" style={{ width: '20%' }}>
+                          {row.NextInvoiceDate}
+                        </Box>
+                        <Box
+                          className="zl__td-block"
+                          style={{ width: '20%', color: '#6AD2A0', textAlign: 'right' }}>
                           {parseFloat(row.Charge).toFixed(2)}
                         </Box>
-                        {/* <Box className="zl__td-block" style={{ width: '25%' }}>
-                        {row.status}
-                      </Box> */}
                       </Box>
                     </>
                   );
@@ -92,7 +97,7 @@ export default function SubscriptionTable({
                 <Box style={{ width: '20%' }} className="zl__td-block">
                   <Box style={{ display: 'flex' }}>{''}</Box>
                 </Box>
-                <Box className="zl__td-block" style={{ width: '20%' }}>
+                <Box className="zl__td-block" style={{ width: '20%', textAlign: 'right' }}>
                   <Typography
                     sx={{ fontSize: '16px', fontWeight: 500, color: '#6AD2A0 !important' }}>
                     {parseFloat(amount).toFixed(2)}

@@ -46,9 +46,12 @@ const InvoiceDrawer = (props) => {
   useEffect(() => {
     if (props.customer && props.row) {
       setCustomerDetails([
-        { title: 'Invoice Date : ', value: props.row.invoice_date },
+        { title: 'Invoice Date : ', value: props.row.invoice_date.split('T')[0] },
         { title: 'Invoice Number : ', value: props.row.invoice_id },
-        { title: 'Customer Number : ', value: props.customer.phone },
+        {
+          title: 'Customer Number : ',
+          value: props.cust_id ? props.cust_id : localStorage.getItem('cust_id')
+        },
         { title: 'Company Name : ', value: props.customer.name },
         {
           title: 'Company Address : ',
@@ -65,10 +68,12 @@ const InvoiceDrawer = (props) => {
       }
     }
   }, [props.row]);
+
   const handleClose = () => {
     setIsCloseDialog(!isCloseDialog);
     props.setOpen(false);
   };
+
   return (
     <Drawer
       className="invoice-drawer"
@@ -209,7 +214,7 @@ const InvoiceDrawer = (props) => {
                           lineHeight: '20px !important',
                           color: '#000000DE !important'
                         }}>
-                        {_.tax ? parseFloat(_.tax).toFixed(2) : '$' + 0}
+                        {_.tax ? parseFloat(_.tax).toFixed(2) : '$' + parseFloat(0).toFixed(2)}
                       </TableCell>
                     </TableRow>
                     <TableRow>
@@ -267,7 +272,7 @@ const InvoiceDrawer = (props) => {
                   color: '#828282'
                 }}>
                 {
-                  'All invoices are issued in accordance with the terms and conditions outlined in our agreement or contract. The products or services detailed in this invoice have been provided or delivered as agreed upon. Any discrepancies or concerns regarding this invoice must be communicated within 60 days of receipt. Failure to notify us within this period will be considered as an acceptance of the invoice in full.'
+                  'Please note, all sales are final. However, we understand that questions or concerns about your invoice may arise. If you find any discrepancies or have any concerns, kindly let us know through the "Dispute Invoice" tool in our app within 30 days of receipt. Your satisfaction is important to us, and we appreciate your business.'
                 }
               </Typography>
               <Typography
@@ -277,7 +282,9 @@ const InvoiceDrawer = (props) => {
                   lineHeight: '21px',
                   color: '#828282'
                 }}>
-                {'Thank you for choosing Zoomin Live. We appreciate your business.'}
+                {
+                  'Thank you for choosing Zoomin Live. We value your trust and aim to ensure that our services meet your expectations.'
+                }
               </Typography>
             </Stack>
           </Box>
@@ -294,6 +301,7 @@ InvoiceDrawer.propTypes = {
   setOpen: PropTypes.func,
   customer: PropTypes.object,
   row: PropTypes.object,
+  cust_id: PropTypes.string,
   setIsParentFormDialogOpen: PropTypes.func,
   setParentType: PropTypes.func,
   setIsDisableFamilyDialogOpen: PropTypes.func,

@@ -137,16 +137,33 @@ const Invoices = () => {
   const [subscriptionRows, setSubscriptionRows] = useState([]);
   const [invoiceList, setInvoiceList] = useState([]);
   const [invoice, setInvoice] = useState();
+  const [invoicePayload, setInvoicePayload] = useState({
+    pageNumber: 0,
+    pageSize: parseInt(process.env.REACT_APP_PAGINATION_LIMIT, 10),
+    status: 'All',
+    method: 'All'
+  });
 
   const ref = useRef(null);
   const stripe_cust_id = authCtx.user.stripe_cust_id;
+  const cust_id = authCtx.user.cust_id;
+
+  const currentDate = new Date();
+
+  // Get the year and month from the current date
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
+
+  // Create a new Date object for the first day of the next month
+  const firstDayOfNextMonth = new Date(year, month + 1, 1);
+  const formattedDate = firstDayOfNextMonth.toDateString();
 
   useEffect(() => {
     // Retrieve Customer's Payment Method
     getCustPaymentMethod();
     listSubscriptions();
     listInvoice();
-  }, []);
+  }, [invoicePayload]);
 
   useEffect(() => {
     setHeight(ref.current.clientHeight);
@@ -162,6 +179,7 @@ const Invoices = () => {
   }, []);
 
   console.log('height-->', height);
+  console.log('authCtx.user-->', authCtx.user);
   const Row = ({ row }) => {
     const { invoice_date, description, payment_method, amount_paid, amount_due, status } = row;
     return (
@@ -227,7 +245,7 @@ const Invoices = () => {
               </Button>
             )}
           </TableCell>
-          <TableCell align="left">
+          <TableCell align="right">
             <DisputeActions setIsDisputeFormDialogOpen={setIsDisputeFormDialogOpen} />
           </TableCell>
         </TableRow>
@@ -259,6 +277,7 @@ const Invoices = () => {
         });
         setBackupCardDetails({
           ...response.data.backupCard[0]?.card,
+          name: response.data.backupCard[0]?.billing_details.name,
           id: response.data.backupCard[0]?.id
         });
         setBillingDetails(response.data.data.data[0].billing_details);
@@ -285,7 +304,9 @@ const Invoices = () => {
         let mappedSubscriptionRes = response.data.data.subscriptionsFromDB.map((item) => ({
           Type: item.product_name,
           Number: item.quantity,
-          Charge: item.stripe_price
+          NextInvoiceDate: item.ends_at.split('T')[0],
+          Charge: item.stripe_price,
+          Status: item.stripe_status
         }));
         setSubscriptionRows(mappedSubscriptionRes);
       } else {
@@ -303,7 +324,11 @@ const Invoices = () => {
   const listInvoice = () => {
     setIsLoading(true);
     API.get('payment/list-invoice', {
-      params: { stripe_cust_id: stripe_cust_id, cust_id: localStorage.getItem('cust_id') }
+      params: {
+        ...invoicePayload,
+        stripe_cust_id: stripe_cust_id,
+        cust_id: localStorage.getItem('cust_id')
+      }
     }).then((response) => {
       if (response.status === 200) {
         setInvoiceList(response.data.invoiceFromDB);
@@ -346,6 +371,14 @@ const Invoices = () => {
     });
   };
 
+  const handleStatusChange = (event) => {
+    setInvoicePayload((prevPayload) => ({ ...prevPayload, status: event.target.value }));
+  };
+
+  const handleMethodChange = (event) => {
+    setInvoicePayload((prevPayload) => ({ ...prevPayload, method: event.target.value }));
+  };
+
   const handleMakePrimary = () => {
     setIsLoading(true);
     API.put('payment/update-customer', {
@@ -370,7 +403,7 @@ const Invoices = () => {
     <Box className="invoice">
       <LinerLoader loading={isLoading} />
       <Grid container spacing={3}>
-        <Grid item md={12} sm={12} xs={12} lg={4}>
+        <Grid item md={12} sm={12} xs={12} lg={4.5}>
           <Paper sx={{ marginTop: 2, height: '96%' }} className="zl__table-res">
             <SubscriptionTable
               rows={subscriptionRows}
@@ -486,22 +519,32 @@ const Invoices = () => {
                         justifyContent={'space-between'}
                         gap={2}
                         alignItems={'center'}>
-                        <Typography
-                          sx={{
-                            fontSize: '14px !important',
-                            fontWeight: '400 !important',
-                            lineHeight: '20px',
-                            color: '#998E8E !important'
-                          }}>
-                          Backup Payment Method
-                        </Typography>
+                        <Stack>
+                          {backupCardDetails !== undefined && backupCardDetails?.id !== undefined && (
+                            <Typography
+                              sx={{
+                                fontSize: '14px !important',
+                                fontWeight: '500 !important'
+                              }}>
+                              {backupCardDetails?.name}
+                            </Typography>
+                          )}
+                          <Typography
+                            sx={{
+                              fontSize: '14px !important',
+                              fontWeight: '400 !important',
+                              color: '#998E8E !important',
+                              lineHeight: '1.5 !important'
+                            }}>
+                            Backup Payment Method
+                          </Typography>
+                        </Stack>
                         {backupCardDetails !== undefined && backupCardDetails?.id !== undefined ? (
                           <Stack>
                             <Typography
                               sx={{
                                 fontSize: '14px !important',
-                                fontWeight: '500 !important',
-                                lineHeight: '20px'
+                                fontWeight: '500 !important'
                               }}>
                               {`#### #### #### ${backupCardDetails?.last4}`}
                             </Typography>
@@ -567,7 +610,7 @@ const Invoices = () => {
             </Paper>
           </Paper>
         </Grid>
-        <Grid item md={12} sm={12} xs={12} lg={4} ref={ref}>
+        <Grid item md={12} sm={12} xs={12} lg={3.5} ref={ref}>
           <Paper sx={{ marginTop: 2 }}>
             <Paper
               sx={{
@@ -636,7 +679,7 @@ const Invoices = () => {
                             fontWeight: '600 !important',
                             lineHeight: '48px'
                           }}>
-                          Dec 22, 2023
+                          {formattedDate}
                         </Typography>
                       </Box>
                     </Stack>
@@ -705,49 +748,30 @@ const Invoices = () => {
                   <Grid item md={3.5} sm={6}>
                     <InputLabel id="status">Select Status</InputLabel>
                     <FormControl fullWidth className="status-select">
-                      <Select labelId="status" id="status" value={location}>
+                      <Select
+                        labelId="status"
+                        id="status"
+                        value={invoicePayload?.status}
+                        onChange={handleStatusChange}>
                         <MenuItem value={'All'}>All</MenuItem>
-                        {[]}
+                        <MenuItem value={'Paid'}>Paid</MenuItem>
+                        <MenuItem value={'Outstanding'}>Outstanding</MenuItem>
                       </Select>
                     </FormControl>
                   </Grid>
                   <Grid item md={4.5} sm={12}>
                     <InputLabel id="method">Select Method</InputLabel>
-                    <Autocomplete
-                      labelId="method"
-                      fullWidth
-                      multiple
-                      id="method"
-                      options={[]}
-                      isOptionEqualToValue={(option, value) => option?.room_id === value?.room_id}
-                      getOptionLabel={(option) => {
-                        return option?.room_name;
-                      }}
-                      renderTags={(value, getTagProps) =>
-                        value.map((option, index) => (
-                          <Chip key={index} label={option?.room_name} {...getTagProps({ index })} />
-                        ))
-                      }
-                      renderInput={(params) => (
-                        <TextField
-                          {...params}
-                          // label="Room"
-                          fullWidth
-                          placeholder="Method"
-                          // InputProps={{
-                          //   ...params.InputProps,
-                          //   endAdornment: (
-                          //     <React.Fragment>
-                          //       {roomsDropdownLoading ? (
-                          //         <CircularProgress color="inherit" size={20} />
-                          //       ) : null}
-                          //       {params.InputProps.endAdornment}
-                          //     </React.Fragment>
-                          //   )
-                          // }}
-                        />
-                      )}
-                    />
+                    <FormControl fullWidth>
+                      <Select
+                        labelId="method"
+                        id="method"
+                        value={invoicePayload?.method}
+                        onChange={handleMethodChange}>
+                        <MenuItem value={'All'}>All</MenuItem>
+                        <MenuItem value={'Debit Card'}>Debit Card</MenuItem>
+                        <MenuItem value={'Credit Card'}>Credit Card</MenuItem>
+                      </Select>
+                    </FormControl>
                   </Grid>
                 </Grid>
               </Grid>
@@ -833,6 +857,7 @@ const Invoices = () => {
         customer={customerDetails && customerDetails}
         row={invoice && invoice}
         setOpen={setInvoiceDrawerOpen}
+        cust_id={(cust_id !== null || cust_id !== undefined) && cust_id}
       />
       {isPaymentDialogOpen && (
         <Dialog open={isPaymentDialogOpen} onClose={handleClose} fullWidth>
