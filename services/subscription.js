@@ -85,7 +85,6 @@ createSubscription: async (subscriptionObj) => {
 listSubscriptions: async (stripe_cust_id) => {
   const { Subscriptions } = await connectToDatabase();
   let subcriptions = await Subscriptions.findAll({
-    logging: console.log,
     order: [["created_at", "DESC"]],
     where: {
       cust_id: stripe_cust_id
@@ -119,18 +118,28 @@ createInvoice: async (invoiceObj) => {
   return invoiceCreated;
 },
 
-listInvoice: async (stripe_cust_id) => {
+listInvoice: async (stripe_cust_id, filter) => {
+  let {
+    pageNumber = 0,
+    pageSize = 10,
+    status = "All",
+    method = "All",
+  } = filter;
+
   const { Invoice } = await connectToDatabase();
-  let invoiceList = await Invoice.findAll({
+  let invoiceList = await Invoice.findAndCountAll({
     logging: console.log,
+    limit: parseInt(pageSize),
+    offset: parseInt(pageNumber * pageSize),
     order: [["created_at", "DESC"]],
     where: {
-      stripe_cust_id: stripe_cust_id
+      stripe_cust_id: stripe_cust_id,
+      status: status !== 'All' && status,
+      payment_method : method !== 'All' && method
     },
     raw: true,
   });
-  console.log('invoiceList---->', invoiceList);
-  return invoiceList;
+  return { invoiceList: invoiceList.rows, count: invoiceList.count };
 },
 
 // Insert a webhook log into the database

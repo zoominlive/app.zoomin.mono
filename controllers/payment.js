@@ -111,6 +111,35 @@ module.exports = {
   createSubscription: async(req, res) => {
     const {stripe_cust_id, products, startDate, trial_period_days, trialend} = req.body;
     try {      
+      const calculateEndOfMonth = (timestamp) => {
+        // Convert the timestamp to a Date object
+        const date = new Date(timestamp * 1000);
+    
+        // Get the year and month from the date
+        const year = date.getFullYear();
+        const month = date.getMonth();
+    
+        // Create a new Date object for the first day of the next month
+        const nextMonthFirstDay = new Date(year, month + 1, 1);
+    
+        // Subtract one day from the first day of the next month to get the last day of the current month
+        const lastDayOfMonth = new Date(nextMonthFirstDay.getTime() - 1);
+    
+        // Convert the last day of the month to a Unix timestamp
+        const lastDayOfMonthTimestamp = Math.floor(lastDayOfMonth.getTime() / 1000);
+
+        // Convert the first day of the next month to a Unix timestamp
+        const nextMonthFirstDayTimestamp = Math.floor(nextMonthFirstDay.getTime() / 1000);
+        // Convert the last day of the month to a Unix timestamp and return
+        return {
+          lastDayOfMonth: lastDayOfMonthTimestamp,
+          nextMonthFirstDay: nextMonthFirstDayTimestamp
+        };
+      };
+      const trialEndDate = startDate + (parseInt(trial_period_days) * 24 * 60 * 60)
+      const phaseEndDate = calculateEndOfMonth(trialEndDate).lastDayOfMonth;
+      const nextPhaseStartDate = calculateEndOfMonth(trialEndDate).nextMonthFirstDay;
+
       const subscriptions = await Promise.all(products.map(async (product) => {
         const { price_id, qty } = product.product;
         let subscriptionSchedule;
@@ -128,10 +157,25 @@ module.exports = {
                     quantity: qty,
                   },
                 ],
-                trial_end: startDate + (parseInt(trial_period_days) * 24 * 60 * 60), // 10 days from the start date
+                trial_end: trialEndDate, // 10 days from the start date
+                end_date: phaseEndDate,
+                proration_behavior: "create_prorations",
+              },
+              {
+                items: [
+                  {
+                    price: price_id,
+                    quantity: qty,
+                  },
+                ],
+                metadata: {
+                  start_date: nextPhaseStartDate,
+                  billing_cycle_anchor: nextPhaseStartDate
+                },
+                proration_behavior: "create_prorations",
               },
             ],
-          });
+          });        
           return subscriptionSchedule;
         } else {
           subscription = await stripe.subscriptions.create({
@@ -142,6 +186,10 @@ module.exports = {
                 quantity: qty,
               },
             ],
+            proration_behavior: 'create_prorations',
+            billing_cycle_anchor_config: {
+              day_of_month: 1,
+            },
           });
           return subscription;
         }
@@ -217,15 +265,30 @@ module.exports = {
   listInvoice: async(req, res) => {
     const { stripe_cust_id } = req.query;
 
+    const filter = {
+      pageNumber: req.query?.pageNumber,
+      pageSize: req.query?.pageSize,
+      status: req.query?.status,
+      method: req.query?.method,
+      pageCount: req.query?.pageCount,
+      orderBy: req.query?.orderBy,
+      cust_id: req.query?.cust_id
+    };
+
     try {
       const invoices = await stripe.invoices.list({
         customer: stripe_cust_id
       });
-      const invoiceFromDB = await subscription.listInvoice(stripe_cust_id);
-      
+
+      const upcomingInvoice = await stripe.invoices.retrieveUpcoming({
+        customer: stripe_cust_id,
+      });
+
+      const invoiceFromDB = await subscription.listInvoice(stripe_cust_id, filter);
       res.status(200).json({ 
         data: invoices,
-        invoiceFromDB: invoiceFromDB,
+        invoiceFromDB: invoiceFromDB.invoiceList,
+        upcomingInvoice: upcomingInvoice,
         message: 'Invoice retrieved' 
       });
     } catch (error) {
@@ -245,7 +308,6 @@ module.exports = {
       /* Filter out the subcriptions those aren't cancelled */
       const filteredData = subscriptions.data.filter((item) => item.canceled_at == null);
       const subscriptionsFromDB = await subscription.listSubscriptions(stripe_cust_id);
-      console.log('subscriptionsFromDB===', subscriptionsFromDB);
       res.status(200).json({ 
         data: {
           subscriptions: filteredData,
