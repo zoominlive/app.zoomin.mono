@@ -97,6 +97,25 @@ listSubscriptions: async (stripe_cust_id) => {
 createInvoice: async (invoiceObj) => {
   const { Invoice } = await connectToDatabase();
   let invoice_created_at = new Date(invoiceObj.created * 1000);
+  // Retrieve the invoice using the Stripe API
+  const invoice = await stripe.invoices.retrieve(invoiceObj.id, {
+    expand: ["payment_intent"], // Expand the payment intent to get payment method details
+  });
+
+  // Extract payment method details from the payment intent
+  const paymentMethod = invoice.payment_intent?.payment_method;
+  let cardType;
+  if(paymentMethod) {
+    // Retrieve the payment method details using the payment method ID
+    const paymentMethodDetails = await stripe.paymentMethods.retrieve(
+      paymentMethod
+    );
+    // Extract relevant information about the payment method (e.g., card type)
+    cardType = paymentMethodDetails.card.funding;
+  } else {
+    cardType = null;
+  }
+  
   let invoiceCreated = await Invoice.create({
     invoice_id: invoiceObj.id,
     stripe_cust_id: invoiceObj.customer,
@@ -104,7 +123,7 @@ createInvoice: async (invoiceObj) => {
     invoice_date: invoice_created_at,
     description: invoiceObj.lines.data[0].description,
     quantity: invoiceObj.lines.data[0].quantity,
-    payment_method: invoiceObj.collection_method,
+    payment_method: cardType,
     amount_paid: parseFloat(invoiceObj.amount_paid / 100).toFixed(2),
     amount_due: parseFloat(invoiceObj.amount_due / 100).toFixed(2),
     subtotal: parseFloat(invoiceObj.subtotal / 100).toFixed(2),
@@ -134,9 +153,9 @@ listInvoice: async (stripe_cust_id, filter) => {
     order: [["created_at", "DESC"]],
     where: {
       stripe_cust_id: stripe_cust_id,
-      status: status !== 'All' && status,
-      payment_method : method !== 'All' && method
-    },
+      ...(status !== 'All' && status ? { status: status } : {}),
+      ...(method !== 'All' && method ? { payment_method: method } : {})
+  },
     raw: true,
   });
   return { invoiceList: invoiceList.rows, count: invoiceList.count };

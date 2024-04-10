@@ -139,44 +139,65 @@ module.exports = {
       const trialEndDate = startDate + (parseInt(trial_period_days) * 24 * 60 * 60)
       const phaseEndDate = calculateEndOfMonth(trialEndDate).lastDayOfMonth;
       const nextPhaseStartDate = calculateEndOfMonth(trialEndDate).nextMonthFirstDay;
-
+      // comment the upper part afterwards
       const subscriptions = await Promise.all(products.map(async (product) => {
         const { price_id, qty } = product.product;
         let subscriptionSchedule;
         let subscription;
         if (trial_period_days !== 0) {
-            subscriptionSchedule = await stripe.subscriptionSchedules.create({
+          const updatedStartDate = new Date(startDate * 1000);
+          const trialEnd = new Date(updatedStartDate);
+          trialEnd.setDate(trialEnd.getDate() + parseInt(trial_period_days)); // 14 days trial
+
+          // Ensure trialEnd is before the start of the next month
+          const nextMonth = new Date(trialEnd.getFullYear(), trialEnd.getMonth() + 1, 1);
+
+          if (trialEnd.getTime() >= nextMonth.getTime()) {
+            // If trialEnd is after the start of the next month, set it to the end of the current month
+            nextMonth.setDate(0);
+            trialEnd.setDate(nextMonth.getDate());
+          }
+
+          subscriptionSchedule = await stripe.subscriptions.create({
             customer: stripe_cust_id,
-            start_date: startDate,
-            end_behavior: 'release',
-            phases: [
-              {
-                items: [
-                  {
-                    price: price_id,
-                    quantity: qty,
-                  },
-                ],
-                trial_end: trialEndDate, // 10 days from the start date
-                end_date: phaseEndDate,
-                proration_behavior: "create_prorations",
-              },
-              {
-                items: [
-                  {
-                    price: price_id,
-                    quantity: qty,
-                  },
-                ],
-                metadata: {
-                  start_date: nextPhaseStartDate,
-                  billing_cycle_anchor: nextPhaseStartDate
-                },
-                proration_behavior: "create_prorations",
-              },
-            ],
-          });        
+            items: [{ price: price_id, quantity: qty }],
+            trial_end: Math.floor(trialEnd.getTime() / 1000),
+            billing_cycle_anchor: Math.floor(nextMonth.getTime() / 1000),
+            proration_behavior: 'create_prorations',
+          });          
           return subscriptionSchedule;
+          // subscriptionSchedule = await stripe.subscriptionSchedules.create({
+          //   customer: stripe_cust_id,
+          //   start_date: startDate,
+          //   end_behavior: 'release',
+          //   phases: [
+          //     {
+          //       items: [
+          //         {
+          //           price: price_id,
+          //           quantity: qty,
+          //         },
+          //       ],
+          //       trial_end: trialEndDate, // 10 days from the start date
+          //       end_date: phaseEndDate,
+          //       proration_behavior: "create_prorations",
+          //     },
+          //     {
+          //       items: [
+          //         {
+          //           price: price_id,
+          //           quantity: qty,
+          //         },
+          //       ],
+          //       metadata: {
+          //         start_date: nextPhaseStartDate,
+          //         billing_cycle_anchor: nextPhaseStartDate
+          //       },
+          //       proration_behavior: "create_prorations",
+          //     },
+          //   ],
+          // });        
+          // return subscriptionSchedule;
         } else {
           subscription = await stripe.subscriptions.create({
             customer: stripe_cust_id,
@@ -277,19 +298,22 @@ module.exports = {
 
     try {
       const invoices = await stripe.invoices.list({
-        customer: stripe_cust_id
+        customer: stripe_cust_id,
       });
 
       const upcomingInvoice = await stripe.invoices.retrieveUpcoming({
         customer: stripe_cust_id,
       });
 
-      const invoiceFromDB = await subscription.listInvoice(stripe_cust_id, filter);
-      res.status(200).json({ 
+      const invoiceFromDB = await subscription.listInvoice(
+        stripe_cust_id,
+        filter
+      );
+      res.status(200).json({
         data: invoices,
         invoiceFromDB: invoiceFromDB.invoiceList,
         upcomingInvoice: upcomingInvoice,
-        message: 'Invoice retrieved' 
+        message: "Invoice retrieved",
       });
     } catch (error) {
       console.error(error);
