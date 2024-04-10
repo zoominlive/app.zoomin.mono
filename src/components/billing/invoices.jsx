@@ -3,7 +3,6 @@ import React, { useContext, useEffect, useRef, useState } from 'react';
 import LayoutContext from '../../context/layoutcontext';
 import AuthContext from '../../context/authcontext';
 import {
-  Autocomplete,
   Box,
   Button,
   Card,
@@ -15,7 +14,6 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
-  Divider,
   FormControl,
   FormGroup,
   Grid,
@@ -27,11 +25,10 @@ import {
   Stack,
   Table,
   TableBody,
-  // TableBody,
   TableCell,
   TableContainer,
   TableHead,
-  // TablePagination,
+  TablePagination,
   TableRow,
   TextField,
   TextareaAutosize,
@@ -178,6 +175,19 @@ const Invoices = () => {
     };
   }, []);
 
+  // Method to change the page in table
+  const handlePageChange = (_, newPage) => {
+    setInvoicePayload((prevPayload) => ({ ...prevPayload, pageNumber: newPage }));
+  };
+
+  // Method to change the row per page in table
+  const handleChangeRowsPerPage = (event) => {
+    setInvoicePayload((prevPayload) => ({
+      ...prevPayload,
+      pageSize: parseInt(event.target.value, 10)
+    }));
+  };
+
   console.log('height-->', height);
   console.log('authCtx.user-->', authCtx.user);
   const Row = ({ row }) => {
@@ -208,7 +218,13 @@ const Invoices = () => {
               setInvoice(row);
             }}>
             {/* <Stack direction="row"> */}
-            <Typography>{payment_method}</Typography>
+            <Typography>
+              {payment_method == 'debit'
+                ? 'Debit Card'
+                : payment_method == 'credit'
+                ? 'Credit Card'
+                : payment_method}
+            </Typography>
             {/* </Stack> */}
           </TableCell>
           <TableCell
@@ -400,300 +416,465 @@ const Invoices = () => {
     });
   };
   return (
-    <Box className="invoice">
-      <LinerLoader loading={isLoading} />
-      <Grid container spacing={3}>
-        <Grid item md={12} sm={12} xs={12} lg={4.5}>
-          <Paper sx={{ marginTop: 2, height: '96%' }} className="zl__table-res">
-            <SubscriptionTable
-              rows={subscriptionRows}
-              columns={SubscriptionColumns}
-              title={'Subscriptions'}
-              isLoading={isLoading}
-            />
-          </Paper>
-        </Grid>
-        <Grid item md={12} sm={12} xs={12} lg={4}>
-          <Paper sx={{ marginTop: 2, height: '96%' }} className="zl__table-res">
-            <Paper sx={{ marginTop: 2, height: '96%', minHeight: '338px', boxShadow: 'unset' }}>
-              <Box className="zl__table-block listing-wrapper">
-                <Stack direction={'row'} justifyContent={'space-between'}>
-                  <Typography style={{ padding: '20px 14px' }}>Default Payment Method</Typography>
-                  {/* {cardDetails && cardDetails?.billingDetails !== undefined && (
-                    <Button
-                      disableRipple
-                      disableFocusRipple
-                      sx={{ textTransform: 'none', ':hover': { backgroundColor: 'transparent' } }}
-                      onClick={() => handleRemoveCard('default')}>
-                      Remove
-                    </Button>
-                  )} */}
-                </Stack>
-                <Stack direction={'column'} justifyContent={'space-between'} gap={2}>
-                  {cardDetails && cardDetails?.billingDetails !== undefined ? (
-                    <Stack>
-                      <Paper
-                        sx={{
-                          background:
-                            'linear-gradient(180deg, #4F5BAE 0%, #19257B 100%), linear-gradient(0deg, #EBE8FF, #EBE8FF)',
-                          height: '125px',
-                          padding: '24px'
-                        }}>
-                        <Stack direction={'row'} justifyContent={'space-between'}>
-                          <img src={visa_png} alt="visa" />
-                          <Typography
-                            sx={{
-                              fontSize: '16px !important',
-                              fontWeight: '400 !important',
-                              lineHeight: '22px',
-                              color: '#FFFFFF !important'
-                            }}>
-                            {cardDetails?.funding === 'credit'
-                              ? 'Credit Card'
-                              : cardDetails?.funding === 'debit'
-                              ? 'Dedit Card'
-                              : `${cardDetails?.funding}`}
-                          </Typography>
-                        </Stack>
-                        <Stack marginTop={3}>
-                          <Typography
-                            sx={{
-                              fontSize: '16px !important',
-                              fontWeight: '400 !important',
-                              lineHeight: '22px',
-                              color: '#FFFFFF !important',
-                              opacity: '60% !important'
-                            }}>
-                            {cardDetails?.billingDetails?.name}
-                          </Typography>
-                        </Stack>
-                        <Stack>
-                          <Typography
-                            sx={{
-                              fontSize: '20px !important',
-                              fontWeight: '500 !important',
-                              lineHeight: '28px',
-                              color: '#FFFFFF !important'
-                            }}>
-                            {`#### #### #### ${cardDetails?.last4}`}
-                          </Typography>
-                        </Stack>
-                      </Paper>
-                    </Stack>
-                  ) : (
-                    <>
-                      <Box
-                        display={'flex'}
-                        alignItems={'center'}
-                        justifyContent={'center'}
-                        marginTop={'50px'}>
-                        <Stack
-                          alignItems="center"
-                          justifyContent="center"
-                          sx={{ paddingTop: 2, color: '#8E8E8E' }}
-                          gap={2}>
-                          <Typography variant="caption" sx={{ fontSize: '20px' }}>
-                            No payment method is selected
-                          </Typography>
-                          <Button
-                            className="add-payment-button"
-                            variant="contained"
-                            startIcon={<Plus />}
-                            onClick={() => setPaymentDialogOpen(true)}>
-                            {' '}
-                            Add Payment Method
-                          </Button>
-                        </Stack>
-                      </Box>
-                    </>
-                  )}
-                  <Stack width={'100%'}>
-                    <Box
-                      sx={{
-                        border: '1px solid #EBE8FF !important',
-                        borderRadius: '15px !important',
-                        padding: '20px 16px !important'
-                      }}>
-                      <Stack
-                        direction={'row'}
-                        justifyContent={'space-between'}
-                        gap={2}
-                        alignItems={'center'}>
-                        <Stack>
-                          {backupCardDetails !== undefined && backupCardDetails?.id !== undefined && (
+    <>
+      <Box className="invoice">
+        <LinerLoader loading={isLoading} />
+        <Grid container spacing={3}>
+          <Grid item md={12} sm={12} xs={12} lg={4.5}>
+            <Paper sx={{ marginTop: 2, height: '96%' }} className="zl__table-res">
+              <SubscriptionTable
+                rows={subscriptionRows}
+                columns={SubscriptionColumns}
+                title={'Subscriptions'}
+                isLoading={isLoading}
+              />
+            </Paper>
+          </Grid>
+          <Grid item md={12} sm={12} xs={12} lg={4}>
+            <Paper sx={{ marginTop: 2, height: '96%' }} className="zl__table-res">
+              <Paper sx={{ marginTop: 2, height: '96%', minHeight: '338px', boxShadow: 'unset' }}>
+                <Box className="zl__table-block listing-wrapper">
+                  <Stack direction={'row'} justifyContent={'space-between'}>
+                    <Typography style={{ padding: '20px 14px' }}>Default Payment Method</Typography>
+                    {/* {cardDetails && cardDetails?.billingDetails !== undefined && (
+                      <Button
+                        disableRipple
+                        disableFocusRipple
+                        sx={{ textTransform: 'none', ':hover': { backgroundColor: 'transparent' } }}
+                        onClick={() => handleRemoveCard('default')}>
+                        Remove
+                      </Button>
+                    )} */}
+                  </Stack>
+                  <Stack direction={'column'} justifyContent={'space-between'} gap={2}>
+                    {cardDetails && cardDetails?.billingDetails !== undefined ? (
+                      <Stack>
+                        <Paper
+                          sx={{
+                            background:
+                              'linear-gradient(180deg, #4F5BAE 0%, #19257B 100%), linear-gradient(0deg, #EBE8FF, #EBE8FF)',
+                            height: '125px',
+                            padding: '24px'
+                          }}>
+                          <Stack direction={'row'} justifyContent={'space-between'}>
+                            <img src={visa_png} alt="visa" />
                             <Typography
                               sx={{
-                                fontSize: '14px !important',
-                                fontWeight: '500 !important'
+                                fontSize: '16px !important',
+                                fontWeight: '400 !important',
+                                lineHeight: '22px',
+                                color: '#FFFFFF !important'
                               }}>
-                              {backupCardDetails?.name}
+                              {cardDetails?.funding === 'credit'
+                                ? 'Credit Card'
+                                : cardDetails?.funding === 'debit'
+                                ? 'Dedit Card'
+                                : `${cardDetails?.funding}`}
                             </Typography>
-                          )}
-                          <Typography
-                            sx={{
-                              fontSize: '14px !important',
-                              fontWeight: '400 !important',
-                              color: '#998E8E !important',
-                              lineHeight: '1.5 !important'
-                            }}>
-                            Backup Payment Method
-                          </Typography>
-                        </Stack>
-                        {backupCardDetails !== undefined && backupCardDetails?.id !== undefined ? (
+                          </Stack>
+                          <Stack marginTop={3}>
+                            <Typography
+                              sx={{
+                                fontSize: '16px !important',
+                                fontWeight: '400 !important',
+                                lineHeight: '22px',
+                                color: '#FFFFFF !important',
+                                opacity: '60% !important'
+                              }}>
+                              {cardDetails?.billingDetails?.name}
+                            </Typography>
+                          </Stack>
                           <Stack>
                             <Typography
                               sx={{
-                                fontSize: '14px !important',
-                                fontWeight: '500 !important'
+                                fontSize: '20px !important',
+                                fontWeight: '500 !important',
+                                lineHeight: '28px',
+                                color: '#FFFFFF !important'
                               }}>
-                              {`#### #### #### ${backupCardDetails?.last4}`}
+                              {`#### #### #### ${cardDetails?.last4}`}
                             </Typography>
-                            <Stack direction={'row'} gap={1}>
-                              <Button
-                                disableRipple
-                                onClick={handleMakePrimary}
-                                sx={{
-                                  justifyContent: 'end !important',
-                                  fontSize: '14px !important',
-                                  letterSpacing: '0px',
-                                  padding: '0px',
-                                  fontWeight: '500 !important',
-                                  lineHeight: '20px !important',
-                                  color: '#5A53DD !important',
-                                  textTransform: 'none !important',
-                                  ':hover': { backgroundColor: 'transparent' }
-                                }}>
-                                Make Primary
-                              </Button>
-                              or
-                              <Button
-                                disableRipple
-                                onClick={() => handleRemoveCard('backup')}
-                                sx={{
-                                  justifyContent: 'end !important',
-                                  fontSize: '14px !important',
-                                  letterSpacing: '0px',
-                                  minWidth: '0px',
-                                  padding: '0px',
-                                  fontWeight: '500 !important',
-                                  lineHeight: '20px !important',
-                                  color: '#5A53DD !important',
-                                  textTransform: 'none !important',
-                                  ':hover': { backgroundColor: 'transparent' }
-                                }}>
-                                Remove
-                              </Button>
-                            </Stack>
                           </Stack>
-                        ) : (
-                          <Button
-                            disableRipple
-                            onClick={() => setPaymentDialogOpen(true)}
+                        </Paper>
+                      </Stack>
+                    ) : (
+                      <>
+                        <Box
+                          display={'flex'}
+                          alignItems={'center'}
+                          justifyContent={'center'}
+                          marginTop={'50px'}>
+                          <Stack
+                            alignItems="center"
+                            justifyContent="center"
+                            sx={{ paddingTop: 2, color: '#8E8E8E' }}
+                            gap={2}>
+                            <Typography variant="caption" sx={{ fontSize: '20px' }}>
+                              No payment method is selected
+                            </Typography>
+                            <Button
+                              className="add-payment-button"
+                              variant="contained"
+                              startIcon={<Plus />}
+                              onClick={() => setPaymentDialogOpen(true)}>
+                              {' '}
+                              Add Payment Method
+                            </Button>
+                          </Stack>
+                        </Box>
+                      </>
+                    )}
+                    <Stack width={'100%'}>
+                      <Box
+                        sx={{
+                          border: '1px solid #EBE8FF !important',
+                          borderRadius: '15px !important',
+                          padding: '20px 16px !important'
+                        }}>
+                        <Stack
+                          direction={'row'}
+                          justifyContent={'space-between'}
+                          gap={2}
+                          alignItems={'center'}>
+                          <Stack>
+                            {backupCardDetails !== undefined &&
+                              backupCardDetails?.id !== undefined && (
+                                <Typography
+                                  sx={{
+                                    fontSize: '14px !important',
+                                    fontWeight: '500 !important'
+                                  }}>
+                                  {backupCardDetails?.name}
+                                </Typography>
+                              )}
+                            <Typography
+                              sx={{
+                                fontSize: '14px !important',
+                                fontWeight: '400 !important',
+                                color: '#998E8E !important',
+                                lineHeight: '1.5 !important'
+                              }}>
+                              Backup Payment Method
+                            </Typography>
+                          </Stack>
+                          {backupCardDetails !== undefined &&
+                          backupCardDetails?.id !== undefined ? (
+                            <Stack>
+                              <Typography
+                                sx={{
+                                  fontSize: '14px !important',
+                                  fontWeight: '500 !important'
+                                }}>
+                                {`#### #### #### ${backupCardDetails?.last4}`}
+                              </Typography>
+                              <Stack direction={'row'} gap={1}>
+                                <Button
+                                  disableRipple
+                                  onClick={handleMakePrimary}
+                                  sx={{
+                                    justifyContent: 'end !important',
+                                    fontSize: '14px !important',
+                                    letterSpacing: '0px',
+                                    padding: '0px',
+                                    fontWeight: '500 !important',
+                                    lineHeight: '20px !important',
+                                    color: '#5A53DD !important',
+                                    textTransform: 'none !important',
+                                    ':hover': { backgroundColor: 'transparent' }
+                                  }}>
+                                  Make Primary
+                                </Button>
+                                or
+                                <Button
+                                  disableRipple
+                                  onClick={() => handleRemoveCard('backup')}
+                                  sx={{
+                                    justifyContent: 'end !important',
+                                    fontSize: '14px !important',
+                                    letterSpacing: '0px',
+                                    minWidth: '0px',
+                                    padding: '0px',
+                                    fontWeight: '500 !important',
+                                    lineHeight: '20px !important',
+                                    color: '#5A53DD !important',
+                                    textTransform: 'none !important',
+                                    ':hover': { backgroundColor: 'transparent' }
+                                  }}>
+                                  Remove
+                                </Button>
+                              </Stack>
+                            </Stack>
+                          ) : (
+                            <Button
+                              disableRipple
+                              onClick={() => setPaymentDialogOpen(true)}
+                              sx={{
+                                fontSize: '14px !important',
+                                letterSpacing: '0px',
+                                padding: '0px',
+                                fontWeight: '500 !important',
+                                lineHeight: '20px !important',
+                                color: '#5A53DD !important',
+                                textTransform: 'none !important',
+                                ':hover': { backgroundColor: 'transparent' }
+                              }}>
+                              Add Backup Payment Method
+                            </Button>
+                          )}
+                        </Stack>
+                      </Box>
+                    </Stack>
+                  </Stack>
+                </Box>
+              </Paper>
+            </Paper>
+          </Grid>
+          <Grid item md={12} sm={12} xs={12} lg={3.5} ref={ref}>
+            <Paper sx={{ marginTop: 2 }}>
+              <Paper
+                sx={{
+                  position: 'relative',
+                  display: 'flex',
+                  alignItems: 'center',
+                  height: '96%',
+                  minHeight: `${cardHeight}px`,
+                  boxShadow: 'unset'
+                }}>
+                <Box>
+                  <Stack direction={'row'} spacing={3} marginLeft={4}>
+                    <Box>
+                      <img src={AccountBalance} alt="AccountBalance" />
+                    </Box>
+                    <Box display={'flex'} alignItems={'center'} justifyContent={'left'}>
+                      <Stack alignItems="center" sx={{ color: '#8E8E8E' }}>
+                        <Box>
+                          <Typography variant="caption" sx={{ fontSize: '16px' }}>
+                            Account Balance
+                          </Typography>
+                          <Typography
                             sx={{
-                              fontSize: '14px !important',
-                              letterSpacing: '0px',
-                              padding: '0px',
-                              fontWeight: '500 !important',
-                              lineHeight: '20px !important',
-                              color: '#5A53DD !important',
-                              textTransform: 'none !important',
-                              ':hover': { backgroundColor: 'transparent' }
+                              fontSize: '32px',
+                              color: '#000000',
+                              fontWeight: '600 !important',
+                              lineHeight: '48px'
                             }}>
-                            Add Backup Payment Method
-                          </Button>
-                        )}
+                            $0.00
+                          </Typography>
+                        </Box>
                       </Stack>
                     </Box>
                   </Stack>
-                </Stack>
-              </Box>
+                </Box>
+                <Box sx={{ position: 'absolute', bottom: 0, right: 0 }}>
+                  <img src={AccountBalanceBottomRight} alt="AccountBalanceBottomRight" />
+                </Box>
+              </Paper>
             </Paper>
-          </Paper>
+            <Paper sx={{ marginTop: 2 }}>
+              <Paper
+                sx={{
+                  position: 'relative',
+                  display: 'flex',
+                  alignItems: 'center',
+                  height: '96%',
+                  minHeight: `${cardHeight}px`,
+                  boxShadow: 'unset'
+                }}>
+                <Box className="">
+                  <Stack direction={'row'} spacing={3} marginLeft={4}>
+                    <Box>
+                      <img src={NextChargeDate} alt="NextChargeDate" />
+                    </Box>
+                    <Box display={'flex'} alignItems={'center'} justifyContent={'left'}>
+                      <Stack alignItems="center" sx={{ color: '#8E8E8E' }}>
+                        <Box>
+                          <Typography variant="caption" sx={{ fontSize: '16px' }}>
+                            Next Charge Date
+                          </Typography>
+                          <Typography
+                            sx={{
+                              fontSize: '32px',
+                              color: '#000000',
+                              fontWeight: '600 !important',
+                              lineHeight: '48px'
+                            }}>
+                            {formattedDate}
+                          </Typography>
+                        </Box>
+                      </Stack>
+                    </Box>
+                  </Stack>
+                </Box>
+                <Box sx={{ position: 'absolute', bottom: 0, right: 0 }}>
+                  <img src={NextChargeDateBottomRight} alt="NextChargeDateBottomRight" />
+                </Box>
+              </Paper>
+            </Paper>
+          </Grid>
         </Grid>
-        <Grid item md={12} sm={12} xs={12} lg={3.5} ref={ref}>
-          <Paper sx={{ marginTop: 2 }}>
-            <Paper
-              sx={{
-                position: 'relative',
-                display: 'flex',
-                alignItems: 'center',
-                height: '96%',
-                minHeight: `${cardHeight}px`,
-                boxShadow: 'unset'
-              }}>
-              <Box>
-                <Stack direction={'row'} spacing={3} marginLeft={4}>
-                  <Box>
-                    <img src={AccountBalance} alt="AccountBalance" />
-                  </Box>
-                  <Box display={'flex'} alignItems={'center'} justifyContent={'left'}>
-                    <Stack alignItems="center" sx={{ color: '#8E8E8E' }}>
-                      <Box>
-                        <Typography variant="caption" sx={{ fontSize: '16px' }}>
-                          Account Balance
-                        </Typography>
-                        <Typography
-                          sx={{
-                            fontSize: '32px',
-                            color: '#000000',
-                            fontWeight: '600 !important',
-                            lineHeight: '48px'
-                          }}>
-                          $0.00
-                        </Typography>
-                      </Box>
-                    </Stack>
-                  </Box>
-                </Stack>
-              </Box>
-              <Box sx={{ position: 'absolute', bottom: 0, right: 0 }}>
-                <img src={AccountBalanceBottomRight} alt="AccountBalanceBottomRight" />
-              </Box>
-            </Paper>
-          </Paper>
-          <Paper sx={{ marginTop: 2 }}>
-            <Paper
-              sx={{
-                position: 'relative',
-                display: 'flex',
-                alignItems: 'center',
-                height: '96%',
-                minHeight: `${cardHeight}px`,
-                boxShadow: 'unset'
-              }}>
-              <Box className="">
-                <Stack direction={'row'} spacing={3} marginLeft={4}>
-                  <Box>
-                    <img src={NextChargeDate} alt="NextChargeDate" />
-                  </Box>
-                  <Box display={'flex'} alignItems={'center'} justifyContent={'left'}>
-                    <Stack alignItems="center" sx={{ color: '#8E8E8E' }}>
-                      <Box>
-                        <Typography variant="caption" sx={{ fontSize: '16px' }}>
-                          Next Charge Date
-                        </Typography>
-                        <Typography
-                          sx={{
-                            fontSize: '32px',
-                            color: '#000000',
-                            fontWeight: '600 !important',
-                            lineHeight: '48px'
-                          }}>
-                          {formattedDate}
-                        </Typography>
-                      </Box>
-                    </Stack>
-                  </Box>
-                </Stack>
-              </Box>
-              <Box sx={{ position: 'absolute', bottom: 0, right: 0 }}>
-                <img src={NextChargeDateBottomRight} alt="NextChargeDateBottomRight" />
-              </Box>
-            </Paper>
-          </Paper>
-        </Grid>
-      </Grid>
 
+        <InvoiceDrawer
+          open={isInvoiceDrawerOpen}
+          customer={customerDetails && customerDetails}
+          row={invoice && invoice}
+          setOpen={setInvoiceDrawerOpen}
+          cust_id={(cust_id !== null || cust_id !== undefined) && cust_id}
+        />
+        {isPaymentDialogOpen && (
+          <Dialog open={isPaymentDialogOpen} onClose={handleClose} fullWidth>
+            <DialogTitle sx={{ padding: '40px 40px 24px 40px' }}>
+              {'Payment Method'}
+              <DialogContentText></DialogContentText>
+              <IconButton
+                aria-label="close"
+                onClick={handleClose}
+                sx={{
+                  position: 'absolute',
+                  right: 18,
+                  top: 30
+                }}>
+                <CloseIcon />
+              </IconButton>
+            </DialogTitle>
+            {isCloseDialog ? (
+              <>
+                <Stack direction={'row'} justifyContent={'center'} alignItems={'start'} padding={3}>
+                  <DialogContentText>
+                    Are you sure you want to exit before completing the wizard ?
+                  </DialogContentText>
+                </Stack>
+                <DialogActions sx={{ paddingRight: 4, paddingBottom: 3 }}>
+                  <Stack direction="row" justifyContent="flex-end" width="100%">
+                    <Button
+                      className="log-btn"
+                      variant="outlined"
+                      sx={{ marginRight: 1.5 }}
+                      onClick={() => {
+                        setIsCloseDialog(false);
+                      }}>
+                      No
+                    </Button>
+
+                    <Button
+                      id="yes-btn"
+                      className="log-btn"
+                      variant="outlined"
+                      sx={{ marginRight: 1.5, color: '#ffff' }}
+                      style={{ color: '#ffff' }}
+                      onClick={() => {
+                        setIsCloseDialog(false);
+                        handleFormDialogClose();
+                      }}>
+                      Yes
+                    </Button>
+                  </Stack>
+                </DialogActions>
+              </>
+            ) : (
+              <DialogContent sx={{ padding: '40px' }}>
+                <Elements stripe={stripePromise}>
+                  <CheckoutForm
+                    closeDialog={handleFormDialogClose}
+                    getCustPaymentMethod={getCustPaymentMethod}
+                    setIsLoading={setIsLoading}
+                  />
+                </Elements>
+              </DialogContent>
+            )}
+          </Dialog>
+        )}
+        {isDisputeFormDialogOpen && (
+          <Dialog open={isDisputeFormDialogOpen} onClose={handleClose} sx={{ padding: '40px' }}>
+            <DialogTitle
+              sx={{
+                padding: '40px 40px 8px 40px',
+                fontSize: '22px !important',
+                fontWeight: '600 !important',
+                lineHeight: '28px !important',
+                color: '#343434 !important'
+              }}>
+              {'Dispute Invoice'}
+              <DialogContentText></DialogContentText>
+              <IconButton
+                aria-label="close"
+                onClick={handleClose}
+                sx={{
+                  position: 'absolute',
+                  right: 18,
+                  top: 30
+                }}>
+                <CloseIcon />
+              </IconButton>
+            </DialogTitle>
+            {isCloseDialog ? (
+              <>
+                <Stack direction={'row'} justifyContent={'center'} alignItems={'start'} padding={3}>
+                  <DialogContentText>
+                    Are you sure you want to exit before completing the wizard ?
+                  </DialogContentText>
+                </Stack>
+                <DialogActions sx={{ paddingRight: 4, paddingBottom: 3 }}>
+                  <Stack direction="row" justifyContent="flex-end" width="100%">
+                    <Button
+                      className="log-btn"
+                      variant="outlined"
+                      sx={{ marginRight: 1.5 }}
+                      onClick={() => {
+                        setIsCloseDialog(false);
+                      }}>
+                      No
+                    </Button>
+
+                    <Button
+                      id="yes-btn"
+                      className="log-btn"
+                      variant="outlined"
+                      sx={{ marginRight: 1.5, color: '#ffff' }}
+                      style={{ color: '#ffff' }}
+                      onClick={() => {
+                        setIsCloseDialog(false);
+                        handleFormDialogClose();
+                      }}>
+                      Yes
+                    </Button>
+                  </Stack>
+                </DialogActions>
+              </>
+            ) : (
+              <DialogContent sx={{ padding: '40px' }}>
+                <Box>
+                  <Typography
+                    sx={{
+                      fontSize: '16px !important',
+                      fontWeight: '400 !important',
+                      lineHeight: '24px !important',
+                      letterSpacing: '0.1px !important',
+                      color: '#828282 !important'
+                    }}>
+                    We understand there may be concerns regarding your invoice. <br /> Please
+                    provide explanation of your dispute in the space below. <br /> This will help us
+                    address concerns more efficiently.
+                  </Typography>
+                </Box>
+                <Box marginTop={3}>
+                  <TextareaAutosize
+                    aria-label="minimum height"
+                    minRows={7}
+                    placeholder="Write here"
+                    className="dispute-textarea"
+                    maxLength={500}
+                  />
+                </Box>
+                <Box marginTop={5}>
+                  <Button className="dispute-invoice" variant="contained">
+                    Dispute Invoice
+                  </Button>
+                </Box>
+              </DialogContent>
+            )}
+          </Dialog>
+        )}
+      </Box>
       <Box className="listing-wrapper">
         <Card className="filter">
           <CardContent>
@@ -754,8 +935,8 @@ const Invoices = () => {
                         value={invoicePayload?.status}
                         onChange={handleStatusChange}>
                         <MenuItem value={'All'}>All</MenuItem>
-                        <MenuItem value={'Paid'}>Paid</MenuItem>
-                        <MenuItem value={'Outstanding'}>Outstanding</MenuItem>
+                        <MenuItem value={'paid'}>Paid</MenuItem>
+                        <MenuItem value={'outstanding'}>Outstanding</MenuItem>
                       </Select>
                     </FormControl>
                   </Grid>
@@ -768,8 +949,8 @@ const Invoices = () => {
                         value={invoicePayload?.method}
                         onChange={handleMethodChange}>
                         <MenuItem value={'All'}>All</MenuItem>
-                        <MenuItem value={'Debit Card'}>Debit Card</MenuItem>
-                        <MenuItem value={'Credit Card'}>Credit Card</MenuItem>
+                        <MenuItem value={'debit'}>Debit Card</MenuItem>
+                        <MenuItem value={'credit'}>Credit Card</MenuItem>
                       </Select>
                     </FormControl>
                   </Grid>
@@ -827,193 +1008,30 @@ const Invoices = () => {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {invoiceList?.length > 0 ? (
-                      invoiceList?.map((row, index) => <Row row={row} key={index} />)
-                    ) : (
-                      <NoDataDiv />
-                    )}
+                    {invoiceList?.length > 0
+                      ? invoiceList?.map((row, index) => <Row row={row} key={index} />)
+                      : null}
                   </TableBody>
                 </Table>
-                {/* {!isLoading && recordedStreamList?.length == 0 ? <NoDataDiv /> : null}
-                {recordedStreamList?.length > 0 ? (
+                {!isLoading && invoiceList?.length == 0 ? <NoDataDiv /> : null}
+                {invoiceList?.length > 0 ? (
                   <TablePagination
                     rowsPerPageOptions={[5, 10, 20, 25, 50]}
                     onPageChange={handlePageChange}
                     onRowsPerPageChange={handleChangeRowsPerPage}
                     component="div"
-                    count={recordedStreamList.length}
-                    rowsPerPage={recordingsPayload?.pageSize}
-                    page={recordingsPayload?.pageNumber}
+                    count={invoiceList.length}
+                    rowsPerPage={invoicePayload?.pageSize}
+                    page={invoicePayload?.pageNumber}
                     sx={{ flex: '1 1 auto' }}
                   />
-                ) : null} */}
+                ) : null}
               </TableContainer>
             </Box>
           </CardContent>
         </Card>
       </Box>
-      <InvoiceDrawer
-        open={isInvoiceDrawerOpen}
-        customer={customerDetails && customerDetails}
-        row={invoice && invoice}
-        setOpen={setInvoiceDrawerOpen}
-        cust_id={(cust_id !== null || cust_id !== undefined) && cust_id}
-      />
-      {isPaymentDialogOpen && (
-        <Dialog open={isPaymentDialogOpen} onClose={handleClose} fullWidth>
-          <DialogTitle sx={{ padding: '40px 40px 24px 40px' }}>
-            {'Payment Method'}
-            <DialogContentText></DialogContentText>
-            <IconButton
-              aria-label="close"
-              onClick={handleClose}
-              sx={{
-                position: 'absolute',
-                right: 18,
-                top: 30
-              }}>
-              <CloseIcon />
-            </IconButton>
-          </DialogTitle>
-          {isCloseDialog ? (
-            <>
-              <Stack direction={'row'} justifyContent={'center'} alignItems={'start'} padding={3}>
-                <DialogContentText>
-                  Are you sure you want to exit before completing the wizard ?
-                </DialogContentText>
-              </Stack>
-              <DialogActions sx={{ paddingRight: 4, paddingBottom: 3 }}>
-                <Stack direction="row" justifyContent="flex-end" width="100%">
-                  <Button
-                    className="log-btn"
-                    variant="outlined"
-                    sx={{ marginRight: 1.5 }}
-                    onClick={() => {
-                      setIsCloseDialog(false);
-                    }}>
-                    No
-                  </Button>
-
-                  <Button
-                    id="yes-btn"
-                    className="log-btn"
-                    variant="outlined"
-                    sx={{ marginRight: 1.5, color: '#ffff' }}
-                    style={{ color: '#ffff' }}
-                    onClick={() => {
-                      setIsCloseDialog(false);
-                      handleFormDialogClose();
-                    }}>
-                    Yes
-                  </Button>
-                </Stack>
-              </DialogActions>
-            </>
-          ) : (
-            <DialogContent sx={{ padding: '40px' }}>
-              <Elements stripe={stripePromise}>
-                <CheckoutForm
-                  closeDialog={handleFormDialogClose}
-                  getCustPaymentMethod={getCustPaymentMethod}
-                  setIsLoading={setIsLoading}
-                />
-              </Elements>
-            </DialogContent>
-          )}
-        </Dialog>
-      )}
-      {isDisputeFormDialogOpen && (
-        <Dialog open={isDisputeFormDialogOpen} onClose={handleClose} sx={{ padding: '40px' }}>
-          <DialogTitle
-            sx={{
-              padding: '40px 40px 8px 40px',
-              fontSize: '22px !important',
-              fontWeight: '600 !important',
-              lineHeight: '28px !important',
-              color: '#343434 !important'
-            }}>
-            {'Dispute Invoice'}
-            <DialogContentText></DialogContentText>
-            <IconButton
-              aria-label="close"
-              onClick={handleClose}
-              sx={{
-                position: 'absolute',
-                right: 18,
-                top: 30
-              }}>
-              <CloseIcon />
-            </IconButton>
-          </DialogTitle>
-          {isCloseDialog ? (
-            <>
-              <Stack direction={'row'} justifyContent={'center'} alignItems={'start'} padding={3}>
-                <DialogContentText>
-                  Are you sure you want to exit before completing the wizard ?
-                </DialogContentText>
-              </Stack>
-              <DialogActions sx={{ paddingRight: 4, paddingBottom: 3 }}>
-                <Stack direction="row" justifyContent="flex-end" width="100%">
-                  <Button
-                    className="log-btn"
-                    variant="outlined"
-                    sx={{ marginRight: 1.5 }}
-                    onClick={() => {
-                      setIsCloseDialog(false);
-                    }}>
-                    No
-                  </Button>
-
-                  <Button
-                    id="yes-btn"
-                    className="log-btn"
-                    variant="outlined"
-                    sx={{ marginRight: 1.5, color: '#ffff' }}
-                    style={{ color: '#ffff' }}
-                    onClick={() => {
-                      setIsCloseDialog(false);
-                      handleFormDialogClose();
-                    }}>
-                    Yes
-                  </Button>
-                </Stack>
-              </DialogActions>
-            </>
-          ) : (
-            <DialogContent sx={{ padding: '40px' }}>
-              <Box>
-                <Typography
-                  sx={{
-                    fontSize: '16px !important',
-                    fontWeight: '400 !important',
-                    lineHeight: '24px !important',
-                    letterSpacing: '0.1px !important',
-                    color: '#828282 !important'
-                  }}>
-                  We understand there may be concerns regarding your invoice. <br /> Please provide
-                  explanation of your dispute in the space below. <br /> This will help us address
-                  concerns more efficiently.
-                </Typography>
-              </Box>
-              <Box marginTop={3}>
-                <TextareaAutosize
-                  aria-label="minimum height"
-                  minRows={7}
-                  placeholder="Write here"
-                  className="dispute-textarea"
-                  maxLength={500}
-                />
-              </Box>
-              <Box marginTop={5}>
-                <Button className="dispute-invoice" variant="contained">
-                  Dispute Invoice
-                </Button>
-              </Box>
-            </DialogContent>
-          )}
-        </Dialog>
-      )}
-    </Box>
+    </>
   );
 };
 

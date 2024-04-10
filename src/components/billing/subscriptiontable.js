@@ -33,7 +33,7 @@ export default function SubscriptionTable({
       setFamily(familyDetails);
     }
   }, [rows]);
-  let amount = rows.map((item) => parseInt(item.Charge));
+  let amount = rows.map((item) => parseInt(item.Charge * item.Number));
   amount = _.sum(amount);
   return (
     <>
@@ -73,7 +73,7 @@ export default function SubscriptionTable({
                         <Box
                           className="zl__td-block"
                           style={{ width: '20%', color: '#6AD2A0', textAlign: 'right' }}>
-                          {parseFloat(row.Charge).toFixed(2)}
+                          {parseFloat(row.Charge * row.Number).toFixed(2)}
                         </Box>
                       </Box>
                     </>

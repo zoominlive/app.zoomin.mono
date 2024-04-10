@@ -415,8 +415,7 @@ const Settings = () => {
       stripe_cust_id: authCtx.user?.stripe_cust_id,
       products: checked,
       startDate: moment(startDate).unix(),
-      trial_period_days: trialDays,
-      trial_end: unixTimestamp
+      trial_period_days: trialDays
     }).then((response) => {
       if (response.status === 200) {
         console.log(response.data);
