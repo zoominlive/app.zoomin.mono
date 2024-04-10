@@ -9,6 +9,7 @@ const familyServices = require("../services/families");
 const cameraServices = require('../services/cameras');
 const socketServices = require('../services/socket');
 const sequelize = require("../lib/database");
+const MountedCameraRecentViewers = require("../models/mounted_camera_recent_viewers");
 module.exports = {
   // encode stream and create new camera
   getAllCamForLocation: async (req, res, next) => {
@@ -219,6 +220,16 @@ module.exports = {
     const t = await sequelize.transaction();
     try {
       const params = req.body;
+      // Check if a record with the same viewer ID and function already exists
+      const existingRecord = await MountedCameraRecentViewers.findOne({
+        where: {
+          viewer_id: params.viewer_id, 
+          function: params.function // Assuming function is the field representing the function (start or stop)
+        }
+      });
+      if (existingRecord) {
+        throw new Error('A record already exists for the given stream ID and function.');
+      }
       const recentViewer = await watchStreamServices.reportViewers(params);
       let user_family_obj = await userServices.getUserById(
         params?.recent_user_id
