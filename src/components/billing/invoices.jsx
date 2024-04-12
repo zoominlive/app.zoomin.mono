@@ -41,8 +41,9 @@ import AccountBalance from '../../assets/account_balance.svg';
 import AccountBalanceBottomRight from '../../assets/account_balance_bottom_right.svg';
 import NextChargeDate from '../../assets/next_charge_date.svg';
 import NextChargeDateBottomRight from '../../assets/next_charge_date_bottom_right.svg';
-import { DesktopDatePicker, LocalizationProvider } from '@mui/x-date-pickers';
-import { AdapterMoment } from '@mui/x-date-pickers/AdapterMoment';
+import { DesktopDateRangePicker } from '@mui/x-date-pickers-pro';
+import { LocalizationProvider } from '@mui/x-date-pickers-pro';
+import { AdapterDayjs } from '@mui/x-date-pickers-pro/AdapterDayjs';
 import ArrowDropUpIcon from '@mui/icons-material/ArrowDropUp';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import moment from 'moment';
@@ -59,7 +60,7 @@ import API from '../../api';
 import { errorMessageHandler } from '../../utils/errormessagehandler';
 import { useSnackbar } from 'notistack';
 import NoDataDiv from '../common/nodatadiv';
-// import ViewersTable from '../dashboard/viewerstable';
+import dayjs from 'dayjs';
 
 const SubscriptionColumns = [
   { label: 'Type', width: '60%' },
@@ -68,42 +69,61 @@ const SubscriptionColumns = [
   // { label: 'Status', width: '25%' }
 ];
 
-const invoiceList = [
+const shortcutsItems = [
   {
-    invoice_date: 'Dec 21, 2023',
-    description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit...',
-    method: 'Credit Card',
-    amount: '$257.50',
-    status: 'Paid'
+    label: 'Today',
+    getValue: () => {
+      const today = dayjs();
+      return [today, today];
+    }
   },
   {
-    invoice_date: 'Dec 27, 2023',
-    description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit...',
-    method: 'Debit Card',
-    amount: '$257.50',
-    status: 'Outstanding'
+    label: 'Yesterday',
+    getValue: () => {
+      const today = dayjs();
+      const yesterday = today.subtract(1, 'day');
+      return [yesterday, yesterday];
+    }
   },
   {
-    invoice_date: 'Dec 21, 2023',
-    description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit...',
-    method: 'Credit Card',
-    amount: '$257.50',
-    status: 'Paid'
+    label: 'Last Week',
+    getValue: () => {
+      const today = dayjs();
+      const prevWeek = today.subtract(7, 'day');
+      return [prevWeek.startOf('week'), prevWeek.endOf('week')];
+    }
   },
   {
-    invoice_date: 'Dec 21, 2023',
-    description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit...',
-    method: 'Debit Card',
-    amount: '$257.50',
-    status: 'Outstanding'
+    label: 'Last Month',
+    getValue: () => {
+      const today = dayjs();
+      const startOfLastMonth = today.startOf('month').subtract(1, 'day');
+      return [startOfLastMonth.startOf('month'), startOfLastMonth.endOf('month')];
+    }
   },
   {
-    invoice_date: 'Dec 21, 2023',
-    description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit...',
-    method: 'Debit Card',
-    amount: '$257.50',
-    status: 'Outstanding'
-  }
+    label: 'Last 30 Days',
+    getValue: () => {
+      const today = dayjs();
+      return [today.subtract(30, 'day'), today];
+    }
+  },
+  {
+    label: 'Current Month',
+    getValue: () => {
+      const today = dayjs();
+      return [today.startOf('month'), today.endOf('month')];
+    }
+  },
+  {
+    label: 'Next Month',
+    getValue: () => {
+      const today = dayjs();
+      const startOfNextMonth = today.endOf('month').add(1, 'day');
+      return [startOfNextMonth, startOfNextMonth.endOf('month')];
+    }
+  },
+  { label: 'Reset', getValue: () => [dayjs(), dayjs()] }
 ];
 
 const stripePromise = loadStripe(
@@ -122,10 +142,7 @@ const Invoices = () => {
   const [billingDetails, setBillingDetails] = useState(null);
   const [paymentMethodDetails, setPaymentMethodDetails] = useState(null);
   const [backupPaymentMethodDetails, setBackupPaymentMethodDetails] = useState(null);
-  const [isDatePickerOpen1, setIsDatePickerOpen1] = useState(false);
-  const [isDatePickerOpen2, setIsDatePickerOpen2] = useState(false);
-  const [fromDate, setFromDate] = useState(moment().subtract(7, 'days'));
-  const [toDate, setToDate] = useState(moment().subtract(7, 'days'));
+  const [rangeDate, setRangeDate] = useState([dayjs(), dayjs()]);
   const [isCloseDialog, setIsCloseDialog] = useState(false);
   const [isInvoiceDrawerOpen, setInvoiceDrawerOpen] = useState(false);
   const [isDisputeFormDialogOpen, setIsDisputeFormDialogOpen] = useState(false);
@@ -138,9 +155,12 @@ const Invoices = () => {
     pageNumber: 0,
     pageSize: parseInt(process.env.REACT_APP_PAGINATION_LIMIT, 10),
     status: 'All',
-    method: 'All'
+    method: 'All',
+    from: moment().format('YYYY-MM-DD'),
+    to: moment().format('YYYY-MM-DD')
   });
-
+  const [selectedStatus, setSelectedStatus] = useState('All');
+  const [selectedMethod, setSelectedMethod] = useState('All');
   const ref = useRef(null);
   const stripe_cust_id = authCtx.user.stripe_cust_id;
   const cust_id = authCtx.user.cust_id;
@@ -155,12 +175,34 @@ const Invoices = () => {
   const firstDayOfNextMonth = new Date(year, month + 1, 1);
   const formattedDate = firstDayOfNextMonth.toDateString();
 
+  const status = [
+    { id: 'All', name: 'All' },
+    { id: 'paid', name: 'Paid' },
+    { id: 'outstanding', name: 'Outstanding' }
+  ];
+
+  const method = [
+    { id: 'All', name: 'All' },
+    { id: 'debit', name: 'Debit Card' },
+    { id: 'credit', name: 'Credit Card' }
+  ];
+
   useEffect(() => {
     // Retrieve Customer's Payment Method
     getCustPaymentMethod();
     listSubscriptions();
     listInvoice();
-  }, [invoicePayload]);
+  }, []);
+
+  useEffect(() => {
+    setInvoicePayload({
+      ...invoicePayload,
+      from: dayjs(rangeDate[0]).format('YYYY-MM-DD'),
+      to: dayjs(rangeDate[1]).format('YYYY-MM-DD'),
+      status: selectedStatus,
+      method: selectedMethod
+    });
+  }, [rangeDate, selectedMethod, selectedStatus]);
 
   useEffect(() => {
     setHeight(ref.current.clientHeight);
@@ -388,10 +430,12 @@ const Invoices = () => {
   };
 
   const handleStatusChange = (event) => {
+    setSelectedStatus(event.target.value);
     setInvoicePayload((prevPayload) => ({ ...prevPayload, status: event.target.value }));
   };
 
   const handleMethodChange = (event) => {
+    setSelectedMethod(event.target.value);
     setInvoicePayload((prevPayload) => ({ ...prevPayload, method: event.target.value }));
   };
 
@@ -420,7 +464,7 @@ const Invoices = () => {
       <Box className="invoice">
         <LinerLoader loading={isLoading} />
         <Grid container spacing={3}>
-          <Grid item md={12} sm={12} xs={12} lg={4.5}>
+          <Grid item md={12} sm={12} xs={12} lg={5}>
             <Paper sx={{ marginTop: 2, height: '96%' }} className="zl__table-res">
               <SubscriptionTable
                 rows={subscriptionRows}
@@ -430,7 +474,7 @@ const Invoices = () => {
               />
             </Paper>
           </Grid>
-          <Grid item md={12} sm={12} xs={12} lg={4}>
+          <Grid item md={12} sm={12} xs={12} lg={3.5}>
             <Paper sx={{ marginTop: 2, height: '96%' }} className="zl__table-res">
               <Paper sx={{ marginTop: 2, height: '96%', minHeight: '338px', boxShadow: 'unset' }}>
                 <Box className="zl__table-block listing-wrapper">
@@ -881,52 +925,25 @@ const Invoices = () => {
             <Grid container alignContent={'center'}>
               <Grid item lg={7} md={7} sm={12} xs={12}>
                 <Grid container spacing={2}>
-                  <Grid item md={2}>
-                    <LocalizationProvider dateAdapter={AdapterMoment}>
-                      <InputLabel id="from">From</InputLabel>
-                      <DesktopDatePicker
-                        open={isDatePickerOpen1}
-                        maxDate={moment()}
-                        labelId="from"
-                        autoOk={true}
-                        value={fromDate}
-                        inputFormat="MM/DD/YY"
-                        onClose={() => setIsDatePickerOpen1(false)}
-                        renderInput={(params) => (
-                          <TextField onClick={() => setIsDatePickerOpen1(true)} {...params} />
-                        )}
-                        components={{
-                          OpenPickerIcon: !isDatePickerOpen1 ? ArrowDropDownIcon : ArrowDropUpIcon
-                        }}
-                        onChange={(value) => {
-                          setFromDate(value);
-                        }}
-                      />
-                    </LocalizationProvider>
+                  <Grid item md={4} sm={6}>
+                    <Box sx={{ marginTop: '20px' }}>
+                      <LocalizationProvider dateAdapter={AdapterDayjs}>
+                        <DesktopDateRangePicker
+                          localeText={{ start: 'From', end: 'To' }}
+                          value={rangeDate}
+                          onChange={(newVal) => setRangeDate(newVal)}
+                          slotProps={{
+                            shortcuts: {
+                              items: shortcutsItems
+                            },
+                            actionBar: { actions: [] }
+                          }}
+                          calendars={2}
+                        />
+                      </LocalizationProvider>
+                    </Box>
                   </Grid>
-                  <Grid item md={2}>
-                    <InputLabel id="to">To</InputLabel>
-                    <LocalizationProvider dateAdapter={AdapterMoment}>
-                      <DesktopDatePicker
-                        labelId="to"
-                        open={isDatePickerOpen2}
-                        maxDate={moment()}
-                        value={toDate}
-                        inputFormat="MM/DD/YY"
-                        onClose={() => setIsDatePickerOpen2(false)}
-                        renderInput={(params) => (
-                          <TextField onClick={() => setIsDatePickerOpen2(true)} {...params} />
-                        )}
-                        components={{
-                          OpenPickerIcon: !isDatePickerOpen2 ? ArrowDropDownIcon : ArrowDropUpIcon
-                        }}
-                        onChange={(value) => {
-                          setToDate(value);
-                        }}
-                      />
-                    </LocalizationProvider>
-                  </Grid>
-                  <Grid item md={3.5} sm={6}>
+                  <Grid item md={4} sm={6}>
                     <InputLabel id="status">Select Status</InputLabel>
                     <FormControl fullWidth className="status-select">
                       <Select
@@ -934,13 +951,15 @@ const Invoices = () => {
                         id="status"
                         value={invoicePayload?.status}
                         onChange={handleStatusChange}>
-                        <MenuItem value={'All'}>All</MenuItem>
-                        <MenuItem value={'paid'}>Paid</MenuItem>
-                        <MenuItem value={'outstanding'}>Outstanding</MenuItem>
+                        {status.map((item, index) => (
+                          <MenuItem key={index} value={item.id}>
+                            {item.name}
+                          </MenuItem>
+                        ))}
                       </Select>
                     </FormControl>
                   </Grid>
-                  <Grid item md={4.5} sm={12}>
+                  <Grid item md={4} sm={12}>
                     <InputLabel id="method">Select Method</InputLabel>
                     <FormControl fullWidth>
                       <Select
@@ -948,9 +967,11 @@ const Invoices = () => {
                         id="method"
                         value={invoicePayload?.method}
                         onChange={handleMethodChange}>
-                        <MenuItem value={'All'}>All</MenuItem>
-                        <MenuItem value={'debit'}>Debit Card</MenuItem>
-                        <MenuItem value={'credit'}>Credit Card</MenuItem>
+                        {method.map((item, index) => (
+                          <MenuItem key={index} value={item.id}>
+                            {item.name}
+                          </MenuItem>
+                        ))}
                       </Select>
                     </FormControl>
                   </Grid>
@@ -967,7 +988,10 @@ const Invoices = () => {
                     </Grid>
 
                     <Grid item md={6} sm={6}>
-                      <Button className="add-button" variant="contained">
+                      <Button
+                        className="add-button"
+                        variant="contained"
+                        onClick={() => listInvoice()}>
                         {' '}
                         Submit
                       </Button>

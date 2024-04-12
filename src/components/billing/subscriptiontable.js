@@ -65,7 +65,7 @@ export default function SubscriptionTable({
                           {row?.Number}
                         </Box>
                         <Box className="zl__td-block" style={{ width: '20%' }}>
-                          {row.Status}
+                          {_.startCase(row.Status)}
                         </Box>
                         <Box className="zl__td-block" style={{ width: '20%' }}>
                           {row.NextInvoiceDate}
@@ -73,7 +73,7 @@ export default function SubscriptionTable({
                         <Box
                           className="zl__td-block"
                           style={{ width: '20%', color: '#6AD2A0', textAlign: 'right' }}>
-                          {parseFloat(row.Charge * row.Number).toFixed(2)}
+                          {'$' + parseFloat(row.Charge * row.Number).toFixed(2)}
                         </Box>
                       </Box>
                     </>
@@ -100,7 +100,7 @@ export default function SubscriptionTable({
                 <Box className="zl__td-block" style={{ width: '20%', textAlign: 'right' }}>
                   <Typography
                     sx={{ fontSize: '16px', fontWeight: 500, color: '#6AD2A0 !important' }}>
-                    {parseFloat(amount).toFixed(2)}
+                    {'$' + parseFloat(amount).toFixed(2)}
                   </Typography>
                 </Box>
               </Box>
