@@ -1,4 +1,6 @@
+const Sequelize = require("sequelize");
 const connectToDatabase = require("../models/index");
+const moment = require("moment");
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
 module.exports = {
@@ -143,6 +145,8 @@ listInvoice: async (stripe_cust_id, filter) => {
     pageSize = 10,
     status = "All",
     method = "All",
+    startDate,
+    endDate,
   } = filter;
 
   const { Invoice } = await connectToDatabase();
@@ -153,6 +157,12 @@ listInvoice: async (stripe_cust_id, filter) => {
     order: [["created_at", "DESC"]],
     where: {
       stripe_cust_id: stripe_cust_id,
+      created_at: {
+        [Sequelize.Op.between]: [
+          moment(startDate).startOf('day').toISOString(),
+          moment(endDate).endOf('day').toISOString()
+        ]
+      },
       ...(status !== 'All' && status ? { status: status } : {}),
       ...(method !== 'All' && method ? { payment_method: method } : {})
   },

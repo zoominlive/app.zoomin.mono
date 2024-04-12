@@ -1,3 +1,4 @@
+const moment = require("moment");
 const subscription = require("../services/subscription");
 
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
@@ -287,6 +288,8 @@ module.exports = {
     const { stripe_cust_id } = req.query;
 
     const filter = {
+      startDate: req.query?.from ? req.query?.from : moment(),
+      endDate: req.query?.to ? req.query?.to : moment(),
       pageNumber: req.query?.pageNumber,
       pageSize: req.query?.pageSize,
       status: req.query?.status,
