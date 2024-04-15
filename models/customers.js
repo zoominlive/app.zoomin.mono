@@ -11,7 +11,7 @@ const Customers = sequelize.define(
     },
     stripe_cust_id: {
       type: Sequelize.STRING(50),
-      allowNull: false,
+      allowNull: true,
     },
     company_name: {
       type: Sequelize.STRING(50)

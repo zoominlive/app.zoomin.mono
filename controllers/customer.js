@@ -127,13 +127,7 @@ module.exports = {
       const params = req.body;
       const { user, customer_locations, ...customeDetails } = params;
       let customer;
-      if(user.role === 'Admin') {
-        customer = await stripe.customers.create({
-          name: user.first_name +' '+ user.last_name,
-          email: user.email,
-        });
-        customeDetails.stripe_cust_id = customer.id;
-      }
+      
       // const productList = await stripe.products.list();
       // const productPriceIDs = productList.data.map((item) => item.default_price);
       // console.log('productPriceIDs-->', productPriceIDs);
@@ -168,7 +162,7 @@ module.exports = {
       );
       user.cust_id = addCustomer?.cust_id;
       user.is_verified = false;
-      let addUser = await userServices.createUser(user);
+      let addUser = await userServices.createUser(user, t);
       //let userData = addUser?.toJSON();
       //const token = await userServices.createPasswordToken(userData);
       // const name = userData.first_name + ' ' + userData.last_name;
@@ -190,6 +184,13 @@ module.exports = {
           Data: { ..._.omit(addCustomer, ["cust_id"]), ...addLocations },
           Message: CONSTANTS.CUSTOMER_REGISTERED,
         });
+        if(user.role === 'Admin') {
+          customer = await stripe.customers.create({
+            name: user.first_name +' '+ user.last_name,
+            email: user.email,
+          });
+          await customerServices.editCustomer(addCustomer?.cust_id, {stripe_cust_id: customer.id}, t)
+        }
       } else {
         res
           .status(400)

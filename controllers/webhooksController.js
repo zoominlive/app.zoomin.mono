@@ -39,6 +39,11 @@ const webhookController = async (req, res) => {
       await subscription.createSubscription(event.data.object);
       await subscription.insertWebhookLog('customer.subscription.created',  event.data.object);
       break;
+    case 'customer.subscription.updated':
+      // Handle subscription updated event
+      await subscription.updateSubscription(event.data.object);
+      await subscription.insertWebhookLog('customer.subscription.created',  event.data.object);
+      break;
     case 'customer.subscription.deleted':
       // Handle subscription created event
       console.log('Subscription deleted:', event.data.object);
@@ -55,14 +60,25 @@ const webhookController = async (req, res) => {
       await subscription.insertWebhookLog('payment_intent.created',  event.data.object);
       break;
     case 'invoice.created':
-      // Handle subscription created event
+      // Handle invoice created event
       console.log('Invoice created:', event.data.object);
       await subscription.createInvoice(event.data.object);
       await subscription.insertWebhookLog('invoice.created',  event.data.object);
       break;
-    case 'invoice.finalized':
+    case 'invoice.updated':
+      // Handle invoice updated event
+      await subscription.updateInvoice(event.data.object);
+      await subscription.insertWebhookLog('invoice.created',  event.data.object);
+      break;
+    case 'invoiceitem.created':
       // Handle subscription created event
+      // await subscription.createInvoice(event.data.object);
+      await subscription.insertWebhookLog('invoice.created',  event.data.object);
+      break;
+    case 'invoice.finalized':
+      // Handle invoice finalized event
       console.log('Invoice finalized:', event.data.object);
+      await subscription.createInvoice(event.data.object);
       await subscription.insertWebhookLog('invoice.finalized',  event.data.object);
       break;
     case 'invoice.paid':

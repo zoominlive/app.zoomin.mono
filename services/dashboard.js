@@ -29,7 +29,6 @@ module.exports = {
           ],
         },
       },
-      logging: console.log,
       subQuery: false,
       attributes: [
         "rv_id",
