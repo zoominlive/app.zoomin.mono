@@ -440,6 +440,26 @@ const CustomerForm = (props) => {
                 />
               </LocalizationProvider>
             </Grid>
+            <Grid item md={4} xs={12}>
+              <InputLabel id="timeout">Viewing Timeout</InputLabel>
+              <TextField
+                labelId="timeout"
+                type="number"
+                onKeyPress={(event) => {
+                  if (event?.key === '-' || event?.key === '+') {
+                    event.preventDefault();
+                  }
+                }}
+                name="timeout"
+                value={values?.timeout}
+                onChange={(event) => {
+                  setFieldValue('timeout', event.target.value);
+                }}
+                helperText={touched.timeout && errors.timeout}
+                error={touched.timeout && Boolean(errors.timeout)}
+                fullWidth
+              />
+            </Grid>
             <Grid item xs={12} md={12}>
               <Divider orientation="horizontal" variant="middle" flexItem />
             </Grid>
@@ -466,27 +486,6 @@ const CustomerForm = (props) => {
                 }}
                 helperText={touched.max_locations && errors.max_locations}
                 error={touched.max_locations && Boolean(errors.max_locations)}
-                fullWidth
-              />
-            </Grid>
-            <Grid item md={4} xs={12}>
-              <InputLabel id="timeout">Viewing Timeout</InputLabel>
-              <TextField
-                labelId="timeout"
-                type="number"
-                onKeyPress={(event) => {
-                  if (event?.key === '-' || event?.key === '+') {
-                    event.preventDefault();
-                  }
-                }}
-                label="Timeout"
-                name="timeout"
-                value={values?.timeout}
-                onChange={(event) => {
-                  setFieldValue('timeout', event.target.value);
-                }}
-                helperText={touched.timeout && errors.timeout}
-                error={touched.timeout && Boolean(errors.timeout)}
                 fullWidth
               />
             </Grid>
