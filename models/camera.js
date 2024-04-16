@@ -24,6 +24,11 @@ const Camera = sequelize.define(
       required: true,
       comment: 'RTSP Stream URL from customer system'
     },
+    thumbnail: {
+      type: Sequelize.STRING(255),
+      allowNull: true,
+      required: false
+    },
     description: {
       type: Sequelize.STRING(300),
       allowNull: true,

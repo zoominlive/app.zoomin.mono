@@ -364,6 +364,7 @@ module.exports = {
                   return {
                     cam_id: cam?.camera?.cam_id,
                     cam_name: cam?.camera?.cam_name,
+                    thumbnail: cam?.camera?.thumbnail,
                     description: cam?.camera?.description,
                     stream_uri: `${cam?.camera?.stream_uri}?uid=${user?.family_member_id || user?.user_id}&sid=${cam?.camera?.cam_id}&uuid=${uuidv4()}`,
                   };
@@ -374,6 +375,7 @@ module.exports = {
                 return {
                   cam_id: cam?.cam_id,
                   cam_name: cam?.cam_name,
+                  thumbnail: cam?.thumbnail,
                   description: cam?.description || "",
                   sendbird_channel_url: sendbird_channel_url,
                   stream_uri:`${cam?.stream_uri}?uid=${user?.family_member_id || user?.user_id}&sid=${cam?.stream_uri.split('/') [cam?.stream_uri.split('/').length - 1].split('.')[0]}&uuid=${uuidv4()}`,
@@ -394,6 +396,7 @@ module.exports = {
                 return {
                   cam_id: cam?.camera?.cam_id,
                   cam_name: cam?.camera?.cam_name,
+                  thumbnail: cam?.camera?.thumbnail,
                   description: cam?.camera?.description,
                   stream_uri: `${cam?.camera?.stream_uri}?uid=${user?.family_member_id || user?.user_id}&sid=${cam?.camera?.cam_id}&uuid=${uuidv4()}`,
                 };
@@ -403,6 +406,7 @@ module.exports = {
               return {
                 cam_id: cam?.cam_id,
                 cam_name: cam?.cam_name,
+                thumbnail: cam?.thumbnail,
                 description: cam?.description || "",
                 sendbird_channel_url: sendbird_channel_url,
                 stream_uri: `${cam?.stream_uri}?uid=${user?.family_member_id || user?.user_id}&sid=${cam?.stream_uri.split('/') [cam?.stream_uri.split('/').length - 1].split('.')[0]}&uuid=${uuidv4()}`,
@@ -460,6 +464,7 @@ module.exports = {
                 return {
                   cam_id: cam?.camera?.cam_id,
                   cam_name: cam?.camera?.cam_name,
+                  thumbnail: cam?.camera?.thumbnail,
                   description: cam?.camera?.description,
                   stream_uri: `${cam?.camera?.stream_uri}?uid=${user?.family_member_id || user?.user_id}&sid=${cam?.camera?.cam_id}&uuid=${uuidv4()}`,
                 };
@@ -469,6 +474,7 @@ module.exports = {
               return {
                 cam_id: cam?.cam_id,
                 cam_name: cam?.cam_name,
+                thumbnail: cam?.thumbnail,
                 description: cam?.description || "",
                 stream_uri: `${cam?.stream_uri}?uid=${user?.family_member_id || user?.user_id}&sid=${cam?.stream_uri.split('/') [cam?.stream_uri.split('/').length - 1].split('.')[0]}&uuid=${uuidv4()}`,
               };
@@ -548,6 +554,7 @@ module.exports = {
                 return {
                   cam_id: cam?.camera?.cam_id,
                   cam_name: cam?.camera?.cam_name,
+                  thumbnail: cam?.camera?.thumbnail,
                   description: cam?.camera?.description,
                   stream_uri: `${cam?.camera?.stream_uri}?uid=${user?.family_member_id || user?.user_id}&sid=${cam?.camera?.cam_id}&uuid=${uuidv4()}`
                   ,
@@ -560,6 +567,7 @@ module.exports = {
                 return {
                   cam_id: cam?.cam_id,
                   cam_name: cam?.cam_name,
+                  thumbnail: cam?.thumbnail,
                   description: cam?.description || "",
                   stream_uri: `${cam?.stream_uri}?uid=${user?.family_member_id || user?.user_id}&sid=${cam?.stream_uri.split('/') [cam?.stream_uri.split('/').length - 1].split('.')[0]}&uuid=${uuidv4()}`,
                 };
@@ -604,6 +612,7 @@ module.exports = {
                 return {
                   cam_id: cam?.camera?.cam_id,
                   cam_name: cam?.camera?.cam_name,
+                  thumbnail: cam?.camera?.thumbnail,
                   description: cam?.camera?.description,
                   stream_uri: `${cam?.camera?.stream_uri}?uid=${user?.family_member_id || user?.user_id}&sid=${cam?.camera?.cam_id}&uuid=${uuidv4()}`
                   ,
@@ -618,6 +627,7 @@ module.exports = {
               return {
                 cam_id: cam?.cam_id,
                 cam_name: cam?.cam_name,
+                thumbnail: cam?.thumbnail,
                 description: cam?.description || "",
                 stream_uri: `${cam?.stream_uri}?uid=${user?.family_member_id || user?.user_id}&sid=${cam?.stream_uri.split('/') [cam?.stream_uri.split('/').length - 1].split('.')[0]}&uuid=${uuidv4()}`,
               };

@@ -5,6 +5,7 @@ const customerServices = require('../services/customers');
 const logServices = require('../services/logs');
 const userServices = require('../services/users');
 const socketServices = require('../services/socket');
+const s3BucketImageUploader = require('../lib/aws-services');
 const CONSTANTS = require('../lib/constants');
 const sequelize = require('../lib/database');
 module.exports = {
@@ -31,6 +32,10 @@ module.exports = {
         params.stream_uri = transcodedDetails?.data ? transcodedDetails.data?.uri : '';
         params.stream_uuid = transcodedDetails?.data ? transcodedDetails.data?.id : '';
         params.cam_alias = transcodedDetails?.data ? transcodedDetails.data?.alias : '';
+        if (params?.thumbnail) {
+          const imageUrl = await s3BucketImageUploader._upload(params.thumbnail);
+          params.thumbnail = imageUrl
+        }
         const camera = await cameraServices.createCamera(params, t);
 
         // const resetAvailableCameras = await customerServices.setAvailableCameras(
@@ -171,12 +176,16 @@ module.exports = {
     const t = await sequelize.transaction();
     try {
       const params = req.body;
-
+      if (params?.thumbnail) {
+        const imageUrl = await s3BucketImageUploader._upload(params?.thumbnail);
+        params.thumbnail = imageUrl;
+      }
       const cameraUpdated = await cameraServices.editCamera(
         params.cam_id,
         {
           cam_id: params.cam_id,
-          cam_name: params.cam_name
+          cam_name: params.cam_name,
+          thumbnail: params.thumbnail
         },
         t
       );
