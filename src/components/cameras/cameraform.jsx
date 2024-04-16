@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import {
   Autocomplete,
+  Avatar,
   Button,
   // Button,
   Chip,
@@ -16,7 +17,8 @@ import {
   IconButton,
   InputLabel,
   Stack,
-  TextField
+  TextField,
+  Tooltip
 } from '@mui/material';
 import { Form, Formik } from 'formik';
 import * as yup from 'yup';
@@ -28,6 +30,9 @@ import { errorMessageHandler } from '../../utils/errormessagehandler';
 import { useContext } from 'react';
 import AuthContext from '../../context/authcontext';
 import CloseIcon from '@mui/icons-material/Close';
+import DeleteIcon from '@mui/icons-material/Delete';
+import { useDropzone } from 'react-dropzone';
+import { toBase64 } from '../../utils/base64converter';
 
 const validationSchema = yup.object({
   cam_name: yup.string('Enter camera name').required('Camera name is required'),
@@ -46,12 +51,15 @@ const CameraForm = (props) => {
   const { enqueueSnackbar } = useSnackbar();
   const [submitLoading, setSubmitLoading] = useState(false);
   const [isCloseDialog, setIsCloseDialog] = useState(false);
+  const [base64Image, setBase64Image] = useState();
+  const [image, setImage] = useState(props.camera && props.camera.thumbnail);
   const authCtx = useContext(AuthContext);
 
   // Method to update the user profile
   const handleSubmit = (data) => {
     const payload = {
       cam_id: props?.camera?.cam_id,
+      thumbnail: !props.camera ? base64Image : image ? (base64Image ? base64Image : image) : null,
       ...data
     };
     delete payload.locations;
@@ -104,6 +112,40 @@ const CameraForm = (props) => {
       props.setCamera();
     }
   };
+
+  // Method to remove profile photo
+  const handlePhotoDelete = () => {
+    setBase64Image();
+    setImage();
+  };
+
+  // Method to get image from input and upload it to BE
+  async function handleImageUpload(acceptedFiles) {
+    setImage(URL.createObjectURL(acceptedFiles[0]));
+    const bas64Image = await toBase64(acceptedFiles[0]);
+    setBase64Image(bas64Image.split(',')[1]);
+  }
+
+  const { getRootProps, getInputProps } = useDropzone({
+    maxFiles: 1,
+    accept: {
+      'image/png': ['.png'],
+      'image/jpeg': ['.jpeg'],
+      'image/jpg': ['.jpg']
+    },
+    onDropAccepted: handleImageUpload,
+    onDropRejected: (fileRejections) => {
+      if (fileRejections.length > 1) {
+        enqueueSnackbar('Only one file is allowed to be uploaded', {
+          variant: 'error'
+        });
+      } else {
+        enqueueSnackbar('Only image file is allowed to be uploaded', {
+          variant: 'error'
+        });
+      }
+    }
+  });
 
   const handleClose = () => setIsCloseDialog(!isCloseDialog);
   return (
@@ -178,6 +220,32 @@ const CameraForm = (props) => {
             return (
               <Form>
                 <DialogContent>
+                  <Stack spacing={3} mb={3} mt={2} direction="row" alignItems="center">
+                    <Avatar src={image} />
+
+                    <LoadingButton
+                      disabled={submitLoading}
+                      variant="contained"
+                      color="primary"
+                      component="span"
+                      {...getRootProps({ className: 'dropzone' })}>
+                      Upload
+                      <input {...getInputProps()} />
+                    </LoadingButton>
+
+                    {image && (
+                      <Tooltip title="Remove photo">
+                        <LoadingButton
+                          variant="outlined"
+                          disabled={submitLoading}
+                          className="image-delete-btn"
+                          aria-label="delete"
+                          onClick={handlePhotoDelete}>
+                          <DeleteIcon />
+                        </LoadingButton>
+                      </Tooltip>
+                    )}
+                  </Stack>
                   <Grid container spacing={2}>
                     <Grid item md={6} xs={12}>
                       <InputLabel id="cam_name">Camera Name</InputLabel>
