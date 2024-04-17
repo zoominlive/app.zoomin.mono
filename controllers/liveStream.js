@@ -354,7 +354,7 @@ module.exports = {
       );
       fcmTokens = fcmTokens.flatMap((i) => i.fcm_token);
       fcmTokens = [...new Set(fcmTokens)].filter((i) => i !== null);
-      let message = `${streamObj.stream_name} has stoped`;
+      let message = `${streamObj.stream_name} has stopped`;
 
       if (!_.isEmpty(fcmTokens)) {
         await notificationSender.sendNotification(
