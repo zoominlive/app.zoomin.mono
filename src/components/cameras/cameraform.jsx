@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import {
   Autocomplete,
-  Avatar,
+  Box,
   Button,
   // Button,
   Chip,
@@ -18,7 +18,8 @@ import {
   InputLabel,
   Stack,
   TextField,
-  Tooltip
+  Tooltip,
+  Typography
 } from '@mui/material';
 import { Form, Formik } from 'formik';
 import * as yup from 'yup';
@@ -33,6 +34,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useDropzone } from 'react-dropzone';
 import { toBase64 } from '../../utils/base64converter';
+import noimg from '../../assets/ic_no_image.png';
 
 const validationSchema = yup.object({
   cam_name: yup.string('Enter camera name').required('Camera name is required'),
@@ -117,6 +119,34 @@ const CameraForm = (props) => {
   const handlePhotoDelete = () => {
     setBase64Image();
     setImage();
+  };
+
+  // Method to generate thumbnail
+  const handleGenerateThumbnail = () => {
+    console.log('reached', props.camera);
+    setSubmitLoading(true);
+    API.get('cams/generate-thumbnail', {
+      // 221
+      // '/stream/fb05fb2c-41a8-4c87-a464-489b79ef915a/index.m3u8'
+      params: {
+        sid: props.camera?.cam_id,
+        stream_uri: props.camera?.stream_uri
+      }
+    }).then((response) => {
+      if (response.status === 200) {
+        console.log('success', response.data.Data.thumbnailUrl);
+        setImage(response.data.Data.thumbnailUrl);
+        enqueueSnackbar('Thumbnail generated', { variant: 'success' });
+      } else {
+        errorMessageHandler(
+          enqueueSnackbar,
+          response?.response?.data?.Message || 'Something Went Wrong.',
+          response?.response?.status,
+          authCtx.setAuthError
+        );
+      }
+      setSubmitLoading(false);
+    });
   };
 
   // Method to get image from input and upload it to BE
@@ -220,9 +250,24 @@ const CameraForm = (props) => {
             return (
               <Form>
                 <DialogContent>
-                  <Stack spacing={3} mb={3} mt={2} direction="row" alignItems="center">
-                    <Avatar src={image} />
-
+                  <Stack
+                    display={props.camera == undefined && 'none'}
+                    spacing={3}
+                    mb={3}
+                    mt={2}
+                    direction="row"
+                    alignItems="center">
+                    <Box
+                      component="img"
+                      sx={{
+                        height: 133,
+                        width: 250,
+                        maxHeight: { xs: 233, md: 167 },
+                        maxWidth: { xs: 350, md: 250 }
+                      }}
+                      alt="Thumbnail"
+                      src={image ? image : noimg}
+                    />
                     <LoadingButton
                       disabled={submitLoading}
                       variant="contained"
@@ -232,7 +277,15 @@ const CameraForm = (props) => {
                       Upload
                       <input {...getInputProps()} />
                     </LoadingButton>
-
+                    <Typography>or</Typography>
+                    <LoadingButton
+                      disabled={submitLoading}
+                      variant="contained"
+                      color="primary"
+                      onClick={handleGenerateThumbnail}
+                      component="span">
+                      Generate
+                    </LoadingButton>
                     {image && (
                       <Tooltip title="Remove photo">
                         <LoadingButton
@@ -286,7 +339,7 @@ const CameraForm = (props) => {
                       />
                     </Grid>
                     <Grid item md={6} xs={12} display={props.camera && 'none'}>
-                      <InputLabel id="description">description</InputLabel>
+                      <InputLabel id="description">Description</InputLabel>
                       <TextField
                         labelId="description"
                         name="description"
