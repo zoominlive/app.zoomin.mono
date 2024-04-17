@@ -176,7 +176,7 @@ module.exports = {
     const t = await sequelize.transaction();
     try {
       const params = req.body;
-      if (params?.thumbnail) {
+      if (params?.thumbnail && !params?.thumbnail.includes('https://zoominlive-cam-thumbs.s3.amazonaws.com')) {
         const imageUrl = await s3BucketImageUploader._upload(params?.thumbnail);
         params.thumbnail = imageUrl;
       }
@@ -278,6 +278,31 @@ module.exports = {
       } catch (e) {
         console.log(e);
       }
+    }
+  },
+
+  // generate thumbnail
+  generateThumbnail: async (req, res) => {
+    try {
+      const filter = {
+        sid: req.query?.sid,
+        hlsStreamUri: req.query?.stream_uri,
+        userId: req.user?.user_id
+      };
+      const token = req.userToken;
+      const thumbailRes = await cameraServices.getThumbnailUrl(req.user?.cust_id, token, filter)
+      res.status(200).json({
+        IsSuccess: true,
+        Data: thumbailRes,
+        Message: 'Thumbnail details'
+      });
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({
+        IsSuccess: false,
+        error_log: error.response.data,
+        Message: CONSTANTS.INTERNAL_SERVER_ERROR
+      });
     }
   },
 
