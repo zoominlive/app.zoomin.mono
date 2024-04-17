@@ -10,6 +10,8 @@ createSubscription: async (subscriptionObj) => {
   if (subscriptionObj.object === 'subscription') {
     let updatedStartAt = new Date(subscriptionObj.current_period_start * 1000);
     let updatedEndAt = new Date(subscriptionObj.current_period_end * 1000);
+    let updatedTrialStartAt = new Date(subscriptionObj.trial_start * 1000);
+    let updatedTrialEndAt = new Date(subscriptionObj.trial_end * 1000);
     
     // Function to get product information for subscriptions
     async function getProductInfo(productId) {
@@ -48,8 +50,8 @@ createSubscription: async (subscriptionObj) => {
       quantity: subscriptionObj.quantity,
       starts_at: updatedStartAt,
       ends_at: updatedEndAt,
-      trial_starts_at: subscriptionObj.trial_start,
-      trial_ends_at: subscriptionObj.trial_end,
+      trial_starts_at: updatedTrialStartAt,
+      trial_ends_at: updatedTrialEndAt,
     });
   
     return subscriptionCreated;
