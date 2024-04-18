@@ -286,10 +286,12 @@ module.exports = {
     const liveStreamCameras = await livestreamCameras.getAllLivestreamCameras();
     let liveStreamObj;
     let sendbird_channel_url;
+    let streamName;
     if(!_.isEmpty(liveStreamCameras)) {
       let liveStreamRoomID = liveStreamCameras[0]?.room_id;
       liveStreamObj = await liveStream.getActiveStreamObjByRoomId(liveStreamRoomID);
       sendbird_channel_url = liveStreamObj[0]?.sendbird_channel_url;
+      streamName = liveStreamObj[0]?.stream_name;
     }
     if (user?.family_id) {
       let cameras = await Child.findAll({
@@ -376,7 +378,7 @@ module.exports = {
                   cam_id: cam?.cam_id,
                   cam_name: cam?.cam_name,
                   thumbnail: cam?.thumbnail,
-                  description: cam?.description || "",
+                  description: cam?.description || streamName,
                   sendbird_channel_url: sendbird_channel_url,
                   stream_uri:`${cam?.stream_uri}?uid=${user?.family_member_id || user?.user_id}&sid=${cam?.stream_uri.split('/') [cam?.stream_uri.split('/').length - 1].split('.')[0]}&uuid=${uuidv4()}`,
                 };
@@ -407,7 +409,7 @@ module.exports = {
                 cam_id: cam?.cam_id,
                 cam_name: cam?.cam_name,
                 thumbnail: cam?.thumbnail,
-                description: cam?.description || "",
+                description: cam?.description || streamName,
                 sendbird_channel_url: sendbird_channel_url,
                 stream_uri: `${cam?.stream_uri}?uid=${user?.family_member_id || user?.user_id}&sid=${cam?.stream_uri.split('/') [cam?.stream_uri.split('/').length - 1].split('.')[0]}&uuid=${uuidv4()}`,
               };
@@ -475,7 +477,8 @@ module.exports = {
                 cam_id: cam?.cam_id,
                 cam_name: cam?.cam_name,
                 thumbnail: cam?.thumbnail,
-                description: cam?.description || "",
+                description: cam?.description || streamName,
+                sendbird_channel_url: sendbird_channel_url,
                 stream_uri: `${cam?.stream_uri}?uid=${user?.family_member_id || user?.user_id}&sid=${cam?.stream_uri.split('/') [cam?.stream_uri.split('/').length - 1].split('.')[0]}&uuid=${uuidv4()}`,
               };
             });
@@ -568,7 +571,8 @@ module.exports = {
                   cam_id: cam?.cam_id,
                   cam_name: cam?.cam_name,
                   thumbnail: cam?.thumbnail,
-                  description: cam?.description || "",
+                  description: cam?.description || streamName,
+                  sendbird_channel_url: sendbird_channel_url,
                   stream_uri: `${cam?.stream_uri}?uid=${user?.family_member_id || user?.user_id}&sid=${cam?.stream_uri.split('/') [cam?.stream_uri.split('/').length - 1].split('.')[0]}&uuid=${uuidv4()}`,
                 };
               }
@@ -628,7 +632,8 @@ module.exports = {
                 cam_id: cam?.cam_id,
                 cam_name: cam?.cam_name,
                 thumbnail: cam?.thumbnail,
-                description: cam?.description || "",
+                description: cam?.description || streamName,
+                sendbird_channel_url: sendbird_channel_url,
                 stream_uri: `${cam?.stream_uri}?uid=${user?.family_member_id || user?.user_id}&sid=${cam?.stream_uri.split('/') [cam?.stream_uri.split('/').length - 1].split('.')[0]}&uuid=${uuidv4()}`,
               };
             });
