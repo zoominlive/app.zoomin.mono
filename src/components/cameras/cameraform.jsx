@@ -55,6 +55,7 @@ const CameraForm = (props) => {
   const [isCloseDialog, setIsCloseDialog] = useState(false);
   const [base64Image, setBase64Image] = useState();
   const [image, setImage] = useState(props.camera && props.camera.thumbnail);
+  const [S3Uri, setS3Uri] = useState();
   const authCtx = useContext(AuthContext);
 
   // Method to update the user profile
@@ -62,6 +63,7 @@ const CameraForm = (props) => {
     const payload = {
       cam_id: props?.camera?.cam_id,
       thumbnail: !props.camera ? base64Image : image ? (base64Image ? base64Image : image) : null,
+      s3Uri: S3Uri,
       ...data
     };
     delete payload.locations;
@@ -136,6 +138,7 @@ const CameraForm = (props) => {
       if (response.status === 200) {
         console.log('success', response.data.Data.thumbnailUrl);
         setImage(response.data.Data.thumbnailUrl);
+        setS3Uri(response.data.Data.s3Uri);
         enqueueSnackbar('Thumbnail generated', { variant: 'success' });
       } else {
         errorMessageHandler(
