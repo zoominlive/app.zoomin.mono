@@ -54,7 +54,11 @@ const CameraForm = (props) => {
   const [submitLoading, setSubmitLoading] = useState(false);
   const [isCloseDialog, setIsCloseDialog] = useState(false);
   const [base64Image, setBase64Image] = useState();
-  const [image, setImage] = useState(props.camera && props.camera.thumbnail);
+  const [image, setImage] = useState(
+    props.camera && props.camera.thumbnailPresignedUrl
+      ? props.camera.thumbnailPresignedUrl
+      : props.camera.thumbnail
+  );
   const [S3Uri, setS3Uri] = useState();
   const authCtx = useContext(AuthContext);
 
