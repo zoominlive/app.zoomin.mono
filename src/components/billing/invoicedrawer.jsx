@@ -42,7 +42,6 @@ const InvoiceDrawer = (props) => {
   const [isCloseDialog, setIsCloseDialog] = useState(false);
   const [customerDetails, setCustomerDetails] = useState([]);
   const [charges, setCharges] = useState([]);
-
   useEffect(() => {
     if (props.customer && props.row) {
       setCustomerDetails([
@@ -55,13 +54,16 @@ const InvoiceDrawer = (props) => {
         { title: 'Company Name : ', value: props.customer.name },
         {
           title: 'Company Address : ',
-          value: props.customer.address.city
-            ? props.customer.address.city
-            : '-' + ', ' + props.customer.address.state
-            ? props.customer.address.state
-            : '-' + ', ' + props.customer.address.country
-            ? props.customer.address.country
-            : '-'
+          value:
+            props.customer?.address == null || props.customer?.address == undefined
+              ? '-'
+              : props.customer?.address?.city
+              ? props.customer?.address?.city
+              : '-' + ', ' + props.customer?.address?.state
+              ? props.customer?.address?.state
+              : '-' + ', ' + props.customer?.address?.country
+              ? props.customer?.address?.country
+              : '-'
         }
       ]);
       if (props.row) {
