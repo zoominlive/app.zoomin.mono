@@ -318,7 +318,37 @@ module.exports = {
         cust_id: req.query?.cust_id
       };
       const cameras = await cameraServices.getAllCameraForCustomer(req.user.cust_id , req.user, filter);
-
+      const generatePresignedUrlForThumbnail = async (thumbnail) => {
+        // Check if the thumbnail contains an S3 URI
+        if (thumbnail && thumbnail.startsWith('s3://')) {
+            // Extract bucket name and object key from the S3 URI
+        
+            try {
+                // Generate the presigned URL
+                const presignedUrl = await s3BucketImageUploader.getPresignedUrlForThumbnail(thumbnail);
+                return presignedUrl;
+            } catch (error) {
+                console.error('Error generating presigned URL:', error);
+                return null;
+            }
+        } else {
+            return null; // Return null if the thumbnail does not contain an S3 URI
+        }
+      };
+      // Function to generate presigned URLs for thumbnails in the provided array
+      const generatePresignedUrlsForThumbnails = async (cameras) => {
+        const camerasWithPresignedUrls = await Promise.all(cameras.map(async (camera) => {
+            // Generate presigned URL for thumbnail if it contains an S3 URI
+            if (camera.thumbnail && camera.thumbnail.startsWith('s3://')) {
+              camera.thumbnailPresignedUrl = await generatePresignedUrlForThumbnail(camera.thumbnail);
+            }
+            return camera;
+        }));
+        return { cameras: camerasWithPresignedUrls };
+      };
+      let mappedCamValues = cameras.cams.map((item) => item.dataValues)
+      const camerasWithPresignedUrls = await generatePresignedUrlsForThumbnails(mappedCamValues);
+      cameras.cams = camerasWithPresignedUrls.cameras
       res.status(200).json({
         IsSuccess: true,
         Data: cameras,
