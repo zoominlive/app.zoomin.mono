@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import {
   Autocomplete,
@@ -54,13 +54,19 @@ const CameraForm = (props) => {
   const [submitLoading, setSubmitLoading] = useState(false);
   const [isCloseDialog, setIsCloseDialog] = useState(false);
   const [base64Image, setBase64Image] = useState();
-  const [image, setImage] = useState(
-    props.camera && props.camera.thumbnailPresignedUrl
-      ? props.camera.thumbnailPresignedUrl
-      : props.camera.thumbnail
-  );
+  const [image, setImage] = useState();
   const [S3Uri, setS3Uri] = useState();
   const authCtx = useContext(AuthContext);
+
+  useEffect(() => {
+    if (props.camera !== undefined) {
+      setImage(
+        props.camera && props.camera.thumbnailPresignedUrl
+          ? props.camera.thumbnailPresignedUrl
+          : props.camera.thumbnail
+      );
+    }
+  }, []);
 
   // Method to update the user profile
   const handleSubmit = (data) => {
