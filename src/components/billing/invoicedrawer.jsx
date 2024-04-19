@@ -55,12 +55,13 @@ const InvoiceDrawer = (props) => {
         { title: 'Company Name : ', value: props.customer.name },
         {
           title: 'Company Address : ',
-          value:
-            props.customer.address.city +
-            ', ' +
-            props.customer.address.state +
-            ', ' +
-            props.customer.address.country
+          value: props.customer.address.city
+            ? props.customer.address.city
+            : '-' + ', ' + props.customer.address.state
+            ? props.customer.address.state
+            : '-' + ', ' + props.customer.address.country
+            ? props.customer.address.country
+            : '-'
         }
       ]);
       if (props.row) {
