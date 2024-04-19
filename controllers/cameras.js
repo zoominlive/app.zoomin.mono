@@ -180,13 +180,13 @@ module.exports = {
         const imageUrl = await s3BucketImageUploader._upload(params?.thumbnail);
         params.thumbnail = imageUrl;
       }
-      const getPresignedUrl = await s3BucketImageUploader.getPresignedUrlForThumbnail(params?.s3Uri);
+      // const getPresignedUrl = await s3BucketImageUploader.getPresignedUrlForThumbnail(params?.s3Uri);
       const cameraUpdated = await cameraServices.editCamera(
         params.cam_id,
         {
           cam_id: params.cam_id,
           cam_name: params.cam_name,
-          thumbnail: getPresignedUrl
+          thumbnail: params?.s3Uri ? params?.s3Uri : params?.thumbnail 
         },
         t
       );
