@@ -549,7 +549,7 @@ const Layout = () => {
                           backgroundColor: '#FFFFFF',
                           borderRadius: '120px',
                           padding: '16px 24px',
-                          width: '90%'
+                          width: '87%'
                         }}
                         onChange={(e) => newHandleChange(e)}
                         InputProps={{
@@ -636,7 +636,11 @@ const Layout = () => {
                           })}
                         </Box>
                       )}
-                      <Badge disableRipple badgeContent={unreadCount} color="primary">
+                      <Badge
+                        disableRipple
+                        badgeContent={unreadCount}
+                        color="primary"
+                        sx={{ marginRight: '10px' }}>
                         <NotificationsIcon ref={notificationRef} fontSize="large" />
                       </Badge>
                     </Stack>
