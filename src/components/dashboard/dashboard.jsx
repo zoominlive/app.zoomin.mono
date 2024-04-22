@@ -644,7 +644,7 @@ const Dashboard = () => {
                       ? statisticsData?.activeLiveStreams
                       : []
                   }
-                  title={'Live Streams'}
+                  title={'Mobile Live Streams'}
                   isLoading={isLoading}
                 />
 
