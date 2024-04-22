@@ -160,7 +160,7 @@ const Layout = () => {
 
     // Later, when the PF JS API is available, call the following API method and pass the element instance.
     window.productFruits?.api?.announcementsV2.attachNewsWidgetToElement(customLauncher);
-  }, [notificationRef.current]);
+  }, []);
 
   const newHandleChange = debounce((e) => {
     const searchValue = e.target.value;
