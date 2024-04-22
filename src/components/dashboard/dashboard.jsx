@@ -53,6 +53,7 @@ import RoomAddForm from '../families/roomaddform';
 import FamilyForm from '../families/familyform';
 import LinerLoader from '../common/linearLoader';
 import UserForm from '../users/userform';
+import { PF } from '../pf/pf';
 
 const AccessColumns = [
   { label: 'Children', width: '25%' },
@@ -442,7 +443,7 @@ const Dashboard = () => {
     <>
       <Box className="dashboard">
         <LinerLoader loading={isLoading} />
-
+        <PF />
         <Grid container spacing={3} mt={2} alignItems={'stretch'}>
           <Grid item md={12} sm={12} xs={12} lg={7} style={{ paddingTop: 0 }}>
             <Card sx={{ borderRadius: 5, background: '#5A53DD', height: '100%' }}>
