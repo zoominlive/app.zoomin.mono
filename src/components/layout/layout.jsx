@@ -146,21 +146,23 @@ const Layout = () => {
   useEffect(() => {
     // When your custom element is rendered in your application.
     // If you use React, get a "ref" is the launcher element
+    console.log('notificationRef.current1-->', notificationRef.current);
     const customLauncher = notificationRef.current;
+    if (customLauncher) {
+      // If you want to render a badge with number of unread items...
+      //
+      // If you want to get the initial number of unread items,
+      // attach this event BEFORE the attachNewsWidgetToElement method call.
+      window.productFruits?.api?.announcementsV2.listen('newsfeed-unread-count-changed', (data) => {
+        const unreadCount = data.count;
+        setUnreadCount(unreadCount);
+        // Render the count in your UI. We don't render badges automatically, it is up to you.
+      });
 
-    // If you want to render a badge with number of unread items...
-    //
-    // If you want to get the initial number of unread items,
-    // attach this event BEFORE the attachNewsWidgetToElement method call.
-    window.productFruits?.api?.announcementsV2.listen('newsfeed-unread-count-changed', (data) => {
-      const unreadCount = data.count;
-      setUnreadCount(unreadCount);
-      // Render the count in your UI. We don't render badges automatically, it is up to you.
-    });
-
-    // Later, when the PF JS API is available, call the following API method and pass the element instance.
-    window.productFruits?.api?.announcementsV2.attachNewsWidgetToElement(customLauncher);
-  }, []);
+      // Later, when the PF JS API is available, call the following API method and pass the element instance.
+      window.productFruits?.api?.announcementsV2.attachNewsWidgetToElement(customLauncher);
+    }
+  }, [notificationRef.current]);
 
   const newHandleChange = debounce((e) => {
     const searchValue = e.target.value;
