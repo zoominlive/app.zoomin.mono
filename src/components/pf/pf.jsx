@@ -10,9 +10,9 @@ export function PF() {
     email: authCtx.user.email,
     firstname: authCtx.user.first_name,
     lastname: authCtx.user.last_name,
-    // signUpAt: authCtx.user.name,
+    signUpAt: authCtx.user.createdAt,
     role: authCtx.user.role
-    // props: { customProp1: 123 }
+    // props: { customProp1: 123 } used to pass any other properties
   };
 
   return <ProductFruits workspaceCode={'tolz2SzpdmAUTMVA'} language="en" user={userInfo} />;
