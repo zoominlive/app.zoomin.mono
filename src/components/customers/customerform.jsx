@@ -746,8 +746,8 @@ const CustomerForm = (props) => {
                     setFieldValue('role', event.target.value);
                     // setSelectedRole(event.target.value);
                   }}>
-                  <MenuItem value={'Teacher'}>Teacher</MenuItem>
-                  <MenuItem value={'User'}>User</MenuItem>
+                  {/* <MenuItem value={'Teacher'}>Teacher</MenuItem>
+                  <MenuItem value={'User'}>User</MenuItem> */}
                   <MenuItem value={'Admin'}>Admin</MenuItem>
                 </Select>
                 {touched.role && Boolean(errors.role) && (

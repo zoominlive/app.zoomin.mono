@@ -44,8 +44,6 @@ import NextChargeDateBottomRight from '../../assets/next_charge_date_bottom_righ
 import { DesktopDateRangePicker } from '@mui/x-date-pickers-pro';
 import { LocalizationProvider } from '@mui/x-date-pickers-pro';
 import { AdapterDayjs } from '@mui/x-date-pickers-pro/AdapterDayjs';
-import ArrowDropUpIcon from '@mui/icons-material/ArrowDropUp';
-import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import moment from 'moment';
 import PropTypes from 'prop-types';
 import PrintIcon from '@mui/icons-material/Print';
@@ -61,13 +59,6 @@ import { errorMessageHandler } from '../../utils/errormessagehandler';
 import { useSnackbar } from 'notistack';
 import NoDataDiv from '../common/nodatadiv';
 import dayjs from 'dayjs';
-
-const SubscriptionColumns = [
-  { label: 'Type', width: '60%' },
-  { label: 'Number', width: '20%' },
-  { label: 'Charge', width: '20%' }
-  // { label: 'Status', width: '25%' }
-];
 
 const shortcutsItems = [
   {
@@ -468,7 +459,6 @@ const Invoices = () => {
             <Paper sx={{ marginTop: 2, height: '96%' }} className="zl__table-res">
               <SubscriptionTable
                 rows={subscriptionRows}
-                columns={SubscriptionColumns}
                 title={'Subscriptions'}
                 isLoading={isLoading}
               />

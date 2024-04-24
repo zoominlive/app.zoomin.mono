@@ -15,6 +15,7 @@ import { countries } from '../../utils/constants';
 import API from '../../api';
 import { errorMessageHandler } from '../../utils/errormessagehandler';
 import { useSnackbar } from 'notistack';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 export default function CheckoutForm(props) {
   const stripe = useStripe();
@@ -24,6 +25,8 @@ export default function CheckoutForm(props) {
   const [firstName, setFirstName] = useState(null);
   const [country, setCountry] = useState(null);
   const { enqueueSnackbar } = useSnackbar();
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const handleAddPaymentMethod = async () => {
     console.log('cardElement', CardElement);
@@ -51,13 +54,18 @@ export default function CheckoutForm(props) {
       const response = await API.post(`payment/save-card-details`, {
         cardToken: cardToken,
         userId: authCtx.user.stripe_cust_id, // Replace 'user_id' with the actual user ID
-        cust_id: localStorage.getItem('cust_id')
+        cust_id: localStorage.getItem('cust_id') || authCtx.user.cust_id
       });
       if (response.status === 200) {
-        props.closeDialog();
-        props.getCustPaymentMethod();
-        props.setIsLoading(false);
-        console.log(response.data.message); // Log success message
+        if (location.pathname == '/terms-and-conditions') {
+          authCtx.setPaymentMethod(true);
+          navigate('dashboard');
+        } else {
+          props.closeDialog();
+          props.getCustPaymentMethod();
+          props.setIsLoading(false);
+          console.log(response.data.message); // Log success message
+        }
       } else {
         errorMessageHandler(
           enqueueSnackbar,
@@ -145,10 +153,9 @@ export default function CheckoutForm(props) {
         <Button
           className="add-payment-button"
           variant="contained"
-          startIcon={<Plus />}
+          startIcon={location.pathname == 'billing' && <Plus />}
           onClick={handleAddPaymentMethod}>
-          {' '}
-          Add Payment Method
+          {location.pathname == 'billing' ? 'Add Payment Method' : 'Continue'}
         </Button>
       </Box>
       {cardDetails && (

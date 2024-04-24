@@ -82,6 +82,7 @@ const Layout = () => {
   const [usersResults, setUsersResults] = useState([]);
   const [showSearchResults, setShowSearchResults] = useState();
   const resultsListRef = useRef(null);
+  const stripe_cust_id = authCtx.user.stripe_cust_id;
 
   const locs = ['Select All'];
   //authCtx?.user?.location?.accessable_locations.forEach((loc) => locs.push(loc));
@@ -110,8 +111,6 @@ const Layout = () => {
   useEffect(() => {
     setIsLoading(true);
     setDropdownLoading(true);
-    localStorage.removeItem('RETRYCOUNTER_LAYOUT');
-    localStorage.setItem('RETRYCOUNTER_LAYOUT', 0);
     // API Call for Fetching Logged in user detail
     // let status = localStorage.getItem('login');
     API.get('users', { params: { cust_id: localStorage.getItem('cust_id') } }).then((response) => {
@@ -193,6 +192,33 @@ const Layout = () => {
       document.removeEventListener('click', handleOutsideClick);
     };
   }, []);
+
+  useEffect(() => {
+    getCustPaymentMethod();
+  }, []);
+
+  // Method to fetch Customer Payment Method along with Customer Details
+  const getCustPaymentMethod = () => {
+    setIsLoading(true);
+    API.get('payment/list-customer-payment-method', {
+      params: { stripe_cust_id: stripe_cust_id, cust_id: localStorage.getItem('cust_id') }
+    }).then((response) => {
+      if (response.status === 200) {
+        console.log('response.data.data.data', response.data.data.data);
+        if (response.data.data.data.length !== 0) {
+          authCtx.setPaymentMethod(true);
+        }
+      } else {
+        errorMessageHandler(
+          enqueueSnackbar,
+          response?.response?.data?.message || 'Something Went Wrong.',
+          response?.response?.status,
+          authCtx.setAuthError
+        );
+      }
+      setIsLoading(false);
+    });
+  };
 
   // Method to fetch families list
   const getFamiliesList = (familiesPayload) => {
@@ -331,12 +357,12 @@ const Layout = () => {
     {
       name: 'Knowledge Base',
       icon: <Book style={{ color: 'white' }} />,
-      link: 'https://zoominlive.document360.io/'
+      link: 'https://2whqfcg5oxz4mmi.productfruits.help/'
     },
     {
       name: 'Support',
       icon: <Shield style={{ color: 'white' }} />,
-      link: 'https://www.zoominlive.com/support'
+      link: 'https://www.zoominlive.com/contact-support-team'
     }
   ];
 
@@ -409,7 +435,11 @@ const Layout = () => {
                       item.key !== 10
                     ) {
                       return true;
-                    } else if (authCtx.user.role === 'Admin' && item.key !== 9) {
+                    } else if (
+                      authCtx.user.role === 'Admin' &&
+                      authCtx.paymentMethod &&
+                      item.key !== 9
+                    ) {
                       return true;
                     } else if (authCtx.user.role == 'Teacher' && item.key == 5 && item.key !== 10) {
                       return true;

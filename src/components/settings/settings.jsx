@@ -596,7 +596,8 @@ const Settings = () => {
                           <Grid item xs={12} md={12}>
                             <Divider />
                           </Grid>
-                          {authCtx.user.role === 'Super Admin' && (
+                          {/* temporarily checking with role test instead of commenting whole code block */}
+                          {authCtx.user.role === 'test' && (
                             <>
                               <Grid item xs={12} md={12}>
                                 <Typography variant="h5">Subscription Plans</Typography>
@@ -711,27 +712,29 @@ const Settings = () => {
                               </Grid>
                             </>
                           )}
-                          <Grid item xs={12} md={12}>
-                            <Stack
-                              direction="row"
-                              justifyContent="flex-end"
-                              alignItems="center"
-                              spacing={3}>
-                              {authCtx.user.role === 'Super Admin' && (
-                                <Button
-                                  sx={{
-                                    '&:disabled': {
-                                      backgroundColor: '#6e66c724 !important'
-                                    }
-                                  }}
-                                  variant="contained"
-                                  disabled={checked.length == 0}
-                                  onClick={handleCheckout}>
-                                  Start Service
-                                </Button>
-                              )}
-                            </Stack>
-                          </Grid>
+                          {authCtx.user.role === 'test' && (
+                            <Grid item xs={12} md={12}>
+                              <Stack
+                                direction="row"
+                                justifyContent="flex-end"
+                                alignItems="center"
+                                spacing={3}>
+                                {authCtx.user.role === 'Super Admin' && (
+                                  <Button
+                                    sx={{
+                                      '&:disabled': {
+                                        backgroundColor: '#6e66c724 !important'
+                                      }
+                                    }}
+                                    variant="contained"
+                                    disabled={checked.length == 0}
+                                    onClick={handleCheckout}>
+                                    Start Service
+                                  </Button>
+                                )}
+                              </Stack>
+                            </Grid>
+                          )}
                         </Grid>
                       </Form>
                     );

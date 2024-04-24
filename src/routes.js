@@ -13,6 +13,7 @@ import Customers from './components/customers/customers';
 import WatchStream from './components/watchstream/watchstream';
 import AuthContext from './context/authcontext';
 import Invoices from './components/billing/invoices';
+import PostLoginSteps from './components/dashboard/postloginsteps';
 // import Alerts from './components/alerts/alerts';
 
 const AppRoutes = () => {
@@ -33,20 +34,26 @@ const AppRoutes = () => {
         {authCtx.user && (authCtx.user.role === 'Admin' || authCtx.user.role === 'Super Admin') && (
           <Route path="/billing" element={<Invoices />} />
         )}
-        {authCtx.user && authCtx.user.role !== 'Family' && authCtx.user.role !== 'Teacher' && (
-          <>
-            {' '}
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/families" element={<Families />} />
-            <Route path="/rooms" element={<Rooms />} />
-            <Route path="/cameras" element={<Cameras />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/recordings" element={<Recordings />} />
-          </>
-        )}
+        {authCtx.user &&
+          (authCtx.user.role === 'Super Admin' || authCtx.paymentMethod) &&
+          authCtx.user.role !== 'Family' &&
+          authCtx.user.role !== 'Teacher' && (
+            <>
+              {' '}
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/families" element={<Families />} />
+              <Route path="/rooms" element={<Rooms />} />
+              <Route path="/cameras" element={<Cameras />} />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="/recordings" element={<Recordings />} />
+            </>
+          )}
         {/* <Route path="/recordings" element={<Recordings />} /> */}
         {/* <Route path="/alerts" element={<Alerts />} /> */}
         <Route path="/watch-stream" element={<WatchStream />} />
+        {authCtx.user && authCtx.user.role === 'Admin' && !authCtx.paymentMethod && (
+          <Route path="/terms-and-conditions" element={<PostLoginSteps />} />
+        )}
 
         {/* Default Route */}
         <Route
@@ -54,8 +61,10 @@ const AppRoutes = () => {
           element={
             authCtx.user && (authCtx.user.role === 'Family' || authCtx.user.role === 'Teacher') ? (
               <Navigate to={'watch-stream'} />
-            ) : (
+            ) : authCtx.paymentMethod ? (
               <Navigate to={'dashboard'} />
+            ) : (
+              <Navigate to={'terms-and-conditions'} />
             )
           }
         />
