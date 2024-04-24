@@ -98,7 +98,9 @@ export default function SubscriptionTable({
 
   const getCustomerById = () => {
     setDataIsLoading(true);
-    API.get('customers/getCustomer', { params: { id: authCtx.user.cust_id } }).then((response) => {
+    API.get('customers/getCustomer', {
+      params: { id: authCtx.user.cust_id || localStorage.getItem('cust_id') }
+    }).then((response) => {
       if (response.status === 200) {
         setCustData(response.data.Data);
       } else {
