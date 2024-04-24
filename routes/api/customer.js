@@ -12,6 +12,7 @@ router.get('/all/locations', authController, customerController.getAllCustomerLo
 router.post('/createCustomer', authController, customerController.createCustomer);
 router.post('/createCustomerLocation', authController, customerController.createCustomerLocations);
 router.put('/edit', authController, customerController.updateCustomerProfile);
+router.get('/getCustomer', authController, customerController.getCustomerById);
 router.put('/editCustomerLocation', authController, customerController.updateCustomerLocation);
 router.delete('/delete', authController, customerController.deleteCustomer);
 router.delete('/deleteCustomerLocation', authController, customerController.deleteCustomerLocation);

@@ -73,6 +73,29 @@ module.exports = {
     }
   },
 
+  getCustomerById: async (req, res, next) => {
+    try {
+      const cust_id = req.query?.id
+
+      const custDetails = await customerServices.getCustomerDetails(cust_id);
+      res.status(200).json({
+        IsSuccess: true,
+        Data: custDetails,
+        Message: CONSTANTS.CUSTOMER_FOUND,
+      });
+      next();
+    } catch (error) {
+      res
+        .status(500)
+        .json({
+          IsSuccess: false,
+          error_log: error,
+          Message: CONSTANTS.INTERNAL_SERVER_ERROR,
+        });
+      next(error);
+    }
+  },
+
   createCustomerLocations: async(req, res, next) => {
     const t = await sequelize.transaction();
     try {
