@@ -3,8 +3,7 @@ const connectToDatabase = require('../models/index');
 module.exports = async function (req, res, next) {
   const { Customers } = await connectToDatabase();
   const cust_id = req.query.cust_id || req.body.cust_id;
-  console.log('cust_id-->', cust_id);
-  console.log('req.user-->', req.user);
+
   try {
     let stripe_customer_id;
     if(cust_id && req.user.role == 'Super Admin'){
@@ -12,8 +11,13 @@ module.exports = async function (req, res, next) {
       stripe_customer_id = customer.dataValues.stripe_cust_id;
       req.query.stripe_cust_id = stripe_customer_id
       req.body.stripe_cust_id = stripe_customer_id
+    } 
+    if(req.user.role == 'Admin') {
+      let customer = await Customers.findOne({ where: { cust_id: req.user.cust_id } });
+      stripe_customer_id = customer.dataValues.stripe_cust_id;
+      req.query.stripe_cust_id = stripe_customer_id
+      req.body.stripe_cust_id = stripe_customer_id
     }
-
     next();
   } catch (e) {
     console.log('error_log : ', e);
