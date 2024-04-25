@@ -71,7 +71,7 @@ const Layout = () => {
   const [childrenResults, setChildrenResults] = useState([]);
   const [usersResults, setUsersResults] = useState([]);
   const [showSearchResults, setShowSearchResults] = useState();
-  const [unreadCount, setUnreadCount] = useState();
+  const [unreadCount, setUnreadCount] = useState(0);
   const resultsListRef = useRef(null);
   const notificationRef = useRef(null);
 
@@ -144,21 +144,23 @@ const Layout = () => {
   }, []);
 
   useEffect(() => {
-    // When your custom element is rendered in your application.
-    // If you use React, get a "ref" is the launcher element
-    const customLauncher = notificationRef.current;
-    // If you want to render a badge with number of unread items...
-    //
-    // If you want to get the initial number of unread items,
-    // attach this event BEFORE the attachNewsWidgetToElement method call.
-    window.productFruits?.api?.announcementsV2.listen('newsfeed-unread-count-changed', (data) => {
-      const unreadCount = data.count;
-      setUnreadCount(unreadCount);
-      // Render the count in your UI. We don't render badges automatically, it is up to you.
-    });
-
-    // Later, when the PF JS API is available, call the following API method and pass the element instance.
-    window.productFruits?.api?.announcementsV2.attachNewsWidgetToElement(customLauncher);
+    window.productFruitsReady = function () {
+      // When your custom element is rendered in your application.
+      // If you use React, get a "ref" is the launcher element
+      const customLauncher = notificationRef?.current;
+      // If you want to render a badge with number of unread items...
+      //
+      // If you want to get the initial number of unread items,
+      // attach this event BEFORE the attachNewsWidgetToElement method call.
+      window.productFruits?.api?.announcementsV2.listen('newsfeed-unread-count-changed', (data) => {
+        const unreadCount = data.count;
+        setUnreadCount(unreadCount);
+        // Render the count in your UI. We don't render badges automatically, it is up to you.
+      });
+      // Later, when the PF JS API is available, call the following API method and pass the element instance.
+      window.productFruits?.api?.announcementsV2.attachNewsWidgetToElement(customLauncher);
+      console.log('Product Fruits is ready!');
+    };
   });
 
   const newHandleChange = debounce((e) => {
