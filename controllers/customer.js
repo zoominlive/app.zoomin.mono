@@ -186,13 +186,11 @@ module.exports = {
       user.cust_id = addCustomer?.cust_id;
       user.is_verified = false;
       let addUser = await userServices.createUser(user, t);
-      //let userData = addUser?.toJSON();
-      //const token = await userServices.createPasswordToken(userData);
-      // const name = userData.first_name + ' ' + userData.last_name;
-      //   const originalUrl =
-      //     process.env.FE_SITE_BASE_URL + 'set-password?' + 'token=' + token + '&type=user';
-
-        //await sendRegistrationMailforUser(name, userData.email, originalUrl);
+      let userData = addUser?.toJSON();
+      const token = await userServices.createPasswordToken(userData, true);
+      const name = userData.first_name + ' ' + userData.last_name;
+      const originalUrl = process.env.FE_SITE_BASE_URL + 'set-password?' + 'token=' + token + '&type=user';
+      await sendRegistrationMailforUser(name, userData.email, originalUrl);
 
       let locations = customer_locations.flatMap((i) => i.loc_name);
       let addLocations = await customerServices.createLocation(

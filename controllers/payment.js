@@ -320,7 +320,7 @@ module.exports = {
       });
     } catch (error) {
       console.error(error);
-      res.status(500).json({ message: `Failed to retrieve Invoice` });
+      res.status(500).json({ message: `Failed to retrieve Invoice or No upcoming invoices` });
     }    
   },
 

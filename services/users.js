@@ -123,13 +123,12 @@ module.exports = {
   },
 
   // get user by id
-  getUserById: async (userId, t) => {
+  getUserById: async (userId) => {
     const { Users } = await connectToDatabase();
     let user = await Users.findOne(
       {
         where: { user_id: userId },
-      },
-      { transaction: t }
+      }
     );
     return user ? user.toJSON() : null;
   },

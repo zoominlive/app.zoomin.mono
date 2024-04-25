@@ -955,7 +955,7 @@ module.exports = {
     try {
       const params = req.body;
 
-      const user = await userServices.getUserById(params.userId, t);
+      const user = await userServices.getUserById(params.userId);
       if(params.inviteUser) {
         try {
           const token = await userServices.createPasswordToken(user);
@@ -1149,7 +1149,7 @@ module.exports = {
 
       if (decodeToken?.userId) {
         userId = decodeToken?.userId;
-        const user = await userServices.getUserById(decodeToken.userId, t);
+        const user = await userServices.getUserById(decodeToken.userId);
 
         if (user.email !== decodeToken.email) {
           const emailChanged = await userServices.editUserProfile(
