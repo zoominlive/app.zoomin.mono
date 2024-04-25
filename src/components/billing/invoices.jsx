@@ -384,7 +384,7 @@ const Invoices = () => {
       } else {
         errorMessageHandler(
           enqueueSnackbar,
-          response?.response?.data?.Message || 'Something Went Wrong.',
+          response?.response?.data?.message || 'Something Went Wrong.',
           response?.response?.status,
           authCtx.setAuthError
         );
