@@ -338,7 +338,7 @@ const CustomerForm = (props) => {
               />
             </Grid>
             <Grid item md={4} xs={12}>
-              <InputLabel id="country">Address 2</InputLabel>
+              <InputLabel id="country">Country</InputLabel>
               <TextField
                 labelId="country"
                 name="country"
@@ -418,29 +418,6 @@ const CustomerForm = (props) => {
               />
             </Grid>
             <Grid item md={4} xs={12}>
-              <LocalizationProvider dateAdapter={AdapterMoment}>
-                <InputLabel id="recurring-charge-day">Recurring Charge Day</InputLabel>
-                <DesktopDatePicker
-                  open={isDatePickerOpen}
-                  maxDate={moment()}
-                  labelId="recurring-charge-day"
-                  autoOk={true}
-                  value={values?.recurring_charge_day}
-                  inputFormat="MM/DD/YY"
-                  onClose={() => setIsDatePickerOpen(false)}
-                  renderInput={(params) => (
-                    <TextField onClick={() => setIsDatePickerOpen(true)} {...params} />
-                  )}
-                  components={{
-                    OpenPickerIcon: !isDatePickerOpen ? ArrowDropDownIcon : ArrowDropUpIcon
-                  }}
-                  onChange={(value) => {
-                    setRecurringChargeDate(value);
-                  }}
-                />
-              </LocalizationProvider>
-            </Grid>
-            <Grid item md={4} xs={12}>
               <InputLabel id="timeout">Viewing Timeout</InputLabel>
               <TextField
                 labelId="timeout"
@@ -465,6 +442,29 @@ const CustomerForm = (props) => {
             </Grid>
             <Grid item xs={12} md={12}>
               <Typography variant="subtitle2">Licensing</Typography>
+            </Grid>
+            <Grid item md={4} xs={12}>
+              <LocalizationProvider dateAdapter={AdapterMoment}>
+                <InputLabel id="recurring-charge-day">Recurring Charge Day</InputLabel>
+                <DesktopDatePicker
+                  open={isDatePickerOpen}
+                  maxDate={moment()}
+                  labelId="recurring-charge-day"
+                  autoOk={true}
+                  value={values?.recurring_charge_day}
+                  inputFormat="MM/DD/YY"
+                  onClose={() => setIsDatePickerOpen(false)}
+                  renderInput={(params) => (
+                    <TextField onClick={() => setIsDatePickerOpen(true)} {...params} />
+                  )}
+                  components={{
+                    OpenPickerIcon: !isDatePickerOpen ? ArrowDropDownIcon : ArrowDropUpIcon
+                  }}
+                  onChange={(value) => {
+                    setRecurringChargeDate(value);
+                  }}
+                />
+              </LocalizationProvider>
             </Grid>
             <Grid item md={4} xs={12}>
               <InputLabel id="max_locations">Number of Locations</InputLabel>
