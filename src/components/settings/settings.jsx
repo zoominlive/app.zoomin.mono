@@ -438,6 +438,8 @@ const Settings = () => {
       setIsLoading(false);
     });
   };
+
+  console.log('test log on settings page');
   return (
     <Box sx={{ width: '100%' }}>
       <TabContext value={value}>
