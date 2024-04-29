@@ -13,6 +13,7 @@ const CustomerLocations = sequelize.define(
     loc_name: {
       type: Sequelize.STRING(50),
       unique: {
+        name: 'unique_cust_id',
         args: true,
         msg: 'Location name already in use!'
       },
@@ -26,7 +27,13 @@ const CustomerLocations = sequelize.define(
       type: Sequelize.STRING(100)
     },
     cust_id: {
-      type: Sequelize.STRING(50)
+      type: Sequelize.STRING(50),
+      unique: {
+        name: 'unique_cust_id',
+        args: true,
+        msg: 'Cust Id already in use!'
+      },
+      required: [true, 'Location is mandatory field']
     },
     createdAt: { type: Sequelize.DATE, field: 'created_at' },
     updatedAt: { type: Sequelize.DATE, field: 'updated_at' }
