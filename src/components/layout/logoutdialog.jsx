@@ -23,10 +23,8 @@ const LogoutDialog = (props) => {
   const handleLogout = () => {
     setTimeout(() => {
       localStorage.clear();
-      if (authCtx.paymentMethod) {
-        authCtx.setPaymentMethod(false);
-      }
       authCtx.setToken();
+      authCtx.setPaymentMethod(false);
     }, 2000);
     navigate('login');
   };
