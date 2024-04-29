@@ -183,11 +183,10 @@ module.exports = {
     //   'SELECT recent_user_id, COUNT(DISTINCT sub.viewer_id) AS total_start_only_viewers FROM (SELECT viewer_id FROM mounted_camera_recent_viewers WHERE `function` = "start" AND cam_id IN (:camIds) GROUP BY viewer_id) AS sub WHERE NOT EXISTS (SELECT 1 FROM mounted_camera_recent_viewers WHERE `function` = "stop" AND viewer_id = sub.viewer_id)',
     //   { replacements: { camIds }, type: sequelize.QueryTypes.SELECT }
     // )
-    let result = await sequelize
-      .query(
-        'SELECT recent_user_id, COUNT(DISTINCT sub.viewer_id) AS total_start_only_viewers FROM (SELECT recent_user_id,viewer_id FROM mounted_camera_recent_viewers WHERE `function` = "start" AND cam_id IN (:camIds) AND DATE(requested_at) = CURDATE() GROUP BY recent_user_id) AS sub WHERE NOT EXISTS (SELECT 1 FROM mounted_camera_recent_viewers WHERE `function` = "stop" AND viewer_id = sub.viewer_id) AND DATE(requested_at) = CURDATE()',
-        { replacements: { camIds }, type: sequelize.QueryTypes.SELECT }
-      )
+    let result = await sequelize.query(
+      'SELECT recent_user_id, COUNT(DISTINCT sub.viewer_id) AS total_start_only_viewers FROM (SELECT recent_user_id,viewer_id FROM mounted_camera_recent_viewers WHERE `function` = "start" AND cam_id IN (:camIds) AND DATE(requested_at) = CURDATE() GROUP BY recent_user_id) AS sub WHERE NOT EXISTS (SELECT 1 FROM mounted_camera_recent_viewers WHERE `function` = "stop" AND viewer_id = sub.viewer_id AND DATE(requested_at) = CURDATE())',
+      { replacements: { camIds }, type: sequelize.QueryTypes.SELECT }
+    );
 
     return result[0].total_start_only_viewers;
   },
