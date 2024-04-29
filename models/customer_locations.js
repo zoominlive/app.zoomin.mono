@@ -33,7 +33,6 @@ const CustomerLocations = sequelize.define(
         args: true,
         msg: 'Cust Id already in use!'
       },
-      required: [true, 'Location is mandatory field']
     },
     createdAt: { type: Sequelize.DATE, field: 'created_at' },
     updatedAt: { type: Sequelize.DATE, field: 'updated_at' }
