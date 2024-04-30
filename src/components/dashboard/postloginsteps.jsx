@@ -370,7 +370,7 @@ const PostLoginSteps = (props) => {
                 <Grid item lg={5}>
                   <Paper sx={{ padding: '40px', marginTop: 2 }}>
                     <Elements stripe={stripePromise}>
-                      <CheckoutForm />
+                      <CheckoutForm checked={checked} />
                     </Elements>
                   </Paper>
                 </Grid>

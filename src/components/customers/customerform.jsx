@@ -443,10 +443,28 @@ const CustomerForm = (props) => {
             <Grid item xs={12} md={12}>
               <Typography variant="subtitle2">Licensing</Typography>
             </Grid>
+            <Grid item xs={12} md={4}>
+              <InputLabel id="from">No. of Trial Days</InputLabel>
+              <TextField
+                name={'trial_period_days'}
+                type="number"
+                value={values?.trial_period_days}
+                InputProps={{ inputProps: { min: 0, max: 30, step: 1 } }}
+                onChange={(event) => {
+                  setFieldValue('trial_period_days', event.target.value);
+                  setFieldValue(
+                    'recurring_charge_day',
+                    moment(recurringChargeDate, 'MM/DD/YY').add(event.target.value, 'days')
+                  );
+                }}
+                fullWidth
+              />
+            </Grid>
             <Grid item md={4} xs={12}>
               <LocalizationProvider dateAdapter={AdapterMoment}>
-                <InputLabel id="recurring-charge-day">Recurring Charge Day</InputLabel>
+                <InputLabel id="recurring-charge-day">Next Charge Day</InputLabel>
                 <DesktopDatePicker
+                  disabled
                   open={isDatePickerOpen}
                   maxDate={moment()}
                   labelId="recurring-charge-day"
@@ -961,6 +979,7 @@ const CustomerForm = (props) => {
             max_cameras: props?.customer?.max_cameras || '',
             // available_cameras: props?.customer?.available_cameras || '',
             max_locations: props?.customer?.max_locations || '',
+            trial_period_days: props?.customer?.trial_period_days || '',
             transcoder_endpoint: props?.customer?.transcoder_endpoint || '',
             rtmp_transcoder_endpoint: props?.customer?.rtmp_transcoder_endpoint || '',
             timeout: props?.customer?.timeout || '',
