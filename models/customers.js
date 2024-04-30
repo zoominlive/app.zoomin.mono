@@ -72,6 +72,9 @@ const Customers = sequelize.define(
     max_stream_live_license_room: {
       type: Sequelize.INTEGER(3)
     },
+    trial_period_days: {
+      type: Sequelize.INTEGER(3)
+    },
     recurring_charge_day: { type: Sequelize.DATE, field: 'recurring_charge_day' },
     createdAt: { type: Sequelize.DATE, field: 'created_at' },
     updatedAt: { type: Sequelize.DATE, field: 'updated_at' }

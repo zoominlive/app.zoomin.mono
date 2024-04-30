@@ -248,6 +248,15 @@ module.exports = {
     return customerCreated;
   },
 
+  createTermsApproval: async (customerObj, t) => {
+    const { CustomerTermsApproval } = await connectToDatabase();
+    let termsApprovalCreated = await CustomerTermsApproval.create(customerObj, {
+      transaction: t,
+    });
+
+    return termsApprovalCreated;
+  },
+  
   deleteCustomer: async (customerId, t) => {
     const { Customers } = await connectToDatabase();
     let deletedCustomer = await Customers.destroy(

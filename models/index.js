@@ -22,7 +22,8 @@ const CamPreference = require('./cam_preference');
 const Subscriptions = require('./subscriptions');
 const Invoice = require('./invoice');
 const Webhooks = require('./webhooks');
-const SubscriptionItems = require('./subscriptions_items');;
+const SubscriptionItems = require('./subscriptions_items');
+const CustomerTermsApproval = require('./customer_terms_approval');
 const sequelize = require('../lib/database');
 
 CustomerLocations.belongsTo(Customers, { foreignKey: 'cust_id' });
@@ -212,6 +213,7 @@ module.exports = async () => {
       Users,
       Customers,
       CustomerLocations,
+      CustomerTermsApproval,
       DefaultSchedule,
       Family,
       Child,
@@ -245,6 +247,7 @@ module.exports = async () => {
     Users,
     Customers,
     CustomerLocations,
+    CustomerTermsApproval,
     DefaultSchedule,
     Family,
     Child,
