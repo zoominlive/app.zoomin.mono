@@ -10,6 +10,7 @@ const customerController = require('../../controllers/customer');
 router.get('/all', authController, customerController.getAllCustomerDetails);
 router.get('/all/locations', authController, customerController.getAllCustomerLocations);
 router.post('/createCustomer', authController, customerController.createCustomer);
+router.post('/createCustomerTermsApproval', authController, customerController.createCustomerTermsApproval);
 router.post('/createCustomerLocation', authController, customerController.createCustomerLocations);
 router.put('/edit', authController, customerController.updateCustomerProfile);
 router.get('/getCustomer', authController, customerController.getCustomerById);

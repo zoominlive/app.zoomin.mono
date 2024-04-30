@@ -237,6 +237,41 @@ module.exports = {
     }
   },
 
+  createCustomerTermsApproval: async(req, res, next) => {
+    const t = await sequelize.transaction();
+    try {
+      const { cust_id, user_id, terms_agreed, user_fname, user_lname, user_email } = req.body;
+      let addRecord = await customerServices.createTermsApproval(
+        {
+          cust_id: cust_id,
+          user_id: user_id,
+          terms_agreed: terms_agreed,
+          user_fname: user_fname,
+          user_lname: user_lname,
+          user_email: user_email,
+        }
+      );
+      if (addRecord) {
+        await res.status(201).json({
+          IsSuccess: true,
+          Data: addRecord,
+          Message: CONSTANTS.CUSTOMER_APPROVAL_CREATED,
+        });
+      }
+    } catch (error) {
+      await t.rollback();
+      res.status(500).json({
+        IsSuccess: false,
+        error_log: error,
+        Message:
+          error?.name === "SequelizeUniqueConstraintError"
+            ? error.errors[0].message
+            : CONSTANTS.INTERNAL_SERVER_ERROR,
+      });
+      next(error);
+    }
+  },
+
   deleteCustomer: async (req, res, next) => {
     const t = await sequelize.transaction();
     try {
