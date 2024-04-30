@@ -309,11 +309,11 @@ module.exports = {
     const zip = (locations, timezone) => locations.map((value, index) => [value, timezone[index]]);
     const locationsWithTimezone = zip(locations, timezone);
 
-    let createLocations = Promise.all(
+    let createLocations = await Promise.all(
       locationsWithTimezone.map(async ([loc, timezone]) => {
         const obj = { loc_name: loc, cust_id: custId, time_zone: timezone };
         // obj.loc_id = uuidv4();
-        await CustomerLocations.create(obj, {
+        return CustomerLocations.create(obj, {
           transaction: t,
         });
       })
