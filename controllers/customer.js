@@ -209,6 +209,13 @@ module.exports = {
           customer = await stripe.customers.create({
             name: user.first_name +' '+ user.last_name,
             email: user.email,
+            address: {
+              city: customeDetails?.city,
+              country: customeDetails?.country,
+              line1: customeDetails?.address_1,
+              line2: customeDetails?.address_2,
+              postal_code: customeDetails?.postal,
+            }
           });
           await customerServices.editCustomer(addCustomer?.cust_id, {stripe_cust_id: customer.id}, t)
         }
