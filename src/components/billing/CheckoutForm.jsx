@@ -20,6 +20,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 export default function CheckoutForm(props) {
   const stripe = useStripe();
   const elements = useElements();
+  // eslint-disable-next-line no-unused-vars
   const [cardDetails, setCardDetails] = useState(null);
   const authCtx = useContext(AuthContext);
   const [firstName, setFirstName] = useState(null);
@@ -59,7 +60,24 @@ export default function CheckoutForm(props) {
       if (response.status === 200) {
         if (location.pathname == '/terms-and-conditions') {
           authCtx.setPaymentMethod(true);
-          navigate('dashboard');
+          const response = await API.post(`customers/createCustomerTermsApproval`, {
+            terms_agreed: props?.checked,
+            user_fname: authCtx.user?.first_name,
+            user_lname: authCtx.user?.last_name,
+            user_email: authCtx.user?.email,
+            user_id: authCtx.user.user_id,
+            cust_id: localStorage.getItem('cust_id') || authCtx.user.cust_id
+          });
+          if (response.status === 201) {
+            navigate('dashboard');
+          } else {
+            errorMessageHandler(
+              enqueueSnackbar,
+              response?.response?.data?.message || 'Something Went Wrong.',
+              response?.response?.status,
+              authCtx.setAuthError
+            );
+          }
         } else {
           props.closeDialog();
           props.getCustPaymentMethod();
@@ -158,7 +176,7 @@ export default function CheckoutForm(props) {
           {location.pathname == 'billing' ? 'Add Payment Method' : 'Continue'}
         </Button>
       </Box>
-      {cardDetails && (
+      {/* {cardDetails && (
         <div>
           <p>Card Brand: {cardDetails.card.brand}</p>
           <p>Last 4 Digits: {cardDetails.card.last4}</p>
@@ -166,7 +184,7 @@ export default function CheckoutForm(props) {
             Expiration Date: {cardDetails.card.exp_month}/{cardDetails.card.exp_year}
           </p>
         </div>
-      )}
+      )} */}
     </form>
   );
 }
@@ -174,5 +192,6 @@ export default function CheckoutForm(props) {
 CheckoutForm.propTypes = {
   closeDialog: PropTypes.func,
   getCustPaymentMethod: PropTypes.func,
-  setIsLoading: PropTypes.func
+  setIsLoading: PropTypes.func,
+  checked: PropTypes.bool
 };

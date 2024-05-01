@@ -667,70 +667,73 @@ const Layout = () => {
                   <>
                     <Stack
                       direction={'row'}
-                      justify-content={'end'}
+                      justifyContent={'end'}
                       alignItems={'center'}
                       spacing={3}>
-                      <Autocomplete
-                        sx={{
-                          '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                            borderWidth: 0
-                          },
-                          '& .MuiOutlinedInput-root .MuiAutocomplete-endAdornment': {
-                            right: '22px'
-                          },
-                          '& fieldset': { borderRadius: 10, borderWidth: 0 }
-                        }}
-                        className="header-location-select"
-                        multiple
-                        limitTags={1}
-                        id="tags-standard"
-                        options={locations?.length !== 0 ? locations : []}
-                        onChange={(_, value, reason, option) => {
-                          handleSetLocations(_, value, reason, option);
-                        }}
-                        value={selectedLocation ? selectedLocation : []}
-                        getOptionLabel={(option) => option}
-                        renderTags={(value, getTagProps) =>
-                          value?.map((option, index) => (
-                            <Chip key={index} label={option} {...getTagProps({ index })} />
-                          ))
-                        }
-                        renderOption={(props, option, { selected }) => (
-                          <li {...props}>
-                            <Checkbox
-                              icon={icon}
-                              checkedIcon={checkedIcon}
-                              style={{ marginRight: 8 }}
-                              checked={allLocationChecked ? allLocationChecked : selected}
+                      {authCtx?.user?.role === 'Admin' && authCtx?.paymentMethod && (
+                        <Autocomplete
+                          sx={{
+                            '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline':
+                              {
+                                borderWidth: 0
+                              },
+                            '& .MuiOutlinedInput-root .MuiAutocomplete-endAdornment': {
+                              right: '22px'
+                            },
+                            '& fieldset': { borderRadius: 10, borderWidth: 0 }
+                          }}
+                          className="header-location-select"
+                          multiple
+                          limitTags={1}
+                          id="tags-standard"
+                          options={locations?.length !== 0 ? locations : []}
+                          onChange={(_, value, reason, option) => {
+                            handleSetLocations(_, value, reason, option);
+                          }}
+                          value={selectedLocation ? selectedLocation : []}
+                          getOptionLabel={(option) => option}
+                          renderTags={(value, getTagProps) =>
+                            value?.map((option, index) => (
+                              <Chip key={index} label={option} {...getTagProps({ index })} />
+                            ))
+                          }
+                          renderOption={(props, option, { selected }) => (
+                            <li {...props}>
+                              <Checkbox
+                                icon={icon}
+                                checkedIcon={checkedIcon}
+                                style={{ marginRight: 8 }}
+                                checked={allLocationChecked ? allLocationChecked : selected}
+                              />
+                              {option}
+                            </li>
+                          )}
+                          renderInput={(params) => (
+                            <TextField
+                              {...params}
+                              InputProps={{
+                                ...params.InputProps,
+                                startAdornment: (
+                                  <>
+                                    <InputAdornment position="start" sx={{ marginLeft: '22px' }}>
+                                      <img src={buildingIcon} />
+                                    </InputAdornment>
+                                    {params.InputProps.startAdornment}
+                                  </>
+                                ),
+                                endAdornment: (
+                                  <React.Fragment>
+                                    {dropdownLoading ? (
+                                      <CircularProgress color="inherit" size={20} />
+                                    ) : null}
+                                    {params.InputProps.endAdornment}
+                                  </React.Fragment>
+                                )
+                              }}
                             />
-                            {option}
-                          </li>
-                        )}
-                        renderInput={(params) => (
-                          <TextField
-                            {...params}
-                            InputProps={{
-                              ...params.InputProps,
-                              startAdornment: (
-                                <>
-                                  <InputAdornment position="start" sx={{ marginLeft: '22px' }}>
-                                    <img src={buildingIcon} />
-                                  </InputAdornment>
-                                  {params.InputProps.startAdornment}
-                                </>
-                              ),
-                              endAdornment: (
-                                <React.Fragment>
-                                  {dropdownLoading ? (
-                                    <CircularProgress color="inherit" size={20} />
-                                  ) : null}
-                                  {params.InputProps.endAdornment}
-                                </React.Fragment>
-                              )
-                            }}
-                          />
-                        )}
-                      />
+                          )}
+                        />
+                      )}
                       <Box className="header-right">
                         <AccountMenu openLogoutDialog={setIsLogoutDialogOpen} />
                       </Box>
