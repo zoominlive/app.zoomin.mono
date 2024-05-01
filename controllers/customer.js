@@ -200,6 +200,7 @@ module.exports = {
       );
       
       if (addCustomer && addUser && addLocations) {
+        console.log('check', addCustomer && addUser && addLocations);
         await res.status(201).json({
           IsSuccess: true,
           Data: { ..._.omit(addCustomer, ["cust_id"]), ...addLocations },
