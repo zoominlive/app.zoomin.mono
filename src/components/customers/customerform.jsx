@@ -486,29 +486,6 @@ const CustomerForm = (props) => {
               </LocalizationProvider>
             </Grid>
             <Grid item md={4} xs={12}>
-              <LocalizationProvider dateAdapter={AdapterMoment}>
-                <InputLabel id="recurring-charge-day">Recurring Charge Day</InputLabel>
-                <DesktopDatePicker
-                  open={isDatePickerOpen}
-                  maxDate={moment()}
-                  labelId="recurring-charge-day"
-                  autoOk={true}
-                  value={values?.recurring_charge_day}
-                  inputFormat="MM/DD/YY"
-                  onClose={() => setIsDatePickerOpen(false)}
-                  renderInput={(params) => (
-                    <TextField onClick={() => setIsDatePickerOpen(true)} {...params} />
-                  )}
-                  components={{
-                    OpenPickerIcon: !isDatePickerOpen ? ArrowDropDownIcon : ArrowDropUpIcon
-                  }}
-                  onChange={(value) => {
-                    setRecurringChargeDate(value);
-                  }}
-                />
-              </LocalizationProvider>
-            </Grid>
-            <Grid item md={4} xs={12}>
               <InputLabel id="max_locations">Number of Locations</InputLabel>
               <TextField
                 labelId="max_locations"
