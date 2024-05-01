@@ -198,7 +198,7 @@ module.exports = {
         locations,
         t
       );
-      console.log('test');
+
       if (addCustomer && addUser && addLocations) {
         await res.status(201).json({
           IsSuccess: true,
