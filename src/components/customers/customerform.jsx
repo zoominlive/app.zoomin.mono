@@ -74,7 +74,10 @@ const CustomerForm = (props) => {
       address_1: yup.string('Enter address').required('Address is required'),
       address_2: yup.string('Enter address'),
       city: yup.string('Enter city').required('City is required'),
-      country: yup.string('Enter country').required('Country is required'),
+      country: yup
+        .string('Enter country')
+        .matches(/^[A-Z]{2}$/, 'Country code must be a two-letter code in CAPS')
+        .required('Country is required'),
       postal: yup.string('Enter postal').required('Postal is required'),
       max_cameras: yup.number('Enter maximum cameras').required('Maximum cameras is required'),
       // available_cameras: yup
