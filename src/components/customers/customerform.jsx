@@ -21,9 +21,9 @@ import {
   Chip,
   Autocomplete,
   InputLabel,
-  Select,
-  MenuItem,
-  FormHelperText,
+  // Select,
+  // MenuItem,
+  // FormHelperText,
   IconButton,
   DialogContentText,
   Typography
@@ -449,7 +449,7 @@ const CustomerForm = (props) => {
                 name={'trial_period_days'}
                 type="number"
                 value={values?.trial_period_days}
-                InputProps={{ inputProps: { min: 0, max: 30, step: 1 } }}
+                // InputProps={{ inputProps: { min: 0, max: 30, step: 1 } }}
                 onChange={(event) => {
                   setFieldValue('trial_period_days', event.target.value);
                   setFieldValue(
@@ -465,6 +465,7 @@ const CustomerForm = (props) => {
                 <InputLabel id="recurring-charge-day">Next Charge Day</InputLabel>
                 <DesktopDatePicker
                   disabled
+                  disableOpenPicker
                   open={isDatePickerOpen}
                   maxDate={moment()}
                   labelId="recurring-charge-day"
@@ -753,7 +754,19 @@ const CustomerForm = (props) => {
             </Grid>
             <Grid item md={6} xs={12}>
               <InputLabel id="user-role">Role</InputLabel>
-              <FormControl fullWidth error={touched.role && Boolean(errors.role)}>
+              <TextField
+                labelId="role"
+                disabled
+                name="role"
+                value={values?.role}
+                onChange={(event) => {
+                  setFieldValue('role', event.target.value);
+                }}
+                helperText={touched.role && errors.role}
+                error={touched.role && Boolean(errors.role)}
+                fullWidth
+              />
+              {/* <FormControl fullWidth error={touched.role && Boolean(errors.role)}>
                 <Select
                   labelId="user-role"
                   id="user-role"
@@ -764,8 +777,8 @@ const CustomerForm = (props) => {
                     setFieldValue('role', event.target.value);
                     // setSelectedRole(event.target.value);
                   }}>
-                  {/* <MenuItem value={'Teacher'}>Teacher</MenuItem>
-                  <MenuItem value={'User'}>User</MenuItem> */}
+                  <MenuItem value={'Teacher'}>Teacher</MenuItem>
+                  <MenuItem value={'User'}>User</MenuItem>
                   <MenuItem value={'Admin'}>Admin</MenuItem>
                 </Select>
                 {touched.role && Boolean(errors.role) && (
@@ -773,7 +786,7 @@ const CustomerForm = (props) => {
                     {touched.role && errors.role}
                   </FormHelperText>
                 )}
-              </FormControl>
+              </FormControl> */}
             </Grid>
             <Grid item xs={12} md={values.role === 'Teacher' ? 6 : 12}>
               <InputLabel id="location">Location</InputLabel>
@@ -994,7 +1007,7 @@ const CustomerForm = (props) => {
             first_name: props?.customer?.users[0]?.first_name || '',
             last_name: props?.customer?.users[0]?.last_name || '',
             email: props?.customer?.users[0]?.email || '',
-            role: props?.customer?.users[0]?.role || '',
+            role: props?.customer?.users[0]?.role || 'Admin',
             location: props?.customer?.users[0]?.location?.selected_locations
               ? props?.customer?.users[0]?.location?.selected_locations?.sort((a, b) =>
                   a > b ? 1 : -1
