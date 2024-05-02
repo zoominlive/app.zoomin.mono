@@ -319,7 +319,7 @@ module.exports = {
     if(!location.includes("Select All")){
       let filterResult = []
       children.map(i => {
-          if(i.location?.locations.every(it => location.includes(it))){
+          if(i.location?.locations?.every(it => location.includes(it))){
             filterResult.push(i)
           }
       })
