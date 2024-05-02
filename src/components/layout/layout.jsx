@@ -697,7 +697,8 @@ const Layout = () => {
                       <Badge disableRipple badgeContent={unreadCount} color="error">
                         <NotificationsIcon ref={notificationRef} fontSize="large" />
                       </Badge>
-                      {authCtx?.user?.role === 'Admin' && authCtx?.paymentMethod && (
+                      {((authCtx?.user?.role === 'Admin' && authCtx?.paymentMethod) ||
+                        authCtx?.user?.role === 'Super Admin') && (
                         <Autocomplete
                           sx={{
                             '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline':
