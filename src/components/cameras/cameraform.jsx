@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import {
   Autocomplete,
+  Box,
   Button,
   // Button,
   Chip,
@@ -16,7 +17,9 @@ import {
   IconButton,
   InputLabel,
   Stack,
-  TextField
+  TextField,
+  Tooltip,
+  Typography
 } from '@mui/material';
 import { Form, Formik } from 'formik';
 import * as yup from 'yup';
@@ -28,6 +31,10 @@ import { errorMessageHandler } from '../../utils/errormessagehandler';
 import { useContext } from 'react';
 import AuthContext from '../../context/authcontext';
 import CloseIcon from '@mui/icons-material/Close';
+import DeleteIcon from '@mui/icons-material/Delete';
+import { useDropzone } from 'react-dropzone';
+import { toBase64 } from '../../utils/base64converter';
+import noimg from '../../assets/ic_no_image.png';
 
 const validationSchema = yup.object({
   cam_name: yup.string('Enter camera name').required('Camera name is required'),
@@ -46,12 +53,27 @@ const CameraForm = (props) => {
   const { enqueueSnackbar } = useSnackbar();
   const [submitLoading, setSubmitLoading] = useState(false);
   const [isCloseDialog, setIsCloseDialog] = useState(false);
+  const [base64Image, setBase64Image] = useState();
+  const [image, setImage] = useState();
+  const [S3Uri, setS3Uri] = useState();
   const authCtx = useContext(AuthContext);
+
+  useEffect(() => {
+    if (props.camera !== undefined) {
+      setImage(
+        props.camera && props.camera.thumbnailPresignedUrl
+          ? props.camera.thumbnailPresignedUrl
+          : props.camera.thumbnail
+      );
+    }
+  }, []);
 
   // Method to update the user profile
   const handleSubmit = (data) => {
     const payload = {
       cam_id: props?.camera?.cam_id,
+      thumbnail: !props.camera ? base64Image : image ? (base64Image ? base64Image : image) : null,
+      s3Uri: S3Uri,
       ...data
     };
     delete payload.locations;
@@ -104,6 +126,69 @@ const CameraForm = (props) => {
       props.setCamera();
     }
   };
+
+  // Method to remove profile photo
+  const handlePhotoDelete = () => {
+    setBase64Image();
+    setImage();
+  };
+
+  // Method to generate thumbnail
+  const handleGenerateThumbnail = () => {
+    console.log('reached', props.camera);
+    setSubmitLoading(true);
+    API.get('cams/generate-thumbnail', {
+      // 221
+      // '/stream/fb05fb2c-41a8-4c87-a464-489b79ef915a/index.m3u8'
+      params: {
+        sid: props.camera?.cam_id,
+        stream_uri: props.camera?.stream_uri
+      }
+    }).then((response) => {
+      if (response.status === 200) {
+        console.log('success', response.data.Data.thumbnailUrl);
+        setImage(response.data.Data.thumbnailUrl);
+        setS3Uri(response.data.Data.s3Uri);
+        enqueueSnackbar('Thumbnail generated', { variant: 'success' });
+      } else {
+        errorMessageHandler(
+          enqueueSnackbar,
+          response?.response?.data?.Message || 'Something Went Wrong.',
+          response?.response?.status,
+          authCtx.setAuthError
+        );
+      }
+      setSubmitLoading(false);
+    });
+  };
+
+  // Method to get image from input and upload it to BE
+  async function handleImageUpload(acceptedFiles) {
+    setImage(URL.createObjectURL(acceptedFiles[0]));
+    const bas64Image = await toBase64(acceptedFiles[0]);
+    setBase64Image(bas64Image.split(',')[1]);
+  }
+
+  const { getRootProps, getInputProps } = useDropzone({
+    maxFiles: 1,
+    accept: {
+      'image/png': ['.png'],
+      'image/jpeg': ['.jpeg'],
+      'image/jpg': ['.jpg']
+    },
+    onDropAccepted: handleImageUpload,
+    onDropRejected: (fileRejections) => {
+      if (fileRejections.length > 1) {
+        enqueueSnackbar('Only one file is allowed to be uploaded', {
+          variant: 'error'
+        });
+      } else {
+        enqueueSnackbar('Only image file is allowed to be uploaded', {
+          variant: 'error'
+        });
+      }
+    }
+  });
 
   const handleClose = () => setIsCloseDialog(!isCloseDialog);
   return (
@@ -178,6 +263,55 @@ const CameraForm = (props) => {
             return (
               <Form>
                 <DialogContent>
+                  <Stack
+                    display={props.camera == undefined && 'none'}
+                    spacing={3}
+                    mb={3}
+                    mt={2}
+                    direction="row"
+                    alignItems="center">
+                    <Box
+                      component="img"
+                      sx={{
+                        height: 133,
+                        width: 250,
+                        maxHeight: { xs: 233, md: 167 },
+                        maxWidth: { xs: 350, md: 250 }
+                      }}
+                      alt="Thumbnail"
+                      src={image ? image : noimg}
+                    />
+                    <LoadingButton
+                      disabled={submitLoading}
+                      variant="contained"
+                      color="primary"
+                      component="span"
+                      {...getRootProps({ className: 'dropzone' })}>
+                      Upload
+                      <input {...getInputProps()} />
+                    </LoadingButton>
+                    <Typography>or</Typography>
+                    <LoadingButton
+                      disabled={submitLoading}
+                      variant="contained"
+                      color="primary"
+                      onClick={handleGenerateThumbnail}
+                      component="span">
+                      Generate
+                    </LoadingButton>
+                    {image && (
+                      <Tooltip title="Remove photo">
+                        <LoadingButton
+                          variant="outlined"
+                          disabled={submitLoading}
+                          className="image-delete-btn"
+                          aria-label="delete"
+                          onClick={handlePhotoDelete}>
+                          <DeleteIcon />
+                        </LoadingButton>
+                      </Tooltip>
+                    )}
+                  </Stack>
                   <Grid container spacing={2}>
                     <Grid item md={6} xs={12}>
                       <InputLabel id="cam_name">Camera Name</InputLabel>
@@ -218,7 +352,7 @@ const CameraForm = (props) => {
                       />
                     </Grid>
                     <Grid item md={6} xs={12} display={props.camera && 'none'}>
-                      <InputLabel id="description">description</InputLabel>
+                      <InputLabel id="description">Description</InputLabel>
                       <TextField
                         labelId="description"
                         name="description"

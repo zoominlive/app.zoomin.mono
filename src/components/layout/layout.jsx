@@ -20,7 +20,8 @@ import {
   CircularProgress,
   //InputLabel,
   Grid,
-  Divider
+  Divider,
+  Badge
 } from '@mui/material';
 
 import logo from '../../assets/app-capital.svg';
@@ -60,6 +61,7 @@ import searchIcon from '../../assets/search.svg';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import debounce from 'lodash.debounce';
+import NotificationsIcon from '@mui/icons-material/Notifications';
 
 const icon = <RadioButtonUncheckedIcon fontSize="small" />;
 const checkedIcon = <CheckCircleOutlineIcon fontSize="small" style={{ color: '#5A53DD' }} />;
@@ -81,8 +83,10 @@ const Layout = () => {
   const [childrenResults, setChildrenResults] = useState([]);
   const [usersResults, setUsersResults] = useState([]);
   const [showSearchResults, setShowSearchResults] = useState();
+  const [unreadCount, setUnreadCount] = useState(0);
   const resultsListRef = useRef(null);
   const stripe_cust_id = authCtx.user.stripe_cust_id;
+  const notificationRef = useRef(null);
 
   const locs = ['Select All'];
   //authCtx?.user?.location?.accessable_locations.forEach((loc) => locs.push(loc));
@@ -149,6 +153,26 @@ const Layout = () => {
       window.removeEventListener('resize', handleDrawerToggleOnResize);
     };
   }, []);
+
+  useEffect(() => {
+    window.productFruitsReady = function () {
+      // When your custom element is rendered in your application.
+      // If you use React, get a "ref" is the launcher element
+      const customLauncher = notificationRef?.current;
+      // If you want to render a badge with number of unread items...
+      //
+      // If you want to get the initial number of unread items,
+      // attach this event BEFORE the attachNewsWidgetToElement method call.
+      window.productFruits?.api?.announcementsV2.listen('newsfeed-unread-count-changed', (data) => {
+        const unreadCount = data.count;
+        setUnreadCount(unreadCount);
+        // Render the count in your UI. We don't render badges automatically, it is up to you.
+      });
+      // Later, when the PF JS API is available, call the following API method and pass the element instance.
+      window.productFruits?.api?.announcementsV2.attachNewsWidgetToElement(customLauncher);
+      console.log('Product Fruits is ready!');
+    };
+  });
 
   const newHandleChange = debounce((e) => {
     const searchValue = e.target.value;
@@ -563,7 +587,7 @@ const Layout = () => {
                     </Stack>
                   </Stack>
                   {location.pathname == '/dashboard' ? (
-                    <>
+                    <Stack direction={'row'} alignItems={'center'} justifyContent={'space-between'}>
                       <TextField
                         variant="standard"
                         labelId="search"
@@ -572,7 +596,7 @@ const Layout = () => {
                           backgroundColor: '#FFFFFF',
                           borderRadius: '120px',
                           padding: '16px 24px',
-                          width: '70%'
+                          width: '95%'
                         }}
                         onChange={(e) => newHandleChange(e)}
                         InputProps={{
@@ -659,7 +683,7 @@ const Layout = () => {
                           })}
                         </Box>
                       )}
-                    </>
+                    </Stack>
                   ) : null}
                 </Grid>
 
@@ -670,6 +694,9 @@ const Layout = () => {
                       justifyContent={'end'}
                       alignItems={'center'}
                       spacing={3}>
+                      <Badge disableRipple badgeContent={unreadCount} color="error">
+                        <NotificationsIcon ref={notificationRef} fontSize="large" />
+                      </Badge>
                       {authCtx?.user?.role === 'Admin' && authCtx?.paymentMethod && (
                         <Autocomplete
                           sx={{

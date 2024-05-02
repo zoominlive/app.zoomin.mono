@@ -8190,6 +8190,11 @@ process-nextick-args@~2.0.0:
   resolved "https://registry.npmjs.org/process-nextick-args/-/process-nextick-args-2.0.1.tgz"
   integrity sha512-3ouUOpQhtgrbOa17J7+uxOTpITYWaGP7/AhoR3+A+/1e9skrzelGi/dXzEYyvbxubEF6Wn2ypscTKiKJFFn1ag==
 
+product-fruits@^1.0.25:
+  version "1.0.25"
+  resolved "https://registry.npmjs.org/product-fruits/-/product-fruits-1.0.25.tgz"
+  integrity sha512-w//YC14ZBv3AJ9Ki/XEYPPltodXGJYLue/Wkv/E0Q6BnB/mZ4UvFZMcVYqTCMKUJWdsaeqwO840JC0BGaG3g1w==
+
 promise@^8.1.0:
   version "8.2.0"
   resolved "https://registry.npmjs.org/promise/-/promise-8.2.0.tgz"
@@ -8441,6 +8446,13 @@ react-player@^2.11.0:
     prop-types "^15.7.2"
     react-fast-compare "^3.0.1"
 
+react-product-fruits@^2.2.6:
+  version "2.2.6"
+  resolved "https://registry.npmjs.org/react-product-fruits/-/react-product-fruits-2.2.6.tgz"
+  integrity sha512-f57m1rCD+Cu8QfFQSpkHJjLaWauPbD01GNrbh4icQaOHA/6bHJGpcoSSEQfAtk3g2PyQBpsDdRvL9jC+hyxhhQ==
+  dependencies:
+    product-fruits "^1.0.25"
+
 react-refresh@^0.11.0, "react-refresh@>=0.10.0 <1.0.0":
   version "0.11.0"
   resolved "https://registry.npmjs.org/react-refresh/-/react-refresh-0.11.0.tgz"
@@ -8526,7 +8538,7 @@ react-transition-group@^4.4.5:
     loose-envify "^1.4.0"
     prop-types "^15.6.2"
 
-"react@^0.14 || ^15.0.0 || ^16.0.0 || ^17.0.0 || ^18.0.0 || ^18.0.0", "react@^16.0.0 || ^17.0.0 || ^18.0.0", "react@^16.8.0 || ^17.0.0 || ^18.0.0", "react@^17.0.0 || ^18.0.0", "react@^17.0.2 || ^18.0.0", react@^18.0.0, react@^18.2.0, "react@>= 16", "react@>= 16.8 || 18.0.0", "react@>= 16.8.0", react@>=16, react@>=16.13, react@>=16.6.0, react@>=16.8, react@>=16.8.0, react@>=16.8.6, react@>=16.x.x:
+"react@^0.14 || ^15.0.0 || ^16.0.0 || ^17.0.0 || ^18.0.0 || ^18.0.0", "react@^16.0.0 || ^17.0.0 || ^18.0.0", "react@^16.8.0 || ^17.0.0 || ^18.0.0", "react@^17.0.0 || ^18.0.0", "react@^17.0.2 || ^18.0.0", react@^18.0.0, react@^18.2.0, "react@>= 16", "react@>= 16.8 || 18.0.0", "react@>= 16.8.0", "react@>= 17.0.0", react@>=16, react@>=16.13, react@>=16.6.0, react@>=16.8, react@>=16.8.0, react@>=16.8.6, react@>=16.x.x:
   version "18.2.0"
   resolved "https://registry.npmjs.org/react/-/react-18.2.0.tgz"
   integrity sha512-/3IjMdb2L9QbBdWiW5e3P2/npwMBaU9mHCSCUzNln0ZCYbcfTsGbTJrU/kGemdH2IWmB2ioZ+zkxtmq6g09fGQ==

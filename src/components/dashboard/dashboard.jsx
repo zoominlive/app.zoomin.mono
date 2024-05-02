@@ -61,8 +61,8 @@ const AccessColumns = [
   // { label: 'Status', width: '25%' }
 ];
 const topViewersColumns = [
-  { label: 'Viewers', width: '50%' },
-  { label: 'Views', width: '45%' }
+  { label: 'Viewers', width: '50%' }
+  // { label: 'Views', width: '45%' }
 ];
 const lastHourViewersColumns = [
   { label: 'Viewers', width: '25%' },
@@ -442,7 +442,6 @@ const Dashboard = () => {
     <>
       <Box className="dashboard">
         <LinerLoader loading={isLoading} />
-
         <Grid container spacing={3} mt={2} alignItems={'stretch'}>
           <Grid item md={12} sm={12} xs={12} lg={7} style={{ paddingTop: 0 }}>
             <Card sx={{ borderRadius: 5, background: '#5A53DD', height: '100%' }}>
@@ -643,7 +642,7 @@ const Dashboard = () => {
                       ? statisticsData?.activeLiveStreams
                       : []
                   }
-                  title={'Live Streams'}
+                  title={'Mobile Live Streams'}
                   isLoading={isLoading}
                 />
 

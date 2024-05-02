@@ -15,6 +15,7 @@ import AppRoutes from './routes';
 import { getBuildDate } from './utils/utils';
 import packageJson from '../package.json';
 import withClearCache from './ClearCache';
+import { PF } from './components/pf/pf';
 
 const MainApp = () => {
   const authCtx = useContext(AuthContext);
@@ -88,19 +89,22 @@ const MainApp = () => {
   //   }
   // }, [authCtx.token]);
   return (
-    <Routes>
-      <Route element={<PublicRoute />}>
-        <Route path="/login" element={<Login />} />
-        <Route path="/forget-password" element={<ForgotPassword />} />
-      </Route>
-      <Route path="/set-password" element={<SetPassword />} />
-      <Route path="/email-change" element={<EmailChange />} />
-      <Route element={<ProtectedRoute />}>
-        <Route element={<Layout />}>
-          <Route path="/*" element={<AppRoutes />} />
+    <>
+      <PF />
+      <Routes>
+        <Route element={<PublicRoute />}>
+          <Route path="/login" element={<Login />} />
+          <Route path="/forget-password" element={<ForgotPassword />} />
         </Route>
-      </Route>
-    </Routes>
+        <Route path="/set-password" element={<SetPassword />} />
+        <Route path="/email-change" element={<EmailChange />} />
+        <Route element={<ProtectedRoute />}>
+          <Route element={<Layout />}>
+            <Route path="/*" element={<AppRoutes />} />
+          </Route>
+        </Route>
+      </Routes>
+    </>
   );
 };
 

@@ -214,7 +214,7 @@ export default function ViewersTable({ rows, columns, title, pagination, isLoadi
                           </Stack>
                         </Box>
                         <Box className="zl__td-block" style={{ width: '45%' }}>
-                          {row?.count}
+                          {/* {row?.count} */}
                         </Box>
                         <Box className="zl__td-block" style={{ width: '25%', textAlign: 'end' }}>
                           <KeyboardArrowRightIcon />
