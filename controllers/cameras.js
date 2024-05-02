@@ -5,6 +5,7 @@ const customerServices = require('../services/customers');
 const logServices = require('../services/logs');
 const userServices = require('../services/users');
 const socketServices = require('../services/socket');
+const s3BucketImageUploader = require('../lib/aws-services');
 const CONSTANTS = require('../lib/constants');
 const sequelize = require('../lib/database');
 module.exports = {
@@ -31,6 +32,10 @@ module.exports = {
         params.stream_uri = transcodedDetails?.data ? transcodedDetails.data?.uri : '';
         params.stream_uuid = transcodedDetails?.data ? transcodedDetails.data?.id : '';
         params.cam_alias = transcodedDetails?.data ? transcodedDetails.data?.alias : '';
+        if (params?.thumbnail) {
+          const imageUrl = await s3BucketImageUploader._upload(params.thumbnail);
+          params.thumbnail = imageUrl
+        }
         const camera = await cameraServices.createCamera(params, t);
 
         // const resetAvailableCameras = await customerServices.setAvailableCameras(
@@ -171,12 +176,17 @@ module.exports = {
     const t = await sequelize.transaction();
     try {
       const params = req.body;
-
+      if (params?.thumbnail && !params?.thumbnail.includes('https://zoominlive-cam-thumbs.s3.amazonaws.com')) {
+        const imageUrl = await s3BucketImageUploader._upload(params?.thumbnail);
+        params.thumbnail = imageUrl;
+      }
+      // const getPresignedUrl = await s3BucketImageUploader.getPresignedUrlForThumbnail(params?.s3Uri);
       const cameraUpdated = await cameraServices.editCamera(
         params.cam_id,
         {
           cam_id: params.cam_id,
-          cam_name: params.cam_name
+          cam_name: params.cam_name,
+          thumbnail: params?.s3Uri ? params?.s3Uri : params?.thumbnail 
         },
         t
       );
@@ -272,6 +282,31 @@ module.exports = {
     }
   },
 
+  // generate thumbnail
+  generateThumbnail: async (req, res) => {
+    try {
+      const filter = {
+        sid: req.query?.sid,
+        hlsStreamUri: req.query?.stream_uri,
+        userId: req.user?.user_id
+      };
+      const token = req.userToken;
+      const thumbailRes = await cameraServices.getThumbnailUrl(req.user?.cust_id, token, filter)
+      res.status(200).json({
+        IsSuccess: true,
+        Data: thumbailRes,
+        Message: 'Thumbnail details'
+      });
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({
+        IsSuccess: false,
+        error_log: error.response.data,
+        Message: CONSTANTS.INTERNAL_SERVER_ERROR
+      });
+    }
+  },
+
   // get all camera's
   getAllCameras: async (req, res, next) => {
     try {
@@ -283,7 +318,37 @@ module.exports = {
         cust_id: req.query?.cust_id
       };
       const cameras = await cameraServices.getAllCameraForCustomer(req.user.cust_id , req.user, filter);
-
+      const generatePresignedUrlForThumbnail = async (thumbnail) => {
+        // Check if the thumbnail contains an S3 URI
+        if (thumbnail && thumbnail.startsWith('s3://')) {
+            // Extract bucket name and object key from the S3 URI
+        
+            try {
+                // Generate the presigned URL
+                const presignedUrl = await s3BucketImageUploader.getPresignedUrlForThumbnail(thumbnail);
+                return presignedUrl;
+            } catch (error) {
+                console.error('Error generating presigned URL:', error);
+                return null;
+            }
+        } else {
+            return null; // Return null if the thumbnail does not contain an S3 URI
+        }
+      };
+      // Function to generate presigned URLs for thumbnails in the provided array
+      const generatePresignedUrlsForThumbnails = async (cameras) => {
+        const camerasWithPresignedUrls = await Promise.all(cameras.map(async (camera) => {
+            // Generate presigned URL for thumbnail if it contains an S3 URI
+            if (camera.thumbnail && camera.thumbnail.startsWith('s3://')) {
+              camera.thumbnailPresignedUrl = await generatePresignedUrlForThumbnail(camera.thumbnail);
+            }
+            return camera;
+        }));
+        return { cameras: camerasWithPresignedUrls };
+      };
+      let mappedCamValues = cameras.cams.map((item) => item.dataValues)
+      const camerasWithPresignedUrls = await generatePresignedUrlsForThumbnails(mappedCamValues);
+      cameras.cams = camerasWithPresignedUrls.cameras
       res.status(200).json({
         IsSuccess: true,
         Data: cameras,
