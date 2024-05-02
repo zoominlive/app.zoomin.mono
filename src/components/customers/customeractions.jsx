@@ -4,7 +4,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import PropTypes from 'prop-types';
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
-import { PieChart } from 'react-feather';
+import AccountBalanceRoundedIcon from '@mui/icons-material/AccountBalanceRounded';
 import { useNavigate } from 'react-router-dom';
 
 const CustomerActions = (props) => {
@@ -65,7 +65,7 @@ const CustomerActions = (props) => {
         </MenuItem>
         <MenuItem onClick={handleManageBilling}>
           <ListItemIcon>
-            <PieChart />
+            <AccountBalanceRoundedIcon />
           </ListItemIcon>
           <ListItemText>Manage Billing</ListItemText>
         </MenuItem>
