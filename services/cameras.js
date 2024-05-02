@@ -3,7 +3,8 @@ const connectToDatabase = require("../models/index");
 const Sequelize = require("sequelize");
 
 const sequelize = require("../lib/database");
-const { isArray } = require("lodash");
+const { v4: uuidv4 } = require('uuid');
+const axios = require('axios');
 
 module.exports = {
   /* Create new camera */
@@ -182,12 +183,37 @@ module.exports = {
     //   'SELECT recent_user_id, COUNT(DISTINCT sub.viewer_id) AS total_start_only_viewers FROM (SELECT viewer_id FROM mounted_camera_recent_viewers WHERE `function` = "start" AND cam_id IN (:camIds) GROUP BY viewer_id) AS sub WHERE NOT EXISTS (SELECT 1 FROM mounted_camera_recent_viewers WHERE `function` = "stop" AND viewer_id = sub.viewer_id)',
     //   { replacements: { camIds }, type: sequelize.QueryTypes.SELECT }
     // )
-    let result = await sequelize
-      .query(
-        'SELECT recent_user_id, COUNT(DISTINCT sub.viewer_id) AS total_start_only_viewers FROM (SELECT recent_user_id,viewer_id FROM mounted_camera_recent_viewers WHERE `function` = "start" AND cam_id IN (:camIds) GROUP BY recent_user_id) AS sub WHERE NOT EXISTS (SELECT 1 FROM mounted_camera_recent_viewers WHERE `function` = "stop" AND viewer_id = sub.viewer_id)',
-        { replacements: { camIds }, type: sequelize.QueryTypes.SELECT }
-      )
+    let result = await sequelize.query(
+      'SELECT recent_user_id, COUNT(DISTINCT sub.viewer_id) AS total_start_only_viewers FROM (SELECT recent_user_id,viewer_id FROM mounted_camera_recent_viewers WHERE `function` = "start" AND cam_id IN (:camIds) AND DATE(requested_at) = CURDATE() GROUP BY recent_user_id) AS sub WHERE NOT EXISTS (SELECT 1 FROM mounted_camera_recent_viewers WHERE `function` = "stop" AND viewer_id = sub.viewer_id AND DATE(requested_at) = CURDATE())',
+      { replacements: { camIds }, type: sequelize.QueryTypes.SELECT }
+    );
 
     return result[0].total_start_only_viewers;
   },
+
+  /* Get thumbnail url */
+  getThumbnailUrl: async (custId, token, filter) => {
+    let {
+      sid,
+      hlsStreamUri,
+      userId
+    } = filter;
+    const uuid = uuidv4();
+    const baseUrl = "https://wvgfhd64eh.execute-api.us-east-1.amazonaws.com/default/thumbnail"
+    const hlsUrl = encodeURIComponent(`https://thirdstreet.zoominlive.com${hlsStreamUri}?uid=${userId}&sid=${sid}&uuid=${uuid}`)
+    // const hlsUrl = 'https://thirdstreet.zoominlive.com/stream/fb05fb2c-41a8-4c87-a464-489b79ef915a/index.m3u8?uid=c6f01497-7470-40f7-bbbe-c1c37553158e&sid=211&uuid=2066df71-8e59-47a4-a8e3-8ef0f6b096c5'
+    const thumbRes = await axios.get(baseUrl, {
+      params: {
+        cid: custId,
+        hlsUrl: hlsUrl,
+        sid: sid,
+        uuid: uuid
+      },
+      headers: {
+        'Authorization': `Bearer ${token}`, 
+        'x-api-key': 'fyAErotfBna2ONZSTtGlb4tcaflUeLWR1YWf7jXu'
+      }
+    });
+    return thumbRes.data;
+  }
 };

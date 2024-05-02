@@ -3,6 +3,8 @@ const jwt = require('jsonwebtoken');
 const Sequelize = require('sequelize');
 const moment = require('moment');
 const sequelize = require("../lib/database");
+const axios = require('axios');
+const { uuidv4 } = require('@firebase/util');
 
 module.exports = {
   /* Create stream ID token */
@@ -92,6 +94,18 @@ module.exports = {
     let streamsArray = await LiveStreams.findAll(
       { 
         where: { room_id: room_id },
+      },
+      { transaction: t }
+    );
+    return streamsArray;
+  },
+
+  getActiveStreamObjByRoomId: async (room_id, t) => {
+    const { LiveStreams } = await connectToDatabase();
+    let streamsArray = await LiveStreams.findAll(
+      { 
+        where: { room_id: room_id, stream_running: true },
+        raw: true
       },
       { transaction: t }
     );
@@ -221,5 +235,65 @@ return result[0].total_start_only_viewers;
       { transaction: t }
     );
     return {data: recordedStreams.rows, count: recordedStreams.count};
+  },
+
+  /* Service for creating sendbird group channel */
+  createGroupChannel: async () => {
+    const SEND_BIRD_API_URL = `https://api-${process.env.SEND_BIRD_APPLICATION_ID}.sendbird.com/v3/group_channels`;
+
+    try {
+      // Define the data for creating the group channel
+      const requestData = {
+        name: `group-${uuidv4()}`,
+        is_public: true,
+        // is_super: true
+        // Add other properties as needed
+      };
+  
+      // Set the authorization header with your Sendbird API token
+      const config = {
+        headers: {
+          'Content-Type': 'application/json',
+          'Api-Token': process.env.SEND_BIRD_API_TOKEN,
+        },
+      };
+  
+      // Make a POST request to the Sendbird API endpoint
+      const response = await axios.post(SEND_BIRD_API_URL, requestData, config);
+  
+      // Log the response data
+      console.log('Group channel created:', response.data);
+  
+      return response.data;
+    } catch (error) {
+      // Handle errors
+      console.error('Error creating group channel:', error);
+      throw error;
+    }
+  },
+
+  /* Service for deleting sendbird group channel */
+  deleteGroupChannel: async (channel_url) => {
+    const SEND_BIRD_API_URL = `https://api-${process.env.SEND_BIRD_APPLICATION_ID}.sendbird.com/v3/group_channels/${channel_url}`;
+    try {
+      // Set the authorization header with your Sendbird API token
+      const config = {
+        headers: {
+          'Content-Type': 'application/json',
+          'Api-Token': process.env.SEND_BIRD_API_TOKEN,
+        },
+      };
+      // Make a DELETE request to the Sendbird API endpoint
+      const response = await axios.delete(SEND_BIRD_API_URL, config);
+  
+      // Log the response data
+      console.log('Group channel deleted:', response.data);
+  
+      return response.data;
+    } catch (error) {
+      // Handle errors
+      console.error('Error deleting group channel:', error);
+      throw error;
+    }
   }
 };

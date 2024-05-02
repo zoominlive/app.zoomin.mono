@@ -23,6 +23,12 @@ module.exports = {
     const { LiveStreamCameras } = await connectToDatabase();
     let livestreamcams = await LiveStreamCameras.findAll({where: {room_id: roomId}, raw: true});
     return livestreamcams
+  },
+
+  getAllLivestreamCameras: async () => {
+    const { LiveStreamCameras } = await connectToDatabase();
+    let livestreamcams = await LiveStreamCameras.findAll({limit: 1, order: [ [ 'createdAt', 'DESC' ]], raw: true});
+    return livestreamcams
   }
 
 };

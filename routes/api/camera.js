@@ -12,5 +12,6 @@ router.post('/add', authController, cameraController.createCamera);
 router.put('/edit', authController, cameraController.editCamera);
 router.delete('/delete', authController, cameraController.deleteCamera);
 router.post('/fix-camera', authController, cameraController.fixCamera);
+router.get('/generate-thumbnail', authController, cameraController.generateThumbnail);
 
 module.exports = router;

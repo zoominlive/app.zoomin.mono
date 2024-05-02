@@ -9,6 +9,9 @@ const familyServices = require("../services/families");
 const cameraServices = require('../services/cameras');
 const socketServices = require('../services/socket');
 const sequelize = require("../lib/database");
+const MountedCameraRecentViewers = require("../models/mounted_camera_recent_viewers");
+const s3BucketImageUploader = require('../lib/aws-services');
+
 module.exports = {
   // encode stream and create new camera
   getAllCamForLocation: async (req, res, next) => {
@@ -143,23 +146,58 @@ module.exports = {
         ...req.user,
         cust_id: req.user.cust_id || req.query?.cust_id,
       });
+      const generatePresignedUrlForThumbnail = async (thumbnail) => {
+        // Check if the thumbnail contains an S3 URI
+        if (thumbnail && thumbnail.startsWith('s3://')) {
+            // Extract bucket name and object key from the S3 URI
+        
+            try {
+                // Generate the presigned URL
+                const presignedUrl = await s3BucketImageUploader.getPresignedUrlForThumbnail(thumbnail);
+                return presignedUrl;
+            } catch (error) {
+                console.error('Error generating presigned URL:', error);
+                return null;
+            }
+        } else {
+            return null; // Return null if the thumbnail does not contain an S3 URI
+        }
+    };
+      // Function to generate presigned URLs for thumbnails in the provided array
+      const generatePresignedUrlsForThumbnails = async (locations) => {
+        const locationsWithPresignedUrls = await Promise.all(locations.map(async (location) => {
+            const roomsWithPresignedUrls = await Promise.all(location.rooms.map(async (room) => {
+                const camerasWithPresignedUrls = await Promise.all(room.cameras.map(async (camera) => {
+                    // Generate presigned URL for thumbnail if it contains an S3 URI
+                    if (camera.thumbnail && camera.thumbnail.startsWith('s3://')) {
+                        camera.thumbnailPresignedUrl = await generatePresignedUrlForThumbnail(camera.thumbnail);
+                    }
+                    return camera;
+                }));
+                return { ...room, cameras: camerasWithPresignedUrls };
+            }));
+            return { ...location, rooms: roomsWithPresignedUrls };
+        }));
+        return locationsWithPresignedUrls;
+      };
+      const locationsWithPresignedUrls = await generatePresignedUrlsForThumbnails(camDetails);
 
       const customerDetails = await customerServices.getCustomerDetails(
         req.user.cust_id || req.query?.cust_id
       );
 
-      camDetails?.forEach((room, roomIndex) => {
-        camDetails[roomIndex].timeout = customerDetails.timeout;
-        camDetails[roomIndex].permit_audio = customerDetails.permit_audio;
+      locationsWithPresignedUrls?.forEach((room, roomIndex) => {
+        locationsWithPresignedUrls[roomIndex].timeout = customerDetails.timeout;
+        locationsWithPresignedUrls[roomIndex].permit_audio = customerDetails.permit_audio;
         room?.cameras?.forEach((cam, camIndex) => {
-          camDetails[roomIndex].cameras[camIndex].permit_audio =
+          locationsWithPresignedUrls[roomIndex].cameras[camIndex].permit_audio =
             customerDetails.permit_audio;
         });
       });
-      response = camDetails;
+      response = locationsWithPresignedUrls;
       res.status(200).json({
         IsSuccess: true,
-        Data: camDetails,
+        Data: locationsWithPresignedUrls,
         Message: CONSTANTS.CAMERA_DETAILS,
       });
 
@@ -219,6 +257,16 @@ module.exports = {
     const t = await sequelize.transaction();
     try {
       const params = req.body;
+      // Check if a record with the same viewer ID and function already exists
+      const existingRecord = await MountedCameraRecentViewers.findOne({
+        where: {
+          viewer_id: params.viewer_id, 
+          function: params.function // Assuming function is the field representing the function (start or stop)
+        }
+      });
+      if (existingRecord) {
+        throw new Error('A record already exists for the given stream ID and function.');
+      }
       const recentViewer = await watchStreamServices.reportViewers(params);
       let user_family_obj = await userServices.getUserById(
         params?.recent_user_id

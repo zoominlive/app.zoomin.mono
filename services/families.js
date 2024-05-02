@@ -646,6 +646,7 @@ module.exports = {
     const { Family } = await connectToDatabase();
     let familyIds = await Family.findAll(
       {
+        // logging: console.log,
         where: { cust_id: custId },
         attributes: [ [Sequelize.fn('DISTINCT', Sequelize.col('family_id')) ,'family_id'], "location"],
         group: ["family_id"],
