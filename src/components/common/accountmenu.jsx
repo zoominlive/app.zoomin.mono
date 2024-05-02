@@ -21,7 +21,7 @@ import PropTypes from 'prop-types';
 import AuthContext from '../../context/authcontext';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
-import { PieChart } from 'react-feather';
+import AccountBalanceRoundedIcon from '@mui/icons-material/AccountBalanceRounded';
 
 const AccountMenu = (props) => {
   const navigate = useNavigate();
@@ -123,7 +123,7 @@ const AccountMenu = (props) => {
                   handleClose(event);
                 }}>
                 <ListItemIcon>
-                  <PieChart />
+                  <AccountBalanceRoundedIcon />
                 </ListItemIcon>
                 <ListItemText sx={{ ml: 2 }}>Billing</ListItemText>
               </MenuItem>
@@ -142,6 +142,18 @@ const AccountMenu = (props) => {
           </MenuItem>
           <Divider />
           <MenuItem
+            onClick={(event) => {
+              props.openLogoutDialog(true);
+              handleClose(event);
+            }}>
+            <ListItemIcon>
+              <ExitToAppIcon style={{ fill: '#5A53DD' }} />
+            </ListItemIcon>
+            <ListItemText sx={{ ml: 2 }} className="logout-text">
+              Logout
+            </ListItemText>
+          </MenuItem>
+          {/* <MenuItem
             sx={{ padding: 1.4 }}
             onClick={(event) => {
               props.openLogoutDialog(true);
@@ -151,7 +163,7 @@ const AccountMenu = (props) => {
               <ExitToAppIcon style={{ fill: '#5A53DD' }} />
             </ListItemIcon>
             <ListItemText className="logout-text">Logout</ListItemText>
-          </MenuItem>
+          </MenuItem> */}
         </MenuList>
       </Menu>
     </>
