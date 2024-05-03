@@ -61,10 +61,8 @@ const AppRoutes = () => {
           element={
             authCtx.user && (authCtx.user.role === 'Family' || authCtx.user.role === 'Teacher') ? (
               <Navigate to={'watch-stream'} />
-            ) : authCtx.paymentMethod ? (
-              <Navigate to={'dashboard'} />
             ) : (
-              <Navigate to={'terms-and-conditions'} />
+              authCtx.paymentMethod && <Navigate to={'dashboard'} />
             )
           }
         />
