@@ -2980,7 +2980,7 @@
 }
 
 .results-list {
-  width: 42%;
+  width: 70%;
   background-color: white;
   display: flex;
   flex-direction: column;
@@ -2990,6 +2990,7 @@
   max-height: 300px;
   overflow-y: auto;
   position: absolute;
+  top: 100%;
   z-index: 1;
 }
 

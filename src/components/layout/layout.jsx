@@ -590,7 +590,11 @@ const Layout = () => {
                     </Stack>
                   </Stack>
                   {location.pathname == '/dashboard' ? (
-                    <Stack direction={'row'} alignItems={'center'} justifyContent={'space-between'}>
+                    <Stack
+                      direction={'row'}
+                      alignItems={'center'}
+                      justifyContent={'space-between'}
+                      position={'relative'}>
                       <TextField
                         variant="standard"
                         labelId="search"
