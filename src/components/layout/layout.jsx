@@ -231,7 +231,9 @@ const Layout = () => {
         console.log('response.data.data.data', response.data.data.data);
         if (response.data.data.data.length !== 0) {
           authCtx.setPaymentMethod(true);
-          navigate('dashboard');
+          if (window.location.pathname === '/dashboard') {
+            navigate('dashboard');
+          }
         } else {
           navigate('terms-and-conditions');
         }
