@@ -370,6 +370,7 @@ module.exports = {
                     cam_name: cam?.camera?.cam_name,
                     thumbnail: cam?.camera?.thumbnail,
                     description: cam?.camera?.description,
+                    sendbird_channel_url: '',
                     stream_uri: `${cam?.camera?.stream_uri}?uid=${user?.family_member_id || user?.user_id}&sid=${cam?.camera?.cam_id}&uuid=${uuidv4()}`,
                   };
                 })
@@ -402,6 +403,7 @@ module.exports = {
                   cam_name: cam?.camera?.cam_name,
                   thumbnail: cam?.camera?.thumbnail,
                   description: cam?.camera?.description,
+                  sendbird_channel_url: '',
                   stream_uri: `${cam?.camera?.stream_uri}?uid=${user?.family_member_id || user?.user_id}&sid=${cam?.camera?.cam_id}&uuid=${uuidv4()}`,
                 };
               })
@@ -470,6 +472,7 @@ module.exports = {
                   cam_name: cam?.camera?.cam_name,
                   thumbnail: cam?.camera?.thumbnail,
                   description: cam?.camera?.description,
+                  sendbird_channel_url: '',
                   stream_uri: `${cam?.camera?.stream_uri}?uid=${user?.family_member_id || user?.user_id}&sid=${cam?.camera?.cam_id}&uuid=${uuidv4()}`,
                 };
               })
@@ -561,6 +564,7 @@ module.exports = {
                   cam_name: cam?.camera?.cam_name,
                   thumbnail: cam?.camera?.thumbnail,
                   description: cam?.camera?.description,
+                  sendbird_channel_url: '',
                   stream_uri: `${cam?.camera?.stream_uri}?uid=${user?.family_member_id || user?.user_id}&sid=${cam?.camera?.cam_id}&uuid=${uuidv4()}`
                   ,
                 };
@@ -620,6 +624,7 @@ module.exports = {
                   cam_name: cam?.camera?.cam_name,
                   thumbnail: cam?.camera?.thumbnail,
                   description: cam?.camera?.description,
+                  sendbird_channel_url: '',
                   stream_uri: `${cam?.camera?.stream_uri}?uid=${user?.family_member_id || user?.user_id}&sid=${cam?.camera?.cam_id}&uuid=${uuidv4()}`
                   ,
                 };
