@@ -170,7 +170,10 @@ module.exports = {
                 const camerasWithPresignedUrls = await Promise.all(room.cameras.map(async (camera) => {
                     // Generate presigned URL for thumbnail if it contains an S3 URI
                     if (camera.thumbnail && camera.thumbnail.startsWith('s3://')) {
-                        camera.thumbnailPresignedUrl = await generatePresignedUrlForThumbnail(camera.thumbnail);
+                      camera.thumbnailPresignedUrl = await generatePresignedUrlForThumbnail(camera.thumbnail);
+                    } else {
+                      camera.thumbnail = '',
+                      camera.thumbnailPresignedUrl = ''
                     }
                     return camera;
                 }));
