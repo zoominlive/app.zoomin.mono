@@ -14,7 +14,7 @@ const API = axios.create({
 export default API;
 // Axios Request interceptors
 API.interceptors.request.use((req) => {
-  const userToken = localStorage.getItem('token');
+  const userToken = localStorage.getItem('accessToken');
   if (userToken)
     req.headers = {
       Authorization: 'Bearer ' + userToken.replace(/^"|"$/g, '')

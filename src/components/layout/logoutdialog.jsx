@@ -11,12 +11,13 @@ import SaveIcon from '@mui/icons-material/Save';
 import React, { useContext } from 'react';
 import PropTypes from 'prop-types';
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+// import { useNavigate } from 'react-router-dom';
 import AuthContext from '../../context/authcontext';
 import CloseIcon from '@mui/icons-material/Close';
+import { ContextHolder } from '@frontegg/rest-api';
 
 const LogoutDialog = (props) => {
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
   const authCtx = useContext(AuthContext);
   const [isDeleteLoading, setIsDeleteLoading] = useState(false);
 
@@ -25,8 +26,13 @@ const LogoutDialog = (props) => {
       localStorage.clear();
       authCtx.setToken();
       authCtx.setPaymentMethod(false);
+      const baseUrl = ContextHolder.getContext().baseUrl;
+      console.log('baseUrl-->', baseUrl);
+      console.log('window.location', window.location);
+      // navigate(`${baseUrl}/oauth/logout?post_logout_redirect_uri=${window.location}`);
+      window.location.href = `${baseUrl}/oauth/logout?post_logout_redirect_uri=${'http://localhost:6006/oauth/callback'}`;
     }, 2000);
-    navigate('login');
+    // navigate('login');
   };
   return (
     <Dialog

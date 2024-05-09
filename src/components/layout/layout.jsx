@@ -85,7 +85,7 @@ const Layout = () => {
   const [showSearchResults, setShowSearchResults] = useState();
   const [unreadCount, setUnreadCount] = useState(0);
   const resultsListRef = useRef(null);
-  const stripe_cust_id = authCtx.user.stripe_cust_id;
+  const stripe_cust_id = authCtx.user?.stripe_cust_id;
   const notificationRef = useRef(null);
 
   const locs = ['Select All'];
@@ -521,7 +521,7 @@ const Layout = () => {
               {bottomMenuItems
                 .filter((i) => {
                   if (i.name == 'Customers') {
-                    return authCtx.user.role === 'Super Admin' ? true : false;
+                    return authCtx.user?.role === 'Super Admin' ? true : false;
                   } else {
                     return true;
                   }

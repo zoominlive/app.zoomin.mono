@@ -11,7 +11,16 @@ import { SnackbarProvider } from 'notistack';
 import SnackbarCloseButton from './components/common/snackbarclosrbutton';
 import * as serviceWorker from './serviceWorker';
 import { LicenseInfo } from '@mui/x-license-pro';
+import { FronteggProvider } from '@frontegg/react';
 
+const contextOptions = {
+  baseUrl: 'https://app-8jm96l285037.frontegg.com',
+  clientId: 'fe98b6ea-9844-41f9-bcd2-f7186d06a16a'
+};
+
+const authOptions = {
+  keepSessionAlive: true // Uncomment this in order to maintain the session alive
+};
 LicenseInfo.setLicenseKey(process.env.REACT_APP_MUI_LICENSE_KEY);
 
 ReactDOM.render(
@@ -26,8 +35,13 @@ ReactDOM.render(
             vertical: 'top',
             horizontal: 'right'
           }}>
-          {/* <React.StrictMode> */}
-          <App />
+          <FronteggProvider
+            contextOptions={contextOptions}
+            hostedLoginBox={true}
+            authOptions={authOptions}>
+            {/* <React.StrictMode> */}
+            <App />
+          </FronteggProvider>
           {/* </React.StrictMode> */}
         </SnackbarProvider>
       </BrowserRouter>

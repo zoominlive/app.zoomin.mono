@@ -14,6 +14,7 @@ import WatchStream from './components/watchstream/watchstream';
 import AuthContext from './context/authcontext';
 import Invoices from './components/billing/invoices';
 import PostLoginSteps from './components/dashboard/postloginsteps';
+import CustomerSelection from './components/auth/customerSelection';
 // import Alerts from './components/alerts/alerts';
 
 const AppRoutes = () => {
@@ -23,7 +24,10 @@ const AppRoutes = () => {
     <Routes>
       <>
         {authCtx.user && authCtx.user.role === 'Super Admin' && (
-          <Route path="/customers" element={<Customers />} />
+          <>
+            <Route path="/customers" element={<Customers />} />
+            <Route path="/customer-selection" element={<CustomerSelection />} />
+          </>
         )}
         {authCtx.user && (authCtx.user.role === 'Admin' || authCtx.user.role === 'Super Admin') && (
           <>
