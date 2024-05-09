@@ -10,6 +10,12 @@ var indexRouter = require('./routes/index');
 const sequelize = require('./lib/database');
 var bodyParser = require('body-parser');
 const cors = require('cors');
+const { FronteggContext } = require('@frontegg/client');
+
+FronteggContext.init({
+  FRONTEGG_CLIENT_ID: 'fe98b6ea-9844-41f9-bcd2-f7186d06a16a',
+  FRONTEGG_API_KEY: 'b60c4126-0c08-4c6c-a478-9508f49e0a87',
+});
 
 app.use(cors());
 // To create DB tables from models and sync DB

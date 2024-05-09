@@ -1,4 +1,5 @@
 const express = require('express');
+const { withAuthentication } = require('@frontegg/client');
 
 const router = express.Router();
 
@@ -7,7 +8,7 @@ const authController = require('../../middleware/auth');
 const dashboardController = require('../../controllers/dashboard');
 
 /* dashboard end points */
-router.get('/', authController, dashboardController.getStreamStatistics);
+router.get('/', withAuthentication(), authController, dashboardController.getStreamStatistics);
 router.post('/setPreference', authController, dashboardController.setCamPreference);
 
 module.exports = router;

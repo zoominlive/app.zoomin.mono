@@ -70,10 +70,10 @@ module.exports = {
   },
   /* Get  user's details */
   getUserDetails: async (req, res, next) => {
+    const t = await sequelize.transaction();
     try {
       const user = req.user;
       const custId = req.user.cust_id || req.query?.cust_id;
-      const t = await sequelize.transaction();
       if(!req.user.cust_id){
         console.log('calling===================')
         let availableLocations = await customerServices.getLocationDetails(custId)
