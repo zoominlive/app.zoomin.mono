@@ -14,8 +14,8 @@ import { LicenseInfo } from '@mui/x-license-pro';
 import { FronteggProvider } from '@frontegg/react';
 
 const contextOptions = {
-  baseUrl: 'https://app-8jm96l285037.frontegg.com',
-  clientId: 'fe98b6ea-9844-41f9-bcd2-f7186d06a16a'
+  baseUrl: process.env.REACT_APP_FRONTEGG_CREDENTIALS_BASE_URL_STAGE,
+  clientId: process.env.REACT_APP_FRONTEGG_CREDENTIALS_STAGE
 };
 
 const authOptions = {
