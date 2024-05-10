@@ -30,7 +30,7 @@ const LogoutDialog = (props) => {
       console.log('baseUrl-->', baseUrl);
       console.log('window.location', window.location);
       // navigate(`${baseUrl}/oauth/logout?post_logout_redirect_uri=${window.location}`);
-      window.location.href = `${baseUrl}/oauth/logout?post_logout_redirect_uri=${'https://staging.zoominlive.com/oauth/callback'}`;
+      window.location.href = `${baseUrl}/oauth/logout?post_logout_redirect_uri=${process.env.REACT_APP_LOGOUT_REDIRECT_URL_STAGE}`;
     }, 2000);
     // navigate('login');
   };
