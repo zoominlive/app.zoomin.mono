@@ -173,8 +173,8 @@ module.exports = {
           const vendor_token = await axios.post(
             "https://api.frontegg.com/auth/vendor/",
             {
-              clientId: "fe98b6ea-9844-41f9-bcd2-f7186d06a16a",
-              secret: "b60c4126-0c08-4c6c-a478-9508f49e0a87",
+              clientId: "abff20d3-c32c-43b9-ada5-7c56a9349a7b",
+              secret: "05200ba2-93e1-456c-baee-80a1e2614a92",
             },
           );
           console.log('vendor_token-->', vendor_token);
