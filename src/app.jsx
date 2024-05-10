@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { useSnackbar } from 'notistack';
 import * as React from 'react';
 import { useEffect } from 'react';
@@ -92,10 +93,10 @@ const MainApp = () => {
     <>
       <PF />
       <Routes>
-        <Route element={<PublicRoute />}>
+        {/* <Route element={<PublicRoute />}>
           <Route path="/login" element={<Login />} />
           <Route path="/forget-password" element={<ForgotPassword />} />
-        </Route>
+        </Route> */}
         <Route path="/set-password" element={<SetPassword />} />
         <Route path="/email-change" element={<EmailChange />} />
         <Route element={<ProtectedRoute />}>
