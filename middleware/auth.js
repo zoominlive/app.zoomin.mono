@@ -3,7 +3,7 @@ const connectToDatabase = require('../models/index');
 
 const CONSTANTS = require('../lib/constants');
 const { IdentityClient } = require('@frontegg/client');
-const identityClient = new IdentityClient({ FRONTEGG_CLIENT_ID: 'fe98b6ea-9844-41f9-bcd2-f7186d06a16a', FRONTEGG_API_KEY: 'b60c4126-0c08-4c6c-a478-9508f49e0a87' });
+const identityClient = new IdentityClient({ FRONTEGG_CLIENT_ID: 'abff20d3-c32c-43b9-ada5-7c56a9349a7b', FRONTEGG_API_KEY: '05200ba2-93e1-456c-baee-80a1e2614a92' });
 
 // authentication middleware to check auth and give access based on user type
 module.exports = async function (req, res, next) {
