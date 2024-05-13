@@ -3,13 +3,18 @@ app: zoomin
 service: zoomin
 frameworkVersion: "3"
 
+package:
+  patterns:
+    - "!node_modules/aws-sdk/**"
+    - "!node_modules/**/aws-sdk/**"
+
 provider:
   name: aws
   deploymentMethod: direct
   runtime: nodejs16.x
   httpApi:
     cors: true
-  timeout: 15
+  timeout: 30
   tracing:
     lambda: true
   websocketsApiName: websockets-api
@@ -73,6 +78,8 @@ custom:
       package:
         individually: true
         patterns:
+          - '!./node_modules/aws-sdk/**'
+          - '!./node_modules/**/aws-sdk/**'
           - '!../**'
           - '!../../**'
           - ./**
