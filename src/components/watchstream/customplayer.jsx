@@ -10,7 +10,6 @@ import { useContext } from 'react';
 import AuthContext from '../../context/authcontext';
 import _ from 'lodash';
 // import VideocamOffIcon from '@mui/icons-material/VideocamOff';
-import Hls from 'hls.js';
 
 const CustomPlayer = (props) => {
   const authCtx = useContext(AuthContext);
@@ -33,91 +32,6 @@ const CustomPlayer = (props) => {
   });
   const { played, seeking } = videoState;
   // const [streamStatus, setStreamStatus] = useState(null);
-  const [error, setError] = useState(false);
-  // eslint-disable-next-line no-unused-vars
-  const [playing, setPlaying] = useState(false);
-
-  useEffect(() => {
-    if (playerRef.current) {
-      let hls;
-
-      if (Hls.isSupported()) {
-        hls = new Hls();
-        hls.loadSource(
-          props?.streamUri?.includes('https://live.zoominlive.com') ||
-            props?.streamUri?.includes('zoomin-recordings-rtmp')
-            ? props?.streamUri
-            : `${authCtx.user.transcoderBaseUrl}${props?.streamUri}`
-        );
-        hls.attachMedia(playerRef.current);
-        hls.on(Hls.Events.MANIFEST_PARSED, function () {
-          playerRef.current.play();
-        });
-        hls.on(Hls.Events.ERROR, function (event, data) {
-          if (data.fatal) {
-            switch (data.type) {
-              case Hls.ErrorTypes.NETWORK_ERROR:
-                // try to recover network error
-                console.error('Network error encountered, trying to recover...');
-                hls.startLoad();
-                break;
-              case Hls.ErrorTypes.MEDIA_ERROR:
-                console.error('Media error encountered, trying to recover...');
-                hls.recoverMediaError();
-                break;
-              default:
-                // cannot recover
-                setError(true);
-                break;
-            }
-          }
-        });
-      } else if (playerRef.current.canPlayType('application/vnd.apple.mpegurl')) {
-        playerRef.current.src =
-          props?.streamUri?.includes('https://live.zoominlive.com') ||
-          props?.streamUri?.includes('zoomin-recordings-rtmp')
-            ? props?.streamUri
-            : `${authCtx.user.transcoderBaseUrl}${props?.streamUri}`;
-        playerRef.current.addEventListener('loadedmetadata', () => {
-          playerRef.current.play();
-        });
-      }
-
-      return () => {
-        if (hls) {
-          hls.destroy();
-        }
-      };
-    }
-  }, [props?.streamUri]);
-
-  if (error) {
-    // Handle the error state, maybe retry loading the source or display a message
-    console.error('Error loading the HLS stream.');
-  }
-
-  useEffect(() => {
-    const video = playerRef.current;
-
-    const checkPlaying = () => {
-      if (!video) return;
-
-      // Assuming the video is playing if currentTime is increasing
-      const isPlaying =
-        video.currentTime > 0 && !video.paused && !video.ended && video.readyState > 2;
-      setPlaying(isPlaying);
-
-      if (!isPlaying) {
-        // Attempt to reload the stream
-        video.load();
-        video.play().catch((error) => console.error('Error attempting to play video:', error));
-      }
-    };
-
-    const interval = setInterval(checkPlaying, 1000); // Check every second
-
-    return () => clearInterval(interval);
-  }, []);
 
   useEffect(() => {
     function exitHandler() {
