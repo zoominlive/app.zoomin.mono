@@ -15,6 +15,7 @@ RUN yarn build
 # stage 2 - build the final image and copy the react build files
 FROM nginx:1.17.8-alpine
 COPY --from=build /app/build /usr/share/nginx/html
+COPY .well-known /usr/share/nginx/html/
 RUN echo "SUCCESS" >> /usr/share/nginx/html/healthcheck.html
 RUN chown -R nginx:nginx /usr/share/nginx/html
 RUN chmod -R 0755 /usr/share/nginx/html
