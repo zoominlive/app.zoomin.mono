@@ -1,0 +1,17 @@
+{
+   "applinks": {
+       "details": [
+            {
+              "appIDs": [ "9BXWSWTKYE.com.zoominlive.userapp", "CN4RJ4BLYU.com.learing.test" ],
+              "components" : [
+               {
+               "/" : "/account/login/magic-link/*",
+               "comment" : "Frontegg magic link authentication"
+               }]
+            }
+        ]
+    },
+    "webcredentials": {
+       "apps": [ "9BXWSWTKYE.com.zoominlive.userapp", "CN4RJ4BLYU.com.learing.test" ]
+    }
+ } 
