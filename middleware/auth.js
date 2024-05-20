@@ -28,10 +28,10 @@ module.exports = async function (req, res, next) {
         // console.log('user-->', user);
       }
       if (!user) {
-        if (decodeToken?.family_member_id) {
+        if (user_id) {
           let familyUser;
           familyUser = await Family.findOne({
-            where: { family_member_id: decodeToken?.family_member_id },
+            where: { family_member_id: user_id },
             include: [
               {
                 model: Child,
