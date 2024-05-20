@@ -20,9 +20,10 @@ module.exports = {
   createFamily: async (req, res, next) => {
     const t = await sequelize.transaction();
     try {
-      let { primary, secondary, children, cust_id = null } = req.body;
+      let { primary, secondary, children, cust_id = null, tenant_id } = req.body;
       const userId = req.user.user_id;
       const custId = req.user.cust_id || cust_id;
+      const fronteggTenantId = tenant_id;
 
       //add primary parent
 
@@ -43,7 +44,8 @@ module.exports = {
           ...primary,
           family_member_id: uuidv4(),
           user_id: userId,
-          cust_id: custId
+          cust_id: custId,
+          frontegg_tenant_id: fronteggTenantId
         },
         t
       );
@@ -306,6 +308,7 @@ module.exports = {
     try {
       params = req.body;
       params.cust_id = req.user.cust_id || req.body.cust_id;
+      params.frontegg_tenant_id = req.body.tenant_id;
       params.user_id = req.user.user_id;
       let emailExist = await userServices.checkEmailExist(params.email, t);
 

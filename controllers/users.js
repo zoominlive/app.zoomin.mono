@@ -120,6 +120,7 @@ module.exports = {
     try {
       const params = req.body;
       params.cust_id = req.user.cust_id || req.body.cust_id;
+      params.frontegg_tenant_id = req.body.tenant_id;
 
       let checkUserValidation = await userServices.userValidation(params);
 

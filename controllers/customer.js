@@ -10,6 +10,7 @@ const CustomerLocations = require("../models/customer_locations");
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const axios = require('axios');
 const { v4: uuidv4 } = require('uuid');
+const Users = require("../models/users");
 
 module.exports = {
   /* Get  customer's details */
@@ -211,6 +212,13 @@ module.exports = {
               }
             );
             console.log('user_response--->', user_response.data);
+            await Users.update(
+              { frontegg_tenant_id: tenant_response.data.tenantId },
+              {
+                where: { user_id: addUser.dataValues.user_id },
+                transaction: t 
+              },
+            );
           }
     
           customer = await stripe.customers.create({
