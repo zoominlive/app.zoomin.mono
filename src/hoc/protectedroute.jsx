@@ -18,6 +18,7 @@ const ProtectedRoute = () => {
   if (user) {
     console.log('user in protectedRoute-->', user);
     localStorage.setItem('accessToken', user?.accessToken);
+    localStorage.setItem('tenant_id', user?.tenantId);
     // localStorage.setItem('cust_id', '0904a188-a225-4b4b-b76a-823bda38c4e7');
     // localStorage.setItem('cust_name', 'Fun Land Childcare');
   }

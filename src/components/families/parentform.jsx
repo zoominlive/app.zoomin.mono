@@ -100,7 +100,8 @@ const ParentsForm = (props) => {
         member_type: 'secondary',
         time_zone: moment.tz.guess(),
         location: authCtx.user.location,
-        cust_id: localStorage.getItem('cust_id')
+        cust_id: localStorage.getItem('cust_id'),
+        tenant_id: localStorage.getItem('tenant_id')
       }).then((response) => {
         if (response.status === 201) {
           enqueueSnackbar(response.data.Message, { variant: 'success' });

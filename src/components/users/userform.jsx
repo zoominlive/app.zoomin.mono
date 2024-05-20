@@ -200,26 +200,28 @@ const UserForm = (props) => {
         setSubmitLoading(false);
       });
     } else {
-      API.post('users/createUser', { ...payload, cust_id: localStorage.getItem('cust_id') }).then(
-        (response) => {
-          if (response.status === 201) {
-            enqueueSnackbar(response?.data?.Message, {
-              variant: 'success'
-            });
-            handleFormDialogClose();
-            props.getUsersList();
-            handleLivestream();
-          } else {
-            errorMessageHandler(
-              enqueueSnackbar,
-              response?.response?.data?.Message || 'Something Went Wrong.',
-              response?.response?.status,
-              authCtx.setAuthError
-            );
-          }
-          setSubmitLoading(false);
+      API.post('users/createUser', {
+        ...payload,
+        cust_id: localStorage.getItem('cust_id'),
+        tenant_id: localStorage.getItem('tenant_id')
+      }).then((response) => {
+        if (response.status === 201) {
+          enqueueSnackbar(response?.data?.Message, {
+            variant: 'success'
+          });
+          handleFormDialogClose();
+          props.getUsersList();
+          handleLivestream();
+        } else {
+          errorMessageHandler(
+            enqueueSnackbar,
+            response?.response?.data?.Message || 'Something Went Wrong.',
+            response?.response?.status,
+            authCtx.setAuthError
+          );
         }
-      );
+        setSubmitLoading(false);
+      });
     }
   };
   const resendInvite = (newData) => {
