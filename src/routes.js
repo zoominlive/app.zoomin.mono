@@ -14,19 +14,18 @@ import WatchStream from './components/watchstream/watchstream';
 import AuthContext from './context/authcontext';
 import Invoices from './components/billing/invoices';
 import PostLoginSteps from './components/dashboard/postloginsteps';
-import CustomerSelection from './components/auth/customerSelection';
+import { useAuth } from '@frontegg/react';
 // import Alerts from './components/alerts/alerts';
 
 const AppRoutes = () => {
   const authCtx = useContext(AuthContext);
-
+  const { user } = useAuth();
   return (
     <Routes>
       <>
         {authCtx.user && authCtx.user.role === 'Super Admin' && (
           <>
             <Route path="/customers" element={<Customers />} />
-            <Route path="/customer-selection" element={<CustomerSelection />} />
           </>
         )}
         {authCtx.user && (authCtx.user.role === 'Admin' || authCtx.user.role === 'Super Admin') && (
@@ -65,6 +64,8 @@ const AppRoutes = () => {
           element={
             authCtx.user && (authCtx.user.role === 'Family' || authCtx.user.role === 'Teacher') ? (
               <Navigate to={'watch-stream'} />
+            ) : user?.roles[0]?.name == 'Super Admin' ? (
+              <Navigate to={'customer-selection'} />
             ) : (
               authCtx.paymentMethod && <Navigate to={'dashboard'} />
             )

@@ -13,17 +13,16 @@ const ProtectedRoute = () => {
   console.log('protected route');
   if (!isAuthenticated) {
     loginWithRedirect();
+    return null;
   }
-  if (user && user.roles[0].name == 'Super Admin') {
+  if (user) {
     console.log('user in protectedRoute-->', user);
     localStorage.setItem('accessToken', user?.accessToken);
-    localStorage.setItem('cust_id', '0904a188-a225-4b4b-b76a-823bda38c4e7');
-    localStorage.setItem('cust_name', 'Fun Land Childcare');
-  } else {
-    localStorage.setItem('accessToken', user?.accessToken);
+    // localStorage.setItem('cust_id', '0904a188-a225-4b4b-b76a-823bda38c4e7');
+    // localStorage.setItem('cust_name', 'Fun Land Childcare');
   }
 
-  return isAuthenticated && <Outlet />;
+  return <Outlet />;
 };
 
 export default ProtectedRoute;

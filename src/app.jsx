@@ -17,6 +17,7 @@ import { getBuildDate } from './utils/utils';
 import packageJson from '../package.json';
 import withClearCache from './ClearCache';
 import { PF } from './components/pf/pf';
+import CustomerSelection from './components/auth/customerSelection';
 
 const MainApp = () => {
   const authCtx = useContext(AuthContext);
@@ -93,13 +94,14 @@ const MainApp = () => {
     <>
       <PF />
       <Routes>
-        {/* <Route element={<PublicRoute />}>
+        <Route element={<PublicRoute />}>
           <Route path="/login" element={<Login />} />
           <Route path="/forget-password" element={<ForgotPassword />} />
-        </Route> */}
+        </Route>
         <Route path="/set-password" element={<SetPassword />} />
         <Route path="/email-change" element={<EmailChange />} />
         <Route element={<ProtectedRoute />}>
+          <Route path="/customer-selection" element={<CustomerSelection />} />
           <Route element={<Layout />}>
             <Route path="/*" element={<AppRoutes />} />
           </Route>

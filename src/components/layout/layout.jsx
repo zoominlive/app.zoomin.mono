@@ -117,7 +117,9 @@ const Layout = () => {
     setDropdownLoading(true);
     // API Call for Fetching Logged in user detail
     // let status = localStorage.getItem('login');
-    API.get('users', { params: { cust_id: localStorage.getItem('cust_id') } }).then((response) => {
+    API.get('users', {
+      params: { cust_id: localStorage.getItem('cust_id') || '0d388af2-d396-4d9b-b28a-417a5953ed42' }
+    }).then((response) => {
       if (response.status === 200) {
         setSelectedLocation(response?.data?.Data?.location?.accessable_locations);
         authCtx.setLocation(response?.data?.Data?.location?.accessable_locations);
@@ -225,7 +227,10 @@ const Layout = () => {
   const getCustPaymentMethod = () => {
     setIsLoading(true);
     API.get('payment/list-customer-payment-method', {
-      params: { stripe_cust_id: stripe_cust_id, cust_id: localStorage.getItem('cust_id') }
+      params: {
+        stripe_cust_id: stripe_cust_id,
+        cust_id: localStorage.getItem('cust_id') || '0d388af2-d396-4d9b-b28a-417a5953ed42'
+      }
     }).then((response) => {
       if (response.status === 200) {
         console.log('response.data.data.data', response.data.data.data);
