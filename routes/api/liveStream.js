@@ -10,9 +10,9 @@ const { withAuthentication } = require('@frontegg/client');
 
 /* live stream end points */
 router.get('/', withAuthentication(), authController, LiveStreamController.getEndpoint);
-router.post('/start', withAuthentication(), liveStreamAuthController, LiveStreamController.startLiveStream);
-router.post('/stop', withAuthentication(), liveStreamAuthController, LiveStreamController.stopLiveStream);
-router.get('/details', withAuthentication(), LiveStreamController.getstreamDetails);
-router.post('/reportViewer', withAuthentication(), LiveStreamController.addRecentViewers);
+router.post('/start', liveStreamAuthController, LiveStreamController.startLiveStream);
+router.post('/stop', liveStreamAuthController, LiveStreamController.stopLiveStream);
+router.get('/details', LiveStreamController.getstreamDetails);
+router.post('/reportViewer', LiveStreamController.addRecentViewers);
 
 module.exports = router;
