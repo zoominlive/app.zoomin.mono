@@ -15,9 +15,9 @@ router.post('/addParent', withAuthentication(), authController, familyController
 router.put('/disable', withAuthentication(), authController, familyController.disableFamily);
 router.put('/enable', withAuthentication(), authController, familyController.enableFamily);
 router.delete('/delete', withAuthentication(), authController, familyController.deleteFamily);
-router.post('/setPassword', withAuthentication(), familyController.validateFamilyMember);
-router.post('/emailChange', withAuthentication(), familyController.changeRegisteredEmail);
-router.post('/checkLinkValid', withAuthentication(), familyController.checkLinkValid);
+router.post('/setPassword', familyController.validateFamilyMember);
+router.post('/emailChange', familyController.changeRegisteredEmail);
+router.post('/checkLinkValid', familyController.checkLinkValid);
 router.get('/location', withAuthentication(), authController, familyController.getAllUsersForLocation);
 router.delete('/delete-member', withAuthentication(), authController, familyController.deleteFamilyMember);
 router.delete('/delete-primary-member', withAuthentication(), authController, familyController.deletePrimaryFamilyMember);

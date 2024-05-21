@@ -110,6 +110,9 @@ module.exports = {
       });
 
       children = await childServices.createChildren(childObjs, t);
+      if(primaryParent) {
+        const createFrontEggUser = await userServices.createFrontEggFamilyUser(fronteggTenantId, primaryParent)
+      }
       //await dashboardServices.updateDashboardData(custId);
       await t.commit();
 
