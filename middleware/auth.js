@@ -28,10 +28,11 @@ module.exports = async function (req, res, next) {
         // console.log('user-->', user);
       }
       if (!user) {
-        if (user_id) {
+        const family_member_id = decodeToken.metadata.zoomin_family_member_id;
+        if (family_member_id) {
           let familyUser;
           familyUser = await Family.findOne({
-            where: { family_member_id: user_id },
+            where: { family_member_id: family_member_id },
             include: [
               {
                 model: Child,
