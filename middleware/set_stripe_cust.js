@@ -12,7 +12,7 @@ module.exports = async function (req, res, next) {
       req.query.stripe_cust_id = stripe_customer_id
       req.body.stripe_cust_id = stripe_customer_id
     } 
-    if(req.user.role == 'Admin') {
+    if(req.user.role == 'Admin' || req.user.role == 'Family' || req.user.role == 'Teacher' || req.user.role == 'User') {
       let customer = await Customers.findOne({ where: { cust_id: req.user.cust_id } });
       stripe_customer_id = customer.dataValues.stripe_cust_id;
       req.query.stripe_cust_id = stripe_customer_id
