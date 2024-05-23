@@ -9,6 +9,7 @@ const { withAuthentication } = require('@frontegg/client');
 
 /* Camera end points */
 router.get('/', withAuthentication(), authController, cameraController.getAllCameras);
+router.get('/get-all-cams-transcoder', cameraController.getAllCamerasForTranscoder);
 router.post('/add', withAuthentication(), authController, cameraController.createCamera);
 router.put('/edit', withAuthentication(), authController, cameraController.editCamera);
 router.delete('/delete', withAuthentication(), authController, cameraController.deleteCamera);

@@ -52,6 +52,7 @@ provider:
     STREAM_URL_SECRET_KEY: tNAbY0TfoCsKiS9TOijonkXkT
     STRIPE_SECRET_KEY: ${file(./env.json):${opt:stage, 'stage'}.STRIPE_SECRET_KEY}
     STRIPE_WEBHOOK_SECRET: ${file(./env.json):${opt:stage, 'stage'}.STRIPE_WEBHOOK_SECRET}
+    TRANSCODER_SECRET: "p7FQj}9p9wD$N;L1kC&X<MCa[UV%"
 
   stage: ${opt:stage, 'stage'}
   region: ${file(./env.json):${opt:stage, 'stage'}.REGION}
