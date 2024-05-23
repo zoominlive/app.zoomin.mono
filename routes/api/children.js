@@ -9,7 +9,7 @@ const { withAuthentication } = require('@frontegg/client');
 
 /* Child end points */
 
-router.post('/add', withAuthentication(), authController, childController.createChild);
+router.post('/add', authController, childController.createChild);
 router.put('/edit', withAuthentication(), authController, childController.editChild);
 router.put('/disable', withAuthentication(), authController, childController.disableChild);
 router.put('/enable', withAuthentication(), authController, childController.enableChild);

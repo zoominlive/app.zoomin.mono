@@ -16,8 +16,8 @@ router.post('/createCustomerLocation', withAuthentication(), authController, cus
 router.put('/edit', withAuthentication(), authController, customerController.updateCustomerProfile);
 router.get('/getCustomer', withAuthentication(), authController, customerController.getCustomerById);
 router.put('/editCustomerLocation', withAuthentication(), authController, customerController.updateCustomerLocation);
-router.delete('/delete', authController, withAuthentication(), customerController.deleteCustomer);
+router.delete('/delete', withAuthentication(), authController, customerController.deleteCustomer);
 router.delete('/deleteCustomerLocation', withAuthentication(), authController, customerController.deleteCustomerLocation);
-router.get('/locations', authController, withAuthentication(), customerController.getLocationDetails)
+router.get('/locations', withAuthentication(), authController, customerController.getLocationDetails)
 
 module.exports = router;

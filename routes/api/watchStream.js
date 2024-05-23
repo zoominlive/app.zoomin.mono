@@ -12,5 +12,5 @@ router.get('/', withAuthentication(), authController, watchStreamController.getA
 router.get('/userStreams', withAuthentication(), authController, watchStreamController.getAllCamForUser);
 router.post('/addviewer', withAuthentication(), authController, watchStreamController.addRecentViewers);
 router.post('/setPreference', withAuthentication(), authController, watchStreamController.setUserCamPreference);
-router.post('/reportViewer', withAuthentication(), watchStreamController.ReportViewers);
+router.post('/reportViewer', watchStreamController.ReportViewers);
 module.exports = router;
