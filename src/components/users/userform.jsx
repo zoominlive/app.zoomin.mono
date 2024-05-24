@@ -86,9 +86,9 @@ const UserForm = (props) => {
       rooms: props?.user?.roomsInTeacher
         ? props.user?.roomsInTeacher.map((room) => {
             return {
-              room_name: room.room.room_name,
-              location: room.room.location,
-              room_id: room.room_id
+              room_name: room?.room?.room_name,
+              location: room?.room?.location,
+              room_id: room?.room_id
             };
           })
         : [],
