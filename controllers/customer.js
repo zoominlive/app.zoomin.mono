@@ -183,9 +183,12 @@ module.exports = {
         customeDetails,
         t
       );
+      console.log("addCustomer=========>", addCustomer);
       user.cust_id = addCustomer?.cust_id;
       user.is_verified = false;
       let addUser = await userServices.createUser(user, t);
+      console.log("addUser=========>", addUser);
+      
       let userData = addUser?.toJSON();
       const token = await userServices.createPasswordToken(userData, true);
       const name = userData.first_name + ' ' + userData.last_name;
@@ -199,8 +202,10 @@ module.exports = {
         t
       );
 
+      console.log("addLocations=========>", addLocations);
+
       if (addCustomer && addUser && addLocations) {
-        console.log('check', addCustomer && addUser && addLocations);
+        console.log('check======>', addCustomer && addUser && addLocations);
         await res.status(201).json({
           IsSuccess: true,
           Data: { ..._.omit(addCustomer, ["cust_id"]), ...addLocations },
