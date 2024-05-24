@@ -237,6 +237,8 @@ const Layout = () => {
         } else {
           navigate('terms-and-conditions');
         }
+      } else if (response.status === 500 && authCtx?.user?.role == 'Super Admin') {
+        console.log(response?.response?.data?.message || 'Something Went Wrong.');
       } else {
         errorMessageHandler(
           enqueueSnackbar,
