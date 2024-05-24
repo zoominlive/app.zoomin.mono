@@ -183,10 +183,24 @@ module.exports = {
         customeDetails,
         t
       );
+      if (!addCustomer) {
+        return res.status(400).json({
+          IsSuccess: true,
+          Data: {},
+          Message: CONSTANTS.CUSTOMER_REGISRATION_FAILED,
+        });
+      }
       console.log("addCustomer=========>", addCustomer);
       user.cust_id = addCustomer?.cust_id;
       user.is_verified = false;
       let addUser = await userServices.createUser(user, t);
+      if (!addUser) {
+        return res.status(400).json({
+          IsSuccess: true,
+          Data: {},
+          Message: CONSTANTS.CUSTOMER_REGISRATION_FAILED,
+        });
+      }
       console.log("addUser=========>", addUser);
       
       let userData = addUser?.toJSON();
@@ -201,40 +215,36 @@ module.exports = {
         locations,
         t
       );
-
+      if (!addLocations) {
+        return res.status(400).json({
+          IsSuccess: true,
+          Data: {},
+          Message: CONSTANTS.CUSTOMER_REGISRATION_FAILED,
+        });
+      }
       console.log("addLocations=========>", addLocations);
 
-      if (addCustomer && addUser && addLocations) {
-        console.log('check======>', addCustomer && addUser && addLocations);
-        await res.status(201).json({
-          IsSuccess: true,
-          Data: { ..._.omit(addCustomer, ["cust_id"]), ...addLocations },
-          Message: CONSTANTS.CUSTOMER_REGISTERED,
+      if(user.role === 'Admin') {
+        customer = await stripe.customers.create({
+          name: user.first_name +' '+ user.last_name,
+          email: user.email,
+          address: {
+            city: customeDetails?.city,
+            country: customeDetails?.country,
+            line1: customeDetails?.address_1,
+            line2: customeDetails?.address_2,
+            postal_code: customeDetails?.postal,
+          }
         });
-        if(user.role === 'Admin') {
-          customer = await stripe.customers.create({
-            name: user.first_name +' '+ user.last_name,
-            email: user.email,
-            address: {
-              city: customeDetails?.city,
-              country: customeDetails?.country,
-              line1: customeDetails?.address_1,
-              line2: customeDetails?.address_2,
-              postal_code: customeDetails?.postal,
-            }
-          });
-          await customerServices.editCustomer(addCustomer?.cust_id, {stripe_cust_id: customer.id}, t)
-        }
-      } else {
-        res
-          .status(400)
-          .json({
-            IsSuccess: true,
-            Data: {},
-            Message: CONSTANTS.CUSTOMER_REGISRATION_FAILED,
-          });
+        await customerServices.editCustomer(addCustomer?.cust_id, {stripe_cust_id: customer.id}, t)
       }
       await t.commit();
+      res.status(201).json({
+        IsSuccess: true,
+        Data: { ..._.omit(addCustomer, ["cust_id"]), ...addLocations },
+        Message: CONSTANTS.CUSTOMER_REGISTERED,
+      });
+        
       next();
     } catch (error) {
       await t.rollback();
