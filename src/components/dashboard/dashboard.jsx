@@ -55,8 +55,8 @@ import LinerLoader from '../common/linearLoader';
 import UserForm from '../users/userform';
 
 const AccessColumns = [
-  { label: 'Children', width: '25%' },
-  { label: 'Rooms', width: '25%' },
+  { label: 'Child', width: '75%' },
+  // { label: 'Rooms', width: '25%' },
   { label: 'Date', width: '25%' }
   // { label: 'Status', width: '25%' }
 ];
