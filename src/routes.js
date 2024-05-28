@@ -64,7 +64,7 @@ const AppRoutes = () => {
           element={
             authCtx.user && (authCtx.user.role === 'Family' || authCtx.user.role === 'Teacher') ? (
               <Navigate to={'watch-stream'} />
-            ) : user?.roles[0]?.name == 'Super Admin' ? (
+            ) : user?.superUser ? (
               <Navigate to={'customer-selection'} />
             ) : (
               authCtx.paymentMethod && <Navigate to={'dashboard'} />
