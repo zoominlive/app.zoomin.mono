@@ -62,6 +62,7 @@ import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import debounce from 'lodash.debounce';
 import NotificationsIcon from '@mui/icons-material/Notifications';
+import { PF } from '../pf/pf';
 
 const icon = <RadioButtonUncheckedIcon fontSize="small" />;
 const checkedIcon = <CheckCircleOutlineIcon fontSize="small" style={{ color: '#5A53DD' }} />;
@@ -433,6 +434,7 @@ const Layout = () => {
 
   return (
     <>
+      <PF />
       <Box sx={{ display: 'flex' }}>
         <Loader loading={isLoading} />
         <Drawer

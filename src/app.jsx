@@ -15,7 +15,6 @@ import AppRoutes from './routes';
 import { getBuildDate } from './utils/utils';
 import packageJson from '../package.json';
 import withClearCache from './ClearCache';
-import { PF } from './components/pf/pf';
 
 const MainApp = () => {
   const authCtx = useContext(AuthContext);
@@ -90,7 +89,6 @@ const MainApp = () => {
   // }, [authCtx.token]);
   return (
     <>
-      <PF />
       <Routes>
         <Route element={<PublicRoute />}>
           <Route path="/login" element={<Login />} />
