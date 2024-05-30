@@ -19,9 +19,9 @@ provider:
     ACCESS_KEY_ID: ${file(./env.json):${opt:stage, 'stage'}.ACCESS_KEY_ID}
     SECRET_ACCESS_KEY: ${file(./env.json):${opt:stage, 'stage'}.SECRET_ACCESS_KEY}
     EMAIL_SOURCE_ACCOUNT: "support@zoominlive.com"
-    RDS_HOST: zoomin-1.crzgnnp8iqzv.us-west-2.rds.amazonaws.com
+    RDS_HOST: ${file(./env.json):${opt:stage, 'stage'}.RDS_HOST}
     RDS_PORT: 3306
-    RDS_USER: zoomin_dbuser
+    RDS_USER: ${file(./env.json):${opt:stage, 'stage'}.RDS_USER}
     RDS_PASSWORD: ${file(./env.json):${opt:stage, 'stage'}.RDS_PASSWORD}
     RDS_DB_NAME: ${file(./env.json):${opt:stage, 'stage'}.RDS_DB_NAME}
     #RDS_HOST: 127.0.0.1
@@ -52,7 +52,9 @@ provider:
     STREAM_URL_SECRET_KEY: tNAbY0TfoCsKiS9TOijonkXkT
     STRIPE_SECRET_KEY: ${file(./env.json):${opt:stage, 'stage'}.STRIPE_SECRET_KEY}
     STRIPE_WEBHOOK_SECRET: ${file(./env.json):${opt:stage, 'stage'}.STRIPE_WEBHOOK_SECRET}
-    TRANSCODER_SECRET: "p7FQj}9p9wD$N;L1kC&X<MCa[UV%"
+    TRANSCODER_SECRET: ${file(./env.json):${opt:stage, 'stage'}.TRANSCODER_SECRET}
+    FRONTEGG_CLIENT_ID: ${file(./env.json):${opt:stage, 'stage'}.FRONTEGG_CLIENT_ID}
+    FRONTEGG_API_KEY: ${file(./env.json):${opt:stage, 'stage'}.FRONTEGG_API_KEY}
 
   stage: ${opt:stage, 'stage'}
   region: ${file(./env.json):${opt:stage, 'stage'}.REGION}
@@ -250,6 +252,7 @@ functions:
       - schedule: rate(1 hour)
 
 plugins:
+  - serverless-offline
   - serverless-prune-versions
   - serverless-plugin-warmup
 

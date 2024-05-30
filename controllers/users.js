@@ -171,7 +171,8 @@ module.exports = {
         }
         //await dashboardServices.updateDashboardData(params.cust_id);
         // await t.commit();
-        const frontEggUser = userServices.createFrontEggUser(params.frontegg_tenant_id, userData)
+        const {frontegg_tenant_id} = await customerServices.getCustomerDetails(params.cust_id);
+        const frontEggUser = await userServices.createFrontEggUser(frontegg_tenant_id, userData)
         res.status(201).json({
           IsSuccess: true,
           Data: _.omit(userData, ['password']),

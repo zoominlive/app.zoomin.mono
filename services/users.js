@@ -498,8 +498,8 @@ module.exports = {
     const vendor_token = await axios.post(
       "https://api.frontegg.com/auth/vendor/",
       {
-        clientId: "abff20d3-c32c-43b9-ada5-7c56a9349a7b",
-        secret: "05200ba2-93e1-456c-baee-80a1e2614a92",
+        clientId: process.env.FRONTEGG_CLIENT_ID,
+        secret: process.env.FRONTEGG_API_KEY,
       },
     );
     if (vendor_token) {
@@ -527,8 +527,8 @@ module.exports = {
     const vendor_token = await axios.post(
       "https://api.frontegg.com/auth/vendor/",
       {
-        clientId: "abff20d3-c32c-43b9-ada5-7c56a9349a7b",
-        secret: "05200ba2-93e1-456c-baee-80a1e2614a92",
+        clientId: process.env.FRONTEGG_CLIENT_ID,
+        secret: process.env.FRONTEGG_API_KEY,
       },
     );
     if (vendor_token) {

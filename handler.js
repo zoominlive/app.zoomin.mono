@@ -13,8 +13,8 @@ const cors = require('cors');
 const { FronteggContext } = require('@frontegg/client');
 
 FronteggContext.init({
-  FRONTEGG_CLIENT_ID: 'abff20d3-c32c-43b9-ada5-7c56a9349a7b',
-  FRONTEGG_API_KEY: '05200ba2-93e1-456c-baee-80a1e2614a92',
+  FRONTEGG_CLIENT_ID: process.env.FRONTEGG_CLIENT_ID,
+  FRONTEGG_API_KEY: process.env.FRONTEGG_API_KEY,
 });
 
 app.use(cors());
