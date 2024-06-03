@@ -440,6 +440,7 @@ module.exports = {
         let locations = await CustomerLocations.findAll({
           where: {
             loc_name: user.location.accessable_locations,
+            cust_id: user.cust_id
           },
           attributes: ["loc_name"],
           include: [
