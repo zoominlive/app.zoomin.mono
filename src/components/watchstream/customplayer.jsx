@@ -81,6 +81,7 @@ const CustomPlayer = (props) => {
     let originalFetch;
     const checkForCanceledRequest = (request) => {
       // Check if the request was canceled
+      console.log('request==>', request);
       if (request.type === 'media' && request.status === 0) {
         console.log('Canceled request detected');
         setReloadKey((prevKey) => prevKey + 1); // Trigger a reload
