@@ -16,6 +16,7 @@ import API from '../../api';
 import { errorMessageHandler } from '../../utils/errormessagehandler';
 import { useSnackbar } from 'notistack';
 import { useLocation, useNavigate } from 'react-router-dom';
+import moment from 'moment';
 
 export default function CheckoutForm(props) {
   const stripe = useStripe();
@@ -49,7 +50,13 @@ export default function CheckoutForm(props) {
       saveCardDetails(paymentMethod.id);
     }
   };
+  // Get the current timestamp
+  const currentTimestamp = new Date();
 
+  // Add days to the current timestamp
+  const futureTimestamp = new Date(
+    currentTimestamp.getTime() + parseInt(props?.custData?.trial_period_days) * 24 * 60 * 60 * 1000
+  );
   const saveCardDetails = async (cardToken) => {
     try {
       const response = await API.post(`payment/save-card-details`, {
@@ -67,6 +74,27 @@ export default function CheckoutForm(props) {
             user_email: authCtx.user?.email,
             user_id: authCtx.user.user_id,
             cust_id: localStorage.getItem('cust_id') || authCtx.user.cust_id
+          });
+          const createSubscription = await API.post('payment/create-checkout', {
+            cust_id: localStorage.getItem('cust_id'),
+            stripe_cust_id: authCtx.user?.stripe_cust_id,
+            products: props?.products,
+            startDate: moment(futureTimestamp).unix(),
+            trial_period_days: props?.custData?.trial_period_days
+          }).then((response) => {
+            if (response.status === 200 && createSubscription.status === 200) {
+              console.log(response.data);
+              enqueueSnackbar('Successfully subscribed!', {
+                variant: 'success'
+              });
+            } else {
+              errorMessageHandler(
+                enqueueSnackbar,
+                response?.response?.data?.message || 'Something Went Wrong.',
+                response?.response?.status,
+                authCtx.setAuthError
+              );
+            }
           });
           if (response.status === 201) {
             navigate('dashboard');
@@ -193,5 +221,7 @@ CheckoutForm.propTypes = {
   closeDialog: PropTypes.func,
   getCustPaymentMethod: PropTypes.func,
   setIsLoading: PropTypes.func,
-  checked: PropTypes.bool
+  checked: PropTypes.bool,
+  products: PropTypes.object,
+  custData: PropTypes.object
 };

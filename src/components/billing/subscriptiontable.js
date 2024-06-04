@@ -26,7 +26,9 @@ export default function SubscriptionTable({
   setFamily,
   setIsFamilyDrawerOpen,
   setFamilyIndex,
-  familyIndex
+  familyIndex,
+  setProductsForCheckout,
+  setCustomerDataProp
 }) {
   const authCtx = useContext(AuthContext);
   const { enqueueSnackbar } = useSnackbar();
@@ -103,6 +105,7 @@ export default function SubscriptionTable({
     }).then((response) => {
       if (response.status === 200) {
         setCustData(response.data.Data);
+        setCustomerDataProp(response.data.Data);
       } else {
         errorMessageHandler(
           enqueueSnackbar,
@@ -138,6 +141,21 @@ export default function SubscriptionTable({
           }
         });
         setProducts(updatedProductList.filter((item) => item.active));
+        let productsForCheckout = updatedProductList.filter((item) => item.active);
+        let updatedData = productsForCheckout.map((item) => ({
+          ...item,
+          qty:
+            item.name == 'Fixed Camera License'
+              ? custData?.max_cameras
+              : item.name == 'Location License'
+              ? custData?.max_locations
+              : item.name == 'Month Mobile Live Stream User License'
+              ? custData?.max_stream_live_license
+              : item.name == 'Sub Test'
+              ? custData?.max_stream_live_license_room
+              : 0
+        }));
+        setProductsForCheckout(updatedData);
       } else {
         errorMessageHandler(
           enqueueSnackbar,
@@ -386,5 +404,7 @@ SubscriptionTable.propTypes = {
   setFamily: PropTypes.func,
   setIsFamilyDrawerOpen: PropTypes.func,
   setFamilyIndex: PropTypes.func,
-  familyIndex: PropTypes.number
+  familyIndex: PropTypes.number,
+  setProductsForCheckout: PropTypes.func,
+  setCustomerDataProp: PropTypes.object
 };

@@ -42,6 +42,8 @@ const PostLoginSteps = (props) => {
   const [subscriptionRows, setSubscriptionRows] = useState([]);
   const [checked, setChecked] = useState(false);
   const [showMessage, setShowMessage] = useState(false);
+  const [products, setProducts] = useState();
+  const [custData, setCustData] = useState();
   const stripe_cust_id = authCtx.user.stripe_cust_id;
 
   useEffect(() => {
@@ -364,13 +366,15 @@ const PostLoginSteps = (props) => {
                       rows={subscriptionRows}
                       title={'Subscriptions'}
                       isLoading={isLoading}
+                      setProductsForCheckout={setProducts}
+                      setCustomerDataProp={setCustData}
                     />
                   </Paper>
                 </Grid>
                 <Grid item lg={5}>
                   <Paper sx={{ padding: '40px', marginTop: 2 }}>
                     <Elements stripe={stripePromise}>
-                      <CheckoutForm checked={checked} />
+                      <CheckoutForm checked={checked} products={products} custData={custData} />
                     </Elements>
                   </Paper>
                 </Grid>
