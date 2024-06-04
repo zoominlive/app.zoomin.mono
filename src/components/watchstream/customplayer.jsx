@@ -31,6 +31,8 @@ const CustomPlayer = (props) => {
     seeking: false
   });
   const { played, seeking } = videoState;
+  const [reloadKey, setReloadKey] = useState(0);
+
   // const [streamStatus, setStreamStatus] = useState(null);
 
   useEffect(() => {
@@ -75,6 +77,37 @@ const CustomPlayer = (props) => {
     }
   };
 
+  useEffect(() => {
+    let originalFetch;
+    const checkForCanceledRequest = (request) => {
+      // Check if the request was canceled
+      if (request.type === 'media' && request.status === 0) {
+        console.log('Canceled request detected');
+        setReloadKey((prevKey) => prevKey + 1); // Trigger a reload
+      }
+    };
+
+    const monitorNetworkRequests = () => {
+      originalFetch = window.fetch;
+      window.fetch = async (...args) => {
+        const response = await originalFetch(...args);
+        checkForCanceledRequest(response);
+        return response;
+      };
+    };
+
+    monitorNetworkRequests();
+
+    return () => {
+      // Clean up: restore the original fetch
+      window.fetch = originalFetch;
+    };
+  }, []);
+
+  const handleVideoError = () => {
+    console.log('Video error detected');
+    setReloadKey((prevKey) => prevKey + 1); // Trigger a reload
+  };
   // useEffect(() => {
   //   const checkStreamStatus = async () => {
   //     try {
@@ -145,6 +178,7 @@ const CustomPlayer = (props) => {
             //         authCtx?.user?.family_member_id || authCtx?.user?.user_id
             //       }&sid=${props?.cam_id}&uuid=${uuidv4()}`
             // }
+            key={reloadKey}
             url={
               props?.streamUri?.includes('https://live.zoominlive.com') ||
               props?.streamUri?.includes('zoomin-recordings-rtmp')
@@ -174,6 +208,7 @@ const CustomPlayer = (props) => {
             }}
             onError={() => {
               if (showErrorMessage) {
+                handleVideoError;
                 setReady(true);
                 setShowErrorMessage(false);
               }
