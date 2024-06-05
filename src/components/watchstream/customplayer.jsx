@@ -18,7 +18,6 @@ const CustomPlayer = (props) => {
   const [ready, setReady] = useState(false);
   const playerContainerRef = useRef(null);
   const playerRef = useRef(null);
-  // eslint-disable-next-line no-unused-vars
   const [showErrorMessage, setShowErrorMessage] = useState(true);
   // eslint-disable-next-line no-unused-vars
   const [url, setUrl] = useState('');
@@ -32,8 +31,6 @@ const CustomPlayer = (props) => {
     seeking: false
   });
   const { played, seeking } = videoState;
-  const [retryCount, setRetryCount] = useState(0);
-  const maxRetries = 3;
   // const [streamStatus, setStreamStatus] = useState(null);
 
   useEffect(() => {
@@ -103,21 +100,6 @@ const CustomPlayer = (props) => {
   //     setStreamStatus(null); // Reset stream status if no URI provided
   //   }
   // }, [props.streamUri]);
-  const retryFetch = () => {
-    if (retryCount < maxRetries) {
-      setRetryCount(retryCount + 1);
-      setTimeout(() => {
-        setUrl(''); // Clear URL to force ReactPlayer to unload
-        setTimeout(() => {
-          setUrl(props?.streamUri); // Reset URL to retry loading
-        }, 1000); // Delay to ensure unload
-      }, 2000); // Retry after 2 seconds
-    } else {
-      console.error('Maximum retry attempts reached.');
-      setShowErrorMessage(true);
-      setReady(true);
-    }
-  };
 
   const handleFullscreenToggle = () => {
     screenfull.toggle(playerContainerRef.current);
@@ -190,12 +172,10 @@ const CustomPlayer = (props) => {
             onPause={() => {
               setPlayerPlaying(false);
             }}
-            onError={(e) => {
+            onError={() => {
               if (showErrorMessage) {
                 setReady(true);
                 setShowErrorMessage(false);
-                console.error('Player error:', e);
-                retryFetch();
               }
             }}
             playing={playerPlaying}
