@@ -5,7 +5,7 @@
     ],
     "target": {
       "namespace": "android_app",
-      "package_name": "com.frontegg.android",
+      "package_name": "com.zoominlive.userapp",
       "sha256_cert_fingerprints": [
         "5F:BF:16:56:E0:70:C7:38:1E:F0:21:6B:58:CA:A9:EF:C2:FD:42:B1:EC:A3:AC:48:F8:8F:E4:82:9D:AA:D5:70"
       ]
