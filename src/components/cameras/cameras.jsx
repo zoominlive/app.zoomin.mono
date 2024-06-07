@@ -131,7 +131,8 @@ const Cameras = () => {
       cam_uri: camera.cam_uri,
       cam_id: camera.cam_id,
       wait: wait,
-      streamId: camera.stream_uuid
+      streamId: camera.stream_uuid,
+      cust_id: localStorage.getItem('cust_id')
     }).then((response) => {
       if (response.status === 200) {
         getCamerasList();
