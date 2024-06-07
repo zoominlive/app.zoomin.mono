@@ -228,12 +228,11 @@ module.exports = {
     try {
       const params = req.body;
       const token = req.userToken;
-      // console.log('params-->', params);
       const camEncodedStopped = await stopEncodingStream(
         params.streamId,
         params.wait,
         token,
-        req.user.cust_id,
+        req.user.cust_id || params.cust_id,
         t
       );
       let camera;
@@ -242,7 +241,7 @@ module.exports = {
         const transcodedDetails = await startEncodingStreamToFixCam(
           params.cam_uri,
           token,
-          req.user.cust_id,
+          req.user.cust_id || params.cust_id,
           params.streamId
         );
         // console.log('transcodedDetails-->', transcodedDetails);
