@@ -8,6 +8,7 @@ const cameraController = require('../../controllers/cameras');
 
 /* Camera end points */
 router.get('/', authController, cameraController.getAllCameras);
+router.get('/get-all-cams-transcoder', cameraController.getAllCamerasForTranscoder);
 router.post('/add', authController, cameraController.createCamera);
 router.put('/edit', authController, cameraController.editCamera);
 router.delete('/delete', authController, cameraController.deleteCamera);

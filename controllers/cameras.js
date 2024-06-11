@@ -364,5 +364,71 @@ module.exports = {
       });
       next(error);
     }
+  },
+
+  // get all camera's for transcoder
+  getAllCamerasForTranscoder: async (req, res, next) => {
+    try {
+      const token = req.header('Authorization')?.substring(7);
+      const decodeToken = jwt.verify(token, process.env.TRANSCODER_SECRET);
+      const { rtsp_transcoder_endpoint } = decodeToken;
+      let customers;
+      if ( rtsp_transcoder_endpoint ) {
+        customers = await Customers.findAll({ where: { transcoder_endpoint: rtsp_transcoder_endpoint } });
+      }
+
+      if (customers) {
+        let cust_ids = customers.map((item) => item.cust_id)
+        console.log('cust_ids-->', cust_ids);
+        const cameras = await cameraServices.getAllCameraForTranscoder(cust_ids);
+        const generatePresignedUrlForThumbnail = async (thumbnail) => {
+          // Check if the thumbnail contains an S3 URI
+          if (thumbnail && thumbnail.startsWith('s3://')) {
+              // Extract bucket name and object key from the S3 URI
+          
+              try {
+                  // Generate the presigned URL
+                  const presignedUrl = await s3BucketImageUploader.getPresignedUrlForThumbnail(thumbnail);
+                  return presignedUrl;
+              } catch (error) {
+                  console.error('Error generating presigned URL:', error);
+                  return null;
+              }
+          } else {
+              return null; // Return null if the thumbnail does not contain an S3 URI
+          }
+        };
+        // Function to generate presigned URLs for thumbnails in the provided array
+        const generatePresignedUrlsForThumbnails = async (cameras) => {
+          const camerasWithPresignedUrls = await Promise.all(cameras.map(async (camera) => {
+              // Generate presigned URL for thumbnail if it contains an S3 URI
+              if (camera.thumbnail && camera.thumbnail.startsWith('s3://')) {
+                camera.thumbnailPresignedUrl = await generatePresignedUrlForThumbnail(camera.thumbnail);
+              }
+              return camera;
+          }));
+          return { cameras: camerasWithPresignedUrls };
+        };
+        let mappedCamValues = cameras.cams.map((item) => item.dataValues)
+        const camerasWithPresignedUrls = await generatePresignedUrlsForThumbnails(mappedCamValues);
+        cameras.cams = camerasWithPresignedUrls.cameras
+        res.status(200).json({
+          IsSuccess: true,
+          Data: cameras,
+          Message: CONSTANTS.CAMERA_DETAILS
+        });
+  
+        next();
+      } else {
+        return res.status(401).json({ error: 'No Customers found' });
+      }
+    } catch (error) {
+      res.status(500).json({
+        IsSuccess: false,
+        error_log: error,
+        Message: CONSTANTS.INTERNAL_SERVER_ERROR
+      });
+      next(error);
+    }
   }
 };
