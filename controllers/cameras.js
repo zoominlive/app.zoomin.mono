@@ -370,6 +370,7 @@ module.exports = {
   getAllCamerasForTranscoder: async (req, res, next) => {
     try {
       const token = req.header('Authorization')?.substring(7);
+      // test commit
       const decodeToken = jwt.verify(token, process.env.TRANSCODER_SECRET);
       const { rtsp_transcoder_endpoint } = decodeToken;
       let customers;
