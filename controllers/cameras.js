@@ -8,6 +8,8 @@ const socketServices = require('../services/socket');
 const s3BucketImageUploader = require('../lib/aws-services');
 const CONSTANTS = require('../lib/constants');
 const sequelize = require('../lib/database');
+const jwt = require('jsonwebtoken');
+const Customers = require('../models/customers');
 module.exports = {
   // encode stream and create new camera
   createCamera: async (req, res, next) => {
