@@ -396,7 +396,6 @@ const PostLoginSteps = (props) => {
     }
   };
 
-  console.log('postlogin');
   return (
     <>
       <Box sx={{ width: '100%' }}>
