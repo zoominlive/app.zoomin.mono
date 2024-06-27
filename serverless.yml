@@ -63,7 +63,7 @@ custom:
   warmup:
     default:
       enabled: true # Whether to warm up functions by default or not
-      folderName: '.warmup' # Name of the folder created for the generated warmup 
+      folderName: 'updatedWarmup' # Name of the folder created for the generated warmup 
       cleanFolder: false
       memorySize: 256
       name: warmer-default

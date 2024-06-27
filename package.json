@@ -1,7 +1,9 @@
 {
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon --ignore path/to/ --exec \"sls offline start\""
+    "start": "nodemon --ignore path/to/ --exec \"sls offline start\"",
+    "deploy-prod": "serverless deploy --stage dev",
+    "deploy-staging": "serverless deploy --stage stage"
   },
   "name": "zoomin",
   "version": "1.0.0",
