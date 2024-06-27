@@ -142,13 +142,14 @@ module.exports = {
       const nextPhaseStartDate = calculateEndOfMonth(trialEndDate).nextMonthFirstDay;
       // comment the upper part afterwards
       const subscriptions = await Promise.all(products.map(async (product) => {
-        const { price_id, qty } = product.product;
+        const { price_id, qty } = product;
         let subscriptionSchedule;
         let subscription;
         if (trial_period_days !== 0) {
           const updatedStartDate = new Date(startDate * 1000);
           const trialEnd = new Date(updatedStartDate);
-          trialEnd.setDate(trialEnd.getDate() + parseInt(trial_period_days)); // 14 days trial
+          // trialEnd.setDate(trialEnd.getDate() + parseInt(trial_period_days)); // 14 days trial
+          trialEnd.setDate(trialEnd.getDate()); // 14 days trial
 
           // Ensure trialEnd is before the start of the next month
           const nextMonth = new Date(trialEnd.getFullYear(), trialEnd.getMonth() + 1, 1);
@@ -161,7 +162,7 @@ module.exports = {
 
           subscriptionSchedule = await stripe.subscriptions.create({
             customer: stripe_cust_id,
-            items: [{ price: price_id, quantity: qty }],
+            items: [{ price: price_id, quantity: qty ? qty : 1 }],
             trial_end: Math.floor(trialEnd.getTime() / 1000),
             billing_cycle_anchor: Math.floor(nextMonth.getTime() / 1000),
             proration_behavior: 'create_prorations',

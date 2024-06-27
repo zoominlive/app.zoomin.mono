@@ -56,6 +56,10 @@ const Camera = sequelize.define(
       required: true,
       comment: 'Unless specified by the user use the stream_uuid here'
     },
+    privacy_areas: {
+      type: Sequelize.JSON,
+      allowNull: true,
+    },
     createdAt: { type: Sequelize.DATE, field: 'created_at' },
     updatedAt: { type: Sequelize.DATE, field: 'updated_at' }
   },

@@ -9,6 +9,10 @@ const Users = sequelize.define(
       allowNull: false,
       primaryKey: true
     },
+    frontegg_tenant_id: {
+      type: Sequelize.STRING(50),
+      allowNull: true,
+    },
     first_name: {
       type: Sequelize.STRING(30),
       required: [true, 'FirstName is mandatory field']

@@ -13,6 +13,10 @@ const Customers = sequelize.define(
       type: Sequelize.STRING(50),
       allowNull: true,
     },
+    frontegg_tenant_id: {
+      type: Sequelize.STRING(50),
+      allowNull: true,
+    },
     company_name: {
       type: Sequelize.STRING(50)
     },

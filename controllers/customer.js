@@ -8,6 +8,9 @@ const {
 } = require('../lib/ses-mail-sender');
 const CustomerLocations = require("../models/customer_locations");
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+const axios = require('axios');
+const { v4: uuidv4 } = require('uuid');
+const Users = require("../models/users");
 
 module.exports = {
   /* Get  customer's details */
@@ -150,39 +153,8 @@ module.exports = {
       const params = req.body;
       const { user, customer_locations, ...customeDetails } = params;
       let customer;
-      
-      // const productList = await stripe.products.list();
-      // const productPriceIDs = productList.data.map((item) => item.default_price);
-      // console.log('productPriceIDs-->', productPriceIDs);
-      
-      // async function createSubscriptions(customerId, priceIds) {
-      //   try {
-      //     // Create subscriptions for each product
-      //     const subscriptions = await Promise.all(priceIds.map(priceId => {
-      //       return stripe.subscriptions.create({
-      //         customer: customerId,
-      //         items: [{ price: priceId }], 
-      //       });
-      //     }));
-
-      //     // Return an array of subscription objects
-      //     return subscriptions;
-      //   } catch (error) {
-      //     console.error('Error creating subscriptions:', error);
-      //     throw error;
-      //   }
-      // }
-      // createSubscriptions(customer.id, productPriceIDs)
-      //   .then((subscriptions) => {
-      //     console.log("Subscriptions created:", subscriptions);
-      //   })
-      //   .catch((error) => {
-      //     console.error("Failed to create subscriptions:", error);
-      //   });
-      let addCustomer = await customerServices.createCustomer(
-        customeDetails,
-        t
-      );
+    
+      let addCustomer = await customerServices.createCustomer(customeDetails, t);
       user.cust_id = addCustomer?.cust_id;
       user.is_verified = false;
       let addUser = await userServices.createUser(user, t);
@@ -191,24 +163,66 @@ module.exports = {
       const name = userData.first_name + ' ' + userData.last_name;
       const originalUrl = process.env.FE_SITE_BASE_URL + 'set-password?' + 'token=' + token + '&type=user';
       await sendRegistrationMailforUser(name, userData.email, originalUrl);
-
+    
       let locations = customer_locations.flatMap((i) => i.loc_name);
-      let addLocations = await customerServices.createLocation(
-        addCustomer?.cust_id,
-        locations,
-        t
-      );
-
+      let addLocations = await customerServices.createLocation(addCustomer?.cust_id, locations, t);
+    
       if (addCustomer && addUser && addLocations) {
-        console.log('check', addCustomer && addUser && addLocations);
-        await res.status(201).json({
-          IsSuccess: true,
-          Data: { ..._.omit(addCustomer, ["cust_id"]), ...addLocations },
-          Message: CONSTANTS.CUSTOMER_REGISTERED,
-        });
-        if(user.role === 'Admin') {
+        console.log('addUser-->', addUser);
+        console.log('customeDetails-->', customeDetails);
+        if (user.role === 'Admin') {
+          const vendor_token = await axios.post(
+            "https://api.frontegg.com/auth/vendor/",
+            {
+              clientId:process.env.FRONTEGG_CLIENT_ID,
+              secret: process.env.FRONTEGG_API_KEY,
+            },
+          );
+          console.log('vendor_token-->', vendor_token);
+          const tenant_response = await axios.post(
+            "https://api.frontegg.com/tenants/resources/tenants/v1",
+            {
+              tenantId: uuidv4(),
+              name: customeDetails.company_name,
+            },
+            {
+              headers: {
+                'Authorization':
+                  `Bearer ${vendor_token.data.token}`,
+              },
+            }
+          );
+          console.log('tenant_response--->', tenant_response.data);
+          if (tenant_response) {
+            const user_response = await axios.post(
+              "https://api.frontegg.com/identity/resources/users/v1",
+              {
+                name: customeDetails.billing_contact_first +' '+ customeDetails.billing_contact_last,
+                email: addUser.dataValues.email,
+                metadata: JSON.stringify({
+                  zoomin_user_id: addUser.dataValues.user_id
+                })
+              },
+              {
+                headers: {
+                  'frontegg-tenant-id': `${tenant_response.data.tenantId}`,
+                  'Authorization':
+                    `Bearer ${vendor_token.data.token}`                
+                },
+              }
+            );
+            console.log('user_response--->', user_response.data);
+            await Users.update(
+              { frontegg_tenant_id: tenant_response.data.tenantId },
+              {
+                where: { user_id: addUser.dataValues.user_id },
+                transaction: t 
+              },
+            );
+          }
+    
           customer = await stripe.customers.create({
-            name: user.first_name +' '+ user.last_name,
+            name: user.first_name + ' ' + user.last_name,
             email: user.email,
             address: {
               city: customeDetails?.city,
@@ -218,21 +232,28 @@ module.exports = {
               postal_code: customeDetails?.postal,
             }
           });
-          await customerServices.editCustomer(addCustomer?.cust_id, {stripe_cust_id: customer.id}, t)
+    
+          await customerServices.editCustomer(addCustomer?.cust_id, { stripe_cust_id: customer.id, frontegg_tenant_id: tenant_response.data.tenantId }, t)
         }
+    
+        await t.commit();
+        res.status(201).json({
+          IsSuccess: true,
+          Data: { ..._.omit(addCustomer, ["cust_id"]), ...addLocations },
+          Message: CONSTANTS.CUSTOMER_REGISTERED,
+        });
       } else {
-        res
-          .status(400)
-          .json({
-            IsSuccess: true,
-            Data: {},
-            Message: CONSTANTS.CUSTOMER_REGISRATION_FAILED,
-          });
+        await t.rollback();
+        res.status(400).json({
+          IsSuccess: true,
+          Data: {},
+          Message: CONSTANTS.CUSTOMER_REGISRATION_FAILED,
+        });
       }
-      await t.commit();
       next();
     } catch (error) {
       await t.rollback();
+      console.error(error);
       res.status(500).json({
         IsSuccess: false,
         error_log: error,

@@ -2,25 +2,37 @@ const jwt = require('jsonwebtoken');
 const connectToDatabase = require('../models/index');
 
 const CONSTANTS = require('../lib/constants');
+const { IdentityClient } = require('@frontegg/client');
+const identityClient = new IdentityClient({ FRONTEGG_CLIENT_ID: process.env.FRONTEGG_CLIENT_ID, FRONTEGG_API_KEY: process.env.FRONTEGG_API_KEY });
+
 // authentication middleware to check auth and give access based on user type
 module.exports = async function (req, res, next) {
+  // console.log('req-->', req.frontegg.user);
   const { Family, Child, Users, Customers } = await connectToDatabase();
   try {
     const token = req.header('Authorization')?.substring(7);
     if (!token) {
       return res.status(401).json({ IsSuccess: true, Data: {}, Message: CONSTANTS.AUTH_ERROR });
     } else {
-      const decodeToken = jwt.verify(token, process.env.JWT_SECRET_KEY);
+      // const decodeToken = jwt.verify(token, process.env.JWT_SECRET_KEY);
+      const decodeToken = await identityClient.validateIdentityOnToken(token);
+      // console.log('decodeToken-->', decodeToken);
       let user;
       let cust;
-      if (decodeToken?.user_id) {
-        user = await Users.findOne({ where: { user_id: decodeToken?.user_id } });
+      // console.log('decodeToken.metadata.zoomin_user_id-->', decodeToken.metadata.zoomin_user_id);
+      const user_id = decodeToken.metadata.zoomin_user_id;
+      // console.log('user_id-->', user_id);
+      if (user_id) {
+        // console.log('----query----');
+        user = await Users.findOne({ where: { user_id: user_id } });
+        // console.log('user-->', user);
       }
       if (!user) {
-        if (decodeToken?.family_member_id) {
+        const family_member_id = decodeToken.metadata.zoomin_family_member_id;
+        if (family_member_id) {
           let familyUser;
           familyUser = await Family.findOne({
-            where: { family_member_id: decodeToken?.family_member_id },
+            where: { family_member_id: family_member_id },
             include: [
               {
                 model: Child,

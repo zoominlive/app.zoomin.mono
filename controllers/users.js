@@ -70,10 +70,10 @@ module.exports = {
   },
   /* Get  user's details */
   getUserDetails: async (req, res, next) => {
+    const t = await sequelize.transaction();
     try {
       const user = req.user;
       const custId = req.user.cust_id || req.query?.cust_id;
-      const t = await sequelize.transaction();
       if(!req.user.cust_id){
         console.log('calling===================')
         let availableLocations = await customerServices.getLocationDetails(custId)
@@ -120,6 +120,7 @@ module.exports = {
     try {
       const params = req.body;
       params.cust_id = req.user.cust_id || req.body.cust_id;
+      params.frontegg_tenant_id = req.body.tenant_id;
 
       let checkUserValidation = await userServices.userValidation(params);
 
@@ -170,6 +171,8 @@ module.exports = {
         }
         //await dashboardServices.updateDashboardData(params.cust_id);
         // await t.commit();
+        const {frontegg_tenant_id} = await customerServices.getCustomerDetails(params.cust_id);
+        const frontEggUser = await userServices.createFrontEggUser(frontegg_tenant_id, userData)
         res.status(201).json({
           IsSuccess: true,
           Data: _.omit(userData, ['password']),

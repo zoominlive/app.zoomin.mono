@@ -9,7 +9,8 @@ const { v4: uuidv4 } = require("uuid");
 
 var validator = require("validator");
 const RoomsInTeacher = require("../models/rooms_assigned_to_teacher");
-const customerServices = require('../services/customers')
+const customerServices = require('../services/customers');
+const { default: axios } = require("axios");
 /* Validate email */
 const validateEmail = (emailAdress) => {
   // let regexEmail = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
@@ -491,5 +492,63 @@ module.exports = {
     });
 
     return socketIds
-  }
+  },
+
+  createFrontEggUser: async (tenantId, userDetails) => {
+    const vendor_token = await axios.post(
+      "https://api.frontegg.com/auth/vendor/",
+      {
+        clientId: process.env.FRONTEGG_CLIENT_ID,
+        secret: process.env.FRONTEGG_API_KEY,
+      },
+    );
+    if (vendor_token) {
+      const user_response = await axios.post(
+        "https://api.frontegg.com/identity/resources/users/v1",
+        {
+          name: userDetails.first_name +' '+ userDetails.last_name,
+          email: userDetails.email,
+          metadata: JSON.stringify({
+            zoomin_user_id: userDetails.user_id
+          })
+        },
+        {
+          headers: {
+            'frontegg-tenant-id': `${tenantId}`,
+            'Authorization':
+              `Bearer ${vendor_token.data.token}`                
+          },
+        }
+      );
+    }
+  },
+
+  createFrontEggFamilyUser: async (tenantId, userDetails) => {
+    const vendor_token = await axios.post(
+      "https://api.frontegg.com/auth/vendor/",
+      {
+        clientId: process.env.FRONTEGG_CLIENT_ID,
+        secret: process.env.FRONTEGG_API_KEY,
+      },
+    );
+    if (vendor_token) {
+      const user_response = await axios.post(
+        "https://api.frontegg.com/identity/resources/users/v1",
+        {
+          name: userDetails.first_name +' '+ userDetails.last_name,
+          email: userDetails.email,
+          metadata: JSON.stringify({
+            zoomin_family_member_id: userDetails.family_member_id
+          })
+        },
+        {
+          headers: {
+            'frontegg-tenant-id': `${tenantId}`,
+            'Authorization':
+              `Bearer ${vendor_token.data.token}`                
+          },
+        }
+      );
+    }
+  },
 };

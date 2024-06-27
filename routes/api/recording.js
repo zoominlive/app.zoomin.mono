@@ -5,8 +5,9 @@ const router = express.Router();
 /* Required Controllers */
 const authController = require('../../middleware/auth');
 const RecordingsController = require('../../controllers/recordings');
+const { withAuthentication } = require('@frontegg/client');
 
 /*recordings end points */
-router.get('/', authController, RecordingsController.getAllRecordings);
+router.get('/', withAuthentication(), authController, RecordingsController.getAllRecordings);
 
 module.exports = router;

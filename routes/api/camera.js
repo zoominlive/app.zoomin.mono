@@ -5,13 +5,15 @@ const router = express.Router();
 /* Required Controllers */
 const authController = require('../../middleware/auth');
 const cameraController = require('../../controllers/cameras');
+const { withAuthentication } = require('@frontegg/client');
 
 /* Camera end points */
-router.get('/', authController, cameraController.getAllCameras);
-router.post('/add', authController, cameraController.createCamera);
-router.put('/edit', authController, cameraController.editCamera);
-router.delete('/delete', authController, cameraController.deleteCamera);
-router.post('/fix-camera', authController, cameraController.fixCamera);
-router.get('/generate-thumbnail', authController, cameraController.generateThumbnail);
+router.get('/', withAuthentication(), authController, cameraController.getAllCameras);
+router.get('/get-all-cams-transcoder', cameraController.getAllCamerasForTranscoder);
+router.post('/add', withAuthentication(), authController, cameraController.createCamera);
+router.put('/edit', withAuthentication(), authController, cameraController.editCamera);
+router.delete('/delete', withAuthentication(), authController, cameraController.deleteCamera);
+router.post('/fix-camera', withAuthentication(), authController, cameraController.fixCamera);
+router.get('/generate-thumbnail', withAuthentication(), authController, cameraController.generateThumbnail);
 
 module.exports = router;
