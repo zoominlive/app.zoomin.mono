@@ -1,4 +1,5 @@
-import { Box, Typography } from '@mui/material';
+/* eslint-disable no-unused-vars */
+import { Box, Button, IconButton, Input, Typography } from '@mui/material';
 import React, { useRef, useState } from 'react';
 import ReactPlayer from 'react-player';
 import PlayerControls from './playercontols';
@@ -9,8 +10,11 @@ import Loader from '../common/loader';
 import { useContext } from 'react';
 import AuthContext from '../../context/authcontext';
 import _ from 'lodash';
+import { Stage, Layer, Rect, Text } from 'react-konva';
 // import VideocamOffIcon from '@mui/icons-material/VideocamOff';
 import Hls from 'hls.js';
+import DeleteIcon from '@mui/icons-material/Delete';
+import { useSnackbar } from 'notistack';
 
 const CustomPlayer = (props) => {
   const authCtx = useContext(AuthContext);
@@ -118,6 +122,80 @@ const CustomPlayer = (props) => {
 
     return () => clearInterval(interval);
   }, []);
+  const [overlays, setOverlays] = useState([]);
+  const [currentOverlay, setCurrentOverlay] = useState(null);
+  const [isDrawing, setIsDrawing] = useState(false);
+  // eslint-disable-next-line no-unused-vars
+  const [stageWidth, setStageWidth] = useState(window.innerWidth);
+  const [stageHeight, setStageHeight] = useState(window.innerHeight);
+  const [canvasWidthHeight, setCanvasWidthHeight] = useState(null);
+  const { enqueueSnackbar } = useSnackbar();
+
+  useEffect(() => {
+    const updateDimensions = () => {
+      // Update Stage dimensions to match player dimensions if needed
+      console.log('playerRef-->', playerRef);
+      console.log('playerContainerRef-->', playerContainerRef);
+      console.log('clientHeight-->', playerContainerRef?.current?.clientHeight);
+      console.log('clientWidth-->', playerContainerRef?.current?.clientWidth);
+      if (playerContainerRef?.current) {
+        const { clientWidth, clientHeight } = playerContainerRef.current;
+        setStageWidth(clientWidth);
+        setStageHeight(clientHeight);
+        setCanvasWidthHeight({ canvasWidth: clientWidth, canvasHeight: clientHeight });
+      }
+    };
+
+    window.addEventListener('resize', updateDimensions);
+    updateDimensions();
+
+    return () => {
+      window.removeEventListener('resize', updateDimensions);
+    };
+  }, [playerContainerRef?.current]);
+
+  const handleMouseDown = (e) => {
+    console.log('handleMouseDown');
+    const { x, y } = e.target.getStage().getPointerPosition();
+    setCurrentOverlay({ x, y, width: 0, height: 0 });
+    setIsDrawing(true);
+  };
+
+  const handleMouseMove = (e) => {
+    console.log('handleMouseMove');
+
+    if (!isDrawing) return;
+    const { x, y } = e.target.getStage().getPointerPosition();
+    setCurrentOverlay((prevOverlay) => ({
+      ...prevOverlay,
+      width: x - prevOverlay.x,
+      height: y - prevOverlay.y
+    }));
+  };
+
+  const handleMouseUp = () => {
+    console.log('handleMouseUp');
+
+    if (isDrawing) {
+      setOverlays((prevOverlays) => [...prevOverlays, currentOverlay]);
+      setCurrentOverlay(null);
+      setIsDrawing(false);
+    }
+  };
+
+  const handleDragEnd = (e, index) => {
+    const { x, y } = e.target.position();
+    setOverlays((prevOverlays) => {
+      const newOverlays = [...prevOverlays];
+      newOverlays[index] = { ...newOverlays[index], x, y };
+      return newOverlays;
+    });
+  };
+
+  const handleDelete = (index) => {
+    console.log('index-->', index);
+    setOverlays((prevOverlays) => prevOverlays.filter((_, i) => i !== index));
+  };
 
   useEffect(() => {
     function exitHandler() {
@@ -203,108 +281,177 @@ const CustomPlayer = (props) => {
     playerRef.current.seekTo(parseFloat(value / 100));
   };
 
+  const handleAPICall = (e) => {
+    e.preventDefault();
+    const payload = { overlays };
+    console.log('API Payload:', payload);
+    props.setCoords(payload);
+    props.setCanvasWidthHeight(canvasWidthHeight);
+    enqueueSnackbar('Coordinates saved. Click Save Changes to proceed', { variant: 'success' });
+  };
+
   return (
     <>
       {!_.isEmpty(url) && (
-        <Box
-          className={
-            location.pathname === '/recordings'
-              ? 'video-player-wrapper-recordings-page'
-              : location.pathname === '/watch-stream'
-              ? 'video-player-wrapper-watch-stream-page'
-              : 'video-player-wrapper'
-          }
-          ref={playerContainerRef}>
-          <Loader loading={!ready} />
-          <ReactPlayer
-            progressInterval={0}
-            // url={
-            //   props.streamUri.includes('https://live.zoominlive.com')
-            //     ? `${props?.streamUri}?uid=${
-            //         authCtx?.user?.family_member_id || authCtx?.user?.user_id
-            //       }&sid=${
-            //         props?.streamUri
-            //           .split('/')
-            //           [props?.streamUri.split('/').length - 1].split('.')[0]
-            //       }&uuid=${uuidv4()}`
-            //     : `${authCtx.user.transcoderBaseUrl}${props?.streamUri}?uid=${
-            //         authCtx?.user?.family_member_id || authCtx?.user?.user_id
-            //       }&sid=${props?.cam_id}&uuid=${uuidv4()}`
-            // }
-            url={
-              props?.streamUri?.includes('https://live.zoominlive.com') ||
-              props?.streamUri?.includes('zoomin-recordings-rtmp')
-                ? props?.streamUri
-                : `${authCtx.user.transcoderBaseUrl}${props?.streamUri}`
-            }
+        <>
+          <Box
             className={
-              location.pathname === '/watch-stream' ? 'react-player' : 'react-player custom-wrapper'
+              location.pathname === '/recordings'
+                ? 'video-player-wrapper-recordings-page'
+                : location.pathname === '/watch-stream'
+                ? 'video-player-wrapper-watch-stream-page'
+                : 'video-player-wrapper'
             }
-            height={'100%'}
-            width={'100%'}
-            controls={false}
-            ref={playerRef}
-            stopOnUnmount={true}
-            onReady={() => {
-              setPlayerPlaying(true);
-              startTimer();
-              setReady(true);
-            }}
-            onPlay={() => {
-              setPlayerPlaying(true);
-              startTimer();
-              setShowErrorMessage(true);
-            }}
-            onPause={() => {
-              setPlayerPlaying(false);
-            }}
-            onError={() => {
-              if (showErrorMessage) {
-                setReady(true);
-                setShowErrorMessage(false);
+            sx={{ position: 'relative' }}
+            ref={playerContainerRef}>
+            <Loader loading={!ready} />
+            <ReactPlayer
+              progressInterval={0}
+              url={
+                props?.streamUri?.includes('https://live.zoominlive.com') ||
+                props?.streamUri?.includes('zoomin-recordings-rtmp')
+                  ? props?.streamUri
+                  : `${authCtx.user.transcoderBaseUrl}${props?.streamUri}`
               }
-            }}
-            playing={playerPlaying}
-            pip={inPIPMode}
-            config={{
-              file: {
-                hlsOptions: {
-                  forceHLS: true,
-                  debug: false,
-                  xhrSetup: function (xhr) {
-                    xhr.setRequestHeader('Authorization', `Bearer ${authCtx.token}`);
+              className={
+                location.pathname === '/watch-stream'
+                  ? 'react-player'
+                  : 'react-player custom-wrapper'
+              }
+              height={'100%'}
+              width={'100%'}
+              controls={false}
+              ref={playerRef}
+              stopOnUnmount={true}
+              onReady={() => {
+                setPlayerPlaying(true);
+                startTimer();
+                setReady(true);
+              }}
+              onPlay={() => {
+                setPlayerPlaying(true);
+                startTimer();
+                setShowErrorMessage(true);
+              }}
+              onPause={() => {
+                setPlayerPlaying(false);
+              }}
+              onError={() => {
+                if (showErrorMessage) {
+                  setReady(true);
+                  setShowErrorMessage(false);
+                }
+              }}
+              playing={playerPlaying}
+              pip={inPIPMode}
+              config={{
+                file: {
+                  hlsOptions: {
+                    forceHLS: true,
+                    debug: false,
+                    xhrSetup: function (xhr) {
+                      xhr.setRequestHeader('Authorization', `Bearer ${authCtx.token}`);
+                    }
                   }
                 }
-              }
-            }}
-            muted={isMuted}
-            onProgress={progressHandler}
-          />
-          {location.pathname === '/watch-stream' && (
-            <Box className={'overlay'}>
-              <Typography
-                fontSize={'12px'}
-                color={
-                  'white'
-                }>{`${props?.camDetails?.room_name} - ${props?.camDetails?.cam_name}`}</Typography>
+              }}
+              muted={isMuted}
+              onProgress={progressHandler}
+            />
+            {props?.edit_cam && props?.canvas_status && (
+              <Stage
+                width={stageWidth}
+                height={stageHeight}
+                style={{ position: 'absolute', top: 0, left: 0 }}
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}>
+                <Layer>
+                  {overlays.map((overlay, index) => (
+                    <React.Fragment key={index}>
+                      <Rect
+                        x={overlay.x}
+                        y={overlay.y}
+                        width={overlay.width}
+                        height={overlay.height}
+                        fill="rgba(0, 0, 0, 0.5)"
+                        draggable
+                        onDragEnd={(e) => handleDragEnd(e, index)}
+                      />
+                      <Text
+                        x={overlay.x}
+                        y={overlay.y - 20}
+                        text={`x: ${overlay.x}, y: ${overlay.y}`}
+                        fontSize={12}
+                        fill="white"
+                      />
+                    </React.Fragment>
+                  ))}
+                  {currentOverlay && (
+                    <Rect
+                      x={currentOverlay.x}
+                      y={currentOverlay.y}
+                      width={currentOverlay.width}
+                      height={currentOverlay.height}
+                      fill="rgba(0, 0, 0, 0.5)"
+                    />
+                  )}
+                </Layer>
+              </Stage>
+            )}
+            {location.pathname === '/watch-stream' && (
+              <Box className={'overlay'}>
+                <Typography
+                  fontSize={'12px'}
+                  color={
+                    'white'
+                  }>{`${props?.camDetails?.room_name} - ${props?.camDetails?.cam_name}`}</Typography>
+              </Box>
+            )}
+            <PlayerControls
+              playing={playerPlaying}
+              setPlaying={setPlayerPlaying}
+              inPIPMode={inPIPMode}
+              setInPIPMode={setInPIPMode}
+              fullscreen={fullscreen}
+              handleFullscreenToggle={handleFullscreenToggle}
+              noOfCameras={props.noOfCameras}
+              isMuted={isMuted}
+              setIsMuted={setIsMuted}
+              played={played}
+              onSeek={seekHandler}
+              streamRunning={props.streamRunning}
+              streamUrl={props?.streamUri}
+            />
+          </Box>
+          {props?.edit_cam && props?.canvas_status && (
+            <Box
+              style={{
+                width: '100%',
+                padding: '10px',
+                marginTop: '10px',
+                backgroundColor: '#f0f0f0'
+              }}>
+              <Typography variant="h4">Privacy Areas</Typography>
+              {overlays.map((overlay, index) => (
+                <Box key={index} style={{ marginBottom: '10px', display: 'flex' }}>
+                  <Input
+                    type="text"
+                    value={`x: ${overlay.x}, y: ${overlay.y}, width: ${overlay.width}, height: ${overlay.height}`}
+                    readOnly
+                    style={{ width: '100%' }}
+                  />
+                  <IconButton onClick={() => handleDelete(index)} style={{ marginTop: '5px' }}>
+                    <DeleteIcon color="error" />
+                  </IconButton>
+                </Box>
+              ))}
+              <Button variant="contained" onClick={handleAPICall} style={{ marginTop: '10px' }}>
+                Set Coordinates
+              </Button>
             </Box>
           )}
-          <PlayerControls
-            playing={playerPlaying}
-            setPlaying={setPlayerPlaying}
-            inPIPMode={inPIPMode}
-            setInPIPMode={setInPIPMode}
-            fullscreen={fullscreen}
-            handleFullscreenToggle={handleFullscreenToggle}
-            noOfCameras={props.noOfCameras}
-            isMuted={isMuted}
-            setIsMuted={setIsMuted}
-            played={played}
-            onSeek={seekHandler}
-            streamRunning={props.streamRunning}
-            streamUrl={props?.streamUri}
-          />
-        </Box>
+        </>
       )}
     </>
   );
@@ -322,5 +469,10 @@ CustomPlayer.propTypes = {
   camDetails: PropTypes.object,
   cam_id: PropTypes.number,
   streamRunning: PropTypes.bool,
-  cameras: PropTypes.array
+  cameras: PropTypes.array,
+  edit_cam: PropTypes.bool,
+  canvas_status: PropTypes.bool,
+  drawbox_co: PropTypes.array,
+  setCoords: PropTypes.object,
+  setCanvasWidthHeight: PropTypes.object
 };
