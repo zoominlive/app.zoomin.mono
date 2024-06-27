@@ -9,6 +9,7 @@ const s3BucketImageUploader = require('../lib/aws-services');
 const CONSTANTS = require('../lib/constants');
 const sequelize = require('../lib/database');
 const jwt = require('jsonwebtoken');
+const { v4: uuidv4 } = require("uuid");
 const Customers = require('../models/customers');
 
 module.exports = {
@@ -179,11 +180,40 @@ module.exports = {
     const t = await sequelize.transaction();
     try {
       const params = req.body;
+      const token = req.userToken;
       if (params?.thumbnail && !params?.thumbnail.includes('https://zoominlive-cam-thumbs.s3.amazonaws.com')) {
         const imageUrl = await s3BucketImageUploader._upload(params?.thumbnail);
         params.thumbnail = imageUrl;
       }
       // const getPresignedUrl = await s3BucketImageUploader.getPresignedUrlForThumbnail(params?.s3Uri);
+
+      const camEncodedStopped = await stopEncodingStream(
+        params.stream_id,
+        params.wait,
+        token,
+        req.user.cust_id || params.cust_id,
+        t
+      );
+      let camera;
+      console.log('camEncodedStopped==>', camEncodedStopped);
+      if (camEncodedStopped) {
+        const token = req.userToken;
+        const transcodedDetails = await startEncodingStreamToFixCam(
+          params.cam_uri,
+          token,
+          req.user.cust_id || params.cust_id,
+          params.stream_id,
+          params?.on_screen_display,
+          params?.codec
+        );
+        console.log('transcodedDetails-->', transcodedDetails);
+        params.stream_uri = transcodedDetails?.data ? transcodedDetails.data?.uri : '';
+        params.stream_uuid = transcodedDetails?.data ? transcodedDetails.data?.id : '';
+        params.cam_alias = transcodedDetails?.data ? transcodedDetails.data?.alias : '';
+        params.cust_id = req.user.cust_id ? req.user.cust_id : params.cust_id,
+        params.privacy_areas = params?.on_screen_display
+        camera = await cameraServices.editCamera(params.cam_id, params, t);
+      }
       const cameraUpdated = await cameraServices.editCamera(
         params.cam_id,
         {
@@ -341,10 +371,15 @@ module.exports = {
       // Function to generate presigned URLs for thumbnails in the provided array
       const generatePresignedUrlsForThumbnails = async (cameras) => {
         const camerasWithPresignedUrls = await Promise.all(cameras.map(async (camera) => {
+            let uid = req.user?.family_member_id || req.user?.user_id;
+            let sid = camera?.cam_id;
+            let uuid = uuidv4();
+            const token = jwt.sign({ user_id: uid, cam_id: sid, uuid: uuid }, process.env.STREAM_URL_SECRET_KEY, {expiresIn: '12h'});
             // Generate presigned URL for thumbnail if it contains an S3 URI
             if (camera.thumbnail && camera.thumbnail.startsWith('s3://')) {
               camera.thumbnailPresignedUrl = await generatePresignedUrlForThumbnail(camera.thumbnail);
             }
+            camera.stream_uri_seckey = `${camera?.stream_uri}?seckey=${token}`
             return camera;
         }));
         return { cameras: camerasWithPresignedUrls };
