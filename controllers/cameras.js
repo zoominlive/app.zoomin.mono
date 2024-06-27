@@ -1,5 +1,5 @@
 const cameraServices = require('../services/cameras');
-const { startEncodingStream, deleteEncodingStream, startEncodingStreamToFixCam, stopEncodingStream } = require('../lib/rtsp-stream');
+const { startEncodingStream, deleteEncodingStream, startEncodingStreamToFixCam, stopEncodingStream, stopEncodingStreamPrivacyMasking } = require('../lib/rtsp-stream');
 const _ = require('lodash');
 const customerServices = require('../services/customers');
 const logServices = require('../services/logs');
@@ -187,12 +187,11 @@ module.exports = {
       }
       // const getPresignedUrl = await s3BucketImageUploader.getPresignedUrlForThumbnail(params?.s3Uri);
 
-      const camEncodedStopped = await stopEncodingStream(
-        params.stream_id,
+      const camEncodedStopped = await stopEncodingStreamPrivacyMasking(
+        params.alias,
         params.wait,
         token,
         req.user.cust_id || params.cust_id,
-        t
       );
       let camera;
       console.log('camEncodedStopped==>', camEncodedStopped);
@@ -212,11 +211,12 @@ module.exports = {
         params.cam_alias = transcodedDetails?.data ? transcodedDetails.data?.alias : '';
         params.cust_id = req.user.cust_id ? req.user.cust_id : params.cust_id,
         params.privacy_areas = params?.on_screen_display
-        camera = await cameraServices.editCamera(params.cam_id, params, t);
+        // camera = await cameraServices.editCamera(params.cam_id, params, t);
       }
       const cameraUpdated = await cameraServices.editCamera(
         params.cam_id,
         {
+          ...params,
           cam_id: params.cam_id,
           cam_name: params.cam_name,
           thumbnail: params?.s3Uri ? params?.s3Uri : params?.thumbnail 
