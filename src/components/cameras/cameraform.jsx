@@ -99,6 +99,8 @@ const CameraForm = (props) => {
       on_screen_display: updatedData ? updatedData : '',
       codec: 'libx264',
       stream_id: props?.camera?.stream_uuid,
+      alias: props.camera?.cam_alias,
+      cust_id: localStorage.getItem('cust_id') ? localStorage.getItem('cust_id') : '',
       ...data
     };
     delete payload.locations;
