@@ -88,7 +88,7 @@ const CameraForm = (props) => {
     }
 
     const updatedData = {
-      watermark_url: '/app/watermark-2.png',
+      // watermark_url: '/app/watermark-2.png',
       drawbox_co: coords?.drawbox_co,
       canvasDimensions: canvasWidthHeight && canvasWidthHeight
     };
