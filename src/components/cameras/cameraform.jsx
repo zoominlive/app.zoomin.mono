@@ -98,7 +98,7 @@ const CameraForm = (props) => {
       s3Uri: S3Uri,
       on_screen_display: updatedData ? updatedData : '',
       codec: 'libx264',
-      stream_id: props.camera.stream_uuid,
+      stream_id: props?.camera?.stream_uuid,
       ...data
     };
     delete payload.locations;
@@ -427,19 +427,21 @@ const CameraForm = (props) => {
                         />
                       </Grid>
                     </Grid>
-                    <Grid item spacing={2} md={2} sm={12}>
-                      <Box className="row-button-wrapper">
-                        <InputLabel>{checked ? 'Disable Canvas' : 'Add Privacy Area'}</InputLabel>
-                        <Switch
-                          className={`switch-disable`}
-                          checked={checked}
-                          onChange={() => {
-                            setChecked(!checked);
-                          }}
-                          inputProps={{ 'aria-label': 'controlled' }}
-                        />
-                      </Box>
-                    </Grid>
+                    {props?.camera && (
+                      <Grid item spacing={2} md={2} sm={12}>
+                        <Box className="row-button-wrapper">
+                          <InputLabel>{checked ? 'Disable Canvas' : 'Add Privacy Area'}</InputLabel>
+                          <Switch
+                            className={`switch-disable`}
+                            checked={checked}
+                            onChange={() => {
+                              setChecked(!checked);
+                            }}
+                            inputProps={{ 'aria-label': 'controlled' }}
+                          />
+                        </Box>
+                      </Grid>
+                    )}
                     <Grid
                       container
                       spacing={2}
