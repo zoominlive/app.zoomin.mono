@@ -33,6 +33,7 @@ module.exports = {
           token,
           params.cust_id
         );
+        console.log('transcoderDetails==>', transcodedDetails);
         params.stream_uri = transcodedDetails?.data ? transcodedDetails.data?.uri : '';
         params.stream_uuid = transcodedDetails?.data ? transcodedDetails.data?.id : '';
         params.cam_alias = transcodedDetails?.data ? transcodedDetails.data?.alias : '';
