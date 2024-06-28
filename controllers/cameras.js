@@ -444,6 +444,7 @@ module.exports = {
               if (camera.thumbnail && camera.thumbnail.startsWith('s3://')) {
                 camera.thumbnailPresignedUrl = await generatePresignedUrlForThumbnail(camera.thumbnail);
               }
+              camera.privacy_areas = camera.privacy_areas ? camera.privacy_areas : {"drawbox_co": []}
               return camera;
           }));
           return { cameras: camerasWithPresignedUrls };
