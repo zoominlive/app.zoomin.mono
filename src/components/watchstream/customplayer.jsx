@@ -298,7 +298,7 @@ const CustomPlayer = (props) => {
             className={
               location.pathname === '/recordings'
                 ? 'video-player-wrapper-recordings-page'
-                : location.pathname === '/watch-stream'
+                : location.pathname === '/watch-stream' || location.pathname === '/cameras'
                 ? 'video-player-wrapper-watch-stream-page'
                 : 'video-player-wrapper'
             }
@@ -314,7 +314,7 @@ const CustomPlayer = (props) => {
                   : `${authCtx.user.transcoderBaseUrl}${props?.streamUri}`
               }
               className={
-                location.pathname === '/watch-stream'
+                location.pathname === '/watch-stream' || location.pathname === '/cameras'
                   ? 'react-player'
                   : 'react-player custom-wrapper'
               }
