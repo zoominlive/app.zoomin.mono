@@ -99,7 +99,7 @@ module.exports = {
                   let uid = user?.family_member_id || user?.user_id;
                   let sid = cam?.camera?.cam_id;
                   let uuid = uuidv4();
-                  const token = jwt.sign({ user_id: uid, cam_id: sid, uuid: uuid }, process.env.STREAM_URL_SECRET_KEY, {expiresIn: '10m'});
+                  const token = jwt.sign({ user_id: uid, cam_id: sid, uuid: uuid }, process.env.STREAM_URL_SECRET_KEY, {expiresIn: '12h'});
                   return {
                     cam_id: cam?.camera?.cam_id,
                     cam_name: cam?.camera?.cam_name,
@@ -114,7 +114,7 @@ module.exports = {
                 let uid = user?.family_member_id || user?.user_id;
                 let sid = cam?.stream_uri.split('/') [cam?.stream_uri.split('/').length - 1].split('.')[0];
                 let uuid = uuidv4();
-                const token = jwt.sign({ user_id: uid, cam_id: sid, uuid: uuid }, process.env.STREAM_URL_SECRET_KEY, {expiresIn: '10m'});
+                const token = jwt.sign({ user_id: uid, cam_id: sid, uuid: uuid }, process.env.STREAM_URL_SECRET_KEY, {expiresIn: '12h'});
                 return {
                   cam_id: cam?.cam_id,
                   cam_name: cam?.cam_name,
@@ -137,7 +137,7 @@ module.exports = {
                 let uid = user?.family_member_id || user?.user_id;
                 let sid = cam?.camera?.cam_id;
                 let uuid = uuidv4();
-                const token = jwt.sign({ user_id: uid, cam_id: sid, uuid: uuid }, process.env.STREAM_URL_SECRET_KEY, {expiresIn: '10m'});
+                const token = jwt.sign({ user_id: uid, cam_id: sid, uuid: uuid }, process.env.STREAM_URL_SECRET_KEY, {expiresIn: '12h'});
                 return {
                   cam_id: cam?.camera?.cam_id,
                   cam_name: cam?.camera?.cam_name,
@@ -151,7 +151,7 @@ module.exports = {
               let uid = user?.family_member_id || user?.user_id;
               let sid = cam?.stream_uri.split('/') [cam?.stream_uri.split('/').length - 1].split('.')[0];
               let uuid = uuidv4();
-              const token = jwt.sign({ user_id: uid, cam_id: sid, uuid: uuid }, process.env.STREAM_URL_SECRET_KEY, {expiresIn: '10m'});
+              const token = jwt.sign({ user_id: uid, cam_id: sid, uuid: uuid }, process.env.STREAM_URL_SECRET_KEY, {expiresIn: '12h'});
               return {
                 cam_id: cam?.cam_id,
                 cam_name: cam?.cam_name,
@@ -253,7 +253,7 @@ module.exports = {
             let uid = user?.family_member_id || user?.user_id;
             let sid = cam?.camera?.cam_id;
             let uuid = uuidv4();
-            const token = jwt.sign({ user_id: uid, cam_id: sid, uuid: uuid }, process.env.STREAM_URL_SECRET_KEY, {expiresIn: '10m'});
+            const token = jwt.sign({ user_id: uid, cam_id: sid, uuid: uuid }, process.env.STREAM_URL_SECRET_KEY, {expiresIn: '12h'});
             return {
               cam_id: cam?.camera?.cam_id,
               cam_name: cam?.camera?.cam_name,
@@ -268,7 +268,7 @@ module.exports = {
             let uid = user?.family_member_id || user?.user_id;
             let sid = cam?.stream_uri.split('/') [cam?.stream_uri.split('/').length - 1].split('.')[0];
             let uuid = uuidv4();
-            const token = jwt.sign({ user_id: uid, cam_id: sid, uuid: uuid }, process.env.STREAM_URL_SECRET_KEY, {expiresIn: '10m'});
+            const token = jwt.sign({ user_id: uid, cam_id: sid, uuid: uuid }, process.env.STREAM_URL_SECRET_KEY, {expiresIn: '12h'});
             return {
               cam_id: cam?.cam_id,
               cam_name: cam?.cam_name,
