@@ -35,7 +35,7 @@ API.interceptors.response.use(
     }
     if (err.response.status === 403) {
       const baseUrl = ContextHolder.getContext().baseUrl;
-      window.location.href = `${baseUrl}/oauth/logout?post_logout_redirect_uri=${process.env.REACT_APP_LOGOUT_REDIRECT_URL_DEVELOPMENT}`;
+      window.location.href = `${baseUrl}/oauth/logout?post_logout_redirect_uri=${process.env.REACT_APP_LOGOUT_REDIRECT_URL_STAGE}`;
     }
     return err;
   }

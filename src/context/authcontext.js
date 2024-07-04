@@ -10,7 +10,8 @@ const defaultState = {
     custName: localStorage.getItem('cust_name'),
     location: ['Select All'],
     updateDashboardData: false,
-    paymentMethod: false
+    paymentMethod: false,
+    sessionCreated: false
   }
 };
 
@@ -28,6 +29,7 @@ export const AuthContextProvider = (props) => {
   const [custName, setCustName] = useState(defaultState.auth.custName);
   const [location, setLocation] = useState(defaultState.auth.location);
   const [paymentMethod, setPaymentMethod] = useState(defaultState.auth.paymentMethod);
+  const [sessionCreated, setSessionCreated] = useState(defaultState.auth.sessionCreated);
   const [updateDashboardData, setUpdateDashboardData] = useState(
     defaultState.auth.updateDashboardData
   );
@@ -47,6 +49,7 @@ export const AuthContextProvider = (props) => {
   const handleLocation = (loc) => setLocation(loc);
   const handlePaymentMethod = (pm) => setPaymentMethod(pm);
   const handleUpdateDashboardData = (value) => setUpdateDashboardData(value);
+  const handleSessionCreated = (value) => setSessionCreated(value);
 
   const context = {
     token,
@@ -57,6 +60,7 @@ export const AuthContextProvider = (props) => {
     location,
     updateDashboardData,
     paymentMethod,
+    sessionCreated,
     setToken: handleToken,
     setUser: handleUser,
     setAuthError: handleAuthError,
@@ -64,7 +68,8 @@ export const AuthContextProvider = (props) => {
     setCustName: handleCustName,
     setLocation: handleLocation,
     setUpdateDashboardData: handleUpdateDashboardData,
-    setPaymentMethod: handlePaymentMethod
+    setPaymentMethod: handlePaymentMethod,
+    setSessionCreated: handleSessionCreated
   };
 
   return <AuthContext.Provider value={context}>{props.children}</AuthContext.Provider>;

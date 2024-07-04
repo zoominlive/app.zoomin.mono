@@ -131,6 +131,7 @@ const Layout = () => {
             variant: 'success'
           });
           setSessionCreated(true);
+          authCtx.setSessionCreated(true);
           if (user?.superUser) {
             getCustPaymentMethod();
             getUsers();
