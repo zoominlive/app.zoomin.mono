@@ -62,7 +62,7 @@ import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import debounce from 'lodash.debounce';
 import NotificationsIcon from '@mui/icons-material/Notifications';
-import { useAuth } from '@frontegg/react';
+// import { useAuth } from '@frontegg/react';
 
 const icon = <RadioButtonUncheckedIcon fontSize="small" />;
 const checkedIcon = <CheckCircleOutlineIcon fontSize="small" style={{ color: '#5A53DD' }} />;
@@ -85,11 +85,11 @@ const Layout = () => {
   const [usersResults, setUsersResults] = useState([]);
   const [showSearchResults, setShowSearchResults] = useState();
   const [unreadCount, setUnreadCount] = useState(0);
-  const [sessionCreated, setSessionCreated] = useState(false);
+  // const [sessionCreated, setSessionCreated] = useState(false);
   const resultsListRef = useRef(null);
   const stripe_cust_id = authCtx.user?.stripe_cust_id;
   const notificationRef = useRef(null);
-  const { user, isAuthenticated } = useAuth();
+  // const { user, isAuthenticated } = useAuth();
 
   const locs = ['Select All'];
   //authCtx?.user?.location?.accessable_locations.forEach((loc) => locs.push(loc));
@@ -116,44 +116,47 @@ const Layout = () => {
   }, [selectedLocation]);
 
   useEffect(() => {
-    console.log('user', user);
-    console.log('authCtx.user->', authCtx.user);
-    if (user && isAuthenticated) {
-      setIsLoading(true);
-      API.post('sessions/create', {
-        userId:
-          JSON.parse(user.metadata).zoomin_user_id ||
-          JSON.parse(user.metadata).zoomin_family_member_id,
-        token: user.accessToken
-      }).then((response) => {
-        if (response.status === 200) {
-          enqueueSnackbar(response?.data?.Message, {
-            variant: 'success'
-          });
-          setSessionCreated(true);
-          authCtx.setSessionCreated(true);
-          if (user?.superUser) {
-            getCustPaymentMethod();
-            getUsers();
-          }
-        } else {
-          errorMessageHandler(
-            enqueueSnackbar,
-            response?.response?.data?.Message || 'Something Went Wrong.',
-            response?.response?.status,
-            authCtx.setAuthError
-          );
-        }
-        setIsLoading(false);
-      });
-    }
+    setIsLoading(true);
+    setDropdownLoading(true);
+    // API Call for Fetching Logged in user detail
+    // let status = localStorage.getItem('login');
+    API.get('users', {
+      params: { cust_id: localStorage.getItem('cust_id') || '0d388af2-d396-4d9b-b28a-417a5953ed42' }
+    }).then((response) => {
+      if (response.status === 200) {
+        setSelectedLocation(response?.data?.Data?.location?.accessable_locations);
+        authCtx.setLocation(response?.data?.Data?.location?.accessable_locations);
+        authCtx.setUser({
+          ...response.data.Data,
+          location: response.data.Data.location
+        });
+        localStorage.setItem(
+          'user',
+          JSON.stringify({ ...response.data.Data, location: response.data.Data.location })
+        );
+
+        let selected_locaions = response?.data?.Data?.location?.accessable_locations;
+        response?.data?.Data?.location?.accessable_locations.forEach((loc) => locs.push(loc));
+        setLocations(locs);
+        setSelectedLocation(selected_locaions);
+      } else {
+        errorMessageHandler(
+          enqueueSnackbar,
+          response?.response?.data?.Message || 'Something Went Wrong.',
+          response?.response?.status,
+          authCtx.setAuthError
+        );
+      }
+      setIsLoading(false);
+      setDropdownLoading(false);
+    });
   }, []);
 
-  useEffect(() => {
-    if (sessionCreated) {
-      getUsers();
-    }
-  }, [sessionCreated]);
+  // useEffect(() => {
+  //   if (sessionCreated) {
+  //     getUsers();
+  //   }
+  // }, [sessionCreated]);
 
   useEffect(() => {
     window.addEventListener('resize', handleDrawerToggleOnResize);
@@ -226,10 +229,10 @@ const Layout = () => {
   }, []);
 
   useEffect(() => {
-    if (sessionCreated) {
-      getCustPaymentMethod();
-    }
-  }, [sessionCreated]);
+    // if (sessionCreated) {
+    getCustPaymentMethod();
+    // }
+  }, []);
 
   // Method to fetch Customer Payment Method along with Customer Details
   const getCustPaymentMethod = () => {
@@ -303,44 +306,44 @@ const Layout = () => {
     });
   };
 
-  const getUsers = () => {
-    setIsLoading(true);
-    setDropdownLoading(true);
-    // API Call for Fetching Logged in user detail
-    // let status = localStorage.getItem('login');
-    API.get('users', {
-      params: {
-        cust_id: localStorage.getItem('cust_id') || '0d388af2-d396-4d9b-b28a-417a5953ed42'
-      }
-    }).then((response) => {
-      if (response.status === 200) {
-        setSelectedLocation(response?.data?.Data?.location?.accessable_locations);
-        authCtx.setLocation(response?.data?.Data?.location?.accessable_locations);
-        authCtx.setUser({
-          ...response.data.Data,
-          location: response.data.Data.location
-        });
-        localStorage.setItem(
-          'user',
-          JSON.stringify({ ...response.data.Data, location: response.data.Data.location })
-        );
+  // const getUsers = () => {
+  //   setIsLoading(true);
+  //   setDropdownLoading(true);
+  //   // API Call for Fetching Logged in user detail
+  //   // let status = localStorage.getItem('login');
+  //   API.get('users', {
+  //     params: {
+  //       cust_id: localStorage.getItem('cust_id') || '0d388af2-d396-4d9b-b28a-417a5953ed42'
+  //     }
+  //   }).then((response) => {
+  //     if (response.status === 200) {
+  //       setSelectedLocation(response?.data?.Data?.location?.accessable_locations);
+  //       authCtx.setLocation(response?.data?.Data?.location?.accessable_locations);
+  //       authCtx.setUser({
+  //         ...response.data.Data,
+  //         location: response.data.Data.location
+  //       });
+  //       localStorage.setItem(
+  //         'user',
+  //         JSON.stringify({ ...response.data.Data, location: response.data.Data.location })
+  //       );
 
-        let selected_locaions = response?.data?.Data?.location?.accessable_locations;
-        response?.data?.Data?.location?.accessable_locations.forEach((loc) => locs.push(loc));
-        setLocations(locs);
-        setSelectedLocation(selected_locaions);
-      } else {
-        errorMessageHandler(
-          enqueueSnackbar,
-          response?.response?.data?.Message || 'Something Went Wrong.',
-          response?.response?.status,
-          authCtx.setAuthError
-        );
-      }
-      setIsLoading(false);
-      setDropdownLoading(false);
-    });
-  };
+  //       let selected_locaions = response?.data?.Data?.location?.accessable_locations;
+  //       response?.data?.Data?.location?.accessable_locations.forEach((loc) => locs.push(loc));
+  //       setLocations(locs);
+  //       setSelectedLocation(selected_locaions);
+  //     } else {
+  //       errorMessageHandler(
+  //         enqueueSnackbar,
+  //         response?.response?.data?.Message || 'Something Went Wrong.',
+  //         response?.response?.status,
+  //         authCtx.setAuthError
+  //       );
+  //     }
+  //     setIsLoading(false);
+  //     setDropdownLoading(false);
+  //   });
+  // };
 
   // Method to toggle drawer when the window size changes
   const handleDrawerToggleOnResize = () => {

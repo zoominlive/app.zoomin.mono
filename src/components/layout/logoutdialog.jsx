@@ -15,47 +15,54 @@ import { useState } from 'react';
 import AuthContext from '../../context/authcontext';
 import CloseIcon from '@mui/icons-material/Close';
 import { ContextHolder } from '@frontegg/rest-api';
-import API from '../../api';
-import { errorMessageHandler } from '../../utils/errormessagehandler';
-import { useSnackbar } from 'notistack';
+// import API from '../../api';
+// import { errorMessageHandler } from '../../utils/errormessagehandler';
+// import { useSnackbar } from 'notistack';
 
 const LogoutDialog = (props) => {
   // const navigate = useNavigate();
   const authCtx = useContext(AuthContext);
   const [isDeleteLoading, setIsDeleteLoading] = useState(false);
-  const { enqueueSnackbar } = useSnackbar();
+  // const { enqueueSnackbar } = useSnackbar();
 
-  const handleSession = () => {
-    console.log('authCtx.user', authCtx.user);
-    API.put('sessions/edit', {
-      userId: authCtx?.user?.family_member_id
-        ? authCtx?.user?.family_member_id
-        : authCtx?.user?.user_id
-    }).then((response) => {
-      if (response.status === 200) {
-        console.log('user logged out!');
-        localStorage.clear();
-        authCtx.setToken();
-        authCtx.setPaymentMethod(false);
-        const baseUrl = ContextHolder.getContext().baseUrl;
-        console.log('baseUrl-->', baseUrl);
-        console.log('window.location', window.location);
-        // navigate(`${baseUrl}/oauth/logout?post_logout_redirect_uri=${window.location}`);
-        window.location.href = `${baseUrl}/oauth/logout?post_logout_redirect_uri=${process.env.REACT_APP_LOGOUT_REDIRECT_URL_STAGE}`;
-      } else {
-        errorMessageHandler(
-          enqueueSnackbar,
-          response?.response?.data?.Message || 'Something Went Wrong.',
-          response?.response?.status,
-          authCtx.setAuthError
-        );
-      }
-    });
-  };
+  // const handleSession = () => {
+  //   console.log('authCtx.user', authCtx.user);
+  //   API.put('sessions/edit', {
+  //     userId: authCtx?.user?.family_member_id
+  //       ? authCtx?.user?.family_member_id
+  //       : authCtx?.user?.user_id
+  //   }).then((response) => {
+  //     if (response.status === 200) {
+  //       console.log('user logged out!');
+  //       localStorage.clear();
+  //       authCtx.setToken();
+  //       authCtx.setPaymentMethod(false);
+  //       const baseUrl = ContextHolder.getContext().baseUrl;
+  //       console.log('baseUrl-->', baseUrl);
+  //       console.log('window.location', window.location);
+  //       // navigate(`${baseUrl}/oauth/logout?post_logout_redirect_uri=${window.location}`);
+  //       window.location.href = `${baseUrl}/oauth/logout?post_logout_redirect_uri=${process.env.REACT_APP_LOGOUT_REDIRECT_URL_STAGE}`;
+  //     } else {
+  //       errorMessageHandler(
+  //         enqueueSnackbar,
+  //         response?.response?.data?.Message || 'Something Went Wrong.',
+  //         response?.response?.status,
+  //         authCtx.setAuthError
+  //       );
+  //     }
+  //   });
+  // };
 
   const handleLogout = () => {
     setTimeout(() => {
-      handleSession();
+      localStorage.clear();
+      authCtx.setToken();
+      authCtx.setPaymentMethod(false);
+      const baseUrl = ContextHolder.getContext().baseUrl;
+      console.log('baseUrl-->', baseUrl);
+      console.log('window.location', window.location);
+      // navigate(`${baseUrl}/oauth/logout?post_logout_redirect_uri=${window.location}`);
+      window.location.href = `${baseUrl}/oauth/logout?post_logout_redirect_uri=${process.env.REACT_APP_LOGOUT_REDIRECT_URL_STAGE}`;
     }, 2000);
     // navigate('login');
   };

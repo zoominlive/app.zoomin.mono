@@ -1,4 +1,4 @@
-import { ContextHolder } from '@frontegg/react';
+// import { ContextHolder } from '@frontegg/react';
 import axios from 'axios';
 
 let baseURL = process.env.REACT_APP_BE_ENDPOINT;
@@ -31,12 +31,13 @@ API.interceptors.response.use(
   },
   (err) => {
     if (err.response.status === 401) {
-      // test
+      // localStorage.removeItem('token');
+      // window.location.replace('/login');
     }
-    if (err.response.status === 403) {
-      const baseUrl = ContextHolder.getContext().baseUrl;
-      window.location.href = `${baseUrl}/oauth/logout?post_logout_redirect_uri=${process.env.REACT_APP_LOGOUT_REDIRECT_URL_STAGE}`;
-    }
+    // if (err.response.status === 403) {
+    //   const baseUrl = ContextHolder.getContext().baseUrl;
+    //   window.location.href = `${baseUrl}/oauth/logout?post_logout_redirect_uri=${process.env.REACT_APP_LOGOUT_REDIRECT_URL_STAGE}`;
+    // }
     return err;
   }
 );
