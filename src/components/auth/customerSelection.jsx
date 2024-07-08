@@ -78,10 +78,10 @@ const CustomerSelection = () => {
   };
 
   useEffect(() => {
-    if (authCtx.sessionCreated) {
-      getCustomersList();
-    }
-  }, [authCtx.sessionCreated]);
+    // if (authCtx.sessionCreated) {
+    getCustomersList();
+    // }
+  }, []);
   console.log(isLoading);
   return (
     <Grid container>
