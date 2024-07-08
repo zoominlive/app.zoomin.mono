@@ -3,7 +3,6 @@ const connectToDatabase = require('../models/index');
 
 const CONSTANTS = require('../lib/constants');
 const { IdentityClient } = require('@frontegg/client');
-const Sessions = require('../models/sessions');
 const identityClient = new IdentityClient({ FRONTEGG_CLIENT_ID: process.env.FRONTEGG_CLIENT_ID, FRONTEGG_API_KEY: process.env.FRONTEGG_API_KEY });
 
 // authentication middleware to check auth and give access based on user type
@@ -12,16 +11,9 @@ module.exports = async function (req, res, next) {
   const { Family, Child, Users, Customers } = await connectToDatabase();
   try {
     const token = req.header('Authorization')?.substring(7);
-    const decodeToken = await identityClient.validateIdentityOnToken(token);
-    const user_id = decodeToken.metadata.zoomin_user_id;
-    const family_member_id = decodeToken.metadata.zoomin_family_member_id
-    const session = await Sessions.findOne({where: {user_id: user_id || family_member_id, token: token, isExpired: false, isLoggedIn: true} });
     if (!token) {
       return res.status(401).json({ IsSuccess: true, Data: {}, Message: CONSTANTS.AUTH_ERROR });
-    } else if (!session) {
-      return res.status(403).json({ IsSuccess: true, Data: {}, Message: CONSTANTS.INVALID_TOKEN });
-    } 
-    else {
+    } else {
       // const decodeToken = jwt.verify(token, process.env.JWT_SECRET_KEY);
       const decodeToken = await identityClient.validateIdentityOnToken(token);
       // console.log('decodeToken-->', decodeToken);

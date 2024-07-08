@@ -24,7 +24,6 @@ const Invoice = require('./invoice');
 const Webhooks = require('./webhooks');
 const SubscriptionItems = require('./subscriptions_items');
 const CustomerTermsApproval = require('./customer_terms_approval');
-const Sessions = require('./sessions');
 const sequelize = require('../lib/database');
 
 CustomerLocations.belongsTo(Customers, { foreignKey: 'cust_id' });
@@ -234,7 +233,6 @@ module.exports = async () => {
       Subscriptions,
       Invoice,
       SubscriptionItems,
-      Sessions,
       Webhooks
     };
   }
@@ -269,7 +267,6 @@ module.exports = async () => {
     Subscriptions,
     Invoice,
     SubscriptionItems,
-    Sessions,
     Webhooks
   };
 };

@@ -13,7 +13,6 @@ const logRoutes = require('./logs');
 const liveStreamRoutes = require('./liveStream');
 const RecordingRoutes = require('./recording');
 const PaymentRoutes = require('./payment');
-const SessionRoutes = require('./sessions');
 /* user routes */
 router.use('/users', userRoutes);
 
@@ -49,8 +48,5 @@ router.use('/recordings', RecordingRoutes)
 
 /* payment routes */
 router.use('/payment', PaymentRoutes)
-
-/* session routes */
-router.use('/sessions', SessionRoutes)
 
 module.exports = router;
