@@ -19,6 +19,9 @@ const CustomerLocations = sequelize.define(
       },
       required: [true, 'Location is mandatory field']
     },
+    transcoder_endpoint: {
+      type: Sequelize.STRING(155)
+    },
     status: {
       type: Sequelize.BOOLEAN,
       defaultValue: true

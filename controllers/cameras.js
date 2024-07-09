@@ -11,7 +11,7 @@ const sequelize = require('../lib/database');
 const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require("uuid");
 const Customers = require('../models/customers');
-
+const CustomerLocations = require('../models/customer_locations');
 module.exports = {
   // encode stream and create new camera
   createCamera: async (req, res, next) => {
@@ -31,6 +31,7 @@ module.exports = {
         const transcodedDetails = await startEncodingStream(
           params.cam_uri,
           token,
+          params.location,
           params.cust_id
         );
         console.log('transcoderDetails==>', transcodedDetails);
@@ -114,7 +115,7 @@ module.exports = {
         params.wait,
         token,
         req.user.cust_id,
-        t
+        params.location,
       );
 
       const cameraDeleted = await cameraServices.deleteCamera(params.cam_id, t);
@@ -193,6 +194,7 @@ module.exports = {
         params.wait,
         token,
         req.user.cust_id || params.cust_id,
+        params.location,
       );
       let camera;
       console.log('camEncodedStopped==>', camEncodedStopped);
@@ -201,10 +203,10 @@ module.exports = {
         const transcodedDetails = await startEncodingStreamToFixCam(
           params.cam_uri,
           token,
+          params.location,
           req.user.cust_id || params.cust_id,
           params.stream_id,
           params?.on_screen_display,
-          params?.codec
         );
         console.log('transcodedDetails-->', transcodedDetails);
         params.stream_uri = transcodedDetails?.data ? transcodedDetails.data?.uri : '';
@@ -262,13 +264,15 @@ module.exports = {
     try {
       const params = req.body;
       const token = req.userToken;
-      // console.log('params-->', params);
+      console.log('req.user==', req.user);
+      console.log('params==', params);
       const camEncodedStopped = await stopEncodingStream(
         params.streamId,
         params.wait,
         token,
-        req.user.cust_id,
-        t
+        req.user.cust_id || params.cust_id,
+        params.location,
+        params.on_screen_display
       );
       let camera;
       if (camEncodedStopped) {
@@ -276,8 +280,10 @@ module.exports = {
         const transcodedDetails = await startEncodingStreamToFixCam(
           params.cam_uri,
           token,
-          req.user.cust_id,
-          params.streamId
+          params.location,
+          req.user.cust_id || params.cust_id,
+          params.streamId,
+          params?.on_screen_display,
         );
         // console.log('transcodedDetails-->', transcodedDetails);
         params.stream_uri = transcodedDetails?.data ? transcodedDetails.data?.uri : '';
@@ -409,15 +415,17 @@ module.exports = {
   getAllCamerasForTranscoder: async (req, res, next) => {
     try {
       const token = req.header('Authorization')?.substring(7);
+      // test commit
+      console.log('process.env.TRANSCODER_SECRET', process.env.TRANSCODER_SECRET);
       const decodeToken = jwt.verify(token, process.env.TRANSCODER_SECRET);
       const { rtsp_transcoder_endpoint } = decodeToken;
-      let customers;
+      let customerLocations;
       if ( rtsp_transcoder_endpoint ) {
-        customers = await Customers.findAll({ where: { transcoder_endpoint: rtsp_transcoder_endpoint } });
+        customerLocations = await CustomerLocations.findAll({ where: { transcoder_endpoint: rtsp_transcoder_endpoint } });
       }
-
-      if (customers) {
-        let cust_ids = customers.map((item) => item.cust_id)
+      console.log('customerLocations==>', customerLocations.length);
+      if (customerLocations) {
+        let cust_ids = customerLocations.map((item) => item.cust_id)
         console.log('cust_ids-->', cust_ids);
         const cameras = await cameraServices.getAllCameraForTranscoder(cust_ids);
         const generatePresignedUrlForThumbnail = async (thumbnail) => {

@@ -71,6 +71,7 @@ module.exports = {
 
   listCustPaymentMethod: async(req, res) => {
     const { stripe_cust_id } = req.query;
+    console.log('stripe_cust_id==>', stripe_cust_id);
     try {
       const paymentMethods = await stripe.customers.listPaymentMethods(
         stripe_cust_id,

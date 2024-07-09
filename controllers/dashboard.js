@@ -31,7 +31,7 @@ module.exports = {
       }
       const token = req.userToken;
       
-      let streams = await listAvailableStreams(token, custId);
+      let streams = await listAvailableStreams(token, req?.query?.location);
       const totalStreams =
       await cameraServices.getAllCameraForCustomerDashboard(custId, req?.query?.location, t);
       //const numberofMountedCameraViewers =  await cameraServices.getAllMountedCameraViewers(custId, req?.query?.location, t);

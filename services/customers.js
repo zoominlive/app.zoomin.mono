@@ -79,6 +79,22 @@ module.exports = {
     return customer?.transcoder_endpoint || null;
   },
 
+  getTranscoderUrlFromCustLocations: async (loc, cust_id, t) => {
+    const { CustomerLocations } = await connectToDatabase();
+    let customer_locations = await CustomerLocations.findOne(
+      {
+        raw: true,
+        where: {
+          cust_id: cust_id,
+          loc_name: loc
+        },
+      },
+      { transaction: t }
+    );
+
+    return customer_locations?.transcoder_endpoint || null;
+  },
+
   getCustomerDetails: async (custId, t) => {
     const { Customers } = await connectToDatabase();
     let customer = await Customers.findOne(
@@ -162,7 +178,7 @@ module.exports = {
           {
             model: CustomerLocations,
             as: "customer_locations",
-            attributes: ["loc_name"],
+            attributes: ["loc_name", "transcoder_endpoint"],
           },
           {
             model: Users,
@@ -320,7 +336,7 @@ module.exports = {
 
     let createLocations = await Promise.all(
       locationsWithTimezone.map(async ([loc, timezone]) => {
-        const obj = { loc_name: loc, cust_id: custId, time_zone: timezone };
+        const obj = { loc_name: loc.loc_name, transcoder_endpoint: loc.transcoder_endpoint, cust_id: custId, time_zone: timezone };
         // obj.loc_id = uuidv4();
         return CustomerLocations.create(obj, {
           transaction: t,

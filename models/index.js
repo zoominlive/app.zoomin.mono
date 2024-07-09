@@ -165,6 +165,14 @@ CustomerLocations.hasMany(Room, {
   }
 });
 
+Camera.belongsTo(CustomerLocations, { foreignKey: 'location' });
+CustomerLocations.hasMany(Camera, {
+  sourceKey: 'loc_name',
+  foreignKey: {
+    name: 'location'
+  }
+});
+
 
 Family.belongsTo(RecentViewers, { foreignKey: 'family_member_id' });
 RecentViewers.hasOne(Family, {

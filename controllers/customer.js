@@ -155,101 +155,115 @@ module.exports = {
       let customer;
     
       let addCustomer = await customerServices.createCustomer(customeDetails, t);
-      user.cust_id = addCustomer?.cust_id;
-      user.is_verified = false;
-      let addUser = await userServices.createUser(user, t);
-      let userData = addUser?.toJSON();
-      const token = await userServices.createPasswordToken(userData, true);
-      const name = userData.first_name + ' ' + userData.last_name;
-      const originalUrl = process.env.FE_SITE_BASE_URL + 'set-password?' + 'token=' + token + '&type=user';
-      await sendRegistrationMailforUser(name, userData.email, originalUrl);
-    
-      let locations = customer_locations.flatMap((i) => i.loc_name);
-      let addLocations = await customerServices.createLocation(addCustomer?.cust_id, locations, t);
-    
-      if (addCustomer && addUser && addLocations) {
-        console.log('addUser-->', addUser);
-        console.log('customeDetails-->', customeDetails);
-        if (user.role === 'Admin') {
-          const vendor_token = await axios.post(
-            "https://api.frontegg.com/auth/vendor/",
-            {
-              clientId:process.env.FRONTEGG_CLIENT_ID,
-              secret: process.env.FRONTEGG_API_KEY,
-            },
-          );
-          console.log('vendor_token-->', vendor_token);
-          const tenant_response = await axios.post(
-            "https://api.frontegg.com/tenants/resources/tenants/v1",
-            {
-              tenantId: uuidv4(),
-              name: customeDetails.company_name,
-            },
-            {
-              headers: {
-                'Authorization':
-                  `Bearer ${vendor_token.data.token}`,
-              },
-            }
-          );
-          console.log('tenant_response--->', tenant_response.data);
-          if (tenant_response) {
-            const user_response = await axios.post(
-              "https://api.frontegg.com/identity/resources/users/v1",
-              {
-                name: customeDetails.billing_contact_first +' '+ customeDetails.billing_contact_last,
-                email: addUser.dataValues.email,
-                metadata: JSON.stringify({
-                  zoomin_user_id: addUser.dataValues.user_id
-                })
-              },
-              {
-                headers: {
-                  'frontegg-tenant-id': `${tenant_response.data.tenantId}`,
-                  'Authorization':
-                    `Bearer ${vendor_token.data.token}`                
-                },
-              }
-            );
-            console.log('user_response--->', user_response.data);
-            await Users.update(
-              { frontegg_tenant_id: tenant_response.data.tenantId },
-              {
-                where: { user_id: addUser.dataValues.user_id },
-                transaction: t 
-              },
-            );
-          }
-    
-          customer = await stripe.customers.create({
-            name: user.first_name + ' ' + user.last_name,
-            email: user.email,
-            address: {
-              city: customeDetails?.city,
-              country: customeDetails?.country,
-              line1: customeDetails?.address_1,
-              line2: customeDetails?.address_2,
-              postal_code: customeDetails?.postal,
-            }
-          });
-    
-          await customerServices.editCustomer(addCustomer?.cust_id, { stripe_cust_id: customer.id, frontegg_tenant_id: tenant_response.data.tenantId }, t)
-        }
-    
-        await t.commit();
-        res.status(201).json({
-          IsSuccess: true,
-          Data: { ..._.omit(addCustomer, ["cust_id"]), ...addLocations },
-          Message: CONSTANTS.CUSTOMER_REGISTERED,
-        });
-      } else {
-        await t.rollback();
-        res.status(400).json({
+      if (!addCustomer) {
+        return res.status(400).json({
           IsSuccess: true,
           Data: {},
           Message: CONSTANTS.CUSTOMER_REGISRATION_FAILED,
         });
       }
+      user.cust_id = addCustomer?.cust_id;
+      user.is_verified = false;
+      let addUser = await userServices.createUser(user, t);
+      if (!addUser) {
+        return res.status(400).json({
+          IsSuccess: true,
+          Data: {},
+          Message: CONSTANTS.CUSTOMER_REGISRATION_FAILED,
+        });
+      }
+      let userData = addUser?.toJSON();
+      const token = await userServices.createPasswordToken(userData, true);
+      const name = userData.first_name + ' ' + userData.last_name;
+      const originalUrl = process.env.FE_SITE_BASE_URL + 'set-password?' + 'token=' + token + '&type=user';
+      await sendRegistrationMailforUser(name, userData.email, originalUrl);
+
+      let locations = customer_locations.flatMap((i) => {return { loc_name: i.loc_name, transcoder_endpoint: i.transcoder_endpoint}});
+      console.log('locations==>', locations);
+      let addLocations = await customerServices.createLocation(
+        addCustomer?.cust_id,
+        locations,
+        t
+      );
+      if (!addLocations) {
+        return res.status(400).json({
+          IsSuccess: true,
+          Data: {},
+          Message: CONSTANTS.CUSTOMER_REGISRATION_FAILED,
+        });
+      }
+      console.log("addLocations=========>", addLocations);
+
+      if (user.role === 'Admin') {
+        const vendor_token = await axios.post(
+          "https://api.frontegg.com/auth/vendor/",
+          {
+            clientId:process.env.FRONTEGG_CLIENT_ID,
+            secret: process.env.FRONTEGG_API_KEY,
+          },
+        );
+        console.log('vendor_token-->', vendor_token);
+        const tenant_response = await axios.post(
+          "https://api.frontegg.com/tenants/resources/tenants/v1",
+          {
+            tenantId: uuidv4(),
+            name: customeDetails.company_name,
+          },
+          {
+            headers: {
+              'Authorization':
+                `Bearer ${vendor_token.data.token}`,
+            },
+          }
+        );
+        console.log('tenant_response--->', tenant_response.data);
+        if (tenant_response) {
+          const user_response = await axios.post(
+            "https://api.frontegg.com/identity/resources/users/v1",
+            {
+              name: customeDetails.billing_contact_first +' '+ customeDetails.billing_contact_last,
+              email: addUser.dataValues.email,
+              metadata: JSON.stringify({
+                zoomin_user_id: addUser.dataValues.user_id
+              })
+            },
+            {
+              headers: {
+                'frontegg-tenant-id': `${tenant_response.data.tenantId}`,
+                'Authorization':
+                  `Bearer ${vendor_token.data.token}`                
+              },
+            }
+          );
+          console.log('user_response--->', user_response.data);
+          await Users.update(
+            { frontegg_tenant_id: tenant_response.data.tenantId },
+            {
+              where: { user_id: addUser.dataValues.user_id },
+              transaction: t 
+            },
+          );
+        }
+        customer = await stripe.customers.create({
+          name: user.first_name +' '+ user.last_name,
+          email: user.email,
+          address: {
+            city: customeDetails?.city,
+            country: customeDetails?.country,
+            line1: customeDetails?.address_1,
+            line2: customeDetails?.address_2,
+            postal_code: customeDetails?.postal,
+          }
+        });
+        await customerServices.editCustomer(addCustomer?.cust_id, {stripe_cust_id: customer.id}, t)
+      }
+      await t.commit();
+      res.status(201).json({
+        IsSuccess: true,
+        Data: { ..._.omit(addCustomer, ["cust_id"]), ...addLocations },
+        Message: CONSTANTS.CUSTOMER_REGISTERED,
+      });
+        
       next();
     } catch (error) {
       await t.rollback();
@@ -446,7 +460,7 @@ module.exports = {
       );
 
       const userDetails = await userServices.getUserById(user.user_id, t);
-
+      console.log('user=>', user);
       let editedUser = await userServices.editUserProfile(
         userDetails,
         _.omit(user, ["email"]),
@@ -477,8 +491,9 @@ module.exports = {
         }
       }
       await customerServices.deleteLocation(customeDetails?.cust_id);
-
-      let locations = customer_locations.flatMap((i) => i.loc_name);
+      console.log(customer_locations);
+      let locations = customer_locations.flatMap((i) => {return { loc_name: i.loc_name, transcoder_endpoint: i.transcoder_endpoint}});
+      console.log('locations-->', locations);
       await customerServices.createLocation(
         customeDetails?.cust_id,
         locations,

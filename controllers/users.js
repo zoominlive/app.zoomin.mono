@@ -74,13 +74,21 @@ module.exports = {
     try {
       const user = req.user;
       const custId = req.user.cust_id || req.query?.cust_id;
+      let locations;
       if(!req.user.cust_id){
         console.log('calling===================')
         let availableLocations = await customerServices.getLocationDetails(custId)
         let locs = availableLocations.flatMap((i) => i.loc_name);
+        locations = availableLocations.flatMap((i) => i.loc_name);
         user.location = { selected_locations: locs, accessable_locations: locs };
       }
-      user.transcoderBaseUrl = await customerServices.getTranscoderUrl(custId);
+      // user.transcoderBaseUrl = await customerServices.getTranscoderUrl(custId);
+      console.log('locations-->', locations);
+      if(user.role === 'Super Admin') {
+        user.transcoderBaseUrl = await customerServices.getTranscoderUrlFromCustLocations(locations, custId);
+      } else {
+        user.transcoderBaseUrl = await customerServices.getTranscoderUrlFromCustLocations(user.location.accessable_locations, custId);
+      }
       user.max_stream_live_license = await customerServices.getMaxLiveStramAvailable(custId);
       user.max_stream_live_license_room = await customerServices.getMaxLiveStreamRoomAvailable(custId);
       if(user.role !== 'Super Admin') {
@@ -245,7 +253,7 @@ module.exports = {
         const locationStatusMap = locations.map(location => location.status);
         const allFalse = locationStatusMap.every(status => status === false);
 
-        user.transcoderBaseUrl = await customerServices.getTranscoderUrl(user.cust_id) ;
+        // user.transcoderBaseUrl = await customerServices.getTranscoderUrl(user.cust_id) ;
         user.max_stream_live_license = await customerServices.getMaxLiveStramAvailable(user.cust_id) ;
         if (!user.is_verified || user.status == 'inactive') {
           await t.rollback();
@@ -303,7 +311,7 @@ module.exports = {
         const locationStatusMap = locations.map(location => location.status);
         const allFalse = locationStatusMap.every(status => status === false)
 
-        familyUser.transcoderBaseUrl = await customerServices.getTranscoderUrl(familyUser.cust_id);
+        // familyUser.transcoderBaseUrl = await customerServices.getTranscoderUrl(familyUser.cust_id);
         familyUser.invite_family = customer.invite_user ? true : false
         if (!familyUser.is_verified || familyUser.status == 'Disabled') {
           //await t.commit();
@@ -988,7 +996,7 @@ module.exports = {
           t
         );
       }
-      editedProfile.transcoderBaseUrl = await customerServices.getTranscoderUrl(req.user.cust_id);
+      // editedProfile.transcoderBaseUrl = await customerServices.getTranscoderUrl(req.user.cust_id);
       if (editedProfile) {
         if (params?.email && params?.email !== user.email) {
           const newEmail = params.email;
