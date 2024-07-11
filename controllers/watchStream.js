@@ -171,6 +171,9 @@ module.exports = {
                     // Generate presigned URL for thumbnail if it contains an S3 URI
                     if (camera.thumbnail && camera.thumbnail.startsWith('s3://')) {
                         camera.thumbnailPresignedUrl = await generatePresignedUrlForThumbnail(camera.thumbnail);
+                    } else {
+                      camera.thumbnail = '',
+                      camera.thumbnailPresignedUrl = ''
                     }
                     return camera;
                 }));
