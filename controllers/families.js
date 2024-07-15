@@ -112,7 +112,7 @@ module.exports = {
 
       children = await childServices.createChildren(childObjs, t);
       if(primaryParent) {
-        const { frontegg_tenant_id } = await customerServices.getCustomerDetails(cust_id);
+        const { frontegg_tenant_id } = await customerServices.getCustomerDetails(custId);
         const createFrontEggUser = await userServices.createFrontEggFamilyUser(frontegg_tenant_id, primaryParent)
       }
       //await dashboardServices.updateDashboardData(custId);
