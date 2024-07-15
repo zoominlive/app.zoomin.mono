@@ -255,7 +255,7 @@ module.exports = {
             postal_code: customeDetails?.postal,
           }
         });
-        await customerServices.editCustomer(addCustomer?.cust_id, {stripe_cust_id: customer.id}, t)
+        await customerServices.editCustomer(addCustomer?.cust_id, {stripe_cust_id: customer.id, frontegg_tenant_id: tenant_response.data.tenantId}, t)
       }
       await t.commit();
       res.status(201).json({
