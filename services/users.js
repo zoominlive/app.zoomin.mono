@@ -496,7 +496,7 @@ module.exports = {
 
   createFrontEggUser: async (tenantId, userDetails) => {
     const vendor_token = await axios.post(
-      "https://api.frontegg.com/auth/vendor/",
+      `${process.env.FRONTEGG_API_GATEWAY_URL}auth/vendor/`,
       {
         clientId: process.env.FRONTEGG_CLIENT_ID,
         secret: process.env.FRONTEGG_API_KEY,
@@ -504,7 +504,7 @@ module.exports = {
     );
     if (vendor_token) {
       const user_response = await axios.post(
-        "https://api.frontegg.com/identity/resources/users/v1",
+        `${process.env.FRONTEGG_API_GATEWAY_URL}identity/resources/users/v1`,
         {
           name: userDetails.first_name +' '+ userDetails.last_name,
           email: userDetails.email,
@@ -520,12 +520,35 @@ module.exports = {
           },
         }
       );
+
+      return user_response.data;
+    }
+  },
+
+  removeFrontEggUser: async (userId) => {
+    const vendor_token = await axios.post(
+      `${process.env.FRONTEGG_API_GATEWAY_URL}auth/vendor/`,
+      {
+        clientId: process.env.FRONTEGG_CLIENT_ID,
+        secret: process.env.FRONTEGG_API_KEY,
+      },
+    );
+    if (vendor_token) {
+      const user_response = await axios.delete(
+        `${process.env.FRONTEGG_API_GATEWAY_URL}identity/resources/users/v1/${userId}`,
+        {
+          headers: {
+            'Authorization':
+              `Bearer ${vendor_token.data.token}`                
+          },
+        }
+      );
     }
   },
 
   createFrontEggFamilyUser: async (tenantId, userDetails) => {
     const vendor_token = await axios.post(
-      "https://api.frontegg.com/auth/vendor/",
+      `${process.env.FRONTEGG_API_GATEWAY_URL}auth/vendor/`,
       {
         clientId: process.env.FRONTEGG_CLIENT_ID,
         secret: process.env.FRONTEGG_API_KEY,
@@ -533,7 +556,7 @@ module.exports = {
     );
     if (vendor_token) {
       const user_response = await axios.post(
-        "https://api.frontegg.com/identity/resources/users/v1",
+        `${process.env.FRONTEGG_API_GATEWAY_URL}identity/resources/users/v1`,
         {
           name: userDetails.first_name +' '+ userDetails.last_name,
           email: userDetails.email,
@@ -549,6 +572,7 @@ module.exports = {
           },
         }
       );
+      return user_response.data;
     }
   },
 };

@@ -21,6 +21,10 @@ const Family = sequelize.define(
       type: Sequelize.STRING(50),
       allowNull: false
     },
+    frontegg_user_id: {
+      type: Sequelize.STRING(50),
+      allowNull: true
+    },
     cust_id: {
       type: Sequelize.STRING(50),
       allowNull: false

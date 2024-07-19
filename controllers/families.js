@@ -15,6 +15,7 @@ const {
 } = require('../lib/ses-mail-sender');
 const { v4: uuidv4 } = require('uuid');
 const customerServices = require('../services/customers');
+const Family = require('../models/family');
 
 module.exports = {
   // create new family(primary parent, secondary parent ,child)
@@ -114,6 +115,16 @@ module.exports = {
       if(primaryParent) {
         const { frontegg_tenant_id } = await customerServices.getCustomerDetails(custId);
         const createFrontEggUser = await userServices.createFrontEggFamilyUser(frontegg_tenant_id, primaryParent)
+        if (createFrontEggUser) {
+          console.log('primaryParent===', primaryParent);
+          await Family.update(
+            { frontegg_user_id: createFrontEggUser.id },
+            {
+              where: { family_member_id: primaryParent.family_member_id },
+              transaction: t 
+            }
+          );
+        }
       }
       //await dashboardServices.updateDashboardData(custId);
       await t.commit();
@@ -376,7 +387,9 @@ module.exports = {
       familyDetails = await familyServices.getFamilyDetailsById(params.family_id, t);
       userDetails = await userServices.getUserById(req?.user?.user_id, t);
       let deleteFamily = await familyServices.deleteFamily(params.family_id, t);
-
+      if (deleteFamily && params.frontegg_user_id !== null) {
+        const frontEggUser = await userServices.removeFrontEggUser(params.frontegg_user_id)
+      }
       await t.commit();
       res.status(200).json({
         IsSuccess: true,

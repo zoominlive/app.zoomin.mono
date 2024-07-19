@@ -20,6 +20,7 @@ const CONSTANTS = require('../lib/constants');
 const sequelize = require('../lib/database');
 const notificationSender = require('../lib/firebase-services');
 const CustomerLocations = require('../models/customer_locations');
+const Users = require('../models/users');
 
 module.exports = {
   sendNotification: async (req, res, next) => {
@@ -180,7 +181,18 @@ module.exports = {
         //await dashboardServices.updateDashboardData(params.cust_id);
         // await t.commit();
         const {frontegg_tenant_id} = await customerServices.getCustomerDetails(params.cust_id);
-        const frontEggUser = await userServices.createFrontEggUser(frontegg_tenant_id, userData)
+        const frontEggUser = await userServices.createFrontEggUser(frontegg_tenant_id, userData);
+        if(frontEggUser) {
+          console.log('frontEggUser', frontEggUser);
+          console.log('addUser', addUser.user_id);
+          await Users.update(
+            { frontegg_user_id: frontEggUser.id },
+            {
+              where: { user_id: addUser.dataValues.user_id },
+              transaction: t 
+            }
+          );
+        }
         res.status(201).json({
           IsSuccess: true,
           Data: _.omit(userData, ['password']),
@@ -196,6 +208,7 @@ module.exports = {
       next();
     } catch (error) {
       await t.rollback();
+      console.log('error-->', error);
       res.status(500).json({
         IsSuccess: false,
         error_log: error,
@@ -1104,7 +1117,7 @@ module.exports = {
     let userDetails;
     let deletedByUserDetails;
     try {
-      const { userId, custId, max_stream_live_license } = req.body;
+      const { userId, frontegg_user_id, custId, max_stream_live_license } = req.body;
       userDetails = await userServices.getUserById(userId, t);
       deletedByUserDetails = await userServices.getUserById(req?.user?.user_id, t);
       let deleted = await userServices.deleteUser(userId, t);
@@ -1117,7 +1130,9 @@ module.exports = {
             t
             );
           }
-
+          if(frontegg_user_id !== null) {
+            const frontEggUser = await userServices.removeFrontEggUser(frontegg_user_id)
+          }
         res
           .status(200)
           .json({ IsSuccess: true, Data: deleted, Message: CONSTANTS.PROFILE_DELETED });

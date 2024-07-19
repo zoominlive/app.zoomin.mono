@@ -55,6 +55,7 @@ provider:
     TRANSCODER_SECRET: ${file(./env.json):${opt:stage, 'stage'}.TRANSCODER_SECRET}
     FRONTEGG_CLIENT_ID: ${file(./env.json):${opt:stage, 'stage'}.FRONTEGG_CLIENT_ID}
     FRONTEGG_API_KEY: ${file(./env.json):${opt:stage, 'stage'}.FRONTEGG_API_KEY}
+    FRONTEGG_API_GATEWAY_URL: https://api.us.frontegg.com/
 
   stage: ${opt:stage, 'stage'}
   region: ${file(./env.json):${opt:stage, 'stage'}.REGION}
