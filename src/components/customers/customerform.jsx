@@ -681,6 +681,44 @@ const CustomerForm = (props) => {
                               fullWidth
                             />
                           </Grid>
+                          <Grid item md={4} sm={12}>
+                            <InputLabel id={`customer_locations.${index}.transcoder_endpoint`}>
+                              Transcoder Endpoint
+                            </InputLabel>
+                            <TextField
+                              labelId={`customer_locations.${index}.transcoder_endpoint`}
+                              name={`customer_locations.${index}.transcoder_endpoint`}
+                              value={values?.customer_locations[index]?.transcoder_endpoint}
+                              onChange={(event) => {
+                                setFieldValue(
+                                  `customer_locations[${index}].transcoder_endpoint`,
+                                  event.target.value
+                                );
+                              }}
+                              helperText={
+                                touched &&
+                                touched.customer_locations &&
+                                touched.customer_locations[index] &&
+                                touched.customer_locations[index].transcoder_endpoint &&
+                                errors &&
+                                errors.customer_locations &&
+                                errors.customer_locations[index] &&
+                                errors.customer_locations[index].transcoder_endpoint
+                              }
+                              error={
+                                touched &&
+                                touched.customer_locations &&
+                                touched.customer_locations[index] &&
+                                touched.customer_locations[index].transcoder_endpoint &&
+                                errors &&
+                                errors.customer_locations &&
+                                errors.customer_locations[index] &&
+                                errors.customer_locations[index] &&
+                                Boolean(errors.customer_locations[index].transcoder_endpoint)
+                              }
+                              fullWidth
+                            />
+                          </Grid>
                           <Grid item md={2} sm={12}>
                             <Box className="row-button-wrapper">
                               <IconButton

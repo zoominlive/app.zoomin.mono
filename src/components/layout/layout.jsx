@@ -62,6 +62,7 @@ import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import debounce from 'lodash.debounce';
 import NotificationsIcon from '@mui/icons-material/Notifications';
+import { useAuth } from '@frontegg/react';
 // import { useAuth } from '@frontegg/react';
 
 const icon = <RadioButtonUncheckedIcon fontSize="small" />;
@@ -89,6 +90,7 @@ const Layout = () => {
   const resultsListRef = useRef(null);
   const stripe_cust_id = authCtx.user?.stripe_cust_id;
   const notificationRef = useRef(null);
+  const { user } = useAuth();
   // const { user, isAuthenticated } = useAuth();
 
   const locs = ['Select All'];
@@ -116,12 +118,17 @@ const Layout = () => {
   }, [selectedLocation]);
 
   useEffect(() => {
+    console.log('user==>', user);
     setIsLoading(true);
     setDropdownLoading(true);
     // API Call for Fetching Logged in user detail
     // let status = localStorage.getItem('login');
+    const params = {
+      cust_id: localStorage.getItem('cust_id') || '0d388af2-d396-4d9b-b28a-417a5953ed42',
+      location: authCtx.location // Add location only if the role is Super Admin
+    };
     API.get('users', {
-      params: { cust_id: localStorage.getItem('cust_id') || '0d388af2-d396-4d9b-b28a-417a5953ed42' }
+      params: user.superUser ? params : ''
     }).then((response) => {
       if (response.status === 200) {
         setSelectedLocation(response?.data?.Data?.location?.accessable_locations);
@@ -140,6 +147,9 @@ const Layout = () => {
         setLocations(locs);
         setSelectedLocation(selected_locaions);
       } else {
+        if (response?.response?.status === 401) {
+          enqueueSnackbar('User Not Found', { variant: 'error' });
+        }
         errorMessageHandler(
           enqueueSnackbar,
           response?.response?.data?.Message || 'Something Went Wrong.',
@@ -229,9 +239,7 @@ const Layout = () => {
   }, []);
 
   useEffect(() => {
-    // if (sessionCreated) {
     getCustPaymentMethod();
-    // }
   }, []);
 
   // Method to fetch Customer Payment Method along with Customer Details

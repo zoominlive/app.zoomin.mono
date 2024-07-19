@@ -228,7 +228,7 @@ const WatchStream = () => {
     }).then((response) => {
       if (response.status === 200) {
         setTimeOut(response?.data?.Data?.streamDetails[0]?.timeout);
-
+        setPlaying(true);
         setCamerasPayload({
           location: response?.data?.Data?.streamDetails[0]?.location,
           room: response?.data?.Data?.streamDetails
@@ -764,7 +764,8 @@ const WatchStream = () => {
             setIsDeleteDialogOpen(false);
           }}
           handleDelete={() => {
-            setPlaying(true);
+            getAvailableStreams();
+            // setPlaying(true);
             setIsDeleteDialogOpen(false);
           }}
         />

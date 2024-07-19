@@ -101,6 +101,7 @@ const CameraForm = (props) => {
       stream_id: props?.camera?.stream_uuid,
       alias: props.camera?.cam_alias,
       cust_id: localStorage.getItem('cust_id') ? localStorage.getItem('cust_id') : '',
+      location: props?.camera?.location,
       ...data
     };
     delete payload.locations;

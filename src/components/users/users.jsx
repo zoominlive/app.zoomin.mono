@@ -119,7 +119,8 @@ const Users = () => {
   const handleUserDelete = () => {
     setDeleteLoading(true);
     let payload = {
-      userId: user.user_id
+      userId: user.user_id,
+      frontegg_user_id: user.frontegg_user_id
     };
     if (user.stream_live_license) {
       payload = {

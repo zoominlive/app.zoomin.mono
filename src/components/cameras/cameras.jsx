@@ -103,7 +103,12 @@ const Cameras = () => {
   const handleCameraDelete = (wait = false) => {
     setDeleteLoading(true);
     API.delete('cams/delete', {
-      data: { cam_id: camera.cam_id, wait: wait, streamId: camera.stream_uuid }
+      data: {
+        cam_id: camera.cam_id,
+        wait: wait,
+        streamId: camera.stream_uuid,
+        location: camera.location
+      }
     }).then((response) => {
       if (response.status === 200) {
         getCamerasList();
@@ -126,12 +131,15 @@ const Cameras = () => {
 
   // Method to fix camera
   const handleCameraFix = (wait = false) => {
+    console.log('camera-->', camera);
     setDeleteLoading(true);
     API.post('cams/fix-camera', {
       cam_uri: camera.cam_uri,
       cam_id: camera.cam_id,
       wait: wait,
-      streamId: camera.stream_uuid
+      streamId: camera.stream_uuid,
+      location: camera.location,
+      on_screen_display: camera?.privacy_areas
     }).then((response) => {
       if (response.status === 200) {
         getCamerasList();

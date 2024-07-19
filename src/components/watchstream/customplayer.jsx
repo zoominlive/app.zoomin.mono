@@ -311,8 +311,9 @@ const CustomPlayer = (props) => {
                 props?.streamUri?.includes('https://live.zoominlive.com') ||
                 props?.streamUri?.includes('zoomin-recordings-rtmp')
                   ? props?.streamUri
-                  : `${authCtx.user.transcoderBaseUrl}${props?.streamUri}`
+                  : `${props?.streamUri}`
               }
+              // url={props?.streamUri}
               className={
                 location.pathname === '/watch-stream' || location.pathname === '/cameras'
                   ? 'react-player'
