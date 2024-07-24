@@ -1,4 +1,4 @@
-import { Avatar, Box, Chip, Paper, Stack, Typography } from '@mui/material';
+import { Avatar, Box, Paper, Stack, Typography } from '@mui/material';
 import PropTypes from 'prop-types';
 import NoDataDiv from '../common/nodatadiv';
 import { useEffect } from 'react';
@@ -61,7 +61,7 @@ export default function AccessTable({
                     className="div-row row-marging zl__tr-block"
                     key={`${row?.childFirstName}-${index}`}
                     onClick={() => hanldeRowClick(row?.family, index)}>
-                    <Box className="zl__td-block" style={{ width: '25%' }}>
+                    <Box className="zl__td-block" style={{ width: '75%' }}>
                       <Stack direction={'row'} alignItems={'center'} gap={1}>
                         <Box className="viewer-profile">
                           <Box className="profile-img">
@@ -74,13 +74,13 @@ export default function AccessTable({
                         {row?.childFirstName + ' ' + row.childLastName}
                       </Stack>
                     </Box>
-                    <Box style={{ width: '25%' }} className="child-rooms zl__td-block">
+                    {/* <Box style={{ width: '25%' }} className="child-rooms zl__td-block">
                       <Box style={{ display: 'flex' }}>
                         {row?.rooms?.map((r) => (
                           <Chip key={r} label={r} />
                         ))}
                       </Box>
-                    </Box>
+                    </Box> */}
                     <Box className="zl__td-block" style={{ width: '25%' }}>
                       {row.date}
                     </Box>

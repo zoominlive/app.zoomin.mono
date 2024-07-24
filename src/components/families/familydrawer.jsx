@@ -596,7 +596,7 @@ const FamilyDrawer = (props) => {
                   className="disable_family_btn"
                   // color="dark"
                   onClick={() => props.setIsDisableFamilyDialogOpen(true)}>
-                  Disabled Family
+                  Disable Family
                 </Button>
                 {/* </Stack> */}
               </>

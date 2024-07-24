@@ -47,6 +47,10 @@ const Login = () => {
   const { enqueueSnackbar } = useSnackbar();
 
   useEffect(() => {
+    window.productFruits?.services?.destroy();
+  }, []);
+
+  useEffect(() => {
     if (authCtx.token) {
       //navigate('/dashboard');
     }

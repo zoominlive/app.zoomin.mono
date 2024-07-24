@@ -92,7 +92,6 @@ const MainApp = () => {
   // }, [authCtx.token]);
   return (
     <>
-      <PF />
       <Routes>
         <Route element={<PublicRoute />}>
           <Route path="/login" element={<Login />} />

@@ -64,6 +64,7 @@ import debounce from 'lodash.debounce';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import { useAuth } from '@frontegg/react';
 // import { useAuth } from '@frontegg/react';
+import { PF } from '../pf/pf';
 
 const icon = <RadioButtonUncheckedIcon fontSize="small" />;
 const checkedIcon = <CheckCircleOutlineIcon fontSize="small" style={{ color: '#5A53DD' }} />;
@@ -497,6 +498,7 @@ const Layout = () => {
 
   return (
     <>
+      <PF />
       <Box sx={{ display: 'flex' }}>
         <Loader loading={isLoading} />
         <Drawer
