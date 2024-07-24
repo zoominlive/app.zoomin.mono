@@ -182,40 +182,12 @@ module.exports = {
     const t = await sequelize.transaction();
     try {
       const params = req.body;
-      const token = req.userToken;
       if (params?.thumbnail && !params?.thumbnail.includes('https://zoominlive-cam-thumbs.s3.amazonaws.com')) {
         const imageUrl = await s3BucketImageUploader._upload(params?.thumbnail);
         params.thumbnail = imageUrl;
       }
       // const getPresignedUrl = await s3BucketImageUploader.getPresignedUrlForThumbnail(params?.s3Uri);
 
-      const camEncodedStopped = await stopEncodingStreamPrivacyMasking(
-        params.alias,
-        params.wait,
-        token,
-        req.user.cust_id || params.cust_id,
-        params.location,
-      );
-      let camera;
-      console.log('camEncodedStopped==>', camEncodedStopped);
-      if (camEncodedStopped) {
-        const token = req.userToken;
-        const transcodedDetails = await startEncodingStreamToFixCam(
-          params.cam_uri,
-          token,
-          params.location,
-          req.user.cust_id || params.cust_id,
-          params.stream_id,
-          params?.on_screen_display,
-        );
-        console.log('transcodedDetails-->', transcodedDetails);
-        params.stream_uri = transcodedDetails?.data ? transcodedDetails.data?.uri : '';
-        params.stream_uuid = transcodedDetails?.data ? transcodedDetails.data?.id : '';
-        params.cam_alias = transcodedDetails?.data ? transcodedDetails.data?.alias : '';
-        params.cust_id = req.user.cust_id ? req.user.cust_id : params.cust_id,
-        params.privacy_areas = params?.on_screen_display
-        // camera = await cameraServices.editCamera(params.cam_id, params, t);
-      }
       const cameraUpdated = await cameraServices.editCamera(
         params.cam_id,
         {
@@ -272,7 +244,6 @@ module.exports = {
         token,
         req.user.cust_id || params.cust_id,
         params.location,
-        params.on_screen_display
       );
       let camera;
       if (camEncodedStopped) {
@@ -283,7 +254,6 @@ module.exports = {
           params.location,
           req.user.cust_id || params.cust_id,
           params.streamId,
-          params?.on_screen_display,
         );
         // console.log('transcodedDetails-->', transcodedDetails);
         params.stream_uri = transcodedDetails?.data ? transcodedDetails.data?.uri : '';
@@ -453,7 +423,6 @@ module.exports = {
               if (camera.thumbnail && camera.thumbnail.startsWith('s3://')) {
                 camera.thumbnailPresignedUrl = await generatePresignedUrlForThumbnail(camera.thumbnail);
               }
-              camera.privacy_areas = camera.privacy_areas ? camera.privacy_areas : {"drawbox_co": []}
               return camera;
           }));
           return { cameras: camerasWithPresignedUrls };
