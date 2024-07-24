@@ -1,5 +1,5 @@
 /* eslint-disable no-unused-vars */
-import { Box, Button, IconButton, Input, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import React, { useRef, useState } from 'react';
 import ReactPlayer from 'react-player';
 import PlayerControls from './playercontols';
@@ -10,7 +10,6 @@ import Loader from '../common/loader';
 import { useContext } from 'react';
 import AuthContext from '../../context/authcontext';
 import _ from 'lodash';
-import { Stage, Layer, Rect, Text } from 'react-konva';
 // import VideocamOffIcon from '@mui/icons-material/VideocamOff';
 
 const CustomPlayer = (props) => {
@@ -119,15 +118,6 @@ const CustomPlayer = (props) => {
     playerRef.current.seekTo(parseFloat(value / 100));
   };
 
-  const handleAPICall = (e) => {
-    e.preventDefault();
-    const payload = { overlays };
-    console.log('API Payload:', payload);
-    props.setCoords(payload);
-    props.setCanvasWidthHeight(canvasWidthHeight);
-    enqueueSnackbar('Coordinates saved. Click Save Changes to proceed', { variant: 'success' });
-  };
-
   return (
     <>
       {!_.isEmpty(url) && (
@@ -197,47 +187,6 @@ const CustomPlayer = (props) => {
               muted={isMuted}
               onProgress={progressHandler}
             />
-            {props?.edit_cam && props?.canvas_status && (
-              <Stage
-                width={stageWidth}
-                height={stageHeight}
-                style={{ position: 'absolute', top: 0, left: 0 }}
-                onMouseDown={handleMouseDown}
-                onMouseMove={handleMouseMove}
-                onMouseUp={handleMouseUp}>
-                <Layer>
-                  {overlays.map((overlay, index) => (
-                    <React.Fragment key={index}>
-                      <Rect
-                        x={overlay.x}
-                        y={overlay.y}
-                        width={overlay.width}
-                        height={overlay.height}
-                        fill="rgba(0, 0, 0, 0.5)"
-                        draggable
-                        onDragEnd={(e) => handleDragEnd(e, index)}
-                      />
-                      <Text
-                        x={overlay.x}
-                        y={overlay.y - 20}
-                        text={`x: ${overlay.x}, y: ${overlay.y}`}
-                        fontSize={12}
-                        fill="white"
-                      />
-                    </React.Fragment>
-                  ))}
-                  {currentOverlay && (
-                    <Rect
-                      x={currentOverlay.x}
-                      y={currentOverlay.y}
-                      width={currentOverlay.width}
-                      height={currentOverlay.height}
-                      fill="rgba(0, 0, 0, 0.5)"
-                    />
-                  )}
-                </Layer>
-              </Stage>
-            )}
             {location.pathname === '/watch-stream' && (
               <Box className={'overlay'}>
                 <Typography
@@ -263,33 +212,6 @@ const CustomPlayer = (props) => {
               streamUrl={props?.streamUri}
             />
           </Box>
-          {props?.edit_cam && props?.canvas_status && (
-            <Box
-              style={{
-                width: '100%',
-                padding: '10px',
-                marginTop: '10px',
-                backgroundColor: '#f0f0f0'
-              }}>
-              <Typography variant="h4">Privacy Areas</Typography>
-              {overlays.map((overlay, index) => (
-                <Box key={index} style={{ marginBottom: '10px', display: 'flex' }}>
-                  <Input
-                    type="text"
-                    value={`x: ${overlay.x}, y: ${overlay.y}, width: ${overlay.width}, height: ${overlay.height}`}
-                    readOnly
-                    style={{ width: '100%' }}
-                  />
-                  <IconButton onClick={() => handleDelete(index)} style={{ marginTop: '5px' }}>
-                    <DeleteIcon color="error" />
-                  </IconButton>
-                </Box>
-              ))}
-              <Button variant="contained" onClick={handleAPICall} style={{ marginTop: '10px' }}>
-                Set Coordinates
-              </Button>
-            </Box>
-          )}
         </>
       )}
     </>

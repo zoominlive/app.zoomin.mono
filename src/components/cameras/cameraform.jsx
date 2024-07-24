@@ -17,7 +17,6 @@ import {
   IconButton,
   InputLabel,
   Stack,
-  Switch,
   TextField,
   Tooltip,
   Typography
@@ -36,7 +35,6 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import { useDropzone } from 'react-dropzone';
 import { toBase64 } from '../../utils/base64converter';
 import noimg from '../../assets/ic_no_image.png';
-import CustomPlayer from '../watchstream/customplayer';
 
 const validationSchema = yup.object({
   cam_name: yup.string('Enter camera name').required('Camera name is required'),
@@ -58,10 +56,7 @@ const CameraForm = (props) => {
   const [base64Image, setBase64Image] = useState();
   const [image, setImage] = useState();
   const [S3Uri, setS3Uri] = useState();
-  const [coords, setCoords] = useState();
-  const [checked, setChecked] = useState(false);
   const authCtx = useContext(AuthContext);
-  const [canvasWidthHeight, setCanvasWidthHeight] = useState(null);
 
   useEffect(() => {
     if (props.camera !== undefined) {
@@ -76,28 +71,10 @@ const CameraForm = (props) => {
   // Method to update the user profile
   const handleSubmit = (data) => {
     console.log('called==>');
-    if (coords) {
-      coords.drawbox_co = coords.overlays;
-      coords.drawbox_co = coords.drawbox_co.map((item) => ({
-        x: item.x / canvasWidthHeight?.canvasWidth,
-        y: item.y / canvasWidthHeight?.canvasHeight,
-        width: item.width / canvasWidthHeight?.canvasWidth,
-        height: item.height / canvasWidthHeight?.canvasHeight
-      }));
-      delete coords.overlays;
-    }
-
-    const updatedData = {
-      // watermark_url: '/app/watermark-2.png',
-      drawbox_co: coords?.drawbox_co,
-      canvasDimensions: canvasWidthHeight && canvasWidthHeight
-    };
     const payload = {
       cam_id: props?.camera?.cam_id,
       thumbnail: !props.camera ? base64Image : image ? (base64Image ? base64Image : image) : null,
       s3Uri: S3Uri,
-      on_screen_display: updatedData ? updatedData : '',
-      codec: 'libx264',
       stream_id: props?.camera?.stream_uuid,
       alias: props.camera?.cam_alias,
       cust_id: localStorage.getItem('cust_id') ? localStorage.getItem('cust_id') : '',
@@ -276,223 +253,176 @@ const CameraForm = (props) => {
           </DialogActions>
         </>
       ) : (
-        <>
-          <Formik
-            enableReinitialize
-            validateOnChange
-            validationSchema={validationSchema}
-            initialValues={{
-              cam_name: props?.camera?.cam_name || '',
-              cam_uri: props?.camera?.cam_uri || '',
-              description: props?.camera?.description || '',
-              location: props?.camera?.location || '',
-              stream_uri: props?.camera?.stream_uri_seckey || '',
-              privacy_areas: props?.camera?.privacy_areas?.drawbox_co || ''
-            }}
-            onSubmit={handleSubmit}>
-            {({ values, setFieldValue, touched, errors }) => {
-              return (
-                <Form>
-                  <DialogContent>
-                    <Stack
-                      display={props.camera == undefined && 'none'}
-                      spacing={3}
-                      mb={3}
-                      mt={2}
-                      direction="row"
-                      alignItems="center">
-                      <Box
-                        component="img"
-                        sx={{
-                          height: 133,
-                          width: 250,
-                          maxHeight: { xs: 233, md: 167 },
-                          maxWidth: { xs: 350, md: 250 }
-                        }}
-                        alt="Thumbnail"
-                        src={image ? image : noimg}
-                      />
-                      <LoadingButton
-                        disabled={submitLoading}
-                        variant="contained"
-                        color="primary"
-                        component="span"
-                        {...getRootProps({ className: 'dropzone' })}>
-                        Upload
-                        <input {...getInputProps()} />
-                      </LoadingButton>
-                      <Typography>or</Typography>
-                      <LoadingButton
-                        disabled={submitLoading}
-                        variant="contained"
-                        color="primary"
-                        onClick={handleGenerateThumbnail}
-                        component="span">
-                        Generate
-                      </LoadingButton>
-                      {image && (
-                        <Tooltip title="Remove photo">
-                          <LoadingButton
-                            variant="outlined"
-                            disabled={submitLoading}
-                            className="image-delete-btn"
-                            aria-label="delete"
-                            onClick={handlePhotoDelete}>
-                            <DeleteIcon />
-                          </LoadingButton>
-                        </Tooltip>
-                      )}
-                    </Stack>
-                    <Grid container spacing={2}>
-                      <Grid item md={6} xs={12}>
-                        <InputLabel id="cam_name">Camera Name</InputLabel>
-                        <TextField
-                          labelId="cam_name"
-                          name="cam_name"
-                          value={values?.cam_name}
-                          onChange={(event) => {
-                            setFieldValue('cam_name', event.target.value);
-                          }}
-                          helperText={touched.cam_name && errors.cam_name}
-                          error={touched.cam_name && Boolean(errors.cam_name)}
-                          fullWidth
-                        />
-                      </Grid>
-                      <Grid item md={6} xs={12}>
-                        <InputLabel id="cam_uri">URL</InputLabel>
-                        <TextField
-                          labelId="cam_uri"
-                          name="cam_uri"
-                          disabled={props.camera}
-                          value={
-                            props.camera &&
-                            values?.cam_uri.replace(
-                              values?.cam_uri.substring(
-                                values?.cam_uri.indexOf('//') + 2,
-                                values?.cam_uri.indexOf('@')
-                              ),
-                              '************'
-                            )
-                          }
-                          onChange={(event) => {
-                            setFieldValue('cam_uri', event.target.value);
-                          }}
-                          helperText={touched.cam_uri && errors.cam_uri}
-                          error={touched.cam_uri && Boolean(errors.cam_uri)}
-                          fullWidth
-                        />
-                      </Grid>
-                      <Grid item md={6} xs={12} display={props.camera && 'none'}>
-                        <InputLabel id="description">Description</InputLabel>
-                        <TextField
-                          labelId="description"
-                          name="description"
-                          value={values?.description}
-                          onChange={(event) => {
-                            setFieldValue('description', event.target.value);
-                          }}
-                          helperText={touched.description && errors.description}
-                          error={touched.description && Boolean(errors.description)}
-                          fullWidth
-                        />
-                      </Grid>
-                      <Grid item md={6} xs={12} display={props.camera && 'none'}>
-                        <InputLabel id="location">Location</InputLabel>
-                        <Autocomplete
-                          labelId="location"
-                          fullWidth
-                          id="location"
-                          options={
-                            authCtx?.user?.location?.accessable_locations
-                              ? authCtx?.user?.location?.accessable_locations?.sort((a, b) =>
-                                  a > b ? 1 : -1
-                                )
-                              : []
-                          }
-                          onChange={(_, value) => {
-                            setFieldValue('location', value);
-                          }}
-                          value={values?.location}
-                          renderTags={(value, getTagProps) =>
-                            value.map((option, index) => (
-                              <Chip key={index} label={option} {...getTagProps({ index })} />
-                            ))
-                          }
-                          renderInput={(params) => (
-                            <TextField
-                              {...params}
-                              // placeholder="Location"
-                              helperText={touched.location && errors.location}
-                              error={touched.location && Boolean(errors.location)}
-                              fullWidth
-                            />
-                          )}
-                        />
-                      </Grid>
-                    </Grid>
-                    {props?.camera && (
-                      <Grid item spacing={2} md={2} sm={12}>
-                        <Box className="row-button-wrapper">
-                          <InputLabel>{checked ? 'Disable Canvas' : 'Add Privacy Area'}</InputLabel>
-                          <Switch
-                            className={`switch-disable`}
-                            checked={checked}
-                            onChange={() => {
-                              setChecked(!checked);
-                            }}
-                            inputProps={{ 'aria-label': 'controlled' }}
-                          />
-                        </Box>
-                      </Grid>
-                    )}
-                    <Grid
-                      container
-                      spacing={2}
-                      alignContent={'center'}
-                      marginTop={1}
-                      className="player-grid-container">
-                      <Grid
-                        item
-                        md={12}
-                        sm={12}
-                        sx={{
-                          display: 'flex',
-                          flexDirection: 'column',
-                          justifyContent: 'center',
-                          padding: 1
-                        }}>
-                        <CustomPlayer
-                          streamUri={values?.stream_uri}
-                          camDetails={{}}
-                          cam_id={null}
-                          edit_cam={true}
-                          canvas_status={checked}
-                          drawbox_co={values?.privacy_areas}
-                          setCoords={setCoords}
-                          setCanvasWidthHeight={setCanvasWidthHeight}
-                        />
-                      </Grid>
-                    </Grid>
-                  </DialogContent>
-                  <DialogActions sx={{ paddingRight: 4, paddingBottom: 3 }}>
-                    {/* <Button disabled={submitLoading} variant="text" onClick={handleFormDialogClose}>
-                    CANCEL
-                  </Button> */}
+        <Formik
+          enableReinitialize
+          validateOnChange
+          validationSchema={validationSchema}
+          initialValues={{
+            cam_name: props?.camera?.cam_name || '',
+            cam_uri: props?.camera?.cam_uri || '',
+            description: props?.camera?.description || '',
+            location: props?.camera?.location || ''
+          }}
+          onSubmit={handleSubmit}>
+          {({ values, setFieldValue, touched, errors }) => {
+            return (
+              <Form>
+                <DialogContent>
+                  <Stack
+                    display={props.camera == undefined && 'none'}
+                    spacing={3}
+                    mb={3}
+                    mt={2}
+                    direction="row"
+                    alignItems="center">
+                    <Box
+                      component="img"
+                      sx={{
+                        height: 133,
+                        width: 250,
+                        maxHeight: { xs: 233, md: 167 },
+                        maxWidth: { xs: 350, md: 250 }
+                      }}
+                      alt="Thumbnail"
+                      src={image ? image : noimg}
+                    />
                     <LoadingButton
-                      className="add-btn save-changes-btn"
-                      loading={submitLoading}
-                      loadingPosition={submitLoading ? 'start' : undefined}
-                      startIcon={submitLoading && <SaveIcon />}
-                      variant="text"
-                      type="submit">
-                      SAVE CHANGES
+                      disabled={submitLoading}
+                      variant="contained"
+                      color="primary"
+                      component="span"
+                      {...getRootProps({ className: 'dropzone' })}>
+                      Upload
+                      <input {...getInputProps()} />
                     </LoadingButton>
-                  </DialogActions>
-                </Form>
-              );
-            }}
-          </Formik>
-        </>
+                    <Typography>or</Typography>
+                    <LoadingButton
+                      disabled={submitLoading}
+                      variant="contained"
+                      color="primary"
+                      onClick={handleGenerateThumbnail}
+                      component="span">
+                      Generate
+                    </LoadingButton>
+                    {image && (
+                      <Tooltip title="Remove photo">
+                        <LoadingButton
+                          variant="outlined"
+                          disabled={submitLoading}
+                          className="image-delete-btn"
+                          aria-label="delete"
+                          onClick={handlePhotoDelete}>
+                          <DeleteIcon />
+                        </LoadingButton>
+                      </Tooltip>
+                    )}
+                  </Stack>
+                  <Grid container spacing={2}>
+                    <Grid item md={6} xs={12}>
+                      <InputLabel id="cam_name">Camera Name</InputLabel>
+                      <TextField
+                        labelId="cam_name"
+                        name="cam_name"
+                        value={values?.cam_name}
+                        onChange={(event) => {
+                          setFieldValue('cam_name', event.target.value);
+                        }}
+                        helperText={touched.cam_name && errors.cam_name}
+                        error={touched.cam_name && Boolean(errors.cam_name)}
+                        fullWidth
+                      />
+                    </Grid>
+                    <Grid item md={6} xs={12}>
+                      <InputLabel id="cam_uri">URL</InputLabel>
+                      <TextField
+                        labelId="cam_uri"
+                        name="cam_uri"
+                        disabled={props.camera}
+                        value={
+                          props.camera &&
+                          values?.cam_uri.replace(
+                            values?.cam_uri.substring(
+                              values?.cam_uri.indexOf('//') + 2,
+                              values?.cam_uri.indexOf('@')
+                            ),
+                            '************'
+                          )
+                        }
+                        onChange={(event) => {
+                          setFieldValue('cam_uri', event.target.value);
+                        }}
+                        helperText={touched.cam_uri && errors.cam_uri}
+                        error={touched.cam_uri && Boolean(errors.cam_uri)}
+                        fullWidth
+                      />
+                    </Grid>
+                    <Grid item md={6} xs={12} display={props.camera && 'none'}>
+                      <InputLabel id="description">Description</InputLabel>
+                      <TextField
+                        labelId="description"
+                        name="description"
+                        value={values?.description}
+                        onChange={(event) => {
+                          setFieldValue('description', event.target.value);
+                        }}
+                        helperText={touched.description && errors.description}
+                        error={touched.description && Boolean(errors.description)}
+                        fullWidth
+                      />
+                    </Grid>
+                    <Grid item md={6} xs={12} display={props.camera && 'none'}>
+                      <InputLabel id="location">Location</InputLabel>
+                      <Autocomplete
+                        labelId="location"
+                        fullWidth
+                        id="location"
+                        options={
+                          authCtx?.user?.location?.accessable_locations
+                            ? authCtx?.user?.location?.accessable_locations?.sort((a, b) =>
+                                a > b ? 1 : -1
+                              )
+                            : []
+                        }
+                        onChange={(_, value) => {
+                          setFieldValue('location', value);
+                        }}
+                        value={values?.location}
+                        renderTags={(value, getTagProps) =>
+                          value.map((option, index) => (
+                            <Chip key={index} label={option} {...getTagProps({ index })} />
+                          ))
+                        }
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            // placeholder="Location"
+                            helperText={touched.location && errors.location}
+                            error={touched.location && Boolean(errors.location)}
+                            fullWidth
+                          />
+                        )}
+                      />
+                    </Grid>
+                  </Grid>
+                </DialogContent>
+                <DialogActions sx={{ paddingRight: 4, paddingBottom: 3 }}>
+                  {/* <Button disabled={submitLoading} variant="text" onClick={handleFormDialogClose}>
+                  CANCEL
+                </Button> */}
+                  <LoadingButton
+                    className="add-btn save-changes-btn"
+                    loading={submitLoading}
+                    loadingPosition={submitLoading ? 'start' : undefined}
+                    startIcon={submitLoading && <SaveIcon />}
+                    variant="text"
+                    type="submit">
+                    SAVE CHANGES
+                  </LoadingButton>
+                </DialogActions>
+              </Form>
+            );
+          }}
+        </Formik>
       )}
     </Dialog>
   );
