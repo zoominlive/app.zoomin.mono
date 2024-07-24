@@ -63,7 +63,7 @@ module.exports = {
         child.roomsInChild.forEach((room) => {
           if (room.scheduled_disable_date != null) {
            if(req.query?.location !== "All"){
-            if(req.query?.location == room.room?.location){
+            if(req.query?.location == room.room?.location || req.query?.location?.length !== 0){
               roomsToDisable.push(room.room?.room_name);
             }
            }
@@ -73,7 +73,7 @@ module.exports = {
            
           } else {
             if(req.query?.location !== "All"){
-              if(req.query?.location == room.room?.location){
+              if(req.query?.location == room.room?.location || req.query?.location?.length !== 0){
                 roomsToEnable.push(room.room?.room_name);
               }
              }

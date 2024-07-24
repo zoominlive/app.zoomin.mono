@@ -178,7 +178,7 @@ module.exports = {
     } else {
       let rooms;
 
-      if (user.role == "Admin" || user.role == "Super Admin") {
+      if (user.role == "Admin" || user.role == "Super Admin" || user.role == "User") {
         let loc_obj = {};
         if (user.role == "Super Admin") {
           let availableLocations = await customerServices.getLocationDetails(
@@ -484,10 +484,11 @@ module.exports = {
 
       return finalResult;
     } else {
-      if (user.role == "Admin") {
+      if (user.role == "Admin" || user.role == "User") {
         let locations = await CustomerLocations.findAll({
           where: {
             loc_name: user.location.accessable_locations,
+            cust_id: user.cust_id
           },
           attributes: ["loc_name", "transcoder_endpoint"],
           include: [

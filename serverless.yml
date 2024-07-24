@@ -3,6 +3,11 @@ app: zoomin
 service: zoomin
 frameworkVersion: "3"
 
+package:
+  patterns:
+    - "!node_modules/aws-sdk/**"
+    - "!node_modules/**/aws-sdk/**"
+
 provider:
   name: aws
   deploymentMethod: direct
@@ -49,6 +54,7 @@ provider:
     SEND_BIRD_APPLICATION_ID: ${file(./env.json):${opt:stage, 'stage'}.SEND_BIRD_APPLICATION_ID}
     SEND_BIRD_API_TOKEN: ${file(./env.json):${opt:stage, 'stage'}.SEND_BIRD_API_TOKEN}
     # websocket_endpoint: "http://localhost:3001"
+    TRANSCODER_SECRET: ${file(./env.json):${opt:stage, 'stage'}.TRANSCODER_SECRET}
     STREAM_URL_SECRET_KEY: tNAbY0TfoCsKiS9TOijonkXkT
     STRIPE_SECRET_KEY: ${file(./env.json):${opt:stage, 'stage'}.STRIPE_SECRET_KEY}
     STRIPE_WEBHOOK_SECRET: ${file(./env.json):${opt:stage, 'stage'}.STRIPE_WEBHOOK_SECRET}
@@ -77,6 +83,8 @@ custom:
       package:
         individually: true
         patterns:
+          - '!./node_modules/aws-sdk/**'
+          - '!./node_modules/**/aws-sdk/**'
           - '!../**'
           - '!../../**'
           - ./**

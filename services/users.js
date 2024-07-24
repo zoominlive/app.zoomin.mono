@@ -28,7 +28,8 @@ module.exports = {
   createUser: async (userObj, t) => {
     const { Users } = await connectToDatabase();
     userObj.user_id = uuidv4();
-
+    delete userObj.rooms;
+    console.log('userObj--->', userObj);
     let userCreated = await Users.create(userObj, { transaction: t });
 
     return userCreated;

@@ -288,7 +288,7 @@ module.exports = {
 
           if (validPassword) {
             const token = await userServices.createUserToken(user.user_id);
-            
+            user.profile_image = user.profile_image !== null ? user.profile_image : ''
             const userData = _.omit(user, ['password', 'cust_id']);
             success = true;
             if(fcmObj){
@@ -349,6 +349,7 @@ module.exports = {
 
           if (validPassword) {
             const token = await familyServices.createFamilyMemberToken(familyUser.family_member_id);
+            familyUser.profile_image = familyUser.profile_image !== null ? familyUser.profile_image : ''
             const userData = _.omit(familyUser, ['password', 'cust_id']);
             if(fcmObj){
             fcmObj = { 

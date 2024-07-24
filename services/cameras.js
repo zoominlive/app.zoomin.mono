@@ -193,7 +193,7 @@ module.exports = {
     );
     return { cams: cams.rows, count: cams.count };
   },
-
+  
   getAllMountedCameraViewers: async (camIds, t) => {
     // .query(
     //   'SELECT recent_user_id, COUNT(DISTINCT sub.viewer_id) AS total_start_only_viewers FROM (SELECT viewer_id FROM mounted_camera_recent_viewers WHERE `function` = "start" AND cam_id IN (:camIds) GROUP BY viewer_id) AS sub WHERE NOT EXISTS (SELECT 1 FROM mounted_camera_recent_viewers WHERE `function` = "stop" AND viewer_id = sub.viewer_id)',
