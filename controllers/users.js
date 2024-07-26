@@ -172,7 +172,7 @@ module.exports = {
           process.env.FE_SITE_BASE_URL + 'set-password?' + 'token=' + token;
         // const short_url = await TinyURL.shorten(originalUrl);
 
-        await sendRegistrationMailforUser(name, userData.email, originalUrl);
+        // await sendRegistrationMailforUser(name, userData.email, originalUrl);
 
         if (req.body?.image) {
           const imageUrl = await s3BucketImageUploader._upload(req.body.image, userData.user_id);

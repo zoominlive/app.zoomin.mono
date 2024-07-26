@@ -176,7 +176,7 @@ module.exports = {
       const token = await userServices.createPasswordToken(userData, true);
       const name = userData.first_name + ' ' + userData.last_name;
       const originalUrl = process.env.FE_SITE_BASE_URL + 'set-password?' + 'token=' + token + '&type=user';
-      await sendRegistrationMailforUser(name, userData.email, originalUrl);
+      // await sendRegistrationMailforUser(name, userData.email, originalUrl);
 
       let locations = customer_locations.flatMap((i) => {return { loc_name: i.loc_name, transcoder_endpoint: i.transcoder_endpoint}});
       console.log('locations==>', locations);
@@ -237,7 +237,7 @@ module.exports = {
           );
           console.log('user_response--->', user_response.data);
           await Users.update(
-            { frontegg_tenant_id: tenant_response.data.tenantId },
+            { frontegg_tenant_id: tenant_response.data.tenantId, frontegg_user_id: user_response.id },
             {
               where: { user_id: addUser.dataValues.user_id },
               transaction: t 

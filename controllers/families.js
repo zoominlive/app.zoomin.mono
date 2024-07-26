@@ -82,7 +82,7 @@ module.exports = {
           process.env.FE_SITE_BASE_URL + 'set-password?' + 'token=' + token;
         // const short_url = await TinyURL.shorten(originalUrl);
 
-        await sendRegistrationMailforFamilyMember(name, primaryParent.email, originalUrl);
+        // await sendRegistrationMailforFamilyMember(name, primaryParent.email, originalUrl);
 
         if (!_.isEmpty(secondaryParents)) {
           secondaryParents.forEach(async (secondaryParent) => {
@@ -342,8 +342,21 @@ module.exports = {
         const originalUrl =
           process.env.FE_SITE_BASE_URL + 'set-password?' + 'token=' + token;
         // const short_url = await TinyURL.shorten(originalUrl);
-
-        await sendRegistrationMailforFamilyMember(name, parent.email, originalUrl);
+        // await sendRegistrationMailforFamilyMember(name, parent.email, originalUrl);
+        console.log('parent==>', parent);
+        if(parent) {
+          const { frontegg_tenant_id } = await customerServices.getCustomerDetails(params.cust_id);
+          const createFrontEggUser = await userServices.createFrontEggFamilyUser(frontegg_tenant_id, parent)
+          if (createFrontEggUser) {
+            await Family.update(
+              { frontegg_user_id: createFrontEggUser.id },
+              {
+                where: { family_member_id: parent.family_member_id },
+                transaction: t 
+              }
+            );
+          }
+        }
         await t.commit();
         res.status(201).json({
           IsSuccess: true,
