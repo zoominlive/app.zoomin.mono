@@ -2,6 +2,7 @@ const connectToDatabase = require("../models/index");
 const Sequelize = require("sequelize");
 const { v4: uuidv4 } = require("uuid");
 const Users = require("../models/users");
+const axios = require("axios");
 
 module.exports = {
   getMaxLiveStramAvailable: async (custId, t) => {
@@ -281,6 +282,27 @@ module.exports = {
     );
 
     return deletedCustomer;
+  },
+
+  deleteFrontEggTenant: async(tenantId) => {
+    const vendor_token = await axios.post(
+      `${process.env.FRONTEGG_API_GATEWAY_URL}auth/vendor/`,
+      {
+        clientId:process.env.FRONTEGG_CLIENT_ID,
+        secret: process.env.FRONTEGG_API_KEY,
+      },
+    );
+    console.log('vendor_token-->', vendor_token);
+    const tenant_response = await axios.delete(
+      `${process.env.FRONTEGG_API_GATEWAY_URL}tenants/resources/tenants/v1/${tenantId}`,
+      {
+        headers: {
+          'Authorization':
+            `Bearer ${vendor_token.data.token}`,
+        },
+      }
+    );
+    console.log('tenant_response--->', tenant_response.data);
   },
 
   editCustomer: async (customerId, params, t) => {

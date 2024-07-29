@@ -319,9 +319,12 @@ module.exports = {
     const t = await sequelize.transaction();
     try {
       const { customerId } = req.body;
-
-      let deleted = await customerServices.deleteCustomer(customerId, t);
-
+      let customer = await customerServices.getCustomerDetails(customerId);
+      const deleteFrontEggTenant = await customerServices.deleteFrontEggTenant(customer.frontegg_tenant_id);
+      let deleted;
+      if(deleteFrontEggTenant) {
+        deleted = await customerServices.deleteCustomer(customerId, t);
+      }
       if (deleted) {
         res
           .status(200)
