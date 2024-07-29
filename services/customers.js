@@ -302,7 +302,7 @@ module.exports = {
         },
       }
     );
-    console.log('tenant_response--->', tenant_response.data);
+    return tenant_response;
   },
 
   editCustomer: async (customerId, params, t) => {

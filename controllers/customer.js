@@ -322,7 +322,7 @@ module.exports = {
       let customer = await customerServices.getCustomerDetails(customerId);
       const deleteFrontEggTenant = await customerServices.deleteFrontEggTenant(customer.frontegg_tenant_id);
       let deleted;
-      if(deleteFrontEggTenant) {
+      if(deleteFrontEggTenant.status == 200) {
         deleted = await customerServices.deleteCustomer(customerId, t);
       }
       if (deleted) {
