@@ -526,6 +526,32 @@ module.exports = {
     }
   },
 
+  editFrontEggUserEmail: async (userDetails) => {
+    const vendor_token = await axios.post(
+      `${process.env.FRONTEGG_API_GATEWAY_URL}auth/vendor/`,
+      {
+        clientId: process.env.FRONTEGG_CLIENT_ID,
+        secret: process.env.FRONTEGG_API_KEY,
+      },
+    );
+    if (vendor_token) {
+      const user_response = await axios.put(
+        `${process.env.FRONTEGG_API_GATEWAY_URL}identity/resources/users/v1/${userDetails.frontegg_user_id}/email`,
+        {
+          email: userDetails.email
+        },
+        {
+          headers: {
+            'Authorization':
+              `Bearer ${vendor_token.data.token}`                
+          },
+        }
+      );
+
+      return user_response.data;
+    }
+  },
+
   removeFrontEggUser: async (userId) => {
     const vendor_token = await axios.post(
       `${process.env.FRONTEGG_API_GATEWAY_URL}auth/vendor/`,
