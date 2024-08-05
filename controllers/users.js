@@ -181,6 +181,15 @@ module.exports = {
         //await dashboardServices.updateDashboardData(params.cust_id);
         // await t.commit();
         const {frontegg_tenant_id} = await customerServices.getCustomerDetails(params.cust_id);
+        let roleIds;
+        if (addUser.role == 'Admin') {
+          roleIds = '1e84e022-f276-4e41-a63e-a66802fd3ed2' //roleId of Admin user on FrontEgg
+        } else if (addUser.role == 'Teacher') {
+          roleIds = '33a934ca-d287-4cb1-81ac-c4a213e765e7' //roleId of Teacher user on FrontEgg
+        }  else if (addUser.role == 'User') {
+          roleIds = '111b6116-ae9f-4ba7-8446-27e11e3a4d27' //roleId of User user on FrontEgg
+        } 
+        userData.roleIds = roleIds;
         const frontEggUser = await userServices.createFrontEggUser(frontegg_tenant_id, userData);
         if(frontEggUser) {
           console.log('frontEggUser', frontEggUser);

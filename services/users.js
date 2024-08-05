@@ -509,6 +509,7 @@ module.exports = {
         {
           name: userDetails.first_name +' '+ userDetails.last_name,
           email: userDetails.email,
+          roleIds: [userDetails.roleIds],
           metadata: JSON.stringify({
             zoomin_user_id: userDetails.user_id
           })
@@ -587,6 +588,7 @@ module.exports = {
         {
           name: userDetails.first_name +' '+ userDetails.last_name,
           email: userDetails.email,
+          roleIds: [userDetails.roleIds],
           metadata: JSON.stringify({
             zoomin_family_member_id: userDetails.family_member_id
           })

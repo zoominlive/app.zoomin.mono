@@ -114,6 +114,7 @@ module.exports = {
       children = await childServices.createChildren(childObjs, t);
       if(primaryParent) {
         const { frontegg_tenant_id } = await customerServices.getCustomerDetails(custId);
+        primaryParent.roleIds = 'f9298849-ecce-473a-9e1d-5cd156ceb93e';
         const createFrontEggUser = await userServices.createFrontEggFamilyUser(frontegg_tenant_id, primaryParent)
         if (createFrontEggUser) {
           console.log('primaryParent===', primaryParent);
@@ -346,6 +347,7 @@ module.exports = {
         console.log('parent==>', parent);
         if(parent) {
           const { frontegg_tenant_id } = await customerServices.getCustomerDetails(params.cust_id);
+          parent.roleIds = '8cd1581f-5401-40b9-b7ce-b8b746e58c0e';
           const createFrontEggUser = await userServices.createFrontEggFamilyUser(frontegg_tenant_id, parent)
           if (createFrontEggUser) {
             await Family.update(
