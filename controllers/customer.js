@@ -109,7 +109,7 @@ module.exports = {
       let timezone = time_zone.flatMap((i) => i);
       console.log(user);
       console.log(locations);
-      let addLocations = await customerServices.createLocation(
+      let addLocations = await customerServices.createNewLocation(
         user,
         locations,
         timezone,

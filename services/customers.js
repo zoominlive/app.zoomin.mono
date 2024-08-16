@@ -368,6 +368,23 @@ module.exports = {
     return createLocations;
   },
 
+  createNewLocation: async (custId, locations, timezone, t) => {
+    const { CustomerLocations } = await connectToDatabase();
+    const zip = (locations, timezone) => locations.map((value, index) => [value, timezone[index]]);
+    const locationsWithTimezone = zip(locations, timezone);
+
+    let createLocations = await Promise.all(
+      locationsWithTimezone.map(async ([loc, timezone]) => {
+        const obj = { loc_name: loc, cust_id: custId, time_zone: timezone };
+        // obj.loc_id = uuidv4();
+        return CustomerLocations.create(obj, {
+          transaction: t,
+        });
+      })
+    );
+    return createLocations;
+  },
+
   deleteLocation: async (custId) => {
     const { CustomerLocations } = await connectToDatabase();
     let deletedLocations = await CustomerLocations.destroy({where: {cust_id: custId}});
