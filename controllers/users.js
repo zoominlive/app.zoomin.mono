@@ -211,7 +211,7 @@ module.exports = {
         // await t.commit();
         res
           .status(400)
-          .json({ IsSuccess: true, Data: {}, Message: CONSTANTS.USER_REGISRATION_FAILED });
+          .json({ IsSuccess: true, Data: {}, Message: CONSTANTS.USER_REGISTRATION_FAILED });
       }
       await t.commit();
       next();
@@ -569,7 +569,7 @@ module.exports = {
             res.status(200).json({
               IsSuccess: true,
               Data: {},
-              Message: CONSTANTS.FAMIY_MEMBER_PASS_RESET
+              Message: CONSTANTS.FAMILY_MEMBER_PASS_RESET
             });
           } else if (familyMember?.password) {
             if (familyMember.password === decodeToken?.password) {
@@ -591,7 +591,7 @@ module.exports = {
               res.status(200).json({
                 IsSuccess: true,
                 Data: {},
-                Message: CONSTANTS.FAMIY_MEMBER_PASS_RESET
+                Message: CONSTANTS.FAMILY_MEMBER_PASS_RESET
               });
             } else {
               res.status(400).json({
@@ -880,7 +880,7 @@ module.exports = {
                   CONSTANTS.FAMILY_UPDATED +
                   ". " +
                   ` ${
-                    user.is_verified ? "" : CONSTANTS.VEIRFY_UPDATED_EMAIL
+                    user.is_verified ? "" : CONSTANTS.VERIFY_UPDATED_EMAIL
                   }`,
               });
             } else {

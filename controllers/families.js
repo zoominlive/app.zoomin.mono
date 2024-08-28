@@ -246,7 +246,7 @@ module.exports = {
           Data: editedFamily,
           Message: CONSTANTS.FAMILY_UPDATED +
             '. ' +
-            ` ${params.is_verified ? '' : CONSTANTS.VEIRFY_UPDATED_EMAIL}`
+            ` ${params.is_verified ? '' : CONSTANTS.VERIFY_UPDATED_EMAIL}`
         });
       } else {
         res.status(404).json({
@@ -588,7 +588,7 @@ module.exports = {
             res.status(200).json({
               IsSuccess: true,
               Data: {},
-              Message: CONSTANTS.FAMIY_MEMBER_PASS_RESET
+              Message: CONSTANTS.FAMILY_MEMBER_PASS_RESET
             });
           } else if (familyMember?.password) {
             if (familyMember.password === decodeToken?.password) {
@@ -610,7 +610,7 @@ module.exports = {
               res.status(200).json({
                 IsSuccess: true,
                 Data: {},
-                Message: CONSTANTS.FAMIY_MEMBER_PASS_RESET
+                Message: CONSTANTS.FAMILY_MEMBER_PASS_RESET
               });
             } else {
               res.status(400).json({

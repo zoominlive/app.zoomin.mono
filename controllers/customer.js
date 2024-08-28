@@ -159,7 +159,7 @@ module.exports = {
         return res.status(400).json({
           IsSuccess: true,
           Data: {},
-          Message: CONSTANTS.CUSTOMER_REGISRATION_FAILED,
+          Message: CONSTANTS.CUSTOMER_REGISTRATION_FAILED,
         });
       }
       user.cust_id = addCustomer?.cust_id;
@@ -169,7 +169,7 @@ module.exports = {
         return res.status(400).json({
           IsSuccess: true,
           Data: {},
-          Message: CONSTANTS.CUSTOMER_REGISRATION_FAILED,
+          Message: CONSTANTS.CUSTOMER_REGISTRATION_FAILED,
         });
       }
       let userData = addUser?.toJSON();
@@ -189,7 +189,7 @@ module.exports = {
         return res.status(400).json({
           IsSuccess: true,
           Data: {},
-          Message: CONSTANTS.CUSTOMER_REGISRATION_FAILED,
+          Message: CONSTANTS.CUSTOMER_REGISTRATION_FAILED,
         });
       }
       console.log("addLocations=========>", addLocations);
