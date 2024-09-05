@@ -70,7 +70,8 @@ module.exports = {
           family_member_id: uuidv4(),
           user_id: userId,
           cust_id: custId,
-          family_id: familyId
+          family_id: familyId,
+          frontegg_tenant_id: fronteggTenantId
         });
       });
       secondaryParents = await familyServices.createFamilies(familyObj, t);
@@ -125,6 +126,23 @@ module.exports = {
               transaction: t 
             }
           );
+        }
+      }
+      if(secondaryParents.length !== 0) {
+        const { frontegg_tenant_id } = await customerServices.getCustomerDetails(custId);
+        for (const item of secondaryParents) {
+          item.dataValues.roleIds = 'f9298849-ecce-473a-9e1d-5cd156ceb93e';
+          const createFrontEggUser = await userServices.createFrontEggFamilyUser(frontegg_tenant_id, item.dataValues)
+          if (createFrontEggUser) {
+            console.log('secondaryParents===', item.dataValues);
+            await Family.update(
+              { frontegg_user_id: createFrontEggUser.id },
+              {
+                where: { family_member_id: item.dataValues.family_member_id },
+                transaction: t 
+              }
+            );
+          }
         }
       }
       //await dashboardServices.updateDashboardData(custId);
@@ -404,6 +422,11 @@ module.exports = {
       let deleteFamily = await familyServices.deleteFamily(params.family_id, t);
       if (deleteFamily && params.frontegg_user_id !== null) {
         const frontEggUser = await userServices.removeFrontEggUser(params.frontegg_user_id)
+        if(familyDetails.dataValues.secondary.length !== 0) {
+          for (const secondaryMemmber of familyDetails.dataValues.secondary) {
+            await userServices.removeFrontEggUser(secondaryMemmber.dataValues?.frontegg_user_id);
+          }
+        }
       }
       await t.commit();
       res.status(200).json({
@@ -755,8 +778,11 @@ module.exports = {
     const t = await sequelize.transaction();
     try {
       const { family_member_id } = req.body;
-
-      await familyServices.deleteFamilyMember(family_member_id, t);
+      const familyMemberDetails = await familyServices.getFamilyMemberById(family_member_id, t);
+      const deleteSecondaryMember =  await familyServices.deleteFamilyMember(family_member_id, t);
+      if (deleteSecondaryMember) {
+        await userServices.removeFrontEggUser(familyMemberDetails.frontegg_user_id);
+      }
       await t.commit();
       res.status(200).json({ IsSuccess: true, Data: {}, Message: CONSTANTS.FAMILY_MEMBER_DELETED });
       next();
@@ -773,10 +799,12 @@ module.exports = {
     const t = await sequelize.transaction();
     try {
       const { primary_family_member_id, secondary_family_member_id } = req.body;
-
+      const primaryMemberDetails = await familyServices.getFailyMemberById(primary_family_member_id, t);
       await familyServices.editFamily({family_member_id: primary_family_member_id, status: "Disabled"}, t);
-      await familyServices.deleteFamilyMember(primary_family_member_id, t);
-      
+      const deletePrimaryMember = await familyServices.deleteFamilyMember(primary_family_member_id, t);
+      if(deletePrimaryMember) {
+        await userServices.removeFrontEggUser(primaryMemberDetails.frontegg_user_id);
+      }
       let params= { family_member_id: secondary_family_member_id, member_type:"primary" }
       await familyServices.editFamily(params, t);
       await t.commit();
