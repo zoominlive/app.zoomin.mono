@@ -12,6 +12,7 @@ const _ = require("lodash");
 const sequelize = require("../lib/database");
 const CONSTANTS = require("../lib/constants");
 const { cons } = require("lodash-contrib");
+const jwt = require("jsonwebtoken");
 const { v4: uuidv4 } = require("uuid");
 module.exports = {
   // get all stream statistics data to populate dashboard
@@ -21,15 +22,16 @@ module.exports = {
       params = req.body;
       custId = req.user.cust_id || req.query.cust_id;
       userId = req.user.user_id;
-      if (req.user?.dashboard_cam_preference && req.user?.dashboard_cam_preference?.cameras) {
-        let uid = userId;
-        let sid = req.user?.dashboard_cam_preference?.cameras?.cam_id;
-        let uuid = uuidv4();
-        let stream_uri = new URL(req.user?.dashboard_cam_preference?.cameras).pathname;
-        const token = jwt.sign({ user_id: uid, cam_id: sid, uuid: uuid }, process.env.STREAM_URL_SECRET_KEY, {expiresIn: '12h'});
-        req.user?.dashboard_cam_preference?.cameras.stream_uri = `${baseUrl}${stream_uri}?seckey=${token}`;
-      }
       let defaultWatchStream = req.user?.dashboard_cam_preference || {};
+      if (defaultWatchStream) {
+        let uid = userId;
+        let sid = defaultWatchStream?.cameras?.cam_id;
+        let uuid = uuidv4();
+        let stream_uri = new URL(defaultWatchStream?.cameras?.stream_uri).pathname;
+        const token = jwt.sign({ user_id: uid, cam_id: sid, uuid: uuid }, process.env.STREAM_URL_SECRET_KEY, {expiresIn: '12h'});
+        const baseUrl = await customerServices.getTranscoderUrlFromCustLocations(req.user?.location?.accessable_locations, custId);
+        defaultWatchStream.cameras.stream_uri = `${baseUrl}${stream_uri}?seckey=${token}`;
+      }
       if (req.user.role === "Super Admin") {
         let watchStream = await dashboardServices.getCamPreference(custId);
         defaultWatchStream = watchStream || {};
