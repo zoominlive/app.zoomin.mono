@@ -23,7 +23,7 @@ module.exports = {
       custId = req.user.cust_id || req.query.cust_id;
       userId = req.user.user_id;
       let defaultWatchStream = req.user?.dashboard_cam_preference || {};
-      if (defaultWatchStream) {
+      if (defaultWatchStream && defaultWatchStream?.cameras?.stream_uri) {
         let uid = userId;
         let sid = defaultWatchStream?.cameras?.cam_id;
         let uuid = uuidv4();
