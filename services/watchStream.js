@@ -251,7 +251,8 @@ module.exports = {
       rooms = await Promise.all(
         rooms?.map(async (room) => {
           //.filter((cam) => cam?.cam_id);
-          const baseUrl = await customerServices.getTranscoderUrlFromCustLocations(room?.location, user?.cust_id)
+          const location = user.role == "Teacher" ? room?.dataValues?.room?.dataValues?.location : room?.location;
+          const baseUrl = await customerServices.getTranscoderUrlFromCustLocations(location, user?.cust_id)
           let cameras = room.dataValues.cameras_assigned_to_rooms
           ?.map((cam) => {
               let uid = user?.family_member_id || user?.user_id;
