@@ -253,7 +253,7 @@ module.exports = {
       if (!params.is_verified) {
         const token = await familyServices.createEmailToken(editedFamily, params.email);
         const name = editedFamily.first_name + ' ' + editedFamily.last_name;
-        const originalUrl = process.env.FE_SITE_BASE_URL + 'email-change?' + 'token=' + token;
+        const originalUrl = process.env.FE_SITE_BASE_URL + 'email-change?' + 'token=' + token + '&type=family';
         const response = await sendEmailChangeMail(name, params?.email, originalUrl);
       }
   
