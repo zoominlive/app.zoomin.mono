@@ -721,7 +721,7 @@ module.exports = {
             },
             t
           );
-
+          const changeEmailonFrontEgg = await userServices.editFrontEggUserEmail(emailChanged);
           res.status(200).json({ IsSuccess: true, Data: {}, Message: CONSTANTS.EMAIL_CHANGED });
         } else {
           res
