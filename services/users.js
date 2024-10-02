@@ -157,7 +157,7 @@ module.exports = {
   createEmailToken: async (user, newEmail) => {
     const token = engine.encrypt(
       { userId: user.user_id, email: newEmail },
-      900000
+      259200000 // equals to 3 days. earlier it was 15 mins which is 900000 milliseconds
     );
 
     return token;
