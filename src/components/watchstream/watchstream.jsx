@@ -600,7 +600,7 @@ const WatchStream = () => {
                     )}
                   />
                 </Grid>
-                <Grid item md={4.2} sm={20}>
+                <Grid item md={3} sm={20}>
                   <InputLabel id="cameras">Cameras</InputLabel>
                   <Autocomplete
                     labelId="cameras"
@@ -672,7 +672,11 @@ const WatchStream = () => {
                     )}
                   />
                 </Grid>
-                <Grid item md={1.7} sm={12} sx={{ marginTop: '6px' }}>
+                <Grid
+                  item
+                  md={3}
+                  sm={12}
+                  sx={{ marginTop: '6px', display: 'flex', justifyContent: 'center' }}>
                   <Button
                     className="add-button stream-btn"
                     variant="contained"

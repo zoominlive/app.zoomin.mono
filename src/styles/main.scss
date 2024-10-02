@@ -901,6 +901,19 @@
     height: 54px;
     width: 170px;
   }
+  .create-app-button {
+    border-radius: 30px;
+    background-color: #5a53dd !important;
+    text-transform: capitalize;
+    height: 54px;
+  }
+  .enable-disable-button {
+    border-radius: 30px;
+    background-color: #5a53dd !important;
+    text-transform: capitalize;
+    height: 44px;
+    width: 140px;
+  }
 
   .add-payment-button {
     border-radius: 30px;
@@ -962,6 +975,21 @@
   .room-chip {
     background-color: #dcdbf8 !important;
     color: #000000;
+  }
+}
+
+.api-key-status {
+  .api-secret-key-chip-active {
+    background-color: rgba(106, 210, 160, 0.2) !important;
+    padding: 15px 5px !important;
+    border: 1px solid #6AD2A0 !important;
+    color: rgba(0, 0, 0, 0.87) !important;
+  }
+  .api-secret-key-chip-disabled {
+    background-color: rgba(220, 38, 38, 0.2) !important;
+    padding: 15px 5px;
+    border: 1px solid rgba(220, 38, 38, 1) !important;
+    color: rgba(0, 0, 0, 0.87);
   }
 }
 
@@ -2463,11 +2491,11 @@
       max-width: fit-content;
     }
   }
-  .default-scheduler-settings {
-    @media (min-width: 1920px) {
-      max-width: 60%;
-    }
-  }
+  // .default-scheduler-settings {
+  //   @media (min-width: 1920px) {
+  //     max-width: 60%;
+  //   }
+  // }
   .active-stream {
     @media (min-width: 1920px) {
       max-width: 100%;
@@ -3106,4 +3134,24 @@
 
 .t-n-c-title {
   margin-top: 18px !important;
+}
+
+.settings-tab {
+  @media (max-width: 1535px) {
+    display: none !important;
+  }
+}
+.settings-tab-only-icon {
+  @media (min-width: 1536px) {
+    display: none !important;
+  }
+}
+
+.styled-tab {
+  @media (max-width: 1535px) {
+    padding: 8px !important;
+    svg {
+      font-size: 30px !important;
+    }
+  }
 }

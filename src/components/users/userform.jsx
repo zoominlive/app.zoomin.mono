@@ -170,9 +170,12 @@ const UserForm = (props) => {
     const payload = {
       ...data,
       userId: props.user && props.user.user_id,
+      // location: {
+      //   selected_locations: data.locations,
+      //   accessable_locations: props.user ? props.user.location.accessable_locations : data.locations
+      // },
       location: {
-        selected_locations: data.locations,
-        accessable_locations: props.user ? props.user.location.accessable_locations : data.locations
+        locations: data.locations
       },
       image: !props.user ? base64Image : image ? (base64Image ? base64Image : image) : null,
       max_stream_live_license: liveStreamLicense,
@@ -200,7 +203,7 @@ const UserForm = (props) => {
         setSubmitLoading(false);
       });
     } else {
-      API.post('users/createUser', {
+      API.post('users/create-user', {
         ...payload,
         cust_id: localStorage.getItem('cust_id'),
         tenant_id: localStorage.getItem('tenant_id')

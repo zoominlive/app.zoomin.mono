@@ -89,9 +89,12 @@ const Profile = () => {
   const handleSubmit = (data) => {
     const payload = {
       ...data,
+      // location: {
+      //   selected_locations: data.locations,
+      //   accessable_locations: authCtx.user.location.accessable_locations
+      // }
       location: {
-        selected_locations: data.locations,
-        accessable_locations: authCtx.user.location.accessable_locations
+        locations: data.locations
       }
     };
     delete payload.locations;
@@ -127,7 +130,7 @@ const Profile = () => {
   // Method to remove profile photo
   const handlePhotoDelete = () => {
     setIsImageDeleting(true);
-    API.delete('users/deleteImage').then((response) => {
+    API.delete('users/delete-image').then((response) => {
       if (response.status === 200) {
         enqueueSnackbar(response?.data?.Message, {
           variant: 'success'
@@ -151,7 +154,7 @@ const Profile = () => {
     setIsImageUploading(true);
     setImage(URL.createObjectURL(acceptedFiles[0]));
     const bas64Image = await toBase64(acceptedFiles[0]);
-    API.post('users/uploadImage', {
+    API.post('users/upload-image', {
       image: bas64Image.split(',')[1]
     }).then((response) => {
       if (response.status === 200) {

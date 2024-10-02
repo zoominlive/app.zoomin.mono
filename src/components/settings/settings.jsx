@@ -1,5 +1,7 @@
+/* eslint-disable react/prop-types */
 /* eslint-disable no-unused-vars */
 import {
+  Autocomplete,
   Box,
   Button,
   Card,
@@ -13,6 +15,7 @@ import {
   InputLabel,
   Paper,
   Stack,
+  styled,
   Table,
   TableBody,
   TableCell,
@@ -20,6 +23,7 @@ import {
   TableHead,
   TablePagination,
   TableRow,
+  Tabs,
   TextField,
   Typography
 } from '@mui/material';
@@ -54,6 +58,16 @@ import { AdapterMoment } from '@mui/x-date-pickers/AdapterMoment';
 import ArrowDropUpIcon from '@mui/icons-material/ArrowDropUp';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import moment from 'moment';
+import { grey } from '@mui/material/colors';
+import {
+  CameraAltOutlined,
+  KeyOutlined,
+  PlaceOutlined,
+  PortraitOutlined
+} from '@mui/icons-material';
+import { Country, State, City } from 'country-state-city';
+import APIKeys from '../apikeys/apikeys';
+import TokenExchange from '../tokenexchange/tokenexchange';
 
 const Settings = () => {
   const layoutCtx = useContext(LayoutContext);
@@ -76,7 +90,7 @@ const Settings = () => {
     location: 'All',
     cust_id: localStorage.getItem('cust_id')
   });
-  const [value, setValue] = useState('1');
+  const [value, setValue] = useState(0);
   const [timer, setTimer] = useState([]);
   const [selectedDays, setSelectedDays] = useState([]);
   const [stripeCust, setStripeCust] = useState();
@@ -91,15 +105,47 @@ const Settings = () => {
   const [trialDays, setTrialDays] = useState(0);
   const [scheduledPrices, setScheduledPrices] = useState([]);
   const [customerInfo, setCustomerInfo] = useState([]);
+  const [countries, setCountries] = useState([]);
+  const [states, setStates] = useState([]);
+  const [cities, setCities] = useState([]);
+  const [apiKeysList, setApiKeysList] = useState([]);
+  const [selectedCountry, setSelectedCountry] = useState(null);
+  const [selectedState, setSelectedState] = useState(null);
+  const [selectedCity, setSelectedCity] = useState(null);
   const stripe_cust_id = authCtx.user.stripe_cust_id;
 
   // Fetch products from the backend
   useEffect(() => {
-    fetchProducts();
-    fetchScheduledSubscriptions();
-    fetchSubscriptions();
+    // fetchProducts();
+    // fetchScheduledSubscriptions();
+    // fetchSubscriptions();
     getCustPaymentMethod();
   }, []);
+
+  useEffect(() => {
+    // Load countries initially
+    const countryList = Country.getAllCountries();
+    setCountries(countryList);
+  }, []);
+
+  // Load states based on selected country
+  useEffect(() => {
+    if (selectedCountry) {
+      const stateList = State.getStatesOfCountry(selectedCountry?.isoCode);
+      setStates(stateList);
+      setSelectedState(null); // Reset state selection when country changes
+      setCities([]); // Clear cities when country changes
+    }
+  }, [selectedCountry]);
+
+  // Load cities based on selected state
+  useEffect(() => {
+    if (selectedState) {
+      const cityList = City.getCitiesOfState(selectedCountry?.isoCode, selectedState?.isoCode);
+      setCities(cityList);
+      setSelectedCity(null); // Reset city selection when state changes
+    }
+  }, [selectedState, selectedCountry]);
 
   const fetchProducts = async () => {
     try {
@@ -280,6 +326,9 @@ const Settings = () => {
     }).then((response) => {
       if (response.status === 200) {
         setStripeCust(response.data.customerDetails);
+        setSelectedCountry(response.data.customerDetails.address?.country);
+        setSelectedState(response.data.customerDetails.address?.state);
+        setSelectedCity(response.data.customerDetails.address?.city);
       } else {
         errorMessageHandler(
           enqueueSnackbar,
@@ -298,7 +347,7 @@ const Settings = () => {
     let payload = {
       loc_id: location.loc_id
     };
-    API.delete('customers/deleteCustomerLocation', {
+    API.delete('customers/delete-customer-location', {
       data: { ...payload }
     }).then((response) => {
       if (response.status === 200) {
@@ -354,10 +403,12 @@ const Settings = () => {
       name: data.name,
       email: data.email,
       phone: data.phone,
-      description: data.description,
-      country: data.country,
-      state: data.state,
-      city: data.city
+      addressline1: data.addressLine1,
+      addressline2: data.addressLine2,
+      postalcode: data.postalcode,
+      country: selectedCountry.isoCode,
+      state: selectedState.name,
+      city: selectedCity.name
     };
     setIsLoading(true);
     setSubmitLoading(true);
@@ -439,281 +490,769 @@ const Settings = () => {
     });
   };
 
+  const StyledTab = styled(Tab)(({ theme }) => ({
+    alignItems: 'flex-start',
+    border: '1px solid',
+    borderColor: grey[300],
+    textTransform: 'none',
+    borderRadius: '12px',
+    padding: '18px',
+    transition: 'all 0.2s ease-in-out',
+    width: '100%',
+    margin: 'auto',
+    maxWidth: 'unset',
+    '& p': {
+      color: grey[600]
+    },
+    '& svg': {
+      fontSize: 22,
+      color: grey[500]
+    },
+    '&.Mui-selected, &:hover': {
+      backgroundColor: '#5A53DD',
+      '& p': {
+        color: '#FFFFFF'
+      },
+      '& svg': {
+        color: '#FFFFFF !important'
+      }
+    }
+  }));
+
+  const tabData = [
+    {
+      label: 'Customer Profile',
+      icon: <PortraitOutlined />
+    },
+    {
+      label: 'Locations',
+      icon: <PlaceOutlined />
+    },
+    {
+      label: 'Cameras',
+      icon: <CameraAltOutlined />
+    },
+    {
+      label: 'API Keys',
+      icon: <KeyOutlined />
+    }
+  ];
+
+  const TabPanel = ({ children, value, index }) => {
+    return value === index && <Box sx={{ borderRadius: '12px' }}>{children}</Box>;
+  };
+
   return (
-    <Box sx={{ width: '100%' }}>
-      <TabContext value={value}>
-        <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-          <TabList onChange={handleChange} aria-label="lab API tabs example">
-            {(authCtx.user.role === 'Admin' || authCtx.user.role === 'Super Admin') && (
-              <Tab
-                sx={{ textTransform: 'none', fontSize: '16px' }}
-                label="Customer Profile"
-                value="1"
+    // <Box sx={{ width: '100%' }}>
+    //   <TabContext value={value}>
+    //     <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+    //       <TabList onChange={handleChange} aria-label="lab API tabs example">
+    //         {(authCtx.user.role === 'Admin' || authCtx.user.role === 'Super Admin') && (
+    //           <Tab
+    //             sx={{ textTransform: 'none', fontSize: '16px' }}
+    //             label="Customer Profile"
+    //             value="1"
+    //           />
+    //         )}
+    //         <Tab sx={{ textTransform: 'none', fontSize: '16px' }} label="Locations" value="2" />
+    //         <Tab sx={{ textTransform: 'none', fontSize: '16px' }} label="Cameras" value="3" />
+    //       </TabList>
+    //     </Box>
+    //     <TabPanel value="1">
+    //       <Box sx={{ position: 'relative' }}>
+    //         <LinerLoader loading={isLoading} />
+    //         <Card>
+    //           <CardHeader title="Stripe Account Details"></CardHeader>
+    //           <CardContent>
+    //             <Formik
+    //               enableReinitialize
+    //               validateOnChange
+    //               // validationSchema={validationSchema}
+    //               initialValues={{
+    //                 name: stripeCust?.name || '',
+    //                 email: stripeCust?.email || '',
+    //                 phone: stripeCust?.phone || '',
+    //                 description: stripeCust?.description || '',
+    //                 city: stripeCust?.address?.city || '',
+    //                 state: stripeCust?.address?.state || '',
+    //                 country: stripeCust?.address?.country || ''
+    //               }}
+    //               onSubmit={handleSubmit}>
+    //               {({ values, setFieldValue, touched, errors }) => {
+    //                 return (
+    //                   <Form>
+    //                     <Grid container spacing={2}>
+    //                       <Grid item md={6} xs={12}>
+    //                         <TextField
+    //                           label="Name"
+    //                           name="name"
+    //                           value={values?.name}
+    //                           onChange={(event) => {
+    //                             setFieldValue('name', event.target.value);
+    //                           }}
+    //                           helperText={touched.name && errors.name}
+    //                           error={touched.name && Boolean(errors.name)}
+    //                           fullWidth
+    //                         />
+    //                       </Grid>
+    //                       <Grid item md={6} xs={12}>
+    //                         <TextField
+    //                           label="Email"
+    //                           name="email"
+    //                           value={values?.email}
+    //                           onChange={(event) => {
+    //                             setFieldValue('email', event.target.value);
+    //                           }}
+    //                           helperText={touched.email && errors.email}
+    //                           error={touched.email && Boolean(errors.email)}
+    //                           fullWidth
+    //                         />
+    //                       </Grid>
+    //                       <Grid item md={6} xs={12}>
+    //                         <TextField
+    //                           label="Phone"
+    //                           name="phone"
+    //                           value={values?.phone}
+    //                           onChange={(event) => {
+    //                             setFieldValue('phone', event.target.value);
+    //                           }}
+    //                           helperText={touched.phone && errors.phone}
+    //                           error={touched.phone && Boolean(errors.phone)}
+    //                           fullWidth
+    //                         />
+    //                       </Grid>
+    //                       <Grid item md={6} xs={12}>
+    //                         <TextField
+    //                           label="Description"
+    //                           name="description"
+    //                           value={values?.description}
+    //                           onChange={(event) => {
+    //                             setFieldValue('description', event.target.value);
+    //                           }}
+    //                           helperText={touched.description && errors.description}
+    //                           error={touched.description && Boolean(errors.description)}
+    //                           fullWidth
+    //                         />
+    //                       </Grid>
+    //                       <Grid item xs={12} md={12}>
+    //                         <Divider />
+    //                       </Grid>
+    //                       <Grid item xs={12} md={12}>
+    //                         <Typography variant="subtitle1">Address</Typography>
+    //                       </Grid>
+    //                       <Grid item md={6} xs={12}>
+    //                         <TextField
+    //                           label="Country"
+    //                           name="country"
+    //                           value={values?.country}
+    //                           onChange={(event) => {
+    //                             setFieldValue('country', event.target.value);
+    //                           }}
+    //                           helperText={touched.description && errors.description}
+    //                           error={touched.description && Boolean(errors.description)}
+    //                           fullWidth
+    //                         />
+    //                       </Grid>
+    //                       <Grid item md={6} xs={12}>
+    //                         <TextField
+    //                           label="State"
+    //                           name="state"
+    //                           value={values?.state}
+    //                           onChange={(event) => {
+    //                             setFieldValue('state', event.target.value);
+    //                           }}
+    //                           helperText={touched.description && errors.description}
+    //                           error={touched.description && Boolean(errors.description)}
+    //                           fullWidth
+    //                         />
+    //                       </Grid>
+    //                       <Grid item md={6} xs={12}>
+    //                         <TextField
+    //                           label="City"
+    //                           name="city"
+    //                           value={values?.city}
+    //                           onChange={(event) => {
+    //                             setFieldValue('city', event.target.value);
+    //                           }}
+    //                           helperText={touched.description && errors.description}
+    //                           error={touched.description && Boolean(errors.description)}
+    //                           fullWidth
+    //                         />
+    //                       </Grid>
+    //                       <Grid item xs={12} md={12}>
+    //                         <Stack
+    //                           direction="row"
+    //                           justifyContent="flex-end"
+    //                           alignItems="center"
+    //                           spacing={3}>
+    //                           {authCtx.user.role === 'Super Admin' && (
+    //                             <LoadingButton
+    //                               loading={submitLoading}
+    //                               loadingPosition={submitLoading ? 'start' : undefined}
+    //                               startIcon={submitLoading && <SaveIcon />}
+    //                               variant="contained"
+    //                               type="submit">
+    //                               Save Changes
+    //                             </LoadingButton>
+    //                           )}
+    //                         </Stack>
+    //                       </Grid>
+    //                       <Grid item xs={12} md={12}>
+    //                         <Divider />
+    //                       </Grid>
+    //                       {/* temporarily checking with role test instead of commenting whole code block */}
+    //                       {authCtx.user.role === 'test' && (
+    //                         <>
+    //                           <Grid item xs={12} md={12}>
+    //                             <Typography variant="h5">Subscription Plans</Typography>
+    //                           </Grid>
+    //                           {products
+    //                             ?.filter((item) => item.active)
+    //                             .map((product, index) => (
+    //                               <>
+    //                                 <Grid item xs={12} md={2}>
+    //                                   <Box
+    //                                     className="product-box"
+    //                                     // style={{ width: '250px' }}
+    //                                     key={product.id}>
+    //                                     <Checkbox
+    //                                       disabled={scheduledPrices?.includes(product.price_id)}
+    //                                       id={product.id}
+    //                                       name={product.name}
+    //                                       checked={
+    //                                         checked.find(
+    //                                           (item) => item.product.price_id === product.price_id
+    //                                         ) || scheduledPrices?.includes(product.price_id)
+    //                                       }
+    //                                       onChange={(e) =>
+    //                                         handleCheckChange(
+    //                                           e,
+    //                                           product.id,
+    //                                           product.price_id || product.default_price,
+    //                                           getProductQuantity(product.name)
+    //                                         )
+    //                                       }
+    //                                       inputProps={{
+    //                                         'aria-label': 'controlled'
+    //                                       }}
+    //                                     />
+    //                                     <Typography variant="h6">{product.name}</Typography>
+    //                                     <Typography variant="subtitle1">
+    //                                       Price: ${' '}
+    //                                       {product.unit_amount
+    //                                         ? (product.unit_amount / 100) *
+    //                                           (product.name == 'Mobile Live Stream Room License'
+    //                                             ? authCtx.user.max_stream_live_license_room
+    //                                             : product.name ===
+    //                                               'Sentry Perimeter Monitoring License'
+    //                                             ? authCtx.user.max_stream_live_license
+    //                                             : 1)
+    //                                         : '--'}
+    //                                     </Typography>
+    //                                     <Typography variant="subtitle1">
+    //                                       Qty: {getProductQuantity(product.name)}
+    //                                     </Typography>
+    //                                     {/* <Button onClick={() => handleDecrement(product.id)}>-</Button>
+    //                                   <Input
+    //                                     type="number"
+    //                                     value={productQuantities[product.id] || 0}
+    //                                   />
+    //                                   <Button onClick={() => handleIncrement(product.id)}>+</Button> */}
+    //                                   </Box>
+    //                                 </Grid>
+    //                               </>
+    //                             ))}
+    //                           <Grid item xs={12} md={12}>
+    //                             <Divider />
+    //                           </Grid>
+    //                           <Grid item xs={12} md={12}>
+    //                             <Typography variant="h5">Set Free Trial Period</Typography>
+    //                           </Grid>
+    //                           <Grid item md={6}>
+    //                             <Stack direction={'row'} gap={2} alignItems={'center'}>
+    //                               <Box>
+    //                                 <LocalizationProvider dateAdapter={AdapterMoment}>
+    //                                   <InputLabel id="from">Start Date</InputLabel>
+    //                                   <DesktopDatePicker
+    //                                     disablePast
+    //                                     open={isDatePickerOpen}
+    //                                     // maxDate={moment().add(trialDays, 'days')}
+    //                                     labelId="start_date"
+    //                                     autoOk={true}
+    //                                     value={startDate}
+    //                                     inputFormat="MM/DD/YY"
+    //                                     onClose={() => setIsDatePickerOpen(false)}
+    //                                     renderInput={(params) => (
+    //                                       <TextField
+    //                                         onClick={() => setIsDatePickerOpen(true)}
+    //                                         {...params}
+    //                                       />
+    //                                     )}
+    //                                     components={{
+    //                                       OpenPickerIcon: !isDatePickerOpen
+    //                                         ? ArrowDropDownIcon
+    //                                         : ArrowDropUpIcon
+    //                                     }}
+    //                                     onChange={(value) => {
+    //                                       setStartDate(value);
+    //                                     }}
+    //                                   />
+    //                                 </LocalizationProvider>
+    //                               </Box>
+    //                               <Box>
+    //                                 <InputLabel id="from">No. of Days</InputLabel>
+    //                                 <TextField
+    //                                   name={'no_of_days'}
+    //                                   type="number"
+    //                                   value={trialDays}
+    //                                   InputProps={{ inputProps: { min: 0, max: 45, step: 1 } }}
+    //                                   onChange={(event) => {
+    //                                     setTrialDays(event.target.value);
+    //                                   }}
+    //                                   fullWidth
+    //                                 />
+    //                               </Box>
+    //                             </Stack>
+    //                           </Grid>
+    //                         </>
+    //                       )}
+    //                       {authCtx.user.role === 'test' && (
+    //                         <Grid item xs={12} md={12}>
+    //                           <Stack
+    //                             direction="row"
+    //                             justifyContent="flex-end"
+    //                             alignItems="center"
+    //                             spacing={3}>
+    //                             {authCtx.user.role === 'Super Admin' && (
+    //                               <Button
+    //                                 sx={{
+    //                                   '&:disabled': {
+    //                                     backgroundColor: '#6e66c724 !important'
+    //                                   }
+    //                                 }}
+    //                                 variant="contained"
+    //                                 disabled={checked.length == 0}
+    //                                 onClick={handleCheckout}>
+    //                                 Start Service
+    //                               </Button>
+    //                             )}
+    //                           </Stack>
+    //                         </Grid>
+    //                       )}
+    //                     </Grid>
+    //                   </Form>
+    //                 );
+    //               }}
+    //             </Formik>
+    //           </CardContent>
+    //         </Card>
+    //       </Box>
+    //     </TabPanel>
+    //     <TabPanel value="2">
+    //       <Box className="listing-wrapper">
+    //         <Card className="filter">
+    //           <CardContent>
+    //             <Box>
+    //               <Grid container spacing={2}>
+    //                 <Grid item md={9} sm={12}>
+    //                   <Box>
+    //                     <Grid container spacing={2}>
+    //                       <Grid item md={4} sm={12}>
+    //                         <InputLabel id="search">Search</InputLabel>
+    //                         <TextField
+    //                           labelId="search"
+    //                           placeholder="Location"
+    //                           onChange={debouncedResults}
+    //                           InputProps={{
+    //                             startAdornment: (
+    //                               <InputAdornment position="start">
+    //                                 <SearchIcon />
+    //                               </InputAdornment>
+    //                             )
+    //                           }}
+    //                         />
+    //                       </Grid>
+    //                     </Grid>
+    //                   </Box>
+    //                 </Grid>
+    //                 <Grid
+    //                   item
+    //                   md={3}
+    //                   sm={12}
+    //                   sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
+    //                   <Box>
+    //                     <Button
+    //                       className="add-button"
+    //                       variant="contained"
+    //                       startIcon={<Plus />}
+    //                       onClick={() => setIsUserFormDialogOpen(true)}>
+    //                       {' '}
+    //                       Add Location
+    //                     </Button>
+    //                   </Box>
+    //                 </Grid>
+    //               </Grid>
+    //             </Box>
+    //           </CardContent>
+    //         </Card>
+    //         <Card>
+    //           <CardContent>
+    //             <Box mt={2} position="relative">
+    //               <LinerLoader loading={isLoading} />
+    //               <TableContainer component={Paper}>
+    //                 <Table sx={{ minWidth: 650 }} aria-label="simple table">
+    //                   <TableHead>
+    //                     <TableRow>
+    //                       <TableCell style={{ minWidth: '100px' }} align="left">
+    //                         Location
+    //                       </TableCell>
+    //                       <TableCell align="left">Status</TableCell>
+    //                       <TableCell align="right"></TableCell>
+    //                     </TableRow>
+    //                   </TableHead>
+    //                   <TableBody>
+    //                     {locationsList?.length > 0
+    //                       ? locationsList?.map((row, index) => (
+    //                           <TableRow key={index} hover>
+    //                             <TableCell align="left">
+    //                               <Stack direction="row">
+    //                                 <Chip
+    //                                   key={index}
+    //                                   label={row.loc_name}
+    //                                   color="primary"
+    //                                   className="chip-color"
+    //                                 />
+    //                               </Stack>
+    //                             </TableCell>
+    //                             <TableCell align="left">
+    //                               {row.status ? 'Active' : 'Inactive'}
+    //                             </TableCell>
+    //                             <TableCell align="right">
+    //                               <SettingsActions
+    //                                 location={row}
+    //                                 setLocation={setLocation}
+    //                                 setIsUserFormDialogOpen={setIsUserFormDialogOpen}
+    //                                 setIsDeleteDialogOpen={setIsDeleteDialogOpen}
+    //                               />
+    //                             </TableCell>
+    //                           </TableRow>
+    //                         ))
+    //                       : null}
+    //                   </TableBody>
+    //                 </Table>
+    //                 {!isLoading && locationsList?.length == 0 ? <NoDataDiv /> : null}
+    //                 {locationsList?.length > 0 ? (
+    //                   <TablePagination
+    //                     rowsPerPageOptions={[5, 10, 20, 25, 50]}
+    //                     onPageChange={handlePageChange}
+    //                     onRowsPerPageChange={handleChangeRowsPerPage}
+    //                     component="div"
+    //                     count={totalLocations}
+    //                     rowsPerPage={usersPayload?.pageSize}
+    //                     page={usersPayload?.pageNumber}
+    //                     sx={{ flex: '1 1 auto' }}
+    //                   />
+    //                 ) : null}
+    //               </TableContainer>
+    //             </Box>
+    //           </CardContent>
+    //         </Card>
+    //         {isUserFormDialogOpen && (
+    //           <SettingsForm
+    //             open={isUserFormDialogOpen}
+    //             location={location}
+    //             locationsList={locationsList}
+    //             customer={customerDetails}
+    //             activeLocations={activeLocations}
+    //             setOpen={setIsUserFormDialogOpen}
+    //             getLocationsList={getLocationsList}
+    //             setLocation={setLocation}
+    //           />
+    //         )}
+    //         {/* <DeleteDialog
+    //           open={isDeleteDialogOpen}
+    //           title="Delete User"
+    //           contentText={'Are you sure you want to delete this location?'}
+    //           loading={deleteLoading}
+    //           handleDialogClose={() => {
+    //             setLocation();
+    //             setIsDeleteDialogOpen(false);
+    //           }}
+    //           handleDelete={handleLocationDelete}
+    //         /> */}
+
+    //         <NewDeleteDialog
+    //           open={isDeleteDialogOpen}
+    //           title="Delete location"
+    //           contentText="Are you sure you want to delete this location?"
+    //           loading={deleteLoading}
+    //           handleDialogClose={() => {
+    //             setLocation();
+    //             setIsDeleteDialogOpen(false);
+    //           }}
+    //           handleDelete={handleLocationDelete}
+    //         />
+    //       </Box>
+    //     </TabPanel>
+    //     <TabPanel value="3">
+    //       <DefaultScheduler
+    //         // settings={true}
+    //         custId={authCtx.user.cust_id || localStorage.getItem('cust_id')}
+    //         timer={timer}
+    //         selectedDays={selectedDays}
+    //         getDefaultScheduleSettings={getDefaultScheduleSettings}
+    //       />
+    //     </TabPanel>
+    //   </TabContext>
+    // </Box>
+    <>
+      <Grid container gap={2}>
+        <Grid
+          item
+          sm={2}
+          md={2}
+          lg={2}
+          xl={2}
+          sx={{ backgroundColor: '#fff', borderRadius: '12px' }}>
+          <Tabs
+            orientation="vertical"
+            indicatorColor="white"
+            value={value}
+            onChange={(_event, newValue) => setValue(newValue)}
+            sx={{
+              '& .MuiTabs-flexContainer': {
+                gap: 1.5
+              },
+              '& .MuiTabs-indicator': {
+                display: 'none'
+              },
+              backgroundColor: 'white',
+              borderRadius: '12px',
+              padding: '20px'
+            }}>
+            {tabData.map((tab, index) => (
+              <StyledTab
+                className="styled-tab"
+                key={index}
+                label={
+                  <>
+                    <Stack direction="row" className="settings-tab" alignItems="center" gap={1}>
+                      {tab.icon}
+                      <Box>
+                        <Typography whiteSpace="nowrap">{tab.label}</Typography>
+                      </Box>
+                    </Stack>
+                    <Box
+                      className="settings-tab-only-icon"
+                      sx={{ textAlign: 'center', margin: 'auto' }}>
+                      {tab.icon}
+                    </Box>
+                  </>
+                }
               />
-            )}
-            <Tab sx={{ textTransform: 'none', fontSize: '16px' }} label="Locations" value="2" />
-            <Tab sx={{ textTransform: 'none', fontSize: '16px' }} label="Cameras" value="3" />
-          </TabList>
-        </Box>
-        <TabPanel value="1">
-          <Box sx={{ position: 'relative' }}>
-            <LinerLoader loading={isLoading} />
-            <Card>
-              <CardHeader title="Stripe Account Details"></CardHeader>
-              <CardContent>
-                <Formik
-                  enableReinitialize
-                  validateOnChange
-                  // validationSchema={validationSchema}
-                  initialValues={{
-                    name: stripeCust?.name || '',
-                    email: stripeCust?.email || '',
-                    phone: stripeCust?.phone || '',
-                    description: stripeCust?.description || '',
-                    city: stripeCust?.address?.city || '',
-                    state: stripeCust?.address?.state || '',
-                    country: stripeCust?.address?.country || ''
-                  }}
-                  onSubmit={handleSubmit}>
-                  {({ values, setFieldValue, touched, errors }) => {
-                    return (
-                      <Form>
-                        <Grid container spacing={2}>
-                          <Grid item md={6} xs={12}>
-                            <TextField
-                              label="Name"
-                              name="name"
-                              value={values?.name}
-                              onChange={(event) => {
-                                setFieldValue('name', event.target.value);
-                              }}
-                              helperText={touched.name && errors.name}
-                              error={touched.name && Boolean(errors.name)}
-                              fullWidth
-                            />
-                          </Grid>
-                          <Grid item md={6} xs={12}>
-                            <TextField
-                              label="Email"
-                              name="email"
-                              value={values?.email}
-                              onChange={(event) => {
-                                setFieldValue('email', event.target.value);
-                              }}
-                              helperText={touched.email && errors.email}
-                              error={touched.email && Boolean(errors.email)}
-                              fullWidth
-                            />
-                          </Grid>
-                          <Grid item md={6} xs={12}>
-                            <TextField
-                              label="Phone"
-                              name="phone"
-                              value={values?.phone}
-                              onChange={(event) => {
-                                setFieldValue('phone', event.target.value);
-                              }}
-                              helperText={touched.phone && errors.phone}
-                              error={touched.phone && Boolean(errors.phone)}
-                              fullWidth
-                            />
-                          </Grid>
-                          <Grid item md={6} xs={12}>
-                            <TextField
-                              label="Description"
-                              name="description"
-                              value={values?.description}
-                              onChange={(event) => {
-                                setFieldValue('description', event.target.value);
-                              }}
-                              helperText={touched.description && errors.description}
-                              error={touched.description && Boolean(errors.description)}
-                              fullWidth
-                            />
-                          </Grid>
-                          <Grid item xs={12} md={12}>
-                            <Divider />
-                          </Grid>
-                          <Grid item xs={12} md={12}>
-                            <Typography variant="subtitle1">Address</Typography>
-                          </Grid>
-                          <Grid item md={6} xs={12}>
-                            <TextField
-                              label="Country"
-                              name="country"
-                              value={values?.country}
-                              onChange={(event) => {
-                                setFieldValue('country', event.target.value);
-                              }}
-                              helperText={touched.description && errors.description}
-                              error={touched.description && Boolean(errors.description)}
-                              fullWidth
-                            />
-                          </Grid>
-                          <Grid item md={6} xs={12}>
-                            <TextField
-                              label="State"
-                              name="state"
-                              value={values?.state}
-                              onChange={(event) => {
-                                setFieldValue('state', event.target.value);
-                              }}
-                              helperText={touched.description && errors.description}
-                              error={touched.description && Boolean(errors.description)}
-                              fullWidth
-                            />
-                          </Grid>
-                          <Grid item md={6} xs={12}>
-                            <TextField
-                              label="City"
-                              name="city"
-                              value={values?.city}
-                              onChange={(event) => {
-                                setFieldValue('city', event.target.value);
-                              }}
-                              helperText={touched.description && errors.description}
-                              error={touched.description && Boolean(errors.description)}
-                              fullWidth
-                            />
-                          </Grid>
-                          <Grid item xs={12} md={12}>
-                            <Stack
-                              direction="row"
-                              justifyContent="flex-end"
-                              alignItems="center"
-                              spacing={3}>
-                              {authCtx.user.role === 'Super Admin' && (
-                                <LoadingButton
-                                  loading={submitLoading}
-                                  loadingPosition={submitLoading ? 'start' : undefined}
-                                  startIcon={submitLoading && <SaveIcon />}
-                                  variant="contained"
-                                  type="submit">
-                                  Save Changes
-                                </LoadingButton>
-                              )}
-                            </Stack>
-                          </Grid>
-                          <Grid item xs={12} md={12}>
-                            <Divider />
-                          </Grid>
-                          {/* temporarily checking with role test instead of commenting whole code block */}
-                          {authCtx.user.role === 'test' && (
-                            <>
-                              <Grid item xs={12} md={12}>
-                                <Typography variant="h5">Subscription Plans</Typography>
-                              </Grid>
-                              {products
-                                ?.filter((item) => item.active)
-                                .map((product, index) => (
-                                  <>
-                                    <Grid item xs={12} md={2}>
-                                      <Box
-                                        className="product-box"
-                                        // style={{ width: '250px' }}
-                                        key={product.id}>
-                                        <Checkbox
-                                          disabled={scheduledPrices?.includes(product.price_id)}
-                                          id={product.id}
-                                          name={product.name}
-                                          checked={
-                                            checked.find(
-                                              (item) => item.product.price_id === product.price_id
-                                            ) || scheduledPrices?.includes(product.price_id)
-                                          }
-                                          onChange={(e) =>
-                                            handleCheckChange(
-                                              e,
-                                              product.id,
-                                              product.price_id || product.default_price,
-                                              getProductQuantity(product.name)
-                                            )
-                                          }
-                                          inputProps={{
-                                            'aria-label': 'controlled'
-                                          }}
-                                        />
-                                        <Typography variant="h6">{product.name}</Typography>
-                                        <Typography variant="subtitle1">
-                                          Price: ${' '}
-                                          {product.unit_amount
-                                            ? (product.unit_amount / 100) *
-                                              (product.name == 'Mobile Live Stream Room License'
-                                                ? authCtx.user.max_stream_live_license_room
-                                                : product.name ===
-                                                  'Sentry Perimeter Monitoring License'
-                                                ? authCtx.user.max_stream_live_license
-                                                : 1)
-                                            : '--'}
-                                        </Typography>
-                                        <Typography variant="subtitle1">
-                                          Qty: {getProductQuantity(product.name)}
-                                        </Typography>
-                                        {/* <Button onClick={() => handleDecrement(product.id)}>-</Button>
-                                      <Input
-                                        type="number"
-                                        value={productQuantities[product.id] || 0}
-                                      />
-                                      <Button onClick={() => handleIncrement(product.id)}>+</Button> */}
-                                      </Box>
-                                    </Grid>
-                                  </>
-                                ))}
-                              <Grid item xs={12} md={12}>
-                                <Divider />
-                              </Grid>
-                              <Grid item xs={12} md={12}>
-                                <Typography variant="h5">Set Free Trial Period</Typography>
-                              </Grid>
-                              <Grid item md={6}>
-                                <Stack direction={'row'} gap={2} alignItems={'center'}>
-                                  <Box>
-                                    <LocalizationProvider dateAdapter={AdapterMoment}>
-                                      <InputLabel id="from">Start Date</InputLabel>
-                                      <DesktopDatePicker
-                                        disablePast
-                                        open={isDatePickerOpen}
-                                        // maxDate={moment().add(trialDays, 'days')}
-                                        labelId="start_date"
-                                        autoOk={true}
-                                        value={startDate}
-                                        inputFormat="MM/DD/YY"
-                                        onClose={() => setIsDatePickerOpen(false)}
-                                        renderInput={(params) => (
-                                          <TextField
-                                            onClick={() => setIsDatePickerOpen(true)}
-                                            {...params}
-                                          />
-                                        )}
-                                        components={{
-                                          OpenPickerIcon: !isDatePickerOpen
-                                            ? ArrowDropDownIcon
-                                            : ArrowDropUpIcon
-                                        }}
-                                        onChange={(value) => {
-                                          setStartDate(value);
-                                        }}
-                                      />
-                                    </LocalizationProvider>
-                                  </Box>
-                                  <Box>
-                                    <InputLabel id="from">No. of Days</InputLabel>
-                                    <TextField
-                                      name={'no_of_days'}
-                                      type="number"
-                                      value={trialDays}
-                                      InputProps={{ inputProps: { min: 0, max: 45, step: 1 } }}
-                                      onChange={(event) => {
-                                        setTrialDays(event.target.value);
-                                      }}
-                                      fullWidth
-                                    />
-                                  </Box>
-                                </Stack>
-                              </Grid>
-                            </>
-                          )}
-                          {authCtx.user.role === 'test' && (
+            ))}
+          </Tabs>
+        </Grid>
+        <Grid item sm={9.7} md={9.7} lg={9.7} xl={9.7}>
+          <TabPanel value={value} index={0}>
+            <Box sx={{ position: 'relative' }}>
+              <LinerLoader loading={isLoading} />
+              <Card sx={{ borderRadius: '12px' }}>
+                <CardHeader></CardHeader>
+                <CardContent>
+                  <Formik
+                    enableReinitialize
+                    validateOnChange
+                    // validationSchema={validationSchema}
+                    initialValues={{
+                      name: stripeCust?.name || '',
+                      email: stripeCust?.email || '',
+                      phone: stripeCust?.phone || '',
+                      addressLine1: stripeCust?.address?.line1 || '',
+                      addressLine2: stripeCust?.address?.line2 || '',
+                      city: stripeCust?.address?.city || '',
+                      state: stripeCust?.address?.state || '',
+                      country: stripeCust?.address?.country || '',
+                      postalcode: stripeCust?.address?.postal_code || ''
+                    }}
+                    onSubmit={handleSubmit}>
+                    {({ values, setFieldValue, touched, errors }) => {
+                      return (
+                        <Form>
+                          <Grid container spacing={2}>
+                            <Grid item md={6} xs={12}>
+                              <TextField
+                                label="Primary Contact Name"
+                                name="name"
+                                value={values?.name}
+                                onChange={(event) => {
+                                  setFieldValue('name', event.target.value);
+                                }}
+                                helperText={touched.name && errors.name}
+                                error={touched.name && Boolean(errors.name)}
+                                fullWidth
+                              />
+                            </Grid>
+                            <Grid item md={6} xs={12}>
+                              <TextField
+                                label="Primary Contact Email"
+                                name="email"
+                                value={values?.email}
+                                onChange={(event) => {
+                                  setFieldValue('email', event.target.value);
+                                }}
+                                helperText={touched.email && errors.email}
+                                error={touched.email && Boolean(errors.email)}
+                                fullWidth
+                              />
+                            </Grid>
+                            <Grid item md={6} xs={12}>
+                              <TextField
+                                label="Primary Contact Phone"
+                                name="phone"
+                                value={values?.phone}
+                                onChange={(event) => {
+                                  setFieldValue('phone', event.target.value);
+                                }}
+                                helperText={touched.phone && errors.phone}
+                                error={touched.phone && Boolean(errors.phone)}
+                                fullWidth
+                              />
+                            </Grid>
+                            <Grid item xs={12} md={12}>
+                              <Divider />
+                            </Grid>
+                            <Grid item xs={12} md={12}>
+                              <Typography variant="subtitle1">Address</Typography>
+                            </Grid>
+                            <Grid item md={6} xs={12}>
+                              <TextField
+                                label="Address Line 1"
+                                name="addressLine1"
+                                value={values?.addressLine1}
+                                onChange={(event) => {
+                                  setFieldValue('addressLine1', event.target.value);
+                                }}
+                                helperText={touched.description && errors.description}
+                                error={touched.description && Boolean(errors.description)}
+                                fullWidth
+                              />
+                            </Grid>
+                            <Grid item md={6} xs={12}>
+                              <TextField
+                                label="Address Line 2"
+                                name="addressLine2"
+                                value={values?.addressLine2}
+                                onChange={(event) => {
+                                  setFieldValue('addressLine2', event.target.value);
+                                }}
+                                helperText={touched.description && errors.description}
+                                error={touched.description && Boolean(errors.description)}
+                                fullWidth
+                              />
+                            </Grid>
+                            <Grid item md={6} xs={12}>
+                              {/* Country Dropdown */}
+                              <Autocomplete
+                                options={countries}
+                                getOptionLabel={(option) =>
+                                  typeof option === 'string' ? option : option.isoCode
+                                } // Handle both string and object
+                                value={selectedCountry}
+                                onChange={(event, newValue) => {
+                                  setSelectedCountry(newValue);
+                                  console.log('country==', newValue.isoCode);
+                                }}
+                                renderInput={(params) => (
+                                  <TextField {...params} label="Country" variant="outlined" />
+                                )}
+                                sx={{ marginBottom: 2 }}
+                              />
+                              {/* <TextField
+                                label="Country"
+                                name="country"
+                                value={values?.country}
+                                onChange={(event) => {
+                                  setFieldValue('country', event.target.value);
+                                }}
+                                helperText={touched.description && errors.description}
+                                error={touched.description && Boolean(errors.description)}
+                                fullWidth
+                              /> */}
+                            </Grid>
+                            <Grid item md={6} xs={12}>
+                              {/* State Dropdown */}
+                              <Autocomplete
+                                options={states}
+                                getOptionLabel={(option) =>
+                                  typeof option === 'string' ? option : option.name
+                                } // Handle both string and object
+                                value={selectedState}
+                                onChange={(event, newValue) => {
+                                  setSelectedState(newValue);
+                                  console.log('state==', newValue.name);
+                                }}
+                                disabled={!selectedCountry}
+                                renderInput={(params) => (
+                                  <TextField {...params} label="State" variant="outlined" />
+                                )}
+                                sx={{ marginBottom: 2 }}
+                              />
+                              {/* <TextField
+                                label="State"
+                                name="state"
+                                value={values?.state}
+                                onChange={(event) => {
+                                  setFieldValue('state', event.target.value);
+                                }}
+                                helperText={touched.description && errors.description}
+                                error={touched.description && Boolean(errors.description)}
+                                fullWidth
+                              /> */}
+                            </Grid>
+                            <Grid item md={6} xs={12}>
+                              {/* City Dropdown */}
+                              <Autocomplete
+                                options={cities}
+                                getOptionLabel={(option) =>
+                                  typeof option === 'string' ? option : option.name
+                                } // Handle both string and object
+                                value={selectedCity}
+                                onChange={(event, newValue) => {
+                                  setSelectedCity(newValue);
+                                  console.log('city==', newValue.name);
+                                }}
+                                disabled={!selectedState}
+                                renderInput={(params) => (
+                                  <TextField {...params} label="City" variant="outlined" />
+                                )}
+                                sx={{ marginBottom: 2 }}
+                              />
+                              {/* <TextField
+                                label="City"
+                                name="city"
+                                value={values?.city}
+                                onChange={(event) => {
+                                  setFieldValue('city', event.target.value);
+                                }}
+                                helperText={touched.description && errors.description}
+                                error={touched.description && Boolean(errors.description)}
+                                fullWidth
+                              /> */}
+                            </Grid>
+                            <Grid item md={6} xs={12}>
+                              <TextField
+                                label="Postal Code"
+                                name="postalcode"
+                                value={values?.postalcode}
+                                onChange={(event) => {
+                                  setFieldValue('postalcode', event.target.value);
+                                }}
+                                helperText={touched.description && errors.description}
+                                error={touched.description && Boolean(errors.description)}
+                                fullWidth
+                              />
+                            </Grid>
                             <Grid item xs={12} md={12}>
                               <Stack
                                 direction="row"
@@ -721,187 +1260,329 @@ const Settings = () => {
                                 alignItems="center"
                                 spacing={3}>
                                 {authCtx.user.role === 'Super Admin' && (
-                                  <Button
-                                    sx={{
-                                      '&:disabled': {
-                                        backgroundColor: '#6e66c724 !important'
-                                      }
-                                    }}
+                                  <LoadingButton
+                                    loading={submitLoading}
+                                    loadingPosition={submitLoading ? 'start' : undefined}
+                                    startIcon={submitLoading && <SaveIcon />}
                                     variant="contained"
-                                    disabled={checked.length == 0}
-                                    onClick={handleCheckout}>
-                                    Start Service
-                                  </Button>
+                                    type="submit">
+                                    Save Changes
+                                  </LoadingButton>
                                 )}
                               </Stack>
                             </Grid>
-                          )}
-                        </Grid>
-                      </Form>
-                    );
-                  }}
-                </Formik>
-              </CardContent>
-            </Card>
-          </Box>
-        </TabPanel>
-        <TabPanel value="2">
-          <Box className="listing-wrapper">
-            <Card className="filter">
-              <CardContent>
-                <Box>
-                  <Grid container spacing={2}>
-                    <Grid item md={9} sm={12}>
-                      <Box>
-                        <Grid container spacing={2}>
-                          <Grid item md={4} sm={12}>
-                            <InputLabel id="search">Search</InputLabel>
-                            <TextField
-                              labelId="search"
-                              placeholder="Location"
-                              onChange={debouncedResults}
-                              InputProps={{
-                                startAdornment: (
-                                  <InputAdornment position="start">
-                                    <SearchIcon />
-                                  </InputAdornment>
-                                )
-                              }}
-                            />
-                          </Grid>
-                        </Grid>
-                      </Box>
-                    </Grid>
-                    <Grid
-                      item
-                      md={3}
-                      sm={12}
-                      sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
-                      <Box>
-                        <Button
-                          className="add-button"
-                          variant="contained"
-                          startIcon={<Plus />}
-                          onClick={() => setIsUserFormDialogOpen(true)}>
-                          {' '}
-                          Add Location
-                        </Button>
-                      </Box>
-                    </Grid>
-                  </Grid>
-                </Box>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent>
-                <Box mt={2} position="relative">
-                  <LinerLoader loading={isLoading} />
-                  <TableContainer component={Paper}>
-                    <Table sx={{ minWidth: 650 }} aria-label="simple table">
-                      <TableHead>
-                        <TableRow>
-                          <TableCell style={{ minWidth: '100px' }} align="left">
-                            Location
-                          </TableCell>
-                          <TableCell align="left">Status</TableCell>
-                          <TableCell align="right"></TableCell>
-                        </TableRow>
-                      </TableHead>
-                      <TableBody>
-                        {locationsList?.length > 0
-                          ? locationsList?.map((row, index) => (
-                              <TableRow key={index} hover>
-                                <TableCell align="left">
-                                  <Stack direction="row">
-                                    <Chip
-                                      key={index}
-                                      label={row.loc_name}
-                                      color="primary"
-                                      className="chip-color"
-                                    />
+                            <Grid item xs={12} md={12}>
+                              <Divider />
+                            </Grid>
+                            {/* temporarily checking with role test instead of commenting whole code block */}
+                            {authCtx.user.role === 'test' && (
+                              <>
+                                <Grid item xs={12} md={12}>
+                                  <Typography variant="h5">Subscription Plans</Typography>
+                                </Grid>
+                                {products
+                                  ?.filter((item) => item.active)
+                                  .map((product, index) => (
+                                    <>
+                                      <Grid item xs={12} md={2}>
+                                        <Box
+                                          className="product-box"
+                                          // style={{ width: '250px' }}
+                                          key={product.id}>
+                                          <Checkbox
+                                            disabled={scheduledPrices?.includes(product.price_id)}
+                                            id={product.id}
+                                            name={product.name}
+                                            checked={
+                                              checked.find(
+                                                (item) => item.product.price_id === product.price_id
+                                              ) || scheduledPrices?.includes(product.price_id)
+                                            }
+                                            onChange={(e) =>
+                                              handleCheckChange(
+                                                e,
+                                                product.id,
+                                                product.price_id || product.default_price,
+                                                getProductQuantity(product.name)
+                                              )
+                                            }
+                                            inputProps={{
+                                              'aria-label': 'controlled'
+                                            }}
+                                          />
+                                          <Typography variant="h6">{product.name}</Typography>
+                                          <Typography variant="subtitle1">
+                                            Price: ${' '}
+                                            {product.unit_amount
+                                              ? (product.unit_amount / 100) *
+                                                (product.name == 'Mobile Live Stream Room License'
+                                                  ? authCtx.user.max_stream_live_license_room
+                                                  : product.name ===
+                                                    'Sentry Perimeter Monitoring License'
+                                                  ? authCtx.user.max_stream_live_license
+                                                  : 1)
+                                              : '--'}
+                                          </Typography>
+                                          <Typography variant="subtitle1">
+                                            Qty: {getProductQuantity(product.name)}
+                                          </Typography>
+                                          {/* <Button onClick={() => handleDecrement(product.id)}>-</Button>
+                                        <Input
+                                          type="number"
+                                          value={productQuantities[product.id] || 0}
+                                        />
+                                        <Button onClick={() => handleIncrement(product.id)}>+</Button> */}
+                                        </Box>
+                                      </Grid>
+                                    </>
+                                  ))}
+                                <Grid item xs={12} md={12}>
+                                  <Divider />
+                                </Grid>
+                                <Grid item xs={12} md={12}>
+                                  <Typography variant="h5">Set Free Trial Period</Typography>
+                                </Grid>
+                                <Grid item md={6}>
+                                  <Stack direction={'row'} gap={2} alignItems={'center'}>
+                                    <Box>
+                                      <LocalizationProvider dateAdapter={AdapterMoment}>
+                                        <InputLabel id="from">Start Date</InputLabel>
+                                        <DesktopDatePicker
+                                          disablePast
+                                          open={isDatePickerOpen}
+                                          // maxDate={moment().add(trialDays, 'days')}
+                                          labelId="start_date"
+                                          autoOk={true}
+                                          value={startDate}
+                                          inputFormat="MM/DD/YY"
+                                          onClose={() => setIsDatePickerOpen(false)}
+                                          renderInput={(params) => (
+                                            <TextField
+                                              onClick={() => setIsDatePickerOpen(true)}
+                                              {...params}
+                                            />
+                                          )}
+                                          components={{
+                                            OpenPickerIcon: !isDatePickerOpen
+                                              ? ArrowDropDownIcon
+                                              : ArrowDropUpIcon
+                                          }}
+                                          onChange={(value) => {
+                                            setStartDate(value);
+                                          }}
+                                        />
+                                      </LocalizationProvider>
+                                    </Box>
+                                    <Box>
+                                      <InputLabel id="from">No. of Days</InputLabel>
+                                      <TextField
+                                        name={'no_of_days'}
+                                        type="number"
+                                        value={trialDays}
+                                        InputProps={{ inputProps: { min: 0, max: 45, step: 1 } }}
+                                        onChange={(event) => {
+                                          setTrialDays(event.target.value);
+                                        }}
+                                        fullWidth
+                                      />
+                                    </Box>
                                   </Stack>
-                                </TableCell>
-                                <TableCell align="left">
-                                  {row.status ? 'Active' : 'Inactive'}
-                                </TableCell>
-                                <TableCell align="right">
-                                  <SettingsActions
-                                    location={row}
-                                    setLocation={setLocation}
-                                    setIsUserFormDialogOpen={setIsUserFormDialogOpen}
-                                    setIsDeleteDialogOpen={setIsDeleteDialogOpen}
-                                  />
-                                </TableCell>
-                              </TableRow>
-                            ))
-                          : null}
-                      </TableBody>
-                    </Table>
-                    {!isLoading && locationsList?.length == 0 ? <NoDataDiv /> : null}
-                    {locationsList?.length > 0 ? (
-                      <TablePagination
-                        rowsPerPageOptions={[5, 10, 20, 25, 50]}
-                        onPageChange={handlePageChange}
-                        onRowsPerPageChange={handleChangeRowsPerPage}
-                        component="div"
-                        count={totalLocations}
-                        rowsPerPage={usersPayload?.pageSize}
-                        page={usersPayload?.pageNumber}
-                        sx={{ flex: '1 1 auto' }}
-                      />
-                    ) : null}
-                  </TableContainer>
-                </Box>
-              </CardContent>
-            </Card>
-            {isUserFormDialogOpen && (
-              <SettingsForm
-                open={isUserFormDialogOpen}
-                location={location}
-                locationsList={locationsList}
-                customer={customerDetails}
-                activeLocations={activeLocations}
-                setOpen={setIsUserFormDialogOpen}
-                getLocationsList={getLocationsList}
-                setLocation={setLocation}
-              />
-            )}
-            {/* <DeleteDialog
-              open={isDeleteDialogOpen}
-              title="Delete User"
-              contentText={'Are you sure you want to delete this location?'}
-              loading={deleteLoading}
-              handleDialogClose={() => {
-                setLocation();
-                setIsDeleteDialogOpen(false);
-              }}
-              handleDelete={handleLocationDelete}
-            /> */}
+                                </Grid>
+                              </>
+                            )}
+                            {authCtx.user.role === 'test' && (
+                              <Grid item xs={12} md={12}>
+                                <Stack
+                                  direction="row"
+                                  justifyContent="flex-end"
+                                  alignItems="center"
+                                  spacing={3}>
+                                  {authCtx.user.role === 'Super Admin' && (
+                                    <Button
+                                      sx={{
+                                        '&:disabled': {
+                                          backgroundColor: '#6e66c724 !important'
+                                        }
+                                      }}
+                                      variant="contained"
+                                      disabled={checked.length == 0}
+                                      onClick={handleCheckout}>
+                                      Start Service
+                                    </Button>
+                                  )}
+                                </Stack>
+                              </Grid>
+                            )}
+                          </Grid>
+                        </Form>
+                      );
+                    }}
+                  </Formik>
+                </CardContent>
+              </Card>
+            </Box>
+          </TabPanel>
+          <TabPanel value={value} index={1}>
+            <Box className="listing-wrapper">
+              <Card className="filter" sx={{ marginTop: '0px !important' }}>
+                <CardContent>
+                  <Box>
+                    <Grid container spacing={2}>
+                      <Grid item md={9} sm={12}>
+                        <Box>
+                          <Grid container spacing={2}>
+                            <Grid item md={4} sm={12} mt={0}>
+                              <InputLabel id="search">Search</InputLabel>
+                              <TextField
+                                labelId="search"
+                                placeholder="Location"
+                                onChange={debouncedResults}
+                                InputProps={{
+                                  startAdornment: (
+                                    <InputAdornment position="start">
+                                      <SearchIcon />
+                                    </InputAdornment>
+                                  )
+                                }}
+                              />
+                            </Grid>
+                          </Grid>
+                        </Box>
+                      </Grid>
+                      <Grid
+                        item
+                        md={3}
+                        sm={12}
+                        sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
+                        <Box>
+                          <Button
+                            className="add-button"
+                            variant="contained"
+                            startIcon={<Plus />}
+                            onClick={() => setIsUserFormDialogOpen(true)}>
+                            {' '}
+                            Add Location
+                          </Button>
+                        </Box>
+                      </Grid>
+                    </Grid>
+                  </Box>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent>
+                  <Box mt={2} position="relative">
+                    <LinerLoader loading={isLoading} />
+                    <TableContainer component={Paper}>
+                      <Table sx={{ minWidth: 650 }} aria-label="simple table">
+                        <TableHead>
+                          <TableRow>
+                            <TableCell style={{ minWidth: '100px' }} align="left">
+                              Name
+                            </TableCell>
+                            <TableCell align="left">Status</TableCell>
+                            <TableCell align="right"></TableCell>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {locationsList?.length > 0
+                            ? locationsList?.map((row, index) => (
+                                <TableRow key={index} hover>
+                                  <TableCell align="left">
+                                    <Stack direction="row">
+                                      <Chip
+                                        key={index}
+                                        label={row.loc_name}
+                                        color="primary"
+                                        className="chip-color"
+                                      />
+                                    </Stack>
+                                  </TableCell>
+                                  <TableCell align="left">
+                                    {row.status ? 'Active' : 'Inactive'}
+                                  </TableCell>
+                                  <TableCell align="right">
+                                    <SettingsActions
+                                      location={row}
+                                      setLocation={setLocation}
+                                      setIsUserFormDialogOpen={setIsUserFormDialogOpen}
+                                      setIsDeleteDialogOpen={setIsDeleteDialogOpen}
+                                    />
+                                  </TableCell>
+                                </TableRow>
+                              ))
+                            : null}
+                        </TableBody>
+                      </Table>
+                      {!isLoading && locationsList?.length == 0 ? <NoDataDiv /> : null}
+                      {locationsList?.length > 0 ? (
+                        <TablePagination
+                          rowsPerPageOptions={[5, 10, 20, 25, 50]}
+                          onPageChange={handlePageChange}
+                          onRowsPerPageChange={handleChangeRowsPerPage}
+                          component="div"
+                          count={totalLocations}
+                          rowsPerPage={usersPayload?.pageSize}
+                          page={usersPayload?.pageNumber}
+                          sx={{ flex: '1 1 auto' }}
+                        />
+                      ) : null}
+                    </TableContainer>
+                  </Box>
+                </CardContent>
+              </Card>
+              {isUserFormDialogOpen && (
+                <SettingsForm
+                  open={isUserFormDialogOpen}
+                  location={location}
+                  locationsList={locationsList}
+                  customer={customerDetails}
+                  activeLocations={activeLocations}
+                  setOpen={setIsUserFormDialogOpen}
+                  getLocationsList={getLocationsList}
+                  setLocation={setLocation}
+                />
+              )}
+              {/* <DeleteDialog
+                open={isDeleteDialogOpen}
+                title="Delete User"
+                contentText={'Are you sure you want to delete this location?'}
+                loading={deleteLoading}
+                handleDialogClose={() => {
+                  setLocation();
+                  setIsDeleteDialogOpen(false);
+                }}
+                handleDelete={handleLocationDelete}
+              /> */}
 
-            <NewDeleteDialog
-              open={isDeleteDialogOpen}
-              title="Delete location"
-              contentText="Are you sure you want to delete this location?"
-              loading={deleteLoading}
-              handleDialogClose={() => {
-                setLocation();
-                setIsDeleteDialogOpen(false);
-              }}
-              handleDelete={handleLocationDelete}
+              <NewDeleteDialog
+                open={isDeleteDialogOpen}
+                title="Delete location"
+                contentText="Are you sure you want to delete this location?"
+                loading={deleteLoading}
+                handleDialogClose={() => {
+                  setLocation();
+                  setIsDeleteDialogOpen(false);
+                }}
+                handleDelete={handleLocationDelete}
+              />
+            </Box>
+          </TabPanel>
+          <TabPanel value={value} index={2}>
+            <DefaultScheduler
+              // settings={true}
+              custId={authCtx.user.cust_id || localStorage.getItem('cust_id')}
+              timer={timer}
+              selectedDays={selectedDays}
+              getDefaultScheduleSettings={getDefaultScheduleSettings}
             />
-          </Box>
-        </TabPanel>
-        <TabPanel value="3">
-          <DefaultScheduler
-            // settings={true}
-            custId={authCtx.user.cust_id || localStorage.getItem('cust_id')}
-            timer={timer}
-            selectedDays={selectedDays}
-            getDefaultScheduleSettings={getDefaultScheduleSettings}
-          />
-        </TabPanel>
-      </TabContext>
-    </Box>
+          </TabPanel>
+          <TabPanel value={value} index={3}>
+            <TokenExchange />
+          </TabPanel>
+        </Grid>
+      </Grid>
+    </>
   );
 };
 

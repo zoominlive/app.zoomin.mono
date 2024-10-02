@@ -45,7 +45,7 @@ const AddFamilyDialog = (props) => {
 
   const handleSubmit = (data) => {
     setSubmitLoading(true);
-    API.post('family/addParent', {
+    API.post('family/add-secondary-family-member', {
       ...data,
       family_id: authCtx.user.family_id,
       member_type: 'secondary',

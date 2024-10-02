@@ -331,7 +331,7 @@ const DefaultScheduler = (props) => {
     </Formik>
   ) : (
     <Grid container className="stream-details-wraper">
-      <Grid item xl={9} lg={9} md={12} sm={12} xs={12} className="default-scheduler-settings">
+      <Grid item xl={12} lg={12} md={12} sm={12} xs={12} className="default-scheduler-settings">
         <Card sx={{ height: '100%' }}>
           <CardContent className="live-stream-card">
             <Formik

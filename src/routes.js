@@ -15,6 +15,7 @@ import AuthContext from './context/authcontext';
 import Invoices from './components/billing/invoices';
 import PostLoginSteps from './components/dashboard/postloginsteps';
 import { useAuth } from '@frontegg/react';
+import APIKeys from './components/apikeys/apikeys';
 // import Alerts from './components/alerts/alerts';
 
 const AppRoutes = () => {
@@ -32,6 +33,7 @@ const AppRoutes = () => {
           <>
             <Route path="/logs" element={<Logs />} />
             <Route path="/users" element={<Users />} />
+            <Route path="/api-keys" element={<APIKeys />} />
           </>
         )}
         {authCtx.user && (authCtx.user.role === 'Admin' || authCtx.user.role === 'Super Admin') && (

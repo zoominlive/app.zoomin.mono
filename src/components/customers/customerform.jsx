@@ -184,7 +184,7 @@ const CustomerForm = (props) => {
         setSubmitLoading(false);
       });
     } else {
-      API.post('customers/createCustomer', payload).then((response) => {
+      API.post('customers/create-customer', payload).then((response) => {
         if (response.status === 201) {
           enqueueSnackbar(response?.data?.Message, {
             variant: 'success'

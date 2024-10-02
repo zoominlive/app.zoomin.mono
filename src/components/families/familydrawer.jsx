@@ -130,7 +130,7 @@ const FamilyDrawer = (props) => {
           ? 'child/delete'
           : isDeleteTitle == "Delete Child's Room"
           ? 'child/deleteroom'
-          : 'delete-member'
+          : 'delete-secondary-member'
       }`,
       {
         data: data
@@ -331,7 +331,7 @@ const FamilyDrawer = (props) => {
     API.put('family/enable', {
       family_member_id: parentToEnable,
       member_type: 'secondary',
-      family_id: props.family.primary.family_member_id
+      family_id: props.family.primary.family_id
     }).then((response) => {
       if (response.status === 200) {
         enqueueSnackbar(response.data.Message, { variant: 'success' });

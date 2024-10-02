@@ -103,7 +103,7 @@ export default function ViewersTable({ rows, columns, title, pagination, isLoadi
                           lastHoursUsers: true
                         }}>
                         <Box className="div-row row-marging zl__tr-viewers-block">
-                          <Box className="zl__td-block" style={{ width: '25%' }}>
+                          <Box className="zl__td-block" style={{ width: '31%' }}>
                             <Stack direction={'row'} alignItems={'center'} gap={1}>
                               <Box className="viewer-profile">
                                 <Box className="profile-img">

@@ -94,7 +94,7 @@ const ParentsForm = (props) => {
         setSubmitLoading(false);
       });
     } else {
-      API.post('family/addParent', {
+      API.post('family/add-secondary-family-member', {
         ...data,
         family_id: props.family.primary.family_id,
         member_type: 'secondary',

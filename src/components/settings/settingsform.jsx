@@ -64,7 +64,7 @@ const SettingsForm = (props) => {
       time_zone: time_zone
     };
     if (props.location !== undefined && props.location?.loc_name) {
-      API.put('customers/editCustomerLocation', {
+      API.put('customers/edit-customer-location', {
         loc_name: data.customer_locations[0],
         time_zone: data.time_zone[0],
         loc_id: props.location.loc_id,
@@ -94,7 +94,7 @@ const SettingsForm = (props) => {
       if (new_locations.length > props.customer?.max_locations) {
         setMaxLocationAlert(true);
       } else {
-        API.post('customers/createCustomerLocation', payload).then((response) => {
+        API.post('customers/create-customer-location', payload).then((response) => {
           if (response.status === 201) {
             enqueueSnackbar(response?.data?.Message, {
               variant: 'success'

@@ -67,7 +67,7 @@ export default function CheckoutForm(props) {
       if (response.status === 200) {
         if (location.pathname == '/terms-and-conditions') {
           authCtx.setPaymentMethod(true);
-          const response = await API.post(`customers/createCustomerTermsApproval`, {
+          const response = await API.post(`customers/create-customer-terms-approval`, {
             terms_agreed: props?.checked,
             user_fname: authCtx.user?.first_name,
             user_lname: authCtx.user?.last_name,

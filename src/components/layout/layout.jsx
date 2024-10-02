@@ -397,11 +397,11 @@ const Layout = () => {
       key: 4
     },
     // {
-    //   name: 'Customers',
-    //   icon: <User style={{ color: 'white' }} />,
-    //   link: '/customers',
+    //   name: 'API Keys',
+    //   icon: <Key style={{ color: 'white' }} />,
+    //   link: '/api-keys',
     //   active: true,
-    //   key: 10
+    //   key: 11
     // },
     {
       name: 'Watch Stream',
@@ -636,7 +636,7 @@ const Layout = () => {
             </Box>
             <Grid container alignItems={'self-end'} gap={1}>
               <Grid container spacing={3} alignItems={'stretch'}>
-                <Grid item md={12} sm={12} xs={12} lg={7}>
+                <Grid item md={12} sm={12} xs={12} lg={12} xl={7}>
                   <Stack
                     direction={'row'}
                     justifyContent={'flex-start'}
@@ -762,7 +762,7 @@ const Layout = () => {
                   ) : null}
                 </Grid>
 
-                <Grid item md={12} sm={12} xs={12} lg={5}>
+                <Grid item md={12} sm={12} xs={12} lg={12} xl={5}>
                   <>
                     <Stack
                       direction={'row'}

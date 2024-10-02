@@ -16,7 +16,6 @@ import AppRoutes from './routes';
 import { getBuildDate } from './utils/utils';
 import packageJson from '../package.json';
 import withClearCache from './ClearCache';
-import { PF } from './components/pf/pf';
 import CustomerSelection from './components/auth/customerSelection';
 
 const MainApp = () => {
