@@ -5,6 +5,7 @@ const Sequelize = require("sequelize");
 const sequelize = require("../lib/database");
 const { v4: uuidv4 } = require('uuid');
 const axios = require('axios');
+const Camera = require("../models/camera");
 
 module.exports = {
   /* Create new camera */
@@ -12,6 +13,22 @@ module.exports = {
     const { Camera } = await connectToDatabase();
     let camCreated = await Camera.create(camObj, { transaction: t });
     return camCreated;
+  },
+
+  validateCamera: async (cam_id, userCustId) => {
+    try {
+      const camera = await Camera.findOne({where: {cam_id: cam_id}, raw: true, plain: true});
+      if (!camera) {
+        return { valid: false, message: 'Camera:'+ cam_id +' not found.' };
+      }
+      if (camera.cust_id !== userCustId) {
+        return { valid: false, message: 'Unauthorized access to camera:'+ cam_id};
+      }
+      return { valid: true, message: 'Camera is valid.' };
+    } catch (error) {
+      console.error('Error validating camera:', error);
+      return { valid: false, message: 'Error validating camera.' };
+    }
   },
 
   /* Delete Existing camera */

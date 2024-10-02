@@ -30,11 +30,13 @@ const Room = sequelize.define(
       defaultValue: false,
      },
     createdAt: { type: Sequelize.DATE, field: 'created_at' },
-    updatedAt: { type: Sequelize.DATE, field: 'updated_at' }
+    updatedAt: { type: Sequelize.DATE, field: 'updated_at' },
+    deletedAt: { type: Sequelize.DATE, field: 'deleted_at' }
   },
   {
     tableName: 'room',
-    timestamps: true
+    timestamps: true,
+    paranoid: true
   }
 );
 

@@ -5,15 +5,16 @@ const sequelize = require("../lib/database");
 const { v4: uuidv4 } = require("uuid");
 const CamerasInRooms = require("../models/cameras_assigned_to_rooms");
 const customerServices = require('../services/customers');
+const Room = require("../models/room");
 
 module.exports = {
   /* Create new room */
-  createRoom: async (roomObj, t) => {
+  createRoom: async (roomObj, validCameras, t) => {
     const { Room, CamerasInRooms } = await connectToDatabase();
     roomObj.room_id = uuidv4();
     let roomCreated = await Room.create(roomObj, { transaction: t });
 
-    const camsToAdd = roomObj.cameras.map((cam) => {
+    const camsToAdd = validCameras.map((cam) => {
       return {
         cam_id: cam.cam_id,
         room_id: roomCreated.room_id,
@@ -28,7 +29,7 @@ module.exports = {
   },
 
   /* Edit room details */
-  editRoom: async (user, params, t) => {
+  editRoom: async (user, params, validCameras, t) => {
     const { Room, CamerasInRooms } = await connectToDatabase();
     let update = {};
 
@@ -58,13 +59,13 @@ module.exports = {
         { transaction: t }
       );
       await customerServices.editCustomer(
-        params.cust_id,
+        params.cust_id || user.cust_id,
         {max_stream_live_license_room: params.max_stream_live_license_room},
         t
       );
     }
 
-    const camsToAdd = params.camerasToAdd.map((cam) => {
+    const camsToAdd = validCameras.map((cam) => {
       return {
         cam_id: cam.cam_id,
         room_id: params.room_id,
@@ -431,4 +432,20 @@ module.exports = {
 
     return enableRoom;
   },
+
+  validateRoom: async (room_id, userCustId) => {
+    try {
+      const room = await Room.findOne({where: {room_id: room_id}, raw: true, plain: true});
+      if (!room) {
+        return { valid: false, message: 'Room:'+ room_id +' not found.' };
+      }
+      if (room.cust_id !== userCustId) {
+        return { valid: false, message: 'Unauthorized access to room:'+ room_id};
+      }
+      return { valid: true, message: 'Room is valid.' };
+    } catch (error) {
+      console.error('Error validating room:', error);
+      return { valid: false, message: 'Error validating room.' };
+    }
+  }
 };

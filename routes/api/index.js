@@ -13,6 +13,7 @@ const logRoutes = require('./logs');
 const liveStreamRoutes = require('./liveStream');
 const RecordingRoutes = require('./recording');
 const PaymentRoutes = require('./payment');
+const ApiKeyRoutes = require('./apiKey');
 /* user routes */
 router.use('/users', userRoutes);
 
@@ -48,5 +49,8 @@ router.use('/recordings', RecordingRoutes)
 
 /* payment routes */
 router.use('/payment', PaymentRoutes)
+
+/* api-key routes */
+router.use('/api-key', ApiKeyRoutes)
 
 module.exports = router;

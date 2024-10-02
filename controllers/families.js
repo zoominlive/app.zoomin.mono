@@ -25,7 +25,7 @@ module.exports = {
       let { primary, secondary, children, cust_id = null, tenant_id } = req.body;
       const userId = req.user.user_id;
       const custId = req.user.cust_id || cust_id;
-      const fronteggTenantId = tenant_id;
+      const fronteggTenantId = tenant_id || req.user.frontegg_tenant_id;
 
       //add primary parent
 
@@ -41,10 +41,20 @@ module.exports = {
       primary.location = { selected_locations: allLocations, accessable_locations: allLocations };
       const newFamilyId = await familyServices.generateNewFamilyId();
       primary.family_id = newFamilyId;
+      const emailExist = await userServices.checkEmailExist(primary.email);
+      if (emailExist) {
+        throw new Error("Validation error");
+      }
+      const familyLocation = allLocations;
+      if (!familyLocation.every(location => req.user.location.accessable_locations.includes(location)) && req.user.role !== 'Super Admin') {
+        await t.rollback();
+        return res.status(400).json({Message: "Unauthorized location access"});
+      }
       let primaryParent = await familyServices.createFamily(
         {
           ...primary,
           family_member_id: uuidv4(),
+          family_id: uuidv4(),
           user_id: userId,
           cust_id: custId,
           frontegg_tenant_id: fronteggTenantId
@@ -68,6 +78,7 @@ module.exports = {
         familyObj.push({
           ...family,
           family_member_id: uuidv4(),
+          family_id: uuidv4(),
           user_id: userId,
           cust_id: custId,
           family_id: familyId,
@@ -147,10 +158,17 @@ module.exports = {
       }
       //await dashboardServices.updateDashboardData(custId);
       await t.commit();
-
+      console.log('secondaryParents==>', secondaryParents);
+      
       res.status(201).json({
         IsSuccess: true,
-        Data: { primaryParent, secondaryParents, children },
+        Data: { 
+          primaryParent: _.omit(primaryParent, ['password_link', 'is_verified', 'disabled_locations', 'roleIds', 'frontegg_tenant_id']), 
+          secondaryParents: _.map(secondaryParents, ({dataValues}) => 
+            _.omit(dataValues, ['password_link', 'is_verified', 'disabled_locations', 'roleIds', 'frontegg_tenant_id'])
+          ), 
+          children 
+        },
         Message: CONSTANTS.FAMILY_CREATED
       });
 
@@ -211,6 +229,11 @@ module.exports = {
       let emailExist = false;
       familyMember = await familyServices.getFamilyMemberById(params.family_member_id, t);
 
+      // Validate customer of requested user and family
+      if (familyMember.cust_id !== req.user.cust_id && req.user.role !== 'Super Admin') {
+        await t.rollback();
+        return res.status(400).json({Message: "Unauthorized access to family user:"+ params.family_member_id})
+      }
       if(params.inviteFamily) {
         try {
           const token = await familyServices.createPasswordToken(familyMember);
@@ -261,7 +284,7 @@ module.exports = {
       if (editedFamily) {
         res.status(200).json({
           IsSuccess: true,
-          Data: editedFamily,
+          Data: _.omit(editedFamily.dataValues, ['password_link', 'password', 'is_verified', 'disabled_locations', 'frontegg_user_id', 'frontegg_tenant_id']),
           Message: CONSTANTS.FAMILY_UPDATED +
             '. ' +
             ` ${params.is_verified ? '' : CONSTANTS.VERIFY_UPDATED_EMAIL}`
@@ -343,7 +366,7 @@ module.exports = {
     try {
       params = req.body;
       params.cust_id = req.user.cust_id || req.body.cust_id;
-      params.frontegg_tenant_id = req.body.tenant_id;
+      params.frontegg_tenant_id = req.body.tenant_id || req.user.frontegg_tenant_id;
       params.user_id = req.user.user_id;
       let emailExist = await userServices.checkEmailExist(params.email, t);
 
@@ -380,7 +403,7 @@ module.exports = {
         await t.commit();
         res.status(201).json({
           IsSuccess: true,
-          Data: parent,
+          Data: _.omit(parent, ['password_link', 'is_verified', 'disabled_locations', 'roleIds', 'frontegg_tenant_id']),
           Message: CONSTANTS.PARENT_ADDED
         });
       }
@@ -418,10 +441,20 @@ module.exports = {
     try {
       params = req.body;
       familyDetails = await familyServices.getFamilyDetailsById(params.family_id, t);
+      if (!familyDetails) {
+        await t.rollback();
+        return res.status(400).json({isSucces: false, Data: {}, Message: "Family not found"})
+      }
+      
       userDetails = await userServices.getUserById(req?.user?.user_id, t);
+      // Validate customer of requested user and family
+      if (familyDetails.dataValues.cust_id !== req.user.cust_id && req.user.role !== 'Super Admin') {
+        await t.rollback();
+        return res.status(400).json({Message: "Unauthorized access to family user:"+ params.family_id})
+      }
       let deleteFamily = await familyServices.deleteFamily(params.family_id, t);
       if (deleteFamily && params.frontegg_user_id !== null) {
-        const frontEggUser = await userServices.removeFrontEggUser(params.frontegg_user_id)
+        const frontEggUser = await userServices.removeFrontEggUser(params.frontegg_user_id || familyDetails?.dataValues.frontegg_user_id)
         if(familyDetails.dataValues.secondary.length !== 0) {
           for (const secondaryMemmber of familyDetails.dataValues.secondary) {
             await userServices.removeFrontEggUser(secondaryMemmber.dataValues?.frontegg_user_id);
@@ -450,7 +483,7 @@ module.exports = {
         function: 'Primary_Family',
         function_type: 'Delete',
         request: {
-          Deleted_by: userDetails.first_name + ' ' + userDetails.last_name,
+          Deleted_by: userDetails?.first_name + ' ' + userDetails?.last_name,
           Deleted_FamilyId: familyDetails?.dataValues?.family_id || req?.body,
           Deleted_Family_Member_Name: familyDetails?.dataValues?.first_name + ' ' + familyDetails?.dataValues?.last_name,
         }
@@ -469,7 +502,11 @@ module.exports = {
     const t = await sequelize.transaction();
     try {
       params = req.body;
-
+      const familyDetails = await familyServices.getFamilyDetailsById(params.family_id, t);
+      if (familyDetails.dataValues.cust_id !== req.user.cust_id && req.user.role !== 'Super Admin') {
+        await t.rollback();
+        return res.status(400).json({Message: "Unauthorized access to family user:"+ params.family_id})
+      }
       let disableFamily = await familyServices.disableFamily(
         params.family_member_id,
         params.member_type,
@@ -530,7 +567,11 @@ module.exports = {
     const t = await sequelize.transaction();
     try {
       params = req.body;
-
+      const familyDetails = await familyServices.getFamilyDetailsById(params.family_id, t);
+      if (familyDetails.dataValues.cust_id !== req.user.cust_id && req.user.role !== 'Super Admin') {
+        await t.rollback();
+        return res.status(400).json({Message: "Unauthorized access to family user:"+ params.family_id})
+      }
       let enableFamily = await familyServices.enableFamily(
         params.family_member_id,
         params.member_type,

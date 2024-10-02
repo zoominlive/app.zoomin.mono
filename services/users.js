@@ -11,6 +11,7 @@ var validator = require("validator");
 const RoomsInTeacher = require("../models/rooms_assigned_to_teacher");
 const customerServices = require('../services/customers');
 const { default: axios } = require("axios");
+const Users = require("../models/users");
 /* Validate email */
 const validateEmail = (emailAdress) => {
   // let regexEmail = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
@@ -29,7 +30,7 @@ module.exports = {
     const { Users } = await connectToDatabase();
     userObj.user_id = uuidv4();
     delete userObj.rooms;
-    console.log('userObj--->', userObj);
+    console.log("userObj--->", userObj);
     let userCreated = await Users.create(userObj, { transaction: t });
 
     return userCreated;
@@ -80,7 +81,9 @@ module.exports = {
         // validationResponse = {
         //   isValid: true,
         // };
-        let emailCheck = await Users.findOne({ where: { email: params.email } });
+        let emailCheck = await Users.findOne({
+          where: { email: params.email },
+        });
 
         if (emailCheck) {
           validationResponse = {
@@ -106,9 +109,7 @@ module.exports = {
           },
         };
       }
-
-   
-  }
+    }
     return validationResponse;
   },
 
@@ -127,11 +128,9 @@ module.exports = {
   // get user by id
   getUserById: async (userId) => {
     const { Users } = await connectToDatabase();
-    let user = await Users.findOne(
-      {
-        where: { user_id: userId },
-      }
-    );
+    let user = await Users.findOne({
+      where: { user_id: userId },
+    });
     return user ? user.toJSON() : null;
   },
 
@@ -190,13 +189,16 @@ module.exports = {
   /* Edit user profile details */
   editUserProfile: async (user, params, t) => {
     const { Users } = await connectToDatabase();
+    const locations = {
+      selected_locations: params.location?.locations,
+      accessable_locations: params.location?.locations,
+    };
     let update = {
       first_name:
         params?.first_name !== undefined ? params?.first_name : user.first_name,
       last_name:
         params?.last_name !== undefined ? params?.last_name : user.last_name,
-      location:
-        params?.location !== undefined ? params?.location : user.location,
+      location: params?.location !== undefined ? locations : user.location,
       profile_image:
         params?.image !== undefined ? params?.image : user.profile_image,
       username:
@@ -221,7 +223,7 @@ module.exports = {
         params?.socket_connection_id !== undefined
           ? params?.socket_connection_id
           : user.socket_connection_id,
-      dashboard_locations: params?.dashboard_locations
+      dashboard_locations: params?.dashboard_locations,
     };
 
     let updateUserProfile = await Users.update(
@@ -331,8 +333,10 @@ module.exports = {
 
     const userIds = [];
 
-    if(!user.cust_id){
-      let availableLocations = await customerServices.getLocationDetails(cust_id)
+    if (!user.cust_id) {
+      let availableLocations = await customerServices.getLocationDetails(
+        cust_id
+      );
       let locs = availableLocations.flatMap((i) => i.loc_name);
       allusers.map((item) => {
         locs.forEach((i) => {
@@ -341,8 +345,7 @@ module.exports = {
           }
         });
       });
-    }
-    else{
+    } else {
       allusers.map((item) => {
         user.location.accessable_locations.forEach((i) => {
           if (item.location.accessable_locations?.includes(i)) {
@@ -386,7 +389,10 @@ module.exports = {
     let userIds = await Users.findAll(
       {
         where: { cust_id: custId },
-        attributes: [[Sequelize.fn('DISTINCT', Sequelize.col('user_id')) ,'user_id'], "location"],
+        attributes: [
+          [Sequelize.fn("DISTINCT", Sequelize.col("user_id")), "user_id"],
+          "location",
+        ],
         group: ["user_id"], //user later if required
         raw: true,
       },
@@ -487,12 +493,15 @@ module.exports = {
   getUsersSocketIds: async (cust_id) => {
     const { Users } = await connectToDatabase();
     let socketIds = await Users.findAll({
-     where: { role : {[Sequelize.Op.notIn]:["Teacher"]}, cust_id: {[Sequelize.Op.or]: [cust_id, null]} },
-     attributes: ["socket_connection_id", "dashboard_locations"],
-     raw: true
+      where: {
+        role: { [Sequelize.Op.notIn]: ["Teacher"] },
+        cust_id: { [Sequelize.Op.or]: [cust_id, null] },
+      },
+      attributes: ["socket_connection_id", "dashboard_locations"],
+      raw: true,
     });
 
-    return socketIds
+    return socketIds;
   },
 
   createFrontEggUser: async (tenantId, userDetails) => {
@@ -501,29 +510,187 @@ module.exports = {
       {
         clientId: process.env.FRONTEGG_CLIENT_ID,
         secret: process.env.FRONTEGG_API_KEY,
-      },
+      }
     );
     if (vendor_token) {
       const user_response = await axios.post(
         `${process.env.FRONTEGG_API_GATEWAY_URL}identity/resources/users/v1`,
         {
-          name: userDetails.first_name +' '+ userDetails.last_name,
+          name: userDetails.first_name + " " + userDetails.last_name,
           email: userDetails.email,
           roleIds: [userDetails.roleIds],
           metadata: JSON.stringify({
-            zoomin_user_id: userDetails.user_id
-          })
+            zoomin_user_id: userDetails.user_id,
+          }),
         },
         {
           headers: {
-            'frontegg-tenant-id': `${tenantId}`,
-            'Authorization':
-              `Bearer ${vendor_token.data.token}`                
+            "frontegg-tenant-id": `${tenantId}`,
+            Authorization: `Bearer ${vendor_token.data.token}`,
           },
         }
       );
 
       return user_response.data;
+    }
+  },
+
+  createFrontEggAppUser: async (tenantId, userDetails) => {
+    const vendor_token = await axios.post(
+      `${process.env.FRONTEGG_API_GATEWAY_URL}auth/vendor/`,
+      {
+        clientId: process.env.FRONTEGG_CLIENT_ID,
+        secret: process.env.FRONTEGG_API_KEY,
+      }
+    );
+    if (vendor_token) {
+      const user_response = await axios.post(
+        `${process.env.FRONTEGG_API_GATEWAY_URL}identity/resources/users/v1`,
+        {
+          name: userDetails.name,
+          email: userDetails.email,
+        },
+        {
+          headers: {
+            "frontegg-tenant-id": `${tenantId}`,
+            Authorization: `Bearer ${vendor_token.data.token}`,
+          },
+        }
+      );
+
+      return user_response.data;
+    }
+  },
+
+  updateFrontEggAppUser: async (tenantId, userDetails) => {
+    const vendor_token = await axios.post(
+      `${process.env.FRONTEGG_API_GATEWAY_URL}auth/vendor/`,
+      {
+        clientId: process.env.FRONTEGG_CLIENT_ID,
+        secret: process.env.FRONTEGG_API_KEY,
+      }
+    );
+    if (vendor_token) {
+      const user_response = await axios.put(
+        `${process.env.FRONTEGG_API_GATEWAY_URL}identity/resources/users/v1`,
+        {
+          name: userDetails.name,
+        },
+        {
+          headers: {
+            "frontegg-tenant-id": `${tenantId}`,
+            "frontegg-user-id": `${userDetails.frontegg_user_id}`,
+            Authorization: `Bearer ${vendor_token.data.token}`,
+          },
+        }
+      );
+
+      return user_response.data;
+    }
+  },
+
+  createFrontEggUserAccessToken: async (
+    tenantId,
+    frontegg_user_id,
+    expiresIn
+  ) => {
+    const vendor_token = await axios.post(
+      `${process.env.FRONTEGG_API_GATEWAY_URL}auth/vendor/`,
+      {
+        clientId: process.env.FRONTEGG_CLIENT_ID,
+        secret: process.env.FRONTEGG_API_KEY,
+      }
+    );
+    if (vendor_token) {
+      const token_response = await axios.post(
+        `${process.env.FRONTEGG_API_GATEWAY_URL}identity/resources/users/access-tokens/v1`,
+        {
+          description: "Token for CLI calls",
+          expiresInMinutes: 15,
+        },
+        {
+          headers: {
+            "frontegg-user-id": `${frontegg_user_id}`,
+            "frontegg-tenant-id": `${tenantId}`,
+            Authorization: `Bearer ${vendor_token.data.token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      return token_response.data.secret;
+    }
+  },
+
+  createNewJWTToken: async (refreshToken) => {
+    console.log("refreshToken==>", refreshToken);
+
+    const vendor_token = await axios.post(
+      `${process.env.FRONTEGG_API_GATEWAY_URL}auth/vendor/`,
+      {
+        clientId: process.env.FRONTEGG_CLIENT_ID,
+        secret: process.env.FRONTEGG_API_KEY,
+      }
+    );
+    if (vendor_token) {
+      const token_response = await axios.post(
+        `${process.env.FRONTEGG_API_GATEWAY_URL}identity/resources/auth/v2/api-token/token/refresh`,
+        {
+          refreshToken: refreshToken,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${vendor_token.data.token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      return token_response.data;
+    }
+  },
+
+  enableUser: async (tenantId, userId) => {
+    const vendor_token = await axios.post(
+      `${process.env.FRONTEGG_API_GATEWAY_URL}auth/vendor/`,
+      {
+        clientId: process.env.FRONTEGG_CLIENT_ID,
+        secret: process.env.FRONTEGG_API_KEY,
+      }
+    );
+    if (vendor_token) {
+      const user_response = await axios.post(
+        `${process.env.FRONTEGG_API_GATEWAY_URL}identity/resources/tenants/users/v1/${userId}/enable`,
+        {},
+        {
+          headers: {
+            "frontegg-tenant-id": `${tenantId}`,
+            Authorization: `Bearer ${vendor_token.data.token}`,
+          },
+        }
+      );
+      return user_response;
+    }
+  },
+
+  disableUser: async (tenantId, userId) => {
+    const vendor_token = await axios.post(
+      `${process.env.FRONTEGG_API_GATEWAY_URL}auth/vendor/`,
+      {
+        clientId: process.env.FRONTEGG_CLIENT_ID,
+        secret: process.env.FRONTEGG_API_KEY,
+      }
+    );
+    if (vendor_token) {
+      const user_response = await axios.post(
+        `${process.env.FRONTEGG_API_GATEWAY_URL}identity/resources/tenants/users/v1/${userId}/disable`,
+        {},
+        {
+          headers: {
+            "frontegg-tenant-id": `${tenantId}`,
+            Authorization: `Bearer ${vendor_token.data.token}`,
+          },
+        }
+      );
+      return user_response;
     }
   },
 
@@ -533,18 +700,17 @@ module.exports = {
       {
         clientId: process.env.FRONTEGG_CLIENT_ID,
         secret: process.env.FRONTEGG_API_KEY,
-      },
+      }
     );
     if (vendor_token) {
       const user_response = await axios.put(
         `${process.env.FRONTEGG_API_GATEWAY_URL}identity/resources/users/v1/${userDetails.frontegg_user_id}/email`,
         {
-          email: userDetails.email
+          email: userDetails.email,
         },
         {
           headers: {
-            'Authorization':
-              `Bearer ${vendor_token.data.token}`                
+            Authorization: `Bearer ${vendor_token.data.token}`,
           },
         }
       );
@@ -559,15 +725,14 @@ module.exports = {
       {
         clientId: process.env.FRONTEGG_CLIENT_ID,
         secret: process.env.FRONTEGG_API_KEY,
-      },
+      }
     );
     if (vendor_token) {
       const user_response = await axios.delete(
         `${process.env.FRONTEGG_API_GATEWAY_URL}identity/resources/users/v1/${userId}`,
         {
           headers: {
-            'Authorization':
-              `Bearer ${vendor_token.data.token}`                
+            Authorization: `Bearer ${vendor_token.data.token}`,
           },
         }
       );
@@ -580,28 +745,58 @@ module.exports = {
       {
         clientId: process.env.FRONTEGG_CLIENT_ID,
         secret: process.env.FRONTEGG_API_KEY,
-      },
+      }
     );
     if (vendor_token) {
       const user_response = await axios.post(
         `${process.env.FRONTEGG_API_GATEWAY_URL}identity/resources/users/v1`,
         {
-          name: userDetails.first_name +' '+ userDetails.last_name,
+          name: userDetails.first_name + " " + userDetails.last_name,
           email: userDetails.email,
           roleIds: [userDetails.roleIds],
           metadata: JSON.stringify({
-            zoomin_family_member_id: userDetails.family_member_id
-          })
+            zoomin_family_member_id: userDetails.family_member_id,
+          }),
         },
         {
           headers: {
-            'frontegg-tenant-id': `${tenantId}`,
-            'Authorization':
-              `Bearer ${vendor_token.data.token}`                
+            "frontegg-tenant-id": `${tenantId}`,
+            Authorization: `Bearer ${vendor_token.data.token}`,
           },
         }
       );
       return user_response.data;
+    }
+  },
+
+  validateUser: async (user_id, userCustId, locations) => {
+    try {
+      const user = await Users.findOne({
+        where: { user_id: user_id },
+        raw: true,
+        plain: true,
+      });
+      console.log("user==>", user);
+
+      if (!user) {
+        return { valid: false, message: "User:" + user_id + " not found." };
+      }
+      if (user.cust_id !== userCustId) {
+        return {
+          valid: false,
+          message: "Unauthorized access to user:" + user_id,
+        };
+      }
+      if (locations && !locations.every(location => user.location.accessable_locations.includes(location))) {
+        return {
+          valid: false,
+          message: "Unauthorized access to either of the locations",
+        };
+      }
+      return { valid: true, message: "User is valid." };
+    } catch (error) {
+      console.error("Error validating user:", error);
+      return { valid: false, message: "Error validating user." };
     }
   },
 };

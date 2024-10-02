@@ -11,6 +11,7 @@ const { withAuthentication } = require('@frontegg/client');
 
 router.post('/add', authController, childController.createChild);
 router.put('/edit', withAuthentication(), authController, childController.editChild);
+router.put('/replace-room', withAuthentication(), authController, childController.updateChildRoom);
 router.put('/disable', withAuthentication(), authController, childController.disableChild);
 router.put('/enable', withAuthentication(), authController, childController.enableChild);
 router.delete('/delete', withAuthentication(), authController, childController.deleteChild);

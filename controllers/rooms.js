@@ -5,6 +5,9 @@ const CONSTANTS = require('../lib/constants');
 const _ = require('lodash');
 const sequelize = require('../lib/database');
 const customerServices = require('../services/customers');
+const RoomsInChild = require('../models/rooms_assigned_to_child');
+const Child = require('../models/child');
+const constants = require('../lib/constants');
 
 module.exports = {
   // create new room
@@ -14,7 +17,33 @@ module.exports = {
       const params = req.body;
       params.user_id = req.user.user_id;
       params.cust_id = req.user.cust_id || req.body.cust_id;
-      const room = await roomServices.createRoom(params, t);
+      let validCameras = [];
+      let validationMessages = [];
+      const userLocations = req.user.location.accessable_locations; 
+      // Location validation
+      if (!userLocations.includes(params.location) && req.user.role !== 'Super Admin') {
+        await t.rollback();
+        return res.status(400).json({Message: "Unauthorized location access. Please enter the location you have access to"})
+      }
+      // Validate all cameras before proceeding
+      for (const camera of params.cameras) {
+        const validation = await cameraServices.validateCamera(camera.cam_id, params.cust_id);
+        if (validation.valid) {
+          validCameras.push(camera);
+        } else {
+          validationMessages.push(validation.message);
+        }
+      }
+
+       // Check if there's at least one valid camera
+      if (validCameras.length === 0) {
+        await t.rollback();
+        return res.status(400).json({
+          IsSuccess: false,
+          Message: "No valid cameras found. " + validationMessages.join(" "),
+        });
+      }
+      const room = await roomServices.createRoom(params, validCameras, t);
 
       if (room) {
         await customerServices.editCustomer(
@@ -23,7 +52,7 @@ module.exports = {
           t
         );
       }
-      params?.cameras?.forEach(async (camera) => {
+      validCameras.forEach(async (camera) => {
         let rooms = [];
 
         if (!_.isEmpty(camera.room_ids)) {
@@ -38,7 +67,7 @@ module.exports = {
       res.status(201).json({
         IsSuccess: true,
         Data: room,
-        Message: CONSTANTS.ROOM_CREATED
+        Message: CONSTANTS.ROOM_CREATED + ' ' + validationMessages.join(" ")
       });
 
       next();
@@ -70,7 +99,44 @@ module.exports = {
     const t = await sequelize.transaction();
     try {
       const params = req.body;
-      const room = await roomServices.editRoom(req.user, params, t);
+      params.custId = req.user.cust_id || req.body.cust_id;
+      let validCameras = [];
+      let validationMessages = [];
+      const userLocations = req.user.location.accessable_locations; 
+      // Location validation      
+      if (!userLocations.includes(params.location) && req.user.role !== 'Super Admin') {
+        await t.rollback();
+        return res.status(400).json({Message: "Unauthorized location access. Please enter the location you have access to"})
+      }
+      // Validate Room
+      const validation = await roomServices.validateRoom(params.room_id, params.custId);
+      if (!validation.valid) {
+        await t.rollback();
+        return res.status(400).json({Message: validation.message});
+      }
+
+      // Validate all cameras before proceeding
+      if (!params.camerasToAdd){
+        params.camerasToAdd = params.cameras
+      }
+      for (const camera of params.camerasToAdd) {
+        const validation = await cameraServices.validateCamera(camera.cam_id, params.custId);
+        if (validation.valid) {
+          validCameras.push(camera);
+        } else {
+          validationMessages.push(validation.message);
+        }
+      }
+
+      // Check if there's at least one valid camera
+      if (validCameras.length === 0) {
+        await t.rollback();
+        return res.status(400).json({
+          IsSuccess: false,
+          Message: "No valid cameras found. " + validationMessages.join(" "),
+        });
+      }
+      const room = await roomServices.editRoom(req.user, params, validCameras, t);
 
       await t.commit();
 
@@ -110,6 +176,11 @@ module.exports = {
     try {
       const params = req.body;
       const { custId, max_stream_live_license_room } = params;
+      const validation = await roomServices.validateRoom(params.room_id, req.user.cust_id || custId);
+      if (!validation.valid && req.user.role !== 'Super Admin') {
+        await t.rollback();
+        return res.status(400).json({Message: validation.message});
+      }
       const room = await roomServices.deleteRoom(params.room_id, t);
       if(room && custId && max_stream_live_license_room){
         await customerServices.editCustomer(
@@ -160,13 +231,17 @@ module.exports = {
         searchBy: req.query?.searchBy?.replace(/'/g, "\\'"),
         cust_id: req.query?.cust_id
       };
-      
+      if(filter.cust_id !== "" && filter.cust_id !== undefined) {
+        if (req.user.role !== 'Super Admin' && req.user.cust_id !== filter.cust_id) {
+          return res.status(400).json({Message:"Unauthorized request"});
+        }
+      }
       const rooms = await roomServices.getAllRoomsDetails(req.user.user_id, req.user, filter);
 
       res.status(200).json({
         IsSuccess: true,
         Data: rooms,
-        Message: CONSTANTS.ROOM_DETAILS + `${req.user.first_name}`
+        Message: CONSTANTS.ROOM_DETAILS
       });
 
       next();
@@ -208,7 +283,20 @@ module.exports = {
     const t = await sequelize.transaction();
     try {
       const params = req.body;
-
+      const roomChildExist = await RoomsInChild.findOne({where:{room_child_id: params.room_child_id}});
+      if(!roomChildExist) {
+        await t.rollback();
+        return res.status(400).json({Message: "Data not found"})
+      }
+      const roomDetails = await RoomsInChild.findAll({
+        where: { room_child_id: params.room_child_id },
+        include: [{ model: Child, as: "child" }]
+      });
+      let childCustId = roomDetails[0].dataValues.child.dataValues.cust_id;
+      if (childCustId !== req.user.cust_id) {
+        await t.rollback();
+        return res.status(400).json({Message: constants.CUSTOMER_NOT_FOUND})
+      }
       const room = await roomServices.disableRoom(params, t);
 
       await t.commit();
@@ -247,7 +335,20 @@ module.exports = {
     const t = await sequelize.transaction();
     try {
       const params = req.body;
-
+      const roomChildExist = await RoomsInChild.findOne({where:{room_child_id: params.room_child_id}});
+      if(!roomChildExist) {
+        await t.rollback();
+        return res.status(400).json({Message: "Data not found"})
+      }
+      const roomDetails = await RoomsInChild.findAll({
+        where: { room_child_id: params.room_child_id },
+        include: [{ model: Child, as: "child" }]
+      });
+      let childCustId = roomDetails[0].dataValues.child.dataValues.cust_id;
+      if (childCustId !== req.user.cust_id) {
+        await t.rollback();
+        return res.status(400).json({Message: constants.CUSTOMER_NOT_FOUND})
+      }
       const room = await roomServices.enableRoom(params, t);
 
       await t.commit();

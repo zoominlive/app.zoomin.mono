@@ -4,6 +4,9 @@ const logServices = require('../services/logs');
 const dashboardServices = require('../services/dashboard');
 const CONSTANTS = require('../lib/constants');
 const sequelize = require('../lib/database');
+const Room = require('../models/room');
+const RoomsInChild = require('../models/rooms_assigned_to_child');
+
 module.exports = {
   // create new child
   createChild: async (req, res, next) => {
@@ -13,6 +16,11 @@ module.exports = {
 
       //add children
       const custId = req?.user?.cust_id || req?.body?.cust_id
+      const childLocation = params.location.locations;
+      if (!childLocation.every(location => req.user.location.accessable_locations.includes(location)) && req.user.role !== 'Super Admin') {
+        await t.rollback();
+        return res.status(400).json({Message: "Unauthorized location access"});
+      }
       const newChild = await childServices.createChild(custId, params, t);
 
       const addRoomsToChild = await childServices.assignRoomsToChild(
@@ -57,7 +65,16 @@ module.exports = {
     const t = await sequelize.transaction();
     try {
       const params = req.body;
-
+      const childLocation = params.location.locations;
+      const childDetails = await childServices.getChildById(params.child_id, t);
+      if (childDetails.cust_id !== req.user.cust_id && req.user.role !== 'Super Admin') {
+        await t.rollback();
+        return res.status(400).json({Message: "Unauthorized access to child:"+ params.child_id})
+      }
+      if (!childLocation.every(location => req.user.location.accessable_locations.includes(location)) && req.user.role !== 'Super Admin') {
+        await t.rollback();
+        return res.status(400).json({Message: "Unauthorized location access"});
+      }
       const editedChild = await childServices.editChild(params, t);
 
       const roomsEdited = await childServices.editAssignedRoomsToChild(
@@ -97,12 +114,102 @@ module.exports = {
     }
   },
 
+  // update room
+  updateChildRoom: async (req, res, next) => {
+    const t = await sequelize.transaction();
+    try {
+      const params = req.body;
+      
+      const editedChild = await childServices.editChild(params, t);
+    
+      // Extract room IDs from the payload
+      const roomIds = params.rooms.rooms.map(room => room.room_id);
+
+      // Find rooms that exist in the Rooms table
+      const existingRooms = await Room.findAll({
+        where: { room_id: roomIds },
+      });
+      console.log('existing Rooms', existingRooms.length);
+      
+      if (existingRooms.length === 0) {
+        await t.rollback();
+        return res.status(400).json({Message: "None of the rooms exist in the database. Please create a room first"});
+      }
+      console.log('===out of scope===');
+      
+      // Extract IDs of existing rooms
+      const existingRoomIds = existingRooms.map(room => room.room_id);
+
+      // Identify rooms that do not exist
+      const nonExistentRooms = params.rooms.rooms.filter(room => !existingRoomIds.includes(room.room_id));
+
+      // Prepare data for existing rooms
+      const roomInsertData = existingRooms.map(room => ({
+          child_id: params.child_id,
+          room_id: room.room_id,
+          disabled: "false"
+      }));
+
+      await RoomsInChild.destroy(
+        { where: { child_id: params.child_id }, raw: true },
+        { transaction: t }
+      );
+
+      // Insert the records into RoomsInChild table
+      await RoomsInChild.bulkCreate(roomInsertData, { transaction: t });
+
+      await t.commit();
+      // Prepare the response message
+      const responseMessage = {
+        message: "Rooms processing completed.",
+        addedRooms: existingRooms.map((room) => ({
+          room_id: room.room_id,
+          room_name: room.room_name,
+        })),
+        nonExistentRooms: nonExistentRooms.map((room) => ({
+          room_id: room.room_id,
+          room_name: room.room_name,
+        })),
+      };
+
+      // Send the response
+      res.status(200).json(responseMessage);
+    
+    
+      next();
+    } catch (error) {
+      await t.rollback();
+      res.status(500).json({
+        IsSuccess: false,
+        error_log: error,
+        Message: CONSTANTS.INTERNAL_SERVER_ERROR
+      });
+      next(error);
+    } finally {
+      let logObj = {
+        user_id: req?.user?.user_id ? req?.user?.user_id : 'Not Found',
+        function: 'Child',
+        function_type: 'Edit',
+        request: req.body
+      };
+      try {
+        await logServices.addChangeLog(logObj);
+      } catch (e) {
+        console.log(e);
+      }
+    }
+  },
+
   // delete child by id
   deleteChild: async (req, res, next) => {
     const t = await sequelize.transaction();
     try {
       const params = req.body;
-
+      const childDetails = await childServices.getChildById(params.child_id, t);
+      if (childDetails.cust_id !== req.user.cust_id && req.user.role !== 'Super Admin') {
+        await t.rollback();
+        return res.status(400).json({Message: "Unauthorized access to child:"+ params.child_id})
+      }
       const roomsDeleted = await childServices.deleteAssignedRoomsToChild(params.child_id, t);
 
       const child = await childServices.deleteChild(params.child_id, t);
@@ -145,7 +252,10 @@ module.exports = {
       const params = req.body;
 
       const childDetails = await childServices.getChildById(params.child_id, t);
-
+      if (childDetails.cust_id !== req.user.cust_id && req.user.role !== 'Super Admin') {
+        await t.rollback();
+        return res.status(400).json({Message: "Unauthorized access to child:"+ params.child_id})
+      }
       if (childDetails?.location?.locations?.length == params?.locations_to_disable?.length) {
         const disableChild = await childServices.disableChild(
           params?.child_id,
@@ -215,6 +325,11 @@ module.exports = {
     const t = await sequelize.transaction();
     try {
       const params = req.body;
+      const childDetails = await childServices.getChildById(params.child_id, t);
+      if (childDetails.cust_id !== req.user.cust_id && req.user.role !== 'Super Admin') {
+        await t.rollback();
+        return res.status(400).json({Message: "Unauthorized access to child:"+ params.child_id})
+      }
       const enableChild = await childServices.enableChild(params.child_id, t);
       
       await t.commit();

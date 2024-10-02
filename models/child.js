@@ -5,10 +5,9 @@ const Child = sequelize.define(
   'child',
   {
     child_id: {
-      type: Sequelize.INTEGER,
+      type: Sequelize.STRING(50),
       allowNull: false,
       primaryKey: true,
-      autoIncrement: true
     },
     first_name: {
       type: Sequelize.STRING(30),
@@ -29,7 +28,7 @@ const Child = sequelize.define(
       required: true
     },
     family_id: {
-      type: Sequelize.INTEGER,
+      type: Sequelize.STRING(50),
       comment: 'key used to assosiate child to family member'
     },
     status: {
@@ -54,11 +53,13 @@ const Child = sequelize.define(
       type: Sequelize.STRING(50)
     },
     createdAt: { type: Sequelize.DATE, field: 'created_at' },
-    updatedAt: { type: Sequelize.DATE, field: 'updated_at' }
+    updatedAt: { type: Sequelize.DATE, field: 'updated_at' },
+    deletedAt: { type: Sequelize.DATE, field: 'deleted_at' }
   },
   {
     tableName: 'child',
-    timestamps: true
+    timestamps: true,
+    paranoid: true
   }
 );
 

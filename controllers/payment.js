@@ -373,7 +373,7 @@ module.exports = {
   },
 
   updateCustomer: async(req, res) => {
-    const { stripe_cust_id, paymentMethodID, name, email, phone, description, city, state, country  } = req.body;
+    const { stripe_cust_id, paymentMethodID, name, email, phone, description, addressline1, addressline2, postalcode, city, state, country  } = req.body;
 
     try {
       const customer = await stripe.customers.update(
@@ -387,9 +387,12 @@ module.exports = {
             default_payment_method: paymentMethodID
           },
           address: {
+            line1: addressline1,
+            line2: addressline2,
             country: country,
             state: state,
-            city: city
+            city: city,
+            postal_code: postalcode,
           }
         }
       );

@@ -12,6 +12,7 @@ const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require("uuid");
 const Customers = require('../models/customers');
 const CustomerLocations = require('../models/customer_locations');
+const Camera = require('../models/camera');
 module.exports = {
   // encode stream and create new camera
   createCamera: async (req, res, next) => {
@@ -35,6 +36,7 @@ module.exports = {
           params.cust_id
         );
         console.log('transcoderDetails==>', transcodedDetails);
+        params.cam_id = uuidv4();
         params.stream_uri = transcodedDetails?.data ? transcodedDetails.data?.uri : '';
         params.stream_uuid = transcodedDetails?.data ? transcodedDetails.data?.id : '';
         params.cam_alias = transcodedDetails?.data ? transcodedDetails.data?.alias : '';
@@ -105,11 +107,26 @@ module.exports = {
     const t = await sequelize.transaction();
     try {
       const params = req.body;
+      params.custId = req.user.cust_id || req.body.cust_id;
       const token = req.userToken;
 
       const customer = await customerServices.getCustomerDetails(req.user.cust_id, t);
+      const validateLocation = await customerServices.validateLocation(params.location, req.user.location?.accessable_locations);
+      if (!validateLocation.valid && req.user.role !== 'Super Admin') {
+        await t.rollback();
+        return res.status(400).json({Message: validateLocation.message});
+      }
+      const validation = await cameraServices.validateCamera(params.cam_id, params.custId);
+      if (!validation.valid && req.user.role !== 'Super Admin') {
+        await t.rollback();
+        return res.status(400).json({Message: validation.message});
+      }
       // const availableCameras = customer?.available_cameras;
-
+      if(!params.streamId) {
+        console.log('inside==>');
+        const camera = await Camera.findOne({where: {cam_id: params.cam_id}, raw: true, plain: true});
+        params.streamId = camera.streamId;
+      }
       const camEncodedDeleted = await deleteEncodingStream(
         params.streamId,
         params.wait,
@@ -146,9 +163,9 @@ module.exports = {
         // );
 
         res.status(200).json({
-          IsSuccess: false,
+          IsSuccess: true,
           Data: {},
-          Message: CONSTANTS.STREAM_NOT_FOUND
+          Message: CONSTANTS.CAMERA_DELETED
         });
       }
 
@@ -182,11 +199,17 @@ module.exports = {
     const t = await sequelize.transaction();
     try {
       const params = req.body;
+      params.custId = req.user.cust_id || req.body.cust_id;
       if (params?.thumbnail && !params?.thumbnail.includes('https://zoominlive-cam-thumbs.s3.amazonaws.com')) {
         const imageUrl = await s3BucketImageUploader._upload(params?.thumbnail);
         params.thumbnail = imageUrl;
       }
       // const getPresignedUrl = await s3BucketImageUploader.getPresignedUrlForThumbnail(params?.s3Uri);
+      const validation = await cameraServices.validateCamera(params.cam_id, params.custId);
+      if (!validation.valid && req.user.role !== 'Super Admin') {
+        await t.rollback();
+        return res.status(400).json({Message: validation.message});
+      }
 
       const cameraUpdated = await cameraServices.editCamera(
         params.cam_id,
@@ -328,6 +351,11 @@ module.exports = {
         searchBy: req.query?.searchBy?.replace(/'/g, "\\'"),
         cust_id: req.query?.cust_id
       };
+      if(req.user.role !== 'Super Admin' && filter.cust_id !== "" && filter.cust_id !== undefined) { 
+        if (req.user.cust_id !== filter.cust_id) {
+          return res.status(400).json({Message:"Unauthorized request"});
+        }
+      }
       const cameras = await cameraServices.getAllCameraForCustomer(req.user.cust_id , req.user, filter);
       const generatePresignedUrlForThumbnail = async (thumbnail) => {
         // Check if the thumbnail contains an S3 URI

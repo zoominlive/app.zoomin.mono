@@ -5,10 +5,9 @@ const Camera = sequelize.define(
   'camera',
   {
     cam_id: {
-      type: Sequelize.INTEGER,
+      type: Sequelize.STRING(50),
       allowNull: false,
-      primaryKey: true,
-      autoIncrement: true
+      primaryKey: true
     },
     cust_id: {
       type: Sequelize.STRING(50),
@@ -57,11 +56,13 @@ const Camera = sequelize.define(
       comment: 'Unless specified by the user use the stream_uuid here'
     },
     createdAt: { type: Sequelize.DATE, field: 'created_at' },
-    updatedAt: { type: Sequelize.DATE, field: 'updated_at' }
+    updatedAt: { type: Sequelize.DATE, field: 'updated_at' },
+    deletedAt: { type: Sequelize.DATE, field: 'deleted_at' }
   },
   {
     tableName: 'camera',
-    timestamps: true
+    timestamps: true,
+    paranoid: true
   }
 );
 

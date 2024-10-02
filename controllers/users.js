@@ -129,7 +129,7 @@ module.exports = {
     try {
       const params = req.body;
       params.cust_id = req.user.cust_id || req.body.cust_id;
-      params.frontegg_tenant_id = req.body.tenant_id;
+      params.frontegg_tenant_id = req.body.tenant_id || req.user.frontegg_tenant_id;
 
       let checkUserValidation = await userServices.userValidation(params);
 
@@ -138,6 +138,14 @@ module.exports = {
         await t.commit();
         return
       }
+      let userLocations = req.user.location.accessable_locations; 
+      console.log('userLocations', userLocations);
+      console.log('params.location?.locations', params.location?.locations);
+      
+      if (!params.location?.locations.every(location => userLocations.includes(location)) && req.user.role !== 'Super Admin') {
+        await t.rollback();
+        return res.status(400).json({Message: "Please enter the locations you have access to"})
+      }   
 
       let emailIs = params.email;
 
@@ -146,7 +154,7 @@ module.exports = {
       params.email = emailIs;
 
       params.is_verified = false;
-  
+      params.location = {selected_locations: params.location?.locations, accessable_locations: params.location?.locations}
       let addUser = await userServices.createUser(_.omit(params, ['image']), t);
       
       userAdded = addUser;
@@ -988,7 +996,11 @@ module.exports = {
     const t = await sequelize.transaction();
     try {
       const params = req.body;
-
+      const validation = await userServices.validateUser(params.userId, req.user.cust_id || params.cust_id, params.location?.locations);
+      if (!validation.valid && req.user.role !== 'Super Admin') {
+        await t.rollback();
+        return res.status(400).json({Message: validation.message});
+      }
       const user = await userServices.getUserById(params.userId);
       if(params.inviteUser) {
         try {
@@ -1045,12 +1057,6 @@ module.exports = {
             });
           }
         } else {
-          await customerServices.editCustomer(
-            params.cust_id,
-            {max_stream_live_license: params.max_stream_live_license},
-            t
-          );
-
           res.status(200).json({
             IsSuccess: true,
             Data: _.omit(editedProfile, ['password']),
@@ -1130,6 +1136,11 @@ module.exports = {
       const { userId, frontegg_user_id, custId, max_stream_live_license } = req.body;
       userDetails = await userServices.getUserById(userId, t);
       deletedByUserDetails = await userServices.getUserById(req?.user?.user_id, t);
+      const validateUser = await userServices.validateUser(userId, req.user.cust_id || custId);
+      if (!validateUser.valid && req.user.role !== 'Super Admin') {
+        await t.rollback();
+        return res.status(400).json({Message: validateUser.message});
+      }
       let deleted = await userServices.deleteUser(userId, t);
 
       if (deleted) {
@@ -1140,8 +1151,10 @@ module.exports = {
             t
             );
           }
-          if(frontegg_user_id !== null) {
-            const frontEggUser = await userServices.removeFrontEggUser(frontegg_user_id)
+          if(frontegg_user_id == null || frontegg_user_id == undefined) {
+            await userServices.removeFrontEggUser(userDetails.frontegg_user_id)
+          } else if(frontegg_user_id !== null) {
+            await userServices.removeFrontEggUser(frontegg_user_id)
           }
         res
           .status(200)
@@ -1163,7 +1176,7 @@ module.exports = {
         function: 'Users',
         function_type: 'Delete',
         request: {
-          Deleted_By: deletedByUserDetails.first_name + ' ' + deletedByUserDetails.last_name,
+          Deleted_By: deletedByUserDetails?.first_name + ' ' + deletedByUserDetails?.last_name,
           Deleted_UserId: userDetails?.user_id,
           Deleted_User_Name: userDetails?.first_name + ' ' + userDetails?.last_name,
         }
@@ -1335,5 +1348,68 @@ module.exports = {
         .json({ IsSuccess: false, error_log: error, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
       next(error);
     }
-  }
+  },
+
+  enableUser: async (req, res, next) => {
+    try {
+      const { user_id } = req.body;
+      const userDetails = await userServices.getUserById(user_id);
+      const validateUser = await userServices.validateUser(user_id, req.user.cust_id || req.body.cust_id);
+      if (!validateUser.valid && req.user.role !== 'Super Admin') {
+        return res.status(400).json({Message: validateUser.message});
+      }
+      if (userDetails) {
+        const enableUser = await userServices.enableUser(userDetails.frontegg_tenant_id, userDetails.frontegg_user_id);
+        
+        if (enableUser) {
+          res.status(201).json({
+            success: true,
+            Message:"User Enabled"
+          })
+        }
+        next();
+      }
+    } catch (error) {
+      res
+        .status(500)
+        .json({
+          IsSuccess: false,
+          error_log: error,
+          Message: CONSTANTS.INTERNAL_SERVER_ERROR,
+        });
+      next(error);
+    }
+  },
+
+  disableUser: async (req, res, next) => {
+    try {
+      const { user_id } = req.body;
+      const userDetails = await userServices.getUserById(user_id);      
+      const validateUser = await userServices.validateUser(user_id, req.user.cust_id || req.body.cust_id);
+      if (!validateUser.valid && req.user.role !== 'Super Admin') {
+        return res.status(400).json({Message: validateUser.message});
+      }
+      if (userDetails) {
+        const disableUser = await userServices.disableUser(userDetails.frontegg_tenant_id, userDetails.frontegg_user_id);
+        if (disableUser) {
+          res.status(201).json({
+            success: true,
+            Message:"User Disabled"
+          })
+        }
+        next();
+      }
+    } catch (error) {
+      console.log('error==>', error);
+      
+      res
+        .status(500)
+        .json({
+          IsSuccess: false,
+          error_log: error,
+          Message: CONSTANTS.INTERNAL_SERVER_ERROR,
+        });
+      next(error);
+    }
+  },
 };

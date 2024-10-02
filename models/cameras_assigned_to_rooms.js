@@ -11,7 +11,7 @@ const CamerasInRooms = sequelize.define(
       autoIncrement: true
     },
     cam_id: {
-      type: Sequelize.INTEGER,
+      type: Sequelize.STRING(50),
       allowNull: false
     },
     room_id: {

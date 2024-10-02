@@ -2,12 +2,14 @@ const connectToDatabase = require('../models/index');
 const Sequelize = require('sequelize');
 const _ = require('lodash');
 const RoomsInChild = require('../models/rooms_assigned_to_child');
-const moment = require('moment');
+const { v4: uuidv4 } = require("uuid");
+
 module.exports = {
   /* Create new child */
   createChild: async (custID, childObj, t) => {
     let createObj = {
       ...childObj,
+      child_id: uuidv4(),
       status: childObj?.enable_date !== null ? 'Disabled' : 'Enabled',
       scheduled_enable_date: childObj?.enable_date,
       cust_id:custID
@@ -22,6 +24,7 @@ module.exports = {
     let childObjs = childObj?.map((child) => {
       return {
         ...child,
+        child_id: uuidv4(),
         status: child?.enable_date !== null ? 'Disabled' : 'Enabled',
         scheduled_enable_date: child?.enable_date
       };

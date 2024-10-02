@@ -3,6 +3,7 @@ const Sequelize = require("sequelize");
 const { v4: uuidv4 } = require("uuid");
 const Users = require("../models/users");
 const axios = require("axios");
+const CustomerLocations = require("../models/customer_locations");
 
 module.exports = {
   getMaxLiveStramAvailable: async (custId, t) => {
@@ -395,5 +396,21 @@ module.exports = {
     const { CustomerLocations } = await connectToDatabase();
     let deletedLocations = await CustomerLocations.destroy({where: {loc_id: loc_id}});
     return deletedLocations
-  }
+  },
+
+  validateLocation: async (loc, userLocations) => {
+    try {
+      const custLocation = await CustomerLocations.findOne({where: {loc_name: loc}, raw: true, plain: true});
+      if (!custLocation) {
+        return { valid: false, message: 'Location:'+ loc +' not found.' };
+      }
+      if (!userLocations.includes(loc)) {
+        return { valid: false, message: 'Unauthorized access to location:'+ loc};
+      }
+      return { valid: true, message: 'Location is valid.' };
+    } catch (error) {
+      console.error('Error validating location:', error);
+      return { valid: false, message: 'Error validating location.' };
+    }
+  },
 };

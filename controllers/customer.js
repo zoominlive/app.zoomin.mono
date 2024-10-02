@@ -11,6 +11,7 @@ const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const axios = require('axios');
 const { v4: uuidv4 } = require('uuid');
 const Users = require("../models/users");
+const connectToDatabase = require("../models/index");
 
 module.exports = {
   /* Get  customer's details */
@@ -103,6 +104,7 @@ module.exports = {
     const t = await sequelize.transaction();
     try {
       const params = req.body;
+      const cust_id = req.user.cust_id;
       const { user, customer_locations, time_zone } = params;
 
       let locations = customer_locations.flatMap((i) => i);
@@ -110,7 +112,7 @@ module.exports = {
       console.log(user);
       console.log(locations);
       let addLocations = await customerServices.createNewLocation(
-        user,
+        user || cust_id,
         locations,
         timezone,
         t
@@ -361,8 +363,21 @@ module.exports = {
     const t = await sequelize.transaction();
     try {
       const { loc_id } = req.body;
-
-      let deleted = await customerServices.deleteCustomerLocation(loc_id, t);
+      const { CustomerLocations } = await connectToDatabase();
+      const locationDetails = await CustomerLocations.findOne({where: { loc_id: loc_id }, raw: true, plain: true});
+      let deleted;      
+      if (locationDetails.cust_id !== req.user?.cust_id) {
+        await t.rollback();
+        return res
+          .status(404)
+          .json({
+            IsSuccess: false,
+            Data: {},
+            Message: CONSTANTS.CUSTOMER_NOT_FOUND,
+          });
+      } else {
+        deleted = await customerServices.deleteCustomerLocation(loc_id, t);
+      }
 
       if (deleted) {
         res
@@ -378,7 +393,7 @@ module.exports = {
           .json({
             IsSuccess: true,
             Data: {},
-            Message: CONSTANTS.CUSTOMER_NOT_FOUND,
+            Message: CONSTANTS.LOCATION_NOT_FOUND,
           });
       }
       await t.commit();
@@ -401,6 +416,8 @@ module.exports = {
     try {
       const params = req.body;
       const { loc_id, loc_name, time_zone, status } = params;
+      const { CustomerLocations } = await connectToDatabase();
+      const locationDetails = await CustomerLocations.findOne({where: { loc_id: loc_id }, raw: true, plain: true});
       console.log('loc_id', loc_id);
       console.log('loc_name', loc_name);
       let update = {
@@ -408,7 +425,14 @@ module.exports = {
         time_zone: time_zone,
         status: status
       };
-
+      if (locationDetails.cust_id !== req.user?.cust_id) {
+        await t.rollback();
+        return res.status(404).json({
+          IsSuccess: false,
+          Data: {},
+          Message: CONSTANTS.CUSTOMER_NOT_FOUND,
+        });
+      }
       let updateLocation = await CustomerLocations.update(
         update,
         {
@@ -538,7 +562,7 @@ module.exports = {
     try {
       const params = req.query;
       let locations = await customerServices.getLocationDetails(
-        params.cust_id,
+        params.cust_id || req.user.cust_id,
         t
       );
       res.status(200).json({
