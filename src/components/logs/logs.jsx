@@ -168,6 +168,8 @@ const Logs = () => {
   const [allActionsChecked, setAllActionsChecked] = useState(false);
   const [allFunctionChecked, setAllFunctionChecked] = useState(false);
   const [pageReady, setPageReady] = useState(false);
+  const [uncheckedUsers, setUncheckedUsers] = useState(false);
+  const [uncheckedFamilies, setUncheckedFamilies] = useState(false);
 
   const [logsPayload, setLogsPayload] = useState({
     pageNumber: 0,
@@ -548,13 +550,17 @@ const Logs = () => {
       setIsLoading(true);
       let familiesToAdd;
       let usersToAdd;
-      if (selectedFamilies?.length == 0) {
+      if (selectedFamilies?.length == 0 && !uncheckedFamilies) {
         familiesToAdd = families.slice(1, families.length);
         familiesToAdd = familiesToAdd?.map((user) => user.family_member_id);
+      } else {
+        familiesToAdd = null;
       }
-      if (selectedUsers?.length == 0) {
+      if (selectedUsers?.length == 0 && !uncheckedUsers) {
         usersToAdd = users.slice(1, users.length);
         usersToAdd = usersToAdd?.map((user) => user.user_id);
+      } else {
+        usersToAdd = null;
       }
       console.log('logsPayload', logsPayload);
       const newFunctions = _.map(logsPayload.functions, (item) =>
@@ -681,6 +687,7 @@ const Logs = () => {
     } else {
       setAllUsersSelected(false);
       setSelectedUsers(value);
+      setUncheckedUsers(true);
     }
   };
 
@@ -705,6 +712,7 @@ const Logs = () => {
     } else {
       setAllFamiliesSelected(false);
       setSelectedFamilies(value);
+      setUncheckedFamilies(true);
     }
   };
 
@@ -719,7 +727,21 @@ const Logs = () => {
     setLoading(false);
     if (response.status === 200) {
       let formattedResponse = response.data.Data.logs.map((log) => {
-        return { ...log, user: log.user.first_name + ' ' + log.user.last_name };
+        console.log('log==>', log);
+        // eslint-disable-next-line no-unused-vars
+        const { createdAt, function_type, updatedAt, family, user, ...rest } = log;
+        return {
+          ...rest,
+          date: moment(log.createdAt).format('MM-DD-YYYY'),
+          time: moment(log.createdAt).format('hh:mm A'),
+          name: log.user
+            ? log.user?.first_name + ' ' + log.user?.last_name
+            : log.family
+            ? log.family?.first_name + ' ' + log.family?.last_name
+            : '-',
+          type: log.user ? 'User' : log.family ? 'Family' : '',
+          event: log.function_type
+        };
       });
       setResponseData(formattedResponse);
 
@@ -765,6 +787,11 @@ const Logs = () => {
                   ? row?.family?.first_name + ' ' + row?.family?.last_name
                   : 'Not Found'
               }`}</Typography>
+            </Stack>
+          </TableCell>
+          <TableCell component="th" scope="row">
+            <Stack direction="row" alignItems="center" spacing={3}>
+              <Typography>{`${row?.user ? 'Staff' : row.family ? 'Family' : '--'}`}</Typography>
             </Stack>
           </TableCell>
           <TableCell component="th" scope="row">
@@ -1164,7 +1191,7 @@ const Logs = () => {
                         />
                       </Grid>
                       <Grid item md={3} sm={6}>
-                        <InputLabel id="user_name">User Name</InputLabel>
+                        <InputLabel id="user_name">Staff</InputLabel>
                         <Autocomplete
                           labelId="user_name"
                           multiple
@@ -1303,7 +1330,8 @@ const Logs = () => {
                       <TableCell style={{ minWidth: '100px' }} align="left">
                         Time
                       </TableCell>
-                      <TableCell align="left">Staff</TableCell>
+                      <TableCell align="left">Name</TableCell>
+                      <TableCell align="left">Type</TableCell>
                       <TableCell align="left">Event</TableCell>
                       <TableCell align="left">Function</TableCell>
                       <TableCell align="left">Event Description</TableCell>

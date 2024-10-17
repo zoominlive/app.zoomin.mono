@@ -345,8 +345,10 @@ const SchedulerDialog = (props) => {
                     }}>
                     CANCEL
                   </Button>
+                  {console.log('daytimers==>', daytimers)}
                   <LoadingButton
                     loading={loading}
+                    disabled={daytimers?.length == 0 || daytimers == undefined}
                     loadingPosition={loading ? 'start' : undefined}
                     startIcon={loading && <SaveIcon />}
                     variant="text"

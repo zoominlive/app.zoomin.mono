@@ -6,6 +6,7 @@ import {
   Button,
   // Button,
   Chip,
+  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
@@ -56,6 +57,9 @@ const CameraForm = (props) => {
   const [base64Image, setBase64Image] = useState();
   const [image, setImage] = useState();
   const [S3Uri, setS3Uri] = useState();
+  const [locationSelected, setLocationSelected] = useState(false);
+  const [roomOptions, setRoomOptions] = useState([]);
+  const [dropdownLoading, setDropdownLoading] = useState(false);
   const authCtx = useContext(AuthContext);
 
   useEffect(() => {
@@ -68,6 +72,28 @@ const CameraForm = (props) => {
     }
   }, []);
 
+  useEffect(() => {
+    setDropdownLoading(true);
+    API.get(props?.camera?.location ? `rooms?location=${props?.camera?.location}` : `rooms/`, {
+      params: { cust_id: localStorage.getItem('cust_id') }
+    }).then((response) => {
+      setDropdownLoading(true);
+      if (response.status === 200) {
+        const rooms = response.data.Data.finalRoomDetails;
+        setRoomOptions(rooms);
+        setDropdownLoading(false);
+      } else {
+        errorMessageHandler(
+          enqueueSnackbar,
+          response?.response?.data?.Message || 'Something Went Wrong.',
+          response?.response?.status,
+          authCtx.setAuthError
+        );
+        setDropdownLoading(false);
+      }
+    });
+  }, []);
+
   // Method to update the user profile
   const handleSubmit = (data) => {
     console.log('called==>');
@@ -77,7 +103,9 @@ const CameraForm = (props) => {
       s3Uri: S3Uri,
       stream_id: props?.camera?.stream_uuid,
       alias: props.camera?.cam_alias,
-      cust_id: localStorage.getItem('cust_id') ? localStorage.getItem('cust_id') : '',
+      cust_id: localStorage.getItem('cust_id')
+        ? localStorage.getItem('cust_id')
+        : props?.camera?.cust_id,
       location: props?.camera?.location,
       ...data
     };
@@ -195,6 +223,27 @@ const CameraForm = (props) => {
     }
   });
 
+  const handleGetRoomsForSelectedLocation = (location) => {
+    setDropdownLoading(true);
+    API.get(`rooms`, {
+      params: { location: location, cust_id: localStorage.getItem('cust_id') }
+    }).then((response) => {
+      if (response.status === 200) {
+        const rooms = response.data.Data.finalRoomDetails;
+        setRoomOptions(rooms);
+        setDropdownLoading(false);
+      } else {
+        errorMessageHandler(
+          enqueueSnackbar,
+          response?.response?.data?.Message || 'Something Went Wrong.',
+          response?.response?.status,
+          authCtx.setAuthError
+        );
+        setDropdownLoading(false);
+      }
+    });
+  };
+
   const handleClose = () => setIsCloseDialog(!isCloseDialog);
   return (
     <Dialog open={props.open} onClose={handleClose} fullWidth className="add-user-drawer">
@@ -261,7 +310,10 @@ const CameraForm = (props) => {
             cam_name: props?.camera?.cam_name || '',
             cam_uri: props?.camera?.cam_uri || '',
             description: props?.camera?.description || '',
-            location: props?.camera?.location || ''
+            location: props?.camera?.location || '',
+            rooms: props?.camera?.cameras_assigned_to_rooms
+              ? props?.camera?.cameras_assigned_to_rooms
+              : []
           }}
           onSubmit={handleSubmit}>
           {({ values, setFieldValue, touched, errors }) => {
@@ -385,6 +437,8 @@ const CameraForm = (props) => {
                         }
                         onChange={(_, value) => {
                           setFieldValue('location', value);
+                          setLocationSelected(true);
+                          handleGetRoomsForSelectedLocation(value);
                         }}
                         value={values?.location}
                         renderTags={(value, getTagProps) =>
@@ -398,6 +452,64 @@ const CameraForm = (props) => {
                             // placeholder="Location"
                             helperText={touched.location && errors.location}
                             error={touched.location && Boolean(errors.location)}
+                            fullWidth
+                          />
+                        )}
+                      />
+                    </Grid>
+                    <Grid item xs={12} md={12}>
+                      <InputLabel id="rooms">Rooms</InputLabel>
+                      <Autocomplete
+                        labelId="rooms"
+                        fullWidth
+                        multiple
+                        id="rooms"
+                        options={roomOptions && locationSelected ? roomOptions : []}
+                        noOptionsText={!locationSelected ? 'Select location first' : 'No Room'}
+                        isOptionEqualToValue={(option, value) =>
+                          option.room_id === value.room?.room_id || option.room_id === value.room_id
+                        }
+                        getOptionLabel={(option) => {
+                          return option.room_name;
+                        }}
+                        onMouseEnter={() => {
+                          if (values?.location) {
+                            setLocationSelected(true);
+                          }
+                        }}
+                        value={values?.rooms}
+                        onChange={(_, value) => {
+                          console.log('value==>', value);
+                          setFieldValue('rooms', value);
+                        }}
+                        //defaultValue={props?.room?.rooms ? props?.room?.rooms : []}
+                        renderTags={(value, getTagProps) =>
+                          value.map((option, index) => (
+                            <Chip
+                              key={index}
+                              label={option.room?.room_name || option?.room_name}
+                              {...getTagProps({ index })}
+                            />
+                          ))
+                        }
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            disabled={!locationSelected}
+                            InputProps={{
+                              ...params.InputProps,
+                              endAdornment: (
+                                <React.Fragment>
+                                  {dropdownLoading ? (
+                                    <CircularProgress color="inherit" size={20} />
+                                  ) : null}
+                                  {params.InputProps.endAdornment}
+                                </React.Fragment>
+                              )
+                            }}
+                            // placeholder="Camera"
+                            helperText={touched.rooms && errors.rooms}
+                            error={touched.rooms && Boolean(errors.rooms)}
                             fullWidth
                           />
                         )}

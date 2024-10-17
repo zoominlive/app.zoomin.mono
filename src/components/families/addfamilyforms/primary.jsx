@@ -15,11 +15,12 @@ const Primary = (props) => {
   return (
     <>
       <Grid container spacing={2}>
-        <Grid item md={6} sm={12}>
+        <Grid item md={6} sm={12} className="family-form">
           <InputLabel id="first_name">First Name</InputLabel>
           <TextField
             labelId="first_name"
             name="first_name"
+            placeholder="Enter first name"
             value={props?.values?.primary?.first_name ? props?.values?.primary?.first_name : ''}
             onChange={(event) => {
               props.setFieldValue('primary.first_name', event.target.value);
@@ -34,10 +35,11 @@ const Primary = (props) => {
             }}
           />
         </Grid>
-        <Grid item md={6} sm={12}>
+        <Grid item md={6} sm={12} className="family-form">
           <InputLabel id="last_name">Last Name</InputLabel>
           <TextField
             labelId="last_name"
+            placeholder="Enter last name"
             value={props?.values?.primary?.last_name ? props?.values?.primary?.last_name : ''}
             onChange={(event) => {
               props.setFieldValue('primary.last_name', event.target.value);
@@ -49,7 +51,7 @@ const Primary = (props) => {
         </Grid>
       </Grid>
       <Grid container spacing={2} sx={{ marginTop: 2 }}>
-        <Grid item md={12} sm={12}>
+        <Grid item md={6} sm={12} className="family-form">
           <InputLabel id="role">Role</InputLabel>
           <FormControl
             fullWidth
@@ -81,13 +83,12 @@ const Primary = (props) => {
             )}
           </FormControl>
         </Grid>
-      </Grid>
-      <Grid container spacing={2} sx={{ marginTop: 2 }}>
-        <Grid item md={6} sm={12}>
+        <Grid item md={6} sm={12} className="family-form">
           <InputLabel id="phone">Phone</InputLabel>
           <TextField
             labelId="phone"
             value={props?.values?.primary?.phone ? props?.values?.primary?.phone : ''}
+            placeholder="Enter phone number"
             onChange={(event) => {
               props.setFieldValue('primary.phone', event.target.value || '');
             }}
@@ -97,11 +98,14 @@ const Primary = (props) => {
             fullWidth
           />
         </Grid>
-        <Grid item md={6} sm={12}>
+      </Grid>
+      <Grid container spacing={2} sx={{ marginTop: 2 }}>
+        <Grid item md={6} sm={12} className="family-form">
           <InputLabel id="email">Email</InputLabel>
           <TextField
             labelId="email"
             value={props?.values?.primary?.email ? props?.values?.primary?.email : ''}
+            placeholder="Enter email address"
             onChange={(event) => {
               props.setFieldValue('primary.email', event.target.value);
             }}

@@ -298,11 +298,12 @@ const ParentsForm = (props) => {
               <Form>
                 <DialogContent>
                   <Grid container spacing={2}>
-                    <Grid item md={6} sm={12}>
+                    <Grid item md={6} sm={12} className="family-form">
                       <InputLabel id="first_name">First Name</InputLabel>
                       <TextField
                         labelId="first_name"
                         name={'first_name'}
+                        placeholder="Enter First Name"
                         value={values?.first_name}
                         onChange={(event) => {
                           setFieldValue('first_name', event.target.value);
@@ -312,11 +313,12 @@ const ParentsForm = (props) => {
                         fullWidth
                       />
                     </Grid>
-                    <Grid item md={6} sm={12}>
+                    <Grid item md={6} sm={12} className="family-form">
                       <InputLabel id="last_name">Last Name</InputLabel>
                       <TextField
                         labelId="last_name"
                         name={'last_name'}
+                        placeholder="Enter Last Name"
                         value={values?.last_name}
                         onChange={(event) => {
                           setFieldValue('last_name', event.target.value);
@@ -326,7 +328,7 @@ const ParentsForm = (props) => {
                         fullWidth
                       />
                     </Grid>
-                    <Grid item md={12} sm={12}>
+                    <Grid item md={6} sm={12}>
                       <InputLabel id="role">Role</InputLabel>
                       <FormControl
                         fullWidth
@@ -355,11 +357,12 @@ const ParentsForm = (props) => {
                         )}
                       </FormControl>
                     </Grid>
-                    <Grid item md={6} sm={12}>
+                    <Grid item md={6} sm={12} className="family-form">
                       <InputLabel id="phone">Phone</InputLabel>
                       <TextField
                         labelId="phone"
                         name={'phone'}
+                        placeholder="Enter Phone Number"
                         value={values?.phone || ''}
                         onChange={(event) => {
                           setFieldValue('phone', event.target.value ? event.target.value : '');
@@ -370,11 +373,12 @@ const ParentsForm = (props) => {
                         fullWidth
                       />
                     </Grid>
-                    <Grid item md={6} sm={12}>
+                    <Grid item md={6} sm={12} className="family-form">
                       <InputLabel id="email">Email</InputLabel>
                       <TextField
                         labelId="email"
                         name={'email'}
+                        placeholder="Enter Email"
                         value={values?.email}
                         onChange={(event) => {
                           setFieldValue('email', event.target.value);

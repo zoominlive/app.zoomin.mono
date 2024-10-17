@@ -8,14 +8,16 @@ import {
   Typography,
   Tooltip,
   Chip,
-  Switch
+  Switch,
+  Divider,
+  styled
 } from '@mui/material';
 import RoomAddForm from './roomaddform';
 import SchedulerFrom from './scheduler';
 // import BlockIcon from '@mui/icons-material/Block';
 // import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import EditSchedule from '../../assets/schedule.svg';
-import Schedule from '../../assets/new-schedule.svg';
+import Schedule from '../../assets/clock.svg';
 import DeleteScheduleIcon from '../../assets/delete-icon.svg';
 import React from 'react';
 import PropTypes from 'prop-types';
@@ -43,6 +45,40 @@ import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import NewDeleteDialog from '../common/newdeletedialog';
 import PrimaryMemberDeleteDialog from './primaryMemberDeleteDialog';
+
+// Styled MUI Switch Component
+const CustomSwitch = styled(Switch)(({ theme }) => ({
+  width: 42,
+  height: 26,
+  padding: 0,
+  display: 'flex',
+  '&:active .MuiSwitch-thumb': {
+    width: 22
+  },
+  '& .MuiSwitch-switchBase': {
+    padding: 2,
+    '&.Mui-checked': {
+      transform: 'translateX(16px)',
+      color: '#fff',
+      '& + .MuiSwitch-track': {
+        backgroundColor: '#5A53DD !important', // Your purple color for active state
+        opacity: 1
+      }
+    }
+  },
+  '& .MuiSwitch-thumb': {
+    width: 22,
+    height: 22,
+    backgroundColor: '#fff',
+    boxShadow: theme.shadows[1]
+  },
+  '& .MuiSwitch-track': {
+    borderRadius: 26 / 2,
+    backgroundColor: '#BDBDBD !important', // Grey color for inactive state
+    opacity: 1
+  }
+}));
+
 const FamilyDrawer = (props) => {
   const authCtx = useContext(AuthContext);
   const { enqueueSnackbar } = useSnackbar();
@@ -115,6 +151,7 @@ const FamilyDrawer = (props) => {
 
   // Method to delete child
   const handleChildDelete = () => {
+    console.log('reached==>');
     let data = {
       [isDeleteTitle == 'Delete Child' || isDeleteTitle == "Delete Child's Room"
         ? 'child_id'
@@ -548,13 +585,16 @@ const FamilyDrawer = (props) => {
           props.setOpen(false);
         }
       }}>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" p={2}>
-        <Typography variant="h5">Family</Typography>
+      <Stack direction="column">
+        <Typography fontWeight={600} fontSize={'22px'} color={'#343434'}>
+          Family Management
+        </Typography>
+        <Typography variant="subtitle1" color="#828282">
+          Manage your family members, children&apos;s detail here
+        </Typography>
       </Stack>
-      <Typography variant="h6" className="title">
-        Family Management
-      </Typography>
-      <Stack direction="row" mt={2} alignItems="center" justifyContent={'flex-start'} spacing={1}>
+      <Divider sx={{ margin: '24px 0px' }} />
+      <Stack direction="row" alignItems="center" justifyContent={'flex-start'} spacing={1}>
         {props?.family?.primary?.status === 'Disabled' ? (
           <LoadingButton
             //className="add_family_member_btn"
@@ -638,80 +678,114 @@ const FamilyDrawer = (props) => {
           </>
         )}
       </Stack>
-
-      <Typography variant="h6" className="title">
-        Primary Family Member
-      </Typography>
-      <Stack
-        spacing={1.5}
-        px={2.5}
-        direction="row"
-        alignItems="center"
-        justifyContent="space-between"
-        className="family_member_wrap">
-        <Stack spacing={1.5} direction="row" alignItems="center">
-          <Box className="viewer-profile">
-            <Box className="profile-img">
-              <Avatar
-                title={
+      <Box
+        sx={{
+          border: '1px solid #EBE8FF',
+          borderRadius: '16px',
+          padding: '24px',
+          marginTop: '24px'
+        }}>
+        <Typography variant="h6" className="title">
+          Primary Family Member
+        </Typography>
+        <Stack
+          spacing={1.5}
+          px={2.5}
+          direction="row"
+          alignItems="center"
+          justifyContent="space-between"
+          className="family_member_wrap">
+          <Stack spacing={1.5} direction="row" alignItems="center">
+            <Box className="viewer-profile">
+              <Box className="profile-img">
+                <Avatar
+                  title={
+                    !_.isEmpty(props?.family?.primary) &&
+                    `${props?.family?.primary?.first_name[0]?.toUpperCase()}${props?.family?.primary?.last_name[0]?.toUpperCase()}`
+                  }
+                  sx={{
+                    color: '#343434',
+                    width: 64,
+                    height: 64,
+                    fontWeight: 600,
+                    fontSize: '1.375rem'
+                  }}
+                  src={props?.family?.primary?.profile_image}>{`${
                   !_.isEmpty(props?.family?.primary) &&
-                  `${props?.family?.primary?.first_name[0]?.toUpperCase()}${props?.family?.primary?.last_name[0]?.toUpperCase()}`
-                }
-                src={props?.family?.primary?.profile_image}>{`${
-                !_.isEmpty(props?.family?.primary) &&
-                props?.family?.primary?.first_name[0]?.toUpperCase()
-              }${
-                !_.isEmpty(props?.family?.primary) &&
-                props?.family?.primary?.last_name[0]?.toUpperCase()
-              }`}</Avatar>
+                  props?.family?.primary?.first_name[0]?.toUpperCase()
+                }${
+                  !_.isEmpty(props?.family?.primary) &&
+                  props?.family?.primary?.last_name[0]?.toUpperCase()
+                }`}</Avatar>
+              </Box>
             </Box>
-          </Box>
-          <Stack>
-            <Stack direction="row" spacing={1.5}>
-              <Typography variant="body2">
-                {props?.family?.primary?.first_name &&
-                  capitalizeFirstLetter(props?.family?.primary?.first_name)}{' '}
-                {props?.family?.primary?.last_name &&
-                  capitalizeFirstLetter(props?.family?.primary?.last_name)}
-              </Typography>
+            <Stack>
+              <Stack direction="row" spacing={1.5} alignItems={'center'}>
+                <Typography
+                  fontWeight={600}
+                  fontSize={'16px'}
+                  lineHeight={'30px'}
+                  color={'#343434'}>
+                  {props?.family?.primary?.first_name &&
+                    capitalizeFirstLetter(props?.family?.primary?.first_name)}{' '}
+                  {props?.family?.primary?.last_name &&
+                    capitalizeFirstLetter(props?.family?.primary?.last_name)}
+                </Typography>
 
-              {/* <Divider orientation="vertical" variant="middle" flexItem /> */}
-              <Chip label={props?.family?.primary?.relationship} />
-              {/* <Typography variant="body2" className="blue-text">
-                {props?.family?.primary?.relationship}
-              </Typography> */}
+                {/* <Divider orientation="vertical" variant="middle" flexItem /> */}
+                <Chip
+                  label={props?.family?.primary?.relationship}
+                  sx={{
+                    borderRadius: '50px !important',
+                    backgroundColor: '#EBE8FF !important',
+                    color: '#5A53DD !important',
+                    textTransform: 'uppercase'
+                  }}
+                />
+                {/* <Typography variant="body2" className="blue-text">
+                  {props?.family?.primary?.relationship}
+                </Typography> */}
+              </Stack>
+              <Typography variant="caption" color={'#828282'}>
+                {props?.family?.primary?.email}
+              </Typography>
             </Stack>
-            <Typography variant="caption">{props?.family?.primary?.email}</Typography>
           </Stack>
+          <Box>
+            <IconButton
+              className="edit-btn"
+              onClick={() => {
+                props.setPrimaryParent(props?.family?.primary);
+                props.setParentType('primary');
+                props.setIsParentFormDialogOpen(true);
+              }}>
+              <EditOutlinedIcon className="edit-parent" />
+            </IconButton>
+            <IconButton
+              onClick={() => {
+                setIsPrimaryMemberDeleteOpen(true);
+                // setIsDeleteChildDialogOpen(true);
+                // setIsDeleteTitle('Delete Primary Member');
+                // setIsDeleteContext(
+                //   props.family.secondary.length > 0
+                //     ? 'Select new primary member'
+                //     : 'You can not delete the primary family member without another family member to take its place'
+                // );
+                // setToDelete(props?.family?.primary?.family_member_id);
+              }}>
+              <DeleteOutlineIcon className="delete-parent" />
+            </IconButton>
+          </Box>
         </Stack>
-        <Box>
-          <IconButton
-            className="edit-btn"
-            onClick={() => {
-              props.setPrimaryParent(props?.family?.primary);
-              props.setParentType('primary');
-              props.setIsParentFormDialogOpen(true);
-            }}>
-            <EditOutlinedIcon />
-          </IconButton>
-          <IconButton
-            onClick={() => {
-              setIsPrimaryMemberDeleteOpen(true);
-              // setIsDeleteChildDialogOpen(true);
-              // setIsDeleteTitle('Delete Primary Member');
-              // setIsDeleteContext(
-              //   props.family.secondary.length > 0
-              //     ? 'Select new primary member'
-              //     : 'You can not delete the primary family member without another family member to take its place'
-              // );
-              // setToDelete(props?.family?.primary?.family_member_id);
-            }}>
-            <DeleteOutlineIcon />
-          </IconButton>
-        </Box>
-      </Stack>
+      </Box>
       {props?.family?.secondary && props?.family?.secondary?.length > 0 && (
-        <>
+        <Box
+          sx={{
+            border: '1px solid #EBE8FF',
+            borderRadius: '16px',
+            padding: '24px',
+            marginTop: '24px'
+          }}>
           <Typography variant="h6" className="title">
             Other Family Members
           </Typography>
@@ -724,29 +798,50 @@ const FamilyDrawer = (props) => {
                 alignItems="center"
                 justifyContent="space-between"
                 className="family_member_wrap">
-                <Stack direction="row" spacing={1.5}>
+                <Stack direction="row" spacing={1.5} alignItems="center">
                   <Box className="viewer-profile">
                     <Box className="profile-img">
                       <Avatar
+                        sx={{
+                          color: '#343434',
+                          width: 64,
+                          height: 64,
+                          fontWeight: 600,
+                          fontSize: '1.375rem'
+                        }}
                         src={
                           parent?.profile_image
                         }>{`${parent?.first_name[0]?.toUpperCase()}${parent?.last_name[0]?.toUpperCase()}`}</Avatar>
                     </Box>
                   </Box>
                   <Stack>
-                    <Stack direction="row" spacing={1.5}>
-                      <Typography variant="body2">
+                    <Stack direction="row" spacing={1.5} alignItems={'center'}>
+                      <Typography
+                        fontWeight={600}
+                        fontSize={'16px'}
+                        lineHeight={'30px'}
+                        color={'#343434'}>
                         {' '}
                         {capitalizeFirstLetter(parent?.first_name)}{' '}
                         {capitalizeFirstLetter(parent?.last_name)}
                       </Typography>
                       {/* <Divider orientation="vertical" variant="middle" flexItem /> */}
-                      <Chip label={parent?.relationship} />
+                      <Chip
+                        label={parent?.relationship}
+                        sx={{
+                          borderRadius: '50px !important',
+                          backgroundColor: '#EBE8FF !important',
+                          color: '#5A53DD !important',
+                          textTransform: 'uppercase'
+                        }}
+                      />
                       {/* <Typography variant="body2" className="blue-text">
                         {parent?.relationship}
                       </Typography> */}
                     </Stack>
-                    <Typography variant="caption">{parent?.email}</Typography>
+                    <Typography variant="caption" color={'#828282'}>
+                      {parent?.email}
+                    </Typography>
                   </Stack>
                 </Stack>
                 <Stack direction="row" spacing={1.5} alignItems="center" justifyContent="center">
@@ -784,7 +879,7 @@ const FamilyDrawer = (props) => {
                   )}
 
                   {parent.status === 'Disabled' ? (
-                    <Switch
+                    <CustomSwitch
                       className={`switch-disable`}
                       checked={false}
                       onChange={() => {
@@ -795,7 +890,7 @@ const FamilyDrawer = (props) => {
                   ) : (
                     <>
                       {parent?.scheduled_end_date == null && (
-                        <Switch
+                        <CustomSwitch
                           className={`switch-enable`}
                           checked={true}
                           onChange={() => {
@@ -824,25 +919,33 @@ const FamilyDrawer = (props) => {
                       props.setParentType('secondary');
                       props.setIsParentFormDialogOpen(true);
                     }}>
-                    <EditOutlinedIcon />
+                    <EditOutlinedIcon className="edit-parent" />
                   </IconButton>
                   <IconButton
+                    className="edit-btn"
                     onClick={() => {
                       setIsDeleteChildDialogOpen(true);
                       setIsDeleteTitle('Delete Family Member');
                       setIsDeleteContext('Are you sure you want to delete this family member?');
                       setToDelete(parent.family_member_id);
                     }}>
-                    <DeleteOutlineIcon />
+                    <DeleteOutlineIcon className="delete-parent" />
                   </IconButton>
                 </Stack>
               </Stack>
             </Box>
           ))}
-        </>
+        </Box>
       )}
       {props?.family?.children && props?.family?.children?.length > 0 && (
-        <>
+        <Box
+          sx={{
+            border: '1px solid #EBE8FF',
+            borderRadius: '16px',
+            padding: '24px',
+            marginTop: '24px',
+            marginBottom: '50px'
+          }}>
           <Typography variant="h6" className="title">
             Children
           </Typography>
@@ -854,10 +957,22 @@ const FamilyDrawer = (props) => {
                     <Stack direction="row" spacing={2} alignItems="center">
                       <Box className="viewer-profile">
                         <Box className="profile-img">
-                          <Avatar>{`${child?.first_name[0]?.toUpperCase()}${child?.last_name[0]?.toUpperCase()}`}</Avatar>
+                          <Avatar
+                            sx={{
+                              color: '#343434',
+                              width: 64,
+                              height: 64,
+
+                              fontWeight: 600,
+                              fontSize: '1.375rem'
+                            }}>{`${child?.first_name[0]?.toUpperCase()}${child?.last_name[0]?.toUpperCase()}`}</Avatar>
                         </Box>
                       </Box>
-                      <Typography variant="body2">
+                      <Typography
+                        fontWeight={600}
+                        fontSize={'16px'}
+                        lineHeight={'30px'}
+                        color={'#343434'}>
                         {' '}
                         {capitalizeFirstLetter(child?.first_name)}{' '}
                         {capitalizeFirstLetter(child?.last_name)}
@@ -961,7 +1076,7 @@ const FamilyDrawer = (props) => {
                             //     handleChildEnable(child.child_id, index);
                             //   }}></BlockIcon>
 
-                            <Switch
+                            <CustomSwitch
                               className="switch-disable"
                               checked={false}
                               onChange={() => {
@@ -985,7 +1100,7 @@ const FamilyDrawer = (props) => {
                                   setDisableDialogTitle('Disable Child');
                                 }}></CheckCircleIcon> */}
 
-                              <Switch
+                              <CustomSwitch
                                 className="switch-enable"
                                 checked={true}
                                 onChange={() => {
@@ -1008,7 +1123,7 @@ const FamilyDrawer = (props) => {
                           props.setChild(child);
                           props.setIsChildFormDialogOpen(true);
                         }}>
-                        <EditIcon />
+                        <EditIcon className="edit-parent" />
                       </IconButton>
                       {props?.family?.children.length !== 1 && (
                         <IconButton
@@ -1021,7 +1136,7 @@ const FamilyDrawer = (props) => {
                             setIsDeleteContext('Are you sure you want to delete this child?');
                           }}>
                           {/* <DeleteIcon className="delete-icon" /> */}
-                          <DeleteOutlineIcon />
+                          <DeleteOutlineIcon className="delete-parent" />
                         </IconButton>
                       )}
                     </Stack>
@@ -1038,7 +1153,7 @@ const FamilyDrawer = (props) => {
                           <Stack px={2.5}>
                             <Stack direction="row" spacing={1.5}>
                               <Typography variant="body2">
-                                <Box sx={{ fontWeight: 'bold' }}>
+                                <Box sx={{ fontWeight: 'bold', fontSize: '16px' }}>
                                   {room?.room?.room_name &&
                                     capitalizeFirstLetter(room?.room?.room_name)}
                                 </Box>
@@ -1049,7 +1164,7 @@ const FamilyDrawer = (props) => {
                                 display: 'flex',
                                 alignItems: 'center'
                               }}>
-                              <Typography variant="caption">
+                              <Typography variant="caption" color={'#828282'}>
                                 {room?.scheduled_enable_date
                                   ? 'Enable date: ' + room?.scheduled_enable_date + '  '
                                   : room?.scheduled_disable_date
@@ -1076,7 +1191,7 @@ const FamilyDrawer = (props) => {
                           spacing={1.5}
                           alignItems="center"
                           justifyContent="center">
-                          <Switch
+                          <CustomSwitch
                             className={`switch-${room?.disabled == 'true' ? 'enable' : 'disable'}`}
                             checked={room?.disabled == 'true' ? false : true}
                             onChange={() => {
@@ -1096,7 +1211,7 @@ const FamilyDrawer = (props) => {
                               setRoomOpenInScheduler(room);
                               setIsSchedulerOpen(true);
                             }}
-                            style={{ height: '1.5rem' }}
+                            style={{ height: '1.5rem', width: '1.5rem' }}
                             className="curser-pointer"></img>
                           <IconButton
                             //className="child-delete-btn"
@@ -1108,7 +1223,7 @@ const FamilyDrawer = (props) => {
                               setIsDeleteContext('Are you sure you want to delete this room?');
                             }}
                             className="edit-btn">
-                            <DeleteOutlineIcon />
+                            <DeleteOutlineIcon className="delete-parent" />
                           </IconButton>
                           {/* <BlockIcon
                             className={
@@ -1135,6 +1250,7 @@ const FamilyDrawer = (props) => {
                   <Button
                     startIcon={<AddIcon />}
                     className="add-room-btn"
+                    variant="outlined"
                     onClick={() => {
                       setExistingRooms(child.roomsInChild);
                       setIsRoomAddDialogOpen(true);
@@ -1146,7 +1262,7 @@ const FamilyDrawer = (props) => {
               </Stack>
             ))}
           </Stack>
-        </>
+        </Box>
       )}
 
       <NewDeleteDialog

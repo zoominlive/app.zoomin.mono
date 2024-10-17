@@ -65,9 +65,9 @@ const topViewersColumns = [
   // { label: 'Views', width: '45%' }
 ];
 const lastHourViewersColumns = [
-  { label: 'Viewers', width: '31%' },
-  { label: 'Children', width: '25%' },
-  { label: 'Room', width: '25%' }
+  { label: 'Viewers', width: '30%' },
+  { label: 'Children', width: '30%' },
+  { label: 'Room', width: '30%' }
 ];
 const streamColumns = ['Stream Name', 'Time', 'Room'];
 

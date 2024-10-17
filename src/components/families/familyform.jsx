@@ -11,7 +11,9 @@ import {
   Stack,
   Step,
   StepLabel,
-  Stepper
+  Stepper,
+  Typography,
+  styled
 } from '@mui/material';
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
@@ -30,11 +32,49 @@ import { errorMessageHandler } from '../../utils/errormessagehandler';
 import * as yup from 'yup';
 import moment from 'moment-timezone';
 import CloseIcon from '@mui/icons-material/Close';
+import CheckCircleIcon from '../../assets/completed-step.svg'; // For active icon
+import ActiveStep from '../../assets/active-step.svg'; // For active icon
+import InactiveStep from '../../assets/inactive-step.svg';
+
 const STEPS = [
-  'Enter the primary family members details',
-  'Add additional family members that watch the stream or click Next Step',
-  'Add any children that belong to this family'
+  { label: 'Primary Member', description: 'Add Primary Member' },
+  { label: 'Other Members', description: 'Add Other Members' },
+  { label: 'Children', description: 'Children Details' }
 ];
+
+// Custom Styling for Stepper Container
+const CustomStepper = styled(Stepper)({
+  backgroundColor: '#F7F8FC', // Light gray background as per your screenshot
+  borderRadius: '8px',
+  padding: '16px',
+  justifyContent: 'space-around'
+});
+
+// Custom Styling for StepLabel to hide step numbers
+const CustomStepLabel = styled(StepLabel)({
+  '& .MuiStepLabel-labelContainer': {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center'
+  },
+  '& .MuiStepLabel-label': {
+    fontWeight: '500'
+  }
+});
+
+// Custom StepIcon Component
+// eslint-disable-next-line react/prop-types
+const StepIcon = ({ active, completed }) => (
+  <>
+    {completed ? (
+      <img src={CheckCircleIcon} alt="CheckCircleIcon" />
+    ) : active ? (
+      <img src={ActiveStep} alt="ActiveStep" />
+    ) : (
+      <img src={InactiveStep} alt="InactiveStep" />
+    )}
+  </>
+);
 
 const AddFamily = (props) => {
   const authCtx = useContext(AuthContext);
@@ -398,15 +438,24 @@ const AddFamily = (props) => {
             <Form>
               <DialogContent>
                 <Box mt={2}>
-                  <Stepper activeStep={activeStep}>
-                    {STEPS.map((label) => (
-                      <Step key={label}>
-                        <StepLabel>{label}</StepLabel>
+                  <CustomStepper activeStep={activeStep}>
+                    {STEPS.map((step, index) => (
+                      <Step key={index}>
+                        <CustomStepLabel StepIconComponent={StepIcon}>
+                          {/* <Box sx={{ display: 'flex', flexDirection: 'column' }}> */}
+                          <Typography variant="subtitle1" fontWeight="bold">
+                            {step.label}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {step.description}
+                          </Typography>
+                          {/* </Box> */}
+                        </CustomStepLabel>
                       </Step>
                     ))}
-                  </Stepper>
+                  </CustomStepper>
                 </Box>
-                <Box p={3}>
+                <Box paddingY={3}>
                   {renderStepContent(activeStep, values, setFieldValue, touched, errors)}
                 </Box>
               </DialogContent>
@@ -424,20 +473,31 @@ const AddFamily = (props) => {
                       //className="add-btn save-changes-btn"
                       className="log-btn"
                       variant="outlined"
-                      sx={{ marginRight: 1.5 }}
+                      sx={{ marginRight: 1.5, borderRadius: '60px !important' }}
                       onClick={handleBack}>
-                      Previous Step
+                      Back
+                    </Button>
+                  )}
+                  {activeStep == 0 && (
+                    <Button
+                      //className="add-btn save-changes-btn"
+                      className="log-btn"
+                      variant="outlined"
+                      sx={{ marginRight: 1.5, borderRadius: '60px !important' }}
+                      onClick={handleFormDialogClose}>
+                      Cancel
                     </Button>
                   )}
                   <LoadingButton
                     className="add-btn save-changes-btn"
+                    sx={{ borderRadius: '60px !important' }}
                     loading={submitLoading || isValidating}
                     loadingPosition={submitLoading || isValidating ? 'start' : undefined}
                     startIcon={(submitLoading || isValidating) && <SaveIcon />}
                     variant="text"
                     // onClick={handleFormSubmit}
                     type="submit">
-                    {activeStep === STEPS.length - 1 ? 'Finish' : 'Next Step'}
+                    {activeStep === STEPS.length - 1 ? 'Finish' : 'Next'}
                   </LoadingButton>
                 </Stack>
                 {/* </Stack> */}

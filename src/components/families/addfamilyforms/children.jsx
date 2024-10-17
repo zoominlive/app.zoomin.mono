@@ -56,12 +56,13 @@ const Children = (props) => {
                 props.values.children.length > 0 &&
                 props.values.children.map((_, index) => (
                   <>
-                    <Grid item md={6} sm={12}>
+                    <Grid item md={6} sm={12} className="family-form">
                       <InputLabel id="child_first_name">Child First Name</InputLabel>
                       <TextField
                         name={`children.${index}.first_name`}
                         labelId="child_first_name"
                         value={props?.values?.children[index]?.first_name}
+                        placeholder="Enter first name"
                         onChange={(event) => {
                           props.setFieldValue(`children[${index}].first_name`, event.target.value);
                         }}
@@ -88,12 +89,13 @@ const Children = (props) => {
                         }
                       />
                     </Grid>
-                    <Grid item md={6} sm={12}>
+                    <Grid item md={6} sm={12} className="family-form">
                       <InputLabel id="child_last_name">Child Last Name</InputLabel>
                       <TextField
                         labelId="child_last_name"
                         name={`children.${index}.last_name`}
                         value={props?.values?.children[index]?.last_name}
+                        placeholder="Enter last name"
                         onChange={(event) => {
                           props.setFieldValue(`children[${index}].last_name`, event.target.value);
                         }}
@@ -121,7 +123,7 @@ const Children = (props) => {
                       />
                     </Grid>
 
-                    <Grid item md={6} sm={12}>
+                    <Grid item md={6} sm={12} className="family-form">
                       <InputLabel id="locations">Locations</InputLabel>
                       <Autocomplete
                         labelId="locations"
@@ -169,7 +171,7 @@ const Children = (props) => {
                         )}
                       />
                     </Grid>
-                    <Grid item md={6} sm={12}>
+                    <Grid item md={6} sm={12} className="family-form">
                       <InputLabel id="rooms">Rooms</InputLabel>
                       <Autocomplete
                         labelId="rooms"

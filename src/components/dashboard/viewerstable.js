@@ -51,7 +51,7 @@ export default function ViewersTable({ rows, columns, title, pagination, isLoadi
                 {column.label}
               </Box>
             ))}
-            <Box key={'action'} style={{ width: '25%' }}></Box>
+            <Box key={'action'} style={{ width: '10%' }}></Box>
           </Box>
         </Box>
 
@@ -103,7 +103,7 @@ export default function ViewersTable({ rows, columns, title, pagination, isLoadi
                           lastHoursUsers: true
                         }}>
                         <Box className="div-row row-marging zl__tr-viewers-block">
-                          <Box className="zl__td-block" style={{ width: '31%' }}>
+                          <Box className="zl__td-block" style={{ width: '30%' }}>
                             <Stack direction={'row'} alignItems={'center'} gap={1}>
                               <Box className="viewer-profile">
                                 <Box className="profile-img">
@@ -120,13 +120,21 @@ export default function ViewersTable({ rows, columns, title, pagination, isLoadi
                                   )}
                                 </Box>
                               </Box>
-                              {(row?.family?.first_name || row?.user?.first_name) +
-                                ' ' +
-                                (row?.family?.last_name || row?.user?.last_name)}
+                              <div
+                                style={{ textOverflow: 'ellipsis', overflow: 'hidden' }}
+                                title={
+                                  (row?.family?.first_name || row?.user?.first_name) +
+                                  ' ' +
+                                  (row?.family?.last_name || row?.user?.last_name)
+                                }>
+                                {(row?.family?.first_name || row?.user?.first_name) +
+                                  ' ' +
+                                  (row?.family?.last_name || row?.user?.last_name)}
+                              </div>
                             </Stack>
                           </Box>
 
-                          <Box className="zl__td-block" style={{ width: '25%' }}>
+                          <Box className="zl__td-block" style={{ width: '30%' }}>
                             {row.family?.children?.length > 0 ? (
                               row?.family?.children?.map(
                                 (child, index) =>
@@ -137,7 +145,7 @@ export default function ViewersTable({ rows, columns, title, pagination, isLoadi
                               <Box>{'--'}</Box>
                             )}
                           </Box>
-                          <Box className="zl__td-block" style={{ width: '25%' }}>
+                          <Box className="zl__td-block" style={{ width: '30%' }}>
                             {row?.family?.children[0]?.roomsInChild &&
                             row?.family?.children[0]?.roomsInChild.length > 0 ? (
                               row?.family?.children[0]?.roomsInChild?.map((room, index) => (
@@ -150,7 +158,7 @@ export default function ViewersTable({ rows, columns, title, pagination, isLoadi
                               <Box>{'--'}</Box>
                             )}
                           </Box>
-                          <Box className="zl__td-block" style={{ width: '25%', textAlign: 'end' }}>
+                          <Box className="zl__td-block" style={{ width: '10%', textAlign: 'end' }}>
                             <KeyboardArrowRightIcon />
                           </Box>
                         </Box>

@@ -240,11 +240,12 @@ const ChildForm = (props) => {
               <Form>
                 <DialogContent>
                   <Grid container spacing={3}>
-                    <Grid item md={6} sm={12}>
+                    <Grid item md={6} sm={12} className="family-form">
                       <InputLabel id="first_name">Child First Name</InputLabel>
                       <TextField
                         labelId="first_name"
                         name="first_name"
+                        placeholder="Enter First Name"
                         value={values.first_name}
                         onChange={(event) => {
                           setFieldValue('first_name', event.target.value);
@@ -254,11 +255,12 @@ const ChildForm = (props) => {
                         fullWidth
                       />
                     </Grid>
-                    <Grid item md={6} sm={12}>
+                    <Grid item md={6} sm={12} className="family-form">
                       <InputLabel id="last_name">Child Last Name</InputLabel>
                       <TextField
                         labelId="last_name"
                         name="last_name"
+                        placeholder="Enter Last Name"
                         value={values.last_name}
                         onChange={(event) => {
                           setFieldValue('last_name', event.target.value);
@@ -268,7 +270,7 @@ const ChildForm = (props) => {
                         fullWidth
                       />
                     </Grid>
-                    <Grid item md={6} sm={12}>
+                    <Grid item md={6} sm={12} className="family-form">
                       <InputLabel id="locations">Locations</InputLabel>
                       <Autocomplete
                         labelId="locations"
@@ -297,7 +299,7 @@ const ChildForm = (props) => {
                         )}
                       />
                     </Grid>
-                    <Grid item md={6} sm={12}>
+                    <Grid item md={6} sm={12} className="family-form">
                       <InputLabel id="rooms">Rooms</InputLabel>
                       <Autocomplete
                         labelId="rooms"

@@ -1252,7 +1252,7 @@
     display: block !important;
     max-width: 560px;
     width: 560px;
-    padding: 0px 20px;
+    padding: 35px 35px;
     border-top-left-radius: 15px;
     border-bottom-left-radius: 15px;
 
@@ -1266,6 +1266,7 @@
       font-size: 20px !important;
       border-radius: 50%;
       color: #455a64;
+      padding: unset;
     }
 
     .child-delete-btn {
@@ -1295,9 +1296,10 @@
     // }
 
     .title {
-      font-size: 14px;
-      color: #5a53dd;
-      margin: 35px 0px 17px 0px;
+      font-size: 20px;
+      color: #343434;
+      margin: 0px 0px 16px 0px;
+      line-height: 30px;
     }
 
     .disabled-btn,
@@ -1314,12 +1316,12 @@
     }
   }
   .family_member_wrap {
-    border: 1px solid #d3cbfb;
     border-radius: 15px;
     padding: 15px;
     margin: 10px 0px;
+    background-color: #F5F7FA;
     .MuiChip-label {
-      font-weight: 400;
+      font-weight: 600;
       font-size: 13px;
       line-height: 18px;
       letter-spacing: 0.16px;
@@ -1331,6 +1333,14 @@
     .add-room-btn {
       width: 138px !important;
       color: #455a64 !important;
+      border: 1px solid #5A53DD;
+      border-radius: 60px;
+    }
+    .delete-parent {
+      color: #D42C2C !important;
+    }
+    .edit-parent {
+      color: #5A53DD !important;
     }
     .delete-icon {
       color: #fff !important;
@@ -3152,6 +3162,71 @@
     padding: 8px !important;
     svg {
       font-size: 30px !important;
+    }
+  }
+}
+
+.family-form {
+  .MuiInputBase-root {
+    border-radius: 15px;
+    background-color: #FAFAFF;
+  }
+}
+
+.family-button-wrapper {
+  display: flex !important;
+  align-items: center !important;
+  // justify-content: center;
+  height: 100%;
+  width: 100%;
+
+  .family-delete-btn {
+    text-transform: capitalize;
+    color: #343434;
+    font-size: 1rem;
+    &.MuiLoadingButton-root {
+      background: transparent !important;
+      box-shadow: none !important;
+      min-width: 50px !important;
+    }
+
+    &:hover {
+      background: transparent;
+    }
+
+    .MuiSvgIcon-root {
+      color: #d21919 !important;
+      width: 20px;
+      height: 20px;
+    }
+
+    .MuiButton-startIcon {
+      margin-right: unset;
+    }
+  }
+
+  .family-add-btn {
+    border-radius: 64px;
+    line-height: 20px;
+    height: 50px;
+    font-weight: 500;
+    font-size: 14px;
+    text-transform: capitalize;
+  }
+}
+
+.other-members-wrapper {
+  padding: 40px 24px;
+  background-color: #EDECFF;
+  border-radius: 16px;
+}
+
+.other-members-divider {
+  .MuiDialog-container {
+    .MuiDialog-paper {
+      .MuiDivider-root {
+        margin: 24px 0px !important;
+      }
     }
   }
 }

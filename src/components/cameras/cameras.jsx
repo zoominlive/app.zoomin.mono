@@ -24,7 +24,7 @@ import {
 } from '@mui/material';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useContext } from 'react';
-import { Plus } from 'react-feather';
+import { Plus, Video } from 'react-feather';
 import LayoutContext from '../../context/layoutcontext';
 import CameraForm from './cameraform';
 import CameraActions from './cameraactions';
@@ -270,6 +270,7 @@ const Cameras = () => {
                     <TableCell style={{ minWidth: '100px' }} align="left">
                       Location
                     </TableCell>
+                    <TableCell align="left">Rooms</TableCell>
                     <TableCell align="left">Description</TableCell>
                     <TableCell align="left">URL</TableCell>
                     <TableCell align="right"></TableCell>
@@ -293,6 +294,17 @@ const Cameras = () => {
                                 className="chip-color"
                               />
                             </Stack>
+                          </TableCell>
+                          <TableCell style={{ lineHeight: 2.5 }}>
+                            {row?.cameras_assigned_to_rooms?.map((roomRow, index) => (
+                              <Chip
+                                key={index}
+                                color="primary"
+                                className="chip-color"
+                                label={roomRow?.room?.room_name}
+                                icon={<Video />}
+                              />
+                            ))}
                           </TableCell>
                           <TableCell component="th" scope="row">
                             <Stack direction="row" alignItems="center" spacing={3}>

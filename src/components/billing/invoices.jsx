@@ -54,6 +54,8 @@ import DisputeActions from './disputeactions';
 import { loadStripe } from '@stripe/stripe-js';
 import CheckoutForm from './CheckoutForm';
 import visa_png from '../../assets/visa_png.png';
+import amex from '../../assets/american-express.png';
+import mastercard from '../../assets/business.png';
 import API from '../../api';
 import { errorMessageHandler } from '../../utils/errormessagehandler';
 import { useSnackbar } from 'notistack';
@@ -491,7 +493,18 @@ const Invoices = () => {
                             padding: '24px'
                           }}>
                           <Stack direction={'row'} justifyContent={'space-between'}>
-                            <img src={visa_png} alt="visa" />
+                            <img
+                              src={
+                                cardDetails?.brand == 'amex'
+                                  ? amex
+                                  : cardDetails?.brand == 'visa'
+                                  ? visa_png
+                                  : mastercard
+                              }
+                              alt="visa"
+                              width={40}
+                              height={40}
+                            />
                             <Typography
                               sx={{
                                 fontSize: '16px !important',

@@ -54,6 +54,7 @@ const AddRoomForm = (props) => {
   const { enqueueSnackbar } = useSnackbar();
   const [submitLoading, setSubmitLoading] = useState(false);
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+  const [selectedOption, setSelectedOption] = useState('enable');
 
   // Method to close the form dialog
   const handleDialogClose = () => {
@@ -222,6 +223,7 @@ const AddRoomForm = (props) => {
                         value={values.selectedOption}
                         onChange={(event) => {
                           setFieldValue('selectedOption', event.currentTarget.value);
+                          setSelectedOption(event.currentTarget.value);
                         }}>
                         <FormControlLabel
                           value={'enable'}
@@ -247,6 +249,7 @@ const AddRoomForm = (props) => {
                     <LocalizationProvider dateAdapter={AdapterDayjs}>
                       <DesktopDatePicker
                         disableHighlightToday
+                        disabled={selectedOption == 'enable'}
                         open={isDatePickerOpen}
                         minDate={moment().add(1, 'days')}
                         label={'Enable date'}
@@ -257,6 +260,7 @@ const AddRoomForm = (props) => {
                           <TextField
                             onClick={() => setIsDatePickerOpen(true)}
                             {...params}
+                            disabled={selectedOption == 'enable'}
                             helperText={touched.date && errors.date}
                             error={touched.date && Boolean(errors.date)}
                           />

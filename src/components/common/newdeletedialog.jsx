@@ -6,7 +6,8 @@ import {
   DialogContentText,
   DialogTitle,
   IconButton,
-  Stack
+  Stack,
+  TextField
 } from '@mui/material';
 import React from 'react';
 import PropTypes from 'prop-types';
@@ -18,7 +19,29 @@ import { useState } from 'react';
 
 const NewDeleteDialog = (props) => {
   const [isCloseDialog, setIsCloseDialog] = useState(false);
+  const [inputValue, setInputValue] = useState('');
+  const [error, setError] = useState(false);
   const handleClose = () => setIsCloseDialog(!isCloseDialog);
+
+  const expectedValue = `DELETE ${props?.customer?.company_name}`;
+
+  const handleChange = (event) => {
+    setInputValue(event.target.value);
+    setError(false); // Reset error on change
+  };
+
+  const handleDelete = () => {
+    if (props?.customer) {
+      if (inputValue === expectedValue) {
+        props.handleDelete();
+        setInputValue('');
+      } else {
+        setError(true); // Set error if the input doesn't match
+      }
+    } else {
+      props.handleDelete();
+    }
+  };
   return (
     <Dialog
       open={props.open}
@@ -93,6 +116,22 @@ const NewDeleteDialog = (props) => {
                 <CheckCircleIcon /> {props.contentText}{' '}
               </Stack>
             </DialogContentText>
+            {props.customer && (
+              <DialogContent>
+                <p>
+                  Please type &quot;DELETE {props?.customer?.company_name}&quot; to confirm deletion
+                  of this customer.
+                </p>
+                <TextField
+                  label={`Type "DELETE ${props?.customer?.company_name}" to confirm`}
+                  value={inputValue}
+                  onChange={handleChange}
+                  error={error}
+                  helperText={error ? 'Please type the exact confirmation text.' : ''}
+                  fullWidth
+                />
+              </DialogContent>
+            )}
           </DialogContent>
 
           <DialogActions sx={{ paddingRight: 4, paddingBottom: 3 }}>
@@ -125,7 +164,7 @@ const NewDeleteDialog = (props) => {
               loadingPosition={props.loading ? 'start' : undefined}
               startIcon={props.loading && <SaveIcon />}
               variant="text"
-              onClick={props.handleDelete}>
+              onClick={handleDelete}>
               Delete
             </LoadingButton>
           </DialogActions>
@@ -141,6 +180,7 @@ NewDeleteDialog.propTypes = {
   open: PropTypes.bool,
   handleDialogClose: PropTypes.func,
   title: PropTypes.string,
+  customer: PropTypes.object,
   contentText: PropTypes.string,
   loading: PropTypes.bool,
   handleDelete: PropTypes.func,

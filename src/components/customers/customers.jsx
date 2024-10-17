@@ -87,7 +87,9 @@ const Customers = () => {
   // Method to delete customer
   const handleCustomerDelete = () => {
     setDeleteLoading(true);
-    API.delete('customers/delete', { data: { customerId: customer.cust_id } }).then((response) => {
+    API.delete('customers/delete', {
+      data: { customerId: customer.cust_id, confirmationText: `DELETE ${customer.company_name}` }
+    }).then((response) => {
       if (response.status === 200) {
         getCustomersList();
         enqueueSnackbar(response.data.Message, {
@@ -287,6 +289,7 @@ const Customers = () => {
         title="Delete Customer"
         contentText={'Are you sure you want to delete this customer?'}
         loading={deleteLoading}
+        customer={customer ? customer : null}
         handleDialogClose={() => {
           setCustomer();
           setIsDeleteDialogOpen(false);
