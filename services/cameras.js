@@ -6,13 +6,25 @@ const sequelize = require("../lib/database");
 const { v4: uuidv4 } = require('uuid');
 const axios = require('axios');
 const Camera = require("../models/camera");
+const Room = require("../models/room");
+const CamerasInRooms = require("../models/cameras_assigned_to_rooms");
 
 module.exports = {
   /* Create new camera */
-  createCamera: async (camObj, t) => {
+  createCamera: async (camObj, roomsToAdd, t) => {
     const { Camera } = await connectToDatabase();
     let camCreated = await Camera.create(camObj, { transaction: t });
-    return camCreated;
+    const mappedData = roomsToAdd.map((room) => {
+      return {
+        room_id: room.room_id,
+        cam_id: camCreated.cam_id,
+      };
+    });
+    await CamerasInRooms.bulkCreate(mappedData, {
+      transaction: t,
+    });
+
+    return camCreated !== undefined ? camCreated.toJSON() : null;
   },
 
   validateCamera: async (cam_id, userCustId) => {
@@ -49,7 +61,7 @@ module.exports = {
   },
 
   /* Edit Existing camera */
-  editCamera: async (camId, camObj, t) => {
+  editCamera: async (camId, camObj, params, t) => {
     const { Camera } = await connectToDatabase();
     let update = {
       ...camObj,
@@ -61,7 +73,23 @@ module.exports = {
       },
       { transaction: t }
     );
-
+    const roomsToAdd = params.map((room) => {
+      return {
+        room_id: room.room_id || room.room.room_id,
+        cam_id: camId,
+      };
+    });
+    await CamerasInRooms.destroy(
+      {
+        where: { cam_id: camId },
+        raw: true,
+      },
+      { transaction: t }
+    );
+    
+    await CamerasInRooms.bulkCreate(roomsToAdd, {
+      transaction: t,
+    });
     return updatedCam;
   },
 
@@ -164,6 +192,22 @@ module.exports = {
               },
             ],
           },
+          include: [
+            {
+              model: CamerasInRooms,
+              attributes: ["cam_room_id"],
+              include: [
+                {
+                  model: Room,
+                  attributes: [
+                    "room_id",
+                    "room_name",
+                    "location"
+                  ],
+                },
+              ],
+            },
+          ]
         },
         { transaction: t }
       );
@@ -188,6 +232,22 @@ module.exports = {
               },
             ],
           },
+          include: [
+            {
+              model: CamerasInRooms,
+              attributes: ["cam_room_id"],
+              include: [
+                {
+                  model: Room,
+                  attributes: [
+                    "room_id",
+                    "room_name",
+                    "location"
+                  ],
+                },
+              ],
+            },
+          ]
         },
         { transaction: t }
       );

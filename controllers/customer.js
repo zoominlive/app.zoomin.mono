@@ -320,8 +320,15 @@ module.exports = {
   deleteCustomer: async (req, res, next) => {
     const t = await sequelize.transaction();
     try {
-      const { customerId } = req.body;
+      const { customerId, confirmationText } = req.body;
       let customer = await customerServices.getCustomerDetails(customerId);
+      
+      // Check if the confirmation text matches "DELETE <CUSTOMER_NAME>"
+      const expectedText = `DELETE ${customer.company_name}`;
+      if (confirmationText !== expectedText) {
+        await t.rollback();
+        return res.status(400).json({ Message: `Incorrect confirmation text. Expected: "DELETE ${customer.company_name}"` });
+      }
       const deleteFrontEggTenant = await customerServices.deleteFrontEggTenant(customer.frontegg_tenant_id);
       let deleted;
       if(deleteFrontEggTenant.status == 200) {
@@ -336,6 +343,7 @@ module.exports = {
             Message: CONSTANTS.CUSTOMER_DELETED,
           });
       } else {
+        await t.rollback();
         res
           .status(400)
           .json({

@@ -10,9 +10,10 @@ const CONSTANTS = require('../lib/constants');
 const sequelize = require('../lib/database');
 const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require("uuid");
-const Customers = require('../models/customers');
 const CustomerLocations = require('../models/customer_locations');
 const Camera = require('../models/camera');
+const roomServices = require('../services/rooms');
+
 module.exports = {
   // encode stream and create new camera
   createCamera: async (req, res, next) => {
@@ -20,7 +21,32 @@ module.exports = {
     try {
       params = req.body;
       params.cust_id = req.user.cust_id || req.body.cust_id;
+      let validRooms = [];
+      let validationMessages = [];
+      const userLocations = req.user.location.accessable_locations; 
+      // Location validation
+      if (!userLocations.includes(params.location) && req.user.role !== 'Super Admin') {
+        await t.rollback();
+        return res.status(400).json({Message: "Unauthorized location access. Please enter the location you have access to"})
+      }
+      // Validate all rooms before proceeding
+      for (const room of params.rooms) {
+        const validation = await roomServices.validateRoom(room.room_id, params.cust_id);
+        if (validation.valid) {
+          validRooms.push(room);
+        } else {
+          validationMessages.push(validation.message);
+        }
+      }
 
+       // Check if there's at least one valid camera
+      if (validRooms.length === 0) {
+        await t.rollback();
+        return res.status(400).json({
+          IsSuccess: false,
+          Message: "No valid rooms found. " + validationMessages.join(" "),
+        });
+      }
       const customer = await customerServices.getCustomerDetails(params.cust_id, t);
       // const availableCameras = customer?.available_cameras;
       const maxCameras = customer?.max_cameras;
@@ -44,7 +70,7 @@ module.exports = {
           const imageUrl = await s3BucketImageUploader._upload(params.thumbnail);
           params.thumbnail = imageUrl
         }
-        const camera = await cameraServices.createCamera(params, t);
+        const camera = await cameraServices.createCamera(params, params.rooms, t);
 
         // const resetAvailableCameras = await customerServices.setAvailableCameras(
         //   params.cust_id,
@@ -219,6 +245,7 @@ module.exports = {
           cam_name: params.cam_name,
           thumbnail: params?.s3Uri ? params?.s3Uri : params?.thumbnail 
         },
+        params.rooms,
         t
       );
 
