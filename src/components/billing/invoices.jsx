@@ -55,7 +55,7 @@ import { loadStripe } from '@stripe/stripe-js';
 import CheckoutForm from './CheckoutForm';
 import visa_png from '../../assets/visa_png.png';
 import amex from '../../assets/american-express.png';
-import mastercard from '../../assets/business.png';
+import mastercard from '../../assets/mastercard_icon.webp';
 import API from '../../api';
 import { errorMessageHandler } from '../../utils/errormessagehandler';
 import { useSnackbar } from 'notistack';

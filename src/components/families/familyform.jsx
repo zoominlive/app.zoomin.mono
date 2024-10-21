@@ -277,7 +277,15 @@ const AddFamily = (props) => {
       className="add-family-dialog">
       <DialogTitle sx={{ paddingTop: 3.5 }}>
         {'Add Family'}
-        <DialogContentText>Please add family member so they can watch stream</DialogContentText>
+        <DialogContentText>
+          {activeStep == 0
+            ? 'Start by adding a Primary Member'
+            : activeStep == 1
+            ? 'Here you can add additional family members'
+            : activeStep == 2
+            ? 'Here you can add children details'
+            : ''}
+        </DialogContentText>
         <IconButton
           aria-label="close"
           onClick={handleFormDialogClose}

@@ -590,7 +590,7 @@ const FamilyDrawer = (props) => {
           Family Management
         </Typography>
         <Typography variant="subtitle1" color="#828282">
-          Manage your family members, children&apos;s detail here
+          Manage family members and children
         </Typography>
       </Stack>
       <Divider sx={{ margin: '24px 0px' }} />

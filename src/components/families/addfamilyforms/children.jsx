@@ -185,6 +185,20 @@ const Children = (props) => {
                         getOptionLabel={(option) => {
                           return option.room_name;
                         }}
+                        renderOption={(props, option) => (
+                          <li {...props}>
+                            {option?.room_name}
+                            <Chip
+                              label={option?.location}
+                              size="small"
+                              sx={{
+                                marginLeft: 1,
+                                border: '1px solid #5a53dd',
+                                backgroundColor: '#EBE8FF'
+                              }}
+                            />
+                          </li>
+                        )}
                         onChange={(_, value) => {
                           props.setFieldValue(`children[${index}].rooms`, value);
                         }}

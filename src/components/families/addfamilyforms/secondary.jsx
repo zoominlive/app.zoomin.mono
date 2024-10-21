@@ -266,14 +266,14 @@ const Secondary = (props) => {
                       fontWeight={500}
                       color={'#343434'}
                       lineHeight={'30px'}>
-                      Do you want to Add Additional Family Members that watch the stream?
+                      Do you want to Add Additional Family Members?
                     </Typography>
                     <Typography
                       fontSize={16}
                       fontWeight={400}
                       color={'#797D8C'}
                       lineHeight={'24px'}>
-                      If you don’t want to add than you can skip this step by clicking on Next.
+                      If not you can skip this step by clicking the next button
                     </Typography>
                     <Box
                       className="family-button-wrapper"
