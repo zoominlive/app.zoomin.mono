@@ -283,7 +283,7 @@ const AddFamily = (props) => {
             : activeStep == 1
             ? 'Here you can add additional family members'
             : activeStep == 2
-            ? 'Here you can add children details'
+            ? 'Here you can add children as well as schedule their start'
             : ''}
         </DialogContentText>
         <IconButton
