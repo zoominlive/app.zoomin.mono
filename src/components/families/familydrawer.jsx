@@ -1104,7 +1104,12 @@ const FamilyDrawer = (props) => {
                                 className="switch-enable"
                                 checked={true}
                                 onChange={() => {
-                                  setLocationsToDisable(child?.location?.locations);
+                                  setLocationsToDisable(
+                                    child?.child_locations?.map(({ loc_id, loc_name }) => ({
+                                      loc_id,
+                                      loc_name
+                                    }))
+                                  );
                                   setIsDisableDialogOpen(true);
                                   setChildToDisable(child.child_id);
                                   setDisableDialogTitle('Disable Child');

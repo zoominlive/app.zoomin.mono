@@ -97,12 +97,14 @@ const AddRoomForm = (props) => {
   };
 
   const setRoomsList = (locations) => {
+    console.log('props==>', props);
+    console.log('locations==>', locations);
     if (locations?.length !== 0) {
       let rooms = props.roomsList
         .filter((room) => {
           let count = 0;
           locations?.forEach((loc) => {
-            if (loc == room.location) {
+            if (loc == room.loc_id) {
               count = 1;
             }
           });
@@ -156,16 +158,17 @@ const AddRoomForm = (props) => {
                       fullWidth
                       multiple
                       id="rooms"
-                      options={authCtx?.user?.location?.selected_locations?.sort((a, b) =>
-                        a > b ? 1 : -1
+                      options={authCtx?.user?.locations?.sort((a, b) =>
+                        a.loc_name > b.loc_name ? 1 : -1
                       )}
                       value={values?.locations}
                       onChange={(_, value) => {
                         setFieldValue('locations', value);
                       }}
+                      getOptionLabel={({ loc_name }) => loc_name}
                       renderTags={(value, getTagProps) =>
                         value.map((option, index) => (
-                          <Chip key={index} label={option} {...getTagProps({ index })} />
+                          <Chip key={index} label={option.loc_name} {...getTagProps({ index })} />
                         ))
                       }
                       renderInput={(params) => (
@@ -180,11 +183,12 @@ const AddRoomForm = (props) => {
                     />
                   </Grid>
                   <Grid item md={6} sm={12}>
+                    {console.log('values==>', values)}
                     <Autocomplete
                       fullWidth
                       multiple
                       id="rooms"
-                      options={setRoomsList(values?.locations)}
+                      options={setRoomsList(values?.locations.map(({ loc_id }) => loc_id))}
                       noOptionsText={
                         values.locations.length == 0
                           ? 'Select location first'

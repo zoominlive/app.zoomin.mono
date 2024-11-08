@@ -330,14 +330,14 @@ const Dashboard = () => {
     setIsLoading(true);
     localStorage.removeItem('RETRYCOUNTER_DASHBOARD');
     localStorage.setItem('RETRYCOUNTER_DASHBOARD', 0);
+    let locations = authCtx?.location.map((item) => item.loc_id);
     API.get('dashboard', {
       params: {
         cust_id: localStorage.getItem('cust_id'),
         location:
-          authCtx.user?.location?.accessable_locations?.length == 1 &&
-          authCtx.user.role !== 'Super Admin'
-            ? authCtx.user?.location?.accessable_locations
-            : authCtx?.location
+          authCtx.user?.locations?.length == 1 && authCtx.user.role !== 'Super Admin'
+            ? authCtx.user?.locations.map((item) => item.loc_id)
+            : locations
       }
     }).then((response) => {
       if (response.status === 200) {
@@ -679,6 +679,7 @@ const Dashboard = () => {
                     <Typography style={{ paddingTop: 10 }}> Watch Stream </Typography>
                     {!_.isEmpty(selectedCamera) ? (
                       <label style={{ color: '#000', paddingTop: 5 }}>
+                        {console.log('selectedCamera=>', selectedCamera)}
                         {' | ' +
                           selectedCamera?.location +
                           '/' +

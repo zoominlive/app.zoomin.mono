@@ -250,11 +250,11 @@ const Logs = () => {
   useEffect(() => {
     layoutCtx.setActive(8);
     layoutCtx.setBreadcrumb(['Logs', 'Review Access and Change Logs']);
-    if (authCtx?.user?.location?.accessable_locations) {
+    if (authCtx?.user?.locations?.map((item) => item.loc_name)) {
       setIsLoading(true);
       API.get('users/location/', {
         params: {
-          locations: [authCtx.user.location.accessable_locations[0]],
+          locations: authCtx.user.locations.map((item) => item.loc_id),
           cust_id: localStorage.getItem('cust_id')
         }
       }).then((response) => {
@@ -275,7 +275,7 @@ const Logs = () => {
           //setUsers([users[0]], ...location?.state?.user);
           API.get('family/location/', {
             params: {
-              locations: [authCtx.user.location.accessable_locations[0]],
+              locations: authCtx.user.locations.map((item) => item.loc_id),
               cust_id: localStorage.getItem('cust_id')
             }
           }).then((response) => {
@@ -326,7 +326,7 @@ const Logs = () => {
               } else {
                 API.post('logs/', {
                   ...logsPayload,
-                  locations: [authCtx.user.location.accessable_locations[0]],
+                  locations: [authCtx.user.locations.map((item) => item.loc_id)[0]],
                   users: userToAdd,
                   familyMemberIds: familyToAdd
                 }).then((response) => {
@@ -375,7 +375,10 @@ const Logs = () => {
         }
       }).then((response) => {
         if (response.status === 200) {
-          let locations = response.data.Data.locations.flatMap((i) => i.loc_name);
+          let locations = response.data.Data.locations.map(({ loc_id, loc_name }) => ({
+            loc_id,
+            loc_name
+          }));
           setLocations(['Select All', ...locations]);
         } else {
           errorMessageHandler(
@@ -388,13 +391,15 @@ const Logs = () => {
       });
     }
     // eslint-disable-next-line no-unsafe-optional-chaining
-    setLocations(['Select All', ...authCtx?.user?.location?.accessable_locations]);
+    setLocations(['Select All', ...authCtx?.user?.locations]);
     // setSelectedLocation(authCtx?.user?.location?.accessable_locations);
+    console.log('location?.state==>', location?.state);
     if (location?.state) {
       setSelectedLocation(location?.state?.location);
       setAllLocationChecked(true);
     } else {
-      setSelectedLocation(authCtx?.user?.location?.accessable_locations);
+      console.log('in else==', authCtx?.user?.locations);
+      setSelectedLocation(authCtx?.user?.locations);
     }
     return () => {
       authCtx.setPreviosPagePath(window.location.pathname);
@@ -482,9 +487,13 @@ const Logs = () => {
   }, [pageNumber, pageSize]);
 
   useEffect(() => {
+    console.log('*-*-*', selectedLocation);
     if (selectedLocation?.length !== 0) {
       API.get('users/location/', {
-        params: { locations: selectedLocation, cust_id: localStorage.getItem('cust_id') }
+        params: {
+          locations: selectedLocation.map((item) => item.loc_id),
+          cust_id: localStorage.getItem('cust_id')
+        }
       }).then((response) => {
         if (response.status === 200) {
           //setSelectedUsers(location?.state?.user || response.data.Data);
@@ -504,7 +513,10 @@ const Logs = () => {
         setIsLoading(false);
       });
       API.get('family/location/', {
-        params: { locations: selectedLocation, cust_id: localStorage.getItem('cust_id') }
+        params: {
+          locations: selectedLocation.map((item) => item.loc_id),
+          cust_id: localStorage.getItem('cust_id')
+        }
       }).then((response) => {
         if (response.status === 200) {
           setFamilies([families[0], ...response.data.Data]);
@@ -537,6 +549,12 @@ const Logs = () => {
       setSelectedFunction(functions.slice(1, 5));
     }
   }, [selectedloginWatchAction]);
+
+  useEffect(() => {
+    if (locations.length > 1 && selectedLocation.length === locations.length - 1) {
+      setAllLocationChecked(true);
+    }
+  }, [selectedLocation, locations]);
 
   //   Method to fetch user list for table
   const getLogsList = () => {
@@ -605,10 +623,16 @@ const Logs = () => {
 
   //   Method to handle location change for table
   const handleLocationChange = (_, value, reason, option) => {
+    console.log('reason, option', reason, option);
     if (reason == 'selectOption' && option?.option == 'Select All' && !allLocationChecked) {
+      console.log('1');
       setSelectedLocation(reason === 'selectOption' ? locations.slice(1, locations.length) : []);
       setAllLocationChecked(true);
-    } else if (option?.option == 'Select All' && reason === 'removeOption') {
+    } else if (
+      (option?.option == 'Select All' && reason === 'removeOption') ||
+      reason === 'clear'
+    ) {
+      console.log('2');
       setSelectedLocation([]);
       setAllLocationChecked(false);
     } else if (
@@ -616,13 +640,31 @@ const Logs = () => {
       option?.option == 'Select All' &&
       allLocationChecked == true
     ) {
+      console.log('3');
       setAllLocationChecked(false);
       setSelectedLocation([]);
     } else {
+      console.log('4', value);
+      console.log('option', option);
+      // Toggle selection logic
+      const isSelected = selectedLocation.some((loc) => loc.loc_id === option.option.loc_id);
+      let newSelectedLocations;
+
+      if (isSelected) {
+        // If the option is already selected, remove it
+        newSelectedLocations = selectedLocation.filter(
+          (loc) => loc.loc_id !== option.option.loc_id
+        );
+      } else {
+        // Otherwise, add it
+        newSelectedLocations = [...selectedLocation, option.option];
+      }
+
       setAllLocationChecked(false);
-      setSelectedLocation(value);
+      setSelectedLocation(newSelectedLocations);
     }
   };
+  console.log('selectedLocation outside the scope==', selectedLocation);
 
   const handleActionTypeChange = (_, value, reason, option) => {
     if (reason == 'selectOption' && option?.option == 'Select All' && !allActionsChecked) {
@@ -927,35 +969,43 @@ const Logs = () => {
                       </Grid>
                       <Grid item md={3} sm={6}>
                         <InputLabel id="location">Location</InputLabel>
+                        {console.log('locations==>', locations)}
+                        {console.log('selectedLocation==>', selectedLocation)}
                         <Autocomplete
                           labelId="location"
                           multiple
                           limitTags={1}
                           id="tags-standard"
-                          options={
-                            authCtx.user.location.accessable_locations?.length !== 0
-                              ? locations
-                              : []
-                          }
+                          options={authCtx.user.locations?.length !== 0 ? locations : []}
                           value={selectedLocation ? selectedLocation : []}
-                          getOptionLabel={(option) => option}
+                          getOptionLabel={(option) => option.loc_name || option}
                           onChange={(_, value, reason, option) => {
+                            console.log('value onChange==>', value);
                             handleLocationChange(_, value, reason, option);
                           }}
                           renderTags={(value, getTagProps) =>
                             value?.map((option, index) => (
-                              <Chip key={index} label={option} {...getTagProps({ index })} />
+                              <Chip
+                                key={index}
+                                label={option?.loc_name}
+                                {...getTagProps({ index })}
+                              />
                             ))
                           }
+                          // eslint-disable-next-line no-unused-vars
                           renderOption={(props, option, { selected }) => (
                             <li {...props}>
                               <Checkbox
                                 icon={icon}
                                 checkedIcon={checkedIcon}
                                 style={{ marginRight: 8 }}
-                                checked={allLocationChecked ? allLocationChecked : selected}
+                                checked={
+                                  allLocationChecked ||
+                                  selectedLocation.some((loc) => loc.loc_id === option.loc_id)
+                                }
+                                // checked={allLocationChecked ? allLocationChecked : selected}
                               />
-                              {option}
+                              {option.loc_name}
                             </li>
                           )}
                           renderInput={(params) => (

@@ -132,19 +132,22 @@ const Layout = () => {
       params: user.superUser ? params : ''
     }).then((response) => {
       if (response.status === 200) {
-        setSelectedLocation(response?.data?.Data?.location?.accessable_locations);
-        authCtx.setLocation(response?.data?.Data?.location?.accessable_locations);
+        setSelectedLocation(response?.data?.Data?.locations);
+        authCtx.setLocation(response?.data?.Data?.locations);
         authCtx.setUser({
           ...response.data.Data,
-          location: response.data.Data.location
+          location: response.data.Data.locations?.map((item) => item.loc_name)
         });
         localStorage.setItem(
           'user',
-          JSON.stringify({ ...response.data.Data, location: response.data.Data.location })
+          JSON.stringify({
+            ...response.data.Data,
+            location: response.data.Data.locations?.map((item) => item.loc_name)
+          })
         );
 
-        let selected_locaions = response?.data?.Data?.location?.accessable_locations;
-        response?.data?.Data?.location?.accessable_locations.forEach((loc) => locs.push(loc));
+        let selected_locaions = response?.data?.Data?.locations;
+        response?.data?.Data?.locations?.map((item) => item).forEach((loc) => locs.push(loc));
         setLocations(locs);
         setSelectedLocation(selected_locaions);
       } else {
@@ -462,12 +465,14 @@ const Layout = () => {
 
   const handleSetLocations = (_, value, reason, option) => {
     if (reason == 'selectOption' && option?.option == 'Select All' && !allLocationChecked) {
+      console.log('1');
       setSelectedLocation(reason === 'selectOption' ? locations.slice(1, locations.length) : []);
       setAllLocationChecked(true);
     } else if (
       (option?.option == 'Select All' && reason === 'removeOption') ||
       reason === 'clear'
     ) {
+      console.log('2');
       setSelectedLocation([]);
       setAllLocationChecked(false);
     } else if (
@@ -475,9 +480,11 @@ const Layout = () => {
       option?.option == 'Select All' &&
       allLocationChecked == true
     ) {
+      console.log('3');
       setAllLocationChecked(false);
       setSelectedLocation([]);
     } else {
+      console.log('4', value);
       setAllLocationChecked(false);
       setSelectedLocation(value);
     }
@@ -772,6 +779,8 @@ const Layout = () => {
                       <Badge disableRipple badgeContent={unreadCount} color="error">
                         <NotificationsIcon ref={notificationRef} fontSize="large" />
                       </Badge>
+                      {console.log('locations in layout==>', locations)}
+                      {console.log('selected_location in layout', selectedLocation)}
                       {((authCtx?.user?.role === 'Admin' && authCtx?.paymentMethod) ||
                         authCtx?.user?.role === 'Super Admin') && (
                         <Autocomplete
@@ -791,24 +800,29 @@ const Layout = () => {
                           id="tags-standard"
                           options={locations?.length !== 0 ? locations : []}
                           onChange={(_, value, reason, option) => {
+                            console.log('value==>', value);
                             handleSetLocations(_, value, reason, option);
                           }}
                           value={selectedLocation ? selectedLocation : []}
-                          getOptionLabel={(option) => option}
+                          getOptionLabel={(option) => option.loc_name}
                           renderTags={(value, getTagProps) =>
                             value?.map((option, index) => (
-                              <Chip key={index} label={option} {...getTagProps({ index })} />
+                              <Chip
+                                key={index}
+                                label={option.loc_name}
+                                {...getTagProps({ index })}
+                              />
                             ))
                           }
                           renderOption={(props, option, { selected }) => (
-                            <li {...props}>
+                            <li key={option.loc_id} {...props}>
                               <Checkbox
                                 icon={icon}
                                 checkedIcon={checkedIcon}
                                 style={{ marginRight: 8 }}
                                 checked={allLocationChecked ? allLocationChecked : selected}
                               />
-                              {option}
+                              {option.loc_name}
                             </li>
                           )}
                           renderInput={(params) => (

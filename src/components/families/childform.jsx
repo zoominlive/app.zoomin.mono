@@ -69,7 +69,10 @@ const ChildForm = (props) => {
         last_name: data.last_name,
         rooms: { rooms: data.rooms },
         location: { locations: data.locations },
-        child_id: props.child.child_id
+        child_id: props.child.child_id,
+        cust_id: props.child.cust_id,
+        family_id: props.child.family_id,
+        family_member_id: props.child.family_member_id
       }).then((response) => {
         if (response.status === 200) {
           enqueueSnackbar(response.data.Message, { variant: 'success' });
@@ -125,7 +128,7 @@ const ChildForm = (props) => {
         rooms: { rooms: data.rooms },
         location: { locations: data.locations },
         family_id: props.family.primary.family_id,
-        cust_id: localStorage.getItem('cust_id')
+        cust_id: localStorage.getItem('cust_id') || authCtx.user.cust_id
       }).then((response) => {
         if (response.status === 201) {
           enqueueSnackbar(response.data.Message, { variant: 'success' });
@@ -160,6 +163,12 @@ const ChildForm = (props) => {
       });
     }
   };
+  console.log('props==>', props.child);
+  console.log(
+    'sorted==>',
+    props.child?.child_locations?.sort((a, b) => (a.loc_name > b.loc_name ? 1 : -1))
+  );
+  console.log('props.roomsList==>', props);
 
   return (
     <Dialog open={props.open} onClose={handleClose} fullWidth className="add-child-drawer">
@@ -232,7 +241,9 @@ const ChildForm = (props) => {
                   };
                 })
               : [],
-            locations: props.child ? props.child.location.locations : []
+            locations: props.child
+              ? props.child?.child_locations?.sort((a, b) => (a.loc_name > b.loc_name ? 1 : -1))
+              : []
           }}
           onSubmit={handleSubmit}>
           {({ values, setFieldValue, touched, errors, isValidating }) => {
@@ -277,16 +288,19 @@ const ChildForm = (props) => {
                         fullWidth
                         multiple
                         id="locations"
-                        options={authCtx?.user?.location?.selected_locations.sort((a, b) =>
-                          a > b ? 1 : -1
-                        )}
+                        options={
+                          authCtx?.user?.locations?.sort((a, b) =>
+                            a.loc_name > b.loc_name ? 1 : -1
+                          ) || []
+                        }
+                        getOptionLabel={(option) => option.loc_name}
                         value={values?.locations}
                         onChange={(_, value) => {
                           setFieldValue('locations', value);
                         }}
                         renderTags={(value, getTagProps) =>
                           value.map((option, index) => (
-                            <Chip key={index} label={option} {...getTagProps({ index })} />
+                            <Chip key={index} label={option.loc_name} {...getTagProps({ index })} />
                           ))
                         }
                         renderInput={(params) => (
@@ -309,7 +323,11 @@ const ChildForm = (props) => {
                         options={props.roomsList
                           .sort((a, b) => (a?.room_name > b?.room_name ? 1 : -1))
                           ?.filter((room) => {
-                            if (values?.locations?.find((loc) => loc == room?.location)) {
+                            if (
+                              values?.locations
+                                ?.map((_) => _.loc_id)
+                                .find((loc) => loc == room?.loc_id)
+                            ) {
                               return room;
                             }
                           })}
@@ -323,7 +341,7 @@ const ChildForm = (props) => {
                           <li {...props}>
                             {option?.room_name}
                             <Chip
-                              label={option?.location}
+                              label={option?.customer_location.loc_name}
                               size="small"
                               sx={{
                                 marginLeft: 1,

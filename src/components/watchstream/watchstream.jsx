@@ -40,6 +40,7 @@ const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
 const checkedIcon = <CheckBoxIcon fontSize="small" />;
 import { FullScreen, useFullScreenHandle } from 'react-full-screen';
 import CustomPlayer from './customplayer';
+
 const WatchStream = () => {
   const layoutCtx = useContext(LayoutContext);
   const authCtx = useContext(AuthContext);
@@ -76,7 +77,7 @@ const WatchStream = () => {
     layoutCtx.setActive(5);
     layoutCtx.setBreadcrumb(['Watch Stream', 'Manage rooms and their camera authorization']);
     const locs = ['Select All'];
-    authCtx?.user?.location?.accessable_locations.forEach((loc) => locs.push(loc));
+    authCtx?.user?.locations?.map((item) => item).forEach((loc) => locs.push(loc));
     setLocations(locs);
     setSelectedLocation(locs);
     setDropdownLoading(true);
@@ -116,7 +117,7 @@ const WatchStream = () => {
       const roomsToSet = camerasPayload?.room?.filter((room) => {
         let count = 0;
         selectedLocation?.forEach((loc) => {
-          if (loc == room?.location) {
+          if (loc.loc_id == room?.location) {
             count = 1;
           }
         });
@@ -215,6 +216,7 @@ const WatchStream = () => {
     //   setAllCamsChecked(false);
     // }
   }, [cameras]);
+
   useEffect(() => {
     console.log(selectedCameras);
     setAllCamsChecked(selectedCameras.length == cameras.length ? true : false);
@@ -235,9 +237,9 @@ const WatchStream = () => {
         });
 
         if (!location?.state) {
-          setSelectedLocation([authCtx?.user?.location?.accessable_locations[0]]);
+          setSelectedLocation([authCtx?.user?.locations?.map((item) => item)[0]]);
           const rooms = response?.data?.Data.streamDetails?.filter(
-            (room) => room.location === authCtx?.user?.location?.accessable_locations[0]
+            (room) => room.location === authCtx?.user?.locations?.map((item) => item.loc_id)[0]
           );
           let roomsToAdd = [{ room_name: 'Select All', room_id: 'select-all' }];
           rooms?.forEach((room) => roomsToAdd.push(room));
@@ -496,6 +498,7 @@ const WatchStream = () => {
       setSelectedCameras(values);
     }
   };
+
   return (
     <>
       <Box className="listing-wrapper">
@@ -512,13 +515,13 @@ const WatchStream = () => {
                     id="tags-standard"
                     options={locations?.length !== 0 ? locations : []}
                     value={selectedLocation ? selectedLocation : []}
-                    getOptionLabel={(option) => option}
+                    getOptionLabel={(option) => option.loc_name || option}
                     onChange={(_, value, reason, option) => {
                       handleSetLocations(_, value, reason, option);
                     }}
                     renderTags={(value, getTagProps) =>
                       value?.map((option, index) => (
-                        <Chip key={index} label={option} {...getTagProps({ index })} />
+                        <Chip key={index} label={option.loc_name} {...getTagProps({ index })} />
                       ))
                     }
                     renderOption={(props, option, { selected }) => (
@@ -529,7 +532,7 @@ const WatchStream = () => {
                           style={{ marginRight: 8 }}
                           checked={allLocationChecked ? allLocationChecked : selected}
                         />
-                        {option}
+                        {option.loc_name}
                       </li>
                     )}
                     renderInput={(params) => (

@@ -214,6 +214,7 @@ const AddFamily = (props) => {
 
   // Method to next to previous step and creating the family
   const handleSubmit = (data, { setTouched, setSubmitting }) => {
+    console.log('location==>', authCtx.user);
     if (activeStep === STEPS.length - 1) {
       setSubmitLoading(true);
 
@@ -221,11 +222,11 @@ const AddFamily = (props) => {
 
       payload.primary.member_type = 'primary';
       payload.primary.time_zone = moment.tz.guess();
-      payload.primary.location = authCtx.user.location;
+      payload.primary.location = authCtx.user.locations;
       payload.secondary.forEach((parent) => {
         parent.member_type = 'secondary';
         parent.time_zone = moment.tz.guess();
-        parent.location = authCtx.user.location;
+        parent.location = authCtx.user.locations;
       });
 
       payload.children.forEach((child) => {

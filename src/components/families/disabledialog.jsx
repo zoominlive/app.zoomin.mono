@@ -205,6 +205,7 @@ const DisableDialog = (props) => {
                     </LocalizationProvider>
                   </Grid>
                   <Grid item lg={6} md={6} sm={12} xs={12}>
+                    {console.log('props.locationsToDisable==>', props?.locationsToDisable)}
                     <InputLabel id="locations_to_end_access">Locations to end access</InputLabel>
                     <Autocomplete
                       labelId="locations_to_end_access"
@@ -213,17 +214,21 @@ const DisableDialog = (props) => {
                       id="rooms"
                       options={
                         props?.locationsToDisable
-                          ? props?.locationsToDisable?.sort((a, b) => (a > b ? 1 : -1))
+                          ? props?.locationsToDisable?.sort((a, b) =>
+                              a.loc_name > b.loc_name ? 1 : -1
+                            )
                           : []
                       }
                       value={values?.locations?.length !== 0 ? values?.locations : []}
                       onChange={(_, value) => {
+                        console.log('val==>', value);
                         props.setSelectedLocationsToDisable(value);
                         setFieldValue('locations', value);
                       }}
+                      getOptionLabel={(option) => option.loc_name}
                       renderTags={(value, getTagProps) =>
                         value.map((option, index) => (
-                          <Chip key={index} label={option} {...getTagProps({ index })} />
+                          <Chip key={index} label={option.loc_name} {...getTagProps({ index })} />
                         ))
                       }
                       renderInput={(params) => (

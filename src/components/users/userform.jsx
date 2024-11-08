@@ -80,8 +80,8 @@ const UserForm = (props) => {
       last_name: props?.user?.last_name || '',
       email: props?.user?.email || '',
       role: props?.user?.role || '',
-      locations: props?.user?.location?.selected_locations
-        ? props?.user?.location?.selected_locations?.sort((a, b) => (a > b ? 1 : -1))
+      locations: props?.user?.locations
+        ? props?.user?.locations?.sort((a, b) => (a.loc_name > b.loc_name ? 1 : -1))
         : [],
       rooms: props?.user?.roomsInTeacher
         ? props.user?.roomsInTeacher.map((room) => {
@@ -167,6 +167,8 @@ const UserForm = (props) => {
   };
   // Method to update the user profile
   const handleSubmit = (data) => {
+    console.log('data==>', data);
+
     const payload = {
       ...data,
       userId: props.user && props.user.user_id,
@@ -277,11 +279,14 @@ const UserForm = (props) => {
       setBase64Image();
     }
   };
-  let disable_locs = props?.user?.location?.accessable_locations
-    ? props?.user?.location?.accessable_locations.filter(
-        (o) => authCtx?.user?.location?.accessable_locations.indexOf(o) === -1
-      )
+  let disable_locs = props?.user?.locations
+    ? props?.user?.locations
+        ?.map((item) => item.loc_id)
+        .filter((o) => authCtx?.user?.locations?.map((item) => item.loc_id).indexOf(o) === -1)
     : [];
+  console.log('disable_loc==>', disable_locs);
+  console.log('user locations==>', authCtx.user.locations);
+
   return (
     <Dialog open={props.open} onClose={handleClose} fullWidth className="add-user-drawer">
       <DialogTitle sx={{ paddingTop: 3.5 }}>
@@ -446,18 +451,21 @@ const UserForm = (props) => {
                         multiple
                         id="locations"
                         options={
-                          props?.user?.location?.accessable_locations
-                            ? props?.user?.location?.accessable_locations?.sort((a, b) =>
-                                a > b ? 1 : -1
+                          props?.user?.locations
+                            ? props?.user?.locations?.sort((a, b) =>
+                                a.loc_name > b.loc_name ? 1 : -1
                               )
-                            : authCtx.user?.location?.accessable_locations?.sort((a, b) =>
-                                a > b ? 1 : -1
+                            : authCtx.user?.locations?.sort((a, b) =>
+                                a.loc_name > b.loc_name ? 1 : -1
                               )
                         }
+                        getOptionLabel={(option) => option.loc_name}
                         // options={authCtx?.user?.location?.accessable_locations.sort((a, b) =>
                         //   a > b ? 1 : -1
                         // )}
                         onChange={(_, value) => {
+                          console.log('_', _);
+                          console.log('value', value);
                           let flag = disable_locs.every((i) => value.includes(i));
                           setFieldValue('locations', flag ? value : value.concat(disable_locs));
                           setSelectedLocation(flag ? value : value.concat(disable_locs));
@@ -467,10 +475,12 @@ const UserForm = (props) => {
                           value.map((option, index) => (
                             <Chip
                               key={index}
-                              label={option}
+                              label={option.loc_name}
                               {...getTagProps({ index })}
                               disabled={
-                                authCtx.user?.location?.accessable_locations.indexOf(option) == -1
+                                authCtx.user?.locations
+                                  ?.map((item) => item.loc_name)
+                                  .indexOf(option.loc_name) == -1
                               }
                             />
                           ))
@@ -498,7 +508,11 @@ const UserForm = (props) => {
                           options={roomList
                             .sort((a, b) => (a?.room_name > b?.room_name ? 1 : -1))
                             ?.filter((room) => {
-                              if (values?.locations?.find((loc) => loc == room?.location)) {
+                              if (
+                                values?.locations
+                                  ?.map((_) => _.loc_id)
+                                  .find((loc) => loc == room?.loc_id)
+                              ) {
                                 return room;
                               }
                             })}

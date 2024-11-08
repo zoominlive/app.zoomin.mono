@@ -63,7 +63,7 @@ const Row = (props) => {
           </IconButton>
         </TableCell>
         <TableCell>{row.room_name}</TableCell>
-        <TableCell>{row.location}</TableCell>
+        <TableCell>{row.loc_name}</TableCell>
         <TableCell style={{ lineHeight: 2.5 }}>
           {/* <Stack direction={'row'} justifyContent="flex-start" alignItems="center"> */}
           {row?.cameras?.map((camRow, index) => (
@@ -150,6 +150,7 @@ Row.propTypes = {
   row: PropTypes.shape({
     room_name: PropTypes.string,
     location: PropTypes.string,
+    loc_name: PropTypes.string,
     number_of_cam: PropTypes.number,
     cameras: PropTypes.array,
     stream_live_license: PropTypes.string
@@ -364,11 +365,11 @@ const Rooms = () => {
                           value={roomsPayload?.location}
                           onChange={handleLocationChange}>
                           <MenuItem value={'All'}>All</MenuItem>
-                          {authCtx.user.location.accessable_locations
-                            .sort((a, b) => (a > b ? 1 : -1))
-                            .map((location, index) => (
-                              <MenuItem key={index} value={location}>
-                                {location}
+                          {authCtx.user.locations
+                            ?.sort((a, b) => (a.loc_name > b.loc_name ? 1 : -1))
+                            .map((item) => (
+                              <MenuItem key={item.loc_id} value={item.loc_id}>
+                                {item.loc_name}
                               </MenuItem>
                             ))}
                         </Select>

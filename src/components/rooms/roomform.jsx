@@ -123,6 +123,8 @@ const RoomForm = (props) => {
 
   // Method to add/edit room
   const handleSubmit = (data) => {
+    console.log('data==>', data);
+
     setSubmitLoading(true);
     let customer_id =
       authCtx.user.role === 'Super Admin' ? localStorage.getItem('cust_id') : authCtx.user.cust_id;
@@ -130,6 +132,7 @@ const RoomForm = (props) => {
       API.put('rooms/edit', {
         ...data,
         room_id: props.room.room_id,
+        loc_id: data.location,
         camerasToAdd: data.cameras,
         max_stream_live_license_room: liveStreamLicense,
         cust_id: customer_id
@@ -170,6 +173,7 @@ const RoomForm = (props) => {
     } else {
       API.post('rooms/add', {
         ...data,
+        loc_id: data.location,
         cust_id: localStorage.getItem('cust_id'),
         max_stream_live_license_room: liveStreamLicense
       }).then((response) => {
@@ -330,19 +334,13 @@ const RoomForm = (props) => {
                               setLocationSelected(true);
                               handleGetCamerasForSelectedLocation(event.target.value);
                             }}>
-                            {authCtx.user &&
-                              authCtx.user.location &&
-                              authCtx.user.location.selected_locations &&
-                              authCtx.user.location.selected_locations.length > 0 &&
-                              authCtx.user.location.selected_locations
-                                .sort((a, b) => (a > b ? 1 : -1))
-                                .map((location, index) => {
-                                  return (
-                                    <MenuItem key={index} value={location}>
-                                      {location}
-                                    </MenuItem>
-                                  );
-                                })}
+                            {authCtx.user.locations
+                              ?.sort((a, b) => (a.loc_name > b.loc_name ? 1 : -1))
+                              .map((item) => (
+                                <MenuItem key={item.loc_id} value={item.loc_id}>
+                                  {item.loc_name}
+                                </MenuItem>
+                              ))}
                           </Select>
                           {touched.location && errors.location && (
                             <FormHelperText sx={{ color: '#d32f2f' }}>

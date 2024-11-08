@@ -32,10 +32,12 @@ const Children = (props) => {
 
   useEffect(() => {
     let rooms = [];
+    console.log('props.roomsList==>', props.roomsList);
     props.roomsList?.map((room) => {
       let count = 0;
       selectedLocation?.forEach((location) => {
-        if (room.location === location) {
+        console.log('location==>', location);
+        if (room.loc_id === location.loc_id) {
           count = count + 1;
         }
       });
@@ -51,6 +53,7 @@ const Children = (props) => {
       render={(arrayHelpers) => {
         return (
           <>
+            {console.log('props.values.children==>', props.values.children)}
             <Grid container spacing={3}>
               {props.values.children &&
                 props.values.children.length > 0 &&
@@ -130,9 +133,10 @@ const Children = (props) => {
                         fullWidth
                         multiple
                         id={`children.${index}.locations`}
-                        options={authCtx?.user?.location?.selected_locations.sort((a, b) =>
+                        options={authCtx?.user?.locations?.sort((a, b) =>
                           a.room_name > b.room_name ? 1 : -1
                         )}
+                        getOptionLabel={(option) => option.loc_name} // Display loc_name in dropdown
                         value={props?.values?.children[index]?.locations}
                         onChange={(_, value) => {
                           props.setFieldValue(`children[${index}].locations`, value);
@@ -140,7 +144,7 @@ const Children = (props) => {
                         }}
                         renderTags={(value, getTagProps) =>
                           value.map((option, index) => (
-                            <Chip key={index} label={option} {...getTagProps({ index })} />
+                            <Chip key={index} label={option.loc_name} {...getTagProps({ index })} />
                           ))
                         }
                         renderInput={(params) => (
@@ -189,7 +193,7 @@ const Children = (props) => {
                           <li {...props}>
                             {option?.room_name}
                             <Chip
-                              label={option?.location}
+                              label={option?.customer_location.loc_name}
                               size="small"
                               sx={{
                                 marginLeft: 1,

@@ -130,25 +130,27 @@ const CameraForm = (props) => {
         setSubmitLoading(false);
       });
     } else {
-      API.post('cams/add', { ...payload, cust_id: localStorage.getItem('cust_id') }).then(
-        (response) => {
-          if (response.status === 201) {
-            enqueueSnackbar(response?.data?.Message, {
-              variant: 'success'
-            });
-            handleFormDialogClose();
-            props.getCamerasList();
-          } else {
-            errorMessageHandler(
-              enqueueSnackbar,
-              response?.response?.data?.Message || 'Something Went Wrong.',
-              response?.response?.status,
-              authCtx.setAuthError
-            );
-          }
-          setSubmitLoading(false);
+      API.post('cams/add', {
+        ...payload,
+        loc_id: data.location,
+        cust_id: localStorage.getItem('cust_id')
+      }).then((response) => {
+        if (response.status === 201) {
+          enqueueSnackbar(response?.data?.Message, {
+            variant: 'success'
+          });
+          handleFormDialogClose();
+          props.getCamerasList();
+        } else {
+          errorMessageHandler(
+            enqueueSnackbar,
+            response?.response?.data?.Message || 'Something Went Wrong.',
+            response?.response?.status,
+            authCtx.setAuthError
+          );
         }
-      );
+        setSubmitLoading(false);
+      });
     }
   };
 
@@ -310,7 +312,7 @@ const CameraForm = (props) => {
             cam_name: props?.camera?.cam_name || '',
             cam_uri: props?.camera?.cam_uri || '',
             description: props?.camera?.description || '',
-            location: props?.camera?.location || '',
+            location: props?.camera?.customer_location?.loc_name || '',
             rooms: props?.camera?.cameras_assigned_to_rooms
               ? props?.camera?.cameras_assigned_to_rooms
               : []
@@ -429,27 +431,28 @@ const CameraForm = (props) => {
                         fullWidth
                         id="location"
                         options={
-                          authCtx?.user?.location?.accessable_locations
-                            ? authCtx?.user?.location?.accessable_locations?.sort((a, b) =>
-                                a > b ? 1 : -1
-                              )
-                            : []
+                          authCtx?.user?.locations?.sort((a, b) =>
+                            a.loc_name > b.loc_name ? 1 : -1
+                          ) || []
                         }
+                        getOptionLabel={(option) => option.loc_name} // Display loc_name in dropdown
                         onChange={(_, value) => {
-                          setFieldValue('location', value);
-                          setLocationSelected(true);
-                          handleGetRoomsForSelectedLocation(value);
+                          setFieldValue('location', value ? value.loc_id : null); // Set loc_id in form value
+                          setLocationSelected(!!value); // Handle selection state
+                          handleGetRoomsForSelectedLocation(value ? value.loc_id : null); // Pass loc_id to handler
                         }}
-                        value={values?.location}
+                        value={
+                          authCtx?.user?.locations?.find((loc) => loc.loc_id === values.location) ||
+                          null
+                        }
                         renderTags={(value, getTagProps) =>
                           value.map((option, index) => (
-                            <Chip key={index} label={option} {...getTagProps({ index })} />
+                            <Chip key={index} label={option.loc_name} {...getTagProps({ index })} />
                           ))
                         }
                         renderInput={(params) => (
                           <TextField
                             {...params}
-                            // placeholder="Location"
                             helperText={touched.location && errors.location}
                             error={touched.location && Boolean(errors.location)}
                             fullWidth

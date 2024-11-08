@@ -50,7 +50,7 @@ const AddFamilyDialog = (props) => {
       family_id: authCtx.user.family_id,
       member_type: 'secondary',
       time_zone: moment.tz.guess(),
-      location: authCtx.user.location,
+      location: authCtx.user.locations,
       cust_id: localStorage.getItem('cust_id'),
       tenant_id: localStorage.getItem('tenant_id')
     })

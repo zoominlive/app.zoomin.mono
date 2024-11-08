@@ -52,7 +52,7 @@ const WatchStreamDialogBox = (props) => {
   const [selectedCameras, setSelectedCameras] = useState(null);
   const camLabel = useRef([]);
   const locs = ['Select All'];
-  authCtx?.user?.location?.accessable_locations.forEach((loc) => locs.push(loc));
+  authCtx?.user?.locations?.map((item) => item.loc_name).forEach((loc) => locs.push(loc));
 
   useEffect(() => {
     setSelectedLocation(props?.defaultWatchStream?.locations);
@@ -72,7 +72,7 @@ const WatchStreamDialogBox = (props) => {
           });
           if (!location.state) {
             !selectedLocation.length &&
-              setSelectedLocation([authCtx?.user?.location?.accessable_locations[0]]);
+              setSelectedLocation([authCtx?.user?.locations?.map((item) => item.loc_name)[0]]);
           } else {
             setSelectedLocation([location?.state?.location]);
           }
@@ -157,17 +157,20 @@ const WatchStreamDialogBox = (props) => {
     setLimitReached(false);
     setDropdownLoading(true);
     const locs = ['Select All'];
-    authCtx?.user?.location?.accessable_locations.forEach((loc) => locs.push(loc));
+    authCtx?.user?.locations?.forEach((loc) => locs.push(loc));
     setLocations(locs);
     getAvailableStreams();
     setDropdownLoading(false);
   }, []);
 
   useEffect(() => {
+    console.log('camerasPayload==>', camerasPayload);
+    console.log('selectedLocation==>', selectedLocation);
     const roomsToSet = camerasPayload?.rooms?.filter((room) => {
       let count = 0;
       selectedLocation?.forEach((loc) => {
-        if (loc == room?.location) {
+        console.log('loc==>', loc);
+        if (loc.loc_id == room?.location) {
           count = 1;
         }
       });
@@ -248,6 +251,7 @@ const WatchStreamDialogBox = (props) => {
           <InputLabel id="location" className="label">
             Location
           </InputLabel>
+          {console.log('locations==>', locations)}
           <Autocomplete
             labelId="location"
             sx={{ padding: '5px 12px 12px 12px', '& fieldset': { borderRadius: 4 } }}
@@ -260,10 +264,10 @@ const WatchStreamDialogBox = (props) => {
               handleSetLocations(_, value, reason, option);
             }}
             value={selectedLocation ? selectedLocation : []}
-            getOptionLabel={(option) => option}
+            getOptionLabel={(option) => option.loc_name}
             renderTags={(value, getTagProps) =>
               value?.map((option, index) => (
-                <Chip key={index} label={option} {...getTagProps({ index })} />
+                <Chip key={index} label={option.loc_name} {...getTagProps({ index })} />
               ))
             }
             renderOption={(props, option, { selected }) => (
@@ -274,7 +278,7 @@ const WatchStreamDialogBox = (props) => {
                   style={{ marginRight: 8 }}
                   checked={allLocationChecked ? allLocationChecked : selected}
                 />
-                {option}
+                {option.loc_name}
               </li>
             )}
             renderInput={(params) => (
