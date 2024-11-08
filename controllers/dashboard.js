@@ -29,7 +29,9 @@ module.exports = {
         let uuid = uuidv4();
         let stream_uri = new URL(defaultWatchStream?.cameras?.stream_uri).pathname;
         const token = jwt.sign({ user_id: uid, cam_id: sid, uuid: uuid }, process.env.STREAM_URL_SECRET_KEY, {expiresIn: '12h'});
-        const baseUrl = await customerServices.getTranscoderUrlFromCustLocations(req.user?.location?.accessable_locations, custId);
+        const baseUrl = await customerServices.getTranscoderUrlFromCustLocations(req.user?.locations?.map((item) => item.loc_id), custId);
+        console.log('baseUrl==>', baseUrl);
+        
         defaultWatchStream.cameras.stream_uri = `${baseUrl}${stream_uri}?seckey=${token}`;
       }
       if (req.user.role === "Super Admin") {
@@ -74,7 +76,7 @@ module.exports = {
         child.roomsInChild.forEach((room) => {
           if (room.scheduled_disable_date != null) {
            if(req.query?.location !== "All"){
-            if(req.query?.location == room.room?.location || req.query?.location?.length !== 0){
+            if(req.query?.location == room.room?.loc_id || req.query?.location?.length !== 0){
               roomsToDisable.push(room.room?.room_name);
             }
            }
@@ -84,7 +86,7 @@ module.exports = {
            
           } else {
             if(req.query?.location !== "All"){
-              if(req.query?.location == room.room?.location || req.query?.location?.length !== 0){
+              if(req.query?.location == room.room?.loc_id || req.query?.location?.length !== 0){
                 roomsToEnable.push(room.room?.room_name);
               }
              }

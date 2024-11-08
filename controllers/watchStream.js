@@ -103,6 +103,7 @@ module.exports = {
       }
     }
   },
+
   addRecentViewers: async (req, res, next) => {
     try {
       const params = req.body;
@@ -230,6 +231,7 @@ module.exports = {
       }
     }
   },
+
   setUserCamPreference: async (req, res, next) => {
     try {
       let cameras = req?.body?.data ? req?.body?.data : req?.body;

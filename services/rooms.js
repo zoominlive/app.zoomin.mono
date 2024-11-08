@@ -191,15 +191,15 @@ module.exports = {
     //   }
     // } else {
     let loc_obj = {};
-    if (!cust_id) {
-      loc_obj = { location: user.location.accessable_locations };
+    if (!cust_id) {      
+      loc_obj = { loc_id: user.locations.map((item) => item.loc_id) };
     } else {
       let availableLocations = await CustomerLocations.findAll({
         where: { cust_id: cust_id },
         raw: true,
       });
       let locs = availableLocations.flatMap((i) => i.loc_name);
-      loc_obj = { location: locs };
+      loc_obj = { loc_id: locs };
     }
 
     if (roomsList?.length !== 0) {
@@ -210,7 +210,7 @@ module.exports = {
             [Sequelize.Op.and]: [
               loc_obj,
               {
-                location: {
+                loc_id: {
                   [Sequelize.Op.substring]: location,
                 },
               },
@@ -220,7 +220,7 @@ module.exports = {
             },
             room_name: roomsList,
           },
-          attributes: ["room_id", "room_name", "location", "stream_live_license"],
+          attributes: ["room_id", "room_name", "loc_id", "stream_live_license"],
           include: [
             {
               model: CamerasInRooms,
@@ -231,14 +231,19 @@ module.exports = {
                   attributes: [
                     "cam_id",
                     "cam_name",
-                    "location",
+                    "loc_id",
                     "stream_uri",
                     "description",
                   ],
                 },
               ],
             },
+            {
+              model: CustomerLocations,
+              attributes: ['loc_name', 'loc_id'], // Only include the location name
+            },
           ],
+          distinct: true
         },
         { transaction: t }
       );
@@ -250,7 +255,7 @@ module.exports = {
             [Sequelize.Op.and]: [
               loc_obj,
               {
-                location: {
+                loc_id: {
                   [Sequelize.Op.substring]: location,
                 },
               },
@@ -260,7 +265,7 @@ module.exports = {
               [Sequelize.Op.substring]: searchBy,
             },
           },
-          attributes: ["room_id", "room_name", "location", "stream_live_license"],
+          attributes: ["room_id", "room_name", "loc_id", "stream_live_license"],
           include: [
             {
               model: CamerasInRooms,
@@ -271,19 +276,24 @@ module.exports = {
                   attributes: [
                     "cam_id",
                     "cam_name",
-                    "location",
+                    "loc_id",
                     "stream_uri",
                     "description",
                   ],
                 },
               ],
             },
+            {
+              model: CustomerLocations,
+              attributes: ['loc_name', 'loc_id'], // Only include the location name
+            },
           ],
+          distinct: true
         },
         { transaction: t }
       );
     }
-    // }
+    // }   
 
     let count = rooms.length;
 
@@ -299,11 +309,12 @@ module.exports = {
     }
 
     rooms = rooms?.map((room) => {
-      let cams = room.cameras_assigned_to_rooms.map((cam) => cam.camera);
+      let cams = room.cameras_assigned_to_rooms.map((cam) => cam.camera);      
       return {
         room_id: room.room_id,
         room_name: room.room_name,
-        location: room.location,
+        location: room.loc_id,
+        loc_name: room.customer_location.loc_name,
         cameras: cams,
         stream_live_license: room.stream_live_license
       };
@@ -339,32 +350,44 @@ module.exports = {
     if (user.role === "Admin" || user.role === "Super Admin") {
       let loc_obj = {};
       if (!cust_id) {
-        loc_obj = { location: user.location.accessable_locations };
+        loc_obj = { loc_id: user.locations.map((item) => item.loc_id) };
       } else {
         let availableLocations = await CustomerLocations.findAll({
           where: { cust_id: cust_id },
           raw: true,
         });
-        let locs = availableLocations.flatMap((i) => i.loc_name);
-        loc_obj = { location: locs };
+        let locs = availableLocations.flatMap((i) => i.loc_id);
+        loc_obj = { loc_id: locs };
       }
 
 
       roomList = await Room.findAll(
         {
-          attributes: ["room_name", "room_id", "location", "stream_live_license"],
+          attributes: ["room_name", "room_id", "loc_id", "stream_live_license"],
           where: {
             cust_id: user.cust_id || cust_id,
             ...loc_obj
           },
+          include: [
+            {
+              model: CustomerLocations,
+              attributes: ['loc_id', 'loc_name']
+            }
+          ]
         },
         { transaction: t }
       );
     } else {
       roomList = await Room.findAll(
         {
-          attributes: ["room_name", "room_id", "location", "stream_live_license"],
+          attributes: ["room_name", "room_id", "loc_id", "stream_live_license"],
           where: { user_id: userId },
+          include: [
+            {
+              model: CustomerLocations,
+              attributes: ['loc_id', 'loc_name']
+            }
+          ]
         },
         { transaction: t }
       );

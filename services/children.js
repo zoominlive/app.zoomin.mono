@@ -14,8 +14,23 @@ module.exports = {
       scheduled_enable_date: childObj?.enable_date,
       cust_id:custID
     };
-    const { Child } = await connectToDatabase();
+    const { Child, CustomerLocationAssignments } = await connectToDatabase();
     let childCreated = await Child.create(createObj, { transaction: t });
+    console.log('childObj==>', childObj);
+    
+    const locationsToAdd = childObj.location.locations.map((_) => {
+      return {
+        loc_id: _.loc_id,
+        cust_id: childObj.cust_id,
+        child_id: childCreated.child_id,
+        family_id: childObj.family_id
+      };
+    });
+    console.log('locationsToAdd==>', locationsToAdd);
+    
+    await CustomerLocationAssignments.bulkCreate(locationsToAdd, {
+      transaction: t,
+    });
 
     return childCreated !== undefined ? childCreated.toJSON() : null;
   },
@@ -29,7 +44,7 @@ module.exports = {
         scheduled_enable_date: child?.enable_date
       };
     });
-    const { Child } = await connectToDatabase();
+    const { Child, CustomerLocationAssignments } = await connectToDatabase();
     let childCreated = await Child.bulkCreate(childObjs, { returning: true }, { transaction: t });
 
     await Promise.all(
@@ -40,6 +55,21 @@ module.exports = {
                     scheduled_enable_date: child?.enable_date !== null ? child?.enable_date : null};
         });
         await RoomsInChild.bulkCreate(roomsInChild, { returning: true }, { transaction: t });
+        console.log('child==>', child);
+        
+        const locationsToAdd = child.location.locations.map((_) => {
+          return {
+            loc_id: _.loc_id,
+            cust_id: child.cust_id,
+            child_id: childCreated[index].child_id,
+            family_id: childCreated[index].family_id
+          };
+        });
+        console.log('locationsToAdd==>', locationsToAdd);
+        
+        await CustomerLocationAssignments.bulkCreate(locationsToAdd, {
+          transaction: t,
+        });
       })
     );
     // const addRoomsToChild = await childServices.assignRoomsToChild(
@@ -53,7 +83,7 @@ module.exports = {
 
   /* Edit child details */
   editChild: async (params, t) => {
-    const { Child } = await connectToDatabase();
+    const { Child, CustomerLocationAssignments } = await connectToDatabase();
     const childObj = _.omit(params, ['child_id']);
     let update = {
       ...childObj
@@ -66,6 +96,30 @@ module.exports = {
       },
       { transaction: t }
     );
+    console.log('params==>', params);
+    
+    const locationsToAdd = params.location.locations.map((loc) => {
+      return {
+        loc_id: loc.loc_id,
+        cust_id: params.cust_id,
+        child_id: params.child_id,
+        cust_id: params.cust_id,
+        family_id: params.family_id,
+        family_member_id: params.family_member_id
+      };
+    });
+
+    await CustomerLocationAssignments.destroy(
+      {
+        where: { child_id: params.child_id },
+        raw: true,
+      },
+      { transaction: t }
+    );
+    
+    await CustomerLocationAssignments.bulkCreate(locationsToAdd, {
+      transaction: t,
+    });
 
     if (updateChildDetails) {
       updateChildDetails = await Child.findOne(
@@ -94,11 +148,18 @@ module.exports = {
 
   // get all children for given family Id
   getChildById: async (childId, t) => {
-    const { Child } = await connectToDatabase();
+    const { Child, CustomerLocations } = await connectToDatabase();
     childDetails = await Child.findOne(
       {
-        raw: true,
-        where: { child_id: childId }
+        // raw: true,
+        where: { child_id: childId },
+        include: [
+          {
+            model: CustomerLocations,
+            as: 'child_locations',
+            attributes: ['loc_id', 'loc_name']
+          }
+        ]
       },
       { transaction: t }
     );
@@ -108,7 +169,7 @@ module.exports = {
 
   // delete selected child
   deleteChild: async (childId, t) => {
-    const { Child, RoomsInChild } = await connectToDatabase();
+    const { Child, RoomsInChild, CustomerLocationAssignments } = await connectToDatabase();
 
     let roomsDeleted = await RoomsInChild.destroy(
       { where: { child_id: childId }, raw: true },
@@ -123,7 +184,15 @@ module.exports = {
       { transaction: t }
     );
 
-    return deletedChild;
+    let deletedChildFromCustLocAssignment = await CustomerLocationAssignments.destroy(
+      {
+        where: { child_id: childId },
+        raw: true
+      },
+      { transaction: t }
+    );
+
+    return deletedChild, deletedChildFromCustLocAssignment;
   },
 
   //disable selected child
@@ -400,7 +469,7 @@ module.exports = {
 
   disableSelectedLocations: async (childId, SED, locationsToDisable, t) => {
     const { RoomsInChild, Room } = await connectToDatabase();
-
+    let mappedLocationstoDisable = locationsToDisable.map(({loc_id}) => loc_id)
     let getRoomsToDisable = await RoomsInChild.findAll(
       {
         where: {
@@ -412,7 +481,7 @@ module.exports = {
             model: Room,
             as: 'room',
             where: {
-              location: locationsToDisable
+              location: mappedLocationstoDisable
             },
             attributes: ['room_name']
           }
@@ -483,23 +552,45 @@ module.exports = {
   },
 
   getAllChildren: async (custId, location = ["Select All"], t) => {
-    const {Child} = await connectToDatabase();
-    let AllChildren = await Child.findAll({
-      where: {cust_id: custId},
-      attributes: ["child_id", "location"], raw: true
-    }, { transaction: t });
+    const { Child, CustomerLocations } = await connectToDatabase();
+    const distinctChildIds = await Child.findAll(
+      {
+        // logging: console.log,
+        where: { cust_id: custId },
+        attributes: [ [Sequelize.fn('DISTINCT', Sequelize.col('child_id')) ,'child_id']],
+        group: ["child_id"],
+        raw: true,
+      },
+      { transaction: t }
+    );
+    
+    const childIdsArray = distinctChildIds.map(child => child.child_id);
+    
+    let childIdsWithLocations = await Child.findAll({
+      where: { child_id: childIdsArray },
+      include: [
+        {
+          model: CustomerLocations,
+          as: "child_locations",
+        },
+      ],
+      group: ["child_id"],
+      transaction: t,
+    });
     
     if(!location.includes("Select All")){
       let filterResult = []
-      AllChildren.map(i => {
-          if(i.location?.locations?.every(it => location.includes(it))){
-            filterResult.push(i)
-          }
+      location = location.map(Number);
+      childIdsWithLocations.map((i) => {        
+        if(i.child_locations?.map((item) => item.dataValues.loc_id).every(it => location.includes(it)))
+        {
+          filterResult.push(i)
+        }
       })
-      AllChildren = filterResult
+      childIdsWithLocations = filterResult
     }
 
-    return AllChildren;
+    return childIdsWithLocations;
   },
 
   deleteRoomInChild: async (childId,roomID, t) => {

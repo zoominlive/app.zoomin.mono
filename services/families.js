@@ -9,22 +9,55 @@ const moment = require("moment-timezone");
 
 module.exports = {
   /* Create new family */
-  createFamily: async (familyObj) => {
-    const { Family } = await connectToDatabase();
+  createFamily: async (familyObj, t) => {
+    const { Family, CustomerLocationAssignments } = await connectToDatabase();
     familyObj.family_member_id = uuidv4();
     let familyCreated = await Family.create(familyObj);
+    console.log('familyObj==>', familyObj);
+    
+    const locationsToAdd = familyObj.location.map((_) => {
+      return {
+        loc_id: _.loc_id,
+        cust_id: familyObj.cust_id,
+        family_member_id: familyCreated.family_member_id,
+        family_id: familyCreated.family_id
+      };
+    });
+    console.log('locationsToAdd==>', locationsToAdd);
+    
+    await CustomerLocationAssignments.bulkCreate(locationsToAdd, {
+      transaction: t,
+    });
 
     return familyCreated !== undefined ? familyCreated.toJSON() : null;
   },
 
   /* Create new family */
   createFamilies: async (familyObj, t) => {
-    const { Family } = await connectToDatabase();
+    const { Family, CustomerLocationAssignments } = await connectToDatabase();
     let familyCreated = await Family.bulkCreate(
       familyObj,
       { returning: true },
       { transaction: t }
     );
+    console.log('familyObj==>', familyObj);
+    await Promise.all(
+      familyObj.map(async(family, index) => {
+        const locationsToAdd = family.location.map((_) => {
+          return {
+            loc_id: _.loc_id,
+            cust_id: family.cust_id,
+            family_member_id: familyCreated[index].family_member_id,
+            family_id: familyCreated[index].family_id
+          };
+        });
+        console.log('locationsToAdd==>', locationsToAdd);
+        
+        await CustomerLocationAssignments.bulkCreate(locationsToAdd, {
+          transaction: t,
+        });
+      })
+    )
 
     return familyCreated;
   },
@@ -100,7 +133,7 @@ module.exports = {
 
   /* Delete Existing family */
   deleteFamily: async (familyId, t) => {
-    const { Family, Child } = await connectToDatabase();
+    const { Family, Child, CustomerLocationAssignments } = await connectToDatabase();
     let deletedParents = await Family.destroy(
       {
         where: { family_id: familyId },
@@ -117,7 +150,15 @@ module.exports = {
       { transaction: t }
     );
 
-    return deletedParents, deletedChildren;
+    let deleteFamilyFromCustLocAssignment = await CustomerLocationAssignments.destroy(
+      {
+        where: { family_id: familyId },
+        raw: true,
+      },
+      { transaction: t }
+    )
+
+    return deletedParents, deletedChildren, deleteFamilyFromCustLocAssignment;
   },
 
   /* Fetch all the family's details */
@@ -154,19 +195,12 @@ module.exports = {
 
     familiesCount = await Family.count(
       {
-        group: ["family.family_id"],
-        attributes: ["children.location"],
+        group: ["family.family_id", "children->child_locations.loc_id"],
+        attributes: ["children->child_locations.loc_id"],
         include: [
           {
             model: Child,
-            attributes: ["location"],
-            where: {
-              [Sequelize.Op.and]: {
-                location: {
-                  [Sequelize.Op.substring]: location === "All" ? "" : location,
-                },
-              },
-            },
+            // attributes: ["location"],
             include: [
               {
                 model: RoomsInChild,
@@ -178,10 +212,28 @@ module.exports = {
                   },
                 ],
               },
+              {
+                model: CustomerLocations,
+                as: "child_locations",
+                where: {
+                  [Sequelize.Op.and]: {
+                    loc_id: {
+                      [Sequelize.Op.substring]: location === "All" ? "" : location,
+                    },
+                  },
+                },
+                attributes: ["loc_name", "loc_id"]
+              },
             ],
           },
+          {
+            model: CustomerLocations,
+            as: 'family_user_locations',
+            attributes: ["loc_name", "loc_id"]
+          }
         ],
         where: whereObj,
+        distinct: true,
         raw: true,
       },
       { transaction: t }
@@ -193,8 +245,9 @@ module.exports = {
         where: { cust_id: cust_id },
         raw: true,
       });
-      let locs = availableLocations.flatMap((i) => i.loc_name);
+      let locs = availableLocations.flatMap((i) => i.loc_id);
       familiesCount.map((item) => {
+        console.log('item in if==>', item);
         locs.forEach((i) => {
           if (item.location?.locations?.includes(i)) {
             result.push(item);
@@ -203,13 +256,16 @@ module.exports = {
       });
     } else {
       familiesCount.map((item) => {
-        user.location.accessable_locations.forEach((i) => {
-          if (item.location?.locations?.includes(i)) {
+        console.log('item in else==>', item);
+        console.log('user_locations==>', user.locations);
+        user.locations.forEach((i) => {
+          if (item.loc_id == i.loc_id) {
             result.push(item);
           }
         });
       });
     }
+    console.log('result==>', result.length);
 
     familiesCount = result;
     families = await Family.findAll(
@@ -237,6 +293,11 @@ module.exports = {
                   },
                 ],
               },
+              {
+                model: CustomerLocations,
+                as: "child_locations",
+                attributes: ["loc_name", "loc_id"]
+              },
             ],
           },
           {
@@ -254,7 +315,19 @@ module.exports = {
             where: {
               member_type: "secondary",
             },
+            include: [
+              {
+                model: CustomerLocations,
+                as: "family_user_locations",
+                attributes: ["loc_name", "loc_id"]
+              },
+            ],
             required: false,
+          },
+          {
+            model: CustomerLocations,
+            as: "family_user_locations",
+            attributes: ["loc_name", "loc_id"]
           },
         ],
         limit: parseInt(pageSize),
@@ -270,6 +343,7 @@ module.exports = {
             })
             .map((fam) => fam.family_id),
         },
+        distinct: true
       },
       { transaction: t }
     );
@@ -566,19 +640,27 @@ module.exports = {
     return familyMembers;
   },
   getAllUsersForLocation: async (custId, locations) => {
-    const { Family } = await connectToDatabase();
+    const { Family, CustomerLocations } = await connectToDatabase();
     let locArray = locations.map((loc) => {
       return {
-        location: {
+        loc_id: {
           [Sequelize.Op.substring]: loc,
         },
       };
     });
     let users = await Family.findAll({
-      where: { cust_id: custId, [Sequelize.Op.or]: locArray },
+      // where: { cust_id: custId, [Sequelize.Op.or]: locArray },
       attributes: ["first_name", "last_name", "family_member_id"],
+      include: [{
+        model: CustomerLocations,
+        as: 'family_user_locations',
+        where: { cust_id: custId, [Sequelize.Op.or]: locArray },
+        attributes: ['loc_id', 'loc_name']
+      }],
+      distinct: true
     });
-
+    console.log('family_users==>', users.length);
+    
     return users;
   },
 
@@ -643,31 +725,46 @@ module.exports = {
   },
 
   getAllFamilyIds: async (custId, location = ["Select All"], t) => {
-    const { Family } = await connectToDatabase();
-    let familyIds = await Family.findAll(
+    const { Family, CustomerLocations } = await connectToDatabase();
+    const distinctFamilyIds = await Family.findAll(
       {
         // logging: console.log,
         where: { cust_id: custId },
-        attributes: [ [Sequelize.fn('DISTINCT', Sequelize.col('family_id')) ,'family_id'], "location"],
+        attributes: [ [Sequelize.fn('DISTINCT', Sequelize.col('family_id')) ,'family_id']],
         group: ["family_id"],
         raw: true,
       },
       { transaction: t }
     );
-
+    
+    const familyIdsArray = distinctFamilyIds.map(family => family.family_id);
+    
+    let familyIdsWithLocations = await Family.findAll({
+      where: { family_id: familyIdsArray },
+      include: [
+        {
+          model: CustomerLocations,
+          as: "family_user_locations",
+        },
+      ],
+      group: ["family_id"],
+      transaction: t,
+    });
+    
     if (!location.includes("Select All")) {
       let filterResult = [];
-      familyIds.map((i) => {
+      location = location.map(Number);
+      familyIdsWithLocations.map((i) => {       
         if (
-          i.location?.accessable_locations?.every((it) => location.includes(it))
+          i.family_user_locations?.map((item) => item.dataValues.loc_id).every((it) => location.includes(it))
         ) {
           filterResult.push(i);
         }
       });
-      familyIds = filterResult;
+      familyIdsWithLocations = filterResult;
     }
 
-    return familyIds;
+    return familyIdsWithLocations;
   },
 
   getSEAChilds: async (custId, location = "All", enable = false, t) => {
@@ -836,13 +933,18 @@ module.exports = {
   },
 
   deleteFamilyMember: async (familyMemberId, t) => {
-    const { Family } = await connectToDatabase();
+    const { Family, CustomerLocationAssignments } = await connectToDatabase();
     let deletedFamilyMember = await Family.destroy(
       { where: { family_member_id: familyMemberId } },
       { transaction: t }
     );
 
-    return deletedFamilyMember;
+    let deletedFamilyMemberFromCustLocAssignment = await CustomerLocationAssignments.destroy(
+      { where: { family_member_id: familyMemberId } },
+      { transaction: t }
+    );
+
+    return deletedFamilyMember, deletedFamilyMemberFromCustLocAssignment;
   },
 
   getFailyMemberById: async (familyMemberId, t) => {

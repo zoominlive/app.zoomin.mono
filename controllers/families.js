@@ -38,15 +38,15 @@ module.exports = {
 
       allLocations = _.uniq(allLocations);
 
-      primary.location = { selected_locations: allLocations, accessable_locations: allLocations };
+      primary.location = allLocations;
       const newFamilyId = await familyServices.generateNewFamilyId();
       primary.family_id = newFamilyId;
       const emailExist = await userServices.checkEmailExist(primary.email);
       if (emailExist) {
         throw new Error("Validation error");
       }
-      const familyLocation = allLocations;
-      if (!familyLocation.every(location => req.user.location.accessable_locations.includes(location)) && req.user.role !== 'Super Admin') {
+      const familyLocation = allLocations.map((item) => item.loc_id);
+      if (!familyLocation.every(location => req.user.locations.map((item) => item.loc_id).includes(location)) && req.user.role !== 'Super Admin') {
         await t.rollback();
         return res.status(400).json({Message: "Unauthorized location access"});
       }
@@ -70,10 +70,7 @@ module.exports = {
       let familyObj = [];
 
       secondary?.forEach(async (family) => {
-        family.location = {
-          selected_locations: allLocations,
-          accessable_locations: allLocations
-        };
+        family.location = allLocations;
 
         familyObj.push({
           ...family,
@@ -808,6 +805,8 @@ module.exports = {
       });
       next();
     } catch (error) {
+      console.log('error==>', error);
+      
       res
         .status(500)
         .json({ IsSuccess: false, error_log: error, Message: CONSTANTS.INTERNAL_SERVER_ERROR });

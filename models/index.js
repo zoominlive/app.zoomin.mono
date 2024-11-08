@@ -25,6 +25,8 @@ const Webhooks = require('./webhooks');
 const SubscriptionItems = require('./subscriptions_items');
 const CustomerTermsApproval = require('./customer_terms_approval');
 const ApiKeys = require('./api_keys');
+const CustomerLocationAssignments = require('./customer_location_assignment');
+const CustomerLocationAssignmentsCopy = require('./customer_location_assignment_copy');
 const sequelize = require('../lib/database');
 
 CustomerLocations.belongsTo(Customers, { foreignKey: 'cust_id' });
@@ -158,19 +160,19 @@ RoomsInTeacher.hasOne(Room, {
   }
 });
 
-Room.belongsTo(CustomerLocations, { foreignKey: 'location' });
+Room.belongsTo(CustomerLocations, { foreignKey: 'loc_id' });
 CustomerLocations.hasMany(Room, {
-  sourceKey: 'loc_name',
+  sourceKey: 'loc_id',
   foreignKey: {
-    name: 'location'
+    name: 'loc_id'
   }
 });
 
-Camera.belongsTo(CustomerLocations, { foreignKey: 'location' });
+Camera.belongsTo(CustomerLocations, { foreignKey: 'loc_id' });
 CustomerLocations.hasMany(Camera, {
-  sourceKey: 'loc_name',
+  sourceKey: 'loc_id',
   foreignKey: {
-    name: 'location'
+    name: 'loc_id'
   }
 });
 
@@ -211,6 +213,43 @@ Child.hasOne(Family, {
 Users.belongsTo(Customers, { foreignKey: 'cust_id' });
 Room.belongsTo(Customers, { foreignKey: 'cust_id' });
 
+// Define Many-to-Many Relationship
+Users.belongsToMany(CustomerLocations, {
+  through: CustomerLocationAssignments,
+  foreignKey: 'user_id',
+  as: 'locations'
+});
+
+CustomerLocations.belongsToMany(Users, {
+  through: CustomerLocationAssignments,
+  foreignKey: 'loc_id',
+  as: 'users'
+});
+
+Family.belongsToMany(CustomerLocations, {
+  through: CustomerLocationAssignments,
+  foreignKey: 'family_member_id',
+  as: 'family_user_locations'
+});
+
+CustomerLocations.belongsToMany(Family, {
+  through: CustomerLocationAssignments,
+  foreignKey: 'loc_id',
+  as: 'family_users'
+});
+
+Child.belongsToMany(CustomerLocations, {
+  through: CustomerLocationAssignments,
+  foreignKey: 'child_id',
+  as: 'child_locations'
+});
+
+CustomerLocations.belongsToMany(Child, {
+  through: CustomerLocationAssignments,
+  foreignKey: 'loc_id',
+  as: 'child'
+});
+
 const connection = {};
 
 module.exports = async () => {
@@ -243,7 +282,8 @@ module.exports = async () => {
       Invoice,
       SubscriptionItems,
       Webhooks,
-      ApiKeys
+      ApiKeys,
+      CustomerLocationAssignments
     };
   }
 
@@ -278,6 +318,8 @@ module.exports = async () => {
     Invoice,
     SubscriptionItems,
     Webhooks,
-    ApiKeys
+    ApiKeys,
+    CustomerLocationAssignments,
+    CustomerLocationAssignmentsCopy
   };
 };

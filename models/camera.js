@@ -33,10 +33,14 @@ const Camera = sequelize.define(
       allowNull: true,
       comment: 'camera description'
     },
-    location: {
-      type: Sequelize.STRING(50),
-      allowNull: false
+    loc_id: {
+      type: Sequelize.INTEGER,
+      allowNull: true
     },
+    // location: {
+    //   type: Sequelize.STRING(50),
+    //   allowNull: false
+    // },
     stream_uri: {
       type: Sequelize.STRING(155),
       allowNull: false,

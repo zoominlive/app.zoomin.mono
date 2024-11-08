@@ -23,7 +23,7 @@ module.exports = {
       params.cust_id = req.user.cust_id || req.body.cust_id;
       let validRooms = [];
       let validationMessages = [];
-      const userLocations = req.user.location.accessable_locations; 
+      const userLocations = req.user.locations.map((item) => item.loc_id);  
       // Location validation
       if (!userLocations.includes(params.location) && req.user.role !== 'Super Admin') {
         await t.rollback();
@@ -137,7 +137,8 @@ module.exports = {
       const token = req.userToken;
 
       const customer = await customerServices.getCustomerDetails(req.user.cust_id, t);
-      const validateLocation = await customerServices.validateLocation(params.location, req.user.location?.accessable_locations);
+      const userLocations = req.user.locations.map((item) => item.loc_id)
+      const validateLocation = await customerServices.validateLocation(params.location, userLocations);
       if (!validateLocation.valid && req.user.role !== 'Super Admin') {
         await t.rollback();
         return res.status(400).json({Message: validateLocation.message});

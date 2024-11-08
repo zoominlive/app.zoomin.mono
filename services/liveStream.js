@@ -114,7 +114,7 @@ module.exports = {
 
   getAllActiveStreams: async (cust_id, location='All', t) => {
     const { LiveStreams, Room, LiveStreamCameras } = await connectToDatabase();
-    let loc_obj = location === "All" ? {} : {location: location};
+    let loc_obj = location === "All" ? {} : {loc_id: location};
     
     let activeLiveStreams = await LiveStreams.findAll(
       { where: { stream_running: true, cust_id: cust_id }, 
@@ -138,7 +138,7 @@ module.exports = {
 
   getRecentStreams: async(cust_id, location='All', t)=> {
     const { LiveStreams, Room, LiveStreamCameras } = await connectToDatabase();
-    let loc_obj = location === "All" ? {} : {location: location}
+    let loc_obj = location === "All" ? {} : {loc_id: location}
     // let oneHourBefore = new Date();
     // oneHourBefore.setHours(oneHourBefore.getHours() - 24);
     const currentDate = new Date();
@@ -161,7 +161,7 @@ module.exports = {
         limit: 10
       },
       { transaction: t }
-    );
+    );   
     return recentLiveStreams;
   },
 

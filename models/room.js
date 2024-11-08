@@ -21,10 +21,14 @@ const Room = sequelize.define(
       type: Sequelize.STRING(50),
       allowNull: false
     },
-    location: {
-      type: Sequelize.STRING(50),
-      allowNull: false
+    loc_id: {
+      type: Sequelize.INTEGER,
+      allowNull: true
     },
+    // location: {
+    //   type: Sequelize.STRING(50),
+    //   allowNull: false
+    // },
     stream_live_license: {
       type: Sequelize.BOOLEAN(),
       defaultValue: false,

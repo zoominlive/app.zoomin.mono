@@ -16,8 +16,8 @@ module.exports = {
 
       //add children
       const custId = req?.user?.cust_id || req?.body?.cust_id
-      const childLocation = params.location.locations;
-      if (!childLocation.every(location => req.user.location.accessable_locations.includes(location)) && req.user.role !== 'Super Admin') {
+      const childLocation = params.location.locations.map((item) => item.loc_id);
+      if (!childLocation.every(location => req.user.locations.map((item) => item.loc_id).includes(location)) && req.user.role !== 'Super Admin') {
         await t.rollback();
         return res.status(400).json({Message: "Unauthorized location access"});
       }
@@ -65,13 +65,13 @@ module.exports = {
     const t = await sequelize.transaction();
     try {
       const params = req.body;
-      const childLocation = params.location.locations;
+      const childLocation = params.location.locations.map((item) => item.loc_id);
       const childDetails = await childServices.getChildById(params.child_id, t);
       if (childDetails.cust_id !== req.user.cust_id && req.user.role !== 'Super Admin') {
         await t.rollback();
         return res.status(400).json({Message: "Unauthorized access to child:"+ params.child_id})
       }
-      if (!childLocation.every(location => req.user.location.accessable_locations.includes(location)) && req.user.role !== 'Super Admin') {
+      if (!childLocation.every(location => req.user.locations.map((item) => item.loc_id).includes(location)) && req.user.role !== 'Super Admin') {
         await t.rollback();
         return res.status(400).json({Message: "Unauthorized location access"});
       }
@@ -252,11 +252,14 @@ module.exports = {
       const params = req.body;
 
       const childDetails = await childServices.getChildById(params.child_id, t);
-      if (childDetails.cust_id !== req.user.cust_id && req.user.role !== 'Super Admin') {
+      if (childDetails.dataValues.cust_id !== req.user.cust_id && req.user.role !== 'Super Admin') {
         await t.rollback();
         return res.status(400).json({Message: "Unauthorized access to child:"+ params.child_id})
       }
-      if (childDetails?.location?.locations?.length == params?.locations_to_disable?.length) {
+      console.log('childDetails==>', childDetails);
+      
+      if (childDetails?.dataValues?.child_locations?.length == params?.locations_to_disable?.length) {
+        console.log('===>1');
         const disableChild = await childServices.disableChild(
           params?.child_id,
           params?.scheduled_end_date ? params?.scheduled_end_date : null,
@@ -264,6 +267,7 @@ module.exports = {
         );
       } else {
       if(params?.locations_to_disable?.length){
+        console.log('===>2');
         const locationsDisabled = await childServices.disableSelectedLocations(
           params?.child_id,
           params?.scheduled_end_date ? params?.scheduled_end_date : null,
@@ -271,6 +275,7 @@ module.exports = {
         );
       }
       else{
+        console.log('===>3');
         const disableChild = await childServices.disableChild(
           params?.child_id,
           params?.scheduled_end_date ?params?.scheduled_end_date: null,

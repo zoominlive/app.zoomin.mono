@@ -124,7 +124,7 @@ module.exports = {
       {
         where: {
           cust_id: custId,
-          location: { [Sequelize.Op.in]: location },
+          loc_id: { [Sequelize.Op.in]: location },
         },
       },
       { transaction: t }
@@ -150,14 +150,14 @@ module.exports = {
     }
     let loc_obj = {};
     if (!cust_id) {
-      loc_obj = { location: user.location.accessable_locations };
+      loc_obj = { loc_id: user.locations.map((item) => item.loc_id) };
     } else {
       let availableLocations = await CustomerLocations.findAll({
         where: { cust_id: cust_id },
         raw: true,
       });
-      let locs = availableLocations.flatMap((i) => i.loc_name);
-      loc_obj = { location: locs };
+      let locs = availableLocations.flatMap((i) => i.loc_id);
+      loc_obj = { loc_id: locs };
     }
 
     if (filter.pageNumber && filter.pageSize) {
@@ -174,7 +174,7 @@ module.exports = {
               // { location: user.location.accessable_locations },
               loc_obj,
               {
-                location: {
+                loc_id: {
                   [Sequelize.Op.like]: `%${location}`,
                 },
               },
@@ -202,12 +202,17 @@ module.exports = {
                   attributes: [
                     "room_id",
                     "room_name",
-                    "location"
+                    "loc_id"
                   ],
                 },
               ],
             },
-          ]
+            {
+              model: CustomerLocations,
+              attributes: ["loc_id", "loc_name"],
+            }
+          ],
+          distinct: true
         },
         { transaction: t }
       );
@@ -216,7 +221,7 @@ module.exports = {
         {
           where: {
             cust_id: custId || cust_id,
-            location: {
+            loc_id: {
               [Sequelize.Op.like]: `%${location}`,
             },
             [Sequelize.Op.or]: [
@@ -242,11 +247,15 @@ module.exports = {
                   attributes: [
                     "room_id",
                     "room_name",
-                    "location"
+                    "loc_id"
                   ],
                 },
               ],
             },
+            {
+              model: CustomerLocations,
+              attributes: ["loc_id", "loc_name"],
+            }
           ]
         },
         { transaction: t }

@@ -88,19 +88,19 @@ module.exports = {
       if(user.role === 'Super Admin') {
         user.transcoderBaseUrl = await customerServices.getTranscoderUrlFromCustLocations(locations, custId);
       } else {
-        user.transcoderBaseUrl = await customerServices.getTranscoderUrlFromCustLocations(user.location.accessable_locations, custId);
+        user.transcoderBaseUrl = await customerServices.getTranscoderUrlFromCustLocations(user.locations, custId);        
       }
       user.max_stream_live_license = await customerServices.getMaxLiveStramAvailable(custId);
       user.max_stream_live_license_room = await customerServices.getMaxLiveStreamRoomAvailable(custId);
       if(user.role !== 'Super Admin') {
         let activeLocations = await customerServices.getActiveLocationDetails(custId)
-        activeLocations = activeLocations.flatMap((i) => i.loc_name)
+        activeLocations = activeLocations.flatMap((i) => i.loc_id)
         // Filter locations that are both in user's accessable_locations and activeLocations
-        const updatedAccessableLocations = user.location.accessable_locations.filter((location) => activeLocations.includes(location));
-        const updatedSelectedLocations = user.location.selected_locations.filter((location) => activeLocations.includes(location));
+        const updatedAccessableLocations = user.locations.filter((location) => activeLocations.includes(location.loc_id));
+        // const updatedSelectedLocations = user.location.selected_locations.filter((location) => activeLocations.includes(location));
         // Update user's location.accessable_locations with the filtered array
-        user.location.accessable_locations = updatedAccessableLocations;
-        user.location.selected_locations = updatedSelectedLocations;
+        user.locations = updatedAccessableLocations;
+        // user.location.selected_locations = updatedSelectedLocations;
       }
       if(user.role == 'Family') {
         let customerDetail = await customerServices.getCustomerDetails(custId, t);
@@ -138,11 +138,11 @@ module.exports = {
         await t.commit();
         return
       }
-      let userLocations = req.user.location.accessable_locations; 
+      let userLocations = req.user.locations.map((item) => item.loc_id); 
       console.log('userLocations', userLocations);
       console.log('params.location?.locations', params.location?.locations);
       
-      if (!params.location?.locations.every(location => userLocations.includes(location)) && req.user.role !== 'Super Admin') {
+      if (!params.location?.locations.map((item) => item.loc_id).every(location => userLocations.includes(location)) && req.user.role !== 'Super Admin') {
         await t.rollback();
         return res.status(400).json({Message: "Please enter the locations you have access to"})
       }   
@@ -154,7 +154,7 @@ module.exports = {
       params.email = emailIs;
 
       params.is_verified = false;
-      params.location = {selected_locations: params.location?.locations, accessable_locations: params.location?.locations}
+      // params.location = {selected_locations: params.location?.locations, accessable_locations: params.location?.locations}
       let addUser = await userServices.createUser(_.omit(params, ['image']), t);
       
       userAdded = addUser;
@@ -996,7 +996,7 @@ module.exports = {
     const t = await sequelize.transaction();
     try {
       const params = req.body;
-      const validation = await userServices.validateUser(params.userId, req.user.cust_id || params.cust_id, params.location?.locations);
+      const validation = await userServices.validateUser(params.userId, req.user.cust_id || params.cust_id, params.location?.locations.map((item) => item.loc_id));
       if (!validation.valid && req.user.role !== 'Super Admin') {
         await t.rollback();
         return res.status(400).json({Message: validation.message});

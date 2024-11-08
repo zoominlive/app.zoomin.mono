@@ -82,19 +82,23 @@ module.exports = {
   },
 
   getTranscoderUrlFromCustLocations: async (loc, cust_id, t) => {
-    const { CustomerLocations } = await connectToDatabase();
-    let customer_locations = await CustomerLocations.findOne(
-      {
-        raw: true,
-        where: {
-          cust_id: cust_id,
-          loc_name: loc
+    try {      
+      const { CustomerLocations } = await connectToDatabase();      
+      let customer_locations = await CustomerLocations.findOne(
+        {
+          raw: true,
+          where: {
+            cust_id: cust_id,
+            loc_id: loc
+          },
         },
-      },
-      { transaction: t }
-    );
-
-    return customer_locations?.transcoder_endpoint || null;
+        { transaction: t }
+      );
+  
+      return customer_locations?.transcoder_endpoint || null;
+    } catch (error) {
+      console.log('error==>', error);
+    }
   },
 
   getCustomerDetails: async (custId, t) => {
@@ -247,6 +251,8 @@ module.exports = {
       },
       attributes: { exclude: ["createdAt", "updatedAt"] },
     });
+    console.log('locations==>', locations);
+    
     return { 
       locations: locations.rows, 
       count: locations.count,
@@ -400,7 +406,7 @@ module.exports = {
 
   validateLocation: async (loc, userLocations) => {
     try {
-      const custLocation = await CustomerLocations.findOne({where: {loc_name: loc}, raw: true, plain: true});
+      const custLocation = await CustomerLocations.findOne({where: {loc_id: loc}, raw: true, plain: true});
       if (!custLocation) {
         return { valid: false, message: 'Location:'+ loc +' not found.' };
       }

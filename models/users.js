@@ -36,11 +36,11 @@ const Users = sequelize.define(
     password: {
       type: Sequelize.STRING(200)
     },
-    location: {
-      type: Sequelize.JSON,
-      allowNull: false,
-      required: [true, 'Atleast one location is required']
-    },
+    // location: {
+    //   type: Sequelize.JSON,
+    //   allowNull: false,
+    //   required: [true, 'Atleast one location is required']
+    // },
     password_link: {
       type: Sequelize.ENUM('active', 'inactive'),
       defaultValue: 'active',

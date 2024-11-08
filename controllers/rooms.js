@@ -19,7 +19,7 @@ module.exports = {
       params.cust_id = req.user.cust_id || req.body.cust_id;
       let validCameras = [];
       let validationMessages = [];
-      const userLocations = req.user.location.accessable_locations; 
+      const userLocations = req.user.locations.map((item) => item.loc_id); 
       // Location validation
       if (!userLocations.includes(params.location) && req.user.role !== 'Super Admin') {
         await t.rollback();
@@ -102,7 +102,7 @@ module.exports = {
       params.custId = req.user.cust_id || req.body.cust_id;
       let validCameras = [];
       let validationMessages = [];
-      const userLocations = req.user.location.accessable_locations; 
+      const userLocations = req.user.locations.map((item) => item.loc_id); 
       // Location validation      
       if (!userLocations.includes(params.location) && req.user.role !== 'Super Admin') {
         await t.rollback();

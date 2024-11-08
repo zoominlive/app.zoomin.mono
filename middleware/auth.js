@@ -4,6 +4,7 @@ const url = require('url');
 const CONSTANTS = require('../lib/constants');
 const { IdentityClient } = require('@frontegg/client');
 const ApiKeys = require('../models/api_keys');
+const CustomerLocations = require('../models/customer_locations');
 const identityClient = new IdentityClient({ FRONTEGG_CLIENT_ID: process.env.FRONTEGG_CLIENT_ID, FRONTEGG_API_KEY: process.env.FRONTEGG_API_KEY });
 
 // authentication middleware to check auth and give access based on user type
@@ -53,7 +54,16 @@ module.exports = async function (req, res, next) {
         req.user = app.dataValues;
       } else {
         if (user_id) {
-          user = await Users.findOne({ where: { user_id: user_id } });
+          user = await Users.findOne({
+            where: { user_id: user_id },
+            include: [
+              {
+                model: CustomerLocations,
+                as: "locations",
+                attributes: ["loc_id", "loc_name"],
+              },
+            ],
+          });
         }
         if (!user) {
           const family_member_id = decodeToken.metadata.zoomin_family_member_id;
@@ -92,14 +102,18 @@ module.exports = async function (req, res, next) {
             });
           }
         } else {
+          let convertedToJSON;
           if(user.role === 'Admin') {
             cust = await Customers.findOne({ where: { cust_id: user.cust_id } });
             user.dataValues.stripe_cust_id = cust.dataValues.stripe_cust_id;
             req.userToken = token;
-            req.user = user.toJSON();
+            convertedToJSON = user.toJSON();
+            let locations = convertedToJSON.locations.map((item) => ({loc_id: item.loc_id, loc_name: item.loc_name}));           
+            convertedToJSON.locations = locations
+            req.user = convertedToJSON;
           }
           req.userToken = token;
-          req.user = user.toJSON();
+          req.user = convertedToJSON;
          
         }
       }

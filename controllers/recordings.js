@@ -16,7 +16,7 @@ module.exports = {
       pageCount = req.query?.pageCount;
       const activeLiveStreams = await liveStreamServices.getAllActiveStreams(custId, req?.query?.location, t);
       let recentLiveStreams = await liveStreamServices.getRecentStreams(custId, req?.query?.location, t);
-      let recordedStreams = await liveStreamServices.getRecordedStreams(custId, req?.query?.from, req?.query?.to, req?.query?.location,req?.query?.rooms,req.query?.live,req.query?.vod, req.query?.sortBy, pageNumber, pageSize, pageCount, t);
+      let recordedStreams = await liveStreamServices.getRecordedStreams(custId, req?.query?.from, req?.query?.to, req?.query?.location, req?.query?.rooms,req.query?.live,req.query?.vod, req.query?.sortBy, pageNumber, pageSize, pageCount, t);
      // `${cam?.stream_uri}?uid=${user?.family_member_id || user?.user_id}&sid=${cam?.stream_uri.split('/') [cam?.stream_uri.split('/').length - 1].split('.')[0]}&uuid=${uuidv4()}`
     // recordedStreams.forEach(element => {
       //element.stream_uri = `${cam?.stream_uri}?uid=${req.user?.family_member_id || req.user?.user_id}&sid=${cam?.stream_uri.split('/') [cam?.stream_uri.split('/').length - 1].split('.')[0]}&uuid=${uuidv4()}`
