@@ -147,6 +147,7 @@ const CustomerForm = (props) => {
       stream_live_license,
       ...details
     } = data;
+    console.log('location==>', location);
 
     const payload = {
       ...details,
@@ -158,7 +159,7 @@ const CustomerForm = (props) => {
         last_name: last_name,
         email: email,
         role: role,
-        location: { selected_locations: location, accessable_locations: location },
+        location: { locations: location },
         rooms: rooms,
         stream_live_license: stream_live_license,
         user_id: props.customer && props.customer?.users[0]?.user_id

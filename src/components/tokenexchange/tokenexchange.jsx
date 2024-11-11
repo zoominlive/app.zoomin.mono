@@ -394,7 +394,7 @@ const TokenExchange = () => {
         user_id: authCtx?.user?.frontegg_user_id || authCtx?.user?.user_id,
         frontegg_tenant_id: authCtx?.user?.frontegg_tenant_id,
         cust_id: authCtx?.user?.cust_id || localStorage.getItem('cust_id'),
-        location: authCtx?.user?.location,
+        location: authCtx?.user?.locations,
         allowed_endpoints: filteredEndpoints
       }).then((response) => {
         if (response.status === 201) {
