@@ -1,6 +1,6 @@
 const sequelize = require('./lib/database');
 const Users = require('./models/users');  // Import your Users model
-const CustomerLocationAssignmentsCopy = require('./models/customer_location_assignment_copy');  // Import your CustomerLocationAssignments model
+const CustomerLocationAssignmentsCopy = require('./models/customer_location_assignment');  // Import your CustomerLocationAssignments model
 
 // Define location mapping for simplicity
 const locationMapping = {

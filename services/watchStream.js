@@ -186,7 +186,7 @@ module.exports = {
               user.cust_id || req?.query?.cust_id
             );
             let locs = availableLocations.flatMap((i) => i.loc_id);
-            loc_obj = { location: locs };
+            loc_obj = { loc_id: locs };
           } else {            
             loc_obj = { loc_id: user.locations.map((item) => item.loc_id) };
           }

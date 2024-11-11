@@ -198,7 +198,7 @@ module.exports = {
         where: { cust_id: cust_id },
         raw: true,
       });
-      let locs = availableLocations.flatMap((i) => i.loc_name);
+      let locs = availableLocations.flatMap((i) => i.loc_id);
       loc_obj = { loc_id: locs };
     }
 

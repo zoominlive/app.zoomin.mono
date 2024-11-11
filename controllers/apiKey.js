@@ -4,6 +4,7 @@ const sequelize = require('../lib/database');
 const userServices = require('../services/users');
 const constants = require('../lib/constants');
 const Customers = require('../models/customers');
+const CustomerLocationAssignments = require('../models/customer_location_assignment');
 
 module.exports = {
   createApiKey: async (req, res, next) => {
@@ -24,7 +25,7 @@ module.exports = {
       console.log("apiKey", apiKey);
 
       const frontEggUser = await userServices.createFrontEggAppUser(params.frontegg_tenant_id || fronteggTenantId, params);
-      const { ApiKeys } = await connectToDatabase();
+      const { ApiKeys, CustomerLocationAssignments } = await connectToDatabase();
       params.key = apiKey;
       // params.secret = apiSecret;
       // params.hashedSecret = hashedSecret;
@@ -34,6 +35,20 @@ module.exports = {
       params.location = params.location;
       let apiKeyCreated;
       if(frontEggUser) apiKeyCreated = await ApiKeys.create(params, { transaction: t });
+      if(apiKeyCreated) {
+        const locsToAdd = params.location.map((_) => {
+          return {
+            loc_id: _.loc_id,
+            cust_id: params.cust_id,
+            api_key_id: apiKeyCreated.id
+          };
+        });
+        console.log('locsToAdd==>', locsToAdd);
+        
+        await CustomerLocationAssignments.bulkCreate(locsToAdd, {
+          transaction: t,
+        });
+      }
 
       if (apiKeyCreated) {
         console.log(apiKeyCreated);
@@ -203,9 +218,16 @@ module.exports = {
   },
 
   getApiKeyList: async (req, res, next) => {
-    const { ApiKeys } = await connectToDatabase();
+    const { ApiKeys, CustomerLocations } = await connectToDatabase();
 
-    let keyList = await ApiKeys.findAll();
+    let keyList = await ApiKeys.findAll({
+      include: [
+        {
+          model: CustomerLocations,
+          as: 'api_key_locations'
+        }
+      ]
+    });
     return res.status(200).json({
       data: keyList,
       count: keyList.length
@@ -217,7 +239,13 @@ module.exports = {
 
     let keyList = await ApiKeys.findAll({
       limit: 1,
-      order: [ [ 'createdAt', 'DESC' ]]
+      order: [ [ 'createdAt', 'DESC' ]],
+      include: [
+        {
+          model: CustomerLocations,
+          as: 'api_key_locations'
+        }
+      ]
     });
     return res.status(200).json({
       data: keyList,
@@ -233,6 +261,10 @@ module.exports = {
         { where: { id: id }, raw: true }, 
         { transaction: t }
       );
+      await CustomerLocationAssignments.destroy(
+        { where: { api_key_id: id } },
+        { transaction: t }
+      );
       if(deleteKey) {
         await userServices.removeFrontEggUser(frontegg_user_id);
       }
@@ -243,7 +275,9 @@ module.exports = {
       });
     } catch (error) {
       await t.rollback(); // Rollback the transaction in case of error
-      res.status(500).json({ err: error, Message: error.Message });
+      console.log('err', error);
+      
+      res.status(500).json({ err: error, Message: error.message });
     } finally {
       next();
     }

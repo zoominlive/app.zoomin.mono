@@ -245,11 +245,11 @@ module.exports = {
         where: { cust_id: cust_id },
         raw: true,
       });
-      let locs = availableLocations.flatMap((i) => i.loc_id);
+      let locs = availableLocations.map(({loc_id, loc_name}) => ({loc_id, loc_name}));
       familiesCount.map((item) => {
         console.log('item in if==>', item);
         locs.forEach((i) => {
-          if (item.location?.locations?.includes(i)) {
+          if (item.loc_id == i.loc_id) {
             result.push(item);
           }
         });

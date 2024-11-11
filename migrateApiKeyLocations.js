@@ -1,5 +1,5 @@
 const sequelize = require('./lib/database');
-const Family = require('./models/family');  // Import your Family model
+const ApiKey = require('./models/api_keys');  // Import your Users model
 const CustomerLocationAssignmentsCopy = require('./models/customer_location_assignment');  // Import your CustomerLocationAssignments model
 
 // Define location mapping for simplicity
@@ -8,20 +8,19 @@ const locationMapping = {
   "Secondary Location": 203
 };
 
-async function migrateUserLocations() {
+async function migrateApiKeyLocations() {
   try {
-    // Fetch all users
-    const famUsers = await Family.findAll();
+    // Fetch all apikeys
+    const apikeys = await ApiKey.findAll();
 
-    for (const fam of famUsers) {
+    for (const apikey of apikeys) {
       // Parse `location` field to get selected locations
-      
       let locationData;
       try {      
-        locationData = typeof fam.location === 'string' ? JSON.parse(fam.location) : fam.location;
+        locationData = typeof apikey.location === 'string' ? JSON.parse(apikey.location) : apikey.location;
         console.log('locationData==>', locationData);
       } catch (error) {
-        console.error(`Failed to parse location for fam ${fam.family_member_id}`, error);
+        console.error(`Failed to parse location for apikey ${apikey.user_id}`, error);
         continue;
       }
       
@@ -35,21 +34,22 @@ async function migrateUserLocations() {
 
           // Skip if loc_id is undefined (meaning location is unrecognized)
           if (!loc_id) {
-            console.warn(`Unknown location: ${locName} for fam ${fam.family_member_id}`);
+            console.warn(`Unknown location: ${locName} for apikey ${apikey.id}`);
             continue;
           }
 
           // Insert a record into `customer_location_assignments`
           await CustomerLocationAssignmentsCopy.create({
             user_id: null,
-            family_member_id: fam.family_member_id,
-            family_id: fam.family_id,
+            family_member_id: null,
+            family_id: null,
             child_id: null,
-            cust_id: fam.cust_id,
+            cust_id: apikey.cust_id,
+            api_key_id: apikey.id,
             loc_id: loc_id
           });
 
-          console.log(`Added location ${locName} (loc_id: ${loc_id}) for fam ${fam.family_member_id}`);
+          console.log(`Added location ${locName} (loc_id: ${loc_id}) for user ${apikey.id}`);
         }
       }
     }
@@ -62,4 +62,4 @@ async function migrateUserLocations() {
 }
 
 // Run the migration
-migrateUserLocations();
+migrateApiKeyLocations();

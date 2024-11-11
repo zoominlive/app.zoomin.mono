@@ -383,14 +383,17 @@ module.exports = {
       let availableLocations = await customerServices.getLocationDetails(
         cust_id
       );
-      let locs = availableLocations.flatMap((i) => i.loc_name);
+      let locs = availableLocations.flatMap(({loc_id, loc_name}) => ({loc_id, loc_name}));
+      console.log('locs==>', locs);
+      
       allusers.map((item) => {
         locs.forEach((i) => {
-          if (item.location.accessable_locations?.includes(i)) {
+          if (item.locations?.map((item) => item.loc_id)?.includes(i.loc_id)) {
             userIds.push(item);
           }
         });
       });
+      console.log('userIds==>', userIds);
     } else {
       allusers.map((item) => {
         user.locations.forEach((i) => {          

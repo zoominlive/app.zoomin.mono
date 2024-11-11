@@ -332,7 +332,7 @@ module.exports = {
         searchBy: req.query?.searchBy?.replace(/'/g, "\\'"),
         roomsList: req.query?.rooms,
         location: req.query?.location,
-        cust_id: req. query?.cust_id
+        cust_id: req.query?.cust_id
       };
       
       let familyDetails = await familyServices.getAllFamilyDetails(req.user, filter, t);

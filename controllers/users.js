@@ -74,14 +74,18 @@ module.exports = {
     const t = await sequelize.transaction();
     try {
       const user = req.user;
+      console.log('user==>', user);
+      
       const custId = req.user.cust_id || req.query?.cust_id;
       let locations;
       if(!req.user.cust_id){
         console.log('calling===================')
         let availableLocations = await customerServices.getLocationDetails(custId)
-        let locs = availableLocations.flatMap((i) => i.loc_name);
-        locations = availableLocations.flatMap((i) => i.loc_name);
-        user.location = { selected_locations: locs, accessable_locations: locs };
+        console.log('availableLocations==>', availableLocations);
+        
+        let locs = availableLocations.map(({loc_id, loc_name}) => ({loc_id, loc_name}));
+        locations = availableLocations.flatMap((i) => i.loc_id);
+        user.locations = locs;
       }
       // user.transcoderBaseUrl = await customerServices.getTranscoderUrl(custId);
       console.log('locations-->', locations);

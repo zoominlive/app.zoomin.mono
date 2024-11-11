@@ -166,19 +166,6 @@ module.exports = {
       }
       user.cust_id = addCustomer?.cust_id;
       user.is_verified = false;
-      let addUser = await userServices.createUser(user, t);
-      if (!addUser) {
-        return res.status(400).json({
-          IsSuccess: true,
-          Data: {},
-          Message: CONSTANTS.CUSTOMER_REGISTRATION_FAILED,
-        });
-      }
-      let userData = addUser?.toJSON();
-      const token = await userServices.createPasswordToken(userData, true);
-      const name = userData.first_name + ' ' + userData.last_name;
-      const originalUrl = process.env.FE_SITE_BASE_URL + 'set-password?' + 'token=' + token + '&type=user';
-      // await sendRegistrationMailforUser(name, userData.email, originalUrl);
 
       let locations = customer_locations.flatMap((i) => {return { loc_name: i.loc_name, transcoder_endpoint: i.transcoder_endpoint}});
       console.log('locations==>', locations);
@@ -195,6 +182,37 @@ module.exports = {
         });
       }
       console.log("addLocations=========>", addLocations);
+      user.location.locations = addLocations.map((item) => item.dataValues);
+
+      let addUser = await userServices.createUser(user, t);
+      if (!addUser) {
+        return res.status(400).json({
+          IsSuccess: true,
+          Data: {},
+          Message: CONSTANTS.CUSTOMER_REGISTRATION_FAILED,
+        });
+      }
+      let userData = addUser?.toJSON();
+      const token = await userServices.createPasswordToken(userData, true);
+      const name = userData.first_name + ' ' + userData.last_name;
+      const originalUrl = process.env.FE_SITE_BASE_URL + 'set-password?' + 'token=' + token + '&type=user';
+      // await sendRegistrationMailforUser(name, userData.email, originalUrl);
+
+      // let locations = customer_locations.flatMap((i) => {return { loc_name: i.loc_name, transcoder_endpoint: i.transcoder_endpoint}});
+      // console.log('locations==>', locations);
+      // let addLocations = await customerServices.createLocation(
+      //   addCustomer?.cust_id,
+      //   locations,
+      //   t
+      // );
+      // if (!addLocations) {
+      //   return res.status(400).json({
+      //     IsSuccess: true,
+      //     Data: {},
+      //     Message: CONSTANTS.CUSTOMER_REGISTRATION_FAILED,
+      //   });
+      // }
+      // console.log("addLocations=========>", addLocations);
 
       if (user.role === 'Admin') {
         const vendor_token = await axios.post(
@@ -496,6 +514,16 @@ module.exports = {
 
       const userDetails = await userServices.getUserById(user.user_id, t);
       console.log('user=>', user);
+      await customerServices.deleteLocation(customeDetails?.cust_id);
+      console.log(customer_locations);
+      let locations = customer_locations.flatMap((i) => {return { loc_name: i.loc_name, transcoder_endpoint: i.transcoder_endpoint}});
+      console.log('locations-->', locations);
+      let newLocations = await customerServices.createLocation(
+        customeDetails?.cust_id,
+        locations,
+        t
+      );
+      user.location.locations = newLocations.map((item) => item.dataValues);
       let editedUser = await userServices.editUserProfile(
         userDetails,
         _.omit(user, ["email"]),
@@ -525,15 +553,15 @@ module.exports = {
           await sendEmailChangeMail(name, user?.email, originalUrl);
         }
       }
-      await customerServices.deleteLocation(customeDetails?.cust_id);
-      console.log(customer_locations);
-      let locations = customer_locations.flatMap((i) => {return { loc_name: i.loc_name, transcoder_endpoint: i.transcoder_endpoint}});
-      console.log('locations-->', locations);
-      await customerServices.createLocation(
-        customeDetails?.cust_id,
-        locations,
-        t
-      );
+      // await customerServices.deleteLocation(customeDetails?.cust_id);
+      // console.log(customer_locations);
+      // let locations = customer_locations.flatMap((i) => {return { loc_name: i.loc_name, transcoder_endpoint: i.transcoder_endpoint}});
+      // console.log('locations-->', locations);
+      // await customerServices.createLocation(
+      //   customeDetails?.cust_id,
+      //   locations,
+      //   t
+      // );
 
       if (editedProfile && editedUser) {
         res.status(200).json({

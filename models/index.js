@@ -226,6 +226,18 @@ CustomerLocations.belongsToMany(Users, {
   as: 'users'
 });
 
+ApiKeys.belongsToMany(CustomerLocations, {
+  through: CustomerLocationAssignments,
+  foreignKey: 'api_key_id',
+  as: 'api_key_locations'
+});
+
+CustomerLocations.belongsToMany(ApiKeys, {
+  through: CustomerLocationAssignments,
+  foreignKey: 'loc_id',
+  as: 'apikeys'
+});
+
 Family.belongsToMany(CustomerLocations, {
   through: CustomerLocationAssignments,
   foreignKey: 'family_member_id',

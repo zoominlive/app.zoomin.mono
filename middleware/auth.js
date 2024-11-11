@@ -112,6 +112,7 @@ module.exports = async function (req, res, next) {
             convertedToJSON.locations = locations
             req.user = convertedToJSON;
           }
+          convertedToJSON = user.toJSON();
           req.userToken = token;
           req.user = convertedToJSON;
          
