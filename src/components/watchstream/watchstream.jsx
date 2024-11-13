@@ -76,7 +76,7 @@ const WatchStream = () => {
   useEffect(() => {
     layoutCtx.setActive(5);
     layoutCtx.setBreadcrumb(['Watch Stream', 'Manage rooms and their camera authorization']);
-    const locs = ['Select All'];
+    const locs = [{ loc_id: 'select-all', loc_name: 'Select All' }];
     authCtx?.user?.locations?.map((item) => item).forEach((loc) => locs.push(loc));
     setLocations(locs);
     setSelectedLocation(locs);
@@ -321,15 +321,19 @@ const WatchStream = () => {
   };
 
   const handleSetLocations = (_, value, reason, option) => {
-    if (reason == 'selectOption' && option?.option == 'Select All' && !allLocationChecked) {
+    if (
+      reason == 'selectOption' &&
+      option?.option.loc_name == 'Select All' &&
+      !allLocationChecked
+    ) {
       setSelectedLocation(reason === 'selectOption' ? locations.slice(1, locations.length) : []);
       setAllLocationChecked(true);
-    } else if (option?.option == 'Select All' && reason === 'removeOption') {
+    } else if (option?.option.loc_name == 'Select All' && reason === 'removeOption') {
       setSelectedLocation([]);
       setAllLocationChecked(false);
     } else if (
       reason === 'selectOption' &&
-      option?.option == 'Select All' &&
+      option?.option.loc_name == 'Select All' &&
       allLocationChecked == true
     ) {
       setAllLocationChecked(false);

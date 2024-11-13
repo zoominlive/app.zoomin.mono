@@ -94,7 +94,7 @@ const Layout = () => {
   const { user } = useAuth();
   // const { user, isAuthenticated } = useAuth();
 
-  const locs = ['Select All'];
+  const locs = [{ loc_id: 'select-all', loc_name: 'Select All' }];
   //authCtx?.user?.location?.accessable_locations.forEach((loc) => locs.push(loc));
   // const handleChange = (event) => {
   //   authCtx.setLocation(event.target.value);
@@ -464,12 +464,17 @@ const Layout = () => {
   ];
 
   const handleSetLocations = (_, value, reason, option) => {
-    if (reason == 'selectOption' && option?.option == 'Select All' && !allLocationChecked) {
-      console.log('1');
+    console.log('option==>', option);
+    if (
+      reason == 'selectOption' &&
+      option?.option.loc_name == 'Select All' &&
+      !allLocationChecked
+    ) {
+      console.log('1', option);
       setSelectedLocation(reason === 'selectOption' ? locations.slice(1, locations.length) : []);
       setAllLocationChecked(true);
     } else if (
-      (option?.option == 'Select All' && reason === 'removeOption') ||
+      (option?.option.loc_name == 'Select All' && reason === 'removeOption') ||
       reason === 'clear'
     ) {
       console.log('2');
@@ -477,7 +482,7 @@ const Layout = () => {
       setAllLocationChecked(false);
     } else if (
       reason === 'selectOption' &&
-      option?.option == 'Select All' &&
+      option?.option.loc_name == 'Select All' &&
       allLocationChecked == true
     ) {
       console.log('3');

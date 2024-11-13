@@ -379,7 +379,7 @@ const Logs = () => {
             loc_id,
             loc_name
           }));
-          setLocations(['Select All', ...locations]);
+          setLocations([{ loc_id: 'select-all', loc_name: 'Select All' }, ...locations]);
         } else {
           errorMessageHandler(
             enqueueSnackbar,
@@ -391,7 +391,7 @@ const Logs = () => {
       });
     }
     // eslint-disable-next-line no-unsafe-optional-chaining
-    setLocations(['Select All', ...authCtx?.user?.locations]);
+    setLocations([{ loc_id: 'select-all', loc_name: 'Select All' }, ...authCtx?.user?.locations]);
     // setSelectedLocation(authCtx?.user?.location?.accessable_locations);
     console.log('location?.state==>', location?.state);
     if (location?.state) {
@@ -624,12 +624,16 @@ const Logs = () => {
   //   Method to handle location change for table
   const handleLocationChange = (_, value, reason, option) => {
     console.log('reason, option', reason, option);
-    if (reason == 'selectOption' && option?.option == 'Select All' && !allLocationChecked) {
+    if (
+      reason == 'selectOption' &&
+      option?.option.loc_name == 'Select All' &&
+      !allLocationChecked
+    ) {
       console.log('1');
       setSelectedLocation(reason === 'selectOption' ? locations.slice(1, locations.length) : []);
       setAllLocationChecked(true);
     } else if (
-      (option?.option == 'Select All' && reason === 'removeOption') ||
+      (option?.option.loc_name == 'Select All' && reason === 'removeOption') ||
       reason === 'clear'
     ) {
       console.log('2');
@@ -637,7 +641,7 @@ const Logs = () => {
       setAllLocationChecked(false);
     } else if (
       reason === 'selectOption' &&
-      option?.option == 'Select All' &&
+      option?.option.loc_name == 'Select All' &&
       allLocationChecked == true
     ) {
       console.log('3');

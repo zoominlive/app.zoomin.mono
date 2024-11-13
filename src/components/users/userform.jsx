@@ -103,7 +103,7 @@ const UserForm = (props) => {
     roomList?.map((room) => {
       let count = 0;
       selectedLocation?.forEach((location) => {
-        if (room.location === location) {
+        if (room.loc_id === location.loc_id) {
           count = count + 1;
         }
       });
