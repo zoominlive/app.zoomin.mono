@@ -21,7 +21,7 @@ module.exports = {
         let accessableLocsToFamily;
         if (req.user.cust_id) {
           accessableLocsToFamily =
-            req.user?.location?.accessable_locations?.filter((loc) => {
+            req.user?.locations?.filter((loc) => {
               if (
                 !req.user?.disabled_locations?.locations?.find(
                   (loc1) => loc1 == loc
@@ -45,7 +45,7 @@ module.exports = {
             }
           });
         }
-        req.user.location.accessable_locations = accessableLocsToFamily;
+        req.user.locations = accessableLocsToFamily;
       }
       let cameras = await watchStreamServices.getAllCamForLocation({
         ...req.user,

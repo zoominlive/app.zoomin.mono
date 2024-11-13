@@ -31,7 +31,7 @@ module.exports = {
 
       if (user?.family_id) {
         console.log("user-->", user);
-        const baseUrl = await customerServices.getTranscoderUrlFromCustLocations(user?.location?.accessable_locations, user?.cust_id);
+        const baseUrl = await customerServices.getTranscoderUrlFromCustLocations(user?.locations.map((item) => item.loc_id), user?.cust_id);
         let cameras = await Child.findAll({
           where: { family_id: user.family_id, status: "enabled" },
           include: [
@@ -45,7 +45,7 @@ module.exports = {
                 {
                   model: Room,
                   as: "room",
-                  where: { location: user.location.accessable_locations },
+                  where: { loc_id: user.locations.map((item) => item.dataValues.loc_id) },
                   include: [
                     {
                       model: CamerasInRooms,
@@ -70,7 +70,7 @@ module.exports = {
           rooms?.roomsInChild?.forEach((room) => {
             if (room?.schedule?.timeRange) {
               const timeZone = availableLocations.find(
-                (loc) => loc.loc_name == room.room.location
+                (loc) => loc.loc_id == room.room.loc_id
               );
               let hasAccess = false;
               room.schedule.timeRange?.forEach((range) => {
@@ -130,7 +130,7 @@ module.exports = {
                 finalRooms.push({
                   room_id: room.room.room_id,
                   room_name: room.room.room_name,
-                  location: room.room.location,
+                  location: room.room.loc_id,
                   cameras: cams,
                 });
               }
@@ -167,7 +167,7 @@ module.exports = {
               finalRooms.push({
                 room_id: room.room.room_id,
                 room_name: room.room.room_name,
-                location: room.room.location,
+                location: room.room.loc_id,
                 cameras: cams,
               });
             }

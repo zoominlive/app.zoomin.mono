@@ -71,26 +71,33 @@ module.exports = async function (req, res, next) {
             let familyUser;
             familyUser = await Family.findOne({
               where: { family_member_id: family_member_id },
+              group: ['children.child_locations.loc_id'],
               include: [
                 {
                   model: Child,
-                  attributes: ['location']
+                  include: [
+                    {
+                      model: CustomerLocations,
+                      as: 'child_locations',
+                      attributes: ['loc_id', 'loc_name']
+                    }
+                  ],
                 }
-              ]
+              ],
             });
   
             if (familyUser) {
               let locations = [];
               familyUser?.children?.forEach((child) => {
-                child?.location?.locations?.forEach((location) => {
+                child?.child_locations?.forEach((location) => {
                   locations.push(location);
                 });
               });
               locations = locations?.filter((v, i, a) => a.indexOf(v) === i);
               req.userToken = token;
               req.user = familyUser.toJSON();
-              req.user.accessable_locations = req.user.location;
-              req.user.location = { selected_locations: locations, accessable_locations: locations };
+              // req.user.accessable_locations = req.user.location;
+              req.user.locations = locations;
             } else {
               res.status(401).json({ IsSuccess: true, Data: {}, Message: CONSTANTS.AUTH_ERROR });
             }
