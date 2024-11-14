@@ -14,21 +14,21 @@ provider:
   runtime: nodejs16.x
   httpApi:
     cors: true
-  timeout: 300
+  timeout: 30
   tracing:
     lambda: true
   websocketsApiName: websockets-api
   websocketsApiRouteSelectionExpression: $request.body.action
   environment:
-    AWS_BUCKET_NAME: ${file(./env.json):${opt:stage, 'local'}.AWS_BUCKET_NAME}
-    ACCESS_KEY_ID: ${file(./env.json):${opt:stage, 'local'}.ACCESS_KEY_ID}
-    SECRET_ACCESS_KEY: ${file(./env.json):${opt:stage, 'local'}.SECRET_ACCESS_KEY}
+    AWS_BUCKET_NAME: ${file(./env.json):${opt:stage, 'stage'}.AWS_BUCKET_NAME}
+    ACCESS_KEY_ID: ${file(./env.json):${opt:stage, 'stage'}.ACCESS_KEY_ID}
+    SECRET_ACCESS_KEY: ${file(./env.json):${opt:stage, 'stage'}.SECRET_ACCESS_KEY}
     EMAIL_SOURCE_ACCOUNT: "support@zoominlive.com"
-    RDS_HOST: ${file(./env.json):${opt:stage, 'local'}.RDS_HOST}
+    RDS_HOST: ${file(./env.json):${opt:stage, 'stage'}.RDS_HOST}
     RDS_PORT: 3306
-    RDS_USER: ${file(./env.json):${opt:stage, 'local'}.RDS_USER}
-    RDS_PASSWORD: ${file(./env.json):${opt:stage, 'local'}.RDS_PASSWORD}
-    RDS_DB_NAME: ${file(./env.json):${opt:stage, 'local'}.RDS_DB_NAME}
+    RDS_USER: ${file(./env.json):${opt:stage, 'stage'}.RDS_USER}
+    RDS_PASSWORD: ${file(./env.json):${opt:stage, 'stage'}.RDS_PASSWORD}
+    RDS_DB_NAME: ${file(./env.json):${opt:stage, 'stage'}.RDS_DB_NAME}
     #RDS_HOST: 127.0.0.1
     #RDS_PORT: 3306
     #RDS_USER: root
@@ -39,7 +39,7 @@ provider:
     ACCESS_TOKEN_EXPIRY: 1d
     REFRESH_TOKEN_EXPIRY: 1d
     NODE_ENV: production
-    FE_SITE_BASE_URL: ${file(./env.json):${opt:stage, 'local'}.FE_SITE_BASE_URL}
+    FE_SITE_BASE_URL: ${file(./env.json):${opt:stage, 'stage'}.FE_SITE_BASE_URL}
     type: "service_account"
     project_id: "zoomin-push-notifications"
     private_key_id: "1103eee93f0e16663970b897519c219dfef17831"
@@ -50,20 +50,20 @@ provider:
     token_uri: "https://oauth2.googleapis.com/token"
     auth_provider_x509_cert_url: "https://www.googleapis.com/oauth2/v1/certs"
     client_x509_cert_url: "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-eg6hb%40zoomin-push-notifications.iam.gserviceaccount.com"
-    websocket_endpoint: ${file(./env.json):${opt:stage, 'local'}.WS_ENDPOINT}
-    SEND_BIRD_APPLICATION_ID: ${file(./env.json):${opt:stage, 'local'}.SEND_BIRD_APPLICATION_ID}
-    SEND_BIRD_API_TOKEN: ${file(./env.json):${opt:stage, 'local'}.SEND_BIRD_API_TOKEN}
+    websocket_endpoint: ${file(./env.json):${opt:stage, 'stage'}.WS_ENDPOINT}
+    SEND_BIRD_APPLICATION_ID: ${file(./env.json):${opt:stage, 'stage'}.SEND_BIRD_APPLICATION_ID}
+    SEND_BIRD_API_TOKEN: ${file(./env.json):${opt:stage, 'stage'}.SEND_BIRD_API_TOKEN}
     # websocket_endpoint: "http://localhost:3001"
     STREAM_URL_SECRET_KEY: tNAbY0TfoCsKiS9TOijonkXkT
-    STRIPE_SECRET_KEY: ${file(./env.json):${opt:stage, 'local'}.STRIPE_SECRET_KEY}
-    STRIPE_WEBHOOK_SECRET: ${file(./env.json):${opt:stage, 'local'}.STRIPE_WEBHOOK_SECRET}
-    TRANSCODER_SECRET: ${file(./env.json):${opt:stage, 'local'}.TRANSCODER_SECRET}
-    FRONTEGG_CLIENT_ID: ${file(./env.json):${opt:stage, 'local'}.FRONTEGG_CLIENT_ID}
-    FRONTEGG_API_KEY: ${file(./env.json):${opt:stage, 'local'}.FRONTEGG_API_KEY}
+    STRIPE_SECRET_KEY: ${file(./env.json):${opt:stage, 'stage'}.STRIPE_SECRET_KEY}
+    STRIPE_WEBHOOK_SECRET: ${file(./env.json):${opt:stage, 'stage'}.STRIPE_WEBHOOK_SECRET}
+    TRANSCODER_SECRET: ${file(./env.json):${opt:stage, 'stage'}.TRANSCODER_SECRET}
+    FRONTEGG_CLIENT_ID: ${file(./env.json):${opt:stage, 'stage'}.FRONTEGG_CLIENT_ID}
+    FRONTEGG_API_KEY: ${file(./env.json):${opt:stage, 'stage'}.FRONTEGG_API_KEY}
     FRONTEGG_API_GATEWAY_URL: https://api.us.frontegg.com/
 
-  stage: ${opt:stage, 'local'}
-  region: ${file(./env.json):${opt:stage, 'local'}.REGION}
+  stage: ${opt:stage, 'stage'}
+  region: ${file(./env.json):${opt:stage, 'stage'}.REGION}
 custom:
   prune:
     automatic: true
@@ -244,6 +244,18 @@ functions:
       - httpApi:
           method: "*"
           path: /api/customers/locations
+
+  migrateUserLocations:
+    handler: migrateUserLocations.migrateUserLocations
+  
+  migrateFamilyLocations:
+    handler: migrateFamilyLocations.migrateFamilyLocations
+
+  migrateChildrenLocations:
+    handler: migrateChildrenLocations.migrateChildrenLocations
+  
+  migrateApiKeyLocations:
+    handler: migrateApiKeyLocations.migrateApiKeyLocations
           
   disableScheduledMembers:
     handler: cron.disableScheduledFamilyAndChild
@@ -260,7 +272,6 @@ functions:
       - schedule: rate(1 hour)
 
 plugins:
-  - serverless-offline
   - serverless-prune-versions
   - serverless-plugin-warmup
 

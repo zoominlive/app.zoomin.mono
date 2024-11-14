@@ -27,6 +27,9 @@ const CustomerLocationAssignments = sequelize.define(
     loc_id: {
       type: Sequelize.INTEGER
     },
+    api_key_id: {
+      type: Sequelize.INTEGER
+    },
     createdAt: { type: Sequelize.DATE, field: 'created_at' },
     updatedAt: { type: Sequelize.DATE, field: 'updated_at' }
   },

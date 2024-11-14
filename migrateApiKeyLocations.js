@@ -62,4 +62,4 @@ async function migrateApiKeyLocations() {
 }
 
 // Run the migration
-migrateApiKeyLocations();
+module.exports.migrateApiKeyLocations = migrateApiKeyLocations;

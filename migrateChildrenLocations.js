@@ -62,4 +62,4 @@ async function migrateChildrenLocations() {
 }
 
 // Run the migration
-migrateChildrenLocations();
+module.exports.migrateChildrenLocations = migrateChildrenLocations;

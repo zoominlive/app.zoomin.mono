@@ -60,5 +60,4 @@ async function migrateUserLocations() {
   }
 }
 
-// Run the migration
-migrateUserLocations();
+module.exports.migrateUserLocations = migrateUserLocations;

@@ -8,7 +8,7 @@ const locationMapping = {
   "Secondary Location": 203
 };
 
-async function migrateUserLocations() {
+async function migrateFamilyLocations() {
   try {
     // Fetch all users
     const famUsers = await Family.findAll();
@@ -62,4 +62,4 @@ async function migrateUserLocations() {
 }
 
 // Run the migration
-migrateUserLocations();
+module.exports.migrateFamilyLocations = migrateFamilyLocations;
