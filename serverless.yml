@@ -266,6 +266,7 @@ functions:
     handler: cron.enableScheduledChild
     events:
       - schedule: rate(1 hour)
+
   enableDisablescheduledRoom:
     handler: cron.enableDisableScheduledRoom
     events:

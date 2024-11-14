@@ -110,7 +110,7 @@ module.exports.disableScheduledFamilyAndChild = async () => {
 };
 
 module.exports.enableScheduledChild = async () => {
-  const { Child, Family, RoomsInChild } = await connectToDatabase();
+  const { Child } = await connectToDatabase();
 
   let update = {
     status: 'Enabled',
@@ -172,7 +172,7 @@ module.exports.enableDisableScheduledRoom = async () => {
 
   let roomsToEnable = [];
   enableRooms?.forEach((room) => {
-    const timeZone = availableLocations?.find((loc) => loc?.loc_name == room?.room?.location);
+    const timeZone = availableLocations?.find((loc) => loc?.loc_id == room?.room?.loc_id);
     const today = moment()?.tz(timeZone?.time_zone)?.format('YYYY-MM-DD');
     if (room?.scheduled_enable_date <= today) {
       roomsToEnable?.push(room?.room_child_id);
@@ -181,7 +181,7 @@ module.exports.enableDisableScheduledRoom = async () => {
 
   let roomsToDisable = [];
   disableRooms?.forEach((room) => {
-    const timeZone = availableLocations?.find((loc) => loc?.loc_name == room?.room?.location);
+    const timeZone = availableLocations?.find((loc) => loc?.loc_id == room?.room?.loc_id);
     const today = moment()?.tz(timeZone?.time_zone)?.format('YYYY-MM-DD');
     if (room?.scheduled_disable_date <= today) {
       roomsToDisable?.push(room?.room_child_id);
