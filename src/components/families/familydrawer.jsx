@@ -902,7 +902,7 @@ const FamilyDrawer = (props) => {
                             let locations = [];
                             props?.family?.children.forEach((child) => {
                               // eslint-disable-next-line no-unsafe-optional-chaining
-                              locations.push(...child?.location?.locations);
+                              locations.push(...child?.child_locations);
                             });
                             setLocationsToDisable(_.uniq(locations));
                             setParentToDisable(parent.family_member_id);
