@@ -258,7 +258,7 @@ functions:
     handler: migrateApiKeyLocations.migrateApiKeyLocations
           
   disableScheduledMembers:
-    handler: cron.disableScheduledFamilyAndChild
+    handler: cron.disableScheduledUsers
     events:
       - schedule: rate(1 hour)
 

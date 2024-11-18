@@ -105,6 +105,7 @@ module.exports = {
     try {
       const params = req.body;
       const cust_id = req.user.cust_id;
+      const user_id = req.user.user_id;
       const { user, customer_locations, time_zone } = params;
 
       let locations = customer_locations.flatMap((i) => i);
@@ -113,6 +114,7 @@ module.exports = {
       console.log(locations);
       let addLocations = await customerServices.createNewLocation(
         user || cust_id,
+        user_id,
         locations,
         timezone,
         t
@@ -402,7 +404,7 @@ module.exports = {
             Message: CONSTANTS.CUSTOMER_NOT_FOUND,
           });
       } else {
-        deleted = await customerServices.deleteCustomerLocation(loc_id, t);
+        deleted = await customerServices.deleteCustomerLocation(loc_id, req.user.user_id);
       }
 
       if (deleted) {

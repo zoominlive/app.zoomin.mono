@@ -375,8 +375,8 @@ module.exports = {
     return createLocations;
   },
 
-  createNewLocation: async (custId, locations, timezone, t) => {
-    const { CustomerLocations } = await connectToDatabase();
+  createNewLocation: async (custId, user_id, locations, timezone, t) => {
+    const { CustomerLocations, CustomerLocationAssignments } = await connectToDatabase();
     const zip = (locations, timezone) => locations.map((value, index) => [value, timezone[index]]);
     const locationsWithTimezone = zip(locations, timezone);
 
@@ -384,9 +384,14 @@ module.exports = {
       locationsWithTimezone.map(async ([loc, timezone]) => {
         const obj = { loc_name: loc, cust_id: custId, time_zone: timezone };
         // obj.loc_id = uuidv4();
-        return CustomerLocations.create(obj, {
+        const locationCreated = await CustomerLocations.create(obj, {
           transaction: t,
         });
+        
+        const userObj = { loc_id: locationCreated.dataValues.loc_id, cust_id: custId, user_id: user_id };
+        await CustomerLocationAssignments.create(userObj, {
+          transaction: t
+        })
       })
     );
     return createLocations;
@@ -398,10 +403,13 @@ module.exports = {
     return deletedLocations
   },
 
-  deleteCustomerLocation: async (loc_id) => {
-    const { CustomerLocations } = await connectToDatabase();
+  deleteCustomerLocation: async (loc_id, user_id) => {
+    const { CustomerLocations, CustomerLocationAssignments } = await connectToDatabase();
     let deletedLocations = await CustomerLocations.destroy({where: {loc_id: loc_id}});
-    return deletedLocations
+    let deletedUserLocation = await CustomerLocationAssignments.destroy({
+      where: { [Sequelize.Op.and]: [{ user_id: user_id }, { loc_id: loc_id }] },
+    });
+    return { deletedLocations, deletedUserLocation };
   },
 
   validateLocation: async (loc, userLocations) => {

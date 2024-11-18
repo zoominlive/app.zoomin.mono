@@ -504,13 +504,13 @@ module.exports = {
 
   // enable family member by ID
   enableFamily: async (familyMemberId, memberType, familyId, user, t) => {
-    const { Family, Child } = await connectToDatabase();
+    const { Family, Child, CustomerLocationAssignments } = await connectToDatabase();
     let updateFamilyDetails;
     let updateChildDetails;
 
     const location = await Family.findOne(
       {
-        attributes: ["location", "disabled_locations"],
+        attributes: ["disabled_locations", "cust_id"],
         where: {
           family_member_id: familyMemberId,
         },
@@ -519,7 +519,7 @@ module.exports = {
       { transaction: t }
     );
 
-    let locations = location?.location?.selected_locations;
+    let locations = [];
     let disabledLocations = location?.disabled_locations?.locations;
     if (disabledLocations?.length !== 0) {
       locations.push(...disabledLocations);
@@ -528,12 +528,21 @@ module.exports = {
     let update = {
       status: "Enabled",
       scheduled_end_date: null,
-      location: {
-        selected_locations: locations,
-        accessable_locations: locations,
-      },
+      // location: {
+      //   selected_locations: locations,
+      //   accessable_locations: locations,
+      // },
       disabled_locations: {},
     };
+    
+    locations.forEach(async (item) => {
+      await CustomerLocationAssignments.create({
+        loc_id: item.loc_id, 
+        family_member_id: familyMemberId,
+        family_id: familyId,
+        cust_id: location.cust_id
+      })
+    });
 
     if (memberType == "secondary") {
       updateFamilyDetails = await Family.update(
