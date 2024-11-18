@@ -146,14 +146,28 @@ const Families = () => {
   // Method to render the family location in table(combines the location from each child and remove duplicates)
   const renderFamilyLocations = (children) => {
     let locations = [];
+
+    // Flatten all child locations into the locations array
     children?.forEach((child) => {
-      child?.location?.locations?.forEach((location) => {
-        locations?.push(location);
+      child?.child_locations?.forEach((location) => {
+        locations.push(location);
       });
     });
-    const uniqueLocations = locations?.filter((item, index) => locations?.indexOf(item) === index);
-    const locationsJSX = uniqueLocations?.map((location, index) => (
-      <Chip key={index} label={location} color="primary" className="chip-color" />
+
+    // Create a map to ensure unique locations based on loc_id
+    const uniqueLocations = locations.reduce((map, location) => {
+      if (!map.has(location.loc_id)) {
+        map.set(location.loc_id, location);
+      }
+      return map;
+    }, new Map());
+
+    // Convert unique locations back to an array
+    const uniqueLocationsArray = Array.from(uniqueLocations.values());
+
+    // Generate JSX
+    const locationsJSX = uniqueLocationsArray.map((location, index) => (
+      <Chip key={index} label={location.loc_name} color="primary" className="chip-color" />
     ));
     return locationsJSX;
   };

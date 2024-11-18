@@ -904,7 +904,7 @@ const FamilyDrawer = (props) => {
                               // eslint-disable-next-line no-unsafe-optional-chaining
                               locations.push(...child?.child_locations);
                             });
-                            setLocationsToDisable(_.uniq(locations));
+                            setLocationsToDisable(_.uniqBy(locations, 'loc_id'));
                             setParentToDisable(parent.family_member_id);
                           }}
                           inputProps={{ 'aria-label': 'controlled' }}
