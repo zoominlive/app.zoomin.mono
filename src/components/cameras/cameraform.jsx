@@ -473,7 +473,7 @@ const CameraForm = (props) => {
                           option.room_id === value.room?.room_id || option.room_id === value.room_id
                         }
                         getOptionLabel={(option) => {
-                          return option.room_name;
+                          return option.loc_name + ' - ' + option.room_name;
                         }}
                         onMouseEnter={() => {
                           if (values?.location) {

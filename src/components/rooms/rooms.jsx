@@ -1,11 +1,11 @@
 import {
-  Autocomplete,
+  // Autocomplete,
   Box,
   Button,
   Card,
   CardContent,
   Chip,
-  CircularProgress,
+  // CircularProgress,
   Collapse,
   FormControl,
   Grid,
@@ -167,8 +167,8 @@ const Rooms = () => {
   const [isRoomFormDialogOpen, setIsRoomFormDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [roomsDropdownLoading, setRoomsDropdownLoading] = useState(false);
-  const [dropdownList, setDropdownList] = useState([]);
+  // const [roomsDropdownLoading, setRoomsDropdownLoading] = useState(false);
+  // const [dropdownList, setDropdownList] = useState([]);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [roomsList, setRoomList] = useState([]);
   const [totalRooms, setTotalRooms] = useState(0);
@@ -192,9 +192,9 @@ const Rooms = () => {
     };
   }, []);
 
-  useEffect(() => {
-    getDropDownRoomList();
-  }, []);
+  // useEffect(() => {
+  //   getDropDownRoomList();
+  // }, []);
 
   useEffect(() => {
     return () => {
@@ -226,24 +226,24 @@ const Rooms = () => {
   };
 
   // Method to fetch the rooms list for dropdown
-  const getDropDownRoomList = () => {
-    setRoomsDropdownLoading(true);
-    API.get('rooms/list', { params: { cust_id: localStorage.getItem('cust_id') } }).then(
-      (response) => {
-        if (response.status === 200) {
-          setDropdownList(response.data.Data);
-        } else {
-          errorMessageHandler(
-            enqueueSnackbar,
-            response?.response?.data?.Message || 'Something Went Wrong.',
-            response?.response?.status,
-            authCtx.setAuthError
-          );
-        }
-        setRoomsDropdownLoading(false);
-      }
-    );
-  };
+  // const getDropDownRoomList = () => {
+  //   setRoomsDropdownLoading(true);
+  //   API.get('rooms/list', { params: { cust_id: localStorage.getItem('cust_id') } }).then(
+  //     (response) => {
+  //       if (response.status === 200) {
+  //         setDropdownList(response.data.Data);
+  //       } else {
+  //         errorMessageHandler(
+  //           enqueueSnackbar,
+  //           response?.response?.data?.Message || 'Something Went Wrong.',
+  //           response?.response?.status,
+  //           authCtx.setAuthError
+  //         );
+  //       }
+  //       setRoomsDropdownLoading(false);
+  //     }
+  //   );
+  // };
 
   // Method to delete room
   const handleRoomDelete = () => {
@@ -260,11 +260,11 @@ const Rooms = () => {
     }
     API.delete('rooms/delete', { data: { ...payload } }).then((response) => {
       if (response.status === 200) {
-        setDropdownList((prevList) => {
-          let tempList = [...prevList];
-          tempList = tempList.filter((item) => item.room_id !== room.room_id);
-          return tempList;
-        });
+        // setDropdownList((prevList) => {
+        //   let tempList = [...prevList];
+        //   tempList = tempList.filter((item) => item.room_id !== room.room_id);
+        //   return tempList;
+        // });
         setRoomsPayload((prev) => {
           let temp = { ...prev };
           temp.rooms = temp.rooms.filter((item) => item.room_id !== room.room_id);
@@ -321,11 +321,11 @@ const Rooms = () => {
   };
 
   // Method to handle room change for table
-  const handleRoomChange = (_, value) => {
-    const roomsArr = [];
-    value.forEach((room) => roomsArr.push(room.room_name));
-    setRoomsPayload((prevPayload) => ({ ...prevPayload, rooms: roomsArr, pageNumber: 0 }));
-  };
+  // const handleRoomChange = (_, value) => {
+  //   const roomsArr = [];
+  //   value.forEach((room) => roomsArr.push(room.room_name));
+  //   setRoomsPayload((prevPayload) => ({ ...prevPayload, rooms: roomsArr, pageNumber: 0 }));
+  // };
 
   // Calls the search handler after 500ms
   const roomsListDebounce = useMemo(() => {
@@ -357,7 +357,7 @@ const Rooms = () => {
                       />
                     </Grid>
                     <Grid item md={3.5} sm={12}>
-                      <InputLabel id="location">Select Location</InputLabel>
+                      <InputLabel id="location">Location</InputLabel>
                       <FormControl fullWidth className="location-select">
                         <Select
                           labelId="location"
@@ -375,7 +375,7 @@ const Rooms = () => {
                         </Select>
                       </FormControl>
                     </Grid>
-                    <Grid item md={3.5} sm={12}>
+                    {/* <Grid item md={3.5} sm={12}>
                       <InputLabel id="rooms">Select Rooms</InputLabel>
                       <Autocomplete
                         labelId="rooms"
@@ -417,7 +417,7 @@ const Rooms = () => {
                           />
                         )}
                       />
-                    </Grid>
+                    </Grid> */}
                   </Grid>
                 </Box>
               </Grid>
@@ -499,10 +499,10 @@ const Rooms = () => {
           open={isRoomFormDialogOpen}
           setOpen={setIsRoomFormDialogOpen}
           getRoomsList={getRoomsList}
-          getDropDownRoomList={getDropDownRoomList}
+          // getDropDownRoomList={getDropDownRoomList}
           roomsPayload={roomsPayload}
           setRoomsPayload={setRoomsPayload}
-          setDropdownList={setDropdownList}
+          // setDropdownList={setDropdownList}
         />
       )}
       <NewDeleteDialog

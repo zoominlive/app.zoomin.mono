@@ -41,8 +41,8 @@ import CloseIcon from '@mui/icons-material/Close';
 
 const validationSchema = yup.object({
   room_name: yup.string('Enter Room name').required('Room name is required'),
-  location: yup.string('Select Location').required('Location is required'),
-  cameras: yup.array().min(1, 'Select at least one Camera').required('Camera is required')
+  location: yup.string('Select Location').required('Location is required')
+  // cameras: yup.array().min(1, 'Select at least one Camera').required('Camera is required')
 });
 
 const RoomForm = (props) => {
@@ -143,7 +143,7 @@ const RoomForm = (props) => {
             (room) => room.room_id === props.room.room_id
           );
           if (index !== -1) {
-            props.getDropDownRoomList();
+            // props.getDropDownRoomList();
             props.setRoomsPayload((prev) => {
               const tempPayload = { ...prev };
               const index = tempPayload.rooms.findIndex(
@@ -156,7 +156,7 @@ const RoomForm = (props) => {
             });
           } else {
             props.getRoomsList();
-            props.getDropDownRoomList();
+            // props.getDropDownRoomList();
           }
           handleLivestream();
         } else {
@@ -180,7 +180,7 @@ const RoomForm = (props) => {
         if (response.status === 201) {
           enqueueSnackbar(response.data.Message, { variant: 'success' });
           props.getRoomsList();
-          props.getDropDownRoomList();
+          // props.getDropDownRoomList();
           handleLivestream();
         } else {
           errorMessageHandler(
@@ -357,7 +357,7 @@ const RoomForm = (props) => {
                           multiple
                           id="cameras"
                           options={cameraOptions && locationSelected ? cameraOptions : []}
-                          noOptionsText={!locationSelected ? 'Select location first' : 'No Camera'}
+                          noOptionsText={!locationSelected ? 'Select location first' : 'No Cameras'}
                           isOptionEqualToValue={(option, value) => option.cam_id === value.cam_id}
                           getOptionLabel={(option) => {
                             return option.cam_name + ' - ' + option?.description;
@@ -397,8 +397,8 @@ const RoomForm = (props) => {
                                 )
                               }}
                               // placeholder="Camera"
-                              helperText={touched.cameras && errors.cameras}
-                              error={touched.cameras && Boolean(errors.cameras)}
+                              // helperText={touched.cameras && errors.cameras}
+                              // error={touched.cameras && Boolean(errors.cameras)}
                               fullWidth
                             />
                           )}
