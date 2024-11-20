@@ -36,13 +36,13 @@ module.exports = {
       }
 
        // Check if there's at least one valid camera
-      if (validCameras.length === 0) {
-        await t.rollback();
-        return res.status(400).json({
-          IsSuccess: false,
-          Message: "No valid cameras found. " + validationMessages.join(" "),
-        });
-      }
+      // if (validCameras.length === 0) {
+      //   await t.rollback();
+      //   return res.status(400).json({
+      //     IsSuccess: false,
+      //     Message: "No valid cameras found. " + validationMessages.join(" "),
+      //   });
+      // }
       const room = await roomServices.createRoom(params, validCameras, t);
 
       if (room) {
@@ -129,13 +129,13 @@ module.exports = {
       }
 
       // Check if there's at least one valid camera
-      if (validCameras.length === 0) {
-        await t.rollback();
-        return res.status(400).json({
-          IsSuccess: false,
-          Message: "No valid cameras found. " + validationMessages.join(" "),
-        });
-      }
+      // if (validCameras.length === 0) {
+      //   await t.rollback();
+      //   return res.status(400).json({
+      //     IsSuccess: false,
+      //     Message: "No valid cameras found. " + validationMessages.join(" "),
+      //   });
+      // }
       const room = await roomServices.editRoom(req.user, params, validCameras, t);
 
       await t.commit();
