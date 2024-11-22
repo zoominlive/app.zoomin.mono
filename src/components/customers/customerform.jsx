@@ -837,19 +837,23 @@ const CustomerForm = (props) => {
                 fullWidth
                 multiple
                 id="location"
-                options={values?.customer_locations
-                  ?.flatMap((i) => i.loc_name)
-                  ?.sort((a, b) => (a > b ? 1 : -1))}
+                options={values?.customer_locations?.sort((a, b) =>
+                  a.loc_name > b.loc_name ? 1 : -1
+                )}
+                getOptionLabel={(option) => option.loc_name}
+                isOptionEqualToValue={(option, value) => option.loc_name === value.loc_name}
                 onChange={(_, value) => {
                   setFieldValue('location', value);
                   setSelectedLocation(value);
                 }}
-                value={values?.location}
+                value={values?.location?.map((loc) => ({
+                  loc_name: loc.loc_name
+                }))}
                 renderTags={(value, getTagProps) =>
                   value.map((option, index) => (
                     <Chip
                       key={index}
-                      label={option}
+                      label={option.loc_name}
                       {...getTagProps({ index })}
                       //disabled={authCtx.user?.location?.accessable_locations.indexOf(option) == -1}
                     />
@@ -1050,9 +1054,9 @@ const CustomerForm = (props) => {
             last_name: props?.customer?.users[0]?.last_name || '',
             email: props?.customer?.users[0]?.email || '',
             role: props?.customer?.users[0]?.role || 'Admin',
-            location: props?.customer?.users[0]?.location?.selected_locations
-              ? props?.customer?.users[0]?.location?.selected_locations?.sort((a, b) =>
-                  a > b ? 1 : -1
+            location: props?.customer?.users[0]?.locations
+              ? props?.customer?.users[0]?.locations?.sort((a, b) =>
+                  a.loc_name > b.loc_name ? 1 : -1
                 )
               : [],
             rooms: props?.customer?.users[0]?.roomsInTeacher
