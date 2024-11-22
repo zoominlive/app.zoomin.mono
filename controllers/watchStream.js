@@ -132,16 +132,16 @@ module.exports = {
     try {
       if (req.user.role == "Family") {
         let accessableLocsToFamily =
-          req.user?.location?.accessable_locations?.filter((loc) => {
+          req.user?.locations?.map((item) => item).filter((loc) => {
             if (
-              !req.user?.disabled_locations?.locations?.find(
-                (loc1) => loc1 == loc
+              !req.user?.disabled_locations?.locations?.map((item) => item).find(
+                (loc1) => loc1.loc_id == loc.loc_id
               )
             ) {
               return loc;
             }
           });
-        req.user.location.accessable_locations = accessableLocsToFamily;
+        req.user.locations = accessableLocsToFamily;
       }
       const camDetails = await watchStreamServices.getAllCamForUser({
         ...req.user,

@@ -96,7 +96,7 @@ module.exports = {
       recentViewers.map((item) => {
         if (item.family) {
           locs.forEach((i) => {
-            if (item.family?.location?.accessable_locations.includes(i)) {
+            if (item.family.dataValues?.family_user_locations?.map((item) => item.loc_name).includes(i)) {
               if(!result.includes(item)){
                 result.push(item);
               }
@@ -104,7 +104,7 @@ module.exports = {
           });
         } else {
           locs.forEach((i) => {
-            if (item.user?.location?.accessable_locations.includes(i)) {
+            if (item.user.dataValues?.family_user_locations?.map((item) => item.loc_name).includes(i)) {
               if(!result.includes(item)){
                 result.push(item);
               }
@@ -135,11 +135,12 @@ module.exports = {
     }
     let filterResult = []
     if(!location.includes("Select All")){
+      if (location !== 'All') location = location?.map(Number);
        result.map((i) => {
         if(i.dataValues.family) {
           if (
             i.dataValues.family?.dataValues.family_user_locations
-              .map((item) => item.loc_id)
+              .map((item) => item.dataValues?.loc_id)
               .every((i) => location.includes(i))
           ) {
             filterResult.push(i);
@@ -147,7 +148,7 @@ module.exports = {
         } else {
           if (
             i.dataValues.user?.dataValues.locations
-            .map((item) => item.loc_id)
+            .map((item) => item.dataValues?.loc_id)
             .every((i) =>
               location.includes(i)
             )

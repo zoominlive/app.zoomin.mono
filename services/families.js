@@ -395,7 +395,7 @@ module.exports = {
     user,
     t
   ) => {
-    const { Family, Child } = await connectToDatabase();
+    const { Family, Child, CustomerLocations, CustomerLocationAssignments } = await connectToDatabase();
     let updateFamilyDetails;
     let updateChildDetails;
 
@@ -436,21 +436,28 @@ module.exports = {
     } else {
       const location = await Family.findOne(
         {
-          attributes: ["location"],
+          // attributes: ["location"],
           where: {
             family_member_id: familyMemberId,
           },
-          raw: true,
+          include: [
+            {
+              model: CustomerLocations,
+              as: 'family_user_locations',
+              attributes: ['loc_id', 'loc_name']
+            }
+          ]
+          // raw: true,
         },
         { transaction: t }
       );
 
-      const locations = location?.location?.selected_locations?.filter(
+      const locations = location?.dataValues?.family_user_locations?.filter(
         (location) => {
           let count = 0;
 
           locations_to_disable.forEach((loc) => {
-            if (loc === location) {
+            if (loc.loc_id === location.loc_id) {
               count = 1;
             }
           });
@@ -463,13 +470,18 @@ module.exports = {
         disabled_locations: { locations: locations_to_disable },
         scheduled_end_date: null,
         status: "Disabled",
-        location: {
-          selected_locations: locations,
-          accessable_locations: locations,
-        },
+        // location: {
+        //   selected_locations: locations,
+        //   accessable_locations: locations,
+        // },
       };
 
       if (memberType == "secondary") {
+        locations_to_disable.forEach(async (item) => {
+          await CustomerLocationAssignments.destroy({
+            where: {[Sequelize.Op.and]: [{loc_id: item.loc_id}, {family_member_id: familyMemberId}]} 
+          })
+        });
         updateFamilyDetails = await Family.update(
           update,
           {
@@ -479,6 +491,11 @@ module.exports = {
           { transaction: t }
         );
       } else if (memberType == "primary") {
+        locations_to_disable.forEach(async (item) => {
+          await CustomerLocationAssignments.destroy({
+            where: {[Sequelize.Op.and]: [{loc_id: item.loc_id}, {family_id: familyId}]} 
+          })
+        });
         updateFamilyDetails = await Family.update(
           update,
           {

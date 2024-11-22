@@ -188,7 +188,14 @@ module.exports = {
           },
           {
             model: Users,
-            attributes: ['first_name', 'last_name','role','location','stream_live_license', 'email', 'user_id'],
+            attributes: ['first_name', 'last_name','role','stream_live_license', 'email', 'user_id'],
+            include: [
+              {
+                model: CustomerLocations,
+                as: 'locations',
+                attributes: ["loc_name", "loc_id"],
+              }
+            ]
           }
         ],
         attributes: { exclude: ["updatedAt"] },

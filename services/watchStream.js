@@ -330,7 +330,7 @@ module.exports = {
     }
     if (user?.family_id) {
       // console.log('user-->', user);
-      const baseUrl = await customerServices.getTranscoderUrlFromCustLocations(user?.location?.accessable_locations, user?.cust_id);
+      const baseUrl = await customerServices.getTranscoderUrlFromCustLocations(user?.locations?.map((item) => item.loc_id), user?.cust_id);
       console.log('baseUrl==>',baseUrl);
       let cameras = await Child.findAll({
         where: { family_id: user.family_id, status: "enabled" },
@@ -346,7 +346,7 @@ module.exports = {
                 model: Room,
                 as: "room",
                 where: {
-                  location: user.location.accessable_locations,
+                  loc_id: user.locations.map((item) => item.loc_id),
                 },
                 include: [
                   {
@@ -491,7 +491,7 @@ module.exports = {
       if (user.role == "Admin" || user.role == "User") {
         let locations = await CustomerLocations.findAll({
           where: {
-            loc_name: user.location.accessable_locations,
+            loc_name: user.locations.map((item) => item.loc_name),
             cust_id: user.cust_id
           },
           attributes: ["loc_name", "transcoder_endpoint"],
@@ -564,7 +564,7 @@ module.exports = {
         console.log('user==>', user);
         let locations = await CustomerLocations.findAll({
           where: {
-            loc_name: user.location.accessable_locations,
+            loc_name: user.locations.map((item) => item.loc_name),
           },
           attributes: ["loc_name", "transcoder_endpoint"],
           include: [
@@ -591,7 +591,7 @@ module.exports = {
           ],
         });
         if (user.role == "Teacher") {
-          const baseUrl = await customerServices.getTranscoderUrlFromCustLocations(user?.location?.accessable_locations, user?.cust_id);
+          const baseUrl = await customerServices.getTranscoderUrlFromCustLocations(user?.locations?.map((item) => item.loc_id), user?.cust_id);
           let rooms = await RoomsInTeacher.findAll({
             where: { teacher_id: user.user_id },
             include: [
@@ -612,7 +612,7 @@ module.exports = {
                 as: "room",
                 raw: true,
                 where: {
-                  location: user.location.accessable_locations,
+                  loc_id: user.locations.map((item) => item.loc_id),
                 },
               },
             ],

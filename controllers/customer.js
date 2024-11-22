@@ -525,7 +525,13 @@ module.exports = {
         locations,
         t
       );
-      user.location.locations = newLocations.map((item) => item.dataValues);
+      if (customer_locations.length !== user.location.locations.length) {
+        user.location.locations = newLocations.map((item) => item.dataValues).filter((customerLocation) => !user.location.locations.some(
+          (location) => location.loc_name !== customerLocation.loc_name
+        ));  
+      } else {
+        user.location.locations = newLocations.map((item) => item.dataValues);
+      }
       let editedUser = await userServices.editUserProfile(
         userDetails,
         _.omit(user, ["email"]),
