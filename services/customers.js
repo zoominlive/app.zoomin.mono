@@ -386,12 +386,12 @@ module.exports = {
     const { CustomerLocations, CustomerLocationAssignments } = await connectToDatabase();
     const zip = (locations, timezone) => locations.map((value, index) => [value, timezone[index]]);
     const locationsWithTimezone = zip(locations, timezone);
-
+    let locationCreated;
     let createLocations = await Promise.all(
       locationsWithTimezone.map(async ([loc, timezone]) => {
         const obj = { loc_name: loc, cust_id: custId, time_zone: timezone };
         // obj.loc_id = uuidv4();
-        const locationCreated = await CustomerLocations.create(obj, {
+        locationCreated = await CustomerLocations.create(obj, {
           transaction: t,
         });
         
@@ -401,7 +401,7 @@ module.exports = {
         })
       })
     );
-    return createLocations;
+    return locationCreated;
   },
 
   deleteLocation: async (custId) => {
