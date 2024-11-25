@@ -66,6 +66,7 @@ module.exports = {
         params.stream_uri = transcodedDetails?.data ? transcodedDetails.data?.uri : '';
         params.stream_uuid = transcodedDetails?.data ? transcodedDetails.data?.id : '';
         params.cam_alias = transcodedDetails?.data ? transcodedDetails.data?.alias : '';
+        params.loc_id = params.location;
         if (params?.thumbnail) {
           const imageUrl = await s3BucketImageUploader._upload(params.thumbnail);
           params.thumbnail = imageUrl

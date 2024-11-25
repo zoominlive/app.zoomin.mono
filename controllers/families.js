@@ -365,6 +365,7 @@ module.exports = {
       params.cust_id = req.user.cust_id || req.body.cust_id;
       params.frontegg_tenant_id = req.body.tenant_id || req.user.frontegg_tenant_id;
       params.user_id = req.user.user_id;
+      if (!params.location) params.location = req.user.locations;
       let emailExist = await userServices.checkEmailExist(params.email, t);
 
       if (emailExist) {

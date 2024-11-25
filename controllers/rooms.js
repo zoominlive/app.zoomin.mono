@@ -43,6 +43,7 @@ module.exports = {
       //     Message: "No valid cameras found. " + validationMessages.join(" "),
       //   });
       // }
+      params.loc_id = params.location;
       const room = await roomServices.createRoom(params, validCameras, t);
 
       if (room) {

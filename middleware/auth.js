@@ -42,7 +42,16 @@ module.exports = async function (req, res, next) {
         const parsedUrl = url.parse(endpoint);
         const baseEndpoint = parsedUrl.pathname;
 
-        let app = await ApiKeys.findOne({ where: { frontegg_user_id: app_user_id } });
+        let app = await ApiKeys.findOne({
+          where: { frontegg_user_id: app_user_id },
+          include: [
+            {
+              model: CustomerLocations,
+              as: "api_key_locations",
+              attributes: ["loc_id", "loc_name"],
+            },
+          ],
+        });
 
         if (!app.dataValues.allowed_endpoints.includes(baseEndpoint)) {
           return res.status(403).json({ Message: 'API key does not have access to this endpoint' });
@@ -52,6 +61,7 @@ module.exports = async function (req, res, next) {
           return res.status(403).json({ Message: 'Invalid or inactive API key' });
         }
         req.user = app.dataValues;
+        req.user.locations = app.dataValues.api_key_locations.map((item) => item.dataValues)
       } else {
         if (user_id) {
           user = await Users.findOne({
