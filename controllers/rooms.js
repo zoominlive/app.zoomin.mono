@@ -61,7 +61,7 @@ module.exports = {
         }
         rooms.push({ room_name: room.room_name, room_id: room.room_id });
 
-        await cameraServices.editCamera(camera.cam_id, { room_ids: { rooms: rooms } }, t);
+        await cameraServices.editCamera(camera.cam_id, { room_ids: { rooms: rooms } }, null, t);
       });
 
       await t.commit();

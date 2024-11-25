@@ -73,23 +73,25 @@ module.exports = {
       },
       { transaction: t }
     );
-    const roomsToAdd = params.map((room) => {
-      return {
-        room_id: room.room_id || room.room.room_id,
-        cam_id: camId,
-      };
-    });
-    await CamerasInRooms.destroy(
-      {
-        where: { cam_id: camId },
-        raw: true,
-      },
-      { transaction: t }
-    );
-    
-    await CamerasInRooms.bulkCreate(roomsToAdd, {
-      transaction: t,
-    });
+    if (params !== null && params !== undefined && params !== '') {     
+      const roomsToAdd = params.map((room) => {
+        return {
+          room_id: room.room_id || room.room.room_id,
+          cam_id: camId,
+        };
+      });
+      await CamerasInRooms.destroy(
+        {
+          where: { cam_id: camId },
+          raw: true,
+        },
+        { transaction: t }
+      );
+      
+      await CamerasInRooms.bulkCreate(roomsToAdd, {
+        transaction: t,
+      });
+    }
     return updatedCam;
   },
 
