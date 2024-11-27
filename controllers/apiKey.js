@@ -235,7 +235,7 @@ module.exports = {
   },
 
   getLatestRecord: async (req, res, next) => {
-    const { ApiKeys } = await connectToDatabase();
+    const { ApiKeys, CustomerLocations } = await connectToDatabase();
 
     let keyList = await ApiKeys.findAll({
       limit: 1,
