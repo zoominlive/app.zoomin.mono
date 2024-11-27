@@ -96,30 +96,30 @@ module.exports = {
       },
       { transaction: t }
     );
-    console.log('params==>', params);
-    
-    const locationsToAdd = params.location.locations.map((loc) => {
-      return {
-        loc_id: loc.loc_id,
-        cust_id: params.cust_id,
-        child_id: params.child_id,
-        cust_id: params.cust_id,
-        family_id: params.family_id,
-        family_member_id: params.family_member_id
-      };
-    });
+    if(params.location) {
+      const locationsToAdd = params.location.locations.map((loc) => {
+        return {
+          loc_id: loc.loc_id,
+          cust_id: params.cust_id,
+          child_id: params.child_id,
+          cust_id: params.cust_id,
+          family_id: params.family_id,
+          family_member_id: params.family_member_id
+        };
+      });
 
-    await CustomerLocationAssignments.destroy(
-      {
-        where: { child_id: params.child_id },
-        raw: true,
-      },
-      { transaction: t }
-    );
-    
-    await CustomerLocationAssignments.bulkCreate(locationsToAdd, {
-      transaction: t,
-    });
+      await CustomerLocationAssignments.destroy(
+        {
+          where: { child_id: params.child_id },
+          raw: true,
+        },
+        { transaction: t }
+      );
+      
+      await CustomerLocationAssignments.bulkCreate(locationsToAdd, {
+        transaction: t,
+      });
+    }
 
     if (updateChildDetails) {
       updateChildDetails = await Child.findOne(
