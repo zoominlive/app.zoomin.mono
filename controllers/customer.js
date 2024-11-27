@@ -112,11 +112,14 @@ module.exports = {
       let timezone = time_zone.flatMap((i) => i);
       console.log(user);
       console.log(locations);
+      let api_key_id;
+      if(req.user.key && req.user.key !== undefined && req.user.key !== null) api_key_id = req.user.id;
       let addLocations = await customerServices.createNewLocation(
         user || cust_id,
         user_id,
         locations,
         timezone,
+        api_key_id,
         t
       );
       

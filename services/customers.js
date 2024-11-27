@@ -382,7 +382,7 @@ module.exports = {
     return createLocations;
   },
 
-  createNewLocation: async (custId, user_id, locations, timezone, t) => {
+  createNewLocation: async (custId, user_id, locations, timezone, api_key_id = null, t) => {
     const { CustomerLocations, CustomerLocationAssignments } = await connectToDatabase();
     const zip = (locations, timezone) => locations.map((value, index) => [value, timezone[index]]);
     const locationsWithTimezone = zip(locations, timezone);
@@ -395,7 +395,7 @@ module.exports = {
           transaction: t,
         });
         
-        const userObj = { loc_id: locationCreated.dataValues.loc_id, cust_id: custId, user_id: user_id };
+        const userObj = { loc_id: locationCreated.dataValues.loc_id, cust_id: custId, user_id: user_id, api_key_id: api_key_id };
         await CustomerLocationAssignments.create(userObj, {
           transaction: t
         })
