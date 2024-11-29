@@ -304,7 +304,7 @@ const Logs = () => {
                   ...logsPayload,
                   from: moment().startOf('week').format('YYYY-MM-DD'),
                   to: moment().endOf('week').format('YYYY-MM-DD'),
-                  locations: [authCtx.user.location.accessable_locations[0]],
+                  locations: authCtx.user.locations.map((item) => item.loc_id),
                   users: userToAdd,
                   familyMemberIds: familyToAdd
                 }).then((response) => {
@@ -326,7 +326,7 @@ const Logs = () => {
               } else {
                 API.post('logs/', {
                   ...logsPayload,
-                  locations: [authCtx.user.locations.map((item) => item.loc_id)[0]],
+                  locations: authCtx.user.locations.map((item) => item.loc_id),
                   users: userToAdd,
                   familyMemberIds: familyToAdd
                 }).then((response) => {
@@ -589,6 +589,7 @@ const Logs = () => {
         ...logsPayload,
         pageNumber,
         pageSize,
+        locations: logsPayload.locations.map((item) => item.loc_id),
         users: usersToAdd ? usersToAdd : logsPayload.users,
         familyMemberIds: familiesToAdd ? familiesToAdd : logsPayload.familyMemberIds
       }).then((response) => {
