@@ -48,7 +48,7 @@ module.exports = {
       actions
     } = filter;
 
-    const { ChangeLogs, AccessLogs, Users, Family } = await connectToDatabase();
+    const { ChangeLogs, AccessLogs, Users, Family, CustomerLocations } = await connectToDatabase();
     let locArray = locations.map((loc) => {
       return {
         location: {
@@ -76,19 +76,44 @@ module.exports = {
           function_type: actions,
           [Sequelize.Op.or]: [{ user_id: userIds }, { user_id: familyMemberIds }]
         },
+        distinct: true,
         order: [['created_at', 'DESC']],
         include: [
           {
             model: Users,
-            where: {
-              [Sequelize.Op.or]: locArray
-            },
-            attributes: ['first_name', 'last_name'],
+            // where: {
+            //   [Sequelize.Op.or]: locArray
+            // },
+            attributes: ['user_id','first_name', 'last_name'],
+            include: [
+              {
+                model: CustomerLocations,
+                as: 'locations',
+                attributes: ['loc_id', 'loc_name'],
+                where: {
+                  loc_id: locations,
+                },
+                required: false
+              }
+            ],
+            group: ['user_id'],
             required: false
           },
           {
             model: Family,
-            attributes: ['first_name', 'last_name'],
+            attributes: ['family_member_id','first_name', 'last_name'],
+            include: [
+              {
+                model: CustomerLocations,
+                as: 'family_user_locations',
+                attributes: ['loc_id', 'loc_name'],
+                where: {
+                  loc_id: locations,
+                },
+                required: false
+              }
+            ],
+            group: ['family_member_id'],
             required: false
           }
         ],
@@ -118,9 +143,9 @@ module.exports = {
         include: [
           {
             model: Users,
-            where: {
-              [Sequelize.Op.or]: locArray
-            },
+            // where: {
+            //   [Sequelize.Op.or]: locArray
+            // },
             attributes: ['first_name', 'last_name'],
             required: true
           }
