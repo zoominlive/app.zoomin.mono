@@ -272,8 +272,22 @@ module.exports = {
       await CustomerLocationAssignments.bulkCreate(locationsToAdd, {
         transaction: t,
       });
-    }
 
+      const userLocations = await Users.findOne({
+        where: {
+          user_id: user.user_id
+        },
+        include: [
+          {
+            model: CustomerLocations,
+            as: 'locations',
+            attributes: ['loc_id', 'loc_name']
+          }
+        ],
+        transaction: t
+      })   
+      updateUserProfile.dataValues.locations = userLocations.toJSON().locations.map((item) => ({loc_id: item.loc_id, loc_name: item.loc_name})); 
+    }
     return updateUserProfile.toJSON();
   },
 
