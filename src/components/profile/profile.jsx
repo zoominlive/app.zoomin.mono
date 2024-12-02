@@ -103,7 +103,7 @@ const Profile = () => {
       if (response.status === 200) {
         authCtx.setUser({
           ...response.data.Data,
-          location: response.data.Data.location
+          locations: response.data.Data.locations
         });
         localStorage.setItem(
           'user',
