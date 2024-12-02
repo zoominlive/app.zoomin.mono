@@ -262,7 +262,7 @@ module.exports = {
           );
           console.log('user_response--->', user_response.data);
           await Users.update(
-            { frontegg_tenant_id: tenant_response.data.tenantId, frontegg_user_id: user_response.id },
+            { frontegg_tenant_id: tenant_response.data.tenantId, frontegg_user_id: user_response.data.id },
             {
               where: { user_id: addUser.dataValues.user_id },
               transaction: t 
