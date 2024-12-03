@@ -23,7 +23,7 @@ export default function ViewersTable({ rows, columns, title, pagination, isLoadi
   };
   return (
     <Paper
-      sx={{ height: '96%', minHeight: !pagination ? '338px' : '', marginTop: !pagination ? 0 : 2 }}
+      sx={{ height: '96%', minHeight: '338px', marginTop: !pagination ? 0 : 2 }}
       className={!pagination ? 'top-viewers' : ''}>
       <Box className="zl__table-block">
         {/* <Typography style={{ padding: '20px 24px' }}>{title}</Typography> */}
