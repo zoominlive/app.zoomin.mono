@@ -61,7 +61,7 @@ const CustomerSelection = () => {
 
   const getCustomersList = () => {
     setIsLoading(true);
-    API.get('customers/all', { params: [{ all: true }] }).then((response) => {
+    API.get('customers/all', { params: { all: true } }).then((response) => {
       if (response.status === 200) {
         setCustomersList(response.data.Data.customers);
         //setTotalCustomers(response.data.Data.count);

@@ -1013,6 +1013,7 @@ const CustomerForm = (props) => {
                 style={{ color: '#ffff' }}
                 onClick={() => {
                   setIsCloseDialog(false);
+                  handleFormDialogClose();
                   props.setOpen(false);
                 }}>
                 Yes
