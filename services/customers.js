@@ -198,13 +198,14 @@ module.exports = {
             ]
           }
         ],
+        distinct: true,
         attributes: { exclude: ["updatedAt"] },
         limit: parseInt(pageSize),
         offset: parseInt(pageNumber * pageSize),
         order: [[{ model: Users }, 'created_at', 'ASC']]
       });
     }
-    return { customers: customers.rows, count: customers.rows.length,  };
+    return { customers: customers.rows, count: customers.count,  };
   },
 
   getAllLocations: async (filter) => {
