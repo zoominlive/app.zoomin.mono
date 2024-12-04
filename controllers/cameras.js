@@ -40,13 +40,13 @@ module.exports = {
       }
 
        // Check if there's at least one valid camera
-      if (validRooms.length === 0) {
-        await t.rollback();
-        return res.status(400).json({
-          IsSuccess: false,
-          Message: "No valid rooms found. " + validationMessages.join(" "),
-        });
-      }
+      // if (validRooms.length === 0) {
+      //   await t.rollback();
+      //   return res.status(400).json({
+      //     IsSuccess: false,
+      //     Message: "No valid rooms found. " + validationMessages.join(" "),
+      //   });
+      // }
       const customer = await customerServices.getCustomerDetails(params.cust_id, t);
       // const availableCameras = customer?.available_cameras;
       const maxCameras = customer?.max_cameras;

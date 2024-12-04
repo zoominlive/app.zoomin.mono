@@ -660,11 +660,15 @@ module.exports = {
               room_name:
                 room.room_name || room.dataValues?.room?.dataValues?.room_name,
               location:
-                room.location || room.dataValues?.room?.dataValues?.location,
+                room.location || room.dataValues?.room?.dataValues?.loc_id,
               cameras: cameras,
             };
           });
         
+          for (const item of rooms) {
+            const location = await CustomerLocations.findOne({ where: { loc_id: item.location } });
+            item.location = location.loc_name;
+          }
           let result = _.chain(rooms)
             .groupBy("location")
             .map((value, key) => ({
