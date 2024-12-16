@@ -382,7 +382,7 @@ const Layout = () => {
       key: 2
     },
     {
-      name: 'Rooms',
+      name: 'Zones',
       icon: <Copy style={{ color: 'white' }} />,
       link: '/rooms',
       key: 3
@@ -648,7 +648,22 @@ const Layout = () => {
             </Box>
             <Grid container alignItems={'self-end'} gap={1}>
               <Grid container spacing={3} alignItems={'stretch'}>
-                <Grid item md={12} sm={12} xs={12} lg={12} xl={7}>
+                <Grid
+                  item
+                  md={12}
+                  sm={12}
+                  xs={12}
+                  lg={12}
+                  xl={7}
+                  sx={{
+                    display: {
+                      xs: 'none', // Hide on extra-small screens
+                      sm: 'none', // Hide on small screens
+                      md: 'none', // Hide on medium screens
+                      lg: 'none', // Hide on large screens
+                      xl: 'block' // Show on extra-large screens
+                    }
+                  }}>
                   <Stack
                     direction={'row'}
                     justifyContent={'flex-start'}
@@ -861,6 +876,146 @@ const Layout = () => {
                       </Box>
                     </Stack>
                   </>
+                </Grid>
+                <Grid
+                  item
+                  md={12}
+                  sm={12}
+                  xs={12}
+                  lg={12}
+                  xl={7}
+                  sx={{
+                    display: {
+                      xs: 'block', // Show on extra-small screens
+                      sm: 'block', // Show on small screens
+                      md: 'block', // Show on medium screens
+                      lg: 'block', // Show on large screens
+                      xl: 'none' // Hide on extra-large screens
+                    }
+                  }}>
+                  <Stack
+                    direction={'row'}
+                    justifyContent={'flex-start'}
+                    alignItems={'center'}
+                    gap={2}
+                    className="breadcrumb">
+                    {/* {layoutCtx?.breadcrumb?.length > 2 ? (
+                      <Avatar
+                        src={authCtx?.user?.profile_image}
+                        sx={{ width: 85, height: 85 }}
+                        alt='="profile-image'
+                      />
+                    ) : null} */}
+                    <Stack direction={'column'} spacing={0.5}>
+                      <Typography variant="h2">{layoutCtx?.breadcrumb[0]}</Typography>
+                      {layoutCtx?.breadcrumb?.length > 1 && (
+                        <Typography className="">{layoutCtx?.breadcrumb[1]}</Typography>
+                      )}
+                    </Stack>
+                  </Stack>
+                  {location.pathname == '/dashboard' ? (
+                    <Stack
+                      direction={'row'}
+                      alignItems={'center'}
+                      justifyContent={'space-between'}
+                      position={'relative'}>
+                      <TextField
+                        variant="standard"
+                        labelId="search"
+                        placeholder={'Find Children, Families or Staff'}
+                        sx={{
+                          backgroundColor: '#FFFFFF',
+                          borderRadius: '120px',
+                          padding: '16px 24px',
+                          width: '95%'
+                        }}
+                        onChange={(e) => newHandleChange(e)}
+                        InputProps={{
+                          disableUnderline: true,
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <img src={searchIcon} alt="search" width={24} height={24} />
+                            </InputAdornment>
+                          )
+                        }}
+                      />
+                      {showSearchResults && (
+                        <Box className="results-list">
+                          <Stack
+                            className="search-result"
+                            direction={'row'}
+                            justifyContent={'space-between'}>
+                            <Typography>Name</Typography>
+                            <Typography>Role</Typography>
+                          </Stack>
+                          <Divider />
+                          {familiesResults.map((result) => {
+                            return (
+                              <Stack
+                                direction={'row'}
+                                justifyContent={'space-between'}
+                                alignItems={'center'}
+                                sx={{
+                                  ':hover': { backgroundColor: '#eae9ff80' }
+                                }}
+                                key={result?.user_id || result?.primary?.family_member_id}
+                                onClick={() => handleResultClick(result)}>
+                                <Box ref={resultsListRef} className="search-result">
+                                  {result?.primary?.first_name + ' ' + result?.primary?.last_name}
+                                </Box>
+                                <Box>
+                                  <Chip variant="outlined" label={'Family'} />
+                                </Box>
+                              </Stack>
+                            );
+                          })}
+                          {usersResults.map((result) => {
+                            return (
+                              <Stack
+                                direction={'row'}
+                                justifyContent={'space-between'}
+                                alignItems={'center'}
+                                sx={{
+                                  ':hover': { backgroundColor: '#eae9ff80' }
+                                }}
+                                key={result?.user_id}
+                                onClick={() => handleResultClick(result)}>
+                                <Box ref={resultsListRef} className="search-result">
+                                  {result?.first_name + ' ' + result?.last_name}
+                                </Box>
+                                <Box>
+                                  <Chip
+                                    variant="outlined"
+                                    label={result?.role === 'User' ? 'Director' : result?.role}
+                                  />
+                                </Box>
+                              </Stack>
+                            );
+                          })}
+                          {childrenResults.map((result) => {
+                            return (
+                              <Stack
+                                direction={'row'}
+                                justifyContent={'space-between'}
+                                alignItems={'center'}
+                                sx={{
+                                  ':hover': { backgroundColor: '#eae9ff80' }
+                                }}
+                                key={result?.user_id}
+                                onClick={() => handleResultClick(result)}>
+                                <Box ref={resultsListRef} className="search-result">
+                                  {result?.first_name + ' ' + result?.last_name}
+                                </Box>
+                                <Box>
+                                  <Chip variant="outlined" label={'Child'} />
+                                </Box>
+                              </Stack>
+                            );
+                          })}
+                        </Box>
+                      )}
+                    </Stack>
+                  ) : null}
                 </Grid>
               </Grid>
               {/* <Grid item xs={12} sm={12} md={4} lg={2.1}>

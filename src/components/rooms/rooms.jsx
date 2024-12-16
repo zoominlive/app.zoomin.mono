@@ -63,6 +63,7 @@ const Row = (props) => {
           </IconButton>
         </TableCell>
         <TableCell>{row.room_name}</TableCell>
+        <TableCell>{row.zone?.zone_name}</TableCell>
         <TableCell>{row.loc_name}</TableCell>
         <TableCell style={{ lineHeight: 2.5 }}>
           {/* <Stack direction={'row'} justifyContent="flex-start" alignItems="center"> */}
@@ -153,7 +154,8 @@ Row.propTypes = {
     loc_name: PropTypes.string,
     number_of_cam: PropTypes.number,
     cameras: PropTypes.array,
-    stream_live_license: PropTypes.string
+    stream_live_license: PropTypes.string,
+    zone: PropTypes.object
   }),
   setRoom: PropTypes.func,
   setIsRoomFormDialogOpen: PropTypes.func,
@@ -173,6 +175,7 @@ const Rooms = () => {
   const [roomsList, setRoomList] = useState([]);
   const [totalRooms, setTotalRooms] = useState(0);
   const [room, setRoom] = useState();
+  const [zones, setZones] = useState();
 
   const [roomsPayload, setRoomsPayload] = useState({
     pageNumber: 0,
@@ -185,7 +188,7 @@ const Rooms = () => {
 
   useEffect(() => {
     layoutCtx.setActive(3);
-    layoutCtx.setBreadcrumb(['Rooms', 'Manage rooms and their camera authorization']);
+    layoutCtx.setBreadcrumb(['Zones', 'Manage zones and their camera authorization']);
 
     return () => {
       authCtx.setPreviosPagePath(window.location.pathname);
@@ -206,6 +209,10 @@ const Rooms = () => {
     getRoomsList();
   }, [roomsPayload]);
 
+  useEffect(() => {
+    getZonesList();
+  }, []);
+
   // Method to fetch the rooms list for table
   const getRoomsList = () => {
     setIsLoading(true);
@@ -213,6 +220,24 @@ const Rooms = () => {
       if (response.status === 200) {
         setRoomList(response.data.Data.finalRoomDetails);
         setTotalRooms(response.data.Data.count);
+      } else {
+        errorMessageHandler(
+          enqueueSnackbar,
+          response?.response?.data?.Message || 'Something Went Wrong.',
+          response?.response?.status,
+          authCtx.setAuthError
+        );
+      }
+      setIsLoading(false);
+    });
+  };
+
+  // Method to fetch the zones list for table
+  const getZonesList = () => {
+    setIsLoading(true);
+    API.get('zones', { params: { cust_id: localStorage.getItem('cust_id') } }).then((response) => {
+      if (response.status === 200) {
+        setZones(response.data.Data.zones);
       } else {
         errorMessageHandler(
           enqueueSnackbar,
@@ -345,7 +370,7 @@ const Rooms = () => {
                       <InputLabel id="search">Search</InputLabel>
                       <TextField
                         labelId="search"
-                        placeholder="Room Name, Location"
+                        placeholder="Zone Name, Location"
                         onChange={roomsListDebounce}
                         InputProps={{
                           startAdornment: (
@@ -437,7 +462,7 @@ const Rooms = () => {
                     startIcon={<Plus />}
                     onClick={() => setIsRoomFormDialogOpen(true)}>
                     {' '}
-                    Add Room
+                    Add Zone
                   </Button>
                 </Box>
               </Grid>
@@ -454,7 +479,8 @@ const Rooms = () => {
                 <TableHead>
                   <TableRow>
                     <TableCell sx={{ width: '50px' }} />
-                    <TableCell sx={{ width: '200px' }}>Rooms</TableCell>
+                    <TableCell sx={{ width: '200px' }}>Zone Name</TableCell>
+                    <TableCell sx={{ width: '200px' }}>Type</TableCell>
                     <TableCell sx={{ width: '200px' }}>Location</TableCell>
                     <TableCell>Cams</TableCell>
                     <TableCell align="left">Live Streaming</TableCell>
@@ -495,6 +521,7 @@ const Rooms = () => {
       {isRoomFormDialogOpen && (
         <RoomForm
           room={room}
+          zone={zones}
           setRoom={setRoom}
           open={isRoomFormDialogOpen}
           setOpen={setIsRoomFormDialogOpen}

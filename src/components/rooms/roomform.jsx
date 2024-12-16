@@ -41,7 +41,8 @@ import CloseIcon from '@mui/icons-material/Close';
 
 const validationSchema = yup.object({
   room_name: yup.string('Enter Room name').required('Room name is required'),
-  location: yup.string('Select Location').required('Location is required')
+  location: yup.string('Select Location').required('Location is required'),
+  zone: yup.string('Select Zone').required('Zone is required')
   // cameras: yup.array().min(1, 'Select at least one Camera').required('Camera is required')
 });
 
@@ -51,6 +52,7 @@ const RoomForm = (props) => {
   const [initialState, setInitialState] = useState({
     room_name: props?.room?.room_name ? props?.room?.room_name : '',
     location: props?.room?.location ? props?.room?.location : '',
+    zone: props?.room?.zone ? props?.room?.zone.zone_id : '',
     cameras: props?.room?.cameras ? props?.room?.cameras : [],
     stream_live_license: !_.isNil(props?.room?.stream_live_license)
       ? props?.room?.stream_live_license
@@ -239,8 +241,8 @@ const RoomForm = (props) => {
       fullWidth
       className="edit-family-dialog">
       <DialogTitle sx={{ paddingTop: 3.5 }}>
-        {props.room ? 'Edit Room' : 'Add Room'}
-        <DialogContentText>Quickly add rooms to your account</DialogContentText>
+        {props.room ? 'Edit Zone' : 'Add Zone'}
+        <DialogContentText>Quickly add zones to your account</DialogContentText>
         <IconButton
           aria-label="close"
           // onClick={() => {
@@ -286,6 +288,7 @@ const RoomForm = (props) => {
                 onClick={() => {
                   setIsCloseDialog(false);
                   props.setOpen(false);
+                  props.setRoom();
                 }}>
                 Yes
               </Button>
@@ -307,7 +310,7 @@ const RoomForm = (props) => {
                   <Box px={4}>
                     <Grid container spacing={2}>
                       <Grid item xs={12} md={12}>
-                        <InputLabel id="room_name">Room Name</InputLabel>
+                        <InputLabel id="room_name">Zone Name</InputLabel>
                         <TextField
                           labelId="room_name"
                           name="room_name"
@@ -346,6 +349,30 @@ const RoomForm = (props) => {
                             <FormHelperText sx={{ color: '#d32f2f' }}>
                               {errors.location}
                             </FormHelperText>
+                          )}
+                        </FormControl>
+                      </Grid>
+                      <Grid item xs={12} md={12}>
+                        <InputLabel id="zone-type-select">Type</InputLabel>
+                        <FormControl fullWidth error={touched.zone && Boolean(errors.zone)}>
+                          <Select
+                            name="zone-type"
+                            labelId="zone-type-select"
+                            id="zone-type-select"
+                            value={values?.zone}
+                            onChange={(event) => {
+                              setFieldValue('zone', event.target.value);
+                            }}>
+                            {props.zone
+                              ?.sort((a, b) => (a.zone_name > b.zone_name ? 1 : -1))
+                              .map((item) => (
+                                <MenuItem key={item.zone_id} value={item.zone_id}>
+                                  {item.zone_name}
+                                </MenuItem>
+                              ))}
+                          </Select>
+                          {touched.location && errors.location && (
+                            <FormHelperText sx={{ color: '#d32f2f' }}>{errors.zone}</FormHelperText>
                           )}
                         </FormControl>
                       </Grid>
@@ -475,6 +502,7 @@ RoomForm.propTypes = {
   open: PropTypes.bool,
   setOpen: PropTypes.func,
   room: PropTypes.object,
+  zone: PropTypes.array,
   setRoom: PropTypes.func,
   getRoomsList: PropTypes.func,
   getDropDownRoomList: PropTypes.func,

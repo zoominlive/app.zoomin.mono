@@ -280,6 +280,8 @@ const ParentsForm = (props) => {
                 onClick={() => {
                   setIsCloseDialog(false);
                   props.setOpen(false);
+                  props.setPrimaryParent();
+                  props.setSecondaryParent();
                 }}>
                 Yes
               </Button>

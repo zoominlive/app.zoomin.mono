@@ -61,6 +61,7 @@ import moment from 'moment';
 import { grey } from '@mui/material/colors';
 import {
   CameraAltOutlined,
+  Category,
   KeyOutlined,
   PlaceOutlined,
   PortraitOutlined
@@ -68,6 +69,7 @@ import {
 import { Country, State, City } from 'country-state-city';
 import APIKeys from '../apikeys/apikeys';
 import TokenExchange from '../tokenexchange/tokenexchange';
+import SettingsFormZone from './settingsformzone';
 
 const Settings = () => {
   const layoutCtx = useContext(LayoutContext);
@@ -78,10 +80,13 @@ const Settings = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [locationsList, setLocationsList] = useState([]);
+  const [zonesList, setZonesList] = useState([]);
   // eslint-disable-next-line no-unused-vars
   const [customerDetails, setCustomerDetails] = useState(null);
   const [totalLocations, setTotalLocations] = useState(0);
+  const [totalZones, setTotalZones] = useState(0);
   const [location, setLocation] = useState();
+  const [zone, setZone] = useState();
   const [activeLocations, setActiveLocations] = useState(0);
   const [usersPayload, setUsersPayload] = useState({
     pageNumber: 0,
@@ -267,6 +272,7 @@ const Settings = () => {
 
   useEffect(() => {
     getLocationsList();
+    getZonesList();
   }, [usersPayload]);
 
   useEffect(() => {
@@ -282,6 +288,26 @@ const Settings = () => {
         setTotalLocations(response.data.Data.count);
         setCustomerDetails(response.data.Data.customer);
         setActiveLocations(response.data.Data.activeLocations);
+      } else {
+        errorMessageHandler(
+          enqueueSnackbar,
+          response?.response?.data?.Message || 'Something Went Wrong.',
+          response?.response?.status,
+          authCtx.setAuthError
+        );
+      }
+      setIsLoading(false);
+    });
+  };
+
+  // Method to fetch zones list for table
+  const getZonesList = () => {
+    setIsLoading(true);
+    API.get('zones', { params: usersPayload }).then((response) => {
+      if (response.status === 200) {
+        console.log('zones_response==>', response.data);
+        setZonesList(response.data.Data.zones);
+        setTotalZones(response.data.Data.count);
       } else {
         errorMessageHandler(
           enqueueSnackbar,
@@ -364,6 +390,34 @@ const Settings = () => {
         );
       }
       setLocation();
+      setDeleteLoading(false);
+      setIsDeleteDialogOpen(false);
+    });
+  };
+
+  // Method to delete zone
+  const handleZoneDelete = () => {
+    setDeleteLoading(true);
+    let payload = {
+      zone_id: zone.zone_id
+    };
+    API.delete('zones/delete', {
+      data: { ...payload }
+    }).then((response) => {
+      if (response.status === 200) {
+        getZonesList();
+        enqueueSnackbar(response.data.Message, {
+          variant: 'success'
+        });
+      } else {
+        errorMessageHandler(
+          enqueueSnackbar,
+          response?.response?.data?.Message || 'Something Went Wrong.',
+          response?.response?.status,
+          authCtx.setAuthError
+        );
+      }
+      setZone();
       setDeleteLoading(false);
       setIsDeleteDialogOpen(false);
     });
@@ -527,6 +581,10 @@ const Settings = () => {
     {
       label: 'Locations',
       icon: <PlaceOutlined />
+    },
+    {
+      label: 'Zones',
+      icon: <Category />
     },
     {
       label: 'Cameras',
@@ -1569,6 +1627,146 @@ const Settings = () => {
             </Box>
           </TabPanel>
           <TabPanel value={value} index={2}>
+            <Box className="listing-wrapper">
+              <Card className="filter" sx={{ marginTop: '0px !important' }}>
+                <CardContent>
+                  <Box>
+                    <Grid container spacing={2}>
+                      <Grid item md={9} sm={12}>
+                        <Box>
+                          <Grid container spacing={2}>
+                            <Grid item md={4} sm={12} mt={0}>
+                              <InputLabel id="search">Search</InputLabel>
+                              <TextField
+                                labelId="search"
+                                placeholder="Zone"
+                                onChange={debouncedResults}
+                                InputProps={{
+                                  startAdornment: (
+                                    <InputAdornment position="start">
+                                      <SearchIcon />
+                                    </InputAdornment>
+                                  )
+                                }}
+                              />
+                            </Grid>
+                          </Grid>
+                        </Box>
+                      </Grid>
+                      <Grid
+                        item
+                        md={3}
+                        sm={12}
+                        sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
+                        <Box>
+                          <Button
+                            className="add-button"
+                            variant="contained"
+                            startIcon={<Plus />}
+                            onClick={() => setIsUserFormDialogOpen(true)}>
+                            {' '}
+                            Add Zone
+                          </Button>
+                        </Box>
+                      </Grid>
+                    </Grid>
+                  </Box>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent>
+                  <Box mt={2} position="relative">
+                    <LinerLoader loading={isLoading} />
+                    <TableContainer component={Paper}>
+                      <Table sx={{ minWidth: 650 }} aria-label="simple table">
+                        <TableHead>
+                          <TableRow>
+                            <TableCell style={{ minWidth: '100px' }} align="left">
+                              Name
+                            </TableCell>
+                            <TableCell align="right"></TableCell>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {zonesList?.length > 0
+                            ? zonesList?.map((row, index) => (
+                                <TableRow key={index} hover>
+                                  <TableCell align="left">
+                                    <Stack direction="row">
+                                      <Chip
+                                        key={index}
+                                        label={row.zone_name}
+                                        color="primary"
+                                        className="chip-color"
+                                      />
+                                    </Stack>
+                                  </TableCell>
+                                  <TableCell align="right">
+                                    <SettingsActions
+                                      zone={row}
+                                      setZone={setZone}
+                                      setIsUserFormDialogOpen={setIsUserFormDialogOpen}
+                                      setIsDeleteDialogOpen={setIsDeleteDialogOpen}
+                                    />
+                                  </TableCell>
+                                </TableRow>
+                              ))
+                            : null}
+                        </TableBody>
+                      </Table>
+                      {!isLoading && zonesList?.length == 0 ? <NoDataDiv /> : null}
+                      {zonesList?.length > 0 ? (
+                        <TablePagination
+                          rowsPerPageOptions={[5, 10, 20, 25, 50]}
+                          onPageChange={handlePageChange}
+                          onRowsPerPageChange={handleChangeRowsPerPage}
+                          component="div"
+                          count={totalZones}
+                          rowsPerPage={usersPayload?.pageSize}
+                          page={usersPayload?.pageNumber}
+                          sx={{ flex: '1 1 auto' }}
+                        />
+                      ) : null}
+                    </TableContainer>
+                  </Box>
+                </CardContent>
+              </Card>
+              {isUserFormDialogOpen && (
+                <SettingsFormZone
+                  open={isUserFormDialogOpen}
+                  zone={zone}
+                  zonesList={zonesList}
+                  setOpen={setIsUserFormDialogOpen}
+                  getZonesList={getZonesList}
+                  setZone={setZone}
+                />
+              )}
+              {/* <DeleteDialog
+                open={isDeleteDialogOpen}
+                title="Delete User"
+                contentText={'Are you sure you want to delete this location?'}
+                loading={deleteLoading}
+                handleDialogClose={() => {
+                  setLocation();
+                  setIsDeleteDialogOpen(false);
+                }}
+                handleDelete={handleLocationDelete}
+              /> */}
+
+              <NewDeleteDialog
+                open={isDeleteDialogOpen}
+                title="Delete Zone"
+                contentText="Are you sure you want to delete this zone?"
+                loading={deleteLoading}
+                handleDialogClose={() => {
+                  setZone();
+                  setIsDeleteDialogOpen(false);
+                }}
+                handleDelete={handleZoneDelete}
+              />
+            </Box>
+          </TabPanel>
+          <TabPanel value={value} index={3}>
             <DefaultScheduler
               // settings={true}
               custId={authCtx.user.cust_id || localStorage.getItem('cust_id')}
@@ -1577,7 +1775,7 @@ const Settings = () => {
               getDefaultScheduleSettings={getDefaultScheduleSettings}
             />
           </TabPanel>
-          <TabPanel value={value} index={3}>
+          <TabPanel value={value} index={4}>
             <TokenExchange />
           </TabPanel>
         </Grid>

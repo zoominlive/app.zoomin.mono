@@ -218,6 +218,7 @@ const ChildForm = (props) => {
                 onClick={() => {
                   setIsCloseDialog(false);
                   props.setOpen(false);
+                  props.setChild();
                 }}>
                 Yes
               </Button>
