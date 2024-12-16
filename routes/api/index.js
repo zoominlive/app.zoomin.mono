@@ -4,6 +4,7 @@ const router = express.Router();
 const userRoutes = require('./user');
 const customerRoutes = require('./customer');
 const roomRoutes = require('./room');
+const zoneRoutes = require('./zone');
 const cameraRoutes = require('./camera');
 const familyRoutes = require('./family');
 const childRoutes = require('./children');
@@ -22,6 +23,9 @@ router.use('/customers', customerRoutes);
 
 /* room routes */
 router.use('/rooms', roomRoutes);
+
+/* zone routes */ 
+router.use('/zones', zoneRoutes);
 
 /* camera routes */
 router.use('/cams', cameraRoutes);

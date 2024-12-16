@@ -25,6 +25,10 @@ const Room = sequelize.define(
       type: Sequelize.INTEGER,
       allowNull: true
     },
+    zone_id: {
+      type: Sequelize.STRING(50),
+      allowNull: true
+    },
     // location: {
     //   type: Sequelize.STRING(50),
     //   allowNull: false

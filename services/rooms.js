@@ -12,6 +12,7 @@ module.exports = {
   createRoom: async (roomObj, validCameras, t) => {
     const { Room, CamerasInRooms } = await connectToDatabase();
     roomObj.room_id = uuidv4();
+    roomObj.zone_id = roomObj.zone;
     let roomCreated = await Room.create(roomObj, { transaction: t });
 
     const camsToAdd = validCameras.map((cam) => {
@@ -45,6 +46,7 @@ module.exports = {
     if (params?.stream_live_license !== undefined) {
       update.stream_live_license = params?.stream_live_license
     }
+    update.zone_id = params.zone;
     let updateRoomDetails = await Room.update(
       update,
       {
@@ -112,7 +114,7 @@ module.exports = {
 
   /* Fetch all the room's details */
   getAllRoomsDetails: async (userId, user, filter, t) => {
-    const { Room, Camera, CustomerLocations } = await connectToDatabase();
+    const { Room, Camera, CustomerLocations, Zone } = await connectToDatabase();
     let {
       pageNumber = 0,
       pageSize = 10,
@@ -220,7 +222,7 @@ module.exports = {
             },
             room_name: roomsList,
           },
-          attributes: ["room_id", "room_name", "loc_id", "stream_live_license"],
+          attributes: ["room_id", "room_name", "loc_id", "stream_live_license", "zone_id"],
           include: [
             {
               model: CamerasInRooms,
@@ -241,6 +243,11 @@ module.exports = {
             {
               model: CustomerLocations,
               attributes: ['loc_name', 'loc_id'], // Only include the location name
+            },
+            {
+              model: Zone,
+              as: 'zone',
+              attributes: ['zone_name', 'zone_id'], // Only include the location name
             },
           ],
           distinct: true
@@ -265,7 +272,7 @@ module.exports = {
               [Sequelize.Op.substring]: searchBy,
             },
           },
-          attributes: ["room_id", "room_name", "loc_id", "stream_live_license"],
+          attributes: ["room_id", "room_name", "loc_id", "stream_live_license", "zone_id"],
           include: [
             {
               model: CamerasInRooms,
@@ -286,6 +293,11 @@ module.exports = {
             {
               model: CustomerLocations,
               attributes: ['loc_name', 'loc_id'], // Only include the location name
+            },
+            {
+              model: Zone,
+              as: 'zone',
+              attributes: ['zone_name', 'zone_id'], // Only include the location name
             },
           ],
           distinct: true
@@ -316,7 +328,8 @@ module.exports = {
         location: room.loc_id,
         loc_name: room.customer_location.loc_name,
         cameras: cams,
-        stream_live_license: room.stream_live_license
+        stream_live_license: room.stream_live_license,
+        zone: room.zone?.dataValues
       };
     });
 

@@ -6,6 +6,7 @@ const Child = require('./child');
 const Camera = require('./camera');
 const RecentViewers = require('./recent_viewers');
 const Room = require('./room');
+const Zone = require('./zone');
 const ScheduledToDisable = require('./scheluled_to_disable');
 const RoomsInChild = require('./rooms_assigned_to_child');
 const DefaultSchedule = require('./default_schedule');
@@ -262,6 +263,9 @@ CustomerLocations.belongsToMany(Child, {
   as: 'child'
 });
 
+Zone.hasMany(Room, { foreignKey: 'zone_id', as: 'rooms' }); // A Zone has many Rooms
+Room.belongsTo(Zone, { foreignKey: 'zone_id', as: 'zone' }); // A Room belongs to one Zone
+
 const connection = {};
 
 module.exports = async () => {
@@ -279,6 +283,7 @@ module.exports = async () => {
       Child,
       RecentViewers,
       Room,
+      Zone,
       Camera,
       ScheduledToDisable,
       RoomsInChild,
@@ -315,6 +320,7 @@ module.exports = async () => {
     Child,
     RecentViewers,
     Room,
+    Zone,
     Camera,
     ScheduledToDisable,
     RoomsInChild,
