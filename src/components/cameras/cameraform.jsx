@@ -461,14 +461,14 @@ const CameraForm = (props) => {
                       />
                     </Grid>
                     <Grid item xs={12} md={12}>
-                      <InputLabel id="rooms">Rooms</InputLabel>
+                      <InputLabel id="rooms">Zones</InputLabel>
                       <Autocomplete
                         labelId="rooms"
                         fullWidth
                         multiple
                         id="rooms"
                         options={roomOptions && locationSelected ? roomOptions : []}
-                        noOptionsText={!locationSelected ? 'Select location first' : 'No Room'}
+                        noOptionsText={!locationSelected ? 'Select location first' : 'No Zone'}
                         isOptionEqualToValue={(option, value) =>
                           option.room_id === value.room?.room_id || option.room_id === value.room_id
                         }

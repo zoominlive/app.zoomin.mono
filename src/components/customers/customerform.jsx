@@ -562,7 +562,7 @@ const CustomerForm = (props) => {
             </Grid>
             <Grid item md={4} xs={12}>
               <InputLabel id="max_stream_live_license_room">
-                Max Per-Room Live Streaming Licenses
+                Max Per-Zone Live Streaming Licenses
               </InputLabel>
               <TextField
                 labelId="max_stream_live_license_room"
@@ -872,7 +872,7 @@ const CustomerForm = (props) => {
             </Grid>
             {values.role === 'Teacher' && (
               <Grid item xs={12} md={6}>
-                <InputLabel id="rooms">Room</InputLabel>
+                <InputLabel id="rooms">Zone</InputLabel>
                 <Autocomplete
                   labelId="rooms"
                   fullWidth

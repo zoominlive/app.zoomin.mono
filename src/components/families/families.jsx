@@ -343,7 +343,7 @@ const Families = () => {
                     </FormControl>
                   </Grid>
                   <Grid item md={3.5} sm={12}>
-                    <InputLabel id="rooms">Rooms</InputLabel>
+                    <InputLabel id="rooms">Zones</InputLabel>
                     <Autocomplete
                       labelId="rooms"
                       fullWidth
@@ -365,7 +365,7 @@ const Families = () => {
                           {...params}
                           // label="Room"
                           fullWidth
-                          placeholder="Rooms"
+                          placeholder="Zones"
                           InputProps={{
                             ...params.InputProps,
                             endAdornment: (

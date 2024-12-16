@@ -64,7 +64,7 @@ const Cameras = () => {
 
   useEffect(() => {
     layoutCtx.setActive(6);
-    layoutCtx.setBreadcrumb(['Cameras', 'Manage rooms and their camera authorization']);
+    layoutCtx.setBreadcrumb(['Cameras', 'Manage zones and their camera authorization']);
     return () => {
       authCtx.setPreviosPagePath(window.location.pathname);
     };
@@ -270,7 +270,7 @@ const Cameras = () => {
                     <TableCell style={{ minWidth: '100px' }} align="left">
                       Location
                     </TableCell>
-                    <TableCell align="left">Rooms</TableCell>
+                    <TableCell align="left">Zones</TableCell>
                     <TableCell align="left">Description</TableCell>
                     <TableCell align="left">URL</TableCell>
                     <TableCell align="right"></TableCell>

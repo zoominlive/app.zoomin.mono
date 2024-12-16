@@ -54,13 +54,13 @@ const RoomActions = (props) => {
           <ListItemIcon>
             <EditOutlinedIcon />
           </ListItemIcon>
-          <ListItemText>Edit Room</ListItemText>
+          <ListItemText>Edit Zone</ListItemText>
         </MenuItem>
         <MenuItem onClick={handleRoomDelete}>
           <ListItemIcon>
             <DeleteOutlinedIcon />
           </ListItemIcon>
-          <ListItemText>Delete Room</ListItemText>
+          <ListItemText>Delete Zone</ListItemText>
         </MenuItem>
       </Menu>
     </Box>

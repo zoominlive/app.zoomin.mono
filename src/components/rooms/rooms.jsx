@@ -534,8 +534,8 @@ const Rooms = () => {
       )}
       <NewDeleteDialog
         open={isDeleteDialogOpen}
-        title="Delete Room"
-        contentText="Are you sure you want to delete this room?"
+        title="Delete Zone"
+        contentText="Are you sure you want to delete this zone?"
         loading={deleteLoading}
         handleDialogClose={() => {
           setRoom();

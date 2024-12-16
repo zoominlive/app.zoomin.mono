@@ -176,7 +176,7 @@ const Children = (props) => {
                       />
                     </Grid>
                     <Grid item md={6} sm={12} className="family-form">
-                      <InputLabel id="rooms">Rooms</InputLabel>
+                      <InputLabel id="rooms">Zones</InputLabel>
                       <Autocomplete
                         labelId="rooms"
                         fullWidth

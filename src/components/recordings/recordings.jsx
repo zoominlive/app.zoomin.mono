@@ -58,7 +58,7 @@ import FullScreenDialog from '../watchstream/fullscreendialog';
 import LinerLoader from '../common/linearLoader';
 import Logger from '../../utils/logger';
 //import FullScreenDialog from '../watchstream/fullscreendialog';
-const streamColumns = ['Stream Name', 'Time', 'Location', 'Room'];
+const streamColumns = ['Stream Name', 'Time', 'Location', 'Zone'];
 
 const Recordings = () => {
   const layoutCtx = useContext(LayoutContext);
@@ -550,7 +550,7 @@ const Recordings = () => {
                     </FormControl>
                   </Grid>
                   <Grid item md={4.5} sm={12}>
-                    <InputLabel id="rooms">Rooms</InputLabel>
+                    <InputLabel id="rooms">Zones</InputLabel>
                     <Autocomplete
                       labelId="rooms"
                       fullWidth
@@ -572,7 +572,7 @@ const Recordings = () => {
                           {...params}
                           // label="Room"
                           fullWidth
-                          placeholder="Rooms"
+                          placeholder="Zones"
                           InputProps={{
                             ...params.InputProps,
                             endAdornment: (
@@ -669,7 +669,7 @@ const Recordings = () => {
                       </TableCell>
                       <TableCell align="center">Stream Name</TableCell>
                       <TableCell align="center">Location</TableCell>
-                      <TableCell align="center">Rooms</TableCell>
+                      <TableCell align="center">Zones</TableCell>
                       <TableCell align="center">Status</TableCell>
                       <TableCell align="center">Stream</TableCell>
                     </TableRow>

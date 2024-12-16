@@ -153,11 +153,11 @@ const FamilyDrawer = (props) => {
   const handleChildDelete = () => {
     console.log('reached==>');
     let data = {
-      [isDeleteTitle == 'Delete Child' || isDeleteTitle == "Delete Child's Room"
+      [isDeleteTitle == 'Delete Child' || isDeleteTitle == "Delete Child's Zone"
         ? 'child_id'
         : 'family_member_id']: toDelete
     };
-    if (isDeleteTitle == "Delete Child's Room") {
+    if (isDeleteTitle == "Delete Child's Zone") {
       data = { ...data, room_id: toDeleteRoom };
     }
     setDeleteLoading(true);
@@ -165,7 +165,7 @@ const FamilyDrawer = (props) => {
       `family/${
         isDeleteTitle == 'Delete Child'
           ? 'child/delete'
-          : isDeleteTitle == "Delete Child's Room"
+          : isDeleteTitle == "Delete Child's Zone"
           ? 'child/deleteroom'
           : 'delete-secondary-member'
       }`,
@@ -1224,8 +1224,8 @@ const FamilyDrawer = (props) => {
                               setIsDeleteChildDialogOpen(true);
                               setToDelete(child.child_id);
                               setToDeleteRoom(room?.room_id);
-                              setIsDeleteTitle("Delete Child's Room");
-                              setIsDeleteContext('Are you sure you want to delete this room?');
+                              setIsDeleteTitle("Delete Child's Zone");
+                              setIsDeleteContext('Are you sure you want to delete this zone?');
                             }}
                             className="edit-btn">
                             <DeleteOutlineIcon className="delete-parent" />
@@ -1261,7 +1261,7 @@ const FamilyDrawer = (props) => {
                       setIsRoomAddDialogOpen(true);
                       setSelectedChild(child);
                     }}>
-                    Add Room
+                    Add Zone
                   </Button>
                 </Stack>
               </Stack>
@@ -1296,8 +1296,8 @@ const FamilyDrawer = (props) => {
         setOpen={setIsRoomDialogOpen}
         loading={roomLoading}
         roomDetails={roomTodisable}
-        title={roomTodisable?.disabled == 'true' ? 'Enable Room' : 'Disable Room'}
-        contentText="This action will disable room access to this child"
+        title={roomTodisable?.disabled == 'true' ? 'Enable Zone' : 'Disable Zone'}
+        contentText="This action will disable zone access to this child"
         handleRoomDisableEnable={handleRoomDisableEnable}
         handleDialogClose={() => setIsRoomDialogOpen(false)}
       />

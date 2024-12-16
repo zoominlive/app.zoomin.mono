@@ -298,7 +298,7 @@ const WatchStreamDialogBox = (props) => {
             )}
           />
           <InputLabel id="room" className="label">
-            Room
+            Zone
           </InputLabel>
           <Autocomplete
             labelId="room"

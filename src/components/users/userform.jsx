@@ -498,7 +498,7 @@ const UserForm = (props) => {
                     </Grid>
                     {values.role === 'Teacher' && (
                       <Grid item xs={12} md={6}>
-                        <InputLabel id="rooms">Rooms</InputLabel>
+                        <InputLabel id="rooms">Zones</InputLabel>
                         <Autocomplete
                           labelId="rooms"
                           fullWidth

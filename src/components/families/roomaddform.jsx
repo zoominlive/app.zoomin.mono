@@ -133,7 +133,7 @@ const AddRoomForm = (props) => {
 
   return (
     <Dialog open={props.open} onClose={handleDialogClose} fullWidth className="add-child-drawer">
-      <DialogTitle>{'Add Rooms'}</DialogTitle>
+      <DialogTitle>{'Add Zone'}</DialogTitle>
       <Divider />
       <Formik
         enableReinitialize
@@ -210,7 +210,7 @@ const AddRoomForm = (props) => {
                       renderInput={(params) => (
                         <TextField
                           {...params}
-                          label="Rooms"
+                          label="Zone"
                           helperText={touched.rooms && errors.rooms}
                           error={touched.rooms && Boolean(errors.rooms)}
                           fullWidth

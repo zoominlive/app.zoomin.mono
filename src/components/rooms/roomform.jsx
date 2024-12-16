@@ -40,7 +40,7 @@ import _ from 'lodash';
 import CloseIcon from '@mui/icons-material/Close';
 
 const validationSchema = yup.object({
-  room_name: yup.string('Enter Room name').required('Room name is required'),
+  room_name: yup.string('Enter Zone name').required('Zone name is required'),
   location: yup.string('Select Location').required('Location is required'),
   zone: yup.string('Select Zone').required('Zone is required')
   // cameras: yup.array().min(1, 'Select at least one Camera').required('Camera is required')
@@ -484,7 +484,7 @@ const RoomForm = (props) => {
                     variant="text"
                     type="submit">
                     {/* {props?.room?.room_id ? 'Save Changes' : 'Save Room'} */}
-                    Save Room
+                    Save Zone
                   </LoadingButton>
                 </DialogActions>
               </Form>

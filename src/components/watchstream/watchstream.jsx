@@ -75,7 +75,7 @@ const WatchStream = () => {
 
   useEffect(() => {
     layoutCtx.setActive(5);
-    layoutCtx.setBreadcrumb(['Watch Stream', 'Manage rooms and their camera authorization']);
+    layoutCtx.setBreadcrumb(['Watch Stream', 'Manage zones and their camera authorization']);
     const locs = [{ loc_id: 'select-all', loc_name: 'Select All' }];
     authCtx?.user?.locations?.map((item) => item).forEach((loc) => locs.push(loc));
     setLocations(locs);
@@ -559,7 +559,7 @@ const WatchStream = () => {
                   />
                 </Grid>
                 <Grid item md={3} sm={12}>
-                  <InputLabel id="rooms">Rooms</InputLabel>
+                  <InputLabel id="rooms">Zones</InputLabel>
                   <Autocomplete
                     labelId="rooms"
                     multiple
