@@ -6,6 +6,7 @@ const { v4: uuidv4 } = require("uuid");
 const CamerasInRooms = require("../models/cameras_assigned_to_rooms");
 const customerServices = require('../services/customers');
 const Room = require("../models/room");
+const jwt = require('jsonwebtoken');
 
 module.exports = {
   /* Create new room */
@@ -122,12 +123,16 @@ module.exports = {
       location = "All",
       searchBy = "",
       cust_id = null,
+      type = "All"
     } = filter;
 
     if (pageNumber != 0) {
       pageNumber = pageNumber - 1;
     }
 
+    if (type == "All") {
+      type = "";
+    }
     if (location == "All") {
       location = "";
     }
@@ -221,6 +226,9 @@ module.exports = {
               [Sequelize.Op.and]: { [Sequelize.Op.substring]: searchBy },
             },
             room_name: roomsList,
+            zone_id: {
+              [Sequelize.Op.substring]: type,
+            },
           },
           attributes: ["room_id", "room_name", "loc_id", "stream_live_license", "zone_id"],
           include: [
@@ -271,6 +279,9 @@ module.exports = {
             room_name: {
               [Sequelize.Op.substring]: searchBy,
             },
+            zone_id: {
+              [Sequelize.Op.substring]: type,
+            },
           },
           attributes: ["room_id", "room_name", "loc_id", "stream_live_license", "zone_id"],
           include: [
@@ -320,8 +331,17 @@ module.exports = {
       }
     }
 
+    const baseUrl = await customerServices.getTranscoderUrl(user?.cust_id, t)
+    
     rooms = rooms?.map((room) => {
-      let cams = room.cameras_assigned_to_rooms.map((cam) => cam.camera);      
+      let cams = room.cameras_assigned_to_rooms.map((cam) => cam.camera);   
+      cams.forEach((camera) => {
+        let uid = user?.family_member_id || user?.user_id;
+        let sid = camera?.cam_id;
+        let uuid = uuidv4();
+        const token = jwt.sign({ user_id: uid, cam_id: sid, uuid: uuid }, process.env.STREAM_URL_SECRET_KEY, {expiresIn: '12h'});
+        camera.dataValues.stream_uri_seckey = `${baseUrl}${camera?.stream_uri}?seckey=${token}`; // Attach the new key to dataValues
+      });
       return {
         room_id: room.room_id,
         room_name: room.room_name,

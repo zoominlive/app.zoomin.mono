@@ -13,13 +13,17 @@ module.exports = {
       params.user_id = req.user.user_id;
       params.cust_id = req.user.cust_id || req.body.cust_id;
 
+      if (params.zone_name.length > 10) {
+        return res.status(400).json({ error: 'Zone name must be at most 10 characters' });
+      }
+
       const zone = await zoneServices.createZone(params, t);
 
       await t.commit();
       res.status(201).json({
         IsSuccess: true,
         Data: zone,
-        Message: CONSTANTS.ZONE_CREATED
+        Message: CONSTANTS.ZONE_TYPE_CREATED
       });
 
       next();
@@ -60,7 +64,7 @@ module.exports = {
       res.status(200).json({
         IsSuccess: true,
         Data: zone,
-        Message: CONSTANTS.ZONE_UPDATED
+        Message: CONSTANTS.ZONE_TYPE_UPDATED
       });
 
       next();
@@ -98,7 +102,7 @@ module.exports = {
       res.status(200).json({
         IsSuccess: true,
         Data: {},
-        Message: CONSTANTS.ZONE_DELETED
+        Message: CONSTANTS.ZONE_TYPE_DELETED
       });
 
       next();
@@ -147,7 +151,7 @@ module.exports = {
       res.status(200).json({
         IsSuccess: true,
         Data: zones,
-        Message: CONSTANTS.ZONE_DETAILS
+        Message: CONSTANTS.ZONE_TYPE_DETAILS
       });
 
       next();

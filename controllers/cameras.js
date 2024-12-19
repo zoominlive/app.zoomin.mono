@@ -312,7 +312,7 @@ module.exports = {
         params.stream_uuid = transcodedDetails?.data ? transcodedDetails.data?.id : '';
         params.cam_alias = transcodedDetails?.data ? transcodedDetails.data?.alias : '';
         params.cust_id = req.user.cust_id ? req.user.cust_id : params.cust_id
-        camera = await cameraServices.editCamera(params.cam_id, params, t);
+        camera = await cameraServices.editCamera(params.cam_id, params, null, t);
       }
       await t.commit();
       res.status(200).json({

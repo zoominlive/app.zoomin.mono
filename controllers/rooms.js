@@ -68,7 +68,7 @@ module.exports = {
       res.status(201).json({
         IsSuccess: true,
         Data: room,
-        Message: CONSTANTS.ROOM_CREATED + ' ' + validationMessages.join(" ")
+        Message: CONSTANTS.ZONE_CREATED + ' ' + validationMessages.join(" ")
       });
 
       next();
@@ -144,7 +144,7 @@ module.exports = {
       res.status(200).json({
         IsSuccess: true,
         Data: room,
-        Message: CONSTANTS.ROOM_UPDATED
+        Message: CONSTANTS.ZONE_UPDATED
       });
 
       next();
@@ -194,7 +194,7 @@ module.exports = {
       res.status(200).json({
         IsSuccess: true,
         Data: {},
-        Message: CONSTANTS.ROOM_DELETED
+        Message: CONSTANTS.ZONE_DELETED
       });
 
       next();
@@ -229,6 +229,7 @@ module.exports = {
         pageSize: parseInt(req.query?.pageSize),
         roomsList: req.query?.rooms,
         location: req.query?.location,
+        type: req.query?.type,
         searchBy: req.query?.searchBy?.replace(/'/g, "\\'"),
         cust_id: req.query?.cust_id
       };
@@ -242,7 +243,7 @@ module.exports = {
       res.status(200).json({
         IsSuccess: true,
         Data: rooms,
-        Message: CONSTANTS.ROOM_DETAILS
+        Message: CONSTANTS.ZONE_DETAILS
       });
 
       next();
@@ -265,7 +266,7 @@ module.exports = {
       res.status(200).json({
         IsSuccess: true,
         Data: rooms,
-        Message: CONSTANTS.ROOM_DETAILS
+        Message: CONSTANTS.ZONE_DETAILS
       });
 
       next();
@@ -305,7 +306,7 @@ module.exports = {
       res.status(200).json({
         IsSuccess: true,
         Data: room,
-        Message: CONSTANTS.ROOM_UPDATED
+        Message: CONSTANTS.ZONE_UPDATED
       });
 
       next();
@@ -357,7 +358,7 @@ module.exports = {
       res.status(200).json({
         IsSuccess: true,
         Data: room,
-        Message: CONSTANTS.ROOM_UPDATED
+        Message: CONSTANTS.ZONE_UPDATED
       });
 
       next();

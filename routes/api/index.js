@@ -21,11 +21,11 @@ router.use('/users', userRoutes);
 /* customer routes */
 router.use('/customers', customerRoutes);
 
-/* room routes */
-router.use('/rooms', roomRoutes);
+/* room routes || /rooms changed to /zones due introduction of Zones concept */ 
+router.use('/zones', roomRoutes);
 
-/* zone routes */ 
-router.use('/zones', zoneRoutes);
+/* zone type routes */ 
+router.use('/zone-type', zoneRoutes);
 
 /* camera routes */
 router.use('/cams', cameraRoutes);
