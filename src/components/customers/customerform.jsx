@@ -951,7 +951,7 @@ const CustomerForm = (props) => {
     setRoomList(rooms);
   }, [selectedLocation]);
   useEffect(() => {
-    API.get('rooms/list').then((response) => {
+    API.get('zones/list').then((response) => {
       if (response.status === 200) {
         setRoomList(response.data.Data);
       } else {

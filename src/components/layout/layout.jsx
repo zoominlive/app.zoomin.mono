@@ -384,7 +384,7 @@ const Layout = () => {
     {
       name: 'Zones',
       icon: <Copy style={{ color: 'white' }} />,
-      link: '/rooms',
+      link: '/zones',
       key: 3
     },
     {

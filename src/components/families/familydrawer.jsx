@@ -476,7 +476,7 @@ const FamilyDrawer = (props) => {
     if (roomTodisable.disabled == 'true') {
       let scheduled_enable_date =
         data.selectedOption == 'schedule' ? dayjs(data.date).format('YYYY-MM-DD') : null;
-      API.put('rooms/enable', {
+      API.put('zones/enable', {
         room_child_id: roomTodisable?.room_child_id,
         scheduled_enable_date: scheduled_enable_date
       }).then((response) => {
@@ -498,7 +498,7 @@ const FamilyDrawer = (props) => {
     } else {
       let scheduled_disable_date =
         data.selectedOption == 'schedule' ? dayjs(data.date).format('YYYY-MM-DD') : null;
-      API.put('rooms/disable', {
+      API.put('zones/disable', {
         room_child_id: roomTodisable?.room_child_id,
         scheduled_disable_date: scheduled_disable_date
       }).then((response) => {
@@ -529,7 +529,7 @@ const FamilyDrawer = (props) => {
   const handleDeleteSchedule = (room) => {
     setRoomScheduleDeleteLoading({ room_id: room.room_id, child_id: room.child_id, loading: true });
     if (room.disabled == 'true') {
-      API.put('rooms/disable', {
+      API.put('zones/disable', {
         room_child_id: room?.room_child_id,
         scheduled_disable_date: null
       }).then((response) => {
@@ -551,7 +551,7 @@ const FamilyDrawer = (props) => {
         });
       });
     } else {
-      API.put('rooms/enable', {
+      API.put('zones/enable', {
         room_child_id: room?.room_child_id,
         scheduled_enable_date: null
       }).then((response) => {

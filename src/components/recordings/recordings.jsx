@@ -127,7 +127,7 @@ const Recordings = () => {
   }, []);
   useEffect(() => {
     setRoomsDropdownLoading(true);
-    API.get('rooms/list', { params: { cust_id: localStorage.getItem('cust_id') } }).then(
+    API.get('zones/list', { params: { cust_id: localStorage.getItem('cust_id') } }).then(
       (response) => {
         if (response.status === 200) {
           setRoomsList(response.data.Data);

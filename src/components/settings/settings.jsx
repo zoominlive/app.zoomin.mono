@@ -303,7 +303,7 @@ const Settings = () => {
   // Method to fetch zones list for table
   const getZonesList = () => {
     setIsLoading(true);
-    API.get('zones', { params: usersPayload }).then((response) => {
+    API.get('zone-type', { params: usersPayload }).then((response) => {
       if (response.status === 200) {
         console.log('zones_response==>', response.data);
         setZonesList(response.data.Data.zones);
@@ -401,7 +401,7 @@ const Settings = () => {
     let payload = {
       zone_id: zone.zone_id
     };
-    API.delete('zones/delete', {
+    API.delete('zone-type/delete', {
       data: { ...payload }
     }).then((response) => {
       if (response.status === 200) {
@@ -583,7 +583,7 @@ const Settings = () => {
       icon: <PlaceOutlined />
     },
     {
-      label: 'Zones',
+      label: 'Zone Types',
       icon: <Category />
     },
     {
@@ -1665,7 +1665,7 @@ const Settings = () => {
                             startIcon={<Plus />}
                             onClick={() => setIsUserFormDialogOpen(true)}>
                             {' '}
-                            Add Zone
+                            Add Zone Type
                           </Button>
                         </Box>
                       </Grid>

@@ -24,7 +24,7 @@ import {
 } from '@mui/material';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useContext } from 'react';
-import { Plus, Video } from 'react-feather';
+import { Plus } from 'react-feather';
 import LayoutContext from '../../context/layoutcontext';
 import CameraForm from './cameraform';
 import CameraActions from './cameraactions';
@@ -139,7 +139,7 @@ const Cameras = () => {
       wait: wait,
       streamId: camera.stream_uuid,
       cust_id: localStorage.getItem('cust_id'),
-      location: camera.location
+      location: camera.customer_location.loc_id
     }).then((response) => {
       if (response.status === 200) {
         getCamerasList();
@@ -270,7 +270,7 @@ const Cameras = () => {
                     <TableCell style={{ minWidth: '100px' }} align="left">
                       Location
                     </TableCell>
-                    <TableCell align="left">Zones</TableCell>
+                    {/* <TableCell align="left">Zones</TableCell> */}
                     <TableCell align="left">Description</TableCell>
                     <TableCell align="left">URL</TableCell>
                     <TableCell align="right"></TableCell>
@@ -295,7 +295,7 @@ const Cameras = () => {
                               />
                             </Stack>
                           </TableCell>
-                          <TableCell style={{ lineHeight: 2.5 }}>
+                          {/* <TableCell style={{ lineHeight: 2.5 }}>
                             {row?.cameras_assigned_to_rooms?.map((roomRow, index) => (
                               <Chip
                                 key={index}
@@ -305,7 +305,7 @@ const Cameras = () => {
                                 icon={<Video />}
                               />
                             ))}
-                          </TableCell>
+                          </TableCell> */}
                           <TableCell component="th" scope="row">
                             <Stack direction="row" alignItems="center" spacing={3}>
                               <Typography>{`${row.description}`}</Typography>

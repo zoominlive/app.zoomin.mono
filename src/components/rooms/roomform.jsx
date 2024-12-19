@@ -131,7 +131,7 @@ const RoomForm = (props) => {
     let customer_id =
       authCtx.user.role === 'Super Admin' ? localStorage.getItem('cust_id') : authCtx.user.cust_id;
     if (props.room) {
-      API.put('rooms/edit', {
+      API.put('zones/edit', {
         ...data,
         room_id: props.room.room_id,
         loc_id: data.location,
@@ -173,7 +173,7 @@ const RoomForm = (props) => {
         handleFormDialogClose();
       });
     } else {
-      API.post('rooms/add', {
+      API.post('zones/add', {
         ...data,
         loc_id: data.location,
         cust_id: localStorage.getItem('cust_id'),

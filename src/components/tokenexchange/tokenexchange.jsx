@@ -58,7 +58,7 @@ const tableRowsCopy = [
     '/cams': { create: false, edit: false, list: false, delete: false, enabledisable: null }
   },
   {
-    '/rooms': { create: false, edit: false, list: false, delete: false, enabledisable: false }
+    '/zones': { create: false, edit: false, list: false, delete: false, enabledisable: false }
   },
   {
     '/family': {
@@ -104,11 +104,11 @@ const endpointMappings = {
     delete: '/api/cams/delete',
     enabledisable: null
   },
-  '/rooms': {
-    create: '/api/rooms/add',
-    edit: '/api/rooms/edit',
-    list: '/api/rooms',
-    delete: '/api/rooms/delete',
+  '/zones': {
+    create: '/api/zones/add',
+    edit: '/api/zones/edit',
+    list: '/api/zones',
+    delete: '/api/zones/delete',
     enabledisable: null
   },
   '/family': {

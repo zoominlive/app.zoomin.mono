@@ -32,7 +32,10 @@ const SettingsFormZone = (props) => {
   const handleClose = () => setIsCloseDialog(!isCloseDialog);
 
   const validationSchema = yup.object({
-    zone_name: yup.string('Enter zone name').required('Zone name is required')
+    zone_name: yup
+      .string('Enter zone name')
+      .required('Zone name is required')
+      .max(10, 'Zone name must be at most 10 characters')
   });
   // console.log('props', props);
 
@@ -44,7 +47,7 @@ const SettingsFormZone = (props) => {
         authCtx.user.role === 'Super Admin' ? localStorage.getItem('cust_id') : authCtx.user.cust_id
     };
     if (props.zone !== undefined && props.zone?.zone_name) {
-      API.put('zones/edit', {
+      API.put('zone-type/edit', {
         zone_name: data.zone_name,
         zone_id: props.zone.zone_id
       }).then((response) => {
@@ -66,7 +69,7 @@ const SettingsFormZone = (props) => {
         setSubmitLoading(false);
       });
     } else {
-      API.post('zones/add', payload).then((response) => {
+      API.post('zone-type/add', payload).then((response) => {
         if (response.status === 201) {
           enqueueSnackbar(response?.data?.Message, {
             variant: 'success'

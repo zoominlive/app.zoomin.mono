@@ -74,7 +74,7 @@ const CameraForm = (props) => {
 
   useEffect(() => {
     setDropdownLoading(true);
-    API.get(props?.camera?.location ? `rooms?location=${props?.camera?.location}` : `rooms/`, {
+    API.get(props?.camera?.location ? `zones?location=${props?.camera?.location}` : `zones/`, {
       params: { cust_id: localStorage.getItem('cust_id') }
     }).then((response) => {
       setDropdownLoading(true);
@@ -227,7 +227,7 @@ const CameraForm = (props) => {
 
   const handleGetRoomsForSelectedLocation = (location) => {
     setDropdownLoading(true);
-    API.get(`rooms`, {
+    API.get(`zones`, {
       params: { location: location, cust_id: localStorage.getItem('cust_id') }
     }).then((response) => {
       if (response.status === 200) {

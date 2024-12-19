@@ -47,7 +47,7 @@ const AppRoutes = () => {
               {' '}
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/families" element={<Families />} />
-              <Route path="/rooms" element={<Rooms />} />
+              <Route path="/zones" element={<Rooms />} />
               <Route path="/cameras" element={<Cameras />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/recordings" element={<Recordings />} />

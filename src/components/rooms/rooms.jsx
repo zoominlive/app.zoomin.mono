@@ -7,6 +7,9 @@ import {
   Chip,
   // CircularProgress,
   Collapse,
+  Dialog,
+  DialogContent,
+  DialogTitle,
   FormControl,
   Grid,
   IconButton,
@@ -37,6 +40,7 @@ import RoomActions from './roomactions';
 import PropTypes from 'prop-types';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
+import CloseIcon from '@mui/icons-material/Close';
 // import DeleteDialog from '../common/deletedialog';
 // import Loader from '../common/loader';
 import API from '../../api';
@@ -49,10 +53,26 @@ import NoDataDiv from '../common/nodatadiv';
 import NewDeleteDialog from '../common/newdeletedialog';
 import SearchIcon from '@mui/icons-material/Search';
 import LinerLoader from '../common/linearLoader';
+import CustomPlayer from '../watchstream/customplayer';
 
 const Row = (props) => {
   const { row } = props;
   const [open, setOpen] = useState(false);
+  const [isStreamDialogOpen, setIsStreamDialogOpen] = useState(false);
+  const [selectedCamera, setSelectedCamera] = useState(null); // Track clicked camera
+  const [dialogOpen, setDialogOpen] = useState(false);
+
+  const handleClick = (camRow) => {
+    setSelectedCamera(camRow);
+    setDialogOpen(true);
+    setIsStreamDialogOpen(true);
+  };
+
+  const handleClose = () => {
+    setDialogOpen(false);
+    setIsStreamDialogOpen(false);
+    setSelectedCamera(null);
+  };
 
   return (
     <React.Fragment>
@@ -68,26 +88,29 @@ const Row = (props) => {
         <TableCell style={{ lineHeight: 2.5 }}>
           {/* <Stack direction={'row'} justifyContent="flex-start" alignItems="center"> */}
           {row?.cameras?.map((camRow, index) => (
-            <Link
+            // <Link
+            //   key={index}
+            //   to="/watch-stream"
+            //   state={{
+            //     roomName: row?.room_name,
+            //     // eslint-disable-next-line react/prop-types
+            //     roomId: row?.room_id,
+            //     location: row?.location,
+            //     camName: camRow?.cam_name,
+            //     camId: camRow?.cam_id,
+            //     streamUrl: camRow?.stream_uri
+            //   }}
+            //   onClick={() => handleClick(camRow)}
+            //   className="cam-link">
+            // </Link>
+            <Chip
               key={index}
-              to="/watch-stream"
-              state={{
-                roomName: row?.room_name,
-                // eslint-disable-next-line react/prop-types
-                roomId: row?.room_id,
-                location: row?.location,
-                camName: camRow?.cam_name,
-                camId: camRow?.cam_id,
-                streamUrl: camRow?.stream_uri
-              }}
-              className="cam-link">
-              <Chip
-                color="primary"
-                className="chip-color"
-                label={camRow?.cam_name}
-                icon={<Video />}
-              />
-            </Link>
+              color="primary"
+              className="chip-color"
+              label={camRow?.cam_name}
+              onClick={() => handleClick(camRow)}
+              icon={<Video />}
+            />
           ))}
           {/* </Stack> */}
         </TableCell>
@@ -122,16 +145,17 @@ const Row = (props) => {
                       </TableCell>
                       <TableCell>
                         <Link
-                          to="/watch-stream"
-                          state={{
-                            roomName: row?.room_name,
-                            // eslint-disable-next-line react/prop-types
-                            roomId: row?.room_id,
-                            location: row?.location,
-                            camName: camRow?.cam_name,
-                            camId: camRow?.cam_id,
-                            streamUrl: camRow?.stream_uri
-                          }}>
+                          // to="/watch-stream"
+                          // state={{
+                          //   roomName: row?.room_name,
+                          //   // eslint-disable-next-line react/prop-types
+                          //   roomId: row?.room_id,
+                          //   location: row?.location,
+                          //   camName: camRow?.cam_name,
+                          //   camId: camRow?.cam_id,
+                          //   streamUrl: camRow?.stream_uri
+                          // }}
+                          onClick={() => handleClick(camRow)}>
                           <Video />
                         </Link>
                       </TableCell>
@@ -143,6 +167,27 @@ const Row = (props) => {
           </Collapse>
         </TableCell>
       </TableRow>
+      {isStreamDialogOpen && (
+        <Dialog open={dialogOpen} onClose={handleClose} fullWidth>
+          <DialogTitle>
+            {`${selectedCamera?.cam_name}`}
+            <IconButton
+              aria-label="close"
+              onClick={() => {
+                handleClose();
+              }}
+              sx={{
+                position: 'absolute',
+                right: 18
+              }}>
+              <CloseIcon />
+            </IconButton>
+          </DialogTitle>
+          <DialogContent>
+            <CustomPlayer noOfCameras={2} streamUri={selectedCamera?.stream_uri_seckey} />
+          </DialogContent>
+        </Dialog>
+      )}
     </React.Fragment>
   );
 };
@@ -182,6 +227,7 @@ const Rooms = () => {
     pageSize: parseInt(process.env.REACT_APP_PAGINATION_LIMIT, 10),
     searchBy: '',
     location: 'All',
+    type: 'All',
     rooms: [],
     cust_id: localStorage.getItem('cust_id')
   });
@@ -216,7 +262,7 @@ const Rooms = () => {
   // Method to fetch the rooms list for table
   const getRoomsList = () => {
     setIsLoading(true);
-    API.get('rooms', { params: roomsPayload }).then((response) => {
+    API.get('zones', { params: roomsPayload }).then((response) => {
       if (response.status === 200) {
         setRoomList(response.data.Data.finalRoomDetails);
         setTotalRooms(response.data.Data.count);
@@ -235,19 +281,21 @@ const Rooms = () => {
   // Method to fetch the zones list for table
   const getZonesList = () => {
     setIsLoading(true);
-    API.get('zones', { params: { cust_id: localStorage.getItem('cust_id') } }).then((response) => {
-      if (response.status === 200) {
-        setZones(response.data.Data.zones);
-      } else {
-        errorMessageHandler(
-          enqueueSnackbar,
-          response?.response?.data?.Message || 'Something Went Wrong.',
-          response?.response?.status,
-          authCtx.setAuthError
-        );
+    API.get('zone-type', { params: { cust_id: localStorage.getItem('cust_id') } }).then(
+      (response) => {
+        if (response.status === 200) {
+          setZones(response.data.Data.zones);
+        } else {
+          errorMessageHandler(
+            enqueueSnackbar,
+            response?.response?.data?.Message || 'Something Went Wrong.',
+            response?.response?.status,
+            authCtx.setAuthError
+          );
+        }
+        setIsLoading(false);
       }
-      setIsLoading(false);
-    });
+    );
   };
 
   // Method to fetch the rooms list for dropdown
@@ -283,7 +331,7 @@ const Rooms = () => {
         max_stream_live_license_room: authCtx.user.max_stream_live_license_room + 1
       };
     }
-    API.delete('rooms/delete', { data: { ...payload } }).then((response) => {
+    API.delete('zones/delete', { data: { ...payload } }).then((response) => {
       if (response.status === 200) {
         // setDropdownList((prevList) => {
         //   let tempList = [...prevList];
@@ -345,6 +393,15 @@ const Rooms = () => {
     }));
   };
 
+  // Method to handle zone type change for table
+  const handleZoneTypeChange = (event) => {
+    setRoomsPayload((prevPayload) => ({
+      ...prevPayload,
+      type: event.target.value,
+      pageNumber: 0
+    }));
+  };
+
   // Method to handle room change for table
   // const handleRoomChange = (_, value) => {
   //   const roomsArr = [];
@@ -395,6 +452,25 @@ const Rooms = () => {
                             .map((item) => (
                               <MenuItem key={item.loc_id} value={item.loc_id}>
                                 {item.loc_name}
+                              </MenuItem>
+                            ))}
+                        </Select>
+                      </FormControl>
+                    </Grid>
+                    <Grid item md={3.5} sm={12}>
+                      <InputLabel id="type">Type</InputLabel>
+                      <FormControl fullWidth className="location-select">
+                        <Select
+                          labelId="type"
+                          id="type"
+                          value={roomsPayload?.type}
+                          onChange={handleZoneTypeChange}>
+                          <MenuItem value={'All'}>All</MenuItem>
+                          {zones
+                            ?.sort((a, b) => (a.zone_name > b.zone_name ? 1 : -1))
+                            .map((item) => (
+                              <MenuItem key={item.zone_id} value={item.zone_id}>
+                                {item.zone_name}
                               </MenuItem>
                             ))}
                         </Select>
