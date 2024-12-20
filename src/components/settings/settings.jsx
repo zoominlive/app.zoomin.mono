@@ -306,7 +306,7 @@ const Settings = () => {
     API.get('zone-type', { params: usersPayload }).then((response) => {
       if (response.status === 200) {
         console.log('zones_response==>', response.data);
-        setZonesList(response.data.Data.zones);
+        setZonesList(response.data.Data.zoneTypes);
         setTotalZones(response.data.Data.count);
       } else {
         errorMessageHandler(
@@ -399,7 +399,7 @@ const Settings = () => {
   const handleZoneDelete = () => {
     setDeleteLoading(true);
     let payload = {
-      zone_id: zone.zone_id
+      zone_type_id: zone.zone_type_id
     };
     API.delete('zone-type/delete', {
       data: { ...payload }
@@ -1695,7 +1695,7 @@ const Settings = () => {
                                     <Stack direction="row">
                                       <Chip
                                         key={index}
-                                        label={row.zone_name}
+                                        label={row.zone_type}
                                         color="primary"
                                         className="chip-color"
                                       />

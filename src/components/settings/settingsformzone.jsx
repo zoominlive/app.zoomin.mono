@@ -32,24 +32,24 @@ const SettingsFormZone = (props) => {
   const handleClose = () => setIsCloseDialog(!isCloseDialog);
 
   const validationSchema = yup.object({
-    zone_name: yup
-      .string('Enter zone name')
-      .required('Zone name is required')
-      .max(10, 'Zone name must be at most 10 characters')
+    zone_type: yup
+      .string('Enter zone type')
+      .required('Zone type is required')
+      .max(10, 'Zone type must be at most 10 characters')
   });
   // console.log('props', props);
 
   const handleSubmit = (data, { setSubmitting }) => {
-    const { zone_name } = data;
+    const { zone_type } = data;
     const payload = {
-      zone_name: zone_name,
+      zone_type: zone_type,
       cust_id:
         authCtx.user.role === 'Super Admin' ? localStorage.getItem('cust_id') : authCtx.user.cust_id
     };
-    if (props.zone !== undefined && props.zone?.zone_name) {
+    if (props.zone !== undefined && props.zone?.zone_type) {
       API.put('zone-type/edit', {
-        zone_name: data.zone_name,
-        zone_id: props.zone.zone_id
+        zone_type: data.zone_type,
+        zone_type_id: props.zone.zone_type_id
       }).then((response) => {
         if (response.status === 200) {
           enqueueSnackbar(response?.data?.Message, {
@@ -150,7 +150,7 @@ const SettingsFormZone = (props) => {
   return (
     <Dialog open={props.open} onClose={handleClose} fullWidth className="add-user-drawer">
       <DialogTitle sx={{ paddingTop: 3.5 }}>
-        {props.zone?.zone_name !== undefined ? 'Edit Zone' : 'Add Zone'}
+        {props.zone?.zone_type !== undefined ? 'Edit Zone Type' : 'Add Zone Type'}
         <DialogContentText></DialogContentText>
         <IconButton
           aria-label="close"
@@ -205,23 +205,23 @@ const SettingsFormZone = (props) => {
           validateOnChange
           validationSchema={validationSchema}
           initialValues={{
-            zone_name: props?.zone?.zone_name || ''
+            zone_type: props?.zone?.zone_type || ''
           }}
           onSubmit={handleSubmit}>
           {({ values, setFieldValue, touched, errors }) => {
             return (
               <Form>
                 <DialogContent>
-                  <InputLabel id="zone_name">Zone Name</InputLabel>
+                  <InputLabel id="zone_type">Zone Type</InputLabel>
                   <TextField
-                    labelId="zone_name"
-                    name="zone_name"
-                    value={values?.zone_name}
+                    labelId="zone_type"
+                    name="zone_type"
+                    value={values?.zone_type}
                     onChange={(event) => {
-                      setFieldValue('zone_name', event.target.value);
+                      setFieldValue('zone_type', event.target.value);
                     }}
-                    helperText={touched.zone_name && errors.zone_name}
-                    error={touched.zone_name && Boolean(errors.zone_name)}
+                    helperText={touched.zone_type && errors.zone_type}
+                    error={touched.zone_type && Boolean(errors.zone_type)}
                     fullWidth
                   />
                 </DialogContent>
@@ -261,5 +261,5 @@ SettingsFormZone.propTypes = {
   customer: PropTypes.object,
   getZonesList: PropTypes.func,
   setZone: PropTypes.func,
-  zone_name: PropTypes.string
+  zone_type: PropTypes.string
 };

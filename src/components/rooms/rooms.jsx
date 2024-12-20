@@ -83,7 +83,7 @@ const Row = (props) => {
           </IconButton>
         </TableCell>
         <TableCell>{row.room_name}</TableCell>
-        <TableCell>{row.zone?.zone_name}</TableCell>
+        <TableCell>{row.zone_type?.zone_type}</TableCell>
         <TableCell>{row.loc_name}</TableCell>
         <TableCell style={{ lineHeight: 2.5 }}>
           {/* <Stack direction={'row'} justifyContent="flex-start" alignItems="center"> */}
@@ -200,7 +200,7 @@ Row.propTypes = {
     number_of_cam: PropTypes.number,
     cameras: PropTypes.array,
     stream_live_license: PropTypes.string,
-    zone: PropTypes.object
+    zone_type: PropTypes.object
   }),
   setRoom: PropTypes.func,
   setIsRoomFormDialogOpen: PropTypes.func,
@@ -284,7 +284,7 @@ const Rooms = () => {
     API.get('zone-type', { params: { cust_id: localStorage.getItem('cust_id') } }).then(
       (response) => {
         if (response.status === 200) {
-          setZones(response.data.Data.zones);
+          setZones(response.data.Data.zoneTypes);
         } else {
           errorMessageHandler(
             enqueueSnackbar,
@@ -467,10 +467,10 @@ const Rooms = () => {
                           onChange={handleZoneTypeChange}>
                           <MenuItem value={'All'}>All</MenuItem>
                           {zones
-                            ?.sort((a, b) => (a.zone_name > b.zone_name ? 1 : -1))
+                            ?.sort((a, b) => (a.zone_type > b.zone_type ? 1 : -1))
                             .map((item) => (
-                              <MenuItem key={item.zone_id} value={item.zone_id}>
-                                {item.zone_name}
+                              <MenuItem key={item.zone_type_id} value={item.zone_type_id}>
+                                {item.zone_type}
                               </MenuItem>
                             ))}
                         </Select>

@@ -52,7 +52,7 @@ const RoomForm = (props) => {
   const [initialState, setInitialState] = useState({
     room_name: props?.room?.room_name ? props?.room?.room_name : '',
     location: props?.room?.location ? props?.room?.location : '',
-    zone: props?.room?.zone ? props?.room?.zone.zone_id : '',
+    zone: props?.room?.zone_type ? props?.room?.zone_type.zone_type_id : '',
     cameras: props?.room?.cameras ? props?.room?.cameras : [],
     stream_live_license: !_.isNil(props?.room?.stream_live_license)
       ? props?.room?.stream_live_license
@@ -364,10 +364,10 @@ const RoomForm = (props) => {
                               setFieldValue('zone', event.target.value);
                             }}>
                             {props.zone
-                              ?.sort((a, b) => (a.zone_name > b.zone_name ? 1 : -1))
+                              ?.sort((a, b) => (a.zone_type > b.zone_type ? 1 : -1))
                               .map((item) => (
-                                <MenuItem key={item.zone_id} value={item.zone_id}>
-                                  {item.zone_name}
+                                <MenuItem key={item.zone_type_id} value={item.zone_type_id}>
+                                  {item.zone_type}
                                 </MenuItem>
                               ))}
                           </Select>
