@@ -1,28 +1,28 @@
 const CONSTANTS = require('../lib/constants');
 const _ = require('lodash');
 const sequelize = require('../lib/database');
-const zoneServices = require('../services/zone');
+const zoneTypeServices = require('../services/zoneType');
 const logServices = require('../services/logs');
 
 module.exports = {
-  // create new zone
-  createZone: async (req, res, next) => {
+  // create new zone type
+  createZoneType: async (req, res, next) => {
     const t = await sequelize.transaction();
     try {
       const params = req.body;
       params.user_id = req.user.user_id;
       params.cust_id = req.user.cust_id || req.body.cust_id;
 
-      if (params.zone_name.length > 10) {
-        return res.status(400).json({ error: 'Zone name must be at most 10 characters' });
+      if (params.zone_type.length > 10) {
+        return res.status(400).json({ error: 'Zone type must be at most 10 characters' });
       }
 
-      const zone = await zoneServices.createZone(params, t);
+      const zoneType = await zoneTypeServices.createZoneType(params, t);
 
       await t.commit();
       res.status(201).json({
         IsSuccess: true,
-        Data: zone,
+        Data: zoneType,
         Message: CONSTANTS.ZONE_TYPE_CREATED
       });
 
@@ -38,7 +38,7 @@ module.exports = {
     } finally {
       let logObj = {
         user_id: req?.user?.user_id ? req?.user?.user_id : 'Not Found',
-        function: 'Zone',
+        function: 'Zone Type',
         function_type: 'Add',
         request: req.body
       };
@@ -50,20 +50,20 @@ module.exports = {
     }
   },
 
-  // edit existing zone
-  editZone: async (req, res, next) => {
+  // edit existing zone type
+  editZoneType: async (req, res, next) => {
     const t = await sequelize.transaction();
     try {
       const params = req.body;
       params.custId = req.user.cust_id || req.body.cust_id;
    
-      const zone = await zoneServices.editZone(params, t);
+      const zoneType = await zoneTypeServices.editZoneType(params, t);
 
       await t.commit();
 
       res.status(200).json({
         IsSuccess: true,
-        Data: zone,
+        Data: zoneType,
         Message: CONSTANTS.ZONE_TYPE_UPDATED
       });
 
@@ -79,7 +79,7 @@ module.exports = {
     } finally {
       let logObj = {
         user_id: req?.user?.user_id ? req?.user?.user_id : 'Not Found',
-        function: 'Zone',
+        function: 'Zone Type',
         function_type: 'Edit',
         request: req.body
       };
@@ -91,12 +91,12 @@ module.exports = {
     }
   },
 
-  // delete existing zone
-  deleteZone: async (req, res, next) => {
+  // delete existing zone type
+  deleteZoneType: async (req, res, next) => {
     const t = await sequelize.transaction();
     try {
       const params = req.body;
-      await zoneServices.deleteZone(params.zone_id, t);
+      await zoneTypeServices.deleteZoneType(params.zone_type_id, t);
 
       await t.commit();
       res.status(200).json({
@@ -117,7 +117,7 @@ module.exports = {
     } finally {
       let logObj = {
         user_id: req?.user?.user_id ? req?.user?.user_id : 'Not Found',
-        function: 'Zone',
+        function: 'Zone Type',
         function_type: 'Delete',
         request: req.body
       };
@@ -129,8 +129,8 @@ module.exports = {
     }
   },
 
-  // get zone details for zone list page
-  getAllZoneDetails: async (req, res, next) => {
+  // get zone type details for zone types list page
+  getAllZoneTypeDetails: async (req, res, next) => {
     try {
       const filter = {
         pageNumber: req.query?.pageNumber,
@@ -146,11 +146,11 @@ module.exports = {
           return res.status(400).json({Message:"Unauthorized request"});
         }
       }
-      const zones = await zoneServices.getAllZoneDetails(req.user, filter);
+      const zonesTypes = await zoneTypeServices.getAllZoneTypeDetails(req.user, filter);
 
       res.status(200).json({
         IsSuccess: true,
-        Data: zones,
+        Data: zonesTypes,
         Message: CONSTANTS.ZONE_TYPE_DETAILS
       });
 

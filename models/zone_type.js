@@ -1,10 +1,10 @@
 const { Sequelize } = require('sequelize');
 const sequelize = require('../lib/database');
 
-const Zone = sequelize.define(
-  'zone',
+const ZoneType = sequelize.define(
+  'zone_type',
   {
-    zone_id: {
+    zone_type_id: {
       type: Sequelize.STRING(50),
       allowNull: false,
       primaryKey: true
@@ -13,7 +13,7 @@ const Zone = sequelize.define(
       type: Sequelize.STRING(50),
       allowNull: false
     },
-    zone_name: {
+    zone_type: {
       type: Sequelize.STRING(50),
       allowNull: false
     },
@@ -22,10 +22,10 @@ const Zone = sequelize.define(
     deletedAt: { type: Sequelize.DATE, field: 'deleted_at' }
   },
   {
-    tableName: 'zone',
+    tableName: 'zone_type',
     timestamps: true,
     paranoid: true
   }
 );
 
-module.exports = Zone;
+module.exports = ZoneType;

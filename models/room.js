@@ -25,7 +25,7 @@ const Room = sequelize.define(
       type: Sequelize.INTEGER,
       allowNull: true
     },
-    zone_id: {
+    zone_type_id: {
       type: Sequelize.STRING(50),
       allowNull: true
     },
