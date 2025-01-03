@@ -35,8 +35,8 @@ import { useContext } from 'react';
 import { useState } from 'react';
 import { Plus, Video } from 'react-feather';
 import LayoutContext from '../../context/layoutcontext';
-import RoomForm from './roomform';
-import RoomActions from './roomactions';
+import ZoneForm from './zoneform';
+import ZoneActions from './zoneactions';
 import PropTypes from 'prop-types';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
@@ -82,7 +82,7 @@ const Row = (props) => {
             {open ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
           </IconButton>
         </TableCell>
-        <TableCell>{row.room_name}</TableCell>
+        <TableCell>{row.zone_name}</TableCell>
         <TableCell>{row.zone_type?.zone_type}</TableCell>
         <TableCell>{row.loc_name}</TableCell>
         <TableCell style={{ lineHeight: 2.5 }}>
@@ -92,9 +92,9 @@ const Row = (props) => {
             //   key={index}
             //   to="/watch-stream"
             //   state={{
-            //     roomName: row?.room_name,
+            //     roomName: row?.zone_name,
             //     // eslint-disable-next-line react/prop-types
-            //     roomId: row?.room_id,
+            //     roomId: row?.zone_id,
             //     location: row?.location,
             //     camName: camRow?.cam_name,
             //     camId: camRow?.cam_id,
@@ -116,10 +116,10 @@ const Row = (props) => {
         </TableCell>
         <TableCell align="left">{row.stream_live_license ? 'Yes' : 'No'}</TableCell>
         <TableCell align="right">
-          <RoomActions
-            room={row}
-            setRoom={props.setRoom}
-            setIsRoomFormDialogOpen={props.setIsRoomFormDialogOpen}
+          <ZoneActions
+            zone={row}
+            setZone={props.setZone}
+            setIsZoneFormDialogOpen={props.setIsZoneFormDialogOpen}
             setIsDeleteDialogOpen={props.setIsDeleteDialogOpen}
           />
         </TableCell>
@@ -147,9 +147,9 @@ const Row = (props) => {
                         <Link
                           // to="/watch-stream"
                           // state={{
-                          //   roomName: row?.room_name,
+                          //   roomName: row?.zone_name,
                           //   // eslint-disable-next-line react/prop-types
-                          //   roomId: row?.room_id,
+                          //   roomId: row?.zone_id,
                           //   location: row?.location,
                           //   camName: camRow?.cam_name,
                           //   camId: camRow?.cam_id,
@@ -194,7 +194,7 @@ const Row = (props) => {
 
 Row.propTypes = {
   row: PropTypes.shape({
-    room_name: PropTypes.string,
+    zone_name: PropTypes.string,
     location: PropTypes.string,
     loc_name: PropTypes.string,
     number_of_cam: PropTypes.number,
@@ -202,33 +202,33 @@ Row.propTypes = {
     stream_live_license: PropTypes.string,
     zone_type: PropTypes.object
   }),
-  setRoom: PropTypes.func,
-  setIsRoomFormDialogOpen: PropTypes.func,
+  setZone: PropTypes.func,
+  setIsZoneFormDialogOpen: PropTypes.func,
   setIsDeleteDialogOpen: PropTypes.func
 };
 
-const Rooms = () => {
+const Zones = () => {
   const layoutCtx = useContext(LayoutContext);
   const authCtx = useContext(AuthContext);
   const { enqueueSnackbar } = useSnackbar();
-  const [isRoomFormDialogOpen, setIsRoomFormDialogOpen] = useState(false);
+  const [isZoneFormDialogOpen, setIsZoneFormDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   // const [roomsDropdownLoading, setRoomsDropdownLoading] = useState(false);
   // const [dropdownList, setDropdownList] = useState([]);
   const [deleteLoading, setDeleteLoading] = useState(false);
-  const [roomsList, setRoomList] = useState([]);
-  const [totalRooms, setTotalRooms] = useState(0);
-  const [room, setRoom] = useState();
+  const [zonesList, setZoneList] = useState([]);
+  const [totalZones, setTotalZones] = useState(0);
+  const [zone, setZone] = useState();
   const [zones, setZones] = useState();
 
-  const [roomsPayload, setRoomsPayload] = useState({
+  const [zonesPayload, setZonesPayload] = useState({
     pageNumber: 0,
     pageSize: parseInt(process.env.REACT_APP_PAGINATION_LIMIT, 10),
     searchBy: '',
     location: 'All',
     type: 'All',
-    rooms: [],
+    zones: [],
     cust_id: localStorage.getItem('cust_id')
   });
 
@@ -247,25 +247,25 @@ const Rooms = () => {
 
   useEffect(() => {
     return () => {
-      roomsListDebounce.cancel();
+      zonesListDebounce.cancel();
     };
   });
 
   useEffect(() => {
-    getRoomsList();
-  }, [roomsPayload]);
+    getZonesList();
+  }, [zonesPayload]);
 
   useEffect(() => {
-    getZonesList();
+    getZoneTypesList();
   }, []);
 
-  // Method to fetch the rooms list for table
-  const getRoomsList = () => {
+  // Method to fetch the zones list for table
+  const getZonesList = () => {
     setIsLoading(true);
-    API.get('zones', { params: roomsPayload }).then((response) => {
+    API.get('zones', { params: zonesPayload }).then((response) => {
       if (response.status === 200) {
-        setRoomList(response.data.Data.finalRoomDetails);
-        setTotalRooms(response.data.Data.count);
+        setZoneList(response.data.Data.finalZoneDetails);
+        setTotalZones(response.data.Data.count);
       } else {
         errorMessageHandler(
           enqueueSnackbar,
@@ -278,8 +278,8 @@ const Rooms = () => {
     });
   };
 
-  // Method to fetch the zones list for table
-  const getZonesList = () => {
+  // Method to fetch the zone types list for table
+  const getZoneTypesList = () => {
     setIsLoading(true);
     API.get('zone-type', { params: { cust_id: localStorage.getItem('cust_id') } }).then(
       (response) => {
@@ -298,10 +298,10 @@ const Rooms = () => {
     );
   };
 
-  // Method to fetch the rooms list for dropdown
+  // Method to fetch the zones list for dropdown
   // const getDropDownRoomList = () => {
   //   setRoomsDropdownLoading(true);
-  //   API.get('rooms/list', { params: { cust_id: localStorage.getItem('cust_id') } }).then(
+  //   API.get('zones/list', { params: { cust_id: localStorage.getItem('cust_id') } }).then(
   //     (response) => {
   //       if (response.status === 200) {
   //         setDropdownList(response.data.Data);
@@ -318,29 +318,29 @@ const Rooms = () => {
   //   );
   // };
 
-  // Method to delete room
-  const handleRoomDelete = () => {
+  // Method to delete zone
+  const handleZoneDelete = () => {
     setDeleteLoading(true);
     let payload = {
-      room_id: room.room_id
+      zone_id: zone.zone_id
     };
-    if (room.stream_live_license) {
+    if (zone.stream_live_license) {
       payload = {
         ...payload,
         custId: authCtx.user.cust_id || localStorage.getItem('cust_id'),
-        max_stream_live_license_room: authCtx.user.max_stream_live_license_room + 1
+        max_stream_live_license_zone: authCtx.user.max_stream_live_license_zone + 1
       };
     }
     API.delete('zones/delete', { data: { ...payload } }).then((response) => {
       if (response.status === 200) {
         // setDropdownList((prevList) => {
         //   let tempList = [...prevList];
-        //   tempList = tempList.filter((item) => item.room_id !== room.room_id);
+        //   tempList = tempList.filter((item) => item.zone_id !== zone.zone_id);
         //   return tempList;
         // });
-        setRoomsPayload((prev) => {
+        setZonesPayload((prev) => {
           let temp = { ...prev };
-          temp.rooms = temp.rooms.filter((item) => item.room_id !== room.room_id);
+          temp.zones = temp.zones.filter((item) => item.zone_id !== zone.zone_id);
           return temp;
         });
         enqueueSnackbar(response.data.Message, {
@@ -355,7 +355,7 @@ const Rooms = () => {
           authCtx.setAuthError
         );
       }
-      setRoom();
+      setZone();
       //setDeleteLoading(false);
       setIsDeleteDialogOpen(false);
     });
@@ -363,12 +363,12 @@ const Rooms = () => {
 
   // Method to change the page in table
   const handlePageChange = (_, newPage) => {
-    setRoomsPayload((prevPayload) => ({ ...prevPayload, pageNumber: newPage }));
+    setZonesPayload((prevPayload) => ({ ...prevPayload, pageNumber: newPage }));
   };
 
   // Method to change the row per page in table
   const handleChangeRowsPerPage = (event) => {
-    setRoomsPayload((prevPayload) => ({
+    setZonesPayload((prevPayload) => ({
       ...prevPayload,
       pageSize: parseInt(event.target.value, 10),
       pageNumber: 0
@@ -377,7 +377,7 @@ const Rooms = () => {
 
   // Method to handle Search for table
   const handleSearch = (event) => {
-    setRoomsPayload((prevPayload) => ({
+    setZonesPayload((prevPayload) => ({
       ...prevPayload,
       searchBy: event.target.value,
       pageNumber: 0
@@ -386,7 +386,7 @@ const Rooms = () => {
 
   // Method to handle location change for table
   const handleLocationChange = (event) => {
-    setRoomsPayload((prevPayload) => ({
+    setZonesPayload((prevPayload) => ({
       ...prevPayload,
       location: event.target.value,
       pageNumber: 0
@@ -395,22 +395,22 @@ const Rooms = () => {
 
   // Method to handle zone type change for table
   const handleZoneTypeChange = (event) => {
-    setRoomsPayload((prevPayload) => ({
+    setZonesPayload((prevPayload) => ({
       ...prevPayload,
       type: event.target.value,
       pageNumber: 0
     }));
   };
 
-  // Method to handle room change for table
+  // Method to handle zone change for table
   // const handleRoomChange = (_, value) => {
   //   const roomsArr = [];
-  //   value.forEach((room) => roomsArr.push(room.room_name));
-  //   setRoomsPayload((prevPayload) => ({ ...prevPayload, rooms: roomsArr, pageNumber: 0 }));
+  //   value.forEach((zone) => roomsArr.push(zone.zone_name));
+  //   setZonesPayload((prevPayload) => ({ ...prevPayload, zones: roomsArr, pageNumber: 0 }));
   // };
 
   // Calls the search handler after 500ms
-  const roomsListDebounce = useMemo(() => {
+  const zonesListDebounce = useMemo(() => {
     return debounce(handleSearch, 500);
   }, []);
 
@@ -428,7 +428,7 @@ const Rooms = () => {
                       <TextField
                         labelId="search"
                         placeholder="Zone Name, Location"
-                        onChange={roomsListDebounce}
+                        onChange={zonesListDebounce}
                         InputProps={{
                           startAdornment: (
                             <InputAdornment position="start">
@@ -444,7 +444,7 @@ const Rooms = () => {
                         <Select
                           labelId="location"
                           id="location"
-                          value={roomsPayload?.location}
+                          value={zonesPayload?.location}
                           onChange={handleLocationChange}>
                           <MenuItem value={'All'}>All</MenuItem>
                           {authCtx.user.locations
@@ -463,7 +463,7 @@ const Rooms = () => {
                         <Select
                           labelId="type"
                           id="type"
-                          value={roomsPayload?.type}
+                          value={zonesPayload?.type}
                           onChange={handleZoneTypeChange}>
                           <MenuItem value={'All'}>All</MenuItem>
                           {zones
@@ -477,24 +477,24 @@ const Rooms = () => {
                       </FormControl>
                     </Grid>
                     {/* <Grid item md={3.5} sm={12}>
-                      <InputLabel id="rooms">Select Rooms</InputLabel>
+                      <InputLabel id="zones">Select Rooms</InputLabel>
                       <Autocomplete
-                        labelId="rooms"
+                        labelId="zones"
                         loading={roomsDropdownLoading}
                         fullWidth
                         multiple
-                        id="rooms"
-                        options={dropdownList.sort((a, b) => (a.room_name > b.room_name ? 1 : -1))}
-                        isOptionEqualToValue={(option, value) => option.room_id === value.room_id}
+                        id="zones"
+                        options={dropdownList.sort((a, b) => (a.zone_name > b.zone_name ? 1 : -1))}
+                        isOptionEqualToValue={(option, value) => option.zone_id === value.zone_id}
                         getOptionLabel={(option) => {
-                          return option.room_name;
+                          return option.zone_name;
                         }}
                         onChange={handleRoomChange}
                         renderTags={(value, getTagProps) =>
                           value.map((option, index) => (
                             <Chip
                               key={index}
-                              label={option.room_name}
+                              label={option.zone_name}
                               {...getTagProps({ index })}
                             />
                           ))
@@ -536,7 +536,7 @@ const Rooms = () => {
                     className="add-button"
                     variant="contained"
                     startIcon={<Plus />}
-                    onClick={() => setIsRoomFormDialogOpen(true)}>
+                    onClick={() => setIsZoneFormDialogOpen(true)}>
                     {' '}
                     Add Zone
                   </Button>
@@ -564,29 +564,29 @@ const Rooms = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {roomsList?.length > 0
-                    ? roomsList?.map((room) => (
+                  {zonesList?.length > 0
+                    ? zonesList?.map((zone) => (
                         <Row
-                          setRoom={setRoom}
-                          setIsRoomFormDialogOpen={setIsRoomFormDialogOpen}
+                          setZone={setZone}
+                          setIsZoneFormDialogOpen={setIsZoneFormDialogOpen}
                           setIsDeleteDialogOpen={setIsDeleteDialogOpen}
-                          key={room.room_id}
-                          row={room}
+                          key={zone.zone_id}
+                          row={zone}
                         />
                       ))
                     : null}
                 </TableBody>
               </Table>
-              {!isLoading && roomsList?.length == 0 ? <NoDataDiv /> : null}
-              {roomsList?.length > 0 ? (
+              {!isLoading && zonesList?.length == 0 ? <NoDataDiv /> : null}
+              {zonesList?.length > 0 ? (
                 <TablePagination
                   rowsPerPageOptions={[5, 10, 20, 25, 50]}
                   onPageChange={handlePageChange}
                   onRowsPerPageChange={handleChangeRowsPerPage}
                   component="div"
-                  count={totalRooms}
-                  rowsPerPage={roomsPayload?.pageSize}
-                  page={roomsPayload?.pageNumber}
+                  count={totalZones}
+                  rowsPerPage={zonesPayload?.pageSize}
+                  page={zonesPayload?.pageNumber}
                   sx={{ flex: '1 1 auto' }}
                 />
               ) : null}
@@ -594,17 +594,17 @@ const Rooms = () => {
           </Box>
         </CardContent>
       </Card>
-      {isRoomFormDialogOpen && (
-        <RoomForm
-          room={room}
-          zone={zones}
-          setRoom={setRoom}
-          open={isRoomFormDialogOpen}
-          setOpen={setIsRoomFormDialogOpen}
-          getRoomsList={getRoomsList}
+      {isZoneFormDialogOpen && (
+        <ZoneForm
+          zone={zone}
+          zoneType={zones}
+          setZone={setZone}
+          open={isZoneFormDialogOpen}
+          setOpen={setIsZoneFormDialogOpen}
+          getZonesList={getZonesList}
           // getDropDownRoomList={getDropDownRoomList}
-          roomsPayload={roomsPayload}
-          setRoomsPayload={setRoomsPayload}
+          zonesPayload={zonesPayload}
+          setZonesPayload={setZonesPayload}
           // setDropdownList={setDropdownList}
         />
       )}
@@ -614,13 +614,13 @@ const Rooms = () => {
         contentText="Are you sure you want to delete this zone?"
         loading={deleteLoading}
         handleDialogClose={() => {
-          setRoom();
+          setZone();
           setIsDeleteDialogOpen(false);
         }}
-        handleDelete={handleRoomDelete}
+        handleDelete={handleZoneDelete}
       />
     </Box>
   );
 };
 
-export default Rooms;
+export default Zones;

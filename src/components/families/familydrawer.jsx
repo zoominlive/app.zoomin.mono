@@ -12,7 +12,7 @@ import {
   Divider,
   styled
 } from '@mui/material';
-import RoomAddForm from './roomaddform';
+import ZoneAddForm from './zoneaddform';
 import SchedulerFrom from './scheduler';
 // import BlockIcon from '@mui/icons-material/Block';
 // import CheckCircleIcon from '@mui/icons-material/CheckCircle';
@@ -27,7 +27,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import { useState } from 'react';
 // import DeleteDialog from '../common/deletedialog';
 import DisableDialog from './disabledialog';
-import RoomDialog from './roomdialog';
+import ZoneDialog from './zonedialog';
 import dayjs from 'dayjs';
 import { useEffect } from 'react';
 import { LoadingButton } from '@mui/lab';
@@ -83,17 +83,17 @@ const FamilyDrawer = (props) => {
   const authCtx = useContext(AuthContext);
   const { enqueueSnackbar } = useSnackbar();
   const [toDelete, setToDelete] = useState();
-  const [toDeleteRoom, setToDeleteRoom] = useState();
+  const [toDeleteZone, setToDeleteZone] = useState();
   const [childToDisable, setChildToDisable] = useState();
   const [parentToDisable, setParentToDisable] = useState();
   const [disableLoading, setDisableLoading] = useState(false);
   const [isDisableDialogOpen, setIsDisableDialogOpen] = useState(false);
-  const [isRoomDialogOpen, setIsRoomDialogOpen] = useState(false);
+  const [isZoneDialogOpen, setIsZoneDialogOpen] = useState(false);
   const [isDeleteChildDialogOpen, setIsDeleteChildDialogOpen] = useState(false);
   const [disableDialogTitle, setDisableDialogTitle] = useState();
   const [disableDialogSubTitle, setDisableDialogSubTitle] = useState();
   const [deleteLoading, setDeleteLoading] = useState();
-  const [roomLoading, setRoomLoading] = useState(false);
+  const [zoneLoading, setZoneLoading] = useState(false);
   const [enableFamilyLoading, setEnableFamilyLoading] = useState(false);
   const [enableFamilyMembersLoading, setEnableFamilyMembersLoading] = useState([]);
   const [enableChildrenLoading, setEnableChildrenLoading] = useState([]);
@@ -101,14 +101,14 @@ const FamilyDrawer = (props) => {
   const [scheduledLoading, setScheduledLoading] = useState({ loading: false, index: -1, type: '' });
   const [locationsToDisable, setLocationsToDisable] = useState([]);
   const [selectedLocationsToDisable, setSelectedLocationsToDisable] = useState([]);
-  const [roomTodisable, setRoomToDisable] = useState({});
-  const [isRoomAddDialogOpen, setIsRoomAddDialogOpen] = useState(false);
+  const [zoneTodisable, setZoneToDisable] = useState({});
+  const [isZoneAddDialogOpen, setIsZoneAddDialogOpen] = useState(false);
   const [isSchedulerOpen, setIsSchedulerOpen] = useState(false);
-  const [existingRooms, setExistingRooms] = useState([]);
+  const [existingZones, setExistingZones] = useState([]);
   const [selectedChild, setSelectedChild] = useState({});
-  const [roomOpenInScheduler, setRoomOpenInScheduler] = useState({});
-  const [roomScheduleDeleteLoading, setRoomScheduleDeleteLoading] = useState({
-    room_id: '',
+  const [zoneOpenInScheduler, setZoneOpenInScheduler] = useState({});
+  const [zoneScheduleDeleteLoading, setZoneScheduleDeleteLoading] = useState({
+    zone_id: '',
     child_id: '',
     loading: false
   });
@@ -158,7 +158,7 @@ const FamilyDrawer = (props) => {
         : 'family_member_id']: toDelete
     };
     if (isDeleteTitle == "Delete Child's Zone") {
-      data = { ...data, room_id: toDeleteRoom };
+      data = { ...data, zone_id: toDeleteZone };
     }
     setDeleteLoading(true);
     API.delete(
@@ -166,7 +166,7 @@ const FamilyDrawer = (props) => {
         isDeleteTitle == 'Delete Child'
           ? 'child/delete'
           : isDeleteTitle == "Delete Child's Zone"
-          ? 'child/deleteroom'
+          ? 'child/deletezone'
           : 'delete-secondary-member'
       }`,
       {
@@ -470,23 +470,23 @@ const FamilyDrawer = (props) => {
     });
   };
 
-  const handleRoomDisableEnable = (data) => {
-    setRoomLoading(true);
+  const handleZoneDisableEnable = (data) => {
+    setZoneLoading(true);
 
-    if (roomTodisable.disabled == 'true') {
+    if (zoneTodisable.disabled == 'true') {
       let scheduled_enable_date =
         data.selectedOption == 'schedule' ? dayjs(data.date).format('YYYY-MM-DD') : null;
       API.put('zones/enable', {
-        room_child_id: roomTodisable?.room_child_id,
+        zone_child_id: zoneTodisable?.zone_child_id,
         scheduled_enable_date: scheduled_enable_date
       }).then((response) => {
         if (response.status === 200) {
-          setRoomLoading(false);
-          setIsRoomDialogOpen(false);
+          setZoneLoading(false);
+          setIsZoneDialogOpen(false);
           enqueueSnackbar(response.data.Message, { variant: 'success' });
           props.getFamiliesList();
         } else {
-          setRoomLoading(false);
+          setZoneLoading(false);
           errorMessageHandler(
             enqueueSnackbar,
             response?.response?.data?.Message || 'Something Went Wrong.',
@@ -499,12 +499,12 @@ const FamilyDrawer = (props) => {
       let scheduled_disable_date =
         data.selectedOption == 'schedule' ? dayjs(data.date).format('YYYY-MM-DD') : null;
       API.put('zones/disable', {
-        room_child_id: roomTodisable?.room_child_id,
+        zone_child_id: zoneTodisable?.zone_child_id,
         scheduled_disable_date: scheduled_disable_date
       }).then((response) => {
         if (response.status === 200) {
-          setRoomLoading(false);
-          setIsRoomDialogOpen(false);
+          setZoneLoading(false);
+          setIsZoneDialogOpen(false);
           enqueueSnackbar(response.data.Message, { variant: 'success' });
           props.getFamiliesList();
           // props.setFamily((prevState) => {
@@ -514,7 +514,7 @@ const FamilyDrawer = (props) => {
           //   return tempFamily;
           // });
         } else {
-          setRoomLoading(false);
+          setZoneLoading(false);
           errorMessageHandler(
             enqueueSnackbar,
             response?.response?.data?.Message || 'Something Went Wrong.',
@@ -526,11 +526,11 @@ const FamilyDrawer = (props) => {
     }
   };
 
-  const handleDeleteSchedule = (room) => {
-    setRoomScheduleDeleteLoading({ room_id: room.room_id, child_id: room.child_id, loading: true });
-    if (room.disabled == 'true') {
+  const handleDeleteSchedule = (zone) => {
+    setZoneScheduleDeleteLoading({ zone_id: zone.zone_id, child_id: zone.child_id, loading: true });
+    if (zone.disabled == 'true') {
       API.put('zones/disable', {
-        room_child_id: room?.room_child_id,
+        zone_child_id: zone?.zone_child_id,
         scheduled_disable_date: null
       }).then((response) => {
         if (response.status === 200) {
@@ -544,15 +544,15 @@ const FamilyDrawer = (props) => {
             authCtx.setAuthError
           );
         }
-        setRoomScheduleDeleteLoading({
-          room_id: room.room_id,
-          child_id: room.child_id,
+        setZoneScheduleDeleteLoading({
+          zone_id: zone.zone_id,
+          child_id: zone.child_id,
           loading: false
         });
       });
     } else {
       API.put('zones/enable', {
-        room_child_id: room?.room_child_id,
+        zone_child_id: zone?.zone_child_id,
         scheduled_enable_date: null
       }).then((response) => {
         if (response.status === 200) {
@@ -566,9 +566,9 @@ const FamilyDrawer = (props) => {
             authCtx.setAuthError
           );
         }
-        setRoomScheduleDeleteLoading({
-          room_id: room.room_id,
-          child_id: room.child_id,
+        setZoneScheduleDeleteLoading({
+          zone_id: zone.zone_id,
+          child_id: zone.child_id,
           loading: false
         });
       });
@@ -978,11 +978,11 @@ const FamilyDrawer = (props) => {
                         {capitalizeFirstLetter(child?.last_name)}
                       </Typography>
                       {/* <Typography variant="caption">
-                                {room?.scheduled_enable_date
-                                  ? 'Enable date: ' + room?.scheduled_enable_date + '  '
-                                  : room?.scheduled_disable_date
-                                  ? 'Disable date: ' + room?.scheduled_disable_date + '  '
-                                  : room?.disabled == 'true'
+                                {zone?.scheduled_enable_date
+                                  ? 'Enable date: ' + zone?.scheduled_enable_date + '  '
+                                  : zone?.scheduled_disable_date
+                                  ? 'Disable date: ' + zone?.scheduled_disable_date + '  '
+                                  : zone?.disabled == 'true'
                                   ? 'Disabled  '
                                   : 'Enabled  '}
                               </Typography> */}
@@ -1147,7 +1147,7 @@ const FamilyDrawer = (props) => {
                     </Stack>
                   </Stack>
 
-                  {child?.roomsInChild?.map((room, index) => (
+                  {child?.zonesInChild?.map((zone, index) => (
                     <Box key={index}>
                       <Stack
                         spacing={1.5}
@@ -1159,8 +1159,8 @@ const FamilyDrawer = (props) => {
                             <Stack direction="row" spacing={1.5}>
                               <Typography variant="body2">
                                 <Box sx={{ fontWeight: 'bold', fontSize: '16px' }}>
-                                  {room?.room?.room_name &&
-                                    capitalizeFirstLetter(room?.room?.room_name)}
+                                  {zone?.zone?.zone_name &&
+                                    capitalizeFirstLetter(zone?.zone?.zone_name)}
                                 </Box>
                               </Typography>
                             </Stack>
@@ -1170,24 +1170,24 @@ const FamilyDrawer = (props) => {
                                 alignItems: 'center'
                               }}>
                               <Typography variant="caption" color={'#828282'}>
-                                {room?.scheduled_enable_date
-                                  ? 'Enable date: ' + room?.scheduled_enable_date + '  '
-                                  : room?.scheduled_disable_date
-                                  ? 'Disable date: ' + room?.scheduled_disable_date + '  '
-                                  : room?.disabled == 'true'
+                                {zone?.scheduled_enable_date
+                                  ? 'Enable date: ' + zone?.scheduled_enable_date + '  '
+                                  : zone?.scheduled_disable_date
+                                  ? 'Disable date: ' + zone?.scheduled_disable_date + '  '
+                                  : zone?.disabled == 'true'
                                   ? 'Disabled  '
                                   : 'Enabled  '}
                               </Typography>
-                              {(room?.scheduled_enable_date || room?.scheduled_disable_date) && (
+                              {(zone?.scheduled_enable_date || zone?.scheduled_disable_date) && (
                                 <img
                                   src={DeleteScheduleIcon}
                                   style={{ height: '.8rem', marginLeft: '.3rem' }}
-                                  onClick={() => handleDeleteSchedule(room)}
+                                  onClick={() => handleDeleteSchedule(zone)}
                                   className="curser-pointer"></img>
                               )}
-                              {roomScheduleDeleteLoading.room_id == room.room_id &&
-                                roomScheduleDeleteLoading.child_id == child.child_id &&
-                                roomScheduleDeleteLoading.loading && <Loader loading={true} />}
+                              {zoneScheduleDeleteLoading.zone_id == zone.zone_id &&
+                                zoneScheduleDeleteLoading.child_id == child.child_id &&
+                                zoneScheduleDeleteLoading.loading && <Loader loading={true} />}
                             </Box>
                           </Stack>
                         </Stack>
@@ -1197,23 +1197,23 @@ const FamilyDrawer = (props) => {
                           alignItems="center"
                           justifyContent="center">
                           <CustomSwitch
-                            className={`switch-${room?.disabled == 'true' ? 'enable' : 'disable'}`}
-                            checked={room?.disabled == 'true' ? false : true}
+                            className={`switch-${zone?.disabled == 'true' ? 'enable' : 'disable'}`}
+                            checked={zone?.disabled == 'true' ? false : true}
                             onChange={() => {
-                              setRoomToDisable(room);
-                              setIsRoomDialogOpen(true);
+                              setZoneToDisable(zone);
+                              setIsZoneDialogOpen(true);
                             }}
                             inputProps={{ 'aria-label': 'controlled' }}
                           />
 
                           <img
                             src={
-                              _.isEmpty(room.schedule) || _.isEmpty(room.schedule?.timeRange)
+                              _.isEmpty(zone.schedule) || _.isEmpty(zone.schedule?.timeRange)
                                 ? Schedule
                                 : EditSchedule
                             }
                             onClick={() => {
-                              setRoomOpenInScheduler(room);
+                              setZoneOpenInScheduler(zone);
                               setIsSchedulerOpen(true);
                             }}
                             style={{ height: '1.5rem', width: '1.5rem' }}
@@ -1223,7 +1223,7 @@ const FamilyDrawer = (props) => {
                             onClick={() => {
                               setIsDeleteChildDialogOpen(true);
                               setToDelete(child.child_id);
-                              setToDeleteRoom(room?.room_id);
+                              setToDeleteZone(zone?.zone_id);
                               setIsDeleteTitle("Delete Child's Zone");
                               setIsDeleteContext('Are you sure you want to delete this zone?');
                             }}
@@ -1232,33 +1232,33 @@ const FamilyDrawer = (props) => {
                           </IconButton>
                           {/* <BlockIcon
                             className={
-                              room?.disabled == 'true'
+                              zone?.disabled == 'true'
                                 ? 'disable-icon curser-pointer'
                                 : 'curser-pointer'
                             }
                             onClick={() => {
-                              setRoomToDisable(room);
-                              setIsRoomDialogOpen(true);
+                              setZoneToDisable(zone);
+                              setIsZoneDialogOpen(true);
                             }}></BlockIcon> */}
                         </Stack>
                       </Stack>
                     </Box>
                   ))}
                   {/* <AddIcon
-                    className={'room-add-btn'}
+                    className={'zone-add-btn'}
                     onClick={() => {
-                      setExistingRooms(child.roomsInChild);
-                      setIsRoomAddDialogOpen(true);
+                      setExistingZones(child.zonesInChild);
+                      setIsZoneAddDialogOpen(true);
                       setSelectedChild(child);
                     }}>
                   </AddIcon> */}
                   <Button
                     startIcon={<AddIcon />}
-                    className="add-room-btn"
+                    className="add-zone-btn"
                     variant="outlined"
                     onClick={() => {
-                      setExistingRooms(child.roomsInChild);
-                      setIsRoomAddDialogOpen(true);
+                      setExistingZones(child.zonesInChild);
+                      setIsZoneAddDialogOpen(true);
                       setSelectedChild(child);
                     }}>
                     Add Zone
@@ -1291,21 +1291,21 @@ const FamilyDrawer = (props) => {
         handleDisable={handleDisable}
         setOpen={setIsDisableDialogOpen}
       />
-      <RoomDialog
-        open={isRoomDialogOpen}
-        setOpen={setIsRoomDialogOpen}
-        loading={roomLoading}
-        roomDetails={roomTodisable}
-        title={roomTodisable?.disabled == 'true' ? 'Enable Zone' : 'Disable Zone'}
+      <ZoneDialog
+        open={isZoneDialogOpen}
+        setOpen={setIsZoneDialogOpen}
+        loading={zoneLoading}
+        zoneDetails={zoneTodisable}
+        title={zoneTodisable?.disabled == 'true' ? 'Enable Zone' : 'Disable Zone'}
         contentText="This action will disable zone access to this child"
-        handleRoomDisableEnable={handleRoomDisableEnable}
-        handleDialogClose={() => setIsRoomDialogOpen(false)}
+        handleZoneDisableEnable={handleZoneDisableEnable}
+        handleDialogClose={() => setIsZoneDialogOpen(false)}
       />
-      <RoomAddForm
-        open={isRoomAddDialogOpen}
-        setOpen={setIsRoomAddDialogOpen}
-        roomsList={props.roomsList}
-        existingRooms={existingRooms}
+      <ZoneAddForm
+        open={isZoneAddDialogOpen}
+        setOpen={setIsZoneAddDialogOpen}
+        zonesList={props.zonesList}
+        existingZones={existingZones}
         child={selectedChild}
         getFamiliesList={props.getFamiliesList}
       />
@@ -1313,7 +1313,7 @@ const FamilyDrawer = (props) => {
         <SchedulerFrom
           open={isSchedulerOpen}
           setOpen={setIsSchedulerOpen}
-          roomDetails={roomOpenInScheduler}
+          zoneDetails={zoneOpenInScheduler}
           getFamiliesList={props.getFamiliesList}
         />
       )}
@@ -1337,12 +1337,12 @@ FamilyDrawer.propTypes = {
   setParentType: PropTypes.func,
   setIsDisableFamilyDialogOpen: PropTypes.func,
   setIsChildFormDialogOpen: PropTypes.func,
-  setIsRoomFormDialogOpen: PropTypes.func,
+  setIsZoneFormDialogOpen: PropTypes.func,
   family: PropTypes.object,
   setFamily: PropTypes.func,
   setPrimaryParent: PropTypes.func,
   setSecondaryParent: PropTypes.func,
   setChild: PropTypes.func,
   getFamiliesList: PropTypes.func,
-  roomsList: PropTypes.array
+  zonesList: PropTypes.array
 };

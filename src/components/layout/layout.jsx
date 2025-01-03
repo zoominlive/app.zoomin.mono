@@ -207,7 +207,7 @@ const Layout = () => {
       limit: parseInt(process.env.REACT_APP_PAGINATION_LIMIT, 10),
       searchBy: searchValue,
       location: 'All',
-      rooms: [],
+      zones: [],
       cust_id: localStorage.getItem('cust_id')
     };
 

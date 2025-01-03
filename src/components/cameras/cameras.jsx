@@ -296,12 +296,12 @@ const Cameras = () => {
                             </Stack>
                           </TableCell>
                           {/* <TableCell style={{ lineHeight: 2.5 }}>
-                            {row?.cameras_assigned_to_rooms?.map((roomRow, index) => (
+                            {row?.cameras_assigned_to_zones?.map((roomRow, index) => (
                               <Chip
                                 key={index}
                                 color="primary"
                                 className="chip-color"
-                                label={roomRow?.room?.room_name}
+                                label={roomRow?.zone?.zone_name}
                                 icon={<Video />}
                               />
                             ))}

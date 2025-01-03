@@ -74,9 +74,9 @@ export default function AccessTable({
                         {row?.childFirstName + ' ' + row.childLastName}
                       </Stack>
                     </Box>
-                    {/* <Box style={{ width: '25%' }} className="child-rooms zl__td-block">
+                    {/* <Box style={{ width: '25%' }} className="child-zones zl__td-block">
                       <Box style={{ display: 'flex' }}>
-                        {row?.rooms?.map((r) => (
+                        {row?.zones?.map((r) => (
                           <Chip key={r} label={r} />
                         ))}
                       </Box>

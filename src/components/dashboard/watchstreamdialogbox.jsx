@@ -36,39 +36,37 @@ const WatchStreamDialogBox = (props) => {
   const [dropdownLoading, setDropdownLoading] = useState(false);
   const { enqueueSnackbar } = useSnackbar();
   const [locations, setLocations] = useState([]);
-  const [rooms, setRooms] = useState([]);
+  const [zones, setZones] = useState([]);
   const [camerasPayload, setCamerasPayload] = useState({
     locations: [],
-    rooms: [],
+    zones: [],
     cameras: []
   });
   const [selectedLocation, setSelectedLocation] = useState([]);
-  const [selectedRoom, setSelectedRoom] = useState({});
+  const [selectedZone, setSelectedZone] = useState({});
   const [cameras, setCameras] = useState();
   const [allCamsChecked, setAllCamsChecked] = useState(false);
-  const [allRoomChecked, setAllRoomChecked] = useState(false);
+  const [allZoneChecked, setAllZoneChecked] = useState(false);
   const [limitReached, setLimitReached] = useState(false);
   const [allLocationChecked, setAllLocationChecked] = useState(false);
   const [selectedCameras, setSelectedCameras] = useState(null);
   const camLabel = useRef([]);
-  const locs = ['Select All'];
+  const locs = [{ loc_id: 'select-all', loc_name: 'Select All' }];
   authCtx?.user?.locations?.map((item) => item.loc_name).forEach((loc) => locs.push(loc));
 
   useEffect(() => {
     setSelectedLocation(props?.defaultWatchStream?.locations);
-    setSelectedRoom(props?.defaultWatchStream?.rooms);
+    setSelectedZone(props?.defaultWatchStream?.zones);
     setSelectedCameras(props?.defaultWatchStream?.cameras);
   }, [props?.defaultWatchStream]);
 
   const getAvailableStreams = () => {
-    localStorage.removeItem('RETRYCOUNTER_AVAILABLESTREAMS');
-    localStorage.setItem('RETRYCOUNTER_AVAILABLESTREAMS', 0);
     API.get('watchstream', { params: { cust_id: localStorage.getItem('cust_id') } }).then(
       (response) => {
         if (response.status === 200) {
           setCamerasPayload({
             location: [response?.data?.Data.streamDetails[0]?.location],
-            rooms: response?.data?.Data.streamDetails
+            zones: response?.data?.Data.streamDetails
           });
           if (!location.state) {
             !selectedLocation.length &&
@@ -90,20 +88,24 @@ const WatchStreamDialogBox = (props) => {
   };
 
   const handleSetLocations = (_, value, reason, option) => {
-    if (reason == 'selectOption' && option?.option == 'Select All' && !allLocationChecked) {
+    if (
+      reason == 'selectOption' &&
+      option?.option?.loc_name == 'Select All' &&
+      !allLocationChecked
+    ) {
       setSelectedLocation(reason === 'selectOption' ? locations.slice(1, locations.length) : []);
       setAllLocationChecked(true);
     } else if (
-      (option?.option == 'Select All' && reason === 'removeOption') ||
+      (option?.option?.loc_name == 'Select All' && reason === 'removeOption') ||
       reason === 'clear'
     ) {
       setSelectedLocation([]);
       setAllLocationChecked(false);
-      setSelectedRoom(null);
+      setSelectedZone(null);
       setSelectedCameras(null);
     } else if (
       reason === 'selectOption' &&
-      option?.option == 'Select All' &&
+      option?.option?.loc_name == 'Select All' &&
       allLocationChecked == true
     ) {
       setAllLocationChecked(false);
@@ -113,39 +115,39 @@ const WatchStreamDialogBox = (props) => {
       setSelectedLocation(value);
     }
   };
-  const handleSetRooms = (_, value, reason, option) => {
-    const rooms2 = camerasPayload?.rooms?.filter((room) => {
+  const handleSetZones = (_, value, reason, option) => {
+    const zones2 = camerasPayload?.zones?.filter((zone) => {
       let count = 0;
-      if (selectedRoom && Object.values(selectedRoom).includes(room?.room_id)) {
+      if (selectedZone && Object.values(selectedZone).includes(zone?.zone_id)) {
         count = 1;
       }
       return count == 1;
     });
 
     let cameras = [{ cam_id: 'select-all', cam_name: 'Select All' }];
-    rooms2?.forEach((room) => {
-      room?.cameras?.forEach((cam) =>
+    zones2?.forEach((zone) => {
+      zone?.cameras?.forEach((cam) =>
         cameras?.push({
           ...cam,
-          room_id: room.room_id,
-          room_name: room.room_name,
-          location: room.location
+          zone_id: zone.zone_id,
+          zone_name: zone.zone_name,
+          location: zone.location
         })
       );
     });
 
     setCameras(cameras);
 
-    if (reason == 'selectOption' && option?.option?.room_name == 'Select All' && !allRoomChecked) {
-      setSelectedRoom(reason === 'selectOption' ? rooms.slice(1, rooms.length) : []);
-      setAllRoomChecked(true);
-    } else if ((reason === 'removeOption' && selectedRoom?.length === 1) || reason === 'clear') {
-      setSelectedRoom(null);
-      setAllRoomChecked(false);
+    if (reason == 'selectOption' && option?.option?.zone_name == 'Select All' && !allZoneChecked) {
+      setSelectedZone(reason === 'selectOption' ? zones.slice(1, zones.length) : []);
+      setAllZoneChecked(true);
+    } else if ((reason === 'removeOption' && selectedZone?.length === 1) || reason === 'clear') {
+      setSelectedZone(null);
+      setAllZoneChecked(false);
       setSelectedCameras(null);
     } else {
-      setAllRoomChecked(false);
-      setSelectedRoom(value);
+      setAllZoneChecked(false);
+      setSelectedZone(value);
     }
   };
   const handleChangeCameras = (_, values) => {
@@ -156,7 +158,7 @@ const WatchStreamDialogBox = (props) => {
   useEffect(() => {
     setLimitReached(false);
     setDropdownLoading(true);
-    const locs = ['Select All'];
+    const locs = [{ loc_id: 'select-all', loc_name: 'Select All' }];
     authCtx?.user?.locations?.forEach((loc) => locs.push(loc));
     setLocations(locs);
     getAvailableStreams();
@@ -166,62 +168,62 @@ const WatchStreamDialogBox = (props) => {
   useEffect(() => {
     console.log('camerasPayload==>', camerasPayload);
     console.log('selectedLocation==>', selectedLocation);
-    const roomsToSet = camerasPayload?.rooms?.filter((room) => {
+    const zonesToSet = camerasPayload?.zones?.filter((zone) => {
       let count = 0;
       selectedLocation?.forEach((loc) => {
         console.log('loc==>', loc);
-        if (loc.loc_id == room?.location) {
+        if (loc.loc_id == zone?.location) {
           count = 1;
         }
       });
       return count == 1;
     });
-    let roomsToAdd = [];
-    roomsToSet?.forEach((room) => roomsToAdd.push(room));
-    setRooms(roomsToAdd);
-    if (selectedRoom) {
-      setSelectedRoom(roomsToSet?.[0]);
+    let zonesToAdd = [];
+    zonesToSet?.forEach((zone) => zonesToAdd.push(zone));
+    setZones(zonesToAdd);
+    if (selectedZone) {
+      setSelectedZone(zonesToSet?.[0]);
       let camsToAdd = [];
-      roomsToSet?.[0]?.cameras.forEach((cam) =>
+      zonesToSet?.[0]?.cameras.forEach((cam) =>
         camsToAdd.push({
           ...cam,
-          room_id: roomsToSet?.[0]?.room_id,
-          room_name: roomsToSet?.[0]?.room_name
+          zone_id: zonesToSet?.[0]?.zone_id,
+          zone_name: zonesToSet?.[0]?.zone_name
         })
       );
       setCameras(camsToAdd);
     }
 
     setAllCamsChecked(false);
-    setAllRoomChecked(false);
+    setAllZoneChecked(false);
     camLabel.current.locations = selectedLocation;
   }, [selectedLocation]);
 
   useEffect(() => {
-    const rooms = camerasPayload?.rooms?.filter((room) => {
+    const zones = camerasPayload?.zones?.filter((zone) => {
       let count = 0;
-      if (selectedRoom && Object.values(selectedRoom).includes(room?.room_id)) {
+      if (selectedZone && Object.values(selectedZone).includes(zone?.zone_id)) {
         count = 1;
       }
       return count == 1;
     });
 
     let cameras1 = [];
-    rooms?.forEach((room) => {
-      room?.cameras?.forEach((cam) => {
+    zones?.forEach((zone) => {
+      zone?.cameras?.forEach((cam) => {
         cameras1?.push({
           ...cam,
-          room_name: room.room_name,
-          room_id: room.room_id,
-          location: room.location
+          zone_name: zone.zone_name,
+          zone_id: zone.zone_id,
+          location: zone.location
         });
       });
     });
 
     setCameras(cameras1);
     setAllCamsChecked(false);
-    camLabel.current.rooms = selectedRoom;
-  }, [selectedRoom]);
+    camLabel.current.zones = selectedZone;
+  }, [selectedZone]);
 
   useEffect(() => {
     camLabel.current.cameras = selectedCameras;
@@ -251,7 +253,6 @@ const WatchStreamDialogBox = (props) => {
           <InputLabel id="location" className="label">
             Location
           </InputLabel>
-          {console.log('locations==>', locations)}
           <Autocomplete
             labelId="location"
             sx={{ padding: '5px 12px 12px 12px', '& fieldset': { borderRadius: 4 } }}
@@ -264,6 +265,7 @@ const WatchStreamDialogBox = (props) => {
               handleSetLocations(_, value, reason, option);
             }}
             value={selectedLocation ? selectedLocation : []}
+            isOptionEqualToValue={(option, value) => option.loc_id === value.loc_id} // Ensure correct equality
             getOptionLabel={(option) => option.loc_name}
             renderTags={(value, getTagProps) =>
               value?.map((option, index) => (
@@ -297,27 +299,27 @@ const WatchStreamDialogBox = (props) => {
               />
             )}
           />
-          <InputLabel id="room" className="label">
+          <InputLabel id="zone" className="label">
             Zone
           </InputLabel>
           <Autocomplete
-            labelId="room"
+            labelId="zone"
             sx={{ padding: '5px 12px 12px 12px', '& fieldset': { borderRadius: 4 } }}
             limitTags={1}
             id="tags-standard"
-            options={rooms}
-            value={selectedRoom}
-            getOptionLabel={(option) => option?.room_name}
-            isOptionEqualToValue={(option, value) => option?.room_id === value?.room_id}
+            options={zones}
+            value={selectedZone}
+            getOptionLabel={(option) => option?.zone_name}
+            isOptionEqualToValue={(option, value) => option?.zone_id === value?.zone_id}
             onChange={(_, value, reason, option) => {
-              handleSetRooms(_, value, reason, option);
+              handleSetZones(_, value, reason, option);
             }}
             renderTags={(value, getTagProps) =>
               value?.map((option, index) => (
                 <Chip
                   style={{ backgroundColor: 'red' }}
                   key={index}
-                  label={option?.room_name}
+                  label={option?.zone_name}
                   {...getTagProps({ index })}
                 />
               ))
@@ -328,9 +330,9 @@ const WatchStreamDialogBox = (props) => {
                   icon={icon}
                   checkedIcon={checkedIcon}
                   style={{ marginRight: 8 }}
-                  checked={allRoomChecked ? allRoomChecked : selected}
+                  checked={allZoneChecked ? allZoneChecked : selected}
                 />
-                {option?.room_name}
+                {option?.zone_name}
               </li>
             )}
             renderInput={(params) => (
@@ -371,7 +373,7 @@ const WatchStreamDialogBox = (props) => {
                   label={
                     option?.cam_name == 'Select All'
                       ? option?.cam_name
-                      : option?.location + '/' + option?.room_name + ' - ' + option?.cam_name
+                      : option?.location + '/' + option?.zone_name + ' - ' + option?.cam_name
                   }
                   {...getTagProps({ index })}
                 />
@@ -387,7 +389,7 @@ const WatchStreamDialogBox = (props) => {
                 />
                 {option?.cam_name == 'Select All'
                   ? option?.cam_name
-                  : option.location + '/' + option.room_name + ' - ' + option?.cam_name}
+                  : option.location + '/' + option.zone_name + ' - ' + option?.cam_name}
               </li>
             )}
             renderInput={(params) => (

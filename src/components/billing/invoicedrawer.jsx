@@ -304,17 +304,5 @@ InvoiceDrawer.propTypes = {
   setOpen: PropTypes.func,
   customer: PropTypes.object,
   row: PropTypes.object,
-  cust_id: PropTypes.string,
-  setIsParentFormDialogOpen: PropTypes.func,
-  setParentType: PropTypes.func,
-  setIsDisableFamilyDialogOpen: PropTypes.func,
-  setIsChildFormDialogOpen: PropTypes.func,
-  setIsRoomFormDialogOpen: PropTypes.func,
-  family: PropTypes.object,
-  setFamily: PropTypes.func,
-  setPrimaryParent: PropTypes.func,
-  setSecondaryParent: PropTypes.func,
-  setChild: PropTypes.func,
-  getFamiliesList: PropTypes.func,
-  roomsList: PropTypes.array
+  cust_id: PropTypes.string
 };

@@ -38,7 +38,7 @@ import CloseIcon from '@mui/icons-material/Close';
 const validationSchema = yup.object({
   first_name: yup.string().required('First Name is required'),
   last_name: yup.string().required('Last Name is required'),
-  rooms: yup.array().min(1, 'Atleast one room is required'),
+  zones: yup.array().min(1, 'Atleast one zone is required'),
   locations: yup.array().min(1, 'Select at least one location').required('required')
 });
 
@@ -67,7 +67,7 @@ const ChildForm = (props) => {
       API.put('family/child/edit', {
         first_name: data.first_name,
         last_name: data.last_name,
-        rooms: { rooms: data.rooms },
+        zones: { zones: data.zones },
         location: { locations: data.locations },
         child_id: props.child.child_id,
         cust_id: props.child.cust_id,
@@ -116,8 +116,8 @@ const ChildForm = (props) => {
         setSubmitLoading(false);
       });
     } else {
-      data.rooms.forEach((room) => {
-        room.scheduled_enable_date = startDate;
+      data.zones.forEach((zone) => {
+        zone.scheduled_enable_date = startDate;
       });
       API.post('family/child/add', {
         first_name: data.first_name,
@@ -125,7 +125,7 @@ const ChildForm = (props) => {
         time_zone: moment.tz.guess(),
         enable_date: startDate,
         selected_option: selectedOption,
-        rooms: { rooms: data.rooms },
+        zones: { zones: data.zones },
         location: { locations: data.locations },
         family_id: props.family.primary.family_id,
         cust_id: localStorage.getItem('cust_id') || authCtx.user.cust_id
@@ -168,7 +168,7 @@ const ChildForm = (props) => {
     'sorted==>',
     props.child?.child_locations?.sort((a, b) => (a.loc_name > b.loc_name ? 1 : -1))
   );
-  console.log('props.roomsList==>', props);
+  console.log('props.zonesList==>', props);
 
   return (
     <Dialog open={props.open} onClose={handleClose} fullWidth className="add-child-drawer">
@@ -233,12 +233,12 @@ const ChildForm = (props) => {
           initialValues={{
             first_name: props.child ? props.child.first_name : '',
             last_name: props.child ? props.child.last_name : '',
-            rooms: props.child
-              ? props.child?.roomsInChild.map((room) => {
+            zones: props.child
+              ? props.child?.zonesInChild.map((zone) => {
                   return {
-                    room_name: room.room.room_name,
-                    location: room.room.location,
-                    room_id: room.room_id
+                    zone_name: zone.zone.zone_name,
+                    location: zone.zone.location,
+                    zone_id: zone.zone_id
                   };
                 })
               : [],
@@ -315,32 +315,32 @@ const ChildForm = (props) => {
                       />
                     </Grid>
                     <Grid item md={6} sm={12} className="family-form">
-                      <InputLabel id="rooms">Zones</InputLabel>
+                      <InputLabel id="zones">Zones</InputLabel>
                       <Autocomplete
-                        labelId="rooms"
+                        labelId="zones"
                         fullWidth
                         multiple
-                        id="rooms"
-                        options={props.roomsList
-                          .sort((a, b) => (a?.room_name > b?.room_name ? 1 : -1))
-                          ?.filter((room) => {
+                        id="zones"
+                        options={props.zonesList
+                          .sort((a, b) => (a?.zone_name > b?.zone_name ? 1 : -1))
+                          ?.filter((zone) => {
                             if (
                               values?.locations
                                 ?.map((_) => _.loc_id)
-                                .find((loc) => loc == room?.loc_id)
+                                .find((loc) => loc == zone?.loc_id)
                             ) {
-                              return room;
+                              return zone;
                             }
                           })}
                         noOptionsText="Select location first"
-                        value={values?.rooms}
-                        isOptionEqualToValue={(option, value) => option.room_id === value.room_id}
+                        value={values?.zones}
+                        isOptionEqualToValue={(option, value) => option.zone_id === value.zone_id}
                         getOptionLabel={(option) => {
-                          return option?.room_name;
+                          return option?.zone_name;
                         }}
                         renderOption={(props, option) => (
                           <li {...props}>
-                            {option?.room_name}
+                            {option?.zone_name}
                             <Chip
                               label={option?.customer_location.loc_name}
                               size="small"
@@ -353,13 +353,13 @@ const ChildForm = (props) => {
                           </li>
                         )}
                         onChange={(_, value) => {
-                          setFieldValue('rooms', value);
+                          setFieldValue('zones', value);
                         }}
                         renderTags={(value, getTagProps) =>
                           value.map((option, index) => (
                             <Chip
                               key={index}
-                              label={option.room_name}
+                              label={option.zone_name}
                               {...getTagProps({ index })}
                             />
                           ))
@@ -367,8 +367,8 @@ const ChildForm = (props) => {
                         renderInput={(params) => (
                           <TextField
                             {...params}
-                            helperText={touched.rooms && errors.rooms}
-                            error={touched.rooms && Boolean(errors.rooms)}
+                            helperText={touched.zones && errors.zones}
+                            error={touched.zones && Boolean(errors.zones)}
                             fullWidth
                           />
                         )}
@@ -495,7 +495,7 @@ export default ChildForm;
 ChildForm.propTypes = {
   open: PropTypes.bool,
   setOpen: PropTypes.func,
-  roomsList: PropTypes.array,
+  zonesList: PropTypes.array,
   family: PropTypes.object,
   child: PropTypes.any,
   setChild: PropTypes.func,

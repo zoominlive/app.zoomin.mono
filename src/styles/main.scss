@@ -866,7 +866,7 @@
   //   }
   // }
 
-  .room-select {
+  .zone-select {
     width: 100%;
   }
 
@@ -972,7 +972,7 @@
     border: 1px solid #FFAB01;
     color: #000000de;
   }
-  .room-chip {
+  .zone-chip {
     background-color: #dcdbf8 !important;
     color: #000000;
   }
@@ -1309,7 +1309,7 @@
       padding: 5px;
     }
 
-    .rooms {
+    .zones {
       .MuiChip-root {
         margin: 4px;
       }
@@ -1330,7 +1330,7 @@
     .MuiSvgIcon-root {
       color: #455a64 !important;
     }
-    .add-room-btn {
+    .add-zone-btn {
       width: 138px !important;
       color: #455a64 !important;
       border: 1px solid #5A53DD;
@@ -1409,7 +1409,7 @@
       padding: 5px;
     }
 
-    .rooms {
+    .zones {
       .MuiChip-root {
         margin: 4px;
       }
@@ -1430,7 +1430,7 @@
     .MuiSvgIcon-root {
       color: #455a64 !important;
     }
-    .add-room-btn {
+    .add-zone-btn {
       width: 138px !important;
       color: #455a64 !important;
     }
@@ -1497,7 +1497,7 @@
   color: white;
 }
 
-.room-add-btn {
+.zone-add-btn {
   color: black !important;
   width: 20px !important;
 
@@ -1609,7 +1609,7 @@
       order: 1;
     }
 
-    .room {
+    .zone {
       order: 3;
     }
 
@@ -1739,8 +1739,8 @@
     svg {
       // height: 65px;
       // width: 65px;
-      height: 40px;
-      width: 40px;
+      // height: 40px;
+      // width: 40px;
       color: #fff;
     }
 
@@ -1799,15 +1799,16 @@
     position: absolute;
     bottom: 0;
     width: 100%;
-.MuiGrid-root{
-  padding-bottom: 5px;
-}
+    .MuiGrid-root{
+      padding-bottom: 5px;
+    }
     svg {
       // height: 65px;
       // width: 65px;
-      height: 40px;
-      width: 40px;
-      color: #fff;
+      // height: 40px;
+      // width: 40px;
+      // background-color: #fff;
+      // border-radius: 50%;
     }
 
     .volume-icon {
@@ -2678,7 +2679,7 @@
   width: 100%;
   height: 100px;
   overflow-y: auto;
-  .child-rooms {
+  .child-zones {
     width: 30%;
     display: flex;
     overflow-x: auto;

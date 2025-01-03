@@ -211,7 +211,7 @@ const DisableDialog = (props) => {
                       labelId="locations_to_end_access"
                       fullWidth
                       multiple
-                      id="rooms"
+                      id="zones"
                       options={
                         props?.locationsToDisable
                           ? props?.locationsToDisable?.sort((a, b) =>

@@ -28,24 +28,24 @@ import { Plus } from 'react-feather';
 const Children = (props) => {
   const authCtx = useContext(AuthContext);
   const [selectedLocation, setSelectedLocation] = useState([]);
-  const [roomList, setRoomList] = useState([]);
+  const [zoneList, setZoneList] = useState([]);
 
   useEffect(() => {
-    let rooms = [];
-    console.log('props.roomsList==>', props.roomsList);
-    props.roomsList?.map((room) => {
+    let zones = [];
+    console.log('props.zonesList==>', props.zonesList);
+    props.zonesList?.map((zone) => {
       let count = 0;
       selectedLocation?.forEach((location) => {
         console.log('location==>', location);
-        if (room.loc_id === location.loc_id) {
+        if (zone.loc_id === location.loc_id) {
           count = count + 1;
         }
       });
       if (count > 0) {
-        rooms.push(room);
+        zones.push(zone);
       }
     });
-    setRoomList(rooms);
+    setZoneList(zones);
   }, [selectedLocation]);
   return (
     <FieldArray
@@ -134,7 +134,7 @@ const Children = (props) => {
                         multiple
                         id={`children.${index}.locations`}
                         options={authCtx?.user?.locations?.sort((a, b) =>
-                          a.room_name > b.room_name ? 1 : -1
+                          a.zone_name > b.zone_name ? 1 : -1
                         )}
                         getOptionLabel={(option) => option.loc_name} // Display loc_name in dropdown
                         value={props?.values?.children[index]?.locations}
@@ -176,22 +176,22 @@ const Children = (props) => {
                       />
                     </Grid>
                     <Grid item md={6} sm={12} className="family-form">
-                      <InputLabel id="rooms">Zones</InputLabel>
+                      <InputLabel id="zones">Zones</InputLabel>
                       <Autocomplete
-                        labelId="rooms"
+                        labelId="zones"
                         fullWidth
                         multiple
                         noOptionsText={'Select location first'}
-                        id={`children.${index}.rooms`}
-                        options={roomList ? roomList?.sort((a, b) => (a > b ? 1 : -1)) : []}
-                        value={props?.values?.children[index]?.rooms}
-                        isOptionEqualToValue={(option, value) => option.room_id === value.room_id}
+                        id={`children.${index}.zones`}
+                        options={zoneList ? zoneList?.sort((a, b) => (a > b ? 1 : -1)) : []}
+                        value={props?.values?.children[index]?.zones}
+                        isOptionEqualToValue={(option, value) => option.zone_id === value.zone_id}
                         getOptionLabel={(option) => {
-                          return option.room_name;
+                          return option.zone_name;
                         }}
                         renderOption={(props, option) => (
                           <li {...props}>
-                            {option?.room_name}
+                            {option?.zone_name}
                             <Chip
                               label={option?.customer_location.loc_name}
                               size="small"
@@ -204,13 +204,13 @@ const Children = (props) => {
                           </li>
                         )}
                         onChange={(_, value) => {
-                          props.setFieldValue(`children[${index}].rooms`, value);
+                          props.setFieldValue(`children[${index}].zones`, value);
                         }}
                         renderTags={(value, getTagProps) =>
                           value.map((option, index) => (
                             <Chip
                               key={index}
-                              label={option.room_name}
+                              label={option.zone_name}
                               {...getTagProps({ index })}
                             />
                           ))
@@ -223,21 +223,21 @@ const Children = (props) => {
                               props.touched &&
                               props.touched.children &&
                               props.touched.children[index] &&
-                              props.touched.children[index].rooms &&
+                              props.touched.children[index].zones &&
                               props.errors &&
                               props.errors.children &&
                               props.errors.children[index] &&
-                              props.errors.children[index].rooms
+                              props.errors.children[index].zones
                             }
                             error={
                               props.touched &&
                               props.touched.children &&
                               props.touched.children[index] &&
-                              props.touched.children[index].rooms &&
+                              props.touched.children[index].zones &&
                               props.errors &&
                               props.errors.children &&
                               props.errors.children[index] &&
-                              Boolean(props.errors.children[index].rooms)
+                              Boolean(props.errors.children[index].zones)
                             }
                           />
                         )}
@@ -355,7 +355,7 @@ const Children = (props) => {
                 onClick={() => {
                   arrayHelpers.push({
                     first_name: '',
-                    rooms: []
+                    zones: []
                   });
                 }}>
                 Add Child
@@ -375,5 +375,5 @@ Children.propTypes = {
   setFieldValue: PropTypes.func,
   touched: PropTypes.object,
   errors: PropTypes.object,
-  roomsList: PropTypes.array
+  zonesList: PropTypes.array
 };

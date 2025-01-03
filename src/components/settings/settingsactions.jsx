@@ -27,6 +27,8 @@ const SettingsActions = (props) => {
   const handleUserEdit = (event) => {
     if (props.zone) {
       props.setZone({ ...props.zone });
+    } else if (props.tag) {
+      props.setTag({ ...props.tag });
     } else {
       props.setLocation({ ...props.location });
     }
@@ -38,6 +40,8 @@ const SettingsActions = (props) => {
   const handleUserDelete = (event) => {
     if (props.zone) {
       props.setZone({ ...props.zone });
+    } else if (props.tag) {
+      props.setTag({ ...props.tag });
     } else {
       props.setLocation({ ...props.location });
     }
@@ -62,13 +66,17 @@ const SettingsActions = (props) => {
           <ListItemIcon>
             <EditIcon />
           </ListItemIcon>
-          <ListItemText>{props.zone ? 'Edit Zone' : 'Edit Location'}</ListItemText>
+          <ListItemText>
+            {props.zone ? 'Edit Zone' : props.tag ? 'Edit Tag' : 'Edit Location'}
+          </ListItemText>
         </MenuItem>
         <MenuItem onClick={handleUserDelete}>
           <ListItemIcon>
             <DeleteOutlineIcon />
           </ListItemIcon>
-          <ListItemText>{props.zone ? 'Delete Zone' : 'Delete Location'}</ListItemText>
+          <ListItemText>
+            {props.zone ? 'Delete Zone' : props.tag ? 'Delete Tag' : 'Delete Location'}
+          </ListItemText>
         </MenuItem>
       </Menu>
     </Box>
@@ -80,8 +88,10 @@ export default SettingsActions;
 SettingsActions.propTypes = {
   location: PropTypes.object,
   zone: PropTypes.object,
+  tag: PropTypes.object,
   setLocation: PropTypes.func,
   setZone: PropTypes.func,
+  setTag: PropTypes.func,
   setIsUserFormDialogOpen: PropTypes.func,
   setIsDeleteDialogOpen: PropTypes.func
 };

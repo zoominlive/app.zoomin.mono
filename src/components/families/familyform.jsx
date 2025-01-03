@@ -154,15 +154,15 @@ const AddFamily = (props) => {
           yup.object().shape({
             first_name: yup.string().required('First Name is required'),
             last_name: yup.string().required('Last Name is required'),
-            rooms: yup
+            zones: yup
               .array()
               .of(
                 yup.object().shape({
-                  room_id: yup.string(),
-                  room_name: yup.string()
+                  zone_id: yup.string(),
+                  zone_name: yup.string()
                 })
               )
-              .min(1, 'Select at least one room')
+              .min(1, 'Select at least one zone')
               .required('required'),
             locations: yup.array().min(1, 'Select at least one location').required('required')
           })
@@ -199,7 +199,7 @@ const AddFamily = (props) => {
             values={values}
             touched={touched}
             errors={errors}
-            roomsList={props.roomsList}
+            zonesList={props.zonesList}
           />
         );
       default:
@@ -362,7 +362,7 @@ const AddFamily = (props) => {
               {
                 first_name: '',
                 last_name: '',
-                rooms: [],
+                zones: [],
                 locations: [],
                 enable_date: null,
                 selected_option: 'Start Now',
@@ -524,6 +524,6 @@ export default AddFamily;
 AddFamily.propTypes = {
   open: PropTypes.bool,
   setOpen: PropTypes.func,
-  roomsList: PropTypes.array,
+  zonesList: PropTypes.array,
   getFamiliesList: PropTypes.func
 };

@@ -124,7 +124,7 @@ const endpointMappings = {
   },
   '/child': {
     create: '/api/family/child/add',
-    edit: ['/api/family/child/edit', '/api/family/child/replace-room'],
+    edit: ['/api/family/child/edit', '/api/family/child/replace-zone'],
     list: null,
     delete: '/api/family/child/delete',
     enabledisable: ['/api/family/child/enable', '/api/family/child/disable']

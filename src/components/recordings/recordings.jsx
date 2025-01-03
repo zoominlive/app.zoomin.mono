@@ -70,9 +70,9 @@ const Recordings = () => {
   const [fromDate, setFromDate] = useState(moment().subtract(7, 'days'));
   const [toDate, setToDate] = useState(moment());
   const [location, setLocation] = useState('All');
-  const [roomsList, setRoomsList] = useState([]);
-  const [roomsDropdownLoading, setRoomsDropdownLoading] = useState(false);
-  const [selectedRooms, setSelectedRooms] = useState([]);
+  const [zonesList, setZonesList] = useState([]);
+  const [zonesDropdownLoading, setZonesDropdownLoading] = useState(false);
+  const [selectedZones, setSelectedZones] = useState([]);
   //const [selectedRoom, setSelectedRoom] = useState([]);
   // const [timeOut, setTimeOut] = useState(2);
   // const [selectedCamera] = useState({
@@ -80,7 +80,7 @@ const Recordings = () => {
   //   stream_uri: 'https://www.youtube.com/watch?v=ysz5S6PUM-U',
   //   cam_id: null,
   //   location: '',
-  //   room_name: '',
+  //   zone_name: '',
   //   cam_name: ''
   // });
   // const [submitted] = useState(true);
@@ -91,7 +91,7 @@ const Recordings = () => {
   //   {
   //     date: '12-05-2023',
   //     location: 'Location 1',
-  //     room: 'Room 1',
+  //     zone: 'Room 1',
   //     status: 'Live Stream',
   //     url: 'https://www.youtube.com/watch?v=ysz5S6PUM-U'
   //   }
@@ -126,11 +126,11 @@ const Recordings = () => {
     };
   }, []);
   useEffect(() => {
-    setRoomsDropdownLoading(true);
+    setZonesDropdownLoading(true);
     API.get('zones/list', { params: { cust_id: localStorage.getItem('cust_id') } }).then(
       (response) => {
         if (response.status === 200) {
-          setRoomsList(response.data.Data);
+          setZonesList(response.data.Data);
         } else {
           errorMessageHandler(
             enqueueSnackbar,
@@ -139,7 +139,7 @@ const Recordings = () => {
             authCtx.setAuthError
           );
         }
-        setRoomsDropdownLoading(false);
+        setZonesDropdownLoading(false);
       }
     );
   }, []);
@@ -151,12 +151,12 @@ const Recordings = () => {
       pageNumber: 0
     }));
   };
-  const handleRoomChange = (_, value) => {
-    const roomsArr = [];
-    value.forEach((room) => roomsArr.push(room.room_name));
-    setSelectedRooms(roomsArr);
-    setRecordingsPayload((prevPayload) => ({ ...prevPayload, rooms: roomsArr, pageNumber: 0 }));
-    //setFamiliesPayload((prevPayload) => ({ ...prevPayload, rooms: roomsArr, page: 0 }));
+  const handleZoneChange = (_, value) => {
+    const zonesArr = [];
+    value.forEach((zone) => zonesArr.push(zone.zone_name));
+    setSelectedZones(zonesArr);
+    setRecordingsPayload((prevPayload) => ({ ...prevPayload, zones: zonesArr, pageNumber: 0 }));
+    //setFamiliesPayload((prevPayload) => ({ ...prevPayload, zones: zonesArr, page: 0 }));
   };
   const handlePageChange = (_, newPage) => {
     setRecordingsPayload((prevPayload) => ({ ...prevPayload, pageNumber: newPage }));
@@ -173,23 +173,23 @@ const Recordings = () => {
   };
 
   const Row = ({ row }) => {
-    const { created_at, room, presigned_url, stream_running, stream_name } = row;
+    const { created_at, zone, presigned_url, stream_running, stream_name } = row;
     const handle = useFullScreenHandle();
     const [open, setOpen] = useState(false);
     const [timeOut, setTimeOut] = useState(2);
     const [selectedCamera, setSelectedCamera] = useState({
       camLabel: '',
-      stream_uri: presigned_url || room?.live_stream_cameras[0]?.stream_uri,
+      stream_uri: presigned_url || zone?.live_stream_cameras[0]?.stream_uri,
       cam_id: null,
-      location: room?.location,
-      room_name: room?.room_name,
-      cam_name: presigned_url ? room?.live_stream_cameras[0]?.cam_name : ''
+      location: zone?.location,
+      zone_name: zone?.zone_name,
+      cam_name: presigned_url ? zone?.live_stream_cameras[0]?.cam_name : ''
     });
     const [submitted] = useState(true);
     const [playing, setPlaying] = useState(true);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [isFullScreenDialogOpen, setIsFullScreenDialogOpen] = useState(false);
-    Logger.log('=isDeleteDialogOpen=', isDeleteDialogOpen, selectedRooms);
+    Logger.log('=isDeleteDialogOpen=', isDeleteDialogOpen, selectedZones);
     return (
       <>
         <TableRow hover>
@@ -209,12 +209,12 @@ const Recordings = () => {
           </TableCell>
           <TableCell align="center">
             {/* <Stack direction="row"> */}
-            <Chip label={room?.location} color="primary" className="chip-color" />
+            <Chip label={zone?.location} color="primary" className="chip-color" />
             {/* </Stack> */}
           </TableCell>
           <TableCell align="center">
             {/* <Stack direction="row"> */}
-            <Chip label={room?.room_name} color="primary" className="room-chip" />
+            <Chip label={zone?.zone_name} color="primary" className="zone-chip" />
             {/* </Stack> */}
           </TableCell>
           <TableCell align="center">
@@ -234,9 +234,9 @@ const Recordings = () => {
               onClick={() => {
                 setOpen(!open);
                 setSelectedCamera({
-                  location: room?.location,
-                  room_name: room?.room_name,
-                  ...room?.live_stream_cameras[0]
+                  location: zone?.location,
+                  zone_name: zone?.zone_name,
+                  ...zone?.live_stream_cameras[0]
                 });
               }}>
               {' '}
@@ -261,7 +261,7 @@ const Recordings = () => {
                         }}>
                         <CustomPlayer
                           noOfCameras={2}
-                          streamUri={presigned_url || room?.live_stream_cameras[0].stream_uri}
+                          streamUri={presigned_url || zone?.live_stream_cameras[0].stream_uri}
                           camDetails={selectedCamera}
                           timeOut={timeOut}
                           setTimeOut={setTimeOut}
@@ -314,7 +314,7 @@ const Recordings = () => {
       created_at: PropTypes.string,
       stream_running: PropTypes.bool,
       stream_name: PropTypes.string,
-      room: PropTypes.object,
+      zone: PropTypes.object,
       presigned_url: PropTypes.string
     })
   };
@@ -550,21 +550,21 @@ const Recordings = () => {
                     </FormControl>
                   </Grid>
                   <Grid item md={4.5} sm={12}>
-                    <InputLabel id="rooms">Zones</InputLabel>
+                    <InputLabel id="zones">Zones</InputLabel>
                     <Autocomplete
-                      labelId="rooms"
+                      labelId="zones"
                       fullWidth
                       multiple
-                      id="rooms"
-                      options={roomsList.sort((a, b) => (a?.room_name > b?.room_name ? 1 : -1))}
-                      isOptionEqualToValue={(option, value) => option?.room_id === value?.room_id}
+                      id="zones"
+                      options={zonesList.sort((a, b) => (a?.zone_name > b?.zone_name ? 1 : -1))}
+                      isOptionEqualToValue={(option, value) => option?.zone_id === value?.zone_id}
                       getOptionLabel={(option) => {
-                        return option?.room_name;
+                        return option?.zone_name;
                       }}
-                      onChange={handleRoomChange}
+                      onChange={handleZoneChange}
                       renderTags={(value, getTagProps) =>
                         value.map((option, index) => (
-                          <Chip key={index} label={option?.room_name} {...getTagProps({ index })} />
+                          <Chip key={index} label={option?.zone_name} {...getTagProps({ index })} />
                         ))
                       }
                       renderInput={(params) => (
@@ -577,7 +577,7 @@ const Recordings = () => {
                             ...params.InputProps,
                             endAdornment: (
                               <React.Fragment>
-                                {roomsDropdownLoading ? (
+                                {zonesDropdownLoading ? (
                                   <CircularProgress color="inherit" size={20} />
                                 ) : null}
                                 {params.InputProps.endAdornment}

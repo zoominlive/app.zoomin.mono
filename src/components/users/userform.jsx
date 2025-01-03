@@ -47,7 +47,7 @@ const UserForm = (props) => {
   const [submitLoading, setSubmitLoading] = useState(false);
   const [base64Image, setBase64Image] = useState();
   const [selectedLocation, setSelectedLocation] = useState([]);
-  const [roomList, setRoomList] = useState([]);
+  const [zoneList, setZoneList] = useState([]);
   const [selectedRole, setSelectedRole] = useState(null);
   const [liveStreamLicense, setLiveStreamLicense] = useState(
     authCtx?.user?.max_stream_live_license || 0
@@ -64,12 +64,12 @@ const UserForm = (props) => {
       .required('Email is required'),
     role: yup.string('Enter role').required('Role is required'),
     locations: yup.array().min(1, 'Select at least one location').required('Location is required'),
-    rooms:
+    zones:
       selectedRole === 'Teacher'
         ? yup
             .array()
-            .of(yup.object().shape({ room_id: yup.string(), room_name: yup.string() }))
-            .min(1, 'Select at least one room')
+            .of(yup.object().shape({ zone_id: yup.string(), zone_name: yup.string() }))
+            .min(1, 'Select at least one zone')
             .required('required')
         : yup.array()
   });
@@ -83,12 +83,12 @@ const UserForm = (props) => {
       locations: props?.user?.locations
         ? props?.user?.locations?.sort((a, b) => (a.loc_name > b.loc_name ? 1 : -1))
         : [],
-      rooms: props?.user?.roomsInTeacher
-        ? props.user?.roomsInTeacher.map((room) => {
+      zones: props?.user?.zonesInTeacher
+        ? props.user?.zonesInTeacher.map((zone) => {
             return {
-              room_name: room?.room?.room_name,
-              location: room?.room?.location,
-              room_id: room?.room_id
+              zone_name: zone?.zone?.zone_name,
+              location: zone?.zone?.location,
+              zone_id: zone?.zone_id
             };
           })
         : [],
@@ -99,26 +99,26 @@ const UserForm = (props) => {
   });
 
   useEffect(() => {
-    let rooms = [];
-    roomList?.map((room) => {
+    let zones = [];
+    zoneList?.map((zone) => {
       let count = 0;
       selectedLocation?.forEach((location) => {
-        if (room.loc_id === location.loc_id) {
+        if (zone.loc_id === location.loc_id) {
           count = count + 1;
         }
       });
       if (count > 0) {
-        rooms.push(room);
+        zones.push(zone);
       }
     });
-    setRoomList(rooms);
+    setZoneList(zones);
   }, [selectedLocation]);
 
   useEffect(() => {
     API.get('zones/list', { params: { cust_id: localStorage.getItem('cust_id') } }).then(
       (response) => {
         if (response.status === 200) {
-          setRoomList(response.data.Data);
+          setZoneList(response.data.Data);
         } else {
           errorMessageHandler(
             enqueueSnackbar,
@@ -498,39 +498,39 @@ const UserForm = (props) => {
                     </Grid>
                     {values.role === 'Teacher' && (
                       <Grid item xs={12} md={6}>
-                        <InputLabel id="rooms">Zones</InputLabel>
+                        <InputLabel id="zones">Zones</InputLabel>
                         <Autocomplete
-                          labelId="rooms"
+                          labelId="zones"
                           fullWidth
                           multiple
-                          id="rooms"
+                          id="zones"
                           noOptionsText={'Select location first'}
-                          options={roomList
-                            .sort((a, b) => (a?.room_name > b?.room_name ? 1 : -1))
-                            ?.filter((room) => {
+                          options={zoneList
+                            .sort((a, b) => (a?.zone_name > b?.zone_name ? 1 : -1))
+                            ?.filter((zone) => {
                               if (
                                 values?.locations
                                   ?.map((_) => _.loc_id)
-                                  .find((loc) => loc == room?.loc_id)
+                                  .find((loc) => loc == zone?.loc_id)
                               ) {
-                                return room;
+                                return zone;
                               }
                             })}
-                          value={values.rooms}
+                          value={values.zones}
                           isOptionEqualToValue={(option, value) =>
-                            option?.room_id === value?.room_id
+                            option?.zone_id === value?.zone_id
                           }
                           getOptionLabel={(option) => {
-                            return option?.room_name;
+                            return option?.zone_name;
                           }}
                           onChange={(_, value) => {
-                            setFieldValue('rooms', value);
+                            setFieldValue('zones', value);
                           }}
                           renderTags={(value, getTagProps) =>
                             value.map((option, index) => (
                               <Chip
                                 key={index}
-                                label={option?.room_name}
+                                label={option?.zone_name}
                                 {...getTagProps({ index })}
                               />
                             ))
@@ -538,9 +538,9 @@ const UserForm = (props) => {
                           renderInput={(params) => (
                             <TextField
                               {...params}
-                              // placeholder="Room"
-                              helperText={touched.rooms && errors.rooms}
-                              error={touched.rooms && Boolean(errors.rooms)}
+                              // placeholder="Zone"
+                              helperText={touched.zones && errors.zones}
+                              error={touched.zones && Boolean(errors.zones)}
                               fullWidth
                             />
                           )}

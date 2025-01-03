@@ -10,10 +10,14 @@ import Loader from '../common/loader';
 import { useContext } from 'react';
 import AuthContext from '../../context/authcontext';
 import _ from 'lodash';
+import API from '../../api';
+import { errorMessageHandler } from '../../utils/errormessagehandler';
+import { useSnackbar } from 'notistack';
 // import VideocamOffIcon from '@mui/icons-material/VideocamOff';
 
 const CustomPlayer = (props) => {
   const authCtx = useContext(AuthContext);
+  const { enqueueSnackbar } = useSnackbar();
   const [inPIPMode, setInPIPMode] = useState(false);
   const [fullscreen, setFullScreen] = useState(false);
   const [ready, setReady] = useState(false);
@@ -23,6 +27,7 @@ const CustomPlayer = (props) => {
   // eslint-disable-next-line no-unused-vars
   const [url, setUrl] = useState('');
   const [playerPlaying, setPlayerPlaying] = useState(true);
+  const [playerRecording, setPlayerRecording] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
   const timer = useRef({
     timerId: 0
@@ -60,6 +65,60 @@ const CustomPlayer = (props) => {
   useEffect(() => {
     setUrl(props?.streamUri);
   }, [props.streamUri]);
+
+  const handleRecording = (tag) => {
+    if (!playerRecording) {
+      API.post('cams/start-recording', {
+        cust_id: authCtx?.user?.cust_id || localStorage.getItem('cust_id'),
+        user_id: authCtx?.user?.user_id,
+        location: props?.camDetails?.location,
+        cam_id: props?.camDetails?.cam_id,
+        alias: props?.camDetails?.cam_alias
+      }).then((response) => {
+        if (response.status === 201) {
+          console.log('recording started');
+          setPlayerRecording(!playerRecording);
+          enqueueSnackbar(response.data.Message, {
+            variant: 'success'
+          });
+        } else {
+          console.log('response', response);
+          errorMessageHandler(
+            enqueueSnackbar,
+            response?.response?.data.Message || 'Something Went Wrong.',
+            response?.response?.status,
+            authCtx.setAuthError
+          );
+        }
+      });
+    } else {
+      console.log('tag==>', tag?.tag_id);
+      API.post('cams/stop-recording', {
+        cust_id: authCtx?.user?.cust_id || localStorage.getItem('cust_id'),
+        user_id: authCtx?.user?.user_id,
+        location: props?.camDetails?.location,
+        cam_id: props?.camDetails?.cam_id,
+        alias: props?.camDetails?.cam_alias,
+        tag_id: tag?.tag_id
+      }).then((response) => {
+        if (response.status === 201) {
+          setPlayerRecording(!playerRecording);
+          enqueueSnackbar(response.data.Data, {
+            variant: 'success'
+          });
+        } else {
+          console.log('stopresponse=>', response);
+          errorMessageHandler(
+            enqueueSnackbar,
+            response?.response?.data?.Message || 'Something Went Wrong.',
+            response?.response?.status,
+            authCtx.setAuthError
+          );
+        }
+      });
+    }
+  };
+
   const staticTimeOut = 20 * 1000 * 60;
   const defaultTimeOut = props?.timeOut * 1000 * 60;
   const startTimer = () => {
@@ -193,12 +252,15 @@ const CustomPlayer = (props) => {
                   fontSize={'12px'}
                   color={
                     'white'
-                  }>{`${props?.camDetails?.room_name} - ${props?.camDetails?.cam_name}`}</Typography>
+                  }>{`${props?.camDetails?.zone_name} - ${props?.camDetails?.cam_name}`}</Typography>
               </Box>
             )}
             <PlayerControls
               playing={playerPlaying}
               setPlaying={setPlayerPlaying}
+              handleRecording={handleRecording}
+              recording={playerRecording}
+              setRecording={setPlayerRecording}
               inPIPMode={inPIPMode}
               setInPIPMode={setInPIPMode}
               fullscreen={fullscreen}

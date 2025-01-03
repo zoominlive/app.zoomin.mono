@@ -36,7 +36,7 @@ import dayjs from 'dayjs';
 import moment from 'moment';
 
 const validationSchema = yup.object({
-  rooms: yup.array().min(1, 'Atleast one room is required'),
+  zones: yup.array().min(1, 'Atleast one zone is required'),
   locations: yup.array().min(1, 'Select at least one location').required('required'),
   selectedOption: yup.string().required('Please select atleast one option'),
   date: yup
@@ -49,7 +49,7 @@ const validationSchema = yup.object({
     })
 });
 
-const AddRoomForm = (props) => {
+const AddZoneForm = (props) => {
   const authCtx = useContext(AuthContext);
   const { enqueueSnackbar } = useSnackbar();
   const [submitLoading, setSubmitLoading] = useState(false);
@@ -61,20 +61,20 @@ const AddRoomForm = (props) => {
     props.setOpen(false);
   };
 
-  // Method to add room
+  // Method to add zone
   const handleSubmit = (data) => {
     setSubmitLoading(true);
-    let existingRoom = props?.existingRooms.map((room) => {
+    let existingZone = props?.existingZones.map((zone) => {
       return {
-        room_id: room.room_id,
-        room_name: room.room.room_name,
-        location: room.room.location
+        zone_id: zone.zone_id,
+        zone_name: zone.zone.zone_name,
+        location: zone.zone.location
       };
     });
 
-    API.post('family/child/addroom', {
-      existingRooms: existingRoom,
-      roomsToAdd: data?.rooms,
+    API.post('family/child/addzone', {
+      existingZones: existingZone,
+      zonesToAdd: data?.zones,
       selectedOption: data?.selectedOption,
       schedule_enable_date:
         data?.selectedOption == 'schedule' ? dayjs(data?.date).format('YYYY-MM-DD') : null,
@@ -96,36 +96,36 @@ const AddRoomForm = (props) => {
     });
   };
 
-  const setRoomsList = (locations) => {
+  const setZonesList = (locations) => {
     console.log('props==>', props);
     console.log('locations==>', locations);
     if (locations?.length !== 0) {
-      let rooms = props.roomsList
-        .filter((room) => {
+      let zones = props.zonesList
+        .filter((zone) => {
           let count = 0;
           locations?.forEach((loc) => {
-            if (loc == room.loc_id) {
+            if (loc == zone.loc_id) {
               count = 1;
             }
           });
 
           return count === 1;
         })
-        .sort((a, b) => (a.room_name > b.room_name ? 1 : -1));
-      let roomsToAdd = [];
-      rooms.forEach((room) => {
+        .sort((a, b) => (a.zone_name > b.zone_name ? 1 : -1));
+      let zonesToAdd = [];
+      zones.forEach((zone) => {
         let count = 0;
-        props.existingRooms.forEach((room1) => {
-          if (room1.room_id === room.room_id) {
+        props.existingZones.forEach((zone1) => {
+          if (zone1.zone_id === zone.zone_id) {
             count = 1;
           }
         });
         if (count == 0) {
-          roomsToAdd.push(room);
+          zonesToAdd.push(zone);
         }
       });
 
-      return roomsToAdd;
+      return zonesToAdd;
     } else {
       return [];
     }
@@ -140,7 +140,7 @@ const AddRoomForm = (props) => {
         validateOnChange
         validationSchema={validationSchema}
         initialValues={{
-          rooms: [],
+          zones: [],
           locations: [],
           selectedOption: 'enable',
           date: ''
@@ -157,7 +157,7 @@ const AddRoomForm = (props) => {
                     <Autocomplete
                       fullWidth
                       multiple
-                      id="rooms"
+                      id="zones"
                       options={authCtx?.user?.locations?.sort((a, b) =>
                         a.loc_name > b.loc_name ? 1 : -1
                       )}
@@ -187,32 +187,32 @@ const AddRoomForm = (props) => {
                     <Autocomplete
                       fullWidth
                       multiple
-                      id="rooms"
-                      options={setRoomsList(values?.locations.map(({ loc_id }) => loc_id))}
+                      id="zones"
+                      options={setZonesList(values?.locations.map(({ loc_id }) => loc_id))}
                       noOptionsText={
                         values.locations.length == 0
                           ? 'Select location first'
-                          : 'No rooms available'
+                          : 'No zones available'
                       }
-                      value={values?.rooms}
-                      isOptionEqualToValue={(option, value) => option.room_id === value.room_id}
+                      value={values?.zones}
+                      isOptionEqualToValue={(option, value) => option.zone_id === value.zone_id}
                       getOptionLabel={(option) => {
-                        return option.room_name;
+                        return option.zone_name;
                       }}
                       onChange={(_, value) => {
-                        setFieldValue('rooms', value);
+                        setFieldValue('zones', value);
                       }}
                       renderTags={(value, getTagProps) =>
                         value.map((option, index) => (
-                          <Chip key={index} label={option.room_name} {...getTagProps({ index })} />
+                          <Chip key={index} label={option.zone_name} {...getTagProps({ index })} />
                         ))
                       }
                       renderInput={(params) => (
                         <TextField
                           {...params}
                           label="Zone"
-                          helperText={touched.rooms && errors.rooms}
-                          error={touched.rooms && Boolean(errors.rooms)}
+                          helperText={touched.zones && errors.zones}
+                          error={touched.zones && Boolean(errors.zones)}
                           fullWidth
                         />
                       )}
@@ -305,16 +305,16 @@ const AddRoomForm = (props) => {
   );
 };
 
-export default AddRoomForm;
+export default AddZoneForm;
 
-AddRoomForm.propTypes = {
+AddZoneForm.propTypes = {
   open: PropTypes.bool,
   setOpen: PropTypes.func,
-  roomsList: PropTypes.array,
+  zonesList: PropTypes.array,
   family: PropTypes.object,
   child: PropTypes.any,
   setChild: PropTypes.func,
   setFamily: PropTypes.func,
   getFamiliesList: PropTypes.func,
-  existingRooms: PropTypes.array
+  existingZones: PropTypes.array
 };

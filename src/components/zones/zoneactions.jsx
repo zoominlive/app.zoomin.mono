@@ -5,7 +5,7 @@ import PropTypes from 'prop-types';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
 
-const RoomActions = (props) => {
+const ZoneActions = (props) => {
   const [anchorEl, setAnchorEl] = React.useState(null);
   const open = Boolean(anchorEl);
 
@@ -24,15 +24,15 @@ const RoomActions = (props) => {
   };
 
   // Method that sets the user for user form and opens the user form dialog
-  const handleRoomEdit = (event) => {
-    props.setRoom(props.room);
-    props.setIsRoomFormDialogOpen(true);
+  const handleZoneEdit = (event) => {
+    props.setZone(props.zone);
+    props.setIsZoneFormDialogOpen(true);
     handleClose(event);
   };
 
   // Method that sets the user to be deleted and opens the delete dialog
-  const handleRoomDelete = (event) => {
-    props.setRoom(props.room);
+  const handleZoneDelete = (event) => {
+    props.setZone(props.zone);
     props.setIsDeleteDialogOpen(true);
     handleClose(event);
   };
@@ -50,13 +50,13 @@ const RoomActions = (props) => {
         keepMounted
         anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
         TransitionComponent={Fade}>
-        <MenuItem onClick={handleRoomEdit}>
+        <MenuItem onClick={handleZoneEdit}>
           <ListItemIcon>
             <EditOutlinedIcon />
           </ListItemIcon>
           <ListItemText>Edit Zone</ListItemText>
         </MenuItem>
-        <MenuItem onClick={handleRoomDelete}>
+        <MenuItem onClick={handleZoneDelete}>
           <ListItemIcon>
             <DeleteOutlinedIcon />
           </ListItemIcon>
@@ -67,11 +67,11 @@ const RoomActions = (props) => {
   );
 };
 
-export default RoomActions;
+export default ZoneActions;
 
-RoomActions.propTypes = {
-  room: PropTypes.object,
-  setRoom: PropTypes.func,
-  setIsRoomFormDialogOpen: PropTypes.func,
+ZoneActions.propTypes = {
+  zone: PropTypes.object,
+  setZone: PropTypes.func,
+  setIsZoneFormDialogOpen: PropTypes.func,
   setIsDeleteDialogOpen: PropTypes.func
 };

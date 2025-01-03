@@ -72,7 +72,7 @@ export default function ViewersTable({ rows, columns, title, pagination, isLoadi
                   .map((row, index) => {
                     return (
                       <Link
-                        key={`${row?.room?.room_name}-${index}`}
+                        key={`${row?.zone?.zone_name}-${index}`}
                         to="/logs"
                         state={{
                           type: 'Access Log',
@@ -146,12 +146,12 @@ export default function ViewersTable({ rows, columns, title, pagination, isLoadi
                             )}
                           </Box>
                           <Box className="zl__td-block" style={{ width: '30%' }}>
-                            {row?.family?.children[0]?.roomsInChild &&
-                            row?.family?.children[0]?.roomsInChild.length > 0 ? (
-                              row?.family?.children[0]?.roomsInChild?.map((room, index) => (
+                            {row?.family?.children[0]?.zonesInChild &&
+                            row?.family?.children[0]?.zonesInChild.length > 0 ? (
+                              row?.family?.children[0]?.zonesInChild?.map((zone, index) => (
                                 <Chip
-                                  key={room?.room.room_name + '-' + index}
-                                  label={room?.room.room_name}
+                                  key={zone?.zone.zone_name + '-' + index}
+                                  label={zone?.zone.zone_name}
                                 />
                               ))
                             ) : (
@@ -168,7 +168,7 @@ export default function ViewersTable({ rows, columns, title, pagination, isLoadi
               : rows.map((row, index) => {
                   return (
                     <Link
-                      key={`${row?.room?.room_name}-${index}`}
+                      key={`${row?.zone?.zone_name}-${index}`}
                       to="/logs"
                       state={{
                         type: 'Access Log',

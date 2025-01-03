@@ -119,8 +119,8 @@ const SchedulerDialog = (props) => {
   };
 
   useEffect(() => {
-    if (props?.roomDetails?.schedule?.timeRange?.length != 0) {
-      let daysToStore = props?.roomDetails?.schedule?.timeRange?.map((day) => {
+    if (props?.zoneDetails?.schedule?.timeRange?.length != 0) {
+      let daysToStore = props?.zoneDetails?.schedule?.timeRange?.map((day) => {
         let timerToAdd = [getValueFromLabel(day[0][0]), getValueFromLabel(day[0][1])];
         return [timerToAdd, day[1]];
       });
@@ -140,11 +140,11 @@ const SchedulerDialog = (props) => {
       return [timerToAdd, day[1]];
     });
     const payload = {
-      room_child_id: props.roomDetails.room_child_id,
+      zone_child_id: props.zoneDetails.zone_child_id,
       timeRange: daysTostore
     };
 
-    API.put('family/child/roomschedule', payload).then((response) => {
+    API.put('family/child/zoneschedule', payload).then((response) => {
       if (response.status === 200) {
         props.getFamiliesList();
         enqueueSnackbar(response.data.Message, { variant: 'success' });
@@ -372,7 +372,7 @@ const SchedulerDialog = (props) => {
             defaultSettings={defaultSettings}
             setOpen={props.setOpen}
             getFamiliesList={props.getFamiliesList}
-            room_child_id={props.roomDetails.room_child_id}
+            zone_child_id={props.zoneDetails.zone_child_id}
           />
         </>
       )}
@@ -385,6 +385,6 @@ export default SchedulerDialog;
 SchedulerDialog.propTypes = {
   open: PropTypes.bool,
   setOpen: PropTypes.func,
-  roomDetails: PropTypes.object,
+  zoneDetails: PropTypes.object,
   getFamiliesList: PropTypes.func
 };
