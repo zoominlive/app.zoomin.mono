@@ -71,59 +71,59 @@ module.exports = {
       let childrenWithDisableDate = [];
 
       childSEA.forEach((child) => {
-        let roomsToEnable = [];
-        let roomsToDisable = [];
-        child.roomsInChild.forEach((room) => {
-          if (room.scheduled_disable_date != null) {
+        let zonesToEnable = [];
+        let zonesToDisable = [];
+        child.zonesInChild.forEach((zone) => {
+          if (zone.scheduled_disable_date != null) {
            if(req.query?.location !== "All"){
-            if(req.query?.location == room.room?.loc_id || req.query?.location?.length !== 0){
-              roomsToDisable.push(room.room?.room_name);
+            if(req.query?.location == zone.zone?.loc_id || req.query?.location?.length !== 0){
+              zonesToDisable.push(zone.zone?.zone_name);
             }
            }
            else{
-            roomsToDisable.push(room.room?.room_name);
+            zonesToDisable.push(zone.zone?.zone_name);
            }
            
           } else {
             if(req.query?.location !== "All"){
-              if(req.query?.location == room.room?.loc_id || req.query?.location?.length !== 0){
-                roomsToEnable.push(room.room?.room_name);
+              if(req.query?.location == zone.zone?.loc_id || req.query?.location?.length !== 0){
+                zonesToEnable.push(zone.zone?.zone_name);
               }
              }
              else{
-              roomsToEnable.push(room.room?.room_name);
+              zonesToEnable.push(zone.zone?.zone_name);
              }
           }
         });
 
-        if (roomsToDisable.length != 0) {
+        if (zonesToDisable.length != 0) {
           childrenWithDisableDate.push({
             childFirstName: child.first_name,
             childLastName: child.last_name,
-            rooms: roomsToDisable,
+            zones: zonesToDisable,
             family: child.family,
-            date: child.roomsInChild.map((item) => item.scheduled_disable_date),
+            date: child.zonesInChild.map((item) => item.scheduled_disable_date),
             status: child.status
           });
         }
-        if (roomsToEnable.length != 0 && child.roomsInChild.some((item) => item.scheduled_enable_date !== null)) {
+        if (zonesToEnable.length != 0 && child.zonesInChild.some((item) => item.scheduled_enable_date !== null)) {
           childrenWithEnableDate.push({
             childFirstName: child.first_name,
             childLastName: child.last_name,
-            rooms: roomsToEnable,
+            zones: zonesToEnable,
             family: child.family,
-            date: child.roomsInChild.map((item) => item.scheduled_enable_date),
+            date: child.zonesInChild.map((item) => item.scheduled_enable_date),
             status: child.status
           });
         }
-        if (roomsToEnable.length == 0 && roomsToDisable.length == 0) {
+        if (zonesToEnable.length == 0 && zonesToDisable.length == 0) {
           if (child.scheduled_end_date != null) {
             childrenWithDisableDate.push({
               childFirstName: child.first_name,
               childLastName: child.last_name,
-              rooms: roomsToDisable,
+              zones: zonesToDisable,
               family: child.family,
-              date: child.roomsInChild.map((item) => item.scheduled_disable_date),
+              date: child.zonesInChild.map((item) => item.scheduled_disable_date),
               status: child.status
             });
           }
@@ -131,9 +131,9 @@ module.exports = {
             childrenWithEnableDate.push({
               childFirstName: child.first_name,
               childLastName: child.last_name,
-              rooms: roomsToEnable,
+              zones: zonesToEnable,
               family: child.family,
-              date: child.roomsInChild.map((item) => item.scheduled_enable_date),
+              date: child.zonesInChild.map((item) => item.scheduled_enable_date),
               status: child.status
             });
           }
@@ -156,7 +156,7 @@ module.exports = {
         cust_id: custId,
       });
       const customerDetails = await customerServices.getCustomerDetails(custId, t);
-      cameras = _.uniqBy(cameras, "room_id");
+      cameras = _.uniqBy(cameras, "zone_id");
       cameras?.forEach((cam, camIndex) => {
         cameras[camIndex].timeout = customerDetails.timeout;
         cameras[camIndex].permit_audio = customerDetails.permit_audio;

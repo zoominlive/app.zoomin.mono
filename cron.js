@@ -43,74 +43,90 @@ module.exports.enableScheduledChild = async () => {
   return { childrenToEnable };
 };
 
-module.exports.enableDisableScheduledRoom = async () => {
-  const { RoomsInChild, CustomerLocations, Room } = await connectToDatabase();
+module.exports.enableDisableScheduledZone = async () => {
+  const { ZonesInChild, CustomerLocations, Zone } = await connectToDatabase();
 
   let availableLocations = await CustomerLocations.findAll({
     raw: true
   });
 
-  const enableRooms = await RoomsInChild.findAll({
+  const enableZones = await ZonesInChild.findAll({
     where: {
       scheduled_enable_date: {
         [Sequelize.Op.not]: null
       }
     },
-    include: [{ model: Room, as: 'room' }]
+    include: [{ model: Zone, as: 'zone' }]
   });
 
-  const disableRooms = await RoomsInChild.findAll({
+  const disableZones = await ZonesInChild.findAll({
     where: {
       scheduled_disable_date: {
         [Sequelize.Op.not]: null
       }
     },
-    include: [{ model: Room, as: 'room' }]
+    include: [{ model: Zone, as: 'zone' }]
   });
 
-  let roomsToEnable = [];
-  enableRooms?.forEach((room) => {
-    const timeZone = availableLocations?.find((loc) => loc?.loc_id == room?.room?.loc_id);
+  let zonesToEnable = [];
+  enableZones?.forEach((zone) => {
+    const timeZone = availableLocations?.find((loc) => loc?.loc_id == zone?.zone?.loc_id);
     const today = moment()?.tz(timeZone?.time_zone)?.format('YYYY-MM-DD');
-    if (room?.scheduled_enable_date <= today) {
-      roomsToEnable?.push(room?.room_child_id);
+    if (zone?.scheduled_enable_date <= today) {
+      zonesToEnable?.push(zone?.zone_child_id);
     }
   });
 
-  let roomsToDisable = [];
-  disableRooms?.forEach((room) => {
-    const timeZone = availableLocations?.find((loc) => loc?.loc_id == room?.room?.loc_id);
+  let zonesToDisable = [];
+  disableZones?.forEach((zone) => {
+    const timeZone = availableLocations?.find((loc) => loc?.loc_id == zone?.zone?.loc_id);
     const today = moment()?.tz(timeZone?.time_zone)?.format('YYYY-MM-DD');
-    if (room?.scheduled_disable_date <= today) {
-      roomsToDisable?.push(room?.room_child_id);
+    if (zone?.scheduled_disable_date <= today) {
+      zonesToDisable?.push(zone?.zone_child_id);
     }
   });
 
-  if (roomsToEnable?.length !== 0) {
+  if (zonesToEnable?.length !== 0) {
     let update = {
       disabled: 'false',
       scheduled_enable_date: null
     };
-    const enabledRooms = await RoomsInChild.update(update, {
-      where: { room_child_id: roomsToEnable }
+    const enabledZones = await ZonesInChild.update(update, {
+      where: { zone_child_id: zonesToEnable }
     });
   }
 
-  if (roomsToDisable?.length !== 0) {
+  if (zonesToDisable?.length !== 0) {
     let update = {
       disabled: 'true',
       scheduled_disable_date: null
     };
-    const enabledRooms = await RoomsInChild.update(update, {
-      where: { room_child_id: roomsToDisable }
+    const enabledZones = await ZonesInChild.update(update, {
+      where: { zone_child_id: zonesToDisable }
     });
   }
 
-  return { roomsToEnable, roomsToDisable };
+  return { zonesToEnable, zonesToDisable };
+};
+
+const serializeSequelizeInstances = (instances) => {
+  if (!instances || !Array.isArray(instances)) {
+    console.error("Invalid Sequelize instances:", instances);
+    return [];
+  }
+  return instances
+    .map((instance) => {
+      if (!instance || typeof instance.get !== "function") {
+        console.error("Invalid Sequelize instance:", instance);
+        return null;
+      }
+      return instance.get({ plain: true });
+    })
+    .filter(Boolean);
 };
 
 module.exports.disableScheduledUsers = async () => {
-  const { Child, Family, RoomsInChild, CustomerLocations, CustomerLocationAssignments } =
+  const { Child, Family, ZonesInChild, CustomerLocations, CustomerLocationAssignments } =
     await connectToDatabase();
 
   // Update object to disable entities
@@ -119,128 +135,107 @@ module.exports.disableScheduledUsers = async () => {
     scheduled_end_date: null,
   };
 
+  const today = moment().subtract(1, "day").format("YYYY-MM-DD");
+
   try {
     // Fetch families to disable
-    let disableAllMembers;
-    try {
-      disableAllMembers = await Family.findAll({
-        where: { scheduled_end_date: { [Sequelize.Op.not]: null } },
-        include: [{ model: CustomerLocations, as: "family_user_locations" }],
-      });
-    } catch (error) {
-      console.error("Error fetching family members:", error);
-      throw error;
-    }
-    
+    const disableAllMembers = await Family.findAll({
+      where: { scheduled_end_date: { [Sequelize.Op.not]: null } },
+      include: [{ model: CustomerLocations, as: "family_user_locations" }],
+    });
+
+    console.log("disableAllMembers:", disableAllMembers);
+
+    const familyMembersToDisable = serializeSequelizeInstances(
+      disableAllMembers.filter((member) => {
+        return member?.scheduled_end_date <= today;
+      })
+    );
+
+    console.log("familyMembersToDisable:", familyMembersToDisable);
+
     // Fetch children to disable
-    let disableAllChildren;
-    try {
-      disableAllChildren = await Child.findAll({
-        where: { scheduled_end_date: { [Sequelize.Op.not]: null } },
-        raw: true,
-      });
-    } catch (error) {
-      console.error("Error fetching children:", error);
-      throw error;
-    }
+    const disableAllChildren = await Child.findAll({
+      where: { scheduled_end_date: { [Sequelize.Op.not]: null } },
+      raw: true,
+    });
 
-    const today = moment().subtract(1, "day").format("YYYY-MM-DD");
+    console.log("disableAllChildren:", disableAllChildren);
 
-    // Filter children to disable
     const childrenToDisable = disableAllChildren.filter(
       (child) => child.scheduled_end_date <= today
     );
 
-    // Filter family members to disable
-    const familyMembersToDisable = disableAllMembers.filter(
-      (member) => member.dataValues.scheduled_end_date <= today
-    );
+    console.log("childrenToDisable:", childrenToDisable);
 
     // Disable family members
     if (familyMembersToDisable.length > 0) {
-      try {
-        await Promise.all(
-          familyMembersToDisable.map(async (member) => {
-            const locationsToRemove =
-              member?.dataValues?.disabled_locations?.locations || [];
+      await Promise.all(
+        familyMembersToDisable.map(async (member) => {
+          const { family_member_id, disabled_locations, family_user_locations } = member;
 
-            // Filter remaining locations
-            const locations =
-              member.dataValues.family_user_locations?.filter((loc) =>
-                locationsToRemove.every(
-                  (location) => location.loc_id !== loc.dataValues.loc_id
-                )
-              ) || [];
-            
-            const updateObj = { ...update };
-            await Family.update(updateObj, {
-              where: { family_member_id: member.dataValues.family_member_id },
-            });
+          const locationsToRemove = disabled_locations?.locations || [];
+          const remainingLocations = family_user_locations?.filter((loc) =>
+            locationsToRemove.every((location) => location.loc_id !== loc.loc_id)
+          );
 
-            locationsToRemove.forEach(async (item) => {
-              await CustomerLocationAssignments.destroy({
-                where: {[Sequelize.Op.and]: [{loc_id: item.loc_id}, {family_member_id: member.dataValues.family_member_id}]} 
-              })
-            });
+          try {
+            await Family.update(update, { where: { family_member_id } });
 
-          })
-        ).catch((error) => {
-          console.error("Error disabling family members:", error);
-          throw error;
-        });
-      } catch (error) {
-        console.error("Error disabling family members:", error);
-        throw error;
-      }
+            for (const location of locationsToRemove) {
+              try {
+                await CustomerLocationAssignments.destroy({
+                  where: {
+                    [Sequelize.Op.and]: [{ loc_id: location.loc_id }, { family_member_id }],
+                  },
+                });
+              } catch (error) {
+                console.error(`Error deleting location ID ${location.loc_id}:`, error);
+              }
+            }
+          } catch (error) {
+            console.error(`Error updating family member ID ${family_member_id}:`, error);
+          }
+        })
+      );
     }
 
     // Disable children
     if (childrenToDisable.length > 0) {
-      try {
-        await Promise.all(
-          childrenToDisable.map(async (child) => {
-            let roomsToRemove;
-            try {
-              roomsToRemove = await RoomsInChild.findAll({
-                where: { child_id: child.child_id, disabled: "true" },
-                raw: true,
-              });
-            } catch (error) {
-              console.error(
-                `Error fetching rooms for child ID ${child.child_id}:`,
-                error
-              );
-              throw error;
-            }
+      await Promise.all(
+        childrenToDisable.map(async (child) => {
+          const { child_id } = child;
 
-            const roomsToAdd =
-              child?.rooms?.rooms?.filter((room) =>
-                roomsToRemove.every((room1) => room.room_id !== room1.room_id)
-              ) || [];
-
-            console.log("Filtered rooms to add:", roomsToAdd);
-
-            const updateObj = { ...update };
-            await Child.update(updateObj, {
-              where: { child_id: child.child_id },
+          let zonesToRemove;
+          try {
+            zonesToRemove = await ZonesInChild.findAll({
+              where: { child_id, disabled: "true" },
+              raw: true,
             });
-          })
-        ).catch((error) => {
-          console.error("Error disabling children:", error);
-          throw error;
-        });
-      } catch (error) {
-        console.error("Error disabling children:", error);
-        throw error;
-      }
+          } catch (error) {
+            console.error(`Error fetching zones for child ID ${child_id}:`, error);
+            return;
+          }
+
+          const zonesToAdd =
+            child?.zones?.zones?.filter((zone) =>
+              zonesToRemove.every((zone) => zone.zone_id !== zone.zone_id)
+            ) || [];
+
+          console.log(`Filtered zones to add for child ${child_id}:`, zonesToAdd);
+
+          try {
+            await Child.update(update, { where: { child_id } });
+          } catch (error) {
+            console.error(`Error updating child ID ${child_id}:`, error);
+          }
+        })
+      );
     }
 
     return { childrenToDisable, familyMembersToDisable };
   } catch (error) {
-    console.error(
-      "Error in disableScheduledFamilyAndChild function:",
-      error.message
-    );
+    console.error("Error in disableScheduledFamilyAndChild function:", error.message);
     throw error; // Optionally rethrow for higher-level error handling
   }
-}
+};

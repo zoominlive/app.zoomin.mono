@@ -1,17 +1,17 @@
-const roomServices = require('../services/rooms');
+const zoneServices = require('../services/zones');
 const cameraServices = require('../services/cameras');
 const logServices = require('../services/logs');
 const CONSTANTS = require('../lib/constants');
 const _ = require('lodash');
 const sequelize = require('../lib/database');
 const customerServices = require('../services/customers');
-const RoomsInChild = require('../models/rooms_assigned_to_child');
+const ZonesInChild = require('../models/zones_assigned_to_child');
 const Child = require('../models/child');
 const constants = require('../lib/constants');
 
 module.exports = {
-  // create new room
-  createRoom: async (req, res, next) => {
+  // create new zone
+  createZone: async (req, res, next) => {
     const t = await sequelize.transaction();
     try {
       const params = req.body;
@@ -44,30 +44,30 @@ module.exports = {
       //   });
       // }
       params.loc_id = params.location;
-      const room = await roomServices.createRoom(params, validCameras, t);
+      const zone = await zoneServices.createZone(params, validCameras, t);
 
-      if (room) {
+      if (zone) {
         await customerServices.editCustomer(
           params.cust_id,
-          {max_stream_live_license_room: params.max_stream_live_license_room},
+          {max_stream_live_license_zone: params.max_stream_live_license_zone},
           t
         );
       }
       validCameras.forEach(async (camera) => {
-        let rooms = [];
+        let zones = [];
 
-        if (!_.isEmpty(camera.room_ids)) {
-          rooms = camera.room_ids.rooms;
+        if (!_.isEmpty(camera.zone_ids)) {
+          zones = camera.zone_ids.zones;
         }
-        rooms.push({ room_name: room.room_name, room_id: room.room_id });
+        zones.push({ zone_name: zone.zone_name, zone_id: zone.zone_id });
 
-        await cameraServices.editCamera(camera.cam_id, { room_ids: { rooms: rooms } }, null, t);
+        await cameraServices.editCamera(camera.cam_id, { zone_ids: { zones: zones } }, null, t);
       });
 
       await t.commit();
       res.status(201).json({
         IsSuccess: true,
-        Data: room,
+        Data: zone,
         Message: CONSTANTS.ZONE_CREATED + ' ' + validationMessages.join(" ")
       });
 
@@ -83,7 +83,7 @@ module.exports = {
     } finally {
       let logObj = {
         user_id: req?.user?.user_id ? req?.user?.user_id : 'Not Found',
-        function: 'Room',
+        function: 'Zone',
         function_type: 'Add',
         request: req.body
       };
@@ -95,8 +95,8 @@ module.exports = {
     }
   },
 
-  // edit existing room
-  editRoom: async (req, res, next) => {
+  // edit existing zone
+  editZone: async (req, res, next) => {
     const t = await sequelize.transaction();
     try {
       const params = req.body;
@@ -109,8 +109,8 @@ module.exports = {
         await t.rollback();
         return res.status(400).json({Message: "Unauthorized location access. Please enter the location you have access to"})
       }
-      // Validate Room
-      const validation = await roomServices.validateRoom(params.room_id, params.custId);
+      // Validate Zone
+      const validation = await zoneServices.validateZone(params.zone_id, params.custId);
       if (!validation.valid) {
         await t.rollback();
         return res.status(400).json({Message: validation.message});
@@ -137,13 +137,13 @@ module.exports = {
       //     Message: "No valid cameras found. " + validationMessages.join(" "),
       //   });
       // }
-      const room = await roomServices.editRoom(req.user, params, validCameras, t);
+      const zone = await zoneServices.editZone(req.user, params, validCameras, t);
 
       await t.commit();
 
       res.status(200).json({
         IsSuccess: true,
-        Data: room,
+        Data: zone,
         Message: CONSTANTS.ZONE_UPDATED
       });
 
@@ -159,7 +159,7 @@ module.exports = {
     } finally {
       let logObj = {
         user_id: req?.user?.user_id ? req?.user?.user_id : 'Not Found',
-        function: 'Room',
+        function: 'Zone',
         function_type: 'Edit',
         request: req.body
       };
@@ -171,22 +171,22 @@ module.exports = {
     }
   },
 
-  // delete existing room
-  deleteRoom: async (req, res, next) => {
+  // delete existing zone
+  deleteZone: async (req, res, next) => {
     const t = await sequelize.transaction();
     try {
       const params = req.body;
-      const { custId, max_stream_live_license_room } = params;
-      const validation = await roomServices.validateRoom(params.room_id, req.user.cust_id || custId);
+      const { custId, max_stream_live_license_zone } = params;
+      const validation = await zoneServices.validateZone(params.zone_id, req.user.cust_id || custId);
       if (!validation.valid && req.user.role !== 'Super Admin') {
         await t.rollback();
         return res.status(400).json({Message: validation.message});
       }
-      const room = await roomServices.deleteRoom(params.room_id, t);
-      if(room && custId && max_stream_live_license_room){
+      const zone = await zoneServices.deleteZone(params.zone_id, t);
+      if(zone && custId && max_stream_live_license_zone){
         await customerServices.editCustomer(
           custId,
-          {max_stream_live_license_room: max_stream_live_license_room},
+          {max_stream_live_license_zone: max_stream_live_license_zone},
           t
           );
         }
@@ -209,7 +209,7 @@ module.exports = {
     } finally {
       let logObj = {
         user_id: req?.user?.user_id ? req?.user?.user_id : 'Not Found',
-        function: 'Room',
+        function: 'Zone',
         function_type: 'Delete',
         request: req.body
       };
@@ -221,13 +221,13 @@ module.exports = {
     }
   },
 
-  // get room details for room list page
-  getAllRoomsDetails: async (req, res, next) => {
+  // get zone details for zone list page
+  getAllZonesDetails: async (req, res, next) => {
     try {
       const filter = {
         pageNumber: parseInt(req.query?.pageNumber) + 1,
         pageSize: parseInt(req.query?.pageSize),
-        roomsList: req.query?.rooms,
+        zonesList: req.query?.zones,
         location: req.query?.location,
         type: req.query?.type,
         searchBy: req.query?.searchBy?.replace(/'/g, "\\'"),
@@ -238,11 +238,11 @@ module.exports = {
           return res.status(400).json({Message:"Unauthorized request"});
         }
       }
-      const rooms = await roomServices.getAllRoomsDetails(req.user.user_id, req.user, filter);
+      const zones = await zoneServices.getAllZonesDetails(req.user.user_id, req.user, filter);
 
       res.status(200).json({
         IsSuccess: true,
-        Data: rooms,
+        Data: zones,
         Message: CONSTANTS.ZONE_DETAILS
       });
 
@@ -257,15 +257,15 @@ module.exports = {
     }
   },
 
-  // get room's list for loggedin user
-  getAllRoomsList: async (req, res, next) => {
+  // get zone's list for loggedin user
+  getAllZonesList: async (req, res, next) => {
     const t = await sequelize.transaction();
     try {
-      const rooms = await roomServices.getAllRoomsList(req.user.user_id, req.user, req?.query?.cust_id, t);
+      const zones = await zoneServices.getAllZonesList(req.user.user_id, req.user, req?.query?.cust_id, t);
       await t.commit();
       res.status(200).json({
         IsSuccess: true,
-        Data: rooms,
+        Data: zones,
         Message: CONSTANTS.ZONE_DETAILS
       });
 
@@ -280,32 +280,32 @@ module.exports = {
       next(error);
     }
   },
-  // disable room for child
-  disableRoom: async (req, res, next) => {
+  // disable zone for child
+  disableZone: async (req, res, next) => {
     const t = await sequelize.transaction();
     try {
       const params = req.body;
-      const roomChildExist = await RoomsInChild.findOne({where:{room_child_id: params.room_child_id}});
-      if(!roomChildExist) {
+      const zoneChildExist = await ZonesInChild.findOne({where:{zone_child_id: params.zone_child_id}});
+      if(!zoneChildExist) {
         await t.rollback();
         return res.status(400).json({Message: "Data not found"})
       }
-      const roomDetails = await RoomsInChild.findAll({
-        where: { room_child_id: params.room_child_id },
+      const zoneDetails = await ZonesInChild.findAll({
+        where: { zone_child_id: params.zone_child_id },
         include: [{ model: Child, as: "child" }]
       });
-      let childCustId = roomDetails[0].dataValues.child.dataValues.cust_id;
-      if (childCustId !== req.user.cust_id) {
+      let childCustId = zoneDetails[0].dataValues.child.dataValues.cust_id;
+      if (req.user.role !== 'Super Admin' && childCustId !== req.user.cust_id) {
         await t.rollback();
         return res.status(400).json({Message: constants.CUSTOMER_NOT_FOUND})
       }
-      const room = await roomServices.disableRoom(params, t);
+      const zone = await zoneServices.disableZone(params, t);
 
       await t.commit();
 
       res.status(200).json({
         IsSuccess: true,
-        Data: room,
+        Data: zone,
         Message: CONSTANTS.ZONE_UPDATED
       });
 
@@ -321,7 +321,7 @@ module.exports = {
     } finally {
       let logObj = {
         user_id: req?.user?.user_id ? req?.user?.user_id : 'Not Found',
-        function: 'Room',
+        function: 'Zone',
         function_type: 'Disable',
         request: req.body
       };
@@ -332,32 +332,32 @@ module.exports = {
       }
     }
   },
-  // enable room for child
-  enableRoom: async (req, res, next) => {
+  // enable zone for child
+  enableZone: async (req, res, next) => {
     const t = await sequelize.transaction();
     try {
       const params = req.body;
-      const roomChildExist = await RoomsInChild.findOne({where:{room_child_id: params.room_child_id}});
-      if(!roomChildExist) {
+      const zoneChildExist = await ZonesInChild.findOne({where:{zone_child_id: params.zone_child_id}});
+      if(!zoneChildExist) {
         await t.rollback();
         return res.status(400).json({Message: "Data not found"})
       }
-      const roomDetails = await RoomsInChild.findAll({
-        where: { room_child_id: params.room_child_id },
+      const zoneDetails = await ZonesInChild.findAll({
+        where: { zone_child_id: params.zone_child_id },
         include: [{ model: Child, as: "child" }]
       });
-      let childCustId = roomDetails[0].dataValues.child.dataValues.cust_id;
-      if (childCustId !== req.user.cust_id) {
+      let childCustId = zoneDetails[0].dataValues.child.dataValues.cust_id;
+      if (req.user.role !== 'Super Admin' && childCustId !== req.user.cust_id) {
         await t.rollback();
         return res.status(400).json({Message: constants.CUSTOMER_NOT_FOUND})
       }
-      const room = await roomServices.enableRoom(params, t);
+      const zone = await zoneServices.enableZone(params, t);
 
       await t.commit();
 
       res.status(200).json({
         IsSuccess: true,
-        Data: room,
+        Data: zone,
         Message: CONSTANTS.ZONE_UPDATED
       });
 
@@ -374,7 +374,7 @@ module.exports = {
     } finally {
       let logObj = {
         user_id: req?.user?.user_id ? req?.user?.user_id : 'Not Found',
-        function: 'Room',
+        function: 'Zone',
         function_type: 'Disable',
         request: req.body
       };

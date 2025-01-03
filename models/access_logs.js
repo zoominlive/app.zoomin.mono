@@ -16,7 +16,7 @@ const AccessLogs = sequelize.define(
         'Primary_Family',
         'Second_Family',
         'Child',
-        'Room',
+        'Zone',
         'Camera',
         'Users',
         'Profile_Photo',

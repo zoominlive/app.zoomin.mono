@@ -14,7 +14,7 @@ const LiveStreamCameras = sequelize.define(
       type: Sequelize.STRING(25),
       allowNull: false,
     },
-    room_id: {
+    zone_id: {
       type: Sequelize.STRING(50),
     },
     stream_uri: {

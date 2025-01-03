@@ -15,12 +15,12 @@ module.exports = {
     try {
       const {
         Camera,
-        Room,
+        Zone,
         Child,
-        RoomsInChild,
-        CamerasInRooms,
+        ZonesInChild,
+        CamerasInZones,
         CustomerLocations,
-        RoomsInTeacher,
+        ZonesInTeacher,
         LiveStreamCameras,
       } = await connectToDatabase();
 
@@ -36,19 +36,19 @@ module.exports = {
           where: { family_id: user.family_id, status: "enabled" },
           include: [
             {
-              model: RoomsInChild,
+              model: ZonesInChild,
               where: {
                 disabled: "false",
               },
-              as: "roomsInChild",
+              as: "zonesInChild",
               include: [
                 {
-                  model: Room,
-                  as: "room",
+                  model: Zone,
+                  as: "zone",
                   where: { loc_id: user.locations.map((item) => item.dataValues.loc_id) },
                   include: [
                     {
-                      model: CamerasInRooms,
+                      model: CamerasInZones,
                       include: [
                         {
                           model: Camera,
@@ -65,15 +65,15 @@ module.exports = {
           ],
         });
 
-        let finalRooms = [];
-        cameras?.forEach((rooms) => {
-          rooms?.roomsInChild?.forEach((room) => {
-            if (room?.schedule?.timeRange) {
+        let finalZones = [];
+        cameras?.forEach((zones) => {
+          zones?.zonesInChild?.forEach((zone) => {
+            if (zone?.schedule?.timeRange) {
               const timeZone = availableLocations.find(
-                (loc) => loc.loc_id == room.room.loc_id
+                (loc) => loc.loc_id == zone.zone.loc_id
               );
               let hasAccess = false;
-              room.schedule.timeRange?.forEach((range) => {
+              zone.schedule.timeRange?.forEach((range) => {
                 if (
                   range[1].includes(
                     moment().tz(timeZone.time_zone).format("dddd")
@@ -97,7 +97,7 @@ module.exports = {
                 }
               });
               if (hasAccess) {
-                let cams = room?.room?.cameras_assigned_to_rooms
+                let cams = zone?.zone?.cameras_assigned_to_zones
                   ?.map((cam) => {
                     let uid = user?.family_member_id || user?.user_id;
                     let sid = cam?.camera?.cam_id;
@@ -107,13 +107,14 @@ module.exports = {
                       cam_id: cam?.camera?.cam_id,
                       cam_name: cam?.camera?.cam_name,
                       description: cam?.camera?.description,
+                      cam_alias: cam?.camera?.cam_alias,
                       stream_uri: `${baseUrl}${cam?.camera?.stream_uri}?seckey=${token}`
                       
                     };
                   })
                   .filter((cam) => cam?.cam_id);
 
-                let livStreamCams = room.room?.live_stream_cameras?.map((cam) => {
+                let livStreamCams = zone.zone?.live_stream_cameras?.map((cam) => {
                   let uid = user?.family_member_id || user?.user_id;
                   let sid = cam?.stream_uri.split('/') [cam?.stream_uri.split('/').length - 1].split('.')[0];
                   let uuid = uuidv4();
@@ -122,20 +123,21 @@ module.exports = {
                     cam_id: cam?.cam_id,
                     cam_name: cam?.cam_name,
                     description: cam?.description || "",
+                    cam_alias: cam?.camera?.cam_alias,
                     stream_uri: `${cam?.stream_uri}?seckey=${token}`,
                   };
                 });
                 cams = cams.concat(livStreamCams);
 
-                finalRooms.push({
-                  room_id: room.room.room_id,
-                  room_name: room.room.room_name,
-                  location: room.room.loc_id,
+                finalZones.push({
+                  zone_id: zone.zone.zone_id,
+                  zone_name: zone.zone.zone_name,
+                  location: zone.zone.loc_id,
                   cameras: cams,
                 });
               }
             } else {
-              let cams = room?.room?.cameras_assigned_to_rooms
+              let cams = zone?.zone?.cameras_assigned_to_zones
                 ?.map((cam) => {
                   let uid = user?.family_member_id || user?.user_id;
                   let sid = cam?.camera?.cam_id;
@@ -145,12 +147,13 @@ module.exports = {
                     cam_id: cam?.camera?.cam_id,
                     cam_name: cam?.camera?.cam_name,
                     description: cam?.camera?.description,
+                    cam_alias: cam?.camera?.cam_alias,
                     stream_uri: `${baseUrl}${cam?.camera?.stream_uri}?seckey=${token}`,
                   };
                 })
                 .filter((cam) => cam?.cam_id);
 
-              let livStreamCams = room.room?.live_stream_cameras?.map((cam) => {
+              let livStreamCams = zone.zone?.live_stream_cameras?.map((cam) => {
                 let uid = user?.family_member_id || user?.user_id;
                 let sid = cam?.stream_uri.split('/') [cam?.stream_uri.split('/').length - 1].split('.')[0];
                 let uuid = uuidv4();
@@ -159,25 +162,26 @@ module.exports = {
                   cam_id: cam?.cam_id,
                   cam_name: cam?.cam_name,
                   description: cam?.description || "",
+                  cam_alias: cam?.camera?.cam_alias,
                   stream_uri: `${cam?.stream_uri}?seckey=${token}`,
                 };
               });
               cams = cams.concat(livStreamCams);
 
-              finalRooms.push({
-                room_id: room.room.room_id,
-                room_name: room.room.room_name,
-                location: room.room.loc_id,
+              finalZones.push({
+                zone_id: zone.zone.zone_id,
+                zone_name: zone.zone.zone_name,
+                location: zone.zone.loc_id,
                 cameras: cams,
               });
             }
           });
         });
 
-        finalRooms = _.uniqBy(finalRooms, "room_id");
-        return finalRooms;
+        finalZones = _.uniqBy(finalZones, "zone_id");
+        return finalZones;
       } else {
-        let rooms;
+        let zones;
 
         if (user.role == "Admin" || user.role == "Super Admin" || user.role == "User") {
           let loc_obj = {};
@@ -190,14 +194,14 @@ module.exports = {
           } else {            
             loc_obj = { loc_id: user.locations.map((item) => item.loc_id) };
           }
-          rooms = await Room.findAll({
+          zones = await Zone.findAll({
             where: {
               cust_id: user.cust_id,
               ...loc_obj,
             },
             include: [
               {
-                model: CamerasInRooms,
+                model: CamerasInZones,
                 include: [
                   {
                     model: Camera,
@@ -210,11 +214,11 @@ module.exports = {
             ],
           });
         } else if (user.role == "Teacher") {
-          rooms = await RoomsInTeacher.findAll({
+          zones = await ZonesInTeacher.findAll({
             where: { teacher_id: user.user_id },
             include: [
               {
-                model: CamerasInRooms,
+                model: CamerasInZones,
                 include: [
                   {
                     model: Camera,
@@ -224,17 +228,17 @@ module.exports = {
               {
                 model: LiveStreamCameras,
               },
-              { model: Room, as: "room", raw: true },
+              { model: Zone, as: "zone", raw: true },
             ],
           });
         } else {
-          rooms = await Room.findAll({
+          zones = await Zone.findAll({
             where: {
               user_id: user.user_id,
             },
             include: [
               {
-                model: CamerasInRooms,
+                model: CamerasInZones,
                 include: [
                   {
                     model: Camera,
@@ -248,12 +252,12 @@ module.exports = {
           });
         }
         
-        rooms = await Promise.all(
-          rooms?.map(async (room) => {
+        zones = await Promise.all(
+          zones?.map(async (zone) => {
             //.filter((cam) => cam?.cam_id);
-            const location = user.role == "Teacher" ? room?.dataValues?.room?.dataValues?.location : room?.loc_id;
+            const location = user.role == "Teacher" ? zone?.dataValues?.zone?.dataValues?.location : zone?.loc_id;
             const baseUrl = await customerServices.getTranscoderUrlFromCustLocations(location, user?.cust_id)
-            let cameras = room.dataValues.cameras_assigned_to_rooms
+            let cameras = zone.dataValues.cameras_assigned_to_zones
             ?.map((cam) => {
                 let uid = user?.family_member_id || user?.user_id;
                 let sid = cam?.camera?.cam_id;
@@ -263,12 +267,13 @@ module.exports = {
                   cam_id: cam?.camera?.cam_id,
                   cam_name: cam?.camera?.cam_name,
                   description: cam?.camera?.description,
+                  cam_alias: cam?.camera?.cam_alias,
                   stream_uri: `${baseUrl}${cam?.camera?.stream_uri}?seckey=${token}`,
                 };
               })
               .filter((cam) => cam?.cam_id);
     
-            let livStreamCameras = room.dataValues.live_stream_cameras?.map(
+            let livStreamCameras = zone.dataValues.live_stream_cameras?.map(
               (cam) => {
                 let uid = user?.family_member_id || user?.user_id;
                 let sid = cam?.stream_uri.split('/') [cam?.stream_uri.split('/').length - 1].split('.')[0];
@@ -278,6 +283,7 @@ module.exports = {
                   cam_id: cam?.cam_id,
                   cam_name: cam?.cam_name,
                   description: cam?.description || "",
+                  cam_alias: cam?.camera?.cam_alias,
                   stream_uri: `${cam?.stream_uri}?seckey=${token}`,
                 };
               }
@@ -285,16 +291,16 @@ module.exports = {
             cameras = cameras.concat(livStreamCameras);
     
             return {
-              room_id: room.room_id,
-              room_name:
-                room.room_name || room.dataValues?.room?.dataValues?.room_name,
+              zone_id: zone.zone_id,
+              zone_name:
+                zone.zone_name || zone.dataValues?.zone?.dataValues?.zone_name,
               location:
-                room.loc_id || room.dataValues?.room?.dataValues?.loc_id,
+                zone.loc_id || zone.dataValues?.zone?.dataValues?.loc_id,
               cameras: cameras,
             };
           })
         ) 
-        return rooms;
+        return zones;
       }
     } catch (error) {
       console.log('error==>', error);
@@ -304,13 +310,13 @@ module.exports = {
   getAllCamForUser: async (user) => {
     const {
       Camera,
-      Room,
+      Zone,
       Child,
-      RoomsInChild,
-      CamerasInRooms,
+      ZonesInChild,
+      CamerasInZones,
       CustomerLocations,
       LiveStreamCameras,
-      RoomsInTeacher,
+      ZonesInTeacher,
     } = await connectToDatabase();
 
     let availableLocations = await CustomerLocations.findAll({
@@ -323,8 +329,8 @@ module.exports = {
     let sendbird_channel_url;
     let streamName;
     if(!_.isEmpty(liveStreamCameras)) {
-      let liveStreamRoomID = liveStreamCameras[0]?.room_id;
-      liveStreamObj = await liveStream.getActiveStreamObjByRoomId(liveStreamRoomID);
+      let liveStreamZoneID = liveStreamCameras[0]?.zone_id;
+      liveStreamObj = await liveStream.getActiveStreamObjByZoneId(liveStreamZoneID);
       sendbird_channel_url = liveStreamObj[0]?.sendbird_channel_url;
       streamName = liveStreamObj[0]?.stream_name;
     }
@@ -336,21 +342,21 @@ module.exports = {
         where: { family_id: user.family_id, status: "enabled" },
         include: [
           {
-            model: RoomsInChild,
-            as: "roomsInChild",
+            model: ZonesInChild,
+            as: "zonesInChild",
             where: {
               disabled: "false",
             },
             include: [
               {
-                model: Room,
-                as: "room",
+                model: Zone,
+                as: "zone",
                 where: {
                   loc_id: user.locations.map((item) => item.loc_id),
                 },
                 include: [
                   {
-                    model: CamerasInRooms,
+                    model: CamerasInZones,
                     include: [
                       {
                         model: Camera,
@@ -368,14 +374,14 @@ module.exports = {
       });
 
       const finalResult = cameras?.map((child) => {
-        let finalRooms = [];
-        child?.roomsInChild?.forEach((room) => {
-          if (room?.schedule?.timeRange) {
+        let finalZones = [];
+        child?.zonesInChild?.forEach((zone) => {
+          if (zone?.schedule?.timeRange) {
             const timeZone = availableLocations.find(
-              (loc) => loc.loc_name == room.room.location
+              (loc) => loc.loc_name == zone.zone.location
             );
             let hasAccess = false;
-            room.schedule.timeRange?.forEach((range) => {
+            zone.schedule.timeRange?.forEach((range) => {
               if (
                 range[1].includes(
                   moment().tz(timeZone.time_zone).format("dddd")
@@ -399,7 +405,7 @@ module.exports = {
               }
             });
             if (hasAccess) {
-              let cams = room?.room?.cameras_assigned_to_rooms
+              let cams = zone?.zone?.cameras_assigned_to_zones
                 ?.map((cam) => {
                   let uid = user?.family_member_id || user?.user_id;
                   let sid = cam?.camera?.cam_id;
@@ -416,7 +422,7 @@ module.exports = {
                 })
                 .filter((cam) => cam?.cam_id);
 
-              let livStreamCams = room.room?.live_stream_cameras?.map((cam) => {
+              let livStreamCams = zone.zone?.live_stream_cameras?.map((cam) => {
                 let uid = user?.family_member_id || user?.user_id;
                 let sid = cam?.stream_uri.split('/') [cam?.stream_uri.split('/').length - 1].split('.')[0];
                 let uuid = uuidv4();
@@ -432,15 +438,15 @@ module.exports = {
               });
               cams = cams.concat(livStreamCams);
 
-              finalRooms.push({
-                room_id: room.room.room_id,
-                room_name: room.room.room_name,
-                location: room.room.location,
+              finalZones.push({
+                zone_id: zone.zone.zone_id,
+                zone_name: zone.zone.zone_name,
+                location: zone.zone.location,
                 cameras: cams,
               });
             }
           } else {
-            let cams = room?.room?.cameras_assigned_to_rooms
+            let cams = zone?.zone?.cameras_assigned_to_zones
               ?.map((cam) => {
                 let uid = user?.family_member_id || user?.user_id;
                 let sid = cam?.camera?.cam_id;
@@ -456,7 +462,7 @@ module.exports = {
                 };
               })
               .filter((cam) => cam?.cam_id);
-            let livStreamCams = room.room?.live_stream_cameras?.map((cam) => {
+            let livStreamCams = zone.zone?.live_stream_cameras?.map((cam) => {
               let uid = user?.family_member_id || user?.user_id;
               let sid = cam?.stream_uri.split('/') [cam?.stream_uri.split('/').length - 1].split('.')[0];
               let uuid = uuidv4();
@@ -471,10 +477,10 @@ module.exports = {
               };
             });
             cams = cams.concat(livStreamCams);
-            finalRooms.push({
-              room_id: room.room.room_id,
-              room_name: room.room.room_name,
-              location: room.room.location,
+            finalZones.push({
+              zone_id: zone.zone.zone_id,
+              zone_name: zone.zone.zone_name,
+              location: zone.zone.location,
               cameras: cams,
             });
           }
@@ -482,7 +488,7 @@ module.exports = {
         return {
           childFirstName: child.first_name,
           childLastName: child.last_name,
-          rooms: finalRooms,
+          zones: finalZones,
         };
       });
 
@@ -497,11 +503,11 @@ module.exports = {
           attributes: ["loc_name", "transcoder_endpoint"],
           include: [
             {
-              model: Room,
-              attributes: ["room_id", "room_name"],
+              model: Zone,
+              attributes: ["zone_id", "zone_name"],
               include: [
                 {
-                  model: CamerasInRooms,
+                  model: CamerasInZones,
                   include: [
                     {
                       model: Camera,
@@ -517,8 +523,8 @@ module.exports = {
         });
 
         locations = locations?.map((loc) => {
-          let rooms = loc?.rooms?.map((room) => {
-            let cams = room?.cameras_assigned_to_rooms
+          let zones = loc?.zones?.map((zone) => {
+            let cams = zone?.cameras_assigned_to_zones
               ?.map((cam) => {
                 let uid = user?.family_member_id || user?.user_id;
                 let sid = cam?.camera?.cam_id;
@@ -534,7 +540,7 @@ module.exports = {
                 };
               })
               .filter((cam) => cam?.cam_id);
-            let livStreamCams = room.live_stream_cameras?.map((cam) => {
+            let livStreamCams = zone.live_stream_cameras?.map((cam) => {
               let uid = user?.family_member_id || user?.user_id;
               let sid = cam?.stream_uri.split('/') [cam?.stream_uri.split('/').length - 1].split('.')[0];
               let uuid = uuidv4();
@@ -550,13 +556,13 @@ module.exports = {
             });
             cams = cams.concat(livStreamCams);
             return {
-              room_id: room.room_id,
-              room_name: room.room_name,
+              zone_id: zone.zone_id,
+              zone_name: zone.zone_name,
               cameras: cams,
             };
           });
 
-          return { location: loc.loc_name, rooms: rooms };
+          return { location: loc.loc_name, zones: zones };
         });
 
         return locations;
@@ -569,14 +575,14 @@ module.exports = {
           attributes: ["loc_name", "transcoder_endpoint"],
           include: [
             {
-              model: Room,
-              attributes: ["room_id", "room_name"],
+              model: Zone,
+              attributes: ["zone_id", "zone_name"],
               where: {
                 user_id: user.user_id,
               },
               include: [
                 {
-                  model: CamerasInRooms,
+                  model: CamerasInZones,
                   include: [
                     {
                       model: Camera,
@@ -592,11 +598,11 @@ module.exports = {
         });
         if (user.role == "Teacher") {
           const baseUrl = await customerServices.getTranscoderUrlFromCustLocations(user?.locations?.map((item) => item.loc_id), user?.cust_id);
-          let rooms = await RoomsInTeacher.findAll({
+          let zones = await ZonesInTeacher.findAll({
             where: { teacher_id: user.user_id },
             include: [
               {
-                model: CamerasInRooms,
+                model: CamerasInZones,
                 include: [
                   {
                     model: Camera,
@@ -608,8 +614,8 @@ module.exports = {
                 raw: true,
               },
               {
-                model: Room,
-                as: "room",
+                model: Zone,
+                as: "zone",
                 raw: true,
                 where: {
                   loc_id: user.locations.map((item) => item.loc_id),
@@ -617,10 +623,10 @@ module.exports = {
               },
             ],
           });
-          rooms = rooms?.map((room) => {
+          zones = zones?.map((zone) => {
             //.filter((cam) => cam?.cam_id);
 
-            let cameras = room.dataValues.cameras_assigned_to_rooms
+            let cameras = zone.dataValues.cameras_assigned_to_zones
               ?.map((cam) => {
                 let uid = user?.family_member_id || user?.user_id;
                 let sid = cam?.camera?.cam_id;
@@ -638,7 +644,7 @@ module.exports = {
               })
               .filter((cam) => cam?.cam_id);
 
-            let livStreamCameras = room.dataValues.live_stream_cameras?.map(
+            let livStreamCameras = zone.dataValues.live_stream_cameras?.map(
               (cam) => {
                 let uid = user?.family_member_id || user?.user_id;
                 let sid = cam?.stream_uri.split('/') [cam?.stream_uri.split('/').length - 1].split('.')[0];
@@ -656,43 +662,43 @@ module.exports = {
             );
             cameras = cameras.concat(livStreamCameras);
             return {
-              room_id: room.room_id,
-              room_name:
-                room.room_name || room.dataValues?.room?.dataValues?.room_name,
+              zone_id: zone.zone_id,
+              zone_name:
+                zone.zone_name || zone.dataValues?.zone?.dataValues?.zone_name,
               location:
-                room.location || room.dataValues?.room?.dataValues?.loc_id,
+                zone.location || zone.dataValues?.zone?.dataValues?.loc_id,
               cameras: cameras,
             };
           });
         
-          for (const item of rooms) {
+          for (const item of zones) {
             const location = await CustomerLocations.findOne({ where: { loc_id: item.location } });
             item.location = location.loc_name;
           }
-          let result = _.chain(rooms)
+          let result = _.chain(zones)
             .groupBy("location")
             .map((value, key) => ({
               location: key,
-              rooms: value,
+              zones: value,
             }))
             .value();
 
           result = result.map((item) => {
-            let { rooms, ...rest } = item;
-            let newRooms = _.map(rooms, (object) => {
+            let { zones, ...rest } = item;
+            let newZones = _.map(zones, (object) => {
               return _.omit(object, ["location"]);
             });
             return {
               ...rest,
-              rooms: newRooms,
+              zones: newZones,
             };
           });
 
           return result;
         }
         locations = locations?.map((loc) => {
-          let rooms = loc?.rooms?.map((room) => {
-            let cams = room?.cameras_assigned_to_rooms
+          let zones = loc?.zones?.map((zone) => {
+            let cams = zone?.cameras_assigned_to_zones
               ?.map((cam) => {
                 let uid = user?.family_member_id || user?.user_id;
                 let sid = cam?.camera?.cam_id;
@@ -710,10 +716,10 @@ module.exports = {
               })
               .filter((cam) => cam?.cam_id);
             console.log(
-              "===room.live_stream_cameras==",
-              room.live_stream_cameras
+              "===zone.live_stream_cameras==",
+              zone.live_stream_cameras
             );
-            let livStreamCams = room.live_stream_cameras?.map((cam) => {
+            let livStreamCams = zone.live_stream_cameras?.map((cam) => {
               let uid = user?.family_member_id || user?.user_id;
               let sid = cam?.stream_uri.split('/') [cam?.stream_uri.split('/').length - 1].split('.')[0];
               let uuid = uuidv4();
@@ -730,13 +736,13 @@ module.exports = {
             cams = cams.concat(livStreamCams);
 
             return {
-              room_id: room.room_id,
-              room_name: room.room_name,
+              zone_id: zone.zone_id,
+              zone_name: zone.zone_name,
               cameras: cams,
             };
           });
 
-          return { location: loc.loc_name, rooms: rooms };
+          return { location: loc.loc_name, zones: zones };
         });
         return locations;
       }

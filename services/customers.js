@@ -21,7 +21,7 @@ module.exports = {
     return customer?.max_stream_live_license || null;
   },
 
-  getMaxLiveStreamRoomAvailable: async (custId, t) => {
+  getMaxLiveStreamZoneAvailable: async (custId, t) => {
     const { Customers } = await connectToDatabase();
     let customer = await Customers.findOne(
       {
@@ -33,10 +33,10 @@ module.exports = {
       { transaction: t }
     );
 
-    return customer?.max_stream_live_license_room || null;
+    return customer?.max_stream_live_license_zone || null;
   },
 
-  getMaxLiveStreamRoomAvailable: async (custId, t) => {
+  getMaxLiveStreamZoneAvailable: async (custId, t) => {
     const { Customers } = await connectToDatabase();
     let customer = await Customers.findOne(
       {
@@ -48,7 +48,7 @@ module.exports = {
       { transaction: t }
     );
 
-    return customer?.max_stream_live_license_room || null;
+    return customer?.max_stream_live_license_zone || null;
   },
 
   getRTMPTranscoderUrl: async (custId, t) => {

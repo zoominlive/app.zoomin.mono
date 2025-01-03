@@ -1,38 +1,30 @@
 const { Sequelize } = require('sequelize');
 const sequelize = require('../lib/database');
 
-const CamerasInRooms = sequelize.define(
-  'cameras_assigned_to_rooms',
+const ZonesInTeacher = sequelize.define(
+  'zones_assigned_to_teacher',
   {
-    cam_room_id: {
+    zone_teacher_id: {
       type: Sequelize.INTEGER,
       allowNull: false,
       primaryKey: true,
       autoIncrement: true
     },
-    cam_id: {
-      type: Sequelize.STRING(50),
-      allowNull: false
-    },
-    room_id: {
+    teacher_id: {
       type: Sequelize.STRING(100),
       allowNull: false
     },
-    hls_url: {
-      type: Sequelize.STRING(500),
-      allowNull: true
-    },
-    disabled: {
-      type: Sequelize.ENUM('true', 'false'),
-      defaultValue: 'false'
+    zone_id: {
+      type: Sequelize.STRING(100),
+      allowNull: false
     },
     createdAt: { type: Sequelize.DATE, field: 'created_at' },
     updatedAt: { type: Sequelize.DATE, field: 'updated_at' }
   },
   {
-    tableName: 'cameras_assigned_to_rooms',
+    tableName: 'zones_assigned_to_teacher',
     timestamps: true
   }
 );
 
-module.exports = CamerasInRooms;
+module.exports = ZonesInTeacher;

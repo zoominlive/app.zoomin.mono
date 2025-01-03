@@ -1,15 +1,15 @@
 const { Sequelize } = require('sequelize');
 const sequelize = require('../lib/database');
 
-const Room = sequelize.define(
-  'room',
+const Zone = sequelize.define(
+  'zone',
   {
-    room_id: {
+    zone_id: {
       type: Sequelize.STRING(50),
       allowNull: false,
       primaryKey: true
     },
-    room_name: {
+    zone_name: {
       type: Sequelize.STRING(50),
       allowNull: false
     },
@@ -42,10 +42,10 @@ const Room = sequelize.define(
     deletedAt: { type: Sequelize.DATE, field: 'deleted_at' }
   },
   {
-    tableName: 'room',
+    tableName: 'zone',
     timestamps: true,
     paranoid: true
   }
 );
 
-module.exports = Room;
+module.exports = Zone;

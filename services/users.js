@@ -8,7 +8,7 @@ const _ = require("lodash");
 const { v4: uuidv4 } = require("uuid");
 
 var validator = require("validator");
-const RoomsInTeacher = require("../models/rooms_assigned_to_teacher");
+const ZonesInTeacher = require("../models/zones_assigned_to_teacher");
 const customerServices = require('../services/customers');
 const { default: axios } = require("axios");
 const Users = require("../models/users");
@@ -31,7 +31,7 @@ module.exports = {
   createUser: async (userObj, t) => {
     const { Users } = await connectToDatabase();
     userObj.user_id = uuidv4();
-    delete userObj.rooms;
+    delete userObj.zones;
     console.log("userObj--->", userObj);
     let userCreated = await Users.create(userObj, { transaction: t });
 
@@ -321,7 +321,7 @@ module.exports = {
 
   /* Fetch all the user's details */
   getAllUsers: async (user, filter, t) => {
-    const { Users, Customers, RoomsInTeacher, Room } =
+    const { Users, Customers, ZonesInTeacher, Zone } =
       await connectToDatabase();
     let {
       pageNumber = 0,
@@ -431,12 +431,12 @@ module.exports = {
           attributes: ["max_stream_live_license"],
         },
         {
-          model: RoomsInTeacher,
-          as: "roomsInTeacher",
+          model: ZonesInTeacher,
+          as: "zonesInTeacher",
           include: [
             {
-              model: Room,
-              as: "room",
+              model: Zone,
+              as: "zone",
             },
           ],
         },
@@ -543,43 +543,43 @@ module.exports = {
     return users;
   },
 
-  assignRoomsToTeacher: async (teacherId, rooms, t) => {
-    const { RoomsInTeacher } = await connectToDatabase();
-    const roomsToadd = rooms.map((room) => {
+  assignZonesToTeacher: async (teacherId, zones, t) => {
+    const { ZonesInTeacher } = await connectToDatabase();
+    const zonesToadd = zones.map((zone) => {
       return {
-        room_id: room.room_id,
+        zone_id: zone.zone_id,
         teacher_id: teacherId,
       };
     });
 
-    let roomsAdded = await RoomsInTeacher.bulkCreate(
-      roomsToadd,
+    let zonesAdded = await ZonesInTeacher.bulkCreate(
+      zonesToadd,
       { returning: true },
       { transaction: t }
     );
 
-    return roomsAdded;
+    return zonesAdded;
   },
 
-  editAssignedRoomsToTeacher: async (teacherId, rooms, t) => {
-    const { RoomsInTeacher } = await connectToDatabase();
-    const roomsToadd = rooms.map((room) => {
+  editAssignedZonesToTeacher: async (teacherId, zones, t) => {
+    const { ZonesInTeacher } = await connectToDatabase();
+    const zonesToadd = zones.map((zone) => {
       return {
-        room_id: room.room_id,
+        zone_id: zone.zone_id,
         teacher_id: teacherId,
       };
     });
 
-    let roomsRemoved = await RoomsInTeacher.destroy(
+    let zonesRemoved = await ZonesInTeacher.destroy(
       { where: { teacher_id: teacherId }, raw: true },
       { transaction: t }
     );
 
-    let roomsAdded = await RoomsInTeacher.bulkCreate(roomsToadd, {
+    let zonesAdded = await ZonesInTeacher.bulkCreate(zonesToadd, {
       transaction: t,
     });
 
-    return roomsAdded;
+    return zonesAdded;
   },
 
   getUsersSocketIds: async (cust_id) => {

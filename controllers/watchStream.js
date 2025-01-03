@@ -55,7 +55,7 @@ module.exports = {
       const customerDetails = await customerServices.getCustomerDetails(
         req.user.cust_id || req.query?.cust_id
       );
-      cameras = _.uniqBy(cameras, "room_id");
+      cameras = _.uniqBy(cameras, "zone_id");
 
       cameras?.forEach((cam, camIndex) => {
         cameras[camIndex].timeout = customerDetails.timeout;
@@ -167,8 +167,8 @@ module.exports = {
       // Function to generate presigned URLs for thumbnails in the provided array
       const generatePresignedUrlsForThumbnails = async (locations) => {
         const locationsWithPresignedUrls = await Promise.all(locations.map(async (location) => {
-            const roomsWithPresignedUrls = await Promise.all(location.rooms.map(async (room) => {
-                const camerasWithPresignedUrls = await Promise.all(room.cameras.map(async (camera) => {
+            const zonesWithPresignedUrls = await Promise.all(location.zones.map(async (zone) => {
+                const camerasWithPresignedUrls = await Promise.all(zone.cameras.map(async (camera) => {
                     // Generate presigned URL for thumbnail if it contains an S3 URI
                     if (camera.thumbnail && camera.thumbnail.startsWith('s3://')) {
                         camera.thumbnailPresignedUrl = await generatePresignedUrlForThumbnail(camera.thumbnail);
@@ -178,9 +178,9 @@ module.exports = {
                     }
                     return camera;
                 }));
-                return { ...room, cameras: camerasWithPresignedUrls };
+                return { ...zone, cameras: camerasWithPresignedUrls };
             }));
-            return { ...location, rooms: roomsWithPresignedUrls };
+            return { ...location, zones: zonesWithPresignedUrls };
         }));
         return locationsWithPresignedUrls;
       };
@@ -190,11 +190,11 @@ module.exports = {
         req.user.cust_id || req.query?.cust_id
       );
 
-      locationsWithPresignedUrls?.forEach((room, roomIndex) => {
-        locationsWithPresignedUrls[roomIndex].timeout = customerDetails.timeout;
-        locationsWithPresignedUrls[roomIndex].permit_audio = customerDetails.permit_audio;
-        room?.cameras?.forEach((cam, camIndex) => {
-          locationsWithPresignedUrls[roomIndex].cameras[camIndex].permit_audio =
+      locationsWithPresignedUrls?.forEach((zone, zoneIndex) => {
+        locationsWithPresignedUrls[zoneIndex].timeout = customerDetails.timeout;
+        locationsWithPresignedUrls[zoneIndex].permit_audio = customerDetails.permit_audio;
+        zone?.cameras?.forEach((cam, camIndex) => {
+          locationsWithPresignedUrls[zoneIndex].cameras[camIndex].permit_audio =
             customerDetails.permit_audio;
         });
       });

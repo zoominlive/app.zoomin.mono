@@ -163,14 +163,14 @@ module.exports = {
 
   /* Fetch all the family's details */
   getAllFamilyDetails: async (user, filter, t) => {
-    const { Family, Child, RoomsInChild, Room, CustomerLocations } =
+    const { Family, Child, ZonesInChild, Zone, CustomerLocations } =
       await connectToDatabase();
     let {
       pageNumber = 0,
       pageSize = 10,
       location = "All",
       searchBy = "",
-      roomsList = [],
+      zonesList = [],
       cust_id = null,
     } = filter;
 
@@ -186,10 +186,10 @@ module.exports = {
         { "$children.last_name$": { [Sequelize.Op.substring]: searchBy } },
       ],
     };
-    if (roomsList.length != 0) {
+    if (zonesList.length != 0) {
       whereObj = {
         ...whereObj,
-        "$children->roomsInChild->room.room_name$": roomsList,
+        "$children->zonesInChild->zone.zone_name$": zonesList,
       };
     }
 
@@ -203,12 +203,12 @@ module.exports = {
             // attributes: ["location"],
             include: [
               {
-                model: RoomsInChild,
-                as: "roomsInChild",
+                model: ZonesInChild,
+                as: "zonesInChild",
                 include: [
                   {
-                    model: Room,
-                    as: "room",
+                    model: Zone,
+                    as: "zone",
                   },
                 ],
               },
@@ -284,12 +284,12 @@ module.exports = {
             model: Child,
             include: [
               {
-                model: RoomsInChild,
-                as: "roomsInChild",
+                model: ZonesInChild,
+                as: "zonesInChild",
                 include: [
                   {
-                    model: Room,
-                    as: "room",
+                    model: Zone,
+                    as: "zone",
                   },
                 ],
               },
@@ -538,7 +538,7 @@ module.exports = {
 
     let locations = [];
     let disabledLocations = location?.disabled_locations?.locations;
-    if (disabledLocations?.length !== 0) {
+    if (disabledLocations?.length !== 0 && disabledLocations?.length !== null && disabledLocations?.length !== undefined) {
       locations.push(...disabledLocations);
     }
 
@@ -794,7 +794,7 @@ module.exports = {
   },
 
   getSEAChilds: async (custId, location = "All", enable = false, t) => {
-    const { Family, Child, RoomsInChild, Room } = await connectToDatabase();
+    const { Family, Child, ZonesInChild, Zone } = await connectToDatabase();
     let whereObj = enable
       ? {
           scheduled_enable_date: {
@@ -835,13 +835,13 @@ module.exports = {
             ],
             include: [
               {
-                model: RoomsInChild,
-                as: "roomsInChild",
+                model: ZonesInChild,
+                as: "zonesInChild",
                 where: whereObj,
                 include: [
                   {
-                    model: Room,
-                    as: "room",
+                    model: Zone,
+                    as: "zone",
                   },
                 ],
               },
@@ -889,7 +889,7 @@ module.exports = {
   },
 
   getFamilyDetailsById: async (familyId, t) => {
-    const { Family, Child, RoomsInChild, Room } = await connectToDatabase();
+    const { Family, Child, ZonesInChild, Zone } = await connectToDatabase();
 
     let family = await Family.findOne(
       {
@@ -907,12 +907,12 @@ module.exports = {
             model: Child,
             include: [
               {
-                model: RoomsInChild,
-                as: "roomsInChild",
+                model: ZonesInChild,
+                as: "zonesInChild",
                 include: [
                   {
-                    model: Room,
-                    as: "room",
+                    model: Zone,
+                    as: "zone",
                   },
                 ],
               },

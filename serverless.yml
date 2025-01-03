@@ -194,24 +194,24 @@ functions:
           method: "*"
           path: /api/family/checkLinkValid
 
-  roomFunction:
+  zoneFunction:
     handler: handler.handler
     events:
       - httpApi:
           method: "*"
-          path: /api/rooms/add
+          path: /api/zones/add
       - httpApi:
           method: "*"
-          path: /api/rooms/edit
+          path: /api/zones/edit
       - httpApi:
           method: "*"
-          path: /api/rooms/delete
+          path: /api/zones/delete
       - httpApi:
           method: "*"
-          path: /api/rooms/list
+          path: /api/zones/list
       - httpApi:
           method: "*"
-          path: /api/rooms
+          path: /api/zones
 
   liveStreamFunction:
     handler: handler.handler
@@ -267,8 +267,8 @@ functions:
     events:
       - schedule: rate(1 hour)
 
-  enableDisablescheduledRoom:
-    handler: cron.enableDisableScheduledRoom
+  enableDisablescheduledZone:
+    handler: cron.enableDisableScheduledZone
     events:
       - schedule: rate(1 hour)
 

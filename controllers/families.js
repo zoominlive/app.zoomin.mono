@@ -114,7 +114,7 @@ module.exports = {
       children?.forEach(async (child) => {
         childObjs.push({
           ...child,
-          rooms: { rooms: child.rooms },
+          zones: { zones: child.zones },
           family_id: familyId,
           cust_id: custId
         });
@@ -330,7 +330,7 @@ module.exports = {
         pageNumber: parseInt(req.query?.page),
         pageSize: parseInt(req.query?.limit),
         searchBy: req.query?.searchBy?.replace(/'/g, "\\'"),
-        roomsList: req.query?.rooms,
+        zonesList: req.query?.zones,
         location: req.query?.location,
         cust_id: req.query?.cust_id
       };

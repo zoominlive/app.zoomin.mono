@@ -8,36 +8,36 @@ module.exports = {
       'room_ids'
     ]);
 
-    let camRoomObj = [];
+    let camZoneObj = [];
     cameras?.forEach((cam) => {
-      cam?.room_ids?.rooms?.forEach((room) => {
-        camRoomObj.push({
+      cam?.room_ids?.zones?.forEach((zone) => {
+        camZoneObj.push({
           cam_id: cam?.cam_id,
-          room_id: room?.room_id,
+          zone_id: zone?.zone_id,
           created_At: new Date(),
           updated_at: new Date()
         });
       });
     });
-    await queryInterface.bulkInsert('cameras_assigned_to_rooms', camRoomObj, {});
+    await queryInterface.bulkInsert('cameras_assigned_to_zones', camZoneObj, {});
 
     const children = await queryInterface.rawSelect('child', { plain: false }, [
       'child_id',
-      'rooms'
+      'zones'
     ]);
 
-    let childRoomObj = [];
+    let childZoneObj = [];
     children?.forEach((child) => {
-      child?.rooms?.rooms?.forEach((room) => {
-        childRoomObj.push({
+      child?.zones?.zones?.forEach((zone) => {
+        childZoneObj.push({
           child_id: child?.child_id,
-          room_id: room?.room_id,
+          zone_id: zone?.zone_id,
           created_At: new Date(),
           updated_at: new Date()
         });
       });
     });
-    await queryInterface.bulkInsert('rooms_assigned_to_child', childRoomObj, {});
+    await queryInterface.bulkInsert('zones_assigned_to_child', childZoneObj, {});
   },
 
   async down(queryInterface, Sequelize) {

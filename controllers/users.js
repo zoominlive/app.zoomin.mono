@@ -25,9 +25,9 @@ const Users = require('../models/users');
 module.exports = {
   sendNotification: async (req, res, next) => {
     try {
-      let {room_id, title, body, image} = req.body
+      let {zone_id, title, body, image} = req.body
       const t = await sequelize.transaction();
-      let childs = await childServices.getChildOfAssignedRoomId(room_id, t);
+      let childs = await childServices.getChildOfAssignedZoneId(zone_id, t);
       let childIds = childs.flatMap(i => i.child_id)
       let familys = await childServices.getAllchildrensFamilyId(childIds, t);
       let familyIds = [...new Set(familys.flatMap(i => i.family_id))];
@@ -95,7 +95,7 @@ module.exports = {
         user.transcoderBaseUrl = await customerServices.getTranscoderUrlFromCustLocations(user.locations, custId);        
       }
       user.max_stream_live_license = await customerServices.getMaxLiveStramAvailable(custId);
-      user.max_stream_live_license_room = await customerServices.getMaxLiveStreamRoomAvailable(custId);
+      user.max_stream_live_license_zone = await customerServices.getMaxLiveStreamZoneAvailable(custId);
       if(user.role !== 'Super Admin') {
         let activeLocations = await customerServices.getActiveLocationDetails(custId)
         activeLocations = activeLocations.flatMap((i) => i.loc_id)
@@ -171,9 +171,9 @@ module.exports = {
         );
 
         if(params.role === 'Teacher'){
-          const addRoomsToTeacher = await userServices.assignRoomsToTeacher(
+          const addZonesToTeacher = await userServices.assignZonesToTeacher(
             userData?.user_id,
-            params?.rooms,
+            params?.zones,
             t
           );
         }
@@ -1029,9 +1029,9 @@ module.exports = {
       let editedProfile = await userServices.editUserProfile(user, _.omit(params, ['email']), t); // user should not be allowed to edit email directly.
 
       if(params.role === 'Teacher'){
-        const roomsEdited = await userServices.editAssignedRoomsToTeacher(
+        const zonesEdited = await userServices.editAssignedZonesToTeacher(
           user.user_id,
-          params?.rooms,
+          params?.zones,
           t
         );
       }

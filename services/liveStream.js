@@ -35,47 +35,47 @@ module.exports = {
   },
 
   saveEndPointInCamera: async (stream_id, t) => {
-    const { LiveStreams, CamerasInRooms, Camera } = await connectToDatabase();
+    const { LiveStreams, CamerasInZones, Camera } = await connectToDatabase();
     let liveStreamObj = await LiveStreams.findOne(
-      { where: { stream_id: stream_id }, attributes: ["room_id", "hls_url"] },
+      { where: { stream_id: stream_id }, attributes: ["zone_id", "hls_url"] },
       { transaction: t }
     );
-    let cameraUpdated = await CamerasInRooms.update(
+    let cameraUpdated = await CamerasInZones.update(
       { hls_url: liveStreamObj?.dataValues?.hls_url },
-      { where: { room_id: liveStreamObj?.dataValues?.room_id } }
+      { where: { zone_id: liveStreamObj?.dataValues?.zone_id } }
     );
     return cameraUpdated;
   },
 
   removeEndPointInCamera: async (stream_id, t) => {
-    const { LiveStreams, CamerasInRooms } = await connectToDatabase();
+    const { LiveStreams, CamerasInZones } = await connectToDatabase();
     let liveStreamObj = await LiveStreams.findOne(
-      { where: { stream_id: stream_id }, attributes: ["room_id", "hls_url"] },
+      { where: { stream_id: stream_id }, attributes: ["zone_id", "hls_url"] },
       { transaction: t }
     );
-    let cameraUpdated = await CamerasInRooms.update(
+    let cameraUpdated = await CamerasInZones.update(
       { hls_url: null },
-      { where: { room_id: liveStreamObj?.dataValues?.room_id } }
+      { where: { zone_id: liveStreamObj?.dataValues?.zone_id } }
     );
     return cameraUpdated;
   },
 
-  getRoom: async (stream_id, t) => {
+  getZone: async (stream_id, t) => {
     const { LiveStreams } = await connectToDatabase();
-    let roomObj = await LiveStreams.findOne(
-      { where: { stream_id: stream_id }, attributes: ["room_id"] },
+    let zoneObj = await LiveStreams.findOne(
+      { where: { stream_id: stream_id }, attributes: ["zone_id"] },
       { transaction: t }
     );
-    return roomObj?.dataValues?.room_id;
+    return zoneObj?.dataValues?.zone_id;
   },
 
   getstreamObj: async (stream_id, t) => {
     const { LiveStreams } = await connectToDatabase();
-    let roomObj = await LiveStreams.findOne(
+    let zoneObj = await LiveStreams.findOne(
       { where: { stream_id: stream_id } },
       { transaction: t }
     );
-    return roomObj?.dataValues;
+    return zoneObj?.dataValues;
   },
 
   getstreamObjByUserId: async (user_id, t) => {
@@ -89,22 +89,22 @@ module.exports = {
     return streamsArray;
   },
 
-  getstreamObjByRoomId: async (room_id, t) => {
+  getstreamObjByZoneId: async (zone_id, t) => {
     const { LiveStreams } = await connectToDatabase();
     let streamsArray = await LiveStreams.findAll(
       { 
-        where: { room_id: room_id },
+        where: { zone_id: zone_id },
       },
       { transaction: t }
     );
     return streamsArray;
   },
 
-  getActiveStreamObjByRoomId: async (room_id, t) => {
+  getActiveStreamObjByZoneId: async (zone_id, t) => {
     const { LiveStreams } = await connectToDatabase();
     let streamsArray = await LiveStreams.findAll(
       { 
-        where: { room_id: room_id, stream_running: true },
+        where: { zone_id: zone_id, stream_running: true },
         raw: true
       },
       { transaction: t }
@@ -113,16 +113,16 @@ module.exports = {
   },
 
   getAllActiveStreams: async (cust_id, location='All', t) => {
-    const { LiveStreams, Room, LiveStreamCameras } = await connectToDatabase();
+    const { LiveStreams, Zone, LiveStreamCameras } = await connectToDatabase();
     let loc_obj = location === "All" ? {} : {loc_id: location};
     
     let activeLiveStreams = await LiveStreams.findAll(
       { where: { stream_running: true, cust_id: cust_id }, 
         order: [ ['stream_start_time', 'DESC'] ], 
-        attributes:["stream_id","stream_name", "stream_start_time", "room_id"], 
+        attributes:["stream_id","stream_name", "stream_start_time", "zone_id"], 
         include: [{
-         model: Room,
-         as: "room",
+         model: Zone,
+         as: "zone",
          where: loc_obj,
          include: [
            {
@@ -137,7 +137,7 @@ module.exports = {
   },
 
   getRecentStreams: async(cust_id, location='All', t)=> {
-    const { LiveStreams, Room, LiveStreamCameras } = await connectToDatabase();
+    const { LiveStreams, Zone, LiveStreamCameras } = await connectToDatabase();
     let loc_obj = location === "All" ? {} : {loc_id: location}
     // let oneHourBefore = new Date();
     // oneHourBefore.setHours(oneHourBefore.getHours() - 24);
@@ -149,8 +149,8 @@ module.exports = {
         order: [ ['stream_stop_time', 'DESC'] ],
         attributes:["stream_id", "stream_name", "stream_start_time", "stream_stop_time", "s3_url"],
         include: [{
-         model: Room,
-         as: "room",
+         model: Zone,
+         as: "zone",
          where: loc_obj,
          include: [
            {
@@ -197,13 +197,13 @@ let result = await sequelize
 return result[0].total_start_only_viewers;
   },
 
-  getRecordedStreams: async(cust_id, from, to, location='All', rooms="All", live = true, vod = true, sortBy = 'ASC', pageNumber, pageSize, pageCount, t)=> {
-    const { LiveStreams, Room, LiveStreamCameras } = await connectToDatabase();
+  getRecordedStreams: async(cust_id, from, to, location='All', zones="All", live = true, vod = true, sortBy = 'ASC', pageNumber, pageSize, pageCount, t)=> {
+    const { LiveStreams, Zone, LiveStreamCameras } = await connectToDatabase();
     let where_obj = location === "All" ? {} : {location: location}
     let status_obj = live == "true" && vod == "true" ? {}: {stream_running: live == "true" ? true : false}
     
-    if(rooms !== "All" & rooms.length > 0){
-      where_obj = {...where_obj, room_name: rooms}
+    if(zones !== "All" & zones.length > 0){
+      where_obj = {...where_obj, zone_name: zones}
     }
     
     let recordedStreams = await LiveStreams.findAndCountAll(
@@ -220,9 +220,9 @@ return result[0].total_start_only_viewers;
       ],
        attributes:["stream_id", "stream_name","stream_running", "s3_url", "created_at"],
       include: [{
-        model: Room,
+        model: Zone,
         where: where_obj,
-        as: "room",
+        as: "zone",
         include: [
           {
             model: LiveStreamCameras,

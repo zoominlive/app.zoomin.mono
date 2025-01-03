@@ -3,40 +3,40 @@ const Sequelize = require("sequelize");
 const _ = require("lodash");
 const sequelize = require("../lib/database");
 const { v4: uuidv4 } = require("uuid");
-const CamerasInRooms = require("../models/cameras_assigned_to_rooms");
+const CamerasInZones = require("../models/cameras_assigned_to_zones");
 const customerServices = require('../services/customers');
-const Room = require("../models/room");
+const Zone = require("../models/zone");
 const jwt = require('jsonwebtoken');
 
 module.exports = {
-  /* Create new room */
-  createRoom: async (roomObj, validCameras, t) => {
-    const { Room, CamerasInRooms } = await connectToDatabase();
-    roomObj.room_id = uuidv4();
-    roomObj.zone_type_id = roomObj.zone;
-    let roomCreated = await Room.create(roomObj, { transaction: t });
+  /* Create new zone */
+  createZone: async (zoneObj, validCameras, t) => {
+    const { Zone, CamerasInZones } = await connectToDatabase();
+    zoneObj.zone_id = uuidv4();
+    zoneObj.zone_type_id = zoneObj.zone;
+    let zoneCreated = await Zone.create(zoneObj, { transaction: t });
 
     const camsToAdd = validCameras.map((cam) => {
       return {
         cam_id: cam.cam_id,
-        room_id: roomCreated.room_id,
+        zone_id: zoneCreated.zone_id,
       };
     });
 
-    let camerasAssigned = await CamerasInRooms.bulkCreate(camsToAdd, {
+    let camerasAssigned = await CamerasInZones.bulkCreate(camsToAdd, {
       transaction: t,
     });
 
-    return roomCreated !== undefined ? roomCreated.toJSON() : null;
+    return zoneCreated !== undefined ? zoneCreated.toJSON() : null;
   },
 
-  /* Edit room details */
-  editRoom: async (user, params, validCameras, t) => {
-    const { Room, CamerasInRooms } = await connectToDatabase();
+  /* Edit zone details */
+  editZone: async (user, params, validCameras, t) => {
+    const { Zone, CamerasInZones } = await connectToDatabase();
     let update = {};
 
-    if (params?.room_name) {
-      update.room_name = params.room_name;
+    if (params?.zone_name) {
+      update.zone_name = params.zone_name;
     }
     if (params?.location) {
       update.location = params.location;
@@ -48,22 +48,22 @@ module.exports = {
       update.stream_live_license = params?.stream_live_license
     }
     update.zone_type_id = params.zone;
-    let updateRoomDetails = await Room.update(
+    let updateZoneDetails = await Zone.update(
       update,
       {
-        where: { room_id: params.room_id },
+        where: { zone_id: params.zone_id },
       },
       { transaction: t }
     );
 
-    if (updateRoomDetails) {
-      updateRoomDetails = await Room.findOne(
-        { where: { room_id: params.room_id } },
+    if (updateZoneDetails) {
+      updateZoneDetails = await Zone.findOne(
+        { where: { zone_id: params.zone_id } },
         { transaction: t }
       );
       await customerServices.editCustomer(
         params.cust_id || user.cust_id,
-        {max_stream_live_license_room: params.max_stream_live_license_room},
+        {max_stream_live_license_zone: params.max_stream_live_license_zone},
         t
       );
     }
@@ -71,55 +71,55 @@ module.exports = {
     const camsToAdd = validCameras.map((cam) => {
       return {
         cam_id: cam.cam_id,
-        room_id: params.room_id,
+        zone_id: params.zone_id,
       };
     });
 
-    let camsRemoved = await CamerasInRooms.destroy(
+    let camsRemoved = await CamerasInZones.destroy(
       {
-        where: { room_id: params.room_id },
+        where: { zone_id: params.zone_id },
         raw: true,
       },
       { transaction: t }
     );
 
-    let camsAdded = await CamerasInRooms.bulkCreate(camsToAdd, {
+    let camsAdded = await CamerasInZones.bulkCreate(camsToAdd, {
       transaction: t,
     });
 
-    return updateRoomDetails.toJSON();
+    return updateZoneDetails.toJSON();
   },
 
-  /* Delete Existing room */
-  deleteRoom: async (roomId, t) => {
-    const { Room, CamerasInRooms, RoomsInChild } = await connectToDatabase();
-    let camsDeleted = await CamerasInRooms.destroy(
-      { where: { room_id: roomId }, raw: true },
+  /* Delete Existing zone */
+  deleteZone: async (zoneId, t) => {
+    const { Zone, CamerasInZones, ZonesInChild } = await connectToDatabase();
+    let camsDeleted = await CamerasInZones.destroy(
+      { where: { zone_id: zoneId }, raw: true },
       { transaction: t }
     );
 
-    let roomsDeleted = await RoomsInChild.destroy(
-      { where: { room_id: roomId }, raw: true },
+    await ZonesInChild.destroy(
+      { where: { zone_id: zoneId }, raw: true },
       { transaction: t }
     );
 
-    let deletedRoom = await Room.destroy(
+    let deletedZone = await Zone.destroy(
       {
-        where: { room_id: roomId },
+        where: { zone_id: zoneId },
       },
       { transaction: t }
     );
 
-    return deletedRoom;
+    return deletedZone;
   },
 
-  /* Fetch all the room's details */
-  getAllRoomsDetails: async (userId, user, filter, t) => {
-    const { Room, Camera, CustomerLocations, ZoneType } = await connectToDatabase();
+  /* Fetch all the zone's details */
+  getAllZonesDetails: async (userId, user, filter, t) => {
+    const { Zone, Camera, CustomerLocations, ZoneType } = await connectToDatabase();
     let {
       pageNumber = 0,
       pageSize = 10,
-      roomsList = [],
+      zonesList = [],
       location = "All",
       searchBy = "",
       cust_id = null,
@@ -136,26 +136,26 @@ module.exports = {
     if (location == "All") {
       location = "";
     }
-    let rooms;
+    let zones;
     // if (user.role !== 'Admin') {
-    //   if (roomsList?.length !== 0) {
-    //     rooms = await Room.findAll(
+    //   if (zonesList?.length !== 0) {
+    //     zones = await Zone.findAll(
     //       {
     //         where: {
     //           user_id: userId,
     //           location: {
     //             [Sequelize.Op.substring]: location
     //           },
-    //           room_name: {
+    //           zone_name: {
     //             [Sequelize.Op.and]: { [Sequelize.Op.substring]: searchBy }
     //           },
-    //           room_name: roomsList
+    //           zone_name: zonesList
     //         },
-    //         attributes: ['room_id', 'room_name', 'location'],
+    //         attributes: ['zone_id', 'zone_name', 'location'],
     //         include: [
     //           {
-    //             model: CamerasInRooms,
-    //             attributes: ['cam_room_id'],
+    //             model: CamerasInZones,
+    //             attributes: ['cam_zone_id'],
     //             include: [
     //               {
     //                 model: Camera,
@@ -168,22 +168,22 @@ module.exports = {
     //       { transaction: t }
     //     );
     //   } else {
-    //     rooms = await Room.findAll(
+    //     zones = await Zone.findAll(
     //       {
     //         where: {
     //           user_id: userId,
     //           location: {
     //             [Sequelize.Op.substring]: location
     //           },
-    //           room_name: {
+    //           zone_name: {
     //             [Sequelize.Op.substring]: searchBy
     //           }
     //         },
-    //         attributes: ['room_id', 'room_name', 'location'],
+    //         attributes: ['zone_id', 'zone_name', 'location'],
     //         include: [
     //           {
-    //             model: CamerasInRooms,
-    //             attributes: ['cam_room_id'],
+    //             model: CamerasInZones,
+    //             attributes: ['cam_zone_id'],
     //             include: [
     //               {
     //                 model: Camera,
@@ -209,8 +209,8 @@ module.exports = {
       loc_obj = { loc_id: locs };
     }
 
-    if (roomsList?.length !== 0) {
-      rooms = await Room.findAll(
+    if (zonesList?.length !== 0) {
+      zones = await Zone.findAll(
         {
           where: {
             cust_id: user.cust_id || cust_id,
@@ -222,19 +222,19 @@ module.exports = {
                 },
               },
             ],
-            room_name: {
+            zone_name: {
               [Sequelize.Op.and]: { [Sequelize.Op.substring]: searchBy },
             },
-            room_name: roomsList,
+            zone_name: zonesList,
             zone_type_id: {
               [Sequelize.Op.substring]: type,
             },
           },
-          attributes: ["room_id", "room_name", "loc_id", "stream_live_license", "zone_type_id"],
+          attributes: ["zone_id", "zone_name", "loc_id", "stream_live_license", "zone_type_id"],
           include: [
             {
-              model: CamerasInRooms,
-              attributes: ["cam_room_id"],
+              model: CamerasInZones,
+              attributes: ["cam_zone_id"],
               include: [
                 {
                   model: Camera,
@@ -263,7 +263,7 @@ module.exports = {
         { transaction: t }
       );
     } else {
-      rooms = await Room.findAll(
+      zones = await Zone.findAll(
         {
           where: {
             cust_id: user.cust_id || cust_id,
@@ -276,18 +276,18 @@ module.exports = {
               },
             ],
 
-            room_name: {
+            zone_name: {
               [Sequelize.Op.substring]: searchBy,
             },
             zone_type_id: {
               [Sequelize.Op.substring]: type,
             },
           },
-          attributes: ["room_id", "room_name", "loc_id", "stream_live_license", "zone_type_id"],
+          attributes: ["zone_id", "zone_name", "loc_id", "stream_live_license", "zone_type_id"],
           include: [
             {
-              model: CamerasInRooms,
-              attributes: ["cam_room_id"],
+              model: CamerasInZones,
+              attributes: ["cam_zone_id"],
               include: [
                 {
                   model: Camera,
@@ -318,13 +318,13 @@ module.exports = {
     }
     // }   
 
-    let count = rooms.length;
+    let count = zones.length;
 
     if (count > pageSize) {
       if (count > pageNumber * pageSize + pageSize) {
-        rooms = rooms.slice(pageNumber * pageSize, (pageNumber + 1) * pageSize);
+        zones = zones.slice(pageNumber * pageSize, (pageNumber + 1) * pageSize);
       } else {
-        rooms = rooms.slice(
+        zones = zones.slice(
           pageNumber * pageSize,
           pageNumber * pageSize + pageSize
         );
@@ -333,8 +333,8 @@ module.exports = {
 
     const baseUrl = await customerServices.getTranscoderUrl(user?.cust_id, t)
     
-    rooms = rooms?.map((room) => {
-      let cams = room.cameras_assigned_to_rooms.map((cam) => cam.camera);   
+    zones = zones?.map((zone) => {
+      let cams = zone.cameras_assigned_to_zones.map((cam) => cam.camera);   
       cams.forEach((camera) => {
         let uid = user?.family_member_id || user?.user_id;
         let sid = camera?.cam_id;
@@ -343,43 +343,43 @@ module.exports = {
         camera.dataValues.stream_uri_seckey = `${baseUrl}${camera?.stream_uri}?seckey=${token}`; // Attach the new key to dataValues
       });
       return {
-        room_id: room.room_id,
-        room_name: room.room_name,
-        location: room.loc_id,
-        loc_name: room.customer_location.loc_name,
+        zone_id: zone.zone_id,
+        zone_name: zone.zone_name,
+        location: zone.loc_id,
+        loc_name: zone.customer_location.loc_name,
         cameras: cams,
-        stream_live_license: room.stream_live_license,
-        zone_type: room.zone_type?.dataValues
+        stream_live_license: zone.stream_live_license,
+        zone_type: zone.zone_type?.dataValues
       };
     });
 
-    return { finalRoomDetails: rooms, count: count };
+    return { finalZoneDetails: zones, count: count };
   },
 
-  getRoomDetailsByRoomId: async(roomId, t) => {
-    const { Room, Camera } = await connectToDatabase();
+  getZoneDetailsByZoneId: async(zoneId, t) => {
+    const { Zone, Camera } = await connectToDatabase();
 
-    room = await Room.findOne(
+    zone = await Zone.findOne(
       {
         where: {
-          room_id: roomId,
+          zone_id: zoneId,
         },
-        attributes: ["room_id", "room_name", "location", "stream_live_license"],
+        attributes: ["zone_id", "zone_name", "location", "stream_live_license"],
       },
       { transaction: t }
     );
     return {
-      room_id: room.room_id,
-      room_name: room.room_name,
-      location: room.location,
-      stream_live_license: room.stream_live_license
+      zone_id: zone.zone_id,
+      zone_name: zone.zone_name,
+      location: zone.location,
+      stream_live_license: zone.stream_live_license
     };
   },
     
-  // get all room's list for loggedin user
-  getAllRoomsList: async (userId, user, cust_id = null, t) => {
-    const { Room, CustomerLocations } = await connectToDatabase();
-    let roomList;
+  // get all zone's list for loggedin user
+  getAllZonesList: async (userId, user, cust_id = null, t) => {
+    const { Zone, CustomerLocations } = await connectToDatabase();
+    let zoneList;
     if (user.role === "Admin" || user.role === "Super Admin") {
       let loc_obj = {};
       if (!cust_id) {
@@ -394,9 +394,9 @@ module.exports = {
       }
 
 
-      roomList = await Room.findAll(
+      zoneList = await Zone.findAll(
         {
-          attributes: ["room_name", "room_id", "loc_id", "stream_live_license"],
+          attributes: ["zone_name", "zone_id", "loc_id", "stream_live_license"],
           where: {
             cust_id: user.cust_id || cust_id,
             ...loc_obj
@@ -411,9 +411,9 @@ module.exports = {
         { transaction: t }
       );
     } else {
-      roomList = await Room.findAll(
+      zoneList = await Zone.findAll(
         {
-          attributes: ["room_name", "room_id", "loc_id", "stream_live_license"],
+          attributes: ["zone_name", "zone_id", "loc_id", "stream_live_license"],
           where: { user_id: userId },
           include: [
             {
@@ -426,11 +426,11 @@ module.exports = {
       );
     }
 
-    return roomList;
+    return zoneList;
   },
 
-  disableRoom: async (params, t) => {
-    const { RoomsInChild } = await connectToDatabase();
+  disableZone: async (params, t) => {
+    const { ZonesInChild } = await connectToDatabase();
     let update;
     if (
       params?.scheduled_disable_date == "" ||
@@ -447,21 +447,21 @@ module.exports = {
       };
     }
 
-    let disableRoom = await RoomsInChild.update(
+    let disableZone = await ZonesInChild.update(
       update,
       {
         where: {
-          room_child_id: params.room_child_id,
+          zone_child_id: params.zone_child_id,
         },
         returning: true,
       },
       { transaction: t }
     );
 
-    return disableRoom;
+    return disableZone;
   },
-  enableRoom: async (params, t) => {
-    const { RoomsInChild } = await connectToDatabase();
+  enableZone: async (params, t) => {
+    const { ZonesInChild } = await connectToDatabase();
     let update;
     if (
       params?.scheduled_enable_date == "" ||
@@ -476,32 +476,32 @@ module.exports = {
       update = { scheduled_enable_date: params.scheduled_enable_date };
     }
 
-    let enableRoom = await RoomsInChild.update(
+    let enableZone = await ZonesInChild.update(
       update,
       {
         where: {
-          room_child_id: params.room_child_id,
+          zone_child_id: params.zone_child_id,
         },
       },
       { transaction: t }
     );
 
-    return enableRoom;
+    return enableZone;
   },
 
-  validateRoom: async (room_id, userCustId) => {
+  validateZone: async (zone_id, userCustId) => {
     try {
-      const room = await Room.findOne({where: {room_id: room_id}, raw: true, plain: true});
-      if (!room) {
-        return { valid: false, message: 'Room:'+ room_id +' not found.' };
+      const zone = await Zone.findOne({where: {zone_id: zone_id}, raw: true, plain: true});
+      if (!zone) {
+        return { valid: false, message: 'Zone:'+ zone_id +' not found.' };
       }
-      if (room.cust_id !== userCustId) {
-        return { valid: false, message: 'Unauthorized access to room:'+ room_id};
+      if (zone.cust_id !== userCustId) {
+        return { valid: false, message: 'Unauthorized access to zone:'+ zone_id};
       }
-      return { valid: true, message: 'Room is valid.' };
+      return { valid: true, message: 'Zone is valid.' };
     } catch (error) {
-      console.error('Error validating room:', error);
-      return { valid: false, message: 'Error validating room.' };
+      console.error('Error validating zone:', error);
+      return { valid: false, message: 'Error validating zone.' };
     }
   }
 };

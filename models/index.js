@@ -5,13 +5,13 @@ const Family = require('./family');
 const Child = require('./child');
 const Camera = require('./camera');
 const RecentViewers = require('./recent_viewers');
-const Room = require('./room');
+const Zone = require('./zone');
 const ZoneType = require('./zone_type');
 const ScheduledToDisable = require('./scheluled_to_disable');
-const RoomsInChild = require('./rooms_assigned_to_child');
+const ZonesInChild = require('./zones_assigned_to_child');
 const DefaultSchedule = require('./default_schedule');
-const RoomsInTeacher = require('./rooms_assigned_to_teacher');
-const CamerasInRooms = require('./cameras_assigned_to_rooms');
+const ZonesInTeacher = require('./zones_assigned_to_teacher');
+const CamerasInZones = require('./cameras_assigned_to_zones');
 const AccessLogs = require('./access_logs');
 const ChangeLogs = require('./change_logs');
 const LiveStreams = require('./live_stream');
@@ -29,6 +29,8 @@ const ApiKeys = require('./api_keys');
 const CustomerLocationAssignments = require('./customer_location_assignment');
 const CustomerLocationAssignmentsCopy = require('./customer_location_assignment_copy');
 const sequelize = require('../lib/database');
+const RecordRtsp = require('./record_rtsp');
+const RecordTag = require('./record_tag');
 
 CustomerLocations.belongsTo(Customers, { foreignKey: 'cust_id' });
 Customers.hasMany(CustomerLocations, {
@@ -83,58 +85,58 @@ ChangeLogs.hasOne(Users, {
   }
 });
 
-RoomsInChild.belongsTo(Child, { foreignKey: 'child_id' });
-Child.hasMany(RoomsInChild, {
-  as: 'roomsInChild',
+ZonesInChild.belongsTo(Child, { foreignKey: 'child_id' });
+Child.hasMany(ZonesInChild, {
+  as: 'zonesInChild',
   sourceKey: 'child_id',
   foreignKey: {
     name: 'child_id'
   }
 });
 
-RoomsInTeacher.belongsTo(Users, { foreignKey: 'teacher_id', targetKey: 'user_id' });
-Users.hasMany(RoomsInTeacher, {
-  as: 'roomsInTeacher',
+ZonesInTeacher.belongsTo(Users, { foreignKey: 'teacher_id', targetKey: 'user_id' });
+Users.hasMany(ZonesInTeacher, {
+  as: 'zonesInTeacher',
   sourceKey: 'user_id',
   foreignKey: {
     name: 'teacher_id'
   }
 });
 
-CamerasInRooms.belongsTo(Room, { foreignKey: 'room_id' });
-Room.hasMany(CamerasInRooms, {
-  sourceKey: 'room_id',
+CamerasInZones.belongsTo(Zone, { foreignKey: 'zone_id' });
+Zone.hasMany(CamerasInZones, {
+  sourceKey: 'zone_id',
   foreignKey: {
-    name: 'room_id'
+    name: 'zone_id'
   }
 });
-LiveStreams.belongsTo(Room, { foreignKey: 'room_id' });
-LiveStreamCameras.belongsTo(Room, { foreignKey: 'room_id' });
-Room.hasMany(LiveStreamCameras, {
-  sourceKey: 'room_id',
+LiveStreams.belongsTo(Zone, { foreignKey: 'zone_id' });
+LiveStreamCameras.belongsTo(Zone, { foreignKey: 'zone_id' });
+Zone.hasMany(LiveStreamCameras, {
+  sourceKey: 'zone_id',
   foreignKey: {
-    name: 'room_id'
+    name: 'zone_id'
   }
 });
 LiveStreamRecentViewers.belongsTo(LiveStreams, { foreignKey: 'stream_id' })
 
-RoomsInTeacher.hasMany(CamerasInRooms, {
-  sourceKey: 'room_id',
+ZonesInTeacher.hasMany(CamerasInZones, {
+  sourceKey: 'zone_id',
   foreignKey: {
-    name: 'room_id'
+    name: 'zone_id'
   }
 });
 
-RoomsInTeacher.hasMany(LiveStreamCameras, {
-  sourceKey: 'room_id',
+ZonesInTeacher.hasMany(LiveStreamCameras, {
+  sourceKey: 'zone_id',
   foreignKey: {
-    name: 'room_id'
+    name: 'zone_id'
   }
 });
 
 
-CamerasInRooms.belongsTo(Camera, { foreignKey: 'cam_id' });
-Camera.hasMany(CamerasInRooms, {
+CamerasInZones.belongsTo(Camera, { foreignKey: 'cam_id' });
+Camera.hasMany(CamerasInZones, {
   sourceKey: 'cam_id',
   foreignKey: {
     name: 'cam_id'
@@ -143,26 +145,26 @@ Camera.hasMany(CamerasInRooms, {
 MountedCameraRecentViewers.belongsTo(Camera, { foreignKey: 'cam_id' })
 
 
-Room.belongsTo(RoomsInChild, { foreignKey: 'room_id' });
-RoomsInChild.hasOne(Room, {
-  as: 'room',
-  sourceKey: 'room_id',
+Zone.belongsTo(ZonesInChild, { foreignKey: 'zone_id' });
+ZonesInChild.hasOne(Zone, {
+  as: 'zone',
+  sourceKey: 'zone_id',
   foreignKey: {
-    name: 'room_id'
+    name: 'zone_id'
   }
 });
 
-Room.belongsTo(RoomsInTeacher, { foreignKey: 'room_id' });
-RoomsInTeacher.hasOne(Room, {
-  as: 'room',
-  sourceKey: 'room_id',
+Zone.belongsTo(ZonesInTeacher, { foreignKey: 'zone_id' });
+ZonesInTeacher.hasOne(Zone, {
+  as: 'zone',
+  sourceKey: 'zone_id',
   foreignKey: {
-    name: 'room_id'
+    name: 'zone_id'
   }
 });
 
-Room.belongsTo(CustomerLocations, { foreignKey: 'loc_id' });
-CustomerLocations.hasMany(Room, {
+Zone.belongsTo(CustomerLocations, { foreignKey: 'loc_id' });
+CustomerLocations.hasMany(Zone, {
   sourceKey: 'loc_id',
   foreignKey: {
     name: 'loc_id'
@@ -212,7 +214,7 @@ Child.hasOne(Family, {
 });
 
 Users.belongsTo(Customers, { foreignKey: 'cust_id' });
-Room.belongsTo(Customers, { foreignKey: 'cust_id' });
+Zone.belongsTo(Customers, { foreignKey: 'cust_id' });
 
 // Define Many-to-Many Relationship
 Users.belongsToMany(CustomerLocations, {
@@ -263,8 +265,14 @@ CustomerLocations.belongsToMany(Child, {
   as: 'child'
 });
 
-ZoneType.hasMany(Room, { foreignKey: 'zone_type_id', as: 'rooms' }); // A ZoneType has many Rooms
-Room.belongsTo(ZoneType, { foreignKey: 'zone_type_id', as: 'zone_type' }); // A Room belongs to one ZoneType
+ZoneType.hasMany(Zone, { foreignKey: 'zone_type_id', as: 'zones' }); // A ZoneType has many Zones
+Zone.belongsTo(ZoneType, { foreignKey: 'zone_type_id', as: 'zone_type' }); // A Zone belongs to one ZoneType
+
+RecordTag.hasMany(RecordRtsp, { foreignKey: 'tag_id', as: 'tags' }); // A RecordTag has many Recordings
+RecordRtsp.belongsTo(RecordTag, { foreignKey: 'tag_id', as: 'record_tag' }); // A Recording belongs to one RecordTag
+
+Camera.hasMany(RecordRtsp, { foreignKey: 'cam_id', as: 'record_camera' }); // A Camera has many Recordings
+RecordRtsp.belongsTo(Camera, { foreignKey: 'cam_id', as: 'record_camera_tag' }); // A Recording belongs to one Camera
 
 const connection = {};
 
@@ -282,13 +290,15 @@ module.exports = async () => {
       Family,
       Child,
       RecentViewers,
-      Room,
+      Zone,
       ZoneType,
       Camera,
       ScheduledToDisable,
-      RoomsInChild,
-      RoomsInTeacher,
-      CamerasInRooms,
+      ZonesInChild,
+      ZonesInTeacher,
+      CamerasInZones,
+      RecordRtsp,
+      RecordTag,
       LiveStreams,
       LiveStreamCameras,
       LiveStreamRecentViewers,
@@ -319,13 +329,15 @@ module.exports = async () => {
     Family,
     Child,
     RecentViewers,
-    Room,
+    Zone,
     ZoneType,
     Camera,
     ScheduledToDisable,
-    RoomsInChild,
-    RoomsInTeacher,
-    CamerasInRooms,
+    ZonesInChild,
+    ZonesInTeacher,
+    CamerasInZones,
+    RecordRtsp,
+    RecordTag,
     LiveStreams,
     LiveStreamCameras,
     LiveStreamRecentViewers,

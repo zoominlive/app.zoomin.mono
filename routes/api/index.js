@@ -3,7 +3,7 @@ const express = require('express');
 const router = express.Router();
 const userRoutes = require('./user');
 const customerRoutes = require('./customer');
-const roomRoutes = require('./room');
+const zoneRoutes = require('./zone');
 const zoneTypeRoutes = require('./zoneType');
 const cameraRoutes = require('./camera');
 const familyRoutes = require('./family');
@@ -21,8 +21,8 @@ router.use('/users', userRoutes);
 /* customer routes */
 router.use('/customers', customerRoutes);
 
-/* room routes || /rooms changed to /zones due introduction of Zones concept */ 
-router.use('/zones', roomRoutes);
+/* zone routes || /zones changed to /zones due introduction of Zones concept */ 
+router.use('/zones', zoneRoutes);
 
 /* zone type routes */ 
 router.use('/zone-type', zoneTypeRoutes);

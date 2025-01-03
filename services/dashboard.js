@@ -2,8 +2,8 @@ const connectToDatabase = require("../models/index");
 const Sequelize = require("sequelize");
 const _ = require("lodash");
 const moment = require("moment-timezone");
-const RoomsInChild = require("../models/rooms_assigned_to_child");
-const Room = require("../models/room");
+const ZonesInChild = require("../models/zones_assigned_to_child");
+const Zone = require("../models/zone");
 const customerServices = require("../services/customers");
 const userServices = require("../services/users");
 const socketServices = require('../services/socket');
@@ -15,7 +15,7 @@ module.exports = {
   /* get recent viewers */
   getLastOneHourViewers: async (user, custId = null, location = "All") => {
     let loc_obj = location === "All" ? {} : {location: location};
-    const { RecentViewers, Family, Child, Room, RoomsInChild, Users, CustomerLocations } =
+    const { RecentViewers, Family, Child, Zone, ZonesInChild, Users, CustomerLocations } =
       await connectToDatabase();
     let oneHourBefore = new Date();
     oneHourBefore.setHours(oneHourBefore.getHours() - 336);
@@ -52,15 +52,15 @@ module.exports = {
               attributes: ["first_name"],
               include: [
                 {
-                  model: RoomsInChild,
-                  attributes: ["room_id", "disabled"],
-                  as: "roomsInChild",
+                  model: ZonesInChild,
+                  attributes: ["zone_id", "disabled"],
+                  as: "zonesInChild",
                   where: {disabled: "false"},
                   include: [
                     {
-                      attributes: ["room_name"],
-                      model: Room,
-                      as: "room",
+                      attributes: ["zone_name"],
+                      model: Zone,
+                      as: "zone",
                       where: loc_obj
                     },
                   ],
@@ -310,12 +310,12 @@ module.exports = {
               model: Child,
               include: [
                 {
-                  model: RoomsInChild,
-                  as: "roomsInChild",
+                  model: ZonesInChild,
+                  as: "zonesInChild",
                   include: [
                     {
-                      model: Room,
-                      as: "room",
+                      model: Zone,
+                      as: "zone",
                     },
                   ],
                 },
@@ -350,18 +350,18 @@ module.exports = {
           },
         },
         {
-          model: RoomsInChild,
-          as: "roomsInChild",
+          model: ZonesInChild,
+          as: "zonesInChild",
           attributes: [
-            "room_id",
+            "zone_id",
             "scheduled_disable_date",
             "scheduled_enable_date",
           ],
           include: [
             {
-              model: Room,
-              as: "room",
-              attributes: ["room_name", "loc_id"],
+              model: Zone,
+              as: "zone",
+              attributes: ["zone_name", "loc_id"],
             },
           ],
         },

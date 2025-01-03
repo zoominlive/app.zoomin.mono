@@ -1,4 +1,5 @@
 const subscription = require('../services/subscription');
+const connectToDatabase = require("../models/index");
 
 // general structure
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
@@ -127,4 +128,45 @@ const webhookController = async (req, res) => {
   res.sendStatus(200);
 };
 
-module.exports = webhookController;
+const recordingsWebhookController = async(req, res) => {
+  console.log('Webhook received:', req.body);
+
+  // Process the webhook payload
+  const { event, data } = req.body;
+
+  if (!event || !data) {
+    return res.status(400).send({ message: 'Invalid webhook payload' });
+  }
+
+  // Handle the event
+  switch (event) {
+    case 'recording.started':
+      console.log('Recording started:', data);
+      break;
+    case 'recording.stopped':
+      console.log('Recording stopped:', data);
+      const { RecordRtsp } = await connectToDatabase();
+      try {
+        const updateRecordRtsp = await RecordRtsp.update(
+          {
+            stop_time: data.end_time,
+            duration: data.recording_duration,
+            active: false,
+          },
+          { where: { record_uuid: data.recording_id } }
+        );
+        console.log("Record updated successfully:", updateRecordRtsp);
+      } catch (error) {
+        console.error("Error updating record:", error.message);
+        throw error; // Re-throw if needed for further error handling
+      }
+      break;
+    default:
+      console.log('Unhandled event:', event);
+  }
+
+  // Respond to the webhook source
+  res.status(200).send({ message: 'Webhook processed successfully' });
+}
+
+module.exports = {webhookController, recordingsWebhookController};
