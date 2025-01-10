@@ -203,6 +203,7 @@ module.exports = {
             { active: true },
           ],
         },
+        order:[["created_at", "DESC"]],
         raw: true
       });
       console.log('recordRtspData==>', recordRtspData);
