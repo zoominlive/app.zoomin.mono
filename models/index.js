@@ -111,6 +111,7 @@ Zone.hasMany(CamerasInZones, {
   }
 });
 LiveStreams.belongsTo(Zone, { foreignKey: 'zone_id' });
+RecordRtsp.belongsTo(Zone, { foreignKey: 'zone_id' });
 LiveStreamCameras.belongsTo(Zone, { foreignKey: 'zone_id' });
 Zone.hasMany(LiveStreamCameras, {
   sourceKey: 'zone_id',

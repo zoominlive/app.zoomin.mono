@@ -518,28 +518,59 @@ module.exports = {
       );
 
       const userDetails = await userServices.getUserById(user.user_id, t);
-      console.log('user=>', user);
-      await customerServices.deleteLocation(customeDetails?.cust_id);
-      console.log(customer_locations);
-      let locations = customer_locations.flatMap((i) => {return { loc_name: i.loc_name, transcoder_endpoint: i.transcoder_endpoint}});
-      console.log('locations-->', locations);
-      let newLocations = await customerServices.createLocation(
-        customeDetails?.cust_id,
-        locations,
-        t
-      );
-      if (customer_locations.length !== user.location.locations.length) {
-        user.location.locations = newLocations.map((item) => item.dataValues).filter((customerLocation) => !user.location.locations.some(
-          (location) => location.loc_name !== customerLocation.loc_name
-        ));  
-      } else {
-        user.location.locations = newLocations.map((item) => item.dataValues);
+      console.log('customer_locations==>', customer_locations);
+      const customerLocationsFromDB = await customerServices.getLocationDetails(customeDetails.cust_id);
+      console.log('customerLocationsFromDB==>', customerLocationsFromDB);
+      function syncLocations(customer_locations, customerLocationsFromDB) {
+        // Convert DB locations into a Set for quick lookup
+        const dbLocNames = new Set(customerLocationsFromDB.map(loc => loc.loc_name));
+    
+        // Convert incoming locations into a Set for quick lookup
+        const incomingLocNames = new Set(customer_locations.map(loc => loc.loc_name));
+    
+        // Identify locations to delete (Exists in DB but not in incoming data)
+        const locationsToDelete = customerLocationsFromDB.filter(loc => !incomingLocNames.has(loc.loc_name));
+    
+        // Identify locations to create (Exists in incoming data but not in DB)
+        const locationsToCreate = customer_locations.filter(loc => !dbLocNames.has(loc.loc_name));
+    
+        return { locationsToDelete, locationsToCreate };
       }
-      let editedUser = await userServices.editUserProfile(
-        userDetails,
-        _.omit(user, ["email"]),
-        t
-      );
+    
+      // Run the function
+      const { locationsToDelete, locationsToCreate } = syncLocations(customer_locations, customerLocationsFromDB);
+      
+      console.log("Locations to Delete:", locationsToDelete);
+      console.log("Locations to Create:", locationsToCreate);
+      if (locationsToDelete.length > 0) {
+        const mappedData = locationsToDelete.map((item) => item.loc_id);
+        await customerServices.deleteSpecificLocations(mappedData);
+        //also delete the locations from customer_location_assignments table for the locations assigned to users
+      }
+      console.log(customer_locations);
+      let locations = locationsToCreate.flatMap((i) => {return { loc_name: i.loc_name, transcoder_endpoint: i.transcoder_endpoint}});
+      console.log('locations-->', locations);
+      let editedUser
+      if (locations && locations.length > 0) {
+        let newLocations = await customerServices.createLocation(
+          customeDetails?.cust_id,
+          locations,
+          t
+        );
+        if (customer_locations.length !== user.location.locations.length) {
+          user.location.locations = newLocations.map((item) => item.dataValues).filter((customerLocation) => !user.location.locations.some(
+            (location) => location.loc_name !== customerLocation.loc_name
+          ));  
+        } else {
+          user.location.locations = newLocations.map((item) => item.dataValues);
+        }
+        console.log('user.location.locations==>', user.location.locations);
+        editedUser = await userServices.editUserProfile(
+          userDetails,
+          _.omit(user, ["email"]),
+          t
+        );
+      }
 
       if (user?.email && user?.email !== userDetails.email) {
         const newEmail = user.email;
@@ -573,8 +604,10 @@ module.exports = {
       //   locations,
       //   t
       // );
-
-      if (editedProfile && editedUser) {
+      console.log("editedProfile", editedProfile);
+      console.log("editedUser", editedUser);
+      
+      if (editedProfile || editedUser) {
         res.status(200).json({
           IsSuccess: true,
           Data: editedProfile,

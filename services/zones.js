@@ -244,6 +244,7 @@ module.exports = {
                     "loc_id",
                     "stream_uri",
                     "description",
+                    "cam_alias"
                   ],
                 },
               ],
@@ -297,6 +298,7 @@ module.exports = {
                     "loc_id",
                     "stream_uri",
                     "description",
+                    "cam_alias"
                   ],
                 },
               ],

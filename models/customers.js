@@ -63,6 +63,10 @@ const Customers = sequelize.define(
       type: Sequelize.BOOLEAN,
       defaultValue: true
     },
+    camera_recording: {
+      type: Sequelize.BOOLEAN,
+      defaultValue: true
+    },
     invite_user: {
       type: Sequelize.BOOLEAN,
       defaultValue: true

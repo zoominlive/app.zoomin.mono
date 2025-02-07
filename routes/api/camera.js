@@ -13,6 +13,7 @@ router.get('/get-all-cams-transcoder', cameraController.getAllCamerasForTranscod
 router.post('/add', withAuthentication(), authController, cameraController.createCamera);
 router.post('/start-recording', withAuthentication(), authController, cameraController.startCameraRecording);
 router.post('/stop-recording', withAuthentication(), authController, cameraController.stopCameraRecording);
+router.put('/edit-recording', withAuthentication(), authController, cameraController.editCameraRecording);
 router.post('/add-record-tag', withAuthentication(), authController, cameraController.addRecordTag);
 router.put('/edit-record-tag', withAuthentication(), authController, cameraController.editRecordTag);
 router.delete('/delete-record-tag', withAuthentication(), authController, cameraController.deleteRecordTag);

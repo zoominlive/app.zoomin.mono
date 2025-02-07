@@ -97,6 +97,7 @@ module.exports = async function (req, res, next) {
             });
   
             if (familyUser) {
+              let custDetails = await Customers.findOne({ where: { cust_id: familyUser.dataValues.cust_id }, raw: true });              
               let locations = [];
               familyUser?.children?.forEach((child) => {
                 child?.child_locations?.forEach((location) => {
@@ -106,6 +107,9 @@ module.exports = async function (req, res, next) {
               locations = locations?.filter((v, i, a) => a.indexOf(v) === i);
               req.userToken = token;
               req.user = familyUser.toJSON();
+              req.user.permit_audio = custDetails.permit_audio;
+              req.user.camera_recording = custDetails.camera_recording;
+              req.user.invite_user = custDetails.invite_user;
               // req.user.accessable_locations = req.user.location;
               req.user.locations = locations;
             } else {
@@ -123,6 +127,9 @@ module.exports = async function (req, res, next) {
           if(user.role === 'Admin') {
             cust = await Customers.findOne({ where: { cust_id: user.cust_id } });
             user.dataValues.stripe_cust_id = cust.dataValues.stripe_cust_id;
+            user.dataValues.permit_audio = cust.dataValues.permit_audio;
+            user.dataValues.camera_recording = cust.dataValues.camera_recording;
+            user.dataValues.invite_user = cust.dataValues.invite_user;
             req.userToken = token;
             convertedToJSON = user.toJSON();
             let locations = convertedToJSON.locations.map((item) => ({loc_id: item.loc_id, loc_name: item.loc_name}));           

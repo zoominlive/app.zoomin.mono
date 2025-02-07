@@ -21,6 +21,10 @@ const RecordTag = sequelize.define(
       type: Sequelize.STRING(50),
       allowNull: false
     },
+    status: {
+      type: Sequelize.BOOLEAN,
+      defaultValue: true
+    },
     createdAt: { type: Sequelize.DATE, field: 'created_at' },
     updatedAt: { type: Sequelize.DATE, field: 'updated_at' },
     deletedAt: { type: Sequelize.DATE, field: 'deleted_at' }

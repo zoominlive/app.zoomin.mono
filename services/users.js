@@ -261,13 +261,13 @@ module.exports = {
         };
       });
   
-      await CustomerLocationAssignments.destroy(
-        {
-          where: { user_id: user.user_id },
-          raw: true,
-        },
-        { transaction: t }
-      );
+      // await CustomerLocationAssignments.destroy(
+      //   {
+      //     where: { user_id: user.user_id },
+      //     raw: true,
+      //   },
+      //   { transaction: t }
+      // );
       
       await CustomerLocationAssignments.bulkCreate(locationsToAdd, {
         transaction: t,

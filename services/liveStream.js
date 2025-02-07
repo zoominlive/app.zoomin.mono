@@ -165,6 +165,101 @@ module.exports = {
     return recentLiveStreams;
   },
 
+  getFixedCameraRecordings: async (user_id, from, to, location='All', sortBy, pageNumber, pageSize, tags) => {
+    const { RecordRtsp, Camera, RecordTag, CustomerLocations } = await connectToDatabase();
+    let recentFixedCamRecordings = await RecordRtsp.findAndCountAll(
+      { 
+        where: { 
+            active: false, 
+            user_id: user_id, 
+            ...(tags !== "All" && { tag_id: tags }), // Include `tag_id` only if `tags` is not "All"
+            start_time: {
+            [Sequelize.Op.between]: [
+              moment(from).startOf('day').toISOString(),
+              moment(to).endOf('day').toISOString()
+            ],
+          }, 
+        },  
+        order: [ ['start_time', sortBy] ],
+        include: [
+          {
+            model: Camera,
+            as: 'record_camera_tag',
+            where: {
+              ...(location !== "All" && { where: { loc_id: location } }), // Include `where` only if `location` is not "All"
+            },
+            include: [
+              {
+                model: CustomerLocations,
+              }
+            ]
+          },
+          {
+            model: RecordTag,
+            as: 'record_tag'
+          },
+        ],
+        limit: parseInt(pageSize),
+        offset: parseInt(pageNumber * pageSize),
+      }
+    );  
+    return {data: recentFixedCamRecordings.rows, count: recentFixedCamRecordings.count};
+  },
+
+  getFixedCameraRecordingsByUser: async (user_id) => {
+    const { RecordRtsp, RecordTag } = await connectToDatabase();
+    let recentFixedCamRecordingsByUser = await RecordRtsp.findAndCountAll(
+      { 
+        where: { 
+            active: true, 
+            user_id: user_id,
+        },  
+        order: [ ['start_time', 'DESC'] ],
+        attributes: ['record_uuid', 'active', 'user_id', 'cam_id', 'start_time', 'tag_id'],
+        include: [
+          {
+            model: RecordTag,
+            as: "record_tag"
+          }
+        ]
+      }
+    );  
+    return {data: recentFixedCamRecordingsByUser.rows, count: recentFixedCamRecordingsByUser.count};
+  },
+
+  getRecentFixedCameraRecordings: async (user_id, location='All', tags) => {
+    const { RecordRtsp, Camera, RecordTag, CustomerLocations } = await connectToDatabase();
+    let recentFixedCamRecordings = await RecordRtsp.findAndCountAll({
+      where: {
+        active: false,
+        user_id: user_id,
+        ...(tags !== "All" && { tag_id: tags }), // Include `tag_id` only if `tags` is not "All"
+      },
+      order: [['start_time', 'DESC']], // Order by `start_time` in descending order to get the most recent records
+      include: [
+        {
+          model: Camera,
+          as: 'record_camera_tag',
+          where: {
+            ...(location !== "All" && { loc_id: location }), // Include `loc_id` condition only if `location` is not "All"
+          },
+          include: [
+            {
+              model: CustomerLocations,
+            },
+          ],
+        },
+        {
+          model: RecordTag,
+          as: 'record_tag',
+        },
+      ],
+      limit: 10, // Fetch only the last 10 records
+    });
+     
+    return {data: recentFixedCamRecordings.rows, count: recentFixedCamRecordings.count};
+  },
+
   addRecentViewers: async (params, t) => {
     const { LiveStreamRecentViewers } = await connectToDatabase();
     let recentViewerObj = {
@@ -197,24 +292,25 @@ let result = await sequelize
 return result[0].total_start_only_viewers;
   },
 
-  getRecordedStreams: async(cust_id, from, to, location='All', zones="All", live = true, vod = true, sortBy = 'ASC', pageNumber, pageSize, pageCount, t)=> {
-    const { LiveStreams, Zone, LiveStreamCameras } = await connectToDatabase();
-    let where_obj = location === "All" ? {} : {location: location}
-    let status_obj = live == "true" && vod == "true" ? {}: {stream_running: live == "true" ? true : false}
+  getRecordedStreams: async(cust_id, from, to, location='All', zones="All", sortBy = 'ASC', pageNumber, pageSize, t)=> {
+    const { LiveStreams, Zone, LiveStreamCameras, CustomerLocations } = await connectToDatabase();
+    let where_obj = location === "All" ? {} : {loc_id: parseInt(location)}
+    let status_obj = {stream_running : false}
     
     if(zones !== "All" & zones.length > 0){
       where_obj = {...where_obj, zone_name: zones}
     }
     
     let recordedStreams = await LiveStreams.findAndCountAll(
-      { where: { cust_id: cust_id, ...status_obj,
-      stream_start_time: {
-        [Sequelize.Op.between]: [
-          moment(from).startOf('day').toISOString(),
-          moment(to).endOf('day').toISOString()
-        ],
-      },
-     }, 
+      {
+        where: { cust_id: cust_id, ...status_obj,
+        stream_start_time: {
+          [Sequelize.Op.between]: [
+            moment(from).startOf('day').toISOString(),
+            moment(to).endOf('day').toISOString()
+          ],
+        },
+      }, 
      order: [
         ['created_at', sortBy],
       ],
@@ -226,6 +322,9 @@ return result[0].total_start_only_viewers;
         include: [
           {
             model: LiveStreamCameras,
+          },
+          {
+            model: CustomerLocations,
           }
         ]
       }], 

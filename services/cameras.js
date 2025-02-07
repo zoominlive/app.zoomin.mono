@@ -267,7 +267,7 @@ module.exports = {
   },
 
   /* Fetch all the camera's details for transcoder */
-  getAllCameraForTranscoder: async (cust_ids) => {
+  getAllCameraForTranscoder: async (cust_ids, loc_ids) => {
     const { Camera } = await connectToDatabase();
 
     let cams;
@@ -276,6 +276,7 @@ module.exports = {
       {
         where: {
           cust_id: cust_ids,
+          loc_id: loc_ids
         },
       }
     );

@@ -21,6 +21,51 @@ module.exports = {
     return customer?.max_stream_live_license || null;
   },
 
+  getPermitAudio: async (custId, t) => {
+    const { Customers } = await connectToDatabase();
+    let customer = await Customers.findOne(
+      {
+        raw: true,
+        where: {
+          cust_id: custId,
+        },
+      },
+      { transaction: t }
+    );
+
+    return customer?.permit_audio || null;
+  },
+
+  getCameraRecording: async (custId, t) => {
+    const { Customers } = await connectToDatabase();
+    let customer = await Customers.findOne(
+      {
+        raw: true,
+        where: {
+          cust_id: custId,
+        },
+      },
+      { transaction: t }
+    );
+
+    return customer?.camera_recording || null;
+  },
+
+  getInviteUser: async (custId, t) => {
+    const { Customers } = await connectToDatabase();
+    let customer = await Customers.findOne(
+      {
+        raw: true,
+        where: {
+          cust_id: custId,
+        },
+      },
+      { transaction: t }
+    );
+
+    return customer?.invite_user || null;
+  },
+
   getMaxLiveStreamZoneAvailable: async (custId, t) => {
     const { Customers } = await connectToDatabase();
     let customer = await Customers.findOne(
@@ -408,6 +453,12 @@ module.exports = {
   deleteLocation: async (custId) => {
     const { CustomerLocations } = await connectToDatabase();
     let deletedLocations = await CustomerLocations.destroy({where: {cust_id: custId}});
+    return deletedLocations
+  },
+
+  deleteSpecificLocations: async (loc_id) => {
+    const { CustomerLocations } = await connectToDatabase();
+    let deletedLocations = await CustomerLocations.destroy({where: {loc_id: loc_id}});
     return deletedLocations
   },
 

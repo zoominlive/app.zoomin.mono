@@ -147,7 +147,8 @@ module.exports = {
         params.alias,
         params.location,
         params.cust_id,
-        params.user_id
+        params.user_id,
+        params.permit_audio
       );
       
       if (transcodedDetails?.response?.data.error) {
@@ -165,6 +166,10 @@ module.exports = {
           recordRtspObj.active = true;
           recordRtspObj.user_id = params.user_id;
           recordRtspObj.cam_id = params.cam_id;
+          recordRtspObj.zone_id = params.zone_id;
+          recordRtspObj.zone_name = params.zone_name;
+          recordRtspObj.thumbnail_url = transcodedDetails.data.thumbnail_url;
+          recordRtspObj.video_url = transcodedDetails.data.video_url;
           console.log('recordRtspObj==>', recordRtspObj);
           
           const recordRtspCreated = await RecordRtsp.create(recordRtspObj);
@@ -240,6 +245,49 @@ module.exports = {
           Data: transcodedDetails.data.message
         });
       }
+
+      next();
+    } catch (error) {
+      res.status(500).json({
+        IsSuccess: false,
+        error_log: error,
+        Message: CONSTANTS.INTERNAL_SERVER_ERROR
+      });
+      next(error);
+    }
+  },
+
+  editCameraRecording: async (req, res, next) => {
+    try {
+      params = req.body;
+      params.cust_id = req.user.cust_id || req.body.cust_id;
+      params.user_id = req.body.user_id || req.user.user_id;
+      params.cam_id = req.body.cam_id;
+
+      let recordRtspData = await RecordRtsp.findOne({
+        where: {
+          [Sequelize.Op.and]: [
+            { user_id: params.user_id },
+            { cam_id: params.cam_id },
+            { active: true },
+          ],
+        },
+        order:[["created_at", "DESC"]],
+        raw: true
+      });
+      
+      const updateRecordRtsp = await RecordRtsp.update(
+        {
+          tag_id: params.tag_id,
+        },
+        { where: { record_uuid: recordRtspData.record_uuid } }
+      );
+      console.log('updateRecordRtsp==>', updateRecordRtsp);
+      
+      res.status(201).json({
+        IsSuccess: true,
+        Data: 'Recording Tag Updated'
+      });
 
       next();
     } catch (error) {
@@ -337,6 +385,18 @@ module.exports = {
       const params = req.body;
       params.user_id = req.user.user_id;
       params.cust_id = req.user.cust_id || req.body.cust_id;
+      
+      const tagIsAssigned = await RecordRtsp.findAll({ where: { tag_id: params.tag_id } });
+      
+      if (tagIsAssigned.length > 0) {
+        await t.rollback();
+        res.status(400).json({
+          IsSuccess: false,
+          Message: "Tag is already assigned and cannot be deleted.",
+        });
+        return;
+      }
+
       const recordTagCreated = await RecordTag.destroy({where: {tag_id: params.tag_id}}, t);
 
       await t.commit();
@@ -413,7 +473,7 @@ module.exports = {
               },
             ],
           },
-          attributes: ["tag_id", "tag_name"],
+          attributes: ["tag_id", "tag_name", "status"],
         });
       } else {
         recordTags = await RecordTag.findAndCountAll({
@@ -427,7 +487,7 @@ module.exports = {
               },
             ],
           },
-          attributes: ["tag_id", "tag_name"],
+          attributes: ["tag_id", "tag_name", "status"],
           limit: parseInt(pageSize),
           offset: parseInt(pageNumber * pageSize),
         });
@@ -768,15 +828,19 @@ module.exports = {
       console.log('process.env.TRANSCODER_SECRET', process.env.TRANSCODER_SECRET);
       const decodeToken = jwt.verify(token, process.env.TRANSCODER_SECRET);
       const { rtsp_transcoder_endpoint } = decodeToken;
+      console.log('rtsp_transcoder_endpoint==>', rtsp_transcoder_endpoint);
+      
       let customerLocations;
       if ( rtsp_transcoder_endpoint ) {
         customerLocations = await CustomerLocations.findAll({ where: { transcoder_endpoint: rtsp_transcoder_endpoint } });
       }
       console.log('customerLocations==>', customerLocations.length);
+      console.log('customerLocations==>', customerLocations.map((item) => item?.dataValues?.loc_id));
       if (customerLocations) {
-        let cust_ids = customerLocations.map((item) => item.cust_id)
+        let cust_ids = customerLocations.map((item) => item.cust_id);
+        let loc_ids = customerLocations.map((item) => item?.dataValues?.loc_id);
         console.log('cust_ids-->', cust_ids);
-        const cameras = await cameraServices.getAllCameraForTranscoder(cust_ids);
+        const cameras = await cameraServices.getAllCameraForTranscoder(cust_ids, loc_ids);
         const generatePresignedUrlForThumbnail = async (thumbnail) => {
           // Check if the thumbnail contains an S3 URI
           if (thumbnail && thumbnail.startsWith('s3://')) {

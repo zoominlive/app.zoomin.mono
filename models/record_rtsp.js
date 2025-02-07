@@ -13,6 +13,26 @@ const RecordRtsp = sequelize.define(
       type: Sequelize.STRING(50),
       allowNull: true,
     },
+    zone_id: {
+      type: Sequelize.STRING(50),
+      allowNull: true,
+    },
+    zone_name: {
+      type: Sequelize.STRING(50),
+      allowNull: true,
+    },
+    event_name: {
+      type: Sequelize.STRING(50),
+      allowNull: true,
+    },
+    thumbnail_url: {
+      type: Sequelize.STRING(250),
+      allowNull: true,
+    },
+    video_url: {
+      type: Sequelize.STRING(250),
+      allowNull: true,
+    },
     cam_id: {
       type: Sequelize.STRING(50),
       allowNull: true,

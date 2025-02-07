@@ -94,6 +94,9 @@ module.exports = {
       } else {
         user.transcoderBaseUrl = await customerServices.getTranscoderUrlFromCustLocations(user.locations, custId);        
       }
+      user.permit_audio = await customerServices.getPermitAudio(custId);
+      user.camera_recording = await customerServices.getCameraRecording(custId);
+      user.invite_user = await customerServices.getInviteUser(custId);
       user.max_stream_live_license = await customerServices.getMaxLiveStramAvailable(custId);
       user.max_stream_live_license_zone = await customerServices.getMaxLiveStreamZoneAvailable(custId);
       if(user.role !== 'Super Admin') {
