@@ -602,7 +602,22 @@ const CustomerForm = (props) => {
                       }}
                     />
                   }
-                  label={`Audio Permission`}
+                  label={`Allow Fixed Camera Audio`}
+                />
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} md={12}>
+              <FormControl>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={values.camera_recording}
+                      onChange={(event) => {
+                        setFieldValue('camera_recording', event.target.checked);
+                      }}
+                    />
+                  }
+                  label={`Allow Fixed Camera Recording`}
                 />
               </FormControl>
             </Grid>
@@ -617,7 +632,7 @@ const CustomerForm = (props) => {
                       }}
                     />
                   }
-                  label={`Allow Invite User`}
+                  label={`Allow Families to Invite Users`}
                 />
               </FormControl>
             </Grid>
@@ -1047,6 +1062,9 @@ const CustomerForm = (props) => {
             max_stream_live_license_zone: props?.customer?.max_stream_live_license_zone || '',
             audio_permission: !_.isNil(props?.customer?.audio_permission)
               ? props?.customer?.audio_permission
+              : true,
+            camera_recording: !_.isNil(props?.customer?.camera_recording)
+              ? props?.customer?.camera_recording
               : true,
             invite_user: !_.isNil(props?.customer?.invite_user)
               ? props?.customer?.invite_user

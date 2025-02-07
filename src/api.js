@@ -9,7 +9,7 @@ export const currentURL = baseURL;
 const API = axios.create({
   baseURL,
   responseType: 'json',
-  timeout: 1000 * 30
+  timeout: 1000 * 60
 });
 
 export default API;
@@ -32,7 +32,7 @@ API.interceptors.response.use(
   (err) => {
     if (err.response.status === 401) {
       const baseUrl = ContextHolder.getContext().baseUrl;
-      window.location.href = `${baseUrl}/oauth/logout?post_logout_redirect_uri=${process.env.REACT_APP_LOGOUT_REDIRECT_URL_DEVELOPMENT}`;
+      window.location.href = `${baseUrl}/oauth/logout?post_logout_redirect_uri=${process.env.REACT_APP_LOGOUT_REDIRECT_URL_STAGE}`;
     }
     return err;
   }

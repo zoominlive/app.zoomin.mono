@@ -1950,6 +1950,9 @@ const Settings = () => {
                             <TableCell style={{ minWidth: '100px' }} align="left">
                               Name
                             </TableCell>
+                            <TableCell style={{ minWidth: '100px' }} align="left">
+                              Status
+                            </TableCell>
                             <TableCell align="right"></TableCell>
                           </TableRow>
                         </TableHead>
@@ -1962,6 +1965,16 @@ const Settings = () => {
                                       <Chip
                                         key={index}
                                         label={row.tag_name}
+                                        color="primary"
+                                        className="chip-color"
+                                      />
+                                    </Stack>
+                                  </TableCell>
+                                  <TableCell align="left">
+                                    <Stack direction="row">
+                                      <Chip
+                                        key={index}
+                                        label={row.status == true ? 'Active' : 'Inactive'}
                                         color="primary"
                                         className="chip-color"
                                       />

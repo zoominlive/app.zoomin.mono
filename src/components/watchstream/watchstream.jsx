@@ -57,6 +57,8 @@ const WatchStream = () => {
   const [zones, setZones] = useState([]);
   const [cameras, setCameras] = useState([]);
   const [selectedCameras, setSelectedCameras] = useState([]);
+  const [activeCameras, setActiveCameras] = useState([]);
+  const [activeRecordings, setActiveRecordings] = useState([]);
   const [locations, setLocations] = useState([]);
   const [selectedLocation, setSelectedLocation] = useState('');
   const [selectedZone, setSelectedZone] = useState([]);
@@ -83,6 +85,7 @@ const WatchStream = () => {
     setDropdownLoading(true);
     onSelect();
     getAvailableStreams();
+    getRecordingsByUser();
     window.addEventListener('pagehide', saveCameraPreference);
     return () => {
       window.removeEventListener('pagehide', saveCameraPreference);
@@ -113,7 +116,9 @@ const WatchStream = () => {
   };
 
   useEffect(() => {
-    if (!location.state?.streamUrl?.includes('zoomin-recordings-rtmp')) {
+    if (location.state?.streamUrl?.includes('zoomin-recordings-rtsp')) {
+      return;
+    } else {
       const zonesToSet = camerasPayload?.zone?.filter((zone) => {
         let count = 0;
         selectedLocation?.forEach((loc) => {
@@ -154,7 +159,9 @@ const WatchStream = () => {
   }, [selectedLocation]);
 
   useEffect(() => {
-    if (!location.state?.streamUrl?.includes('zoomin-recordings-rtmp')) {
+    if (location.state?.streamUrl?.includes('zoomin-recordings-rtsp')) {
+      return;
+    } else {
       const zones = camerasPayload?.zone?.filter((zone) => {
         let count = 0;
         selectedZone?.forEach((zone1) => {
@@ -221,6 +228,42 @@ const WatchStream = () => {
     console.log(selectedCameras);
     setAllCamsChecked(selectedCameras.length == cameras.length ? true : false);
   }, [selectedCameras]);
+
+  useEffect(() => {
+    API.get('cams/list-record-tags').then((response) => {
+      if (response.status === 200) {
+        authCtx.setTags(response.data.Data.recordTags);
+      } else {
+        errorMessageHandler(
+          enqueueSnackbar,
+          response?.response?.data.Message || 'Something Went Wrong.',
+          response?.response?.status,
+          authCtx.setAuthError
+        );
+      }
+    });
+  }, []);
+
+  const getRecordingsByUser = () => {
+    API.get('recordings/recordings-by-user', {
+      params: {
+        cust_id: localStorage.getItem('cust_id')
+      }
+    }).then((response) => {
+      if (response.status === 200) {
+        setActiveCameras(response.data.Data.activeCameras);
+        setActiveRecordings(response.data.Data.fixedCameraRecordingsByUser.data);
+      } else {
+        errorMessageHandler(
+          enqueueSnackbar,
+          response?.response?.data?.Message || 'Something Went Wrong.',
+          response?.response?.status,
+          authCtx.setAuthError
+        );
+      }
+      setDropdownLoading(false);
+    });
+  };
 
   const getAvailableStreams = () => {
     API.get('watchstream', {
@@ -506,7 +549,38 @@ const WatchStream = () => {
   return (
     <>
       <Box className="listing-wrapper">
-        {!location.state?.streamUrl?.includes('zoomin-recordings-rtmp') ? (
+        {location.state?.streamUrl?.includes('zoomin-recordings-rtsp') ? (
+          <FullScreen
+            handle={handle}
+            onChange={(state) => {
+              if (state == false) {
+                setIsFullScreenDialogOpen(false);
+              }
+            }}>
+            <Grid
+              container
+              alignContent={'center'}
+              spacing={isFullScreenDialogOpen ? 0 : 1}
+              sx={{ border: isFullScreenDialogOpen ? '' : '16px solid white' }}
+              className="player-grid-container">
+              <Grid
+                item
+                md={12}
+                sm={12}
+                sx={{ display: 'flex', justifyContent: 'center', padding: 1 }}>
+                <CustomPlayer
+                  streamUri={location.state?.streamUrl}
+                  camDetails={{}}
+                  timeOut={timeOut}
+                  setTimeOut={setTimeOut}
+                  setPlaying={setPlaying}
+                  setIsDeleteDialogOpen={setIsDeleteDialogOpen}
+                  cam_id={null}
+                />
+              </Grid>
+            </Grid>
+          </FullScreen>
+        ) : !location.state?.streamUrl?.includes('zoomin-recordings-rtmp') ? (
           <Card className="filter">
             <CardContent>
               <Grid container spacing={2} alignItems={'self-end'}>
@@ -730,24 +804,25 @@ const WatchStream = () => {
           </FullScreen>
         ) : (
           <>
-            {(selectedCameras.length == 0 || !playing) && (
-              <Card>
-                <CardContent>
-                  <Box mt={2} sx={{ height: '600px' }} className="no-camera-wrapper">
-                    <Stack
-                      className="no-camera-stack"
-                      spacing={1}
-                      alignItems="center"
-                      justifyContent="center">
-                      <img src={VideoOff} />
-                      <Typography>
-                        {!playing ? 'Stream stopped due to Inactivity' : `Camera not selected`}
-                      </Typography>
-                    </Stack>
-                  </Box>
-                </CardContent>
-              </Card>
-            )}
+            {(selectedCameras.length == 0 || !playing) &&
+              location.state?.streamUrl?.includes('zoomin-recordings-rtmp') && (
+                <Card>
+                  <CardContent>
+                    <Box mt={2} sx={{ height: '600px' }} className="no-camera-wrapper">
+                      <Stack
+                        className="no-camera-stack"
+                        spacing={1}
+                        alignItems="center"
+                        justifyContent="center">
+                        <img src={VideoOff} />
+                        <Typography>
+                          {!playing ? 'Stream stopped due to Inactivity' : `Camera not selected`}
+                        </Typography>
+                      </Stack>
+                    </Box>
+                  </CardContent>
+                </Card>
+              )}
             {!submitted && selectedCameras.length != 0 && (
               <Card>
                 <CardContent>
@@ -793,6 +868,9 @@ const WatchStream = () => {
               selectedCameras={selectedCameras}
               playing={playing}
               submitted={submitted}
+              cameraIdsWithRecording={activeCameras.length > 0 ? activeCameras : []}
+              activeRecordings={activeRecordings}
+              setActiveCameras={setActiveCameras}
               camLabel={selectedCameras}
               timeOut={timeOut}
               setTimeOut={setTimeOut}

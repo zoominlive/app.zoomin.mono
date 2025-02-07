@@ -11,74 +11,91 @@ import {
   Stack,
   Typography
 } from '@mui/material';
-import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
+import PlayArrowRoundedIcon from '../../assets/Play.svg';
 // import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 // import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
-import PictureInPictureAltRoundedIcon from '@mui/icons-material/PictureInPictureAltRounded';
-import FullscreenRoundedIcon from '@mui/icons-material/FullscreenRounded';
-import FullscreenExitRoundedIcon from '@mui/icons-material/FullscreenExitRounded';
-import PauseRoundedIcon from '@mui/icons-material/PauseRounded';
-import VolumeUpIcon from '@mui/icons-material/VolumeUp';
-import VolumeOffIcon from '@mui/icons-material/VolumeOff';
+import PictureInPictureAltRoundedIcon from '../../assets/PictureInPicture.svg';
+import FullscreenRoundedIcon from '../../assets/fullscreen.svg';
+import FullscreenExitRoundedIcon from '../../assets/fullscreen.svg';
+import PauseRoundedIcon from '../../assets/stop-playing.svg';
+import VolumeUpIcon from '../../assets/sound_on_icon.svg';
+import VolumeOffIcon from '../../assets/mute-sound.svg';
 import React, { useContext, useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import { useLocation } from 'react-router-dom';
 import Recording from '../../assets/recording.svg';
-import StopIcon from '@mui/icons-material/Stop';
-import LocalOfferIcon from '@mui/icons-material/LocalOffer';
-import API from '../../api';
-import { errorMessageHandler } from '../../utils/errormessagehandler';
-import { useSnackbar } from 'notistack';
+import StopIcon from '../../assets/pause-recording.svg';
+import LocalOfferIcon from '../../assets/RecordingTag.svg';
 import AuthContext from '../../context/authcontext';
+import { timeDifference } from '../../utils/timedifference';
 
 const PlayerControls = (props) => {
   const authCtx = useContext(AuthContext);
-  const { enqueueSnackbar } = useSnackbar();
   const [isRecording, setIsRecording] = useState(false);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [showTagOptions, setShowTagOptions] = useState(false);
   const [selectedTag, setSelectedTag] = useState(null);
   const [anchorEl, setAnchorEl] = useState(null);
-  const [tags, setTags] = useState([]);
-
+  const [progress, setProgress] = useState(false);
+  // const [tags, setTags] = useState([]);
+  const tags = authCtx.tags;
   // Timer Effect
   useEffect(() => {
     let timer;
-    if (isRecording && props.recording) {
+    const startTimer = (initialTime = 0) => {
+      setElapsedTime(initialTime); // to restart timer from 0 when recording is started again
       timer = setInterval(() => {
         setElapsedTime((prev) => {
           // Check if elapsed time has reached 15 minutes (900 seconds)
           if (prev + 1 >= 900) {
             // Automatically stop recording
             setIsRecording(false);
+            props.setRecording(false);
+            props.startDialogTimer(true);
             return 0;
           }
           return prev + 1;
         });
       }, 1000);
-    } else {
+    };
+    if (isRecording && props.recording) {
+      startTimer(0);
+    } else if (props.isRecording) {
+      const now = new Date();
+      const currentTime = now.toISOString().slice(11, 19);
+      const timeFromDB = props.start_time.slice(11, 19);
+      const { seconds } = timeDifference(currentTime, timeFromDB);
+      startTimer(seconds);
+    } else if (!props.recording) {
+      //remove else if condition if want to reset the timer
       clearInterval(timer);
-      setElapsedTime(0); // Reset timer when recording stops
+      // setElapsedTime(0); // Reset timer when recording stops
     }
 
     return () => clearInterval(timer);
   }, [isRecording, props.recording]);
 
   useEffect(() => {
-    API.get('cams/list-record-tags').then((response) => {
-      if (response.status === 200) {
-        console.log('recording started');
-        setTags(response.data.Data.recordTags);
-      } else {
-        errorMessageHandler(
-          enqueueSnackbar,
-          response?.response?.data.Message || 'Something Went Wrong.',
-          response?.response?.status,
-          authCtx.setAuthError
-        );
-      }
-    });
-  }, []);
+    if (progress) {
+      setProgress(false);
+    }
+  }, [props.recording, props.isRecording, props.error]);
+
+  // useEffect(() => {
+  //   API.get('cams/list-record-tags').then((response) => {
+  //     if (response.status === 200) {
+  //       console.log('recording started');
+  //       setTags(response.data.Data.recordTags);
+  //     } else {
+  //       errorMessageHandler(
+  //         enqueueSnackbar,
+  //         response?.response?.data.Message || 'Something Went Wrong.',
+  //         response?.response?.status,
+  //         authCtx.setAuthError
+  //       );
+  //     }
+  //   });
+  // }, []);
 
   const handleTagClick = (event) => {
     setAnchorEl(event.currentTarget);
@@ -94,6 +111,7 @@ const PlayerControls = (props) => {
     setSelectedTag(tag);
     setShowTagOptions(false);
     setAnchorEl(null);
+    props.handleEditRecordingTag(tag.tag_id);
   };
 
   // Formatting Time (MM:SS)
@@ -102,6 +120,14 @@ const PlayerControls = (props) => {
     const seconds = time % 60;
     return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
   };
+
+  const formatSliderTime = (seconds) => {
+    if (!seconds) return '00:00';
+    const min = Math.floor(seconds / 60);
+    const sec = Math.floor(seconds % 60);
+    return `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+  };
+
   const location = useLocation();
 
   const isS3Url = (url) => {
@@ -114,7 +140,14 @@ const PlayerControls = (props) => {
   };
 
   return (
-    <Box className="controls-wrapper">
+    <Box
+      className={
+        props.fullscreen && location.pathname == '/dashboard'
+          ? 'controls-wrapper-fullscreen'
+          : props.fullscreen && location.pathname == '/watch-stream'
+          ? 'controls-wrapper-watchstream-fullscreen'
+          : 'controls-wrapper'
+      }>
       <Grid
         container
         // spacing={2}
@@ -125,72 +158,269 @@ const PlayerControls = (props) => {
         <Grid display={'flex'} gap={1} alignItems={'center'}>
           <Grid>
             <IconButton
-              sx={{ backgroundColor: '#fff', display: isRecording && 'none' }}
+              sx={{
+                display: (props.recording || props.isRecording) && 'none',
+                padding: props.fullscreen ? '1px' : '8px'
+              }}
               onClick={() => props.setPlaying((playing) => !playing)}>
-              {props.playing ? <PauseRoundedIcon /> : <PlayArrowRoundedIcon />}
+              {props.playing ? (
+                <img
+                  src={PauseRoundedIcon}
+                  alt="PauseIcon"
+                  width={props.fullscreen && 50}
+                  height={props.fullscreen && 50}
+                />
+              ) : (
+                <img
+                  src={PlayArrowRoundedIcon}
+                  alt="PlayIcon"
+                  width={props.fullscreen && 50}
+                  height={props.fullscreen && 50}
+                />
+              )}
             </IconButton>
           </Grid>
           <Grid display={'flex'} alignItems={'center'} gap={1}>
             {/* Stop/Record Button */}
-            <IconButton
+            {/* old logic */}
+            {/* <IconButton
               onClick={() => {
                 setIsRecording(!isRecording);
                 setSelectedTag(null);
+                setProgress(!progress);
                 props.handleRecording(selectedTag);
               }}
               sx={{
                 color: isRecording ? 'red' : 'white',
-                padding: 0
+                padding: 0,
+                position: 'relative'
               }}>
-              {(isRecording && !props.recording) || (!isRecording && props.recording) ? (
-                <CircularProgress size={40} sx={{ color: '#5A53DD' }} />
-              ) : isRecording && props.recording ? (
-                <StopIcon
-                  sx={{ backgroundColor: '#fff', borderRadius: 50, height: '40px', width: '40px' }}
-                />
-              ) : !props.recording && !isRecording && props.playing ? (
-                <img src={Recording} alt="recording" />
-              ) : null}
+              <Box position="relative" display="inline-flex">
+                {progress && (
+                  <CircularProgress
+                    size={props.fullscreen ? 60 : 50}
+                    sx={{
+                      position: 'absolute',
+                      zIndex: 1,
+                      top: -5,
+                      left: -5,
+                      '& .MuiCircularProgress-circle': {
+                        color: '#ffffff' // Purple color
+                      },
+                      '& svg': {
+                        padding: '3px' // Direct SVG padding
+                      }
+                    }}
+                  />
+                )}
+
+                {!isS3Url(props?.streamUrl) && (
+                  <img
+                    src={Recording}
+                    alt="recording"
+                    width={props.fullscreen && 50}
+                    height={props.fullscreen && 50}
+                    style={{
+                      position: 'relative',
+                      zIndex: 2,
+                      display: props.recording && 'none'
+                    }}
+                  />
+                )}
+                {props.recording ? (
+                  <>
+                    {progress && (
+                      <CircularProgress
+                        size={props.fullscreen ? 60 : 50}
+                        sx={{
+                          position: 'absolute',
+                          zIndex: 1,
+                          '& .MuiCircularProgress-circle': {
+                            color: '#ffffff'
+                          }
+                        }}
+                      />
+                    )}
+                    <img
+                      src={StopIcon}
+                      alt="stop-recording"
+                      width={props.fullscreen && 50}
+                      height={props.fullscreen && 50}
+                      style={{
+                        position: 'relative',
+                        zIndex: 2
+                      }}
+                    />
+                  </>
+                ) : null}
+              </Box>
+            </IconButton> */}
+            {/* updated logic */}
+            <IconButton
+              onClick={() => {
+                if (props.isRecording) {
+                  setIsRecording(false);
+                } else {
+                  setIsRecording(!isRecording);
+                }
+                setSelectedTag(null);
+                setProgress(true); // Trigger loader when toggling recording
+                props.handleRecording(selectedTag);
+              }}
+              sx={{
+                color: isRecording ? 'red' : 'white',
+                padding: 0,
+                position: 'relative'
+              }}>
+              <Box position="relative" display="inline-flex">
+                {/* Loader and Recording Icon */}
+                {!props.recording && progress && (
+                  <>
+                    <CircularProgress
+                      size={props.fullscreen ? 60 : 50}
+                      sx={{
+                        position: 'absolute',
+                        zIndex: 1,
+                        top: -5,
+                        left: -5,
+                        '& .MuiCircularProgress-circle': {
+                          color: '#ffffff'
+                        },
+                        '& svg': {
+                          padding: '3px'
+                        },
+                        display: props.isRecording && 'none'
+                      }}
+                    />
+                    <img
+                      src={Recording}
+                      alt="recording"
+                      width={props.fullscreen && 50}
+                      height={props.fullscreen && 50}
+                      style={{
+                        position: 'relative',
+                        zIndex: 2,
+                        display: props.isRecording && 'none'
+                      }}
+                    />
+                  </>
+                )}
+
+                {/* Recording Icon without Loader */}
+                {!props.recording &&
+                  !progress &&
+                  !props.recordedPlayback &&
+                  !props.isRecording &&
+                  authCtx.user.camera_recording && (
+                    <img
+                      src={Recording}
+                      alt="recording"
+                      width={props.fullscreen && 50}
+                      height={props.fullscreen && 50}
+                      style={{
+                        position: 'relative',
+                        zIndex: 2
+                      }}
+                    />
+                  )}
+
+                {/* Loader and Stop Icon */}
+                {((props.recording && progress) ||
+                  (props.isRecording && !props.recording && progress)) && (
+                  <>
+                    <CircularProgress
+                      size={props.fullscreen ? 60 : 50}
+                      sx={{
+                        position: 'absolute',
+                        zIndex: 1,
+                        top: -5,
+                        left: -5,
+                        '& .MuiCircularProgress-circle': {
+                          color: '#ffffff'
+                        }
+                      }}
+                    />
+                    <img
+                      src={StopIcon}
+                      alt="stop-recording"
+                      width={props.fullscreen && 50}
+                      height={props.fullscreen && 50}
+                      style={{
+                        position: 'relative',
+                        zIndex: 2
+                      }}
+                    />
+                  </>
+                )}
+
+                {/* Stop Icon without Loader */}
+                {((props.recording && !progress) || (props.isRecording && !progress)) && (
+                  <img
+                    src={StopIcon}
+                    alt="stop-recording"
+                    width={props.fullscreen && 50}
+                    height={props.fullscreen && 50}
+                    style={{
+                      position: 'relative',
+                      zIndex: 2
+                    }}
+                  />
+                )}
+              </Box>
             </IconButton>
 
             {/* Recording Status */}
             <Stack direction={'row'} sx={{ backgroundColor: '#FFFFFF', borderRadius: '50px' }}>
-              {isRecording && props.recording && (
-                <Box display="flex" alignItems="center" ml={2}>
+              {(props.recording || props.isRecording) && (
+                <Box display="flex" alignItems="center" ml={1} mr={1}>
                   <Box
+                    display="flex"
+                    justifyContent={'center'}
+                    alignItems="center"
                     sx={{
-                      width: '8px',
-                      height: '8px',
-                      backgroundColor: 'red',
-                      borderRadius: '50%',
-                      marginRight: '8px'
-                    }}></Box>
-                  <Typography color="black" variant="body1">
-                    REC
-                  </Typography>
-                  <Typography color="black" variant="body1" ml={1}>
+                      backgroundColor: '#EB5757',
+                      borderRadius: '50px',
+                      padding: '4px 8px'
+                    }}>
+                    <Box
+                      sx={{
+                        width: '6px',
+                        height: '6px',
+                        backgroundColor: '#FFFFFF',
+                        borderRadius: '50%',
+                        marginRight: '2px'
+                        // marginLeft: '4px'
+                      }}></Box>
+                    <Typography
+                      color="white"
+                      sx={{ fontSize: '10px !important', padding: '0px !important' }}>
+                      REC
+                    </Typography>
+                  </Box>
+                  <Typography
+                    color="black"
+                    variant="body1"
+                    sx={{ fontSize: '16px !important' }}
+                    fontWeight={600}
+                    ml={1}>
                     {formatTime(elapsedTime)}
                   </Typography>
                 </Box>
               )}
-              {isRecording && props.recording && (
+              {(props.recording || props.isRecording) && (
                 <Box>
-                  <Divider
-                    variant="middle"
-                    orientation="vertical"
-                    sx={{ height: '70%', padding: '0 10px' }}
-                  />
+                  <Divider variant="middle" orientation="vertical" sx={{ height: '20px' }} />
                 </Box>
               )}
               {/* Tagging Icon */}
               <Box>
-                {isRecording && props.recording && (
-                  <IconButton sx={{ color: 'black', marginLeft: '10px' }} onClick={handleTagClick}>
-                    <LocalOfferIcon
-                      sx={{ backgroundColor: 'unset !important', borderRadius: '0 !important' }}
-                    />
+                {((isRecording && props.recording) || props.isRecording) && (
+                  <IconButton onClick={handleTagClick}>
+                    <img src={LocalOfferIcon} alt="Tag" />
                     {props.fullscreen && (
                       <Typography
+                        ml={1}
+                        mr={1}
                         fontWeight={500}
                         fontSize={14}
                         lineHeight={'21px'}
@@ -202,19 +432,21 @@ const PlayerControls = (props) => {
                 )}
 
                 {/* Display Selected Tag */}
-                {isRecording && selectedTag && (
-                  <Chip
-                    label={selectedTag?.tag_name}
-                    sx={{
-                      backgroundColor: '#5a53dd !important',
-                      color: 'white',
-                      borderRadius: '16px',
-                      padding: '0 8px',
-                      marginLeft: '8px',
-                      fontSize: '14px'
-                    }}
-                  />
-                )}
+                {(isRecording || props.isRecording) &&
+                  (selectedTag || props.tagName) &&
+                  props.fullscreen && (
+                    <Chip
+                      label={selectedTag?.tag_name || props.tagName}
+                      sx={{
+                        backgroundColor: '#5a53dd !important',
+                        color: 'white',
+                        borderRadius: '16px',
+                        padding: '0 8px',
+                        marginLeft: '8px',
+                        fontSize: '14px'
+                      }}
+                    />
+                  )}
               </Box>
 
               {/* Tag Selection Menu */}
@@ -228,11 +460,30 @@ const PlayerControls = (props) => {
                   vertical: 'bottom',
                   horizontal: 'center'
                 }}
-                sx={{ zIndex: 999 }}
+                container={document.fullscreenElement || document.body}
                 open={showTagOptions}
                 onClose={handleTagClose}>
+                <Typography
+                  sx={{
+                    textAlign: 'center',
+                    fontWeight: 'bold',
+                    textDecoration: 'underline',
+                    textUnderlineOffset: '4px', // Adjust the spacing of the underline
+                    textDecorationColor: '#5A53DD', // Set underline color to purple
+                    textDecorationThickness: '2px', // Set underline thickness
+                    color: '#5A53DD', // Set text color to purple
+                    marginBottom: '8px' // Add space below the title
+                  }}>
+                  Tag
+                </Typography>
                 {tags.map((tag) => (
-                  <MenuItem key={tag.tag_id} onClick={() => handleTagSelect(tag)}>
+                  <MenuItem
+                    sx={{
+                      color: selectedTag?.tag_name == tag.tag_name && 'white',
+                      backgroundColor: selectedTag?.tag_name == tag.tag_name && '#5A53DD'
+                    }}
+                    key={tag.tag_id}
+                    onClick={() => handleTagSelect(tag)}>
                     {tag.tag_name}
                   </MenuItem>
                 ))}
@@ -243,34 +494,95 @@ const PlayerControls = (props) => {
         <Grid display={'flex'} gap={1} alignItems={'center'}>
           <Grid margin={'auto'} align={'end'}>
             <IconButton
-              sx={{ backgroundColor: '#fff' }}
+              sx={{ padding: props.fullscreen ? '1px' : '8px' }}
               onClick={() => props.setIsMuted((isMuted) => !isMuted)}>
-              {props.isMuted ? <VolumeOffIcon /> : <VolumeUpIcon />}
+              {props.isMuted ? (
+                <img
+                  src={VolumeOffIcon}
+                  alt="volume-off"
+                  width={props.fullscreen && 50}
+                  height={props.fullscreen && 50}
+                />
+              ) : (
+                <img
+                  src={VolumeUpIcon}
+                  alt="volume-up"
+                  width={props.fullscreen && 50}
+                  height={props.fullscreen && 50}
+                />
+              )}
             </IconButton>
           </Grid>
           <Grid>
             <IconButton
-              sx={{ backgroundColor: '#fff' }}
+              sx={{ padding: props.fullscreen ? '1px' : '8px' }}
               onClick={() => props.setInPIPMode((inPIP) => !inPIP)}>
-              <PictureInPictureAltRoundedIcon />
+              <img
+                src={PictureInPictureAltRoundedIcon}
+                alt="PiP"
+                width={props.fullscreen && 50}
+                height={props.fullscreen && 50}
+              />
             </IconButton>
           </Grid>
           <Grid>
-            <IconButton sx={{ backgroundColor: '#fff' }} onClick={props.handleFullscreenToggle}>
-              {props.fullscreen ? <FullscreenExitRoundedIcon /> : <FullscreenRoundedIcon />}
+            <IconButton
+              sx={{ padding: props.fullscreen ? '1px' : '8px' }}
+              onClick={props.handleFullscreenToggle}>
+              {props.fullscreen ? (
+                <img
+                  src={FullscreenExitRoundedIcon}
+                  alt={'FullScreenExit'}
+                  width={props.fullscreen && 50}
+                  height={props.fullscreen && 50}
+                />
+              ) : (
+                <img src={FullscreenRoundedIcon} alt={FullscreenRoundedIcon} />
+              )}
             </IconButton>
           </Grid>
         </Grid>
-        {props.streamRunning === false && location.pathname === '/recordings' && (
-          <Grid item md={12} sm={12}>
-            <Slider min={0} max={100} onChange={props.onSeek} value={props.played * 100} />
-          </Grid>
-        )}
+        {(props.streamRunning === false || props.streamRunning === undefined) &&
+          location.pathname === '/recordings' && (
+            <Grid item md={12} sm={12}>
+              <Stack direction={'row'} justifyContent={'space-between'}>
+                <Typography variant="body2" color={'white'}>
+                  {formatSliderTime(props.played * props.duration)}
+                </Typography>
+                <Typography variant="body2" color={'white'}>
+                  {formatSliderTime(props.duration)}
+                </Typography>
+              </Stack>
+              <Slider
+                min={0}
+                max={100}
+                onChange={props.onSeek}
+                onChangeCommitted={props.seekMouseUpHandler}
+                value={props.played * 100}
+              />
+            </Grid>
+          )}
         {isS3Url(props?.streamUrl) &&
           location?.state?.streamUrl &&
           location.pathname === '/watch-stream' && (
             <Grid item md={12} sm={12}>
-              <Slider min={0} max={100} onChange={props.onSeek} value={props.played * 100} />
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Stack direction={'row'} justifyContent={'space-between'}>
+                  <Typography variant="body2" color={'white'}>
+                    {formatSliderTime(props.played * props.duration)}
+                  </Typography>
+                  <Typography variant="body2" color={'white'}>
+                    {formatSliderTime(props.duration)}
+                  </Typography>
+                </Stack>
+                <Slider
+                  min={0}
+                  max={100}
+                  onChange={props.onSeek}
+                  onChangeCommitted={props.seekMouseUpHandler}
+                  value={props.played * 100}
+                />
+              </Box>
             </Grid>
           )}
       </Grid>
@@ -283,6 +595,13 @@ export default PlayerControls;
 PlayerControls.propTypes = {
   playing: PropTypes.bool,
   recording: PropTypes.bool,
+  isRecording: PropTypes.bool,
+  error: PropTypes.bool,
+  start_time: PropTypes.string,
+  tagName: PropTypes.string,
+  recordingCameraId: PropTypes.string,
+  existingCameraId: PropTypes.string,
+  seekMouseUpHandler: PropTypes.func,
   inPIPMode: PropTypes.bool,
   fullscreen: PropTypes.bool,
   setPlaying: PropTypes.func,
@@ -292,9 +611,13 @@ PlayerControls.propTypes = {
   handleFullscreenToggle: PropTypes.func,
   noOfCameras: PropTypes.number,
   isMuted: PropTypes.bool,
+  recordedPlayback: PropTypes.bool,
   setIsMuted: PropTypes.func,
+  startDialogTimer: PropTypes.func,
+  handleEditRecordingTag: PropTypes.func,
   onSeek: PropTypes.func,
   played: PropTypes.number,
+  duration: PropTypes.number,
   streamRunning: PropTypes.bool,
   streamUrl: PropTypes.string
 };

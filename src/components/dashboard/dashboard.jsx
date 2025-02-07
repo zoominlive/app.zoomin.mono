@@ -33,7 +33,7 @@ import Families from '../../assets/families-stats.svg';
 import AddFamily from '../../assets/add-fam.svg';
 import AddStaff from '../../assets/add-staff.svg';
 import MultiCam from '../../assets/multi-cam.svg';
-import AccessLog from '../../assets/access-log.svg';
+import Recordings from '../../assets/recordings.svg';
 // import StickyHeadTable from './stickyheadtable';
 import CustomPlayer from '../watchstream/customplayer';
 import { LoadingButton } from '@mui/lab';
@@ -103,6 +103,8 @@ const Dashboard = () => {
   const [child, setChild] = useState();
   const [parentType, setParentType] = useState('');
   const [zonesList, setZonesList] = useState([]);
+  const [activeCameras, setActiveCameras] = useState([]);
+  const [activeRecordings, setActiveRecordings] = useState([]);
   const [disableLoading, setDisableLoading] = useState(false);
   const [user, setUser] = useState(false);
   // eslint-disable-next-line no-unused-vars
@@ -263,6 +265,22 @@ const Dashboard = () => {
         // setRoomsDropdownLoading(false);
       }
     );
+  }, []);
+
+  useEffect(() => {
+    API.get('cams/list-record-tags').then((response) => {
+      if (response.status === 200) {
+        authCtx.setTags(response.data.Data.recordTags);
+      } else {
+        errorMessageHandler(
+          enqueueSnackbar,
+          response?.response?.data.Message || 'Something Went Wrong.',
+          response?.response?.status,
+          authCtx.setAuthError
+        );
+      }
+    });
+    getRecordingsByUser();
   }, []);
 
   const handleOpen = () => {
@@ -436,6 +454,27 @@ const Dashboard = () => {
       setIsLoading(false);
     });
   };
+
+  const getRecordingsByUser = () => {
+    API.get('recordings/recordings-by-user', {
+      params: {
+        cust_id: localStorage.getItem('cust_id')
+      }
+    }).then((response) => {
+      if (response.status === 200) {
+        setActiveCameras(response.data.Data.activeCameras);
+        setActiveRecordings(response.data.Data.fixedCameraRecordingsByUser.data);
+      } else {
+        errorMessageHandler(
+          enqueueSnackbar,
+          response?.response?.data?.Message || 'Something Went Wrong.',
+          response?.response?.status,
+          authCtx.setAuthError
+        );
+      }
+    });
+  };
+
   return (
     <>
       <Box className="dashboard">
@@ -688,7 +727,7 @@ const Dashboard = () => {
                     ) : null}
                   </Stack>
                   <IconButton id="video-button" onClick={handleOpen}>
-                    <Video />
+                    <Video style={{ padding: '3px', color: '#5a53dd' }} />
                   </IconButton>
 
                   <WatchStreamDialogBox
@@ -731,6 +770,17 @@ const Dashboard = () => {
                         noOfCameras={2}
                         streamUri={selectedCamera?.stream_uri}
                         camDetails={selectedCamera}
+                        activeRecordingCameras={activeCameras}
+                        isRecording={activeCameras.includes(selectedCamera?.cam_id)}
+                        startTime={
+                          activeRecordings.find((item) => item.cam_id === selectedCamera?.cam_id)
+                            ?.start_time || 'Not Found'
+                        }
+                        tagName={
+                          activeRecordings.find((item) => item.cam_id === selectedCamera?.cam_id)
+                            ?.record_tag?.tag_name || 'Not Found'
+                        }
+                        setActiveCameras={setActiveCameras}
                         timeOut={timeOut}
                         setTimeOut={setTimeOut}
                         setPlaying={setPlaying}
@@ -826,11 +876,11 @@ const Dashboard = () => {
                       gap={1}
                       sx={{ cursor: 'pointer' }}
                       onClick={() => {
-                        navigate('/logs');
+                        navigate('/recordings');
                       }}
-                      className="quick-link-wrap quick-links-access-logs">
-                      <img src={AccessLog} alt="add-fam" className="quick-link-img" />
-                      <Typography className="link-text">{'Access Log'}</Typography>
+                      className="quick-link-wrap quick-links-recordings">
+                      <img src={Recordings} alt="recordings" className="quick-link-img" />
+                      <Typography className="link-text">{'Recordings'}</Typography>
                     </Stack>
                   </Stack>
                 </CardContent>

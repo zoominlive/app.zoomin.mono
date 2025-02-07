@@ -10,7 +10,8 @@ const defaultState = {
     custName: localStorage.getItem('cust_name'),
     location: ['Select All'],
     updateDashboardData: false,
-    paymentMethod: false
+    paymentMethod: false,
+    tags: []
     // sessionCreated: false
   }
 };
@@ -24,6 +25,7 @@ const AuthContext = React.createContext({
 export const AuthContextProvider = (props) => {
   const [token, setToken] = useState(defaultState.auth.token);
   const [user, setUser] = useState(defaultState.auth.user);
+  const [tags, setTags] = useState(defaultState.auth.tags);
   const [authError, setAuthError] = useState(defaultState.auth.authError);
   const [previosPagePath, setPreviosPagePath] = useState(defaultState.auth.previosPagePath);
   const [custName, setCustName] = useState(defaultState.auth.custName);
@@ -49,11 +51,13 @@ export const AuthContextProvider = (props) => {
   const handleLocation = (loc) => setLocation(loc);
   const handlePaymentMethod = (pm) => setPaymentMethod(pm);
   const handleUpdateDashboardData = (value) => setUpdateDashboardData(value);
+  const handleTags = (value) => setTags(value);
   // const handleSessionCreated = (value) => setSessionCreated(value);
 
   const context = {
     token,
     user,
+    tags,
     authError,
     previosPagePath,
     custName,
@@ -68,7 +72,8 @@ export const AuthContextProvider = (props) => {
     setCustName: handleCustName,
     setLocation: handleLocation,
     setUpdateDashboardData: handleUpdateDashboardData,
-    setPaymentMethod: handlePaymentMethod
+    setPaymentMethod: handlePaymentMethod,
+    setTags: handleTags
     // setSessionCreated: handleSessionCreated
   };
 

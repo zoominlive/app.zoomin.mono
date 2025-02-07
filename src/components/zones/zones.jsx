@@ -184,7 +184,11 @@ const Row = (props) => {
             </IconButton>
           </DialogTitle>
           <DialogContent>
-            <CustomPlayer noOfCameras={2} streamUri={selectedCamera?.stream_uri_seckey} />
+            <CustomPlayer
+              noOfCameras={2}
+              streamUri={selectedCamera?.stream_uri_seckey}
+              camDetails={selectedCamera}
+            />
           </DialogContent>
         </Dialog>
       )}

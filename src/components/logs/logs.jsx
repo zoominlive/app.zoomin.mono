@@ -43,7 +43,6 @@ import NoDataDiv from '../common/nodatadiv';
 import PropTypes from 'prop-types';
 import { useLocation } from 'react-router-dom';
 import LinerLoader from '../common/linearLoader';
-import Logger from '../../utils/logger';
 import { DesktopDateRangePicker } from '@mui/x-date-pickers-pro';
 import { LocalizationProvider } from '@mui/x-date-pickers-pro';
 import { AdapterDayjs } from '@mui/x-date-pickers-pro/AdapterDayjs';
@@ -236,9 +235,8 @@ const Logs = () => {
     { id: 'User_Forgot_Password', name: 'Forgot Password' },
     { id: 'User_Change_Password', name: 'Change Password' }
   ];
-  Logger.log('location?.state==>', location?.state);
+
   useEffect(() => {
-    Logger.log('inside');
     if (location?.state?.lastHoursUsers) {
       setFromDate(moment());
       setToDate(moment());
@@ -289,13 +287,13 @@ const Logs = () => {
                 console.log('familyToAdd in else', families);
               }
               setFamilies([families[0], ...response.data.Data]);
-              Logger.log('location->', location);
+
               setSelectedFamilies(
                 location?.state
                   ? response.data.Data.filter((user) => familyToAdd.includes(user.family_member_id))
                   : response.data.Data
               );
-              Logger.log('logsPayload==>', logsPayload);
+
               if (location?.state?.lastHoursUsers || location?.state?.viewMore) {
                 if (location?.state?.viewMore) {
                   setRangeDate([dayjs().startOf('week'), dayjs().endOf('week')]);
@@ -437,7 +435,7 @@ const Logs = () => {
       // If the item is not in the itemsToReplace array, keep it unchanged
       return item;
     });
-    Logger.log('==reached==');
+
     if (selectedType == 'Access Log') {
       setLogsPayload({
         ...logsPayload,
@@ -463,7 +461,6 @@ const Logs = () => {
         actions: newArray
       });
     }
-    Logger.log('logsPayload after update', logsPayload);
   }, [
     selectedLocation,
     fromDate,
