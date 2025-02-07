@@ -1,43 +1,31 @@
 const { Sequelize } = require('sequelize');
 const sequelize = require('../lib/database');
 
-const Room = sequelize.define(
-  'room',
+const ZoneType = sequelize.define(
+  'zone_type',
   {
-    room_id: {
+    zone_type_id: {
       type: Sequelize.STRING(50),
       allowNull: false,
       primaryKey: true
-    },
-    room_name: {
-      type: Sequelize.STRING(50),
-      allowNull: false
-    },
-    user_id: {
-      type: Sequelize.STRING(50),
-      allowNull: false
     },
     cust_id: {
       type: Sequelize.STRING(50),
       allowNull: false
     },
-    location: {
+    zone_type: {
       type: Sequelize.STRING(50),
       allowNull: false
     },
-    stream_live_license: {
-      type: Sequelize.BOOLEAN(),
-      defaultValue: false,
-     },
     createdAt: { type: Sequelize.DATE, field: 'created_at' },
     updatedAt: { type: Sequelize.DATE, field: 'updated_at' },
     deletedAt: { type: Sequelize.DATE, field: 'deleted_at' }
   },
   {
-    tableName: 'room',
+    tableName: 'zone_type',
     timestamps: true,
     paranoid: true
   }
 );
 
-module.exports = Room;
+module.exports = ZoneType;

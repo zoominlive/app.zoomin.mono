@@ -1,7 +1,7 @@
 const connectToDatabase = require('../models/index');
 const Sequelize = require('sequelize');
 const _ = require('lodash');
-const RoomsInChild = require('../models/rooms_assigned_to_child');
+const ZonesInChild = require('../models/zones_assigned_to_child');
 const { v4: uuidv4 } = require("uuid");
 
 module.exports = {
@@ -14,8 +14,23 @@ module.exports = {
       scheduled_enable_date: childObj?.enable_date,
       cust_id:custID
     };
-    const { Child } = await connectToDatabase();
+    const { Child, CustomerLocationAssignments } = await connectToDatabase();
     let childCreated = await Child.create(createObj, { transaction: t });
+    console.log('childObj==>', childObj);
+    
+    const locationsToAdd = childObj.location.locations.map((_) => {
+      return {
+        loc_id: _.loc_id,
+        cust_id: childObj.cust_id,
+        child_id: childCreated.child_id,
+        family_id: childObj.family_id
+      };
+    });
+    console.log('locationsToAdd==>', locationsToAdd);
+    
+    await CustomerLocationAssignments.bulkCreate(locationsToAdd, {
+      transaction: t,
+    });
 
     return childCreated !== undefined ? childCreated.toJSON() : null;
   },
@@ -29,22 +44,37 @@ module.exports = {
         scheduled_enable_date: child?.enable_date
       };
     });
-    const { Child } = await connectToDatabase();
+    const { Child, CustomerLocationAssignments } = await connectToDatabase();
     let childCreated = await Child.bulkCreate(childObjs, { returning: true }, { transaction: t });
 
     await Promise.all(
       childObjs.map(async (child, index) => {
-        let roomsInChild = child.rooms.rooms.map((room) => {
-          return {  child_id: childCreated[index].child_id, room_id: room.room_id,
+        let zonesInChild = child.zones.zones.map((zone) => {
+          return {  child_id: childCreated[index].child_id, zone_id: zone.zone_id,
                     disabled: child?.enable_date !== null ? 'true' : 'false',
                     scheduled_enable_date: child?.enable_date !== null ? child?.enable_date : null};
         });
-        await RoomsInChild.bulkCreate(roomsInChild, { returning: true }, { transaction: t });
+        await ZonesInChild.bulkCreate(zonesInChild, { returning: true }, { transaction: t });
+        console.log('child==>', child);
+        
+        const locationsToAdd = child.location.locations.map((_) => {
+          return {
+            loc_id: _.loc_id,
+            cust_id: child.cust_id,
+            child_id: childCreated[index].child_id,
+            family_id: childCreated[index].family_id
+          };
+        });
+        console.log('locationsToAdd==>', locationsToAdd);
+        
+        await CustomerLocationAssignments.bulkCreate(locationsToAdd, {
+          transaction: t,
+        });
       })
     );
-    // const addRoomsToChild = await childServices.assignRoomsToChild(
+    // const addZonesToChild = await childServices.assignZonesToChild(
     //   newChild?.child_id,
-    //   params?.rooms?.rooms,
+    //   params?.zones?.zones,
     //   t
     // );
 
@@ -53,7 +83,7 @@ module.exports = {
 
   /* Edit child details */
   editChild: async (params, t) => {
-    const { Child } = await connectToDatabase();
+    const { Child, CustomerLocationAssignments } = await connectToDatabase();
     const childObj = _.omit(params, ['child_id']);
     let update = {
       ...childObj
@@ -66,6 +96,30 @@ module.exports = {
       },
       { transaction: t }
     );
+    if(params.location) {
+      const locationsToAdd = params.location.locations.map((loc) => {
+        return {
+          loc_id: loc.loc_id,
+          cust_id: params.cust_id,
+          child_id: params.child_id,
+          cust_id: params.cust_id,
+          family_id: params.family_id,
+          family_member_id: params.family_member_id
+        };
+      });
+
+      await CustomerLocationAssignments.destroy(
+        {
+          where: { child_id: params.child_id },
+          raw: true,
+        },
+        { transaction: t }
+      );
+      
+      await CustomerLocationAssignments.bulkCreate(locationsToAdd, {
+        transaction: t,
+      });
+    }
 
     if (updateChildDetails) {
       updateChildDetails = await Child.findOne(
@@ -94,11 +148,18 @@ module.exports = {
 
   // get all children for given family Id
   getChildById: async (childId, t) => {
-    const { Child } = await connectToDatabase();
+    const { Child, CustomerLocations } = await connectToDatabase();
     childDetails = await Child.findOne(
       {
-        raw: true,
-        where: { child_id: childId }
+        // raw: true,
+        where: { child_id: childId },
+        include: [
+          {
+            model: CustomerLocations,
+            as: 'child_locations',
+            attributes: ['loc_id', 'loc_name']
+          }
+        ]
       },
       { transaction: t }
     );
@@ -108,9 +169,9 @@ module.exports = {
 
   // delete selected child
   deleteChild: async (childId, t) => {
-    const { Child, RoomsInChild } = await connectToDatabase();
+    const { Child, ZonesInChild, CustomerLocationAssignments } = await connectToDatabase();
 
-    let roomsDeleted = await RoomsInChild.destroy(
+    let zonesDeleted = await ZonesInChild.destroy(
       { where: { child_id: childId }, raw: true },
       { transaction: t }
     );
@@ -123,7 +184,15 @@ module.exports = {
       { transaction: t }
     );
 
-    return deletedChild;
+    let deletedChildFromCustLocAssignment = await CustomerLocationAssignments.destroy(
+      {
+        where: { child_id: childId },
+        raw: true
+      },
+      { transaction: t }
+    );
+
+    return deletedChild, deletedChildFromCustLocAssignment;
   },
 
   //disable selected child
@@ -145,7 +214,7 @@ module.exports = {
         { transaction: t }
       );
 
-      let updateRooms = await RoomsInChild.update(
+      let updateZones = await ZonesInChild.update(
         { scheduled_enable_date: null, scheduled_disable_date: schedluedEndDate, disabled: 'false' },
           {
             where: {
@@ -179,7 +248,7 @@ module.exports = {
         },
         { transaction: t }
       );
-      let updateRooms = await RoomsInChild.update(
+      let updateZones = await ZonesInChild.update(
         { scheduled_enable_date: null, scheduled_disable_date: null, disabled: 'true' },
           {
             where: {
@@ -204,7 +273,7 @@ module.exports = {
 
   //enable selected child
   enableChild: async (childId, t) => {
-    const { Child, RoomsInChild } = await connectToDatabase();
+    const { Child, ZonesInChild } = await connectToDatabase();
     let update = {
       status: 'Enabled',
       scheduled_end_date: null,
@@ -220,7 +289,7 @@ module.exports = {
       { transaction: t }
     );
 
-    let enableRooms = await RoomsInChild.update(
+    let enableZones = await ZonesInChild.update(
     { scheduled_enable_date: null, scheduled_disable_date: null, disabled: 'false' },
       {
         where: {
@@ -242,111 +311,111 @@ module.exports = {
     return updateChildDetails;
   },
 
-  assignRoomsToChild: async (childId, rooms, t) => {
-    const { RoomsInChild } = await connectToDatabase();
-    const roomsToadd = rooms.map((room) => {
+  assignZonesToChild: async (childId, zones, t) => {
+    const { ZonesInChild } = await connectToDatabase();
+    const zonesToadd = zones.map((zone) => {
       return {
-        room_id: room.room_id,
+        zone_id: zone.zone_id,
         child_id: childId,
-        scheduled_enable_date: room.scheduled_enable_date
+        scheduled_enable_date: zone.scheduled_enable_date
       };
     });
 
-    let roomsAdded = await RoomsInChild.bulkCreate(roomsToadd, { transaction: t });
+    let zonesAdded = await ZonesInChild.bulkCreate(zonesToadd, { transaction: t });
 
-    return roomsAdded;
+    return zonesAdded;
   },
 
-  editAssignedRoomsToChild: async (childId, rooms, t) => {
-    const { RoomsInChild } = await connectToDatabase();
-    const roomsToadd = rooms.map((room) => {
+  editAssignedZonesToChild: async (childId, zones, t) => {
+    const { ZonesInChild } = await connectToDatabase();
+    const zonesToadd = zones.map((zone) => {
       return {
-        room_id: room.room_id,
+        zone_id: zone.zone_id,
         child_id: childId
       };
     });
 
-    let roomsRemoved = await RoomsInChild.destroy(
+    let zonesRemoved = await ZonesInChild.destroy(
       { where: { child_id: childId }, raw: true },
       { transaction: t }
     );
 
-    let roomsAdded = await RoomsInChild.bulkCreate(roomsToadd, { transaction: t });
+    let zonesAdded = await ZonesInChild.bulkCreate(zonesToadd, { transaction: t });
 
-    return roomsAdded;
+    return zonesAdded;
   },
 
-  deleteAssignedRoomsToChild: async (childId, t) => {
-    const { RoomsInChild } = await connectToDatabase();
-    let roomsDeleted = await RoomsInChild.destroy(
+  deleteAssignedZonesToChild: async (childId, t) => {
+    const { ZonesInChild } = await connectToDatabase();
+    let zonesDeleted = await ZonesInChild.destroy(
       { where: { child_id: childId }, raw: true },
       { transaction: t }
     );
 
-    return roomsDeleted;
+    return zonesDeleted;
   },
 
-  disableSelectedRoomsForChild: async (childId, roomIds, t) => {
-    const { RoomsInChild } = await connectToDatabase();
-    let disabledRooms = await RoomsInChild.update(
+  disableSelectedZonesForChild: async (childId, zoneIds, t) => {
+    const { ZonesInChild } = await connectToDatabase();
+    let disabledZones = await ZonesInChild.update(
       { disabled: true },
       {
-        where: { child_id: childId, room_id: roomIds },
+        where: { child_id: childId, zone_id: zoneIds },
         raw: true
       },
       { transaction: t }
     );
 
-    return disabledRooms;
+    return disabledZones;
   },
 
-  addRoomsToChild: async (childId, t) => {
-    const { RoomsInChild, Room } = await connectToDatabase();
-    let disabledRooms = await RoomsInChild.findAll(
+  addZonesToChild: async (childId, t) => {
+    const { ZonesInChild, Zone } = await connectToDatabase();
+    let disabledZones = await ZonesInChild.findAll(
       {
         where: { child_id: childId },
-        include: [{ model: Room, as: 'room', attributes: ['room_id', 'location', 'room_name'] }]
+        include: [{ model: Zone, as: 'zone', attributes: ['zone_id', 'location', 'zone_name'] }]
       },
       { transaction: t }
     );
 
-    return disabledRooms;
+    return disabledZones;
   },
 
-  addNewRoomsToChild: async (childId, roomsToAdd, selectedOption, scheduled_enable_date, t) => {
-    const { RoomsInChild } = await connectToDatabase();
-    let addRooms;
+  addNewZonesToChild: async (childId, zonesToAdd, selectedOption, scheduled_enable_date, t) => {
+    const { ZonesInChild } = await connectToDatabase();
+    let addZones;
     if (selectedOption == 'enable') {
-      const roomsToadd = roomsToAdd.map((room) => {
+      const zonesToadd = zonesToAdd.map((zone) => {
         return {
-          room_id: room.room_id,
+          zone_id: zone.zone_id,
           child_id: childId,
           disabled: 'false'
         };
       });
-      addRooms = await RoomsInChild.bulkCreate(roomsToadd, { transaction: t });
+      addZones = await ZonesInChild.bulkCreate(zonesToadd, { transaction: t });
     } else {
-      const roomsToadd = roomsToAdd.map((room) => {
+      const zonesToadd = zonesToAdd.map((zone) => {
         return {
-          room_id: room.room_id,
+          zone_id: zone.zone_id,
           child_id: childId,
           disabled: 'true',
           scheduled_enable_date: scheduled_enable_date
         };
       });
-      addRooms = await RoomsInChild.bulkCreate(roomsToadd, { transaction: t });
+      addZones = await ZonesInChild.bulkCreate(zonesToadd, { transaction: t });
     }
 
-    return addRooms;
+    return addZones;
   },
 
-  changeRoomScheduler: async (roomChildId, update, t) => {
-    const { RoomsInChild } = await connectToDatabase();
+  changeZoneScheduler: async (zoneChildId, update, t) => {
+    const { ZonesInChild } = await connectToDatabase();
 
-    let schedule = await RoomsInChild.update(
+    let schedule = await ZonesInChild.update(
       { schedule: update },
       {
-        where: { room_child_id: roomChildId },
+        where: { zone_child_id: zoneChildId },
       },
       { transaction: t }
     );
@@ -354,7 +423,7 @@ module.exports = {
     return schedule;
   },
 
-  changeDefaultRoomScheduler: async (custId, update, t) => {
+  changeDefaultZoneScheduler: async (custId, update, t) => {
     const { DefaultSchedule } = await connectToDatabase();
 
     // Check if a record with the given custId exists
@@ -399,69 +468,69 @@ module.exports = {
   },
 
   disableSelectedLocations: async (childId, SED, locationsToDisable, t) => {
-    const { RoomsInChild, Room } = await connectToDatabase();
-
-    let getRoomsToDisable = await RoomsInChild.findAll(
+    const { ZonesInChild, Zone } = await connectToDatabase();
+    let mappedLocationstoDisable = locationsToDisable.map(({loc_id}) => loc_id)
+    let getZonesToDisable = await ZonesInChild.findAll(
       {
         where: {
           child_id: childId
         },
-        attributes: ['room_child_id'],
+        attributes: ['zone_child_id'],
         include: [
           {
-            model: Room,
-            as: 'room',
+            model: Zone,
+            as: 'zone',
             where: {
-              location: locationsToDisable
+              location: mappedLocationstoDisable
             },
-            attributes: ['room_name']
+            attributes: ['zone_name']
           }
         ]
       },
       { transaction: t }
     );
 
-    let roomChildIds = getRoomsToDisable?.map((room) => room.room_child_id);
-    let disableRooms;
+    let zoneChildIds = getZonesToDisable?.map((zone) => zone.zone_child_id);
+    let disableZones;
 
     if (SED != null && SED != '' && SED != false) {
-      disableRooms = await RoomsInChild.update(
+      disableZones = await ZonesInChild.update(
         { scheduled_disable_date: SED },
         {
           where: {
-            room_child_id: roomChildIds
+            zone_child_id: zoneChildIds
           }
         },
         { transaction: t }
       );
     } else {
-      disableRooms = await RoomsInChild.update(
+      disableZones = await ZonesInChild.update(
         { disabled: 'true' },
         {
           where: {
-            room_child_id: roomChildIds
+            zone_child_id: zoneChildIds
           }
         },
         { transaction: t }
       );
     }
 
-    return disableRooms;
+    return disableZones;
   },
 
-  getChildOfAssignedRoomId: async (roomID, t) => {
-    const { RoomsInChild } = await connectToDatabase();
-    let roomChilds = await RoomsInChild.findAll(
+  getChildOfAssignedZoneId: async (zoneID, t) => {
+    const { ZonesInChild } = await connectToDatabase();
+    let zoneChilds = await ZonesInChild.findAll(
       {
         raw: true,
-        where: { room_id: roomID },
+        where: { zone_id: zoneID },
         attributes: ['child_id']
 
         },
       { transaction: t }
     );
 
-    return roomChilds;
+    return zoneChilds;
   },
 
   getAllchildrensFamilyId: async (allChildId, t) => {
@@ -483,33 +552,55 @@ module.exports = {
   },
 
   getAllChildren: async (custId, location = ["Select All"], t) => {
-    const {Child} = await connectToDatabase();
-    let AllChildren = await Child.findAll({
-      where: {cust_id: custId},
-      attributes: ["child_id", "location"], raw: true
-    }, { transaction: t });
+    const { Child, CustomerLocations } = await connectToDatabase();
+    const distinctChildIds = await Child.findAll(
+      {
+        // logging: console.log,
+        where: { cust_id: custId },
+        attributes: [ [Sequelize.fn('DISTINCT', Sequelize.col('child_id')) ,'child_id']],
+        group: ["child_id"],
+        raw: true,
+      },
+      { transaction: t }
+    );
+    
+    const childIdsArray = distinctChildIds.map(child => child.child_id);
+    
+    let childIdsWithLocations = await Child.findAll({
+      where: { child_id: childIdsArray },
+      include: [
+        {
+          model: CustomerLocations,
+          as: "child_locations",
+        },
+      ],
+      group: ["child_id"],
+      transaction: t,
+    });
     
     if(!location.includes("Select All")){
       let filterResult = []
-      AllChildren.map(i => {
-          if(i.location?.locations?.every(it => location.includes(it))){
-            filterResult.push(i)
-          }
+      location = location.map(Number);
+      childIdsWithLocations.map((i) => {        
+        if(i.child_locations?.map((item) => item.dataValues.loc_id).every(it => location.includes(it)))
+        {
+          filterResult.push(i)
+        }
       })
-      AllChildren = filterResult
+      childIdsWithLocations = filterResult
     }
 
-    return AllChildren;
+    return childIdsWithLocations;
   },
 
-  deleteRoomInChild: async (childId,roomID, t) => {
-    const { RoomsInChild } = await connectToDatabase();
-    let deletedRoom = await RoomsInChild.destroy(
-      { where: { child_id: childId, room_id: roomID }, raw: true },
+  deleteZoneInChild: async (childId,zoneID, t) => {
+    const { ZonesInChild } = await connectToDatabase();
+    let deletedZone = await ZonesInChild.destroy(
+      { where: { child_id: childId, zone_id: zoneID }, raw: true },
       { transaction: t }
     );
 
-    return deletedRoom;
+    return deletedZone;
   },
 };
 

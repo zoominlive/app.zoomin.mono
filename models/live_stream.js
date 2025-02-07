@@ -15,7 +15,7 @@ const LiveStreams = sequelize.define(
         user_id: {
             type: Sequelize.STRING(50)
         },
-        room_id: {
+        zone_id: {
             type: Sequelize.STRING(50)
         },
         hls_url: {

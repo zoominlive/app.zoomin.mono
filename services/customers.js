@@ -21,7 +21,7 @@ module.exports = {
     return customer?.max_stream_live_license || null;
   },
 
-  getMaxLiveStreamRoomAvailable: async (custId, t) => {
+  getPermitAudio: async (custId, t) => {
     const { Customers } = await connectToDatabase();
     let customer = await Customers.findOne(
       {
@@ -33,10 +33,10 @@ module.exports = {
       { transaction: t }
     );
 
-    return customer?.max_stream_live_license_room || null;
+    return customer?.permit_audio || null;
   },
 
-  getMaxLiveStreamRoomAvailable: async (custId, t) => {
+  getCameraRecording: async (custId, t) => {
     const { Customers } = await connectToDatabase();
     let customer = await Customers.findOne(
       {
@@ -48,7 +48,52 @@ module.exports = {
       { transaction: t }
     );
 
-    return customer?.max_stream_live_license_room || null;
+    return customer?.camera_recording || null;
+  },
+
+  getInviteUser: async (custId, t) => {
+    const { Customers } = await connectToDatabase();
+    let customer = await Customers.findOne(
+      {
+        raw: true,
+        where: {
+          cust_id: custId,
+        },
+      },
+      { transaction: t }
+    );
+
+    return customer?.invite_user || null;
+  },
+
+  getMaxLiveStreamZoneAvailable: async (custId, t) => {
+    const { Customers } = await connectToDatabase();
+    let customer = await Customers.findOne(
+      {
+        raw: true,
+        where: {
+          cust_id: custId,
+        },
+      },
+      { transaction: t }
+    );
+
+    return customer?.max_stream_live_license_zone || null;
+  },
+
+  getMaxLiveStreamZoneAvailable: async (custId, t) => {
+    const { Customers } = await connectToDatabase();
+    let customer = await Customers.findOne(
+      {
+        raw: true,
+        where: {
+          cust_id: custId,
+        },
+      },
+      { transaction: t }
+    );
+
+    return customer?.max_stream_live_license_zone || null;
   },
 
   getRTMPTranscoderUrl: async (custId, t) => {
@@ -82,19 +127,23 @@ module.exports = {
   },
 
   getTranscoderUrlFromCustLocations: async (loc, cust_id, t) => {
-    const { CustomerLocations } = await connectToDatabase();
-    let customer_locations = await CustomerLocations.findOne(
-      {
-        raw: true,
-        where: {
-          cust_id: cust_id,
-          loc_name: loc
+    try {      
+      const { CustomerLocations } = await connectToDatabase();      
+      let customer_locations = await CustomerLocations.findOne(
+        {
+          raw: true,
+          where: {
+            cust_id: cust_id,
+            loc_id: loc
+          },
         },
-      },
-      { transaction: t }
-    );
-
-    return customer_locations?.transcoder_endpoint || null;
+        { transaction: t }
+      );
+  
+      return customer_locations?.transcoder_endpoint || null;
+    } catch (error) {
+      console.log('error==>', error);
+    }
   },
 
   getCustomerDetails: async (custId, t) => {
@@ -184,16 +233,24 @@ module.exports = {
           },
           {
             model: Users,
-            attributes: ['first_name', 'last_name','role','location','stream_live_license', 'email', 'user_id'],
+            attributes: ['first_name', 'last_name','role','stream_live_license', 'email', 'user_id'],
+            include: [
+              {
+                model: CustomerLocations,
+                as: 'locations',
+                attributes: ["loc_name", "loc_id"],
+              }
+            ]
           }
         ],
+        distinct: true,
         attributes: { exclude: ["updatedAt"] },
         limit: parseInt(pageSize),
         offset: parseInt(pageNumber * pageSize),
         order: [[{ model: Users }, 'created_at', 'ASC']]
       });
     }
-    return { customers: customers.rows, count: customers.rows.length,  };
+    return { customers: customers.rows, count: customers.count,  };
   },
 
   getAllLocations: async (filter) => {
@@ -247,6 +304,8 @@ module.exports = {
       },
       attributes: { exclude: ["createdAt", "updatedAt"] },
     });
+    console.log('locations==>', locations);
+    
     return { 
       locations: locations.rows, 
       count: locations.count,
@@ -369,21 +428,26 @@ module.exports = {
     return createLocations;
   },
 
-  createNewLocation: async (custId, locations, timezone, t) => {
-    const { CustomerLocations } = await connectToDatabase();
+  createNewLocation: async (custId, user_id, locations, timezone, api_key_id = null, t) => {
+    const { CustomerLocations, CustomerLocationAssignments } = await connectToDatabase();
     const zip = (locations, timezone) => locations.map((value, index) => [value, timezone[index]]);
     const locationsWithTimezone = zip(locations, timezone);
-
+    let locationCreated;
     let createLocations = await Promise.all(
       locationsWithTimezone.map(async ([loc, timezone]) => {
         const obj = { loc_name: loc, cust_id: custId, time_zone: timezone };
         // obj.loc_id = uuidv4();
-        return CustomerLocations.create(obj, {
+        locationCreated = await CustomerLocations.create(obj, {
           transaction: t,
         });
+        
+        const userObj = { loc_id: locationCreated.dataValues.loc_id, cust_id: custId, user_id: user_id, api_key_id: api_key_id };
+        await CustomerLocationAssignments.create(userObj, {
+          transaction: t
+        })
       })
     );
-    return createLocations;
+    return locationCreated;
   },
 
   deleteLocation: async (custId) => {
@@ -392,15 +456,24 @@ module.exports = {
     return deletedLocations
   },
 
-  deleteCustomerLocation: async (loc_id) => {
+  deleteSpecificLocations: async (loc_id) => {
     const { CustomerLocations } = await connectToDatabase();
     let deletedLocations = await CustomerLocations.destroy({where: {loc_id: loc_id}});
     return deletedLocations
   },
 
+  deleteCustomerLocation: async (loc_id, user_id) => {
+    const { CustomerLocations, CustomerLocationAssignments } = await connectToDatabase();
+    let deletedLocations = await CustomerLocations.destroy({where: {loc_id: loc_id}});
+    let deletedUserLocation = await CustomerLocationAssignments.destroy({
+      where: { [Sequelize.Op.and]: [{ user_id: user_id }, { loc_id: loc_id }] },
+    });
+    return { deletedLocations, deletedUserLocation };
+  },
+
   validateLocation: async (loc, userLocations) => {
     try {
-      const custLocation = await CustomerLocations.findOne({where: {loc_name: loc}, raw: true, plain: true});
+      const custLocation = await CustomerLocations.findOne({where: {loc_id: loc}, raw: true, plain: true});
       if (!custLocation) {
         return { valid: false, message: 'Location:'+ loc +' not found.' };
       }

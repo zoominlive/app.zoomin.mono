@@ -220,12 +220,12 @@ module.exports = {
       }));
       res.status(200).json({ 
         data: subscriptions,
-        message: 'Subscripiton created' 
+        message: 'Subscription created' 
       });
     } catch (error) {
       console.error('Error fetching product info:', error);
       res.status(500).json({ 
-        message: 'Please Add a payment method in order to subscribe',
+        message: 'Error creating subscription',
         error: error
       });
       throw error;

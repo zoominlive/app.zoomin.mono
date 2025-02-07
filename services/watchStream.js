@@ -12,91 +12,132 @@ const livestreamCameras = require("./livestreamCameras");
 module.exports = {
   /* Create new camera */
   getAllCamForLocation: async (user) => {
-    const {
-      Camera,
-      Room,
-      Child,
-      RoomsInChild,
-      CamerasInRooms,
-      CustomerLocations,
-      RoomsInTeacher,
-      LiveStreamCameras,
-    } = await connectToDatabase();
+    try {
+      const {
+        Camera,
+        Zone,
+        Child,
+        ZonesInChild,
+        CamerasInZones,
+        CustomerLocations,
+        ZonesInTeacher,
+        LiveStreamCameras,
+      } = await connectToDatabase();
 
-    let availableLocations = await CustomerLocations.findAll({
-      where: { cust_id: user.cust_id },
-      raw: true,
-    });
-
-    if (user?.family_id) {
-      console.log("user-->", user);
-      const baseUrl = await customerServices.getTranscoderUrlFromCustLocations(user?.location?.accessable_locations, user?.cust_id);
-      let cameras = await Child.findAll({
-        where: { family_id: user.family_id, status: "enabled" },
-        include: [
-          {
-            model: RoomsInChild,
-            where: {
-              disabled: "false",
-            },
-            as: "roomsInChild",
-            include: [
-              {
-                model: Room,
-                as: "room",
-                where: { location: user.location.accessable_locations },
-                include: [
-                  {
-                    model: CamerasInRooms,
-                    include: [
-                      {
-                        model: Camera,
-                      },
-                    ],
-                  },
-                  {
-                    model: LiveStreamCameras,
-                  },
-                ],
-              },
-            ],
-          },
-        ],
+      let availableLocations = await CustomerLocations.findAll({
+        where: { cust_id: user.cust_id },
+        raw: true,
       });
 
-      let finalRooms = [];
-      cameras?.forEach((rooms) => {
-        rooms?.roomsInChild?.forEach((room) => {
-          if (room?.schedule?.timeRange) {
-            const timeZone = availableLocations.find(
-              (loc) => loc.loc_name == room.room.location
-            );
-            let hasAccess = false;
-            room.schedule.timeRange?.forEach((range) => {
-              if (
-                range[1].includes(
-                  moment().tz(timeZone.time_zone).format("dddd")
-                )
-              ) {
-                const currentTime = moment(
-                  moment().tz(timeZone.time_zone).format("hh:mm A"),
-                  "hh:mm A"
-                );
-                const beforeTime = moment(range[0][0], "hh:mm A");
-                const afterTime = moment(range[0][1], "hh:mm A");
-                console.log(
-                  beforeTime,
-                  afterTime,
-                  currentTime,
-                  currentTime.isBetween(beforeTime, afterTime)
-                );
-                if (currentTime.isBetween(beforeTime, afterTime)) {
-                  hasAccess = true;
+      if (user?.family_id) {
+        console.log("user-->", user);
+        const baseUrl = await customerServices.getTranscoderUrlFromCustLocations(user?.locations.map((item) => item.loc_id), user?.cust_id);
+        let cameras = await Child.findAll({
+          where: { family_id: user.family_id, status: "enabled" },
+          include: [
+            {
+              model: ZonesInChild,
+              where: {
+                disabled: "false",
+              },
+              as: "zonesInChild",
+              include: [
+                {
+                  model: Zone,
+                  as: "zone",
+                  where: { loc_id: user.locations.map((item) => item.dataValues.loc_id) },
+                  include: [
+                    {
+                      model: CamerasInZones,
+                      include: [
+                        {
+                          model: Camera,
+                        },
+                      ],
+                    },
+                    {
+                      model: LiveStreamCameras,
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        });
+
+        let finalZones = [];
+        cameras?.forEach((zones) => {
+          zones?.zonesInChild?.forEach((zone) => {
+            if (zone?.schedule?.timeRange) {
+              const timeZone = availableLocations.find(
+                (loc) => loc.loc_id == zone.zone.loc_id
+              );
+              let hasAccess = false;
+              zone.schedule.timeRange?.forEach((range) => {
+                if (
+                  range[1].includes(
+                    moment().tz(timeZone.time_zone).format("dddd")
+                  )
+                ) {
+                  const currentTime = moment(
+                    moment().tz(timeZone.time_zone).format("hh:mm A"),
+                    "hh:mm A"
+                  );
+                  const beforeTime = moment(range[0][0], "hh:mm A");
+                  const afterTime = moment(range[0][1], "hh:mm A");
+                  console.log(
+                    beforeTime,
+                    afterTime,
+                    currentTime,
+                    currentTime.isBetween(beforeTime, afterTime)
+                  );
+                  if (currentTime.isBetween(beforeTime, afterTime)) {
+                    hasAccess = true;
+                  }
                 }
+              });
+              if (hasAccess) {
+                let cams = zone?.zone?.cameras_assigned_to_zones
+                  ?.map((cam) => {
+                    let uid = user?.family_member_id || user?.user_id;
+                    let sid = cam?.camera?.cam_id;
+                    let uuid = uuidv4();
+                    const token = jwt.sign({ user_id: uid, cam_id: sid, uuid: uuid }, process.env.STREAM_URL_SECRET_KEY, {expiresIn: '12h'});
+                    return {
+                      cam_id: cam?.camera?.cam_id,
+                      cam_name: cam?.camera?.cam_name,
+                      description: cam?.camera?.description,
+                      cam_alias: cam?.camera?.cam_alias,
+                      stream_uri: `${baseUrl}${cam?.camera?.stream_uri}?seckey=${token}`
+                      
+                    };
+                  })
+                  .filter((cam) => cam?.cam_id);
+
+                let livStreamCams = zone.zone?.live_stream_cameras?.map((cam) => {
+                  let uid = user?.family_member_id || user?.user_id;
+                  let sid = cam?.stream_uri.split('/') [cam?.stream_uri.split('/').length - 1].split('.')[0];
+                  let uuid = uuidv4();
+                  const token = jwt.sign({ user_id: uid, cam_id: sid, uuid: uuid }, process.env.STREAM_URL_SECRET_KEY, {expiresIn: '12h'});
+                  return {
+                    cam_id: cam?.cam_id,
+                    cam_name: cam?.cam_name,
+                    description: cam?.description || "",
+                    cam_alias: cam?.camera?.cam_alias,
+                    stream_uri: `${cam?.stream_uri}?seckey=${token}`,
+                  };
+                });
+                cams = cams.concat(livStreamCams);
+
+                finalZones.push({
+                  zone_id: zone.zone.zone_id,
+                  zone_name: zone.zone.zone_name,
+                  location: zone.zone.loc_id,
+                  cameras: cams,
+                });
               }
-            });
-            if (hasAccess) {
-              let cams = room?.room?.cameras_assigned_to_rooms
+            } else {
+              let cams = zone?.zone?.cameras_assigned_to_zones
                 ?.map((cam) => {
                   let uid = user?.family_member_id || user?.user_id;
                   let sid = cam?.camera?.cam_id;
@@ -106,13 +147,13 @@ module.exports = {
                     cam_id: cam?.camera?.cam_id,
                     cam_name: cam?.camera?.cam_name,
                     description: cam?.camera?.description,
-                    stream_uri: `${baseUrl}${cam?.camera?.stream_uri}?seckey=${token}`
-                    
+                    cam_alias: cam?.camera?.cam_alias,
+                    stream_uri: `${baseUrl}${cam?.camera?.stream_uri}?seckey=${token}`,
                   };
                 })
                 .filter((cam) => cam?.cam_id);
 
-              let livStreamCams = room.room?.live_stream_cameras?.map((cam) => {
+              let livStreamCams = zone.zone?.live_stream_cameras?.map((cam) => {
                 let uid = user?.family_member_id || user?.user_id;
                 let sid = cam?.stream_uri.split('/') [cam?.stream_uri.split('/').length - 1].split('.')[0];
                 let uuid = uuidv4();
@@ -121,21 +162,103 @@ module.exports = {
                   cam_id: cam?.cam_id,
                   cam_name: cam?.cam_name,
                   description: cam?.description || "",
+                  cam_alias: cam?.camera?.cam_alias,
                   stream_uri: `${cam?.stream_uri}?seckey=${token}`,
                 };
               });
               cams = cams.concat(livStreamCams);
 
-              finalRooms.push({
-                room_id: room.room.room_id,
-                room_name: room.room.room_name,
-                location: room.room.location,
+              finalZones.push({
+                zone_id: zone.zone.zone_id,
+                zone_name: zone.zone.zone_name,
+                location: zone.zone.loc_id,
                 cameras: cams,
               });
             }
-          } else {
-            let cams = room?.room?.cameras_assigned_to_rooms
-              ?.map((cam) => {
+          });
+        });
+
+        finalZones = _.uniqBy(finalZones, "zone_id");
+        return finalZones;
+      } else {
+        let zones;
+
+        if (user.role == "Admin" || user.role == "Super Admin" || user.role == "User") {
+          let loc_obj = {};
+          if (user.role == "Super Admin") {
+            let availableLocations = await customerServices.getLocationDetails(
+              user.cust_id || req?.query?.cust_id
+            );
+            let locs = availableLocations.flatMap((i) => i.loc_id);
+            loc_obj = { loc_id: locs };
+          } else {            
+            loc_obj = { loc_id: user.locations.map((item) => item.loc_id) };
+          }
+          zones = await Zone.findAll({
+            where: {
+              cust_id: user.cust_id,
+              ...loc_obj,
+            },
+            include: [
+              {
+                model: CamerasInZones,
+                include: [
+                  {
+                    model: Camera,
+                  },
+                ],
+              },
+              {
+                model: LiveStreamCameras,
+              },
+            ],
+          });
+        } else if (user.role == "Teacher") {
+          zones = await ZonesInTeacher.findAll({
+            where: { teacher_id: user.user_id },
+            include: [
+              {
+                model: CamerasInZones,
+                include: [
+                  {
+                    model: Camera,
+                  },
+                ],
+              },
+              {
+                model: LiveStreamCameras,
+              },
+              { model: Zone, as: "zone", raw: true },
+            ],
+          });
+        } else {
+          zones = await Zone.findAll({
+            where: {
+              user_id: user.user_id,
+            },
+            include: [
+              {
+                model: CamerasInZones,
+                include: [
+                  {
+                    model: Camera,
+                  },
+                ],
+              },
+              {
+                model: LiveStreamCameras,
+              },
+            ],
+          });
+        }
+        
+        zones = await Promise.all(
+          zones?.map(async (zone) => {
+            //.filter((cam) => cam?.cam_id);
+            const location = user.role == "Teacher" ? zone?.dataValues?.zone?.dataValues?.location : zone?.loc_id;
+            const baseUrl = await customerServices.getTranscoderUrlFromCustLocations(location, user?.cust_id)
+            let cameras = zone.dataValues.cameras_assigned_to_zones
+            ?.map((cam) => {
                 let uid = user?.family_member_id || user?.user_id;
                 let sid = cam?.camera?.cam_id;
                 let uuid = uuidv4();
@@ -144,170 +267,56 @@ module.exports = {
                   cam_id: cam?.camera?.cam_id,
                   cam_name: cam?.camera?.cam_name,
                   description: cam?.camera?.description,
+                  cam_alias: cam?.camera?.cam_alias,
                   stream_uri: `${baseUrl}${cam?.camera?.stream_uri}?seckey=${token}`,
                 };
               })
               .filter((cam) => cam?.cam_id);
-
-            let livStreamCams = room.room?.live_stream_cameras?.map((cam) => {
-              let uid = user?.family_member_id || user?.user_id;
-              let sid = cam?.stream_uri.split('/') [cam?.stream_uri.split('/').length - 1].split('.')[0];
-              let uuid = uuidv4();
-              const token = jwt.sign({ user_id: uid, cam_id: sid, uuid: uuid }, process.env.STREAM_URL_SECRET_KEY, {expiresIn: '12h'});
-              return {
-                cam_id: cam?.cam_id,
-                cam_name: cam?.cam_name,
-                description: cam?.description || "",
-                stream_uri: `${cam?.stream_uri}?seckey=${token}`,
-              };
-            });
-            cams = cams.concat(livStreamCams);
-
-            finalRooms.push({
-              room_id: room.room.room_id,
-              room_name: room.room.room_name,
-              location: room.room.location,
-              cameras: cams,
-            });
-          }
-        });
-      });
-
-      finalRooms = _.uniqBy(finalRooms, "room_id");
-      return finalRooms;
-    } else {
-      let rooms;
-
-      if (user.role == "Admin" || user.role == "Super Admin" || user.role == "User") {
-        let loc_obj = {};
-        if (user.role == "Super Admin") {
-          let availableLocations = await customerServices.getLocationDetails(
-            user.cust_id || req?.query?.cust_id
-          );
-          let locs = availableLocations.flatMap((i) => i.loc_name);
-          loc_obj = { location: locs };
-        } else {
-          loc_obj = { location: user.location.accessable_locations };
-        }
-        console.log('loc_obj==>', loc_obj);
-        rooms = await Room.findAll({
-          where: {
-            cust_id: user.cust_id,
-            ...loc_obj,
-          },
-          include: [
-            {
-              model: CamerasInRooms,
-              include: [
-                {
-                  model: Camera,
-                },
-              ],
-            },
-            {
-              model: LiveStreamCameras,
-            },
-          ],
-        });
-      } else if (user.role == "Teacher") {
-        rooms = await RoomsInTeacher.findAll({
-          where: { teacher_id: user.user_id },
-          include: [
-            {
-              model: CamerasInRooms,
-              include: [
-                {
-                  model: Camera,
-                },
-              ],
-            },
-            {
-              model: LiveStreamCameras,
-            },
-            { model: Room, as: "room", raw: true },
-          ],
-        });
-      } else {
-        rooms = await Room.findAll({
-          where: {
-            user_id: user.user_id,
-          },
-          include: [
-            {
-              model: CamerasInRooms,
-              include: [
-                {
-                  model: Camera,
-                },
-              ],
-            },
-            {
-              model: LiveStreamCameras,
-            },
-          ],
-        });
+    
+            let livStreamCameras = zone.dataValues.live_stream_cameras?.map(
+              (cam) => {
+                let uid = user?.family_member_id || user?.user_id;
+                let sid = cam?.stream_uri.split('/') [cam?.stream_uri.split('/').length - 1].split('.')[0];
+                let uuid = uuidv4();
+                const token = jwt.sign({ user_id: uid, cam_id: sid, uuid: uuid }, process.env.STREAM_URL_SECRET_KEY, {expiresIn: '12h'});
+                return {
+                  cam_id: cam?.cam_id,
+                  cam_name: cam?.cam_name,
+                  description: cam?.description || "",
+                  cam_alias: cam?.camera?.cam_alias,
+                  stream_uri: `${cam?.stream_uri}?seckey=${token}`,
+                };
+              }
+            );
+            cameras = cameras.concat(livStreamCameras);
+    
+            return {
+              zone_id: zone.zone_id,
+              zone_name:
+                zone.zone_name || zone.dataValues?.zone?.dataValues?.zone_name,
+              location:
+                zone.loc_id || zone.dataValues?.zone?.dataValues?.loc_id,
+              cameras: cameras,
+            };
+          })
+        ) 
+        return zones;
       }
-
-      rooms = await Promise.all(
-        rooms?.map(async (room) => {
-          //.filter((cam) => cam?.cam_id);
-          const location = user.role == "Teacher" ? room?.dataValues?.room?.dataValues?.location : room?.location;
-          const baseUrl = await customerServices.getTranscoderUrlFromCustLocations(location, user?.cust_id)
-          let cameras = room.dataValues.cameras_assigned_to_rooms
-          ?.map((cam) => {
-              let uid = user?.family_member_id || user?.user_id;
-              let sid = cam?.camera?.cam_id;
-              let uuid = uuidv4();
-              const token = jwt.sign({ user_id: uid, cam_id: sid, uuid: uuid }, process.env.STREAM_URL_SECRET_KEY, {expiresIn: '12h'});
-              return {
-                cam_id: cam?.camera?.cam_id,
-                cam_name: cam?.camera?.cam_name,
-                description: cam?.camera?.description,
-                stream_uri: `${baseUrl}${cam?.camera?.stream_uri}?seckey=${token}`,
-              };
-            })
-            .filter((cam) => cam?.cam_id);
-  
-          let livStreamCameras = room.dataValues.live_stream_cameras?.map(
-            (cam) => {
-              let uid = user?.family_member_id || user?.user_id;
-              let sid = cam?.stream_uri.split('/') [cam?.stream_uri.split('/').length - 1].split('.')[0];
-              let uuid = uuidv4();
-              const token = jwt.sign({ user_id: uid, cam_id: sid, uuid: uuid }, process.env.STREAM_URL_SECRET_KEY, {expiresIn: '12h'});
-              return {
-                cam_id: cam?.cam_id,
-                cam_name: cam?.cam_name,
-                description: cam?.description || "",
-                stream_uri: `${cam?.stream_uri}?seckey=${token}`,
-              };
-            }
-          );
-          cameras = cameras.concat(livStreamCameras);
-  
-          return {
-            room_id: room.room_id,
-            room_name:
-              room.room_name || room.dataValues?.room?.dataValues?.room_name,
-            location:
-              room.location || room.dataValues?.room?.dataValues?.location,
-            cameras: cameras,
-          };
-        })
-      ) 
-      return rooms;
+    } catch (error) {
+      console.log('error==>', error);
     }
   },
 
   getAllCamForUser: async (user) => {
     const {
       Camera,
-      Room,
+      Zone,
       Child,
-      RoomsInChild,
-      CamerasInRooms,
+      ZonesInChild,
+      CamerasInZones,
       CustomerLocations,
       LiveStreamCameras,
-      RoomsInTeacher,
+      ZonesInTeacher,
     } = await connectToDatabase();
 
     let availableLocations = await CustomerLocations.findAll({
@@ -320,34 +329,34 @@ module.exports = {
     let sendbird_channel_url;
     let streamName;
     if(!_.isEmpty(liveStreamCameras)) {
-      let liveStreamRoomID = liveStreamCameras[0]?.room_id;
-      liveStreamObj = await liveStream.getActiveStreamObjByRoomId(liveStreamRoomID);
+      let liveStreamZoneID = liveStreamCameras[0]?.zone_id;
+      liveStreamObj = await liveStream.getActiveStreamObjByZoneId(liveStreamZoneID);
       sendbird_channel_url = liveStreamObj[0]?.sendbird_channel_url;
       streamName = liveStreamObj[0]?.stream_name;
     }
     if (user?.family_id) {
       // console.log('user-->', user);
-      const baseUrl = await customerServices.getTranscoderUrlFromCustLocations(user?.location?.accessable_locations, user?.cust_id);
+      const baseUrl = await customerServices.getTranscoderUrlFromCustLocations(user?.locations?.map((item) => item.loc_id), user?.cust_id);
       console.log('baseUrl==>',baseUrl);
       let cameras = await Child.findAll({
         where: { family_id: user.family_id, status: "enabled" },
         include: [
           {
-            model: RoomsInChild,
-            as: "roomsInChild",
+            model: ZonesInChild,
+            as: "zonesInChild",
             where: {
               disabled: "false",
             },
             include: [
               {
-                model: Room,
-                as: "room",
+                model: Zone,
+                as: "zone",
                 where: {
-                  location: user.location.accessable_locations,
+                  loc_id: user.locations.map((item) => item.loc_id),
                 },
                 include: [
                   {
-                    model: CamerasInRooms,
+                    model: CamerasInZones,
                     include: [
                       {
                         model: Camera,
@@ -365,14 +374,14 @@ module.exports = {
       });
 
       const finalResult = cameras?.map((child) => {
-        let finalRooms = [];
-        child?.roomsInChild?.forEach((room) => {
-          if (room?.schedule?.timeRange) {
+        let finalZones = [];
+        child?.zonesInChild?.forEach((zone) => {
+          if (zone?.schedule?.timeRange) {
             const timeZone = availableLocations.find(
-              (loc) => loc.loc_name == room.room.location
+              (loc) => loc.loc_name == zone.zone.location
             );
             let hasAccess = false;
-            room.schedule.timeRange?.forEach((range) => {
+            zone.schedule.timeRange?.forEach((range) => {
               if (
                 range[1].includes(
                   moment().tz(timeZone.time_zone).format("dddd")
@@ -396,7 +405,7 @@ module.exports = {
               }
             });
             if (hasAccess) {
-              let cams = room?.room?.cameras_assigned_to_rooms
+              let cams = zone?.zone?.cameras_assigned_to_zones
                 ?.map((cam) => {
                   let uid = user?.family_member_id || user?.user_id;
                   let sid = cam?.camera?.cam_id;
@@ -413,7 +422,7 @@ module.exports = {
                 })
                 .filter((cam) => cam?.cam_id);
 
-              let livStreamCams = room.room?.live_stream_cameras?.map((cam) => {
+              let livStreamCams = zone.zone?.live_stream_cameras?.map((cam) => {
                 let uid = user?.family_member_id || user?.user_id;
                 let sid = cam?.stream_uri.split('/') [cam?.stream_uri.split('/').length - 1].split('.')[0];
                 let uuid = uuidv4();
@@ -429,15 +438,15 @@ module.exports = {
               });
               cams = cams.concat(livStreamCams);
 
-              finalRooms.push({
-                room_id: room.room.room_id,
-                room_name: room.room.room_name,
-                location: room.room.location,
+              finalZones.push({
+                zone_id: zone.zone.zone_id,
+                zone_name: zone.zone.zone_name,
+                location: zone.zone.location,
                 cameras: cams,
               });
             }
           } else {
-            let cams = room?.room?.cameras_assigned_to_rooms
+            let cams = zone?.zone?.cameras_assigned_to_zones
               ?.map((cam) => {
                 let uid = user?.family_member_id || user?.user_id;
                 let sid = cam?.camera?.cam_id;
@@ -453,7 +462,7 @@ module.exports = {
                 };
               })
               .filter((cam) => cam?.cam_id);
-            let livStreamCams = room.room?.live_stream_cameras?.map((cam) => {
+            let livStreamCams = zone.zone?.live_stream_cameras?.map((cam) => {
               let uid = user?.family_member_id || user?.user_id;
               let sid = cam?.stream_uri.split('/') [cam?.stream_uri.split('/').length - 1].split('.')[0];
               let uuid = uuidv4();
@@ -468,10 +477,10 @@ module.exports = {
               };
             });
             cams = cams.concat(livStreamCams);
-            finalRooms.push({
-              room_id: room.room.room_id,
-              room_name: room.room.room_name,
-              location: room.room.location,
+            finalZones.push({
+              zone_id: zone.zone.zone_id,
+              zone_name: zone.zone.zone_name,
+              location: zone.zone.location,
               cameras: cams,
             });
           }
@@ -479,7 +488,7 @@ module.exports = {
         return {
           childFirstName: child.first_name,
           childLastName: child.last_name,
-          rooms: finalRooms,
+          zones: finalZones,
         };
       });
 
@@ -488,17 +497,17 @@ module.exports = {
       if (user.role == "Admin" || user.role == "User") {
         let locations = await CustomerLocations.findAll({
           where: {
-            loc_name: user.location.accessable_locations,
+            loc_name: user.locations.map((item) => item.loc_name),
             cust_id: user.cust_id
           },
           attributes: ["loc_name", "transcoder_endpoint"],
           include: [
             {
-              model: Room,
-              attributes: ["room_id", "room_name"],
+              model: Zone,
+              attributes: ["zone_id", "zone_name"],
               include: [
                 {
-                  model: CamerasInRooms,
+                  model: CamerasInZones,
                   include: [
                     {
                       model: Camera,
@@ -514,8 +523,8 @@ module.exports = {
         });
 
         locations = locations?.map((loc) => {
-          let rooms = loc?.rooms?.map((room) => {
-            let cams = room?.cameras_assigned_to_rooms
+          let zones = loc?.zones?.map((zone) => {
+            let cams = zone?.cameras_assigned_to_zones
               ?.map((cam) => {
                 let uid = user?.family_member_id || user?.user_id;
                 let sid = cam?.camera?.cam_id;
@@ -531,7 +540,7 @@ module.exports = {
                 };
               })
               .filter((cam) => cam?.cam_id);
-            let livStreamCams = room.live_stream_cameras?.map((cam) => {
+            let livStreamCams = zone.live_stream_cameras?.map((cam) => {
               let uid = user?.family_member_id || user?.user_id;
               let sid = cam?.stream_uri.split('/') [cam?.stream_uri.split('/').length - 1].split('.')[0];
               let uuid = uuidv4();
@@ -547,13 +556,13 @@ module.exports = {
             });
             cams = cams.concat(livStreamCams);
             return {
-              room_id: room.room_id,
-              room_name: room.room_name,
+              zone_id: zone.zone_id,
+              zone_name: zone.zone_name,
               cameras: cams,
             };
           });
 
-          return { location: loc.loc_name, rooms: rooms };
+          return { location: loc.loc_name, zones: zones };
         });
 
         return locations;
@@ -561,19 +570,19 @@ module.exports = {
         console.log('user==>', user);
         let locations = await CustomerLocations.findAll({
           where: {
-            loc_name: user.location.accessable_locations,
+            loc_name: user.locations.map((item) => item.loc_name),
           },
           attributes: ["loc_name", "transcoder_endpoint"],
           include: [
             {
-              model: Room,
-              attributes: ["room_id", "room_name"],
+              model: Zone,
+              attributes: ["zone_id", "zone_name"],
               where: {
                 user_id: user.user_id,
               },
               include: [
                 {
-                  model: CamerasInRooms,
+                  model: CamerasInZones,
                   include: [
                     {
                       model: Camera,
@@ -588,12 +597,12 @@ module.exports = {
           ],
         });
         if (user.role == "Teacher") {
-          const baseUrl = await customerServices.getTranscoderUrlFromCustLocations(user?.location?.accessable_locations, user?.cust_id);
-          let rooms = await RoomsInTeacher.findAll({
+          const baseUrl = await customerServices.getTranscoderUrlFromCustLocations(user?.locations?.map((item) => item.loc_id), user?.cust_id);
+          let zones = await ZonesInTeacher.findAll({
             where: { teacher_id: user.user_id },
             include: [
               {
-                model: CamerasInRooms,
+                model: CamerasInZones,
                 include: [
                   {
                     model: Camera,
@@ -605,19 +614,19 @@ module.exports = {
                 raw: true,
               },
               {
-                model: Room,
-                as: "room",
+                model: Zone,
+                as: "zone",
                 raw: true,
                 where: {
-                  location: user.location.accessable_locations,
+                  loc_id: user.locations.map((item) => item.loc_id),
                 },
               },
             ],
           });
-          rooms = rooms?.map((room) => {
+          zones = zones?.map((zone) => {
             //.filter((cam) => cam?.cam_id);
 
-            let cameras = room.dataValues.cameras_assigned_to_rooms
+            let cameras = zone.dataValues.cameras_assigned_to_zones
               ?.map((cam) => {
                 let uid = user?.family_member_id || user?.user_id;
                 let sid = cam?.camera?.cam_id;
@@ -635,7 +644,7 @@ module.exports = {
               })
               .filter((cam) => cam?.cam_id);
 
-            let livStreamCameras = room.dataValues.live_stream_cameras?.map(
+            let livStreamCameras = zone.dataValues.live_stream_cameras?.map(
               (cam) => {
                 let uid = user?.family_member_id || user?.user_id;
                 let sid = cam?.stream_uri.split('/') [cam?.stream_uri.split('/').length - 1].split('.')[0];
@@ -653,39 +662,43 @@ module.exports = {
             );
             cameras = cameras.concat(livStreamCameras);
             return {
-              room_id: room.room_id,
-              room_name:
-                room.room_name || room.dataValues?.room?.dataValues?.room_name,
+              zone_id: zone.zone_id,
+              zone_name:
+                zone.zone_name || zone.dataValues?.zone?.dataValues?.zone_name,
               location:
-                room.location || room.dataValues?.room?.dataValues?.location,
+                zone.location || zone.dataValues?.zone?.dataValues?.loc_id,
               cameras: cameras,
             };
           });
         
-          let result = _.chain(rooms)
+          for (const item of zones) {
+            const location = await CustomerLocations.findOne({ where: { loc_id: item.location } });
+            item.location = location.loc_name;
+          }
+          let result = _.chain(zones)
             .groupBy("location")
             .map((value, key) => ({
               location: key,
-              rooms: value,
+              zones: value,
             }))
             .value();
 
           result = result.map((item) => {
-            let { rooms, ...rest } = item;
-            let newRooms = _.map(rooms, (object) => {
+            let { zones, ...rest } = item;
+            let newZones = _.map(zones, (object) => {
               return _.omit(object, ["location"]);
             });
             return {
               ...rest,
-              rooms: newRooms,
+              zones: newZones,
             };
           });
 
           return result;
         }
         locations = locations?.map((loc) => {
-          let rooms = loc?.rooms?.map((room) => {
-            let cams = room?.cameras_assigned_to_rooms
+          let zones = loc?.zones?.map((zone) => {
+            let cams = zone?.cameras_assigned_to_zones
               ?.map((cam) => {
                 let uid = user?.family_member_id || user?.user_id;
                 let sid = cam?.camera?.cam_id;
@@ -703,10 +716,10 @@ module.exports = {
               })
               .filter((cam) => cam?.cam_id);
             console.log(
-              "===room.live_stream_cameras==",
-              room.live_stream_cameras
+              "===zone.live_stream_cameras==",
+              zone.live_stream_cameras
             );
-            let livStreamCams = room.live_stream_cameras?.map((cam) => {
+            let livStreamCams = zone.live_stream_cameras?.map((cam) => {
               let uid = user?.family_member_id || user?.user_id;
               let sid = cam?.stream_uri.split('/') [cam?.stream_uri.split('/').length - 1].split('.')[0];
               let uuid = uuidv4();
@@ -723,13 +736,13 @@ module.exports = {
             cams = cams.concat(livStreamCams);
 
             return {
-              room_id: room.room_id,
-              room_name: room.room_name,
+              zone_id: zone.zone_id,
+              zone_name: zone.zone_name,
               cameras: cams,
             };
           });
 
-          return { location: loc.loc_name, rooms: rooms };
+          return { location: loc.loc_name, zones: zones };
         });
         return locations;
       }

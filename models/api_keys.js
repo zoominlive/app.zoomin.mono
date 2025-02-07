@@ -56,10 +56,10 @@ const ApiKeys = sequelize.define(
       type: Sequelize.JSON,
       allowNull: false,
     },
-    location: {
-      type: Sequelize.JSON,
-      allowNull: true,
-    },
+    // location: {
+    //   type: Sequelize.JSON,
+    //   allowNull: true,
+    // },
     createdAt: { type: Sequelize.DATE, field: 'created_at' },
     updatedAt: { type: Sequelize.DATE, field: 'updated_at' },
     deletedAt: { type: Sequelize.DATE, field: 'deleted_at' },

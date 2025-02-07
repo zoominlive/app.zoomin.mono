@@ -4,6 +4,7 @@ const url = require('url');
 const CONSTANTS = require('../lib/constants');
 const { IdentityClient } = require('@frontegg/client');
 const ApiKeys = require('../models/api_keys');
+const CustomerLocations = require('../models/customer_locations');
 const identityClient = new IdentityClient({ FRONTEGG_CLIENT_ID: process.env.FRONTEGG_CLIENT_ID, FRONTEGG_API_KEY: process.env.FRONTEGG_API_KEY });
 
 // authentication middleware to check auth and give access based on user type
@@ -41,7 +42,16 @@ module.exports = async function (req, res, next) {
         const parsedUrl = url.parse(endpoint);
         const baseEndpoint = parsedUrl.pathname;
 
-        let app = await ApiKeys.findOne({ where: { frontegg_user_id: app_user_id } });
+        let app = await ApiKeys.findOne({
+          where: { frontegg_user_id: app_user_id },
+          include: [
+            {
+              model: CustomerLocations,
+              as: "api_key_locations",
+              attributes: ["loc_id", "loc_name"],
+            },
+          ],
+        });
 
         if (!app.dataValues.allowed_endpoints.includes(baseEndpoint)) {
           return res.status(403).json({ Message: 'API key does not have access to this endpoint' });
@@ -51,9 +61,19 @@ module.exports = async function (req, res, next) {
           return res.status(403).json({ Message: 'Invalid or inactive API key' });
         }
         req.user = app.dataValues;
+        req.user.locations = app.dataValues.api_key_locations.map((item) => item.dataValues)
       } else {
         if (user_id) {
-          user = await Users.findOne({ where: { user_id: user_id } });
+          user = await Users.findOne({
+            where: { user_id: user_id },
+            include: [
+              {
+                model: CustomerLocations,
+                as: "locations",
+                attributes: ["loc_id", "loc_name"],
+              },
+            ],
+          });
         }
         if (!user) {
           const family_member_id = decodeToken.metadata.zoomin_family_member_id;
@@ -61,26 +81,37 @@ module.exports = async function (req, res, next) {
             let familyUser;
             familyUser = await Family.findOne({
               where: { family_member_id: family_member_id },
+              group: ['children.child_locations.loc_id'],
               include: [
                 {
                   model: Child,
-                  attributes: ['location']
+                  include: [
+                    {
+                      model: CustomerLocations,
+                      as: 'child_locations',
+                      attributes: ['loc_id', 'loc_name']
+                    }
+                  ],
                 }
-              ]
+              ],
             });
   
             if (familyUser) {
+              let custDetails = await Customers.findOne({ where: { cust_id: familyUser.dataValues.cust_id }, raw: true });              
               let locations = [];
               familyUser?.children?.forEach((child) => {
-                child?.location?.locations?.forEach((location) => {
+                child?.child_locations?.forEach((location) => {
                   locations.push(location);
                 });
               });
               locations = locations?.filter((v, i, a) => a.indexOf(v) === i);
               req.userToken = token;
               req.user = familyUser.toJSON();
-              req.user.accessable_locations = req.user.location;
-              req.user.location = { selected_locations: locations, accessable_locations: locations };
+              req.user.permit_audio = custDetails.permit_audio;
+              req.user.camera_recording = custDetails.camera_recording;
+              req.user.invite_user = custDetails.invite_user;
+              // req.user.accessable_locations = req.user.location;
+              req.user.locations = locations;
             } else {
               res.status(401).json({ IsSuccess: true, Data: {}, Message: CONSTANTS.AUTH_ERROR });
             }
@@ -92,14 +123,22 @@ module.exports = async function (req, res, next) {
             });
           }
         } else {
+          let convertedToJSON;
           if(user.role === 'Admin') {
             cust = await Customers.findOne({ where: { cust_id: user.cust_id } });
             user.dataValues.stripe_cust_id = cust.dataValues.stripe_cust_id;
+            user.dataValues.permit_audio = cust.dataValues.permit_audio;
+            user.dataValues.camera_recording = cust.dataValues.camera_recording;
+            user.dataValues.invite_user = cust.dataValues.invite_user;
             req.userToken = token;
-            req.user = user.toJSON();
+            convertedToJSON = user.toJSON();
+            let locations = convertedToJSON.locations.map((item) => ({loc_id: item.loc_id, loc_name: item.loc_name}));           
+            convertedToJSON.locations = locations
+            req.user = convertedToJSON;
           }
+          convertedToJSON = user.toJSON();
           req.userToken = token;
-          req.user = user.toJSON();
+          req.user = convertedToJSON;
          
         }
       }

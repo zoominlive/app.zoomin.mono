@@ -11,14 +11,14 @@ const { withAuthentication } = require('@frontegg/client');
 
 router.post('/add', authController, childController.createChild);
 router.put('/edit', withAuthentication(), authController, childController.editChild);
-router.put('/replace-room', withAuthentication(), authController, childController.updateChildRoom);
+router.put('/replace-zone', withAuthentication(), authController, childController.updateChildZone);
 router.put('/disable', withAuthentication(), authController, childController.disableChild);
 router.put('/enable', withAuthentication(), authController, childController.enableChild);
 router.delete('/delete', withAuthentication(), authController, childController.deleteChild);
-router.post('/addroom', withAuthentication(), authController, childController.addRoomInChild);
-router.delete('/deleteroom', withAuthentication(), authController, childController.deleteRoomInChild);
-router.put('/roomschedule', withAuthentication(), authController, childController.changeRoomScheduler);
-router.put('/schedule/edit', withAuthentication(), authController, childController.changeDefaultRoomScheduler);
+router.post('/addzone', withAuthentication(), authController, childController.addZoneInChild);
+router.delete('/deletezone', withAuthentication(), authController, childController.deleteZoneInChild);
+router.put('/zoneschedule', withAuthentication(), authController, childController.changeZoneScheduler);
+router.put('/schedule/edit', withAuthentication(), authController, childController.changeDefaultZoneScheduler);
 router.get('/schedule', withAuthentication(), authController, childController.getScheduleDetails);
 
 module.exports = router;

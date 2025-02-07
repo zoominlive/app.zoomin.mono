@@ -105,16 +105,21 @@ module.exports = {
     try {
       const params = req.body;
       const cust_id = req.user.cust_id;
+      const user_id = req.user.user_id;
       const { user, customer_locations, time_zone } = params;
 
       let locations = customer_locations.flatMap((i) => i);
       let timezone = time_zone.flatMap((i) => i);
       console.log(user);
       console.log(locations);
+      let api_key_id;
+      if(req.user.key && req.user.key !== undefined && req.user.key !== null) api_key_id = req.user.id;
       let addLocations = await customerServices.createNewLocation(
         user || cust_id,
+        user_id,
         locations,
         timezone,
+        api_key_id,
         t
       );
       
@@ -166,19 +171,6 @@ module.exports = {
       }
       user.cust_id = addCustomer?.cust_id;
       user.is_verified = false;
-      let addUser = await userServices.createUser(user, t);
-      if (!addUser) {
-        return res.status(400).json({
-          IsSuccess: true,
-          Data: {},
-          Message: CONSTANTS.CUSTOMER_REGISTRATION_FAILED,
-        });
-      }
-      let userData = addUser?.toJSON();
-      const token = await userServices.createPasswordToken(userData, true);
-      const name = userData.first_name + ' ' + userData.last_name;
-      const originalUrl = process.env.FE_SITE_BASE_URL + 'set-password?' + 'token=' + token + '&type=user';
-      // await sendRegistrationMailforUser(name, userData.email, originalUrl);
 
       let locations = customer_locations.flatMap((i) => {return { loc_name: i.loc_name, transcoder_endpoint: i.transcoder_endpoint}});
       console.log('locations==>', locations);
@@ -195,6 +187,37 @@ module.exports = {
         });
       }
       console.log("addLocations=========>", addLocations);
+      user.location.locations = addLocations.map((item) => item.dataValues);
+
+      let addUser = await userServices.createUser(user, t);
+      if (!addUser) {
+        return res.status(400).json({
+          IsSuccess: true,
+          Data: {},
+          Message: CONSTANTS.CUSTOMER_REGISTRATION_FAILED,
+        });
+      }
+      let userData = addUser?.toJSON();
+      const token = await userServices.createPasswordToken(userData, true);
+      const name = userData.first_name + ' ' + userData.last_name;
+      const originalUrl = process.env.FE_SITE_BASE_URL + 'set-password?' + 'token=' + token + '&type=user';
+      // await sendRegistrationMailforUser(name, userData.email, originalUrl);
+
+      // let locations = customer_locations.flatMap((i) => {return { loc_name: i.loc_name, transcoder_endpoint: i.transcoder_endpoint}});
+      // console.log('locations==>', locations);
+      // let addLocations = await customerServices.createLocation(
+      //   addCustomer?.cust_id,
+      //   locations,
+      //   t
+      // );
+      // if (!addLocations) {
+      //   return res.status(400).json({
+      //     IsSuccess: true,
+      //     Data: {},
+      //     Message: CONSTANTS.CUSTOMER_REGISTRATION_FAILED,
+      //   });
+      // }
+      // console.log("addLocations=========>", addLocations);
 
       if (user.role === 'Admin') {
         const vendor_token = await axios.post(
@@ -239,7 +262,7 @@ module.exports = {
           );
           console.log('user_response--->', user_response.data);
           await Users.update(
-            { frontegg_tenant_id: tenant_response.data.tenantId, frontegg_user_id: user_response.id },
+            { frontegg_tenant_id: tenant_response.data.tenantId, frontegg_user_id: user_response.data.id },
             {
               where: { user_id: addUser.dataValues.user_id },
               transaction: t 
@@ -384,7 +407,7 @@ module.exports = {
             Message: CONSTANTS.CUSTOMER_NOT_FOUND,
           });
       } else {
-        deleted = await customerServices.deleteCustomerLocation(loc_id, t);
+        deleted = await customerServices.deleteCustomerLocation(loc_id, req.user.user_id);
       }
 
       if (deleted) {
@@ -495,12 +518,59 @@ module.exports = {
       );
 
       const userDetails = await userServices.getUserById(user.user_id, t);
-      console.log('user=>', user);
-      let editedUser = await userServices.editUserProfile(
-        userDetails,
-        _.omit(user, ["email"]),
-        t
-      );
+      console.log('customer_locations==>', customer_locations);
+      const customerLocationsFromDB = await customerServices.getLocationDetails(customeDetails.cust_id);
+      console.log('customerLocationsFromDB==>', customerLocationsFromDB);
+      function syncLocations(customer_locations, customerLocationsFromDB) {
+        // Convert DB locations into a Set for quick lookup
+        const dbLocNames = new Set(customerLocationsFromDB.map(loc => loc.loc_name));
+    
+        // Convert incoming locations into a Set for quick lookup
+        const incomingLocNames = new Set(customer_locations.map(loc => loc.loc_name));
+    
+        // Identify locations to delete (Exists in DB but not in incoming data)
+        const locationsToDelete = customerLocationsFromDB.filter(loc => !incomingLocNames.has(loc.loc_name));
+    
+        // Identify locations to create (Exists in incoming data but not in DB)
+        const locationsToCreate = customer_locations.filter(loc => !dbLocNames.has(loc.loc_name));
+    
+        return { locationsToDelete, locationsToCreate };
+      }
+    
+      // Run the function
+      const { locationsToDelete, locationsToCreate } = syncLocations(customer_locations, customerLocationsFromDB);
+      
+      console.log("Locations to Delete:", locationsToDelete);
+      console.log("Locations to Create:", locationsToCreate);
+      if (locationsToDelete.length > 0) {
+        const mappedData = locationsToDelete.map((item) => item.loc_id);
+        await customerServices.deleteSpecificLocations(mappedData);
+        //also delete the locations from customer_location_assignments table for the locations assigned to users
+      }
+      console.log(customer_locations);
+      let locations = locationsToCreate.flatMap((i) => {return { loc_name: i.loc_name, transcoder_endpoint: i.transcoder_endpoint}});
+      console.log('locations-->', locations);
+      let editedUser
+      if (locations && locations.length > 0) {
+        let newLocations = await customerServices.createLocation(
+          customeDetails?.cust_id,
+          locations,
+          t
+        );
+        if (customer_locations.length !== user.location.locations.length) {
+          user.location.locations = newLocations.map((item) => item.dataValues).filter((customerLocation) => !user.location.locations.some(
+            (location) => location.loc_name !== customerLocation.loc_name
+          ));  
+        } else {
+          user.location.locations = newLocations.map((item) => item.dataValues);
+        }
+        console.log('user.location.locations==>', user.location.locations);
+        editedUser = await userServices.editUserProfile(
+          userDetails,
+          _.omit(user, ["email"]),
+          t
+        );
+      }
 
       if (user?.email && user?.email !== userDetails.email) {
         const newEmail = user.email;
@@ -525,17 +595,19 @@ module.exports = {
           await sendEmailChangeMail(name, user?.email, originalUrl);
         }
       }
-      await customerServices.deleteLocation(customeDetails?.cust_id);
-      console.log(customer_locations);
-      let locations = customer_locations.flatMap((i) => {return { loc_name: i.loc_name, transcoder_endpoint: i.transcoder_endpoint}});
-      console.log('locations-->', locations);
-      await customerServices.createLocation(
-        customeDetails?.cust_id,
-        locations,
-        t
-      );
-
-      if (editedProfile && editedUser) {
+      // await customerServices.deleteLocation(customeDetails?.cust_id);
+      // console.log(customer_locations);
+      // let locations = customer_locations.flatMap((i) => {return { loc_name: i.loc_name, transcoder_endpoint: i.transcoder_endpoint}});
+      // console.log('locations-->', locations);
+      // await customerServices.createLocation(
+      //   customeDetails?.cust_id,
+      //   locations,
+      //   t
+      // );
+      console.log("editedProfile", editedProfile);
+      console.log("editedUser", editedUser);
+      
+      if (editedProfile || editedUser) {
         res.status(200).json({
           IsSuccess: true,
           Data: editedProfile,

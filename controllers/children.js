@@ -4,8 +4,8 @@ const logServices = require('../services/logs');
 const dashboardServices = require('../services/dashboard');
 const CONSTANTS = require('../lib/constants');
 const sequelize = require('../lib/database');
-const Room = require('../models/room');
-const RoomsInChild = require('../models/rooms_assigned_to_child');
+const Zone = require('../models/zone');
+const ZonesInChild = require('../models/zones_assigned_to_child');
 
 module.exports = {
   // create new child
@@ -16,16 +16,16 @@ module.exports = {
 
       //add children
       const custId = req?.user?.cust_id || req?.body?.cust_id
-      const childLocation = params.location.locations;
-      if (!childLocation.every(location => req.user.location.accessable_locations.includes(location)) && req.user.role !== 'Super Admin') {
+      const childLocation = params.location.locations.map((item) => item.loc_id);
+      if (!childLocation.every(location => req.user.locations.map((item) => item.loc_id).includes(location)) && req.user.role !== 'Super Admin') {
         await t.rollback();
         return res.status(400).json({Message: "Unauthorized location access"});
       }
       const newChild = await childServices.createChild(custId, params, t);
 
-      const addRoomsToChild = await childServices.assignRoomsToChild(
+      const addZonesToChild = await childServices.assignZonesToChild(
         newChild?.child_id,
-        params?.rooms?.rooms,
+        params?.zones?.zones,
         t
       );
       //await dashboardServices.updateDashboardData(custId);
@@ -65,21 +65,21 @@ module.exports = {
     const t = await sequelize.transaction();
     try {
       const params = req.body;
-      const childLocation = params.location.locations;
+      const childLocation = params.location.locations.map((item) => item.loc_id);
       const childDetails = await childServices.getChildById(params.child_id, t);
       if (childDetails.cust_id !== req.user.cust_id && req.user.role !== 'Super Admin') {
         await t.rollback();
         return res.status(400).json({Message: "Unauthorized access to child:"+ params.child_id})
       }
-      if (!childLocation.every(location => req.user.location.accessable_locations.includes(location)) && req.user.role !== 'Super Admin') {
+      if (!childLocation.every(location => req.user.locations.map((item) => item.loc_id).includes(location)) && req.user.role !== 'Super Admin') {
         await t.rollback();
         return res.status(400).json({Message: "Unauthorized location access"});
       }
       const editedChild = await childServices.editChild(params, t);
 
-      const roomsEdited = await childServices.editAssignedRoomsToChild(
+      const zonesEdited = await childServices.editAssignedZonesToChild(
         params.child_id,
-        params?.rooms?.rooms,
+        params?.zones?.zones,
         t
       );
 
@@ -114,61 +114,61 @@ module.exports = {
     }
   },
 
-  // update room
-  updateChildRoom: async (req, res, next) => {
+  // update zone
+  updateChildZone: async (req, res, next) => {
     const t = await sequelize.transaction();
     try {
       const params = req.body;
       
       const editedChild = await childServices.editChild(params, t);
     
-      // Extract room IDs from the payload
-      const roomIds = params.rooms.rooms.map(room => room.room_id);
+      // Extract zone IDs from the payload
+      const zoneIds = params.zones.zones.map(zone => zone.zone_id);
 
-      // Find rooms that exist in the Rooms table
-      const existingRooms = await Room.findAll({
-        where: { room_id: roomIds },
+      // Find zones that exist in the Zones table
+      const existingZones = await Zone.findAll({
+        where: { zone_id: zoneIds },
       });
-      console.log('existing Rooms', existingRooms.length);
+      console.log('existing Zones', existingZones.length);
       
-      if (existingRooms.length === 0) {
+      if (existingZones.length === 0) {
         await t.rollback();
-        return res.status(400).json({Message: "None of the rooms exist in the database. Please create a room first"});
+        return res.status(400).json({Message: "None of the zones exist in the database. Please create a zone first"});
       }
       console.log('===out of scope===');
       
-      // Extract IDs of existing rooms
-      const existingRoomIds = existingRooms.map(room => room.room_id);
+      // Extract IDs of existing zones
+      const existingZoneIds = existingZones.map(zone => zone.zone_id);
 
-      // Identify rooms that do not exist
-      const nonExistentRooms = params.rooms.rooms.filter(room => !existingRoomIds.includes(room.room_id));
+      // Identify zones that do not exist
+      const nonExistentZones = params.zones.zones.filter(zone => !existingZoneIds.includes(zone.zone_id));
 
-      // Prepare data for existing rooms
-      const roomInsertData = existingRooms.map(room => ({
+      // Prepare data for existing zones
+      const zoneInsertData = existingZones.map(zone => ({
           child_id: params.child_id,
-          room_id: room.room_id,
+          zone_id: zone.zone_id,
           disabled: "false"
       }));
 
-      await RoomsInChild.destroy(
+      await ZonesInChild.destroy(
         { where: { child_id: params.child_id }, raw: true },
         { transaction: t }
       );
 
-      // Insert the records into RoomsInChild table
-      await RoomsInChild.bulkCreate(roomInsertData, { transaction: t });
+      // Insert the records into ZonesInChild table
+      await ZonesInChild.bulkCreate(zoneInsertData, { transaction: t });
 
       await t.commit();
       // Prepare the response message
       const responseMessage = {
-        message: "Rooms processing completed.",
-        addedRooms: existingRooms.map((room) => ({
-          room_id: room.room_id,
-          room_name: room.room_name,
+        message: "Zones processing completed.",
+        addedZones: existingZones.map((zone) => ({
+          zone_id: zone.zone_id,
+          zone_name: zone.zone_name,
         })),
-        nonExistentRooms: nonExistentRooms.map((room) => ({
-          room_id: room.room_id,
-          room_name: room.room_name,
+        nonExistentZones: nonExistentZones.map((zone) => ({
+          zone_id: zone.zone_id,
+          zone_name: zone.zone_name,
         })),
       };
 
@@ -210,7 +210,7 @@ module.exports = {
         await t.rollback();
         return res.status(400).json({Message: "Unauthorized access to child:"+ params.child_id})
       }
-      const roomsDeleted = await childServices.deleteAssignedRoomsToChild(params.child_id, t);
+      const zonesDeleted = await childServices.deleteAssignedZonesToChild(params.child_id, t);
 
       const child = await childServices.deleteChild(params.child_id, t);
 
@@ -252,11 +252,14 @@ module.exports = {
       const params = req.body;
 
       const childDetails = await childServices.getChildById(params.child_id, t);
-      if (childDetails.cust_id !== req.user.cust_id && req.user.role !== 'Super Admin') {
+      if (childDetails.dataValues.cust_id !== req.user.cust_id && req.user.role !== 'Super Admin') {
         await t.rollback();
         return res.status(400).json({Message: "Unauthorized access to child:"+ params.child_id})
       }
-      if (childDetails?.location?.locations?.length == params?.locations_to_disable?.length) {
+      console.log('childDetails==>', childDetails);
+      
+      if (childDetails?.dataValues?.child_locations?.length == params?.locations_to_disable?.length) {
+        console.log('===>1');
         const disableChild = await childServices.disableChild(
           params?.child_id,
           params?.scheduled_end_date ? params?.scheduled_end_date : null,
@@ -264,6 +267,7 @@ module.exports = {
         );
       } else {
       if(params?.locations_to_disable?.length){
+        console.log('===>2');
         const locationsDisabled = await childServices.disableSelectedLocations(
           params?.child_id,
           params?.scheduled_end_date ? params?.scheduled_end_date : null,
@@ -271,6 +275,7 @@ module.exports = {
         );
       }
       else{
+        console.log('===>3');
         const disableChild = await childServices.disableChild(
           params?.child_id,
           params?.scheduled_end_date ?params?.scheduled_end_date: null,
@@ -363,26 +368,26 @@ module.exports = {
     }
   },
 
-  addRoomInChild: async (req, res, next) => {
+  addZoneInChild: async (req, res, next) => {
     const t = await sequelize.transaction();
     try {
-      const { child_id, existingRooms, roomsToAdd, selectedOption, schedule_enable_date } =
+      const { child_id, existingZones, zonesToAdd, selectedOption, schedule_enable_date } =
         req.body;
 
-      let roomsinChild = [];
+      let zonesInChild = [];
 
-      existingRooms.forEach((room) => roomsinChild.push(room));
-      roomsToAdd.forEach((room) => roomsinChild.push(room));
+      existingZones.forEach((zone) => zonesInChild.push(zone));
+      zonesToAdd.forEach((zone) => zonesInChild.push(zone));
 
       let update = {
         child_id: child_id,
-        rooms: { rooms: roomsinChild }
+        zones: { zones: zonesInChild }
       };
       const childEdit = childServices.editChild(update, t);
 
-      const roomsAdded = await childServices.addNewRoomsToChild(
+      const zonesAdded = await childServices.addNewZonesToChild(
         child_id,
-        roomsToAdd,
+        zonesToAdd,
         selectedOption,
         schedule_enable_date,
         t
@@ -392,8 +397,8 @@ module.exports = {
 
       res.status(200).json({
         IsSuccess: true,
-        Data: roomsAdded,
-        Message: CONSTANTS.ROOMS_ADDED
+        Data: zonesAdded,
+        Message: CONSTANTS.ZONES_ADDED
       });
 
       next();
@@ -420,13 +425,13 @@ module.exports = {
     }
   },
 
-  changeRoomScheduler: async (req, res, next) => {
+  changeZoneScheduler: async (req, res, next) => {
     const t = await sequelize.transaction();
     try {
-      const { room_child_id, timeRange } = req.body;
+      const { zone_child_id, timeRange } = req.body;
 
-      const schedulerAdded = await childServices.changeRoomScheduler(
-        room_child_id,
+      const schedulerAdded = await childServices.changeZoneScheduler(
+        zone_child_id,
         { timeRange },
         t
       );
@@ -436,7 +441,7 @@ module.exports = {
       res.status(200).json({
         IsSuccess: true,
         Data: schedulerAdded,
-        Message: CONSTANTS.ROOM_SCHEDULER_CHANGED
+        Message: CONSTANTS.ZONE_SCHEDULER_CHANGED
       });
 
       next();
@@ -463,12 +468,12 @@ module.exports = {
     }
   },
 
-  changeDefaultRoomScheduler: async (req, res, next) => {
+  changeDefaultZoneScheduler: async (req, res, next) => {
     const t = await sequelize.transaction();
     try {
       const { cust_id, timeRange } = req.body;
 
-      const schedulerAdded = await childServices.changeDefaultRoomScheduler(
+      const schedulerAdded = await childServices.changeDefaultZoneScheduler(
         cust_id,
         { timeRange },
         t
@@ -547,12 +552,12 @@ module.exports = {
     }
   },
 
-  deleteRoomInChild: async (req, res, next) => {
+  deleteZoneInChild: async (req, res, next) => {
     const t = await sequelize.transaction();
     try {
       const params = req.body;
 
-      const roomsDeleted = await childServices.deleteRoomInChild(params.child_id, params.room_id, t);
+      const zonesDeleted = await childServices.deleteZoneInChild(params.child_id, params.zone_id, t);
 
       //const child = await childServices.deleteChild(params.child_id, t);
 
@@ -560,7 +565,7 @@ module.exports = {
       res.status(200).json({
         IsSuccess: true,
         Data: {},
-        Message: CONSTANTS.CHILD_ROOM_DELETED
+        Message: CONSTANTS.CHILD_ZONE_DELETED
       });
 
       next();

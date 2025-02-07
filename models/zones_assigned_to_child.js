@@ -1,10 +1,10 @@
 const { Sequelize } = require('sequelize');
 const sequelize = require('../lib/database');
 
-const RoomsInChild = sequelize.define(
-  'rooms_assigned_to_child',
+const ZonesInChild = sequelize.define(
+  'zones_assigned_to_child',
   {
-    room_child_id: {
+    zone_child_id: {
       type: Sequelize.INTEGER,
       allowNull: false,
       primaryKey: true,
@@ -14,7 +14,7 @@ const RoomsInChild = sequelize.define(
       type: Sequelize.INTEGER,
       allowNull: false
     },
-    room_id: {
+    zone_id: {
       type: Sequelize.STRING(100),
       allowNull: false
     },
@@ -37,9 +37,9 @@ const RoomsInChild = sequelize.define(
     updatedAt: { type: Sequelize.DATE, field: 'updated_at' }
   },
   {
-    tableName: 'rooms_assigned_to_child',
+    tableName: 'zones_assigned_to_child',
     timestamps: true
   }
 );
 
-module.exports = RoomsInChild;
+module.exports = ZonesInChild;

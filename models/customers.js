@@ -63,6 +63,10 @@ const Customers = sequelize.define(
       type: Sequelize.BOOLEAN,
       defaultValue: true
     },
+    camera_recording: {
+      type: Sequelize.BOOLEAN,
+      defaultValue: true
+    },
     invite_user: {
       type: Sequelize.BOOLEAN,
       defaultValue: true
@@ -73,7 +77,7 @@ const Customers = sequelize.define(
     max_stream_live_license: {
       type: Sequelize.INTEGER(3)
     },
-    max_stream_live_license_room: {
+    max_stream_live_license_zone: {
       type: Sequelize.INTEGER(3)
     },
     trial_period_days: {

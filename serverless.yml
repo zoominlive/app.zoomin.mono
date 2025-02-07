@@ -14,7 +14,7 @@ provider:
   runtime: nodejs16.x
   httpApi:
     cors: true
-  timeout: 30
+  timeout: 60
   tracing:
     lambda: true
   websocketsApiName: websockets-api
@@ -194,24 +194,24 @@ functions:
           method: "*"
           path: /api/family/checkLinkValid
 
-  roomFunction:
+  zoneFunction:
     handler: handler.handler
     events:
       - httpApi:
           method: "*"
-          path: /api/rooms/add
+          path: /api/zones/add
       - httpApi:
           method: "*"
-          path: /api/rooms/edit
+          path: /api/zones/edit
       - httpApi:
           method: "*"
-          path: /api/rooms/delete
+          path: /api/zones/delete
       - httpApi:
           method: "*"
-          path: /api/rooms/list
+          path: /api/zones/list
       - httpApi:
           method: "*"
-          path: /api/rooms
+          path: /api/zones
 
   liveStreamFunction:
     handler: handler.handler
@@ -244,9 +244,21 @@ functions:
       - httpApi:
           method: "*"
           path: /api/customers/locations
+
+  migrateUserLocations:
+    handler: migrateUserLocations.migrateUserLocations
+  
+  migrateFamilyLocations:
+    handler: migrateFamilyLocations.migrateFamilyLocations
+
+  migrateChildrenLocations:
+    handler: migrateChildrenLocations.migrateChildrenLocations
+  
+  migrateApiKeyLocations:
+    handler: migrateApiKeyLocations.migrateApiKeyLocations
           
   disableScheduledMembers:
-    handler: cron.disableScheduledFamilyAndChild
+    handler: cron.disableScheduledUsers
     events:
       - schedule: rate(1 hour)
 
@@ -254,8 +266,9 @@ functions:
     handler: cron.enableScheduledChild
     events:
       - schedule: rate(1 hour)
-  enableDisablescheduledRoom:
-    handler: cron.enableDisableScheduledRoom
+
+  enableDisablescheduledZone:
+    handler: cron.enableDisableScheduledZone
     events:
       - schedule: rate(1 hour)
 

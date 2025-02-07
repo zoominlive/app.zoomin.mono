@@ -5,47 +5,47 @@ const connectToDatabase = require('../models/index');
 module.exports = {
   async up(queryInterface, Sequelize) {
     const Models = await connectToDatabase();
-    const data = await Models.CamerasInRooms.findAll({
+    const data = await Models.CamerasInZones.findAll({
       include: [
         {
           model: Models.Camera
         },
         {
-          model: Models.Room
+          model: Models.Zone
         }
       ]
     });
 
     await Promise.all(
-      data.map(async (cam_room) => {
-        if (cam_room.room == null || cam_room.camera == null) {
-          await Models.CamerasInRooms.destroy({
+      data.map(async (cam_zone) => {
+        if (cam_zone.zone == null || cam_zone.camera == null) {
+          await Models.CamerasInZones.destroy({
             where: {
-              cam_room_id: cam_room.cam_room_id
+              cam_zone_id: cam_zone.cam_zone_id
             }
           });
         }
       })
     );
 
-    const data1 = await Models.RoomsInChild.findAll({
+    const data1 = await Models.ZonesInChild.findAll({
       include: [
         {
           model: Models.Child
         },
         {
-          model: Models.Room,
-          as: 'room'
+          model: Models.Zone,
+          as: 'zone'
         }
       ]
     });
 
     await Promise.all(
-      data1.map(async (room_child) => {
-        if (room_child.room == null || room_child.child == null) {
-          await Models.RoomsInChild.destroy({
+      data1.map(async (zone_child) => {
+        if (zone_child.zone == null || zone_child.child == null) {
+          await Models.ZonesInChild.destroy({
             where: {
-              room_child_id: room_child.room_child_id
+              zone_child_id: zone_child.zone_child_id
             }
           });
         }

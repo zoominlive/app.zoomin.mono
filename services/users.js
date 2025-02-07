@@ -8,10 +8,12 @@ const _ = require("lodash");
 const { v4: uuidv4 } = require("uuid");
 
 var validator = require("validator");
-const RoomsInTeacher = require("../models/rooms_assigned_to_teacher");
+const ZonesInTeacher = require("../models/zones_assigned_to_teacher");
 const customerServices = require('../services/customers');
 const { default: axios } = require("axios");
 const Users = require("../models/users");
+const CustomerLocations = require("../models/customer_locations");
+const CustomerLocationAssignments = require("../models/customer_location_assignment");
 /* Validate email */
 const validateEmail = (emailAdress) => {
   // let regexEmail = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
@@ -29,10 +31,22 @@ module.exports = {
   createUser: async (userObj, t) => {
     const { Users } = await connectToDatabase();
     userObj.user_id = uuidv4();
-    delete userObj.rooms;
+    delete userObj.zones;
     console.log("userObj--->", userObj);
     let userCreated = await Users.create(userObj, { transaction: t });
 
+    const camsToAdd = userObj.location.locations.map((_) => {
+      return {
+        loc_id: _.loc_id,
+        cust_id: userObj.cust_id,
+        user_id: userCreated.user_id
+      };
+    });
+    console.log('camsToAdd==>', camsToAdd);
+    
+    await CustomerLocationAssignments.bulkCreate(camsToAdd, {
+      transaction: t,
+    });
     return userCreated;
   },
 
@@ -189,16 +203,13 @@ module.exports = {
   /* Edit user profile details */
   editUserProfile: async (user, params, t) => {
     const { Users } = await connectToDatabase();
-    const locations = {
-      selected_locations: params.location?.locations,
-      accessable_locations: params.location?.locations,
-    };
+
     let update = {
       first_name:
         params?.first_name !== undefined ? params?.first_name : user.first_name,
       last_name:
         params?.last_name !== undefined ? params?.last_name : user.last_name,
-      location: params?.location !== undefined ? locations : user.location,
+      // location: params?.location !== undefined ? locations : user.location,
       profile_image:
         params?.image !== undefined ? params?.image : user.profile_image,
       username:
@@ -241,6 +252,42 @@ module.exports = {
       );
     }
 
+    if(params.location) {
+      const locationsToAdd = params.location.locations.map((loc) => {
+        return {
+          loc_id: loc.loc_id,
+          cust_id: user.cust_id,
+          user_id: user.user_id
+        };
+      });
+  
+      // await CustomerLocationAssignments.destroy(
+      //   {
+      //     where: { user_id: user.user_id },
+      //     raw: true,
+      //   },
+      //   { transaction: t }
+      // );
+      
+      await CustomerLocationAssignments.bulkCreate(locationsToAdd, {
+        transaction: t,
+      });
+
+      const userLocations = await Users.findOne({
+        where: {
+          user_id: user.user_id
+        },
+        include: [
+          {
+            model: CustomerLocations,
+            as: 'locations',
+            attributes: ['loc_id', 'loc_name']
+          }
+        ],
+        transaction: t
+      })   
+      updateUserProfile.dataValues.locations = userLocations.toJSON().locations.map((item) => ({loc_id: item.loc_id, loc_name: item.loc_name})); 
+    }
     return updateUserProfile.toJSON();
   },
 
@@ -251,7 +298,12 @@ module.exports = {
       { where: { user_id: userId } },
       { transaction: t }
     );
-
+    
+    await CustomerLocationAssignments.destroy(
+      { where: { user_id: userId } },
+      { transaction: t }
+    );
+    
     return deletedUser;
   },
 
@@ -269,7 +321,7 @@ module.exports = {
 
   /* Fetch all the user's details */
   getAllUsers: async (user, filter, t) => {
-    const { Users, Customers, RoomsInTeacher, Room } =
+    const { Users, Customers, ZonesInTeacher, Zone } =
       await connectToDatabase();
     let {
       pageNumber = 0,
@@ -321,14 +373,22 @@ module.exports = {
             },
           },
         ],
-        location: {
-          [Sequelize.Op.substring]: location,
-        },
         role: {
           [Sequelize.Op.substring]: role,
         },
       },
-      attributes: ["user_id", "location"],
+      attributes: ["user_id"],
+      include: [{
+        model: CustomerLocations,
+        as: 'locations',
+        where: {
+          loc_id: {
+            [Sequelize.Op.substring]: location,
+          },
+        },
+        attributes: ['loc_id', 'loc_name']
+      }],
+      distinct: true
     });
 
     const userIds = [];
@@ -337,18 +397,21 @@ module.exports = {
       let availableLocations = await customerServices.getLocationDetails(
         cust_id
       );
-      let locs = availableLocations.flatMap((i) => i.loc_name);
+      let locs = availableLocations.flatMap(({loc_id, loc_name}) => ({loc_id, loc_name}));
+      console.log('locs==>', locs);
+      
       allusers.map((item) => {
         locs.forEach((i) => {
-          if (item.location.accessable_locations?.includes(i)) {
+          if (item.locations?.map((item) => item.loc_id)?.includes(i.loc_id)) {
             userIds.push(item);
           }
         });
       });
+      console.log('userIds==>', userIds);
     } else {
       allusers.map((item) => {
-        user.location.accessable_locations.forEach((i) => {
-          if (item.location.accessable_locations?.includes(i)) {
+        user.locations.forEach((i) => {          
+          if (item.locations?.map((item) => item.loc_id).includes(i.loc_id)) {
             userIds.push(item);
           }
         });
@@ -368,50 +431,72 @@ module.exports = {
           attributes: ["max_stream_live_license"],
         },
         {
-          model: RoomsInTeacher,
-          as: "roomsInTeacher",
+          model: ZonesInTeacher,
+          as: "zonesInTeacher",
           include: [
             {
-              model: Room,
-              as: "room",
+              model: Zone,
+              as: "zone",
             },
           ],
         },
+        {
+          model: CustomerLocations,
+          as: 'locations',
+          where: {
+            loc_id: {
+              [Sequelize.Op.substring]: location,
+            },
+          },
+          attributes: ['loc_id', 'loc_name']
+        }
       ],
+      distinct: true,
       attributes: { exclude: ["password"] },
     });
+    console.log('users==>', users);
 
     return { users: users.rows, count: users.count };
   },
 
   getAllUserIds: async (custId, location = ["Select All"], t) => {
-    const { Users } = await connectToDatabase();
-    let userIds = await Users.findAll(
-      {
-        where: { cust_id: custId },
-        attributes: [
-          [Sequelize.fn("DISTINCT", Sequelize.col("user_id")), "user_id"],
-          "location",
-        ],
-        group: ["user_id"], //user later if required
-        raw: true,
-      },
-      { transaction: t }
-    );
+    const { Users, CustomerLocations } = await connectToDatabase();
+    const distinctUserIds = await Users.findAll({
+      where: { cust_id: custId },
+      attributes: [
+        [Sequelize.fn("DISTINCT", Sequelize.col("user_id")), "user_id"]
+      ],
+      raw: true,
+      transaction: t
+    });
+    
+    const userIdsArray = distinctUserIds.map(user => user.user_id);
+    
+    let userIdsWithLocations = await Users.findAll({
+      where: { user_id: userIdsArray },
+      include: [
+        {
+          model: CustomerLocations,
+          as: "locations",
+        },
+      ],
+      transaction: t,
+    });
 
     if (!location.includes("Select All")) {
-      let filterResult = [];
-      userIds.map((i) => {
+      let filterResult = []; 
+      location = location.map(Number);    
+      userIdsWithLocations.map((i) => {        
         if (
-          i.location?.accessable_locations?.every((it) => location.includes(it))
+          i.locations?.map((item) => item.dataValues.loc_id).every((it) => location.includes(it))
         ) {
           filterResult.push(i);
         }
       });
-      userIds = filterResult;
+      userIdsWithLocations = filterResult;
     }
-
-    return userIds;
+    
+    return userIdsWithLocations;
   },
 
   // check if user already exist for given email
@@ -434,60 +519,67 @@ module.exports = {
     }
   },
   getAllUsersForLocation: async (custId, locations) => {
-    const { Users } = await connectToDatabase();
+    const { Users, CustomerLocations } = await connectToDatabase();
     let locArray = locations?.map((loc) => {
       return {
-        location: {
+        loc_id: {
           [Sequelize.Op.substring]: loc,
         },
       };
     });
     let users = await Users.findAll({
-      where: { cust_id: custId, [Sequelize.Op.or]: locArray },
+      // where: { cust_id: custId, [Sequelize.Op.or]: locArray },
       attributes: ["first_name", "last_name", "user_id"],
+      include: [{
+        model: CustomerLocations,
+        as: 'locations',
+        where: { cust_id: custId, [Sequelize.Op.or]: locArray },
+        attributes: ['loc_id', 'loc_name']
+      }],
       paranoid: false,
     });
-
+    console.log('users==>', users.length);
+    
     return users;
   },
 
-  assignRoomsToTeacher: async (teacherId, rooms, t) => {
-    const { RoomsInTeacher } = await connectToDatabase();
-    const roomsToadd = rooms.map((room) => {
+  assignZonesToTeacher: async (teacherId, zones, t) => {
+    const { ZonesInTeacher } = await connectToDatabase();
+    const zonesToadd = zones.map((zone) => {
       return {
-        room_id: room.room_id,
+        zone_id: zone.zone_id,
         teacher_id: teacherId,
       };
     });
 
-    let roomsAdded = await RoomsInTeacher.bulkCreate(
-      roomsToadd,
+    let zonesAdded = await ZonesInTeacher.bulkCreate(
+      zonesToadd,
       { returning: true },
       { transaction: t }
     );
 
-    return roomsAdded;
+    return zonesAdded;
   },
 
-  editAssignedRoomsToTeacher: async (teacherId, rooms, t) => {
-    const { RoomsInTeacher } = await connectToDatabase();
-    const roomsToadd = rooms.map((room) => {
+  editAssignedZonesToTeacher: async (teacherId, zones, t) => {
+    const { ZonesInTeacher } = await connectToDatabase();
+    const zonesToadd = zones.map((zone) => {
       return {
-        room_id: room.room_id,
+        zone_id: zone.zone_id,
         teacher_id: teacherId,
       };
     });
 
-    let roomsRemoved = await RoomsInTeacher.destroy(
+    let zonesRemoved = await ZonesInTeacher.destroy(
       { where: { teacher_id: teacherId }, raw: true },
       { transaction: t }
     );
 
-    let roomsAdded = await RoomsInTeacher.bulkCreate(roomsToadd, {
+    let zonesAdded = await ZonesInTeacher.bulkCreate(zonesToadd, {
       transaction: t,
     });
 
-    return roomsAdded;
+    return zonesAdded;
   },
 
   getUsersSocketIds: async (cust_id) => {
@@ -773,8 +865,11 @@ module.exports = {
     try {
       const user = await Users.findOne({
         where: { user_id: user_id },
-        raw: true,
-        plain: true,
+        include: [{
+          model: CustomerLocations,
+          as: 'locations',
+          attributes: ['loc_id', 'loc_name']
+        }],
       });
       console.log("user==>", user);
 
@@ -787,7 +882,7 @@ module.exports = {
           message: "Unauthorized access to user:" + user_id,
         };
       }
-      if (locations && !locations.every(location => user.location.accessable_locations.includes(location))) {
+      if (locations && !locations.every(location => user.locations.map((item) => item.loc_id).includes(location))) {
         return {
           valid: false,
           message: "Unauthorized access to either of the locations",

@@ -80,10 +80,10 @@ const Family = sequelize.define(
       defaultValue: false,
       required: false
     },
-    location: {
-      type: Sequelize.JSON,
-      defaultValue: null
-    },
+    // location: {
+    //   type: Sequelize.JSON,
+    //   defaultValue: null
+    // },
     disabled_locations: {
       type: Sequelize.JSON,
       defaultValue: {}

@@ -7,11 +7,11 @@ module.exports = {
     return camCreated;
   },
 
-  deleteLivestreamCamera: async (roomId, t) => {
+  deleteLivestreamCamera: async (zoneId, t) => {
     const { LiveStreamCameras } = await connectToDatabase();
     let camdeleted = await LiveStreamCameras.destroy(
       {
-        where: { room_id: roomId },
+        where: { zone_id: zoneId },
         raw: true,
       },
       { transaction: t }
@@ -19,9 +19,9 @@ module.exports = {
     return camdeleted;
   },
 
-  getAllLivestreamCamerasForRoom: async (roomId) => {
+  getAllLivestreamCamerasForZone: async (zoneId) => {
     const { LiveStreamCameras } = await connectToDatabase();
-    let livestreamcams = await LiveStreamCameras.findAll({where: {room_id: roomId}, raw: true});
+    let livestreamcams = await LiveStreamCameras.findAll({where: {zone_id: zoneId}, raw: true});
     return livestreamcams
   },
 

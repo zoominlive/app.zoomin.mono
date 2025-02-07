@@ -17,16 +17,16 @@ const Child = sequelize.define(
       type: Sequelize.STRING(30),
       required: [true, 'Last Name is mandatory field']
     },
-    rooms: {
+    zones: {
       type: Sequelize.JSON,
       allowNull: false,
       required: true
     },
-    location: {
-      type: Sequelize.JSON,
-      allowNull: false,
-      required: true
-    },
+    // location: {
+    //   type: Sequelize.JSON,
+    //   allowNull: false,
+    //   required: true
+    // },
     family_id: {
       type: Sequelize.STRING(50),
       comment: 'key used to assosiate child to family member'

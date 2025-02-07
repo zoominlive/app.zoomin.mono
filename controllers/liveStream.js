@@ -19,21 +19,21 @@ const s3BucketImageUploader = require("../lib/aws-services");
 const CONSTANTS = require("../lib/constants");
 const sequelize = require("../lib/database");
 const { v4: uuidv4 } = require("uuid");
-const rooms = require("../services/rooms");
+const zones = require("../services/zones");
 module.exports = {
   // get endpoint
   getEndpoint: async (req, res, next) => {
     const t = await sequelize.transaction();
     let response;
     try {
-      const { roomID, streamName } = req.query;
+      const { zoneID, streamName } = req.query;
       const { user_id, stream_live_license, cust_id } = req.user;
       const streams = await liveStreamServices.getstreamObjByUserId(user_id, t);
       const hasRunningStream = streams.some(stream => stream.dataValues.stream_running); //check if atleast one of the streams is running
 
-      const streamsByRoom = await liveStreamServices.getstreamObjByRoomId(roomID, t);
-      const hasRunningStreamRooms = streamsByRoom.some(stream => stream.stream_running); //check if atleast one of the streams is running
-      const roomObj = await rooms.getRoomDetailsByRoomId(roomID, t);
+      const streamsByZone = await liveStreamServices.getstreamObjByZoneId(zoneID, t);
+      const hasRunningStreamZones = streamsByZone.some(stream => stream.stream_running); //check if atleast one of the streams is running
+      const zoneObj = await zones.getZoneDetailsByZoneId(zoneID, t);
       if (stream_live_license) {
         if(!hasRunningStream){
           let rtmpTranscoderBaseUrl = await customerServices.getRTMPTranscoderUrl(
@@ -50,7 +50,7 @@ module.exports = {
             stream_id: streamID,
             cust_id: cust_id,
             user_id: user_id,
-            room_id: roomID,
+            zone_id: zoneID,
             stream_name: streamName,
             sendbird_channel_url: groupChannelData?.channel_url ? groupChannelData?.channel_url : '',
             hls_url: `https://zoominstreamprocessing.s3.us-west-2.amazonaws.com/liveStream/${streamID}_${current_time}/index.m3u8`,
@@ -85,12 +85,12 @@ module.exports = {
           await t.rollback();
           res.status(400).json({
             IsSuccess: true,
-            Data: { room_id: roomID },
+            Data: { zone_id: zoneID },
             Message: CONSTANTS.LIVE_STREAM_NOT_ALLOWED,
           });
         }
-      } else if(!stream_live_license && roomObj.stream_live_license) {
-        if(!hasRunningStreamRooms){
+      } else if(!stream_live_license && zoneObj.stream_live_license) {
+        if(!hasRunningStreamZones){
           let rtmpTranscoderBaseUrl = await customerServices.getRTMPTranscoderUrl(
             cust_id
           );
@@ -105,7 +105,7 @@ module.exports = {
             stream_id: streamID,
             cust_id: cust_id,
             user_id: user_id,
-            room_id: roomID,
+            zone_id: zoneID,
             stream_name: streamName,
             hls_url: `https://zoominstreamprocessing.s3.us-west-2.amazonaws.com/liveStream/${streamID}_${current_time}/index.m3u8`,
           };
@@ -136,15 +136,15 @@ module.exports = {
           await t.rollback();
           res.status(400).json({
             IsSuccess: true,
-            Data: { room_id: roomID },
-            Message: CONSTANTS.LIVE_STREAM_ROOM_NOT_ALLOWED,
+            Data: { zone_id: zoneID },
+            Message: CONSTANTS.LIVE_STREAM_ZONE_NOT_ALLOWED,
           });
         }
       } else {
         await t.rollback();
         res.status(401).json({
           IsSuccess: true,
-          Data: { room_id: roomID },
+          Data: { zone_id: zoneID },
           Message: CONSTANTS.LIVE_STREAM_UNAUTHORIZE,
         });
       }
@@ -205,14 +205,14 @@ module.exports = {
 
         await liveStreamServices.updateLiveStream(streamID, updateObj, t);
         await liveStreamServices.saveEndPointInCamera(streamID, t);
-        let roomID = await liveStreamServices.getRoom(streamID, t);
+        let zoneID = await liveStreamServices.getZone(streamID, t);
         let camObj = {
           cam_name: "Live Stream",
-          room_id: roomID,
+          zone_id: zoneID,
           stream_uri: `https://live.zoominlive.com/stream/${streamID}.m3u8`,
         };
         await liveStramcameraServices.createLivestreamCamera(camObj, t);
-        let childs = await childServices.getChildOfAssignedRoomId(roomID, t);
+        let childs = await childServices.getChildOfAssignedzoneId(zoneID, t);
         let childIds = childs.flatMap((i) => i.child_id);
         let familys = await childServices.getAllchildrensFamilyId(childIds, t);
         let familyIds = [...new Set(familys.flatMap((i) => i.family_id))];
@@ -235,7 +235,7 @@ module.exports = {
             fcmTokens,
             {
               stream_id: streamID,
-              room_id: roomID,
+              zone_id: zoneID,
               sendbird_channel_url: streamObj.sendbird_channel_url,
               //stream_uri: camObj?.stream_uri,
               stream_uri: `${camObj?.stream_uri}?uid=${
@@ -334,13 +334,13 @@ module.exports = {
       await liveStreamServices.updateLiveStream(streamID, updateObj, t);
       await liveStreamServices.removeEndPointInCamera(streamID, t);
 
-      let roomID = await liveStreamServices.getRoom(streamID, t);
+      let zoneID = await liveStreamServices.getZone(streamID, t);
 
-      await liveStramcameraServices.deleteLivestreamCamera(roomID);
+      await liveStramcameraServices.deleteLivestreamCamera(zoneID);
 
       let streamObj = await liveStreamServices.getstreamObj(streamID, t);
       let deleteChannel = await liveStreamServices.deleteGroupChannel(streamObj.sendbird_channel_url);
-      let childs = await childServices.getChildOfAssignedRoomId(roomID, t);
+      let childs = await childServices.getChildOfAssignedzoneId(zoneID, t);
       let childIds = childs.flatMap((i) => i.child_id);
       let familys = await childServices.getAllchildrensFamilyId(childIds, t);
       let familyIds = [...new Set(familys.flatMap((i) => i.family_id))];
@@ -364,7 +364,7 @@ module.exports = {
           fcmTokens,
           {
             stream_id: streamID,
-            room_id: roomID,
+            zone_id: zoneID,
             stream_uri: `https://live.zoominlive.com/stream/${streamID}.m3u8`,
           }
         );
@@ -464,7 +464,7 @@ module.exports = {
       const { streamID } = req.query;
       let streamObj = await liveStreamServices.getstreamObj(streamID);
       let response = {
-        room_id: streamObj?.room_id,
+        zone_id: streamObj?.zone_id,
         cust_id: streamObj?.cust_id,
       };
       await t.commit();

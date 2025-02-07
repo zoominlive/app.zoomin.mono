@@ -38,15 +38,15 @@ module.exports = {
 
       allLocations = _.uniq(allLocations);
 
-      primary.location = { selected_locations: allLocations, accessable_locations: allLocations };
+      primary.location = allLocations;
       const newFamilyId = await familyServices.generateNewFamilyId();
       primary.family_id = newFamilyId;
       const emailExist = await userServices.checkEmailExist(primary.email);
       if (emailExist) {
         throw new Error("Validation error");
       }
-      const familyLocation = allLocations;
-      if (!familyLocation.every(location => req.user.location.accessable_locations.includes(location)) && req.user.role !== 'Super Admin') {
+      const familyLocation = allLocations.map((item) => item.loc_id);
+      if (!familyLocation.every(location => req.user.locations.map((item) => item.loc_id).includes(location)) && req.user.role !== 'Super Admin') {
         await t.rollback();
         return res.status(400).json({Message: "Unauthorized location access"});
       }
@@ -70,10 +70,7 @@ module.exports = {
       let familyObj = [];
 
       secondary?.forEach(async (family) => {
-        family.location = {
-          selected_locations: allLocations,
-          accessable_locations: allLocations
-        };
+        family.location = allLocations;
 
         familyObj.push({
           ...family,
@@ -117,7 +114,7 @@ module.exports = {
       children?.forEach(async (child) => {
         childObjs.push({
           ...child,
-          rooms: { rooms: child.rooms },
+          zones: { zones: child.zones },
           family_id: familyId,
           cust_id: custId
         });
@@ -333,9 +330,9 @@ module.exports = {
         pageNumber: parseInt(req.query?.page),
         pageSize: parseInt(req.query?.limit),
         searchBy: req.query?.searchBy?.replace(/'/g, "\\'"),
-        roomsList: req.query?.rooms,
+        zonesList: req.query?.zones,
         location: req.query?.location,
-        cust_id: req. query?.cust_id
+        cust_id: req.query?.cust_id
       };
       
       let familyDetails = await familyServices.getAllFamilyDetails(req.user, filter, t);
@@ -368,6 +365,7 @@ module.exports = {
       params.cust_id = req.user.cust_id || req.body.cust_id;
       params.frontegg_tenant_id = req.body.tenant_id || req.user.frontegg_tenant_id;
       params.user_id = req.user.user_id;
+      if (!params.location) params.location = req.user.locations;
       let emailExist = await userServices.checkEmailExist(params.email, t);
 
       if (emailExist) {
@@ -808,6 +806,8 @@ module.exports = {
       });
       next();
     } catch (error) {
+      console.log('error==>', error);
+      
       res
         .status(500)
         .json({ IsSuccess: false, error_log: error, Message: CONSTANTS.INTERNAL_SERVER_ERROR });

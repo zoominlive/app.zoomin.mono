@@ -6,21 +6,21 @@ const sequelize = require("../lib/database");
 const { v4: uuidv4 } = require('uuid');
 const axios = require('axios');
 const Camera = require("../models/camera");
-const Room = require("../models/room");
-const CamerasInRooms = require("../models/cameras_assigned_to_rooms");
+const Zone = require("../models/zone");
+const CamerasInZones = require("../models/cameras_assigned_to_zones");
 
 module.exports = {
   /* Create new camera */
-  createCamera: async (camObj, roomsToAdd, t) => {
+  createCamera: async (camObj, zonesToAdd, t) => {
     const { Camera } = await connectToDatabase();
     let camCreated = await Camera.create(camObj, { transaction: t });
-    const mappedData = roomsToAdd.map((room) => {
+    const mappedData = zonesToAdd.map((zone) => {
       return {
-        room_id: room.room_id,
+        zone_id: zone.zone_id,
         cam_id: camCreated.cam_id,
       };
     });
-    await CamerasInRooms.bulkCreate(mappedData, {
+    await CamerasInZones.bulkCreate(mappedData, {
       transaction: t,
     });
 
@@ -45,8 +45,8 @@ module.exports = {
 
   /* Delete Existing camera */
   deleteCamera: async (camId, t) => {
-    const { Camera, CamerasInRooms } = await connectToDatabase();
-    let camsDeleted = await CamerasInRooms.destroy(
+    const { Camera, CamerasInZones } = await connectToDatabase();
+    let camsDeleted = await CamerasInZones.destroy(
       { where: { cam_id: camId }, raw: true },
       { transaction: t }
     );
@@ -73,30 +73,32 @@ module.exports = {
       },
       { transaction: t }
     );
-    const roomsToAdd = params.map((room) => {
-      return {
-        room_id: room.room_id || room.room.room_id,
-        cam_id: camId,
-      };
-    });
-    await CamerasInRooms.destroy(
-      {
-        where: { cam_id: camId },
-        raw: true,
-      },
-      { transaction: t }
-    );
-    
-    await CamerasInRooms.bulkCreate(roomsToAdd, {
-      transaction: t,
-    });
+    if (params !== null && params !== undefined && params !== '') {     
+      const zonesToAdd = params.map((zone) => {
+        return {
+          zone_id: zone.zone_id || zone.zone.zone_id,
+          cam_id: camId,
+        };
+      });
+      await CamerasInZones.destroy(
+        {
+          where: { cam_id: camId },
+          raw: true,
+        },
+        { transaction: t }
+      );
+      
+      await CamerasInZones.bulkCreate(zonesToAdd, {
+        transaction: t,
+      });
+    }
     return updatedCam;
   },
 
-  /* Fetch all the camera's details for given room */
-  getAllCameraForRoom: async (roomId, t) => {
+  /* Fetch all the camera's details for given zone */
+  getAllCameraForZone: async (zoneId, t) => {
     const { Camera } = await connectToDatabase();
-    const query = `SELECT * FROM camera WHERE room_ids LIKE '%${roomId}%'  `;
+    const query = `SELECT * FROM camera WHERE room_ids LIKE '%${zoneId}%'  `;
     let cameras = await sequelize.query(
       query,
       { type: Sequelize.QueryTypes.SELECT },
@@ -124,7 +126,7 @@ module.exports = {
       {
         where: {
           cust_id: custId,
-          location: { [Sequelize.Op.in]: location },
+          loc_id: { [Sequelize.Op.in]: location },
         },
       },
       { transaction: t }
@@ -150,14 +152,14 @@ module.exports = {
     }
     let loc_obj = {};
     if (!cust_id) {
-      loc_obj = { location: user.location.accessable_locations };
+      loc_obj = { loc_id: user.locations.map((item) => item.loc_id) };
     } else {
       let availableLocations = await CustomerLocations.findAll({
         where: { cust_id: cust_id },
         raw: true,
       });
-      let locs = availableLocations.flatMap((i) => i.loc_name);
-      loc_obj = { location: locs };
+      let locs = availableLocations.flatMap((i) => i.loc_id);
+      loc_obj = { loc_id: locs };
     }
 
     if (filter.pageNumber && filter.pageSize) {
@@ -174,7 +176,7 @@ module.exports = {
               // { location: user.location.accessable_locations },
               loc_obj,
               {
-                location: {
+                loc_id: {
                   [Sequelize.Op.like]: `%${location}`,
                 },
               },
@@ -194,20 +196,25 @@ module.exports = {
           },
           include: [
             {
-              model: CamerasInRooms,
-              attributes: ["cam_room_id"],
+              model: CamerasInZones,
+              attributes: ["cam_zone_id"],
               include: [
                 {
-                  model: Room,
+                  model: Zone,
                   attributes: [
-                    "room_id",
-                    "room_name",
-                    "location"
+                    "zone_id",
+                    "zone_name",
+                    "loc_id"
                   ],
                 },
               ],
             },
-          ]
+            {
+              model: CustomerLocations,
+              attributes: ["loc_id", "loc_name"],
+            }
+          ],
+          distinct: true
         },
         { transaction: t }
       );
@@ -216,7 +223,7 @@ module.exports = {
         {
           where: {
             cust_id: custId || cust_id,
-            location: {
+            loc_id: {
               [Sequelize.Op.like]: `%${location}`,
             },
             [Sequelize.Op.or]: [
@@ -234,19 +241,23 @@ module.exports = {
           },
           include: [
             {
-              model: CamerasInRooms,
-              attributes: ["cam_room_id"],
+              model: CamerasInZones,
+              attributes: ["cam_zone_id"],
               include: [
                 {
-                  model: Room,
+                  model: Zone,
                   attributes: [
-                    "room_id",
-                    "room_name",
-                    "location"
+                    "zone_id",
+                    "zone_name",
+                    "loc_id"
                   ],
                 },
               ],
             },
+            {
+              model: CustomerLocations,
+              attributes: ["loc_id", "loc_name"],
+            }
           ]
         },
         { transaction: t }
@@ -256,7 +267,7 @@ module.exports = {
   },
 
   /* Fetch all the camera's details for transcoder */
-  getAllCameraForTranscoder: async (cust_ids) => {
+  getAllCameraForTranscoder: async (cust_ids, loc_ids) => {
     const { Camera } = await connectToDatabase();
 
     let cams;
@@ -265,6 +276,7 @@ module.exports = {
       {
         where: {
           cust_id: cust_ids,
+          loc_id: loc_ids
         },
       }
     );

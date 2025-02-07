@@ -2,19 +2,20 @@ const connectToDatabase = require("../models/index");
 const Sequelize = require("sequelize");
 const _ = require("lodash");
 const moment = require("moment-timezone");
-const RoomsInChild = require("../models/rooms_assigned_to_child");
-const Room = require("../models/room");
+const ZonesInChild = require("../models/zones_assigned_to_child");
+const Zone = require("../models/zone");
 const customerServices = require("../services/customers");
 const userServices = require("../services/users");
 const socketServices = require('../services/socket');
 const liveStreamServices = require('../services/liveStream');
 const sequelize = require("../lib/database");
+const CustomerLocations = require("../models/customer_locations");
 
 module.exports = {
   /* get recent viewers */
   getLastOneHourViewers: async (user, custId = null, location = "All") => {
     let loc_obj = location === "All" ? {} : {location: location};
-    const { RecentViewers, Family, Child, Room, RoomsInChild, Users } =
+    const { RecentViewers, Family, Child, Zone, ZonesInChild, Users, CustomerLocations } =
       await connectToDatabase();
     let oneHourBefore = new Date();
     oneHourBefore.setHours(oneHourBefore.getHours() - 336);
@@ -44,33 +45,45 @@ module.exports = {
       include: [
         {
           model: Family,
-          attributes: ["first_name", "last_name", "location", "profile_image"],
+          attributes: ["first_name", "last_name", "profile_image"],
           include: [
             {
               model: Child,
               attributes: ["first_name"],
               include: [
                 {
-                  model: RoomsInChild,
-                  attributes: ["room_id", "disabled"],
-                  as: "roomsInChild",
+                  model: ZonesInChild,
+                  attributes: ["zone_id", "disabled"],
+                  as: "zonesInChild",
                   where: {disabled: "false"},
                   include: [
                     {
-                      attributes: ["room_name"],
-                      model: Room,
-                      as: "room",
+                      attributes: ["zone_name"],
+                      model: Zone,
+                      as: "zone",
                       where: loc_obj
                     },
                   ],
                 },
               ],
             },
+            {
+              model: CustomerLocations,
+              attributes: ["loc_id", "loc_name"],
+              as: 'family_user_locations'
+            }
           ],
         },
         {
           model: Users,
-          attributes: ["first_name", "last_name", "location", "profile_image" ],
+          attributes: ["first_name", "last_name", "profile_image" ],
+          include: [
+            {
+              model: CustomerLocations,
+              attributes: ["loc_id", "loc_name"],
+              as: 'locations'
+            }
+          ]
         },
       ],
     });
@@ -83,7 +96,7 @@ module.exports = {
       recentViewers.map((item) => {
         if (item.family) {
           locs.forEach((i) => {
-            if (item.family?.location?.accessable_locations.includes(i)) {
+            if (item.family.dataValues?.family_user_locations?.map((item) => item.loc_name).includes(i)) {
               if(!result.includes(item)){
                 result.push(item);
               }
@@ -91,7 +104,7 @@ module.exports = {
           });
         } else {
           locs.forEach((i) => {
-            if (item.user?.location?.accessable_locations.includes(i)) {
+            if (item.user.dataValues?.family_user_locations?.map((item) => item.loc_name).includes(i)) {
               if(!result.includes(item)){
                 result.push(item);
               }
@@ -101,17 +114,17 @@ module.exports = {
       });
     } else {
       recentViewers.map((item) => {
-        if (item.family) {
-          user.location.accessable_locations.forEach((i) => {
-            if (item.family?.location?.accessable_locations.includes(i)) {
+        if (item.dataValues.family) {
+          user.locations.map((item) => item.loc_id).forEach((i) => {
+            if (item.dataValues.family?.dataValues?.family_user_locations.includes(i)) {
               if(!result.includes(item)){
                 result.push(item);
               }
             }
           });
         } else {
-          user.location.accessable_locations.forEach((i) => {
-            if (item.user?.location?.accessable_locations.includes(i)) {
+          user.locations.map((item) => item.loc_id).forEach((i) => {
+            if (item.dataValues.user?.dataValues?.locations?.includes(i)) {
               if(!result.includes(item)){
                 result.push(item);
               }
@@ -122,26 +135,37 @@ module.exports = {
     }
     let filterResult = []
     if(!location.includes("Select All")){
-       result.map(i => {
-        if(i.family){
-          if(i.family?.location?.accessable_locations.every(i => location.includes(i))){
-            filterResult.push(i)
+      if (location !== 'All') location = location?.map(Number);
+       result.map((i) => {
+        if(i.dataValues.family) {
+          if (
+            i.dataValues.family?.dataValues.family_user_locations
+              .map((item) => item.dataValues?.loc_id)
+              .every((i) => location.includes(i))
+          ) {
+            filterResult.push(i);
+          }
+        } else {
+          if (
+            i.dataValues.user?.dataValues.locations
+            .map((item) => item.dataValues?.loc_id)
+            .every((i) =>
+              location.includes(i)
+            )
+          ) {
+            filterResult.push(i);
           }
         }
-        else{
-          if(i.user?.location?.accessable_locations.every(i => location.includes(i))){
-            filterResult.push(i)
-          }
-        }
-      })
-      result = filterResult
+      });
+      result = filterResult;
     }
     // result.slice(0,10);
     return result;
   },
 
   topViewersOfTheWeek: async (user, custId = null, location = "All") => {
-    const { RecentViewers, Family, Users } = await connectToDatabase();
+    const { RecentViewers, Family, CustomerLocations, Users } =
+      await connectToDatabase();
     let recentViewers = await RecentViewers.findAll({
       // where: {
       //   requested_at: {
@@ -170,30 +194,45 @@ module.exports = {
       include: [
         {
           model: Family,
-          attributes: ["family_member_id","first_name", "last_name", "location","profile_image"],
+          attributes: ["family_member_id","first_name", "last_name", "profile_image"],
+          include: [
+            {
+              model: CustomerLocations,
+              as: "family_user_locations",
+              attributes: ["loc_id", "loc_name"],
+            },
+          ],
         },
         {
           model: Users,
-          attributes: ["user_id","first_name", "last_name", "location", "profile_image"],
+          attributes: ["user_id","first_name", "last_name","profile_image"],
+          include: [
+            {
+              model: CustomerLocations,
+              as: "locations",
+              attributes: ["loc_id", "loc_name"],
+            },
+          ],
         },
       ],
     });
+    console.log("recentViewers==>", recentViewers.length);
     let result = [];
     if (custId) {
       let availableLocations = await customerServices.getLocationDetails(
         custId
       );
-      let locs = availableLocations.flatMap((i) => i.loc_name);
+      let locs = availableLocations.flatMap((i) => i.loc_id);
       recentViewers.map((item) => {
-        if (item.family) {
+        if (item.dataValues.family) {
           locs.forEach((i) => {
-            if (item.family?.location?.accessable_locations.includes(i)) {
+            if (item.dataValues?.family?.dataValues?.family_user_locations?.map((item) => item.loc_id).includes(i)) {
               result.push(item);
             }
           });
         } else {
            locs.forEach((i) => {
-            if (item.user?.location?.accessable_locations.includes(i)) {
+            if (item.dataValues?.user?.dataValues?.locations?.map((item) => item.loc_id).includes(i)) {
               result.push(item);
             }
           });
@@ -202,40 +241,50 @@ module.exports = {
     } else {
       recentViewers.map((item) => {
       
-        if (item.family) {
-           user.location.accessable_locations.forEach((i) => {
-            if (item.family?.location?.accessable_locations.includes(i)) {
+      if (item.dataValues.family) {
+        user.locations.map((item) => item.loc_id).forEach((i) => {
+            if (item.dataValues?.family?.dataValues?.family_user_locations?.map((item) => item.loc_id).includes(i)) {
               if(!result.includes(item)){
                 result.push(item);
               }
             }
           });
-        } else {
-           user.location.accessable_locations.forEach((i) => {
-            if (item.user?.location?.accessable_locations.includes(i)) {
+      } else {
+        user.locations.map((item) => item.loc_id).forEach((i) => {
+            if (item.dataValues?.user?.dataValues?.locations?.map((item) => item.loc_id).includes(i)) {
               if(!result.includes(item)){
                 result.push(item);
               }
             }
           });
-        }
+      }
       });
     }
 
     if(!location.includes("Select All")){
-      let filterResult = []
-       result.map(i => {
-        if(i.family){
-          if(i.family?.location?.accessable_locations.every(i => location.includes(i))){
-            filterResult.push(i)
+      let filterResult = [];
+      console.log('location==>', location);
+      
+      if (location !== 'All') location = location?.map(Number);
+      result.map((i) => {
+        if (i.dataValues.family) {
+          if (
+            i.dataValues.family?.dataValues.family_user_locations
+              .map((item) => item.loc_id)
+              .every((i) => location.includes(i))
+          ) {
+            filterResult.push(i);
+          }
+        } else {
+          if (
+            i.dataValues.user?.dataValues.locations
+              ?.map((item) => item.loc_id)
+              .every((i) => location.includes(i))
+          ) {
+            filterResult.push(i);
           }
         }
-        else{
-          if(i.user?.location?.accessable_locations.every(i => location.includes(i))){
-            filterResult.push(i)
-          }
-        }
-      })
+      });
       result = filterResult;
     }
     return result.slice(0, 5);
@@ -251,8 +300,7 @@ module.exports = {
         "scheduled_end_date",
         "scheduled_enable_date",
         "family_id",
-        "location",
-        "status"
+        "status",
       ],
       include: [
         {
@@ -262,12 +310,12 @@ module.exports = {
               model: Child,
               include: [
                 {
-                  model: RoomsInChild,
-                  as: "roomsInChild",
+                  model: ZonesInChild,
+                  as: "zonesInChild",
                   include: [
                     {
-                      model: Room,
-                      as: "room",
+                      model: Zone,
+                      as: "zone",
                     },
                   ],
                 },
@@ -302,28 +350,38 @@ module.exports = {
           },
         },
         {
-          model: RoomsInChild,
-          as: "roomsInChild",
-          attributes: ["room_id", "scheduled_disable_date", "scheduled_enable_date"],
+          model: ZonesInChild,
+          as: "zonesInChild",
+          attributes: [
+            "zone_id",
+            "scheduled_disable_date",
+            "scheduled_enable_date",
+          ],
           include: [
             {
-              model: Room,
-              as: "room",
-              attributes: ["room_name", "location"],
+              model: Zone,
+              as: "zone",
+              attributes: ["zone_name", "loc_id"],
             },
           ],
         },
+        {
+          model: CustomerLocations,
+          as: 'child_locations',
+          attributes: ['loc_id', 'loc_name']
+        }
       ],
     });
 
-    if(!location.includes("Select All")){
-      let filterResult = []
-      children.map(i => {
-          if(i.location?.locations?.every(it => location.includes(it))){
-            filterResult.push(i)
-          }
-      })
-      children = filterResult
+    if (!location.includes("Select All")) {
+      location = location.map(Number);
+      let filterResult = [];
+      children.map((i) => {        
+        if (i.child_locations?.map((item) => item.loc_id).every((it) => location.includes(it))) {
+          filterResult.push(i);
+        }
+      });
+      children = filterResult;
     }
 
     return children;
@@ -374,12 +432,12 @@ module.exports = {
       where: { cust_id: custId },
       raw: true,
     });
-     
-    return prefrenceDetails?.dashboard_cam
+
+    return prefrenceDetails?.dashboard_cam;
   },
 
   updateDashboardData: async (cust_id, data) => {
     let usersdata = await userServices.getUsersSocketIds(cust_id);
-    return usersdata
+    return usersdata;
   },
 };

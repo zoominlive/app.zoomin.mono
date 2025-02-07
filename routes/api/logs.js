@@ -7,7 +7,7 @@ const authController = require('../../middleware/auth');
 const logsController = require('../../controllers/logs');
 const { withAuthentication } = require('@frontegg/client');
 
-/* room end points */
+/* logs endpoints */
 router.post('/', withAuthentication(), authController, logsController.getAllLogs);
 
 module.exports = router;
