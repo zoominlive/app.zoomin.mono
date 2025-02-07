@@ -77,12 +77,12 @@ export default function StickyHeadTable({
                               : '--'}
                           </TableCell>
                           <TableCell>
-                            {row?.family?.children[0]?.roomsInChild &&
-                            row?.family?.children[0]?.roomsInChild.length > 0
-                              ? row?.family?.children[0]?.roomsInChild?.map((room, index) => (
+                            {row?.family?.children[0]?.zonesInChild &&
+                            row?.family?.children[0]?.zonesInChild.length > 0
+                              ? row?.family?.children[0]?.zonesInChild?.map((zone, index) => (
                                   <Chip
-                                    key={room?.room.room_name + '-' + index}
-                                    label={room?.room.room_name}
+                                    key={zone?.zone.zone_name + '-' + index}
+                                    label={zone?.zone.zone_name}
                                   />
                                 ))
                               : '--'}
@@ -106,7 +106,7 @@ export default function StickyHeadTable({
                           <>
                             <TableCell>{row?.childFirstName + ' ' + row.childLastName}</TableCell>
                             <TableCell>
-                              {row?.rooms.map((r) => (
+                              {row?.zones.map((r) => (
                                 <Chip key={r} label={r} />
                               ))}
                             </TableCell>

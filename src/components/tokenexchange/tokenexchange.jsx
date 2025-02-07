@@ -58,7 +58,7 @@ const tableRowsCopy = [
     '/cams': { create: false, edit: false, list: false, delete: false, enabledisable: null }
   },
   {
-    '/rooms': { create: false, edit: false, list: false, delete: false, enabledisable: false }
+    '/zones': { create: false, edit: false, list: false, delete: false, enabledisable: false }
   },
   {
     '/family': {
@@ -104,11 +104,11 @@ const endpointMappings = {
     delete: '/api/cams/delete',
     enabledisable: null
   },
-  '/rooms': {
-    create: '/api/rooms/add',
-    edit: '/api/rooms/edit',
-    list: '/api/rooms',
-    delete: '/api/rooms/delete',
+  '/zones': {
+    create: '/api/zones/add',
+    edit: '/api/zones/edit',
+    list: '/api/zones',
+    delete: '/api/zones/delete',
     enabledisable: null
   },
   '/family': {
@@ -124,7 +124,7 @@ const endpointMappings = {
   },
   '/child': {
     create: '/api/family/child/add',
-    edit: ['/api/family/child/edit', '/api/family/child/replace-room'],
+    edit: ['/api/family/child/edit', '/api/family/child/replace-zone'],
     list: null,
     delete: '/api/family/child/delete',
     enabledisable: ['/api/family/child/enable', '/api/family/child/disable']
@@ -394,7 +394,7 @@ const TokenExchange = () => {
         user_id: authCtx?.user?.frontegg_user_id || authCtx?.user?.user_id,
         frontegg_tenant_id: authCtx?.user?.frontegg_tenant_id,
         cust_id: authCtx?.user?.cust_id || localStorage.getItem('cust_id'),
-        location: authCtx?.user?.location,
+        location: authCtx?.user?.locations,
         allowed_endpoints: filteredEndpoints
       }).then((response) => {
         if (response.status === 201) {

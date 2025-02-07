@@ -8,7 +8,8 @@ import {
   DialogContentText,
   DialogTitle,
   Divider,
-  FormControlLabel
+  FormControlLabel,
+  Stack
 } from '@mui/material';
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';

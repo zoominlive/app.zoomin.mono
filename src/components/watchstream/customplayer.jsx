@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-vars */
 import { Box, Typography } from '@mui/material';
-import React, { useRef, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import ReactPlayer from 'react-player';
 import PlayerControls from './playercontols';
 import screenfull from 'screenfull';
@@ -9,11 +9,15 @@ import PropTypes from 'prop-types';
 import Loader from '../common/loader';
 import { useContext } from 'react';
 import AuthContext from '../../context/authcontext';
-import _ from 'lodash';
+import _, { throttle } from 'lodash';
+import API from '../../api';
+import { errorMessageHandler } from '../../utils/errormessagehandler';
+import { useSnackbar } from 'notistack';
 // import VideocamOffIcon from '@mui/icons-material/VideocamOff';
 
 const CustomPlayer = (props) => {
   const authCtx = useContext(AuthContext);
+  const { enqueueSnackbar } = useSnackbar();
   const [inPIPMode, setInPIPMode] = useState(false);
   const [fullscreen, setFullScreen] = useState(false);
   const [ready, setReady] = useState(false);
@@ -23,15 +27,20 @@ const CustomPlayer = (props) => {
   // eslint-disable-next-line no-unused-vars
   const [url, setUrl] = useState('');
   const [playerPlaying, setPlayerPlaying] = useState(true);
+  const [playerRecording, setPlayerRecording] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
+  const [startDialogTimer, setStartDialogTimer] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [error, setError] = useState(false);
   const timer = useRef({
     timerId: 0
   });
   const [videoState, setVideoState] = useState({
     played: 0,
-    seeking: false
+    seeking: false,
+    duration: 0
   });
-  const { played, seeking } = videoState;
+  const { played, seeking, duration } = videoState;
   // const [streamStatus, setStreamStatus] = useState(null);
 
   useEffect(() => {
@@ -58,8 +67,115 @@ const CustomPlayer = (props) => {
   }, []);
 
   useEffect(() => {
+    if (startDialogTimer) {
+      timer.current.timerId = 0;
+      startTimer();
+    }
+  }, [startDialogTimer]);
+
+  useEffect(() => {
     setUrl(props?.streamUri);
   }, [props.streamUri]);
+
+  useEffect(() => {
+    if (location.pathname == '/watch-stream' || location.pathname == '/dashboard') {
+      if (props.activeRecordingCameras.includes(props.camDetails?.cam_id)) {
+        setIsRecording(true);
+      } else {
+        setIsRecording(false);
+      }
+    }
+  }, [props.activeRecordingCameras]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (!videoState.seeking && playerRef.current) {
+        setVideoState((prevState) => ({
+          ...prevState,
+          played: playerRef.current.getCurrentTime() / playerRef.current.getDuration()
+        }));
+      }
+    }, 500); // Adjust interval timing (500ms works well)
+
+    return () => clearInterval(interval);
+  }, [videoState.seeking]);
+
+  const handleRecording = (tag) => {
+    if (!playerRecording && !props.isRecording) {
+      API.post('cams/start-recording', {
+        cust_id: authCtx?.user?.cust_id || localStorage.getItem('cust_id'),
+        user_id: authCtx?.user?.user_id,
+        location: props?.camDetails?.location || props?.camDetails?.loc_id,
+        cam_id: props?.camDetails?.cam_id,
+        zone_id: props?.camDetails?.zone_id,
+        zone_name: props?.camDetails?.zone_name,
+        alias: props?.camDetails?.cam_alias,
+        record_audio: authCtx?.user?.permit_audio ? true : false
+      }).then((response) => {
+        if (response.status === 201) {
+          setPlayerRecording(!playerRecording);
+          clearTimeout(timer.current.timerId);
+        } else {
+          setError(!error);
+          errorMessageHandler(
+            enqueueSnackbar,
+            response?.response?.data.Message || 'Something Went Wrong.',
+            response?.response?.status,
+            authCtx.setAuthError
+          );
+        }
+      });
+    } else {
+      API.post('cams/stop-recording', {
+        cust_id: authCtx?.user?.cust_id || localStorage.getItem('cust_id'),
+        user_id: authCtx?.user?.user_id,
+        location: props?.camDetails?.location || props?.camDetails?.loc_id,
+        cam_id: props?.camDetails?.cam_id,
+        alias: props?.camDetails?.cam_alias,
+        tag_id: tag?.tag_id
+      }).then((response) => {
+        if (response.status === 201) {
+          if (props.isRecording) {
+            setPlayerRecording(false);
+          } else {
+            setPlayerRecording(!playerRecording);
+          }
+          timer.current.timerId = 0;
+          startTimer();
+          let activeCameras = props.activeRecordingCameras;
+          activeCameras = activeCameras.filter((cam) => {
+            return cam !== props?.camDetails?.cam_id;
+          });
+          props.setActiveCameras(activeCameras);
+        } else {
+          setPlayerRecording(!playerRecording);
+          setError(!error);
+          errorMessageHandler(
+            enqueueSnackbar,
+            response?.response?.data?.Message || 'Something Went Wrong.',
+            response?.response?.status,
+            authCtx.setAuthError
+          );
+        }
+      });
+    }
+  };
+
+  const handleEditRecordingTag = (tag) => {
+    API.put('cams/edit-recording', {
+      cust_id: authCtx?.user?.cust_id || localStorage.getItem('cust_id'),
+      user_id: authCtx?.user?.user_id,
+      cam_id: props?.camDetails?.cam_id,
+      tag_id: tag
+    }).then((response) => {
+      if (response.status === 201) {
+        console.log('recording tag updated');
+      } else {
+        console.log('error updating tag');
+      }
+    });
+  };
+
   const staticTimeOut = 20 * 1000 * 60;
   const defaultTimeOut = props?.timeOut * 1000 * 60;
   const startTimer = () => {
@@ -107,15 +223,36 @@ const CustomPlayer = (props) => {
     setFullScreen((fullscreen) => !fullscreen);
   };
 
-  const progressHandler = (state) => {
-    if (!seeking) {
-      setVideoState({ ...videoState, ...state });
-    }
-  };
+  const progressHandler = useCallback(
+    throttle((state) => {
+      if (!videoState.seeking) {
+        setVideoState((prevState) => ({
+          ...prevState,
+          played: state.played
+        }));
+      }
+    }, 300), // Adjust interval timing
+    [videoState.seeking]
+  );
 
   const seekHandler = (e, value) => {
-    setVideoState({ ...videoState, played: parseFloat(value) / 100 });
-    playerRef.current.seekTo(parseFloat(value / 100));
+    const newPlayed = value / 100;
+    setVideoState((prevState) => ({ ...prevState, played: newPlayed, seeking: true }));
+  };
+
+  const seekMouseUpHandler = (e, value) => {
+    const newPlayed = value / 100;
+    playerRef.current.seekTo(newPlayed, 'fraction');
+
+    setVideoState((prevState) => ({
+      ...prevState,
+      played: newPlayed,
+      seeking: false // Resume progress updates
+    }));
+  };
+
+  const handleDuration = (duration) => {
+    setVideoState((prev) => ({ ...prev, duration }));
   };
 
   return (
@@ -124,8 +261,10 @@ const CustomPlayer = (props) => {
         <>
           <Box
             className={
-              location.pathname === '/recordings'
+              !props.dialogOpen && location.pathname === '/recordings'
                 ? 'video-player-wrapper-recordings-page'
+                : props.dialogOpen && location.pathname === '/recordings'
+                ? 'video-player-wrapper-no-video-bg'
                 : location.pathname === '/watch-stream' || location.pathname === '/cameras'
                 ? 'video-player-wrapper-watch-stream-page'
                 : 'video-player-wrapper'
@@ -186,6 +325,7 @@ const CustomPlayer = (props) => {
               }}
               muted={isMuted}
               onProgress={progressHandler}
+              onDuration={handleDuration}
             />
             {location.pathname === '/watch-stream' && (
               <Box className={'overlay'}>
@@ -193,20 +333,34 @@ const CustomPlayer = (props) => {
                   fontSize={'12px'}
                   color={
                     'white'
-                  }>{`${props?.camDetails?.room_name} - ${props?.camDetails?.cam_name}`}</Typography>
+                  }>{`${props?.camDetails?.zone_name} - ${props?.camDetails?.cam_name}`}</Typography>
               </Box>
             )}
             <PlayerControls
               playing={playerPlaying}
               setPlaying={setPlayerPlaying}
+              handleRecording={handleRecording}
+              recording={playerRecording}
+              setRecording={setPlayerRecording}
               inPIPMode={inPIPMode}
               setInPIPMode={setInPIPMode}
               fullscreen={fullscreen}
+              isRecording={isRecording}
+              start_time={props.startTime}
+              tagName={props.tagName}
+              recordingCameraId={props.recordingCameraId}
+              existingCameraId={props.camDetails.cam_id}
+              recordedPlayback={props.recordedPlayback}
               handleFullscreenToggle={handleFullscreenToggle}
+              seekMouseUpHandler={seekMouseUpHandler}
               noOfCameras={props.noOfCameras}
               isMuted={isMuted}
+              error={error}
               setIsMuted={setIsMuted}
               played={played}
+              duration={duration}
+              startDialogTimer={setStartDialogTimer}
+              handleEditRecordingTag={handleEditRecordingTag}
               onSeek={seekHandler}
               streamRunning={props.streamRunning}
               streamUrl={props?.streamUri}
@@ -230,10 +384,18 @@ CustomPlayer.propTypes = {
   camDetails: PropTypes.object,
   cam_id: PropTypes.number,
   streamRunning: PropTypes.bool,
+  dialogOpen: PropTypes.bool,
+  isRecording: PropTypes.bool,
+  startTime: PropTypes.string,
+  tagName: PropTypes.string,
+  recordingCameraId: PropTypes.string,
+  setActiveCameras: PropTypes.func,
+  recordedPlayback: PropTypes.bool,
   cameras: PropTypes.array,
   edit_cam: PropTypes.bool,
   canvas_status: PropTypes.bool,
   drawbox_co: PropTypes.array,
+  activeRecordingCameras: PropTypes.array,
   setCoords: PropTypes.object,
   setCanvasWidthHeight: PropTypes.object
 };

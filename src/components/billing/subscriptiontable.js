@@ -66,7 +66,7 @@ export default function SubscriptionTable({
   const monthlyMobileLicensePerUser = mappedProducts.find(
     (item) => item.name == 'Month Mobile Live Stream User License'
   );
-  const monthlyMobileLicensePerRoom = mappedProducts.find((item) => item.name == 'Sub Test');
+  const monthlyMobileLicensePerZone = mappedProducts.find((item) => item.name == 'Sub Test');
   const subscriptionPreviewData = [
     {
       Type: 'Fixed Camera License',
@@ -91,9 +91,9 @@ export default function SubscriptionTable({
     },
     {
       Type: 'Monthly Mobile Live Stream Per Room',
-      Number: custData?.max_stream_live_license_room,
+      Number: custData?.max_stream_live_license_zone,
       NextInvoiceDate: formattedDate,
-      Charge: monthlyMobileLicensePerRoom?.unit_amount / 100,
+      Charge: monthlyMobileLicensePerZone?.unit_amount / 100,
       Status: 'Available'
     }
   ];
@@ -152,7 +152,7 @@ export default function SubscriptionTable({
               : item.name == 'Month Mobile Live Stream User License'
               ? custData?.max_stream_live_license
               : item.name == 'Sub Test'
-              ? custData?.max_stream_live_license_room
+              ? custData?.max_stream_live_license_zone
               : 0
         }));
         setProductsForCheckout(updatedData);

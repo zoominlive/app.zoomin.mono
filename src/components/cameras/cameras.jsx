@@ -24,7 +24,7 @@ import {
 } from '@mui/material';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useContext } from 'react';
-import { Plus, Video } from 'react-feather';
+import { Plus } from 'react-feather';
 import LayoutContext from '../../context/layoutcontext';
 import CameraForm from './cameraform';
 import CameraActions from './cameraactions';
@@ -64,7 +64,7 @@ const Cameras = () => {
 
   useEffect(() => {
     layoutCtx.setActive(6);
-    layoutCtx.setBreadcrumb(['Cameras', 'Manage rooms and their camera authorization']);
+    layoutCtx.setBreadcrumb(['Cameras', 'Manage zones and their camera authorization']);
     return () => {
       authCtx.setPreviosPagePath(window.location.pathname);
     };
@@ -107,7 +107,7 @@ const Cameras = () => {
         cam_id: camera.cam_id,
         wait: wait,
         streamId: camera.stream_uuid,
-        location: camera.location
+        location: camera.customer_location.loc_id
       }
     }).then((response) => {
       if (response.status === 200) {
@@ -139,7 +139,7 @@ const Cameras = () => {
       wait: wait,
       streamId: camera.stream_uuid,
       cust_id: localStorage.getItem('cust_id'),
-      location: camera.location
+      location: camera.customer_location.loc_id
     }).then((response) => {
       if (response.status === 200) {
         getCamerasList();
@@ -225,11 +225,11 @@ const Cameras = () => {
                           value={camerasPayload?.location}
                           onChange={handleLocationChange}>
                           <MenuItem value={'All'}>All</MenuItem>
-                          {authCtx?.user?.location?.accessable_locations
-                            ?.sort((a, b) => (a > b ? 1 : -1))
-                            ?.map((location, index) => (
-                              <MenuItem key={index} value={location}>
-                                {location}
+                          {authCtx.user.locations
+                            ?.sort((a, b) => (a.loc_name > b.loc_name ? 1 : -1))
+                            .map((item) => (
+                              <MenuItem key={item.loc_id} value={item.loc_id}>
+                                {item.loc_name}
                               </MenuItem>
                             ))}
                         </Select>
@@ -270,7 +270,7 @@ const Cameras = () => {
                     <TableCell style={{ minWidth: '100px' }} align="left">
                       Location
                     </TableCell>
-                    <TableCell align="left">Rooms</TableCell>
+                    {/* <TableCell align="left">Zones</TableCell> */}
                     <TableCell align="left">Description</TableCell>
                     <TableCell align="left">URL</TableCell>
                     <TableCell align="right"></TableCell>
@@ -289,23 +289,23 @@ const Cameras = () => {
                             <Stack direction="row">
                               <Chip
                                 key={index}
-                                label={row.location}
+                                label={row.customer_location.loc_name}
                                 color="primary"
                                 className="chip-color"
                               />
                             </Stack>
                           </TableCell>
-                          <TableCell style={{ lineHeight: 2.5 }}>
-                            {row?.cameras_assigned_to_rooms?.map((roomRow, index) => (
+                          {/* <TableCell style={{ lineHeight: 2.5 }}>
+                            {row?.cameras_assigned_to_zones?.map((roomRow, index) => (
                               <Chip
                                 key={index}
                                 color="primary"
                                 className="chip-color"
-                                label={roomRow?.room?.room_name}
+                                label={roomRow?.zone?.zone_name}
                                 icon={<Video />}
                               />
                             ))}
-                          </TableCell>
+                          </TableCell> */}
                           <TableCell component="th" scope="row">
                             <Stack direction="row" alignItems="center" spacing={3}>
                               <Typography>{`${row.description}`}</Typography>

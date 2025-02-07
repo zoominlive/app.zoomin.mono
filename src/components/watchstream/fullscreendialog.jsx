@@ -24,7 +24,27 @@ const FullScreenDialog = (props) => {
               <CustomPlayer
                 streamUri={props.selectedCameras[0]?.stream_uri}
                 camDetails={props.camLabel[0]}
+                activeRecordingCameras={props?.cameraIdsWithRecording}
+                startTime={
+                  props.activeRecordings.find(
+                    (item) => item.cam_id === props.selectedCameras[0]?.cam_id
+                  )?.start_time || 'Not Found'
+                }
+                tagName={
+                  props.activeRecordings.find(
+                    (item) => item.cam_id === props.selectedCameras[0]?.cam_id
+                  )?.record_tag?.tag_name || 'Not Found'
+                }
+                recordingCameraId={
+                  props.activeRecordings.find(
+                    (item) => item.cam_id === props.selectedCameras[0]?.cam_id
+                  )?.cam_id || 'Not Found'
+                }
                 timeOut={props.timeOut}
+                isRecording={props?.cameraIdsWithRecording.includes(
+                  props.selectedCameras[0]?.cam_id
+                )}
+                setActiveCameras={props.setActiveCameras}
                 setTimeOut={props.setTimeOut}
                 setPlaying={props.setPlaying}
                 setIsDeleteDialogOpen={props.setIsDeleteDialogOpen}
@@ -47,6 +67,21 @@ const FullScreenDialog = (props) => {
                 camDetails={props.camLabel[index]}
                 streamUri={value?.stream_uri}
                 timeOut={props.timeOut}
+                activeRecordingCameras={props?.cameraIdsWithRecording}
+                isRecording={props?.cameraIdsWithRecording.includes(value?.cam_id)}
+                startTime={
+                  props.activeRecordings.find((item) => item.cam_id === value?.cam_id)
+                    ?.start_time || 'Not Found'
+                }
+                tagName={
+                  props.activeRecordings.find((item) => item.cam_id === value?.cam_id)?.record_tag
+                    ?.tag_name || 'Not Found'
+                }
+                recordingCameraId={
+                  props.activeRecordings.find((item) => item.cam_id === value?.cam_id)?.cam_id ||
+                  'Not Found'
+                }
+                setActiveCameras={props.setActiveCameras}
                 setTimeOut={props.setTimeOut}
                 setPlaying={props.setPlaying}
                 setIsDeleteDialogOpen={props.setIsDeleteDialogOpen}
@@ -75,6 +110,21 @@ const FullScreenDialog = (props) => {
                   camDetails={props.camLabel[index]}
                   streamUri={value?.stream_uri}
                   timeOut={props.timeOut}
+                  activeRecordingCameras={props?.cameraIdsWithRecording}
+                  isRecording={props?.cameraIdsWithRecording.includes(value?.cam_id)}
+                  startTime={
+                    props.activeRecordings.find((item) => item.cam_id === value?.cam_id)
+                      ?.start_time || 'Not Found'
+                  }
+                  tagName={
+                    props.activeRecordings.find((item) => item.cam_id === value?.cam_id)?.record_tag
+                      ?.tag_name || 'Not Found'
+                  }
+                  recordingCameraId={
+                    props.activeRecordings.find((item) => item.cam_id === value?.cam_id)?.cam_id ||
+                    'Not Found'
+                  }
+                  setActiveCameras={props.setActiveCameras}
                   setTimeOut={props.setTimeOut}
                   setPlaying={props.setPlaying}
                   setIsDeleteDialogOpen={props.setIsDeleteDialogOpen}
@@ -103,6 +153,21 @@ const FullScreenDialog = (props) => {
                   camDetails={props.camLabel[index]}
                   streamUri={value?.stream_uri}
                   timeOut={props.timeOut}
+                  activeRecordingCameras={props?.cameraIdsWithRecording}
+                  isRecording={props?.cameraIdsWithRecording.includes(value?.cam_id)}
+                  startTime={
+                    props.activeRecordings.find((item) => item.cam_id === value?.cam_id)
+                      ?.start_time || 'Not Found'
+                  }
+                  tagName={
+                    props.activeRecordings.find((item) => item.cam_id === value?.cam_id)?.record_tag
+                      ?.tag_name || 'Not Found'
+                  }
+                  recordingCameraId={
+                    props.activeRecordings.find((item) => item.cam_id === value?.cam_id)?.cam_id ||
+                    'Not Found'
+                  }
+                  setActiveCameras={props.setActiveCameras}
                   setTimeOut={props.setTimeOut}
                   setPlaying={props.setPlaying}
                   setIsDeleteDialogOpen={props.setIsDeleteDialogOpen}
@@ -127,6 +192,9 @@ FullScreenDialog.propTypes = {
   isFullScreenDialogOpen: PropTypes.bool,
   submitted: PropTypes.bool,
   camLabel: PropTypes.array,
+  cameraIdsWithRecording: PropTypes.array,
+  activeRecordings: PropTypes.array,
+  setActiveCameras: PropTypes.func,
   timeOut: PropTypes.number,
   setTimeOut: PropTypes.func,
   setPlaying: PropTypes.func,

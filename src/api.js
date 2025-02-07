@@ -9,7 +9,7 @@ export const currentURL = baseURL;
 const API = axios.create({
   baseURL,
   responseType: 'json',
-  timeout: 1000 * 30
+  timeout: 1000 * 60
 });
 
 export default API;

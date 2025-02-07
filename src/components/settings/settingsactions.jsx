@@ -25,14 +25,26 @@ const SettingsActions = (props) => {
 
   // Method that sets the user id for user form and opens the user form dialog
   const handleUserEdit = (event) => {
-    props.setLocation({ ...props.location });
+    if (props.zone) {
+      props.setZone({ ...props.zone });
+    } else if (props.tag) {
+      props.setTag({ ...props.tag });
+    } else {
+      props.setLocation({ ...props.location });
+    }
     props.setIsUserFormDialogOpen(true);
     handleClose(event);
   };
 
   // Method to set user for the delete action
   const handleUserDelete = (event) => {
-    props.setLocation({ ...props.location });
+    if (props.zone) {
+      props.setZone({ ...props.zone });
+    } else if (props.tag) {
+      props.setTag({ ...props.tag });
+    } else {
+      props.setLocation({ ...props.location });
+    }
     props.setIsDeleteDialogOpen(true);
     handleClose(event);
   };
@@ -54,13 +66,17 @@ const SettingsActions = (props) => {
           <ListItemIcon>
             <EditIcon />
           </ListItemIcon>
-          <ListItemText>Edit Location</ListItemText>
+          <ListItemText>
+            {props.zone ? 'Edit Zone' : props.tag ? 'Edit Tag' : 'Edit Location'}
+          </ListItemText>
         </MenuItem>
         <MenuItem onClick={handleUserDelete}>
           <ListItemIcon>
             <DeleteOutlineIcon />
           </ListItemIcon>
-          <ListItemText>Delete Location</ListItemText>
+          <ListItemText>
+            {props.zone ? 'Delete Zone' : props.tag ? 'Delete Tag' : 'Delete Location'}
+          </ListItemText>
         </MenuItem>
       </Menu>
     </Box>
@@ -71,7 +87,11 @@ export default SettingsActions;
 
 SettingsActions.propTypes = {
   location: PropTypes.object,
+  zone: PropTypes.object,
+  tag: PropTypes.object,
   setLocation: PropTypes.func,
+  setZone: PropTypes.func,
+  setTag: PropTypes.func,
   setIsUserFormDialogOpen: PropTypes.func,
   setIsDeleteDialogOpen: PropTypes.func
 };

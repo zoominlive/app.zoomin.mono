@@ -1,5 +1,6 @@
 # stage1 - build react app first 
 FROM amazonlinux:2 as build
+RUN yum clean all
 RUN yum install -y initscripts bash g++ gcc icu git python3
 # Install as Root
 RUN yum install https://rpm.nodesource.com/pub_16.x/nodistro/repo/nodesource-release-nodistro-1.noarch.rpm -y

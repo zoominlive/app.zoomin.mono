@@ -99,7 +99,7 @@ const ParentsForm = (props) => {
         family_id: props.family.primary.family_id,
         member_type: 'secondary',
         time_zone: moment.tz.guess(),
-        location: authCtx.user.location,
+        location: authCtx.user.locations,
         cust_id: localStorage.getItem('cust_id'),
         tenant_id: localStorage.getItem('tenant_id')
       }).then((response) => {
@@ -280,6 +280,8 @@ const ParentsForm = (props) => {
                 onClick={() => {
                   setIsCloseDialog(false);
                   props.setOpen(false);
+                  props.setPrimaryParent();
+                  props.setSecondaryParent();
                 }}>
                 Yes
               </Button>

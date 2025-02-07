@@ -61,13 +61,17 @@ import moment from 'moment';
 import { grey } from '@mui/material/colors';
 import {
   CameraAltOutlined,
+  Category,
   KeyOutlined,
   PlaceOutlined,
   PortraitOutlined
 } from '@mui/icons-material';
+import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 import { Country, State, City } from 'country-state-city';
 import APIKeys from '../apikeys/apikeys';
 import TokenExchange from '../tokenexchange/tokenexchange';
+import SettingsFormZone from './settingsformzone';
+import SettingsFormTag from './settingsformtag';
 
 const Settings = () => {
   const layoutCtx = useContext(LayoutContext);
@@ -78,12 +82,32 @@ const Settings = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [locationsList, setLocationsList] = useState([]);
+  const [zonesList, setZonesList] = useState([]);
+  const [tagsList, setTagsList] = useState([]);
   // eslint-disable-next-line no-unused-vars
   const [customerDetails, setCustomerDetails] = useState(null);
   const [totalLocations, setTotalLocations] = useState(0);
+  const [totalZones, setTotalZones] = useState(0);
+  const [totalTags, setTotalTags] = useState(0);
   const [location, setLocation] = useState();
+  const [zone, setZone] = useState();
+  const [tag, setTag] = useState();
   const [activeLocations, setActiveLocations] = useState(0);
   const [usersPayload, setUsersPayload] = useState({
+    pageNumber: 0,
+    pageSize: parseInt(process.env.REACT_APP_PAGINATION_LIMIT, 10),
+    searchBy: '',
+    location: 'All',
+    cust_id: localStorage.getItem('cust_id')
+  });
+  const [zonesPayload, setZonesPayload] = useState({
+    pageNumber: 0,
+    pageSize: parseInt(process.env.REACT_APP_PAGINATION_LIMIT, 10),
+    searchBy: '',
+    location: 'All',
+    cust_id: localStorage.getItem('cust_id')
+  });
+  const [tagsPayload, setTagsPayload] = useState({
     pageNumber: 0,
     pageSize: parseInt(process.env.REACT_APP_PAGINATION_LIMIT, 10),
     searchBy: '',
@@ -262,12 +286,22 @@ const Settings = () => {
   useEffect(() => {
     return () => {
       debouncedResults.cancel();
+      debouncedZoneResults.cancel();
+      debouncedTagResults.cancel();
     };
   });
 
   useEffect(() => {
     getLocationsList();
   }, [usersPayload]);
+
+  useEffect(() => {
+    getZonesList();
+  }, [zonesPayload]);
+
+  useEffect(() => {
+    getTagsList();
+  }, [tagsPayload]);
 
   useEffect(() => {
     getDefaultScheduleSettings();
@@ -282,6 +316,46 @@ const Settings = () => {
         setTotalLocations(response.data.Data.count);
         setCustomerDetails(response.data.Data.customer);
         setActiveLocations(response.data.Data.activeLocations);
+      } else {
+        errorMessageHandler(
+          enqueueSnackbar,
+          response?.response?.data?.Message || 'Something Went Wrong.',
+          response?.response?.status,
+          authCtx.setAuthError
+        );
+      }
+      setIsLoading(false);
+    });
+  };
+
+  // Method to fetch zones list for table
+  const getZonesList = () => {
+    setIsLoading(true);
+    API.get('zone-type', { params: zonesPayload }).then((response) => {
+      if (response.status === 200) {
+        console.log('zones_response==>', response.data);
+        setZonesList(response.data.Data.zoneTypes);
+        setTotalZones(response.data.Data.count);
+      } else {
+        errorMessageHandler(
+          enqueueSnackbar,
+          response?.response?.data?.Message || 'Something Went Wrong.',
+          response?.response?.status,
+          authCtx.setAuthError
+        );
+      }
+      setIsLoading(false);
+    });
+  };
+
+  // Method to fetch tags list for table
+  const getTagsList = () => {
+    setIsLoading(true);
+    API.get('cams/list-record-tags', { params: tagsPayload }).then((response) => {
+      if (response.status === 200) {
+        console.log('zones_response==>', response.data);
+        setTagsList(response.data.Data.recordTags);
+        setTotalTags(response.data.Data.count);
       } else {
         errorMessageHandler(
           enqueueSnackbar,
@@ -369,13 +443,91 @@ const Settings = () => {
     });
   };
 
+  // Method to delete zone
+  const handleZoneDelete = () => {
+    setDeleteLoading(true);
+    let payload = {
+      zone_type_id: zone.zone_type_id
+    };
+    API.delete('zone-type/delete', {
+      data: { ...payload }
+    }).then((response) => {
+      if (response.status === 200) {
+        getZonesList();
+        enqueueSnackbar(response.data.Message, {
+          variant: 'success'
+        });
+      } else {
+        errorMessageHandler(
+          enqueueSnackbar,
+          response?.response?.data?.Message || 'Something Went Wrong.',
+          response?.response?.status,
+          authCtx.setAuthError
+        );
+      }
+      setZone();
+      setDeleteLoading(false);
+      setIsDeleteDialogOpen(false);
+    });
+  };
+
+  // Method to delete tag
+  const handleTagDelete = () => {
+    setDeleteLoading(true);
+    let payload = {
+      tag_id: tag.tag_id
+    };
+    API.delete('cams/delete-record-tag', {
+      data: { ...payload }
+    }).then((response) => {
+      if (response.status === 200) {
+        getTagsList();
+        enqueueSnackbar(response.data.Message, {
+          variant: 'success'
+        });
+      } else {
+        errorMessageHandler(
+          enqueueSnackbar,
+          response?.response?.data?.Message || 'Something Went Wrong.',
+          response?.response?.status,
+          authCtx.setAuthError
+        );
+      }
+      setTag();
+      setDeleteLoading(false);
+      setIsDeleteDialogOpen(false);
+    });
+  };
+
   // Method to change the page in table
   const handlePageChange = (_, newPage) => {
     setUsersPayload((prevPayload) => ({ ...prevPayload, pageNumber: newPage }));
   };
 
+  const handleZonesPageChange = (_, newPage) => {
+    setUsersPayload((prevPayload) => ({ ...prevPayload, pageNumber: newPage }));
+  };
+
+  const handleTagsPageChange = (_, newPage) => {
+    setUsersPayload((prevPayload) => ({ ...prevPayload, pageNumber: newPage }));
+  };
+
   // Method to change the row per page in table
   const handleChangeRowsPerPage = (event) => {
+    setUsersPayload((prevPayload) => ({
+      ...prevPayload,
+      pageSize: parseInt(event.target.value, 10)
+    }));
+  };
+
+  const handleChangeZonesRowsPerPage = (event) => {
+    setUsersPayload((prevPayload) => ({
+      ...prevPayload,
+      pageSize: parseInt(event.target.value, 10)
+    }));
+  };
+
+  const handleChangeTagsRowsPerPage = (event) => {
     setUsersPayload((prevPayload) => ({
       ...prevPayload,
       pageSize: parseInt(event.target.value, 10)
@@ -391,9 +543,33 @@ const Settings = () => {
     }));
   };
 
+  const handleZoneSearch = (event) => {
+    setZonesPayload((prevPayload) => ({
+      ...prevPayload,
+      pageNumber: 0,
+      searchBy: event.target.value ? event.target.value : ''
+    }));
+  };
+
+  const handleTagSearch = (event) => {
+    setTagsPayload((prevPayload) => ({
+      ...prevPayload,
+      pageNumber: 0,
+      searchBy: event.target.value ? event.target.value : ''
+    }));
+  };
+
   // Calls the search handler after 500ms
   const debouncedResults = useMemo(() => {
     return debounce(handleSearch, 500);
+  }, []);
+
+  const debouncedZoneResults = useMemo(() => {
+    return debounce(handleZoneSearch, 500);
+  }, []);
+
+  const debouncedTagResults = useMemo(() => {
+    return debounce(handleTagSearch, 500);
   }, []);
 
   const handleSubmit = (data) => {
@@ -444,7 +620,7 @@ const Settings = () => {
   const getProductQuantity = (productName) => {
     switch (productName) {
       case 'Mobile Live Stream Room License':
-        return authCtx.user.max_stream_live_license_room;
+        return authCtx.user.max_stream_live_license_zone;
       case 'Sentry Perimeter Monitoring License':
         return authCtx.user.max_stream_live_license;
       default:
@@ -527,6 +703,14 @@ const Settings = () => {
     {
       label: 'Locations',
       icon: <PlaceOutlined />
+    },
+    {
+      label: 'Zone Types',
+      icon: <Category />
+    },
+    {
+      label: 'Recording Tags',
+      icon: <LocalOfferIcon />
     },
     {
       label: 'Cameras',
@@ -742,7 +926,7 @@ const Settings = () => {
     //                                       {product.unit_amount
     //                                         ? (product.unit_amount / 100) *
     //                                           (product.name == 'Mobile Live Stream Room License'
-    //                                             ? authCtx.user.max_stream_live_license_room
+    //                                             ? authCtx.user.max_stream_live_license_zone
     //                                             : product.name ===
     //                                               'Sentry Perimeter Monitoring License'
     //                                             ? authCtx.user.max_stream_live_license
@@ -1316,7 +1500,7 @@ const Settings = () => {
                                             {product.unit_amount
                                               ? (product.unit_amount / 100) *
                                                 (product.name == 'Mobile Live Stream Room License'
-                                                  ? authCtx.user.max_stream_live_license_room
+                                                  ? authCtx.user.max_stream_live_license_zone
                                                   : product.name ===
                                                     'Sentry Perimeter Monitoring License'
                                                   ? authCtx.user.max_stream_live_license
@@ -1569,6 +1753,287 @@ const Settings = () => {
             </Box>
           </TabPanel>
           <TabPanel value={value} index={2}>
+            <Box className="listing-wrapper">
+              <Card className="filter" sx={{ marginTop: '0px !important' }}>
+                <CardContent>
+                  <Box>
+                    <Grid container spacing={2}>
+                      <Grid item md={9} sm={12}>
+                        <Box>
+                          <Grid container spacing={2}>
+                            <Grid item md={4} sm={12} mt={0}>
+                              <InputLabel id="search">Search</InputLabel>
+                              <TextField
+                                labelId="search"
+                                placeholder="Zone"
+                                onChange={debouncedZoneResults}
+                                InputProps={{
+                                  startAdornment: (
+                                    <InputAdornment position="start">
+                                      <SearchIcon />
+                                    </InputAdornment>
+                                  )
+                                }}
+                              />
+                            </Grid>
+                          </Grid>
+                        </Box>
+                      </Grid>
+                      <Grid
+                        item
+                        md={3}
+                        sm={12}
+                        sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
+                        <Box>
+                          <Button
+                            className="add-button"
+                            variant="contained"
+                            startIcon={<Plus />}
+                            onClick={() => setIsUserFormDialogOpen(true)}>
+                            {' '}
+                            Add Zone Type
+                          </Button>
+                        </Box>
+                      </Grid>
+                    </Grid>
+                  </Box>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent>
+                  <Box mt={2} position="relative">
+                    <LinerLoader loading={isLoading} />
+                    <TableContainer component={Paper}>
+                      <Table sx={{ minWidth: 650 }} aria-label="simple table">
+                        <TableHead>
+                          <TableRow>
+                            <TableCell style={{ minWidth: '100px' }} align="left">
+                              Name
+                            </TableCell>
+                            <TableCell align="right"></TableCell>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {zonesList?.length > 0
+                            ? zonesList?.map((row, index) => (
+                                <TableRow key={index} hover>
+                                  <TableCell align="left">
+                                    <Stack direction="row">
+                                      <Chip
+                                        key={index}
+                                        label={row.zone_type}
+                                        color="primary"
+                                        className="chip-color"
+                                      />
+                                    </Stack>
+                                  </TableCell>
+                                  <TableCell align="right">
+                                    <SettingsActions
+                                      zone={row}
+                                      setZone={setZone}
+                                      setIsUserFormDialogOpen={setIsUserFormDialogOpen}
+                                      setIsDeleteDialogOpen={setIsDeleteDialogOpen}
+                                    />
+                                  </TableCell>
+                                </TableRow>
+                              ))
+                            : null}
+                        </TableBody>
+                      </Table>
+                      {!isLoading && zonesList?.length == 0 ? <NoDataDiv /> : null}
+                      {zonesList?.length > 0 ? (
+                        <TablePagination
+                          rowsPerPageOptions={[5, 10, 20, 25, 50]}
+                          onPageChange={handleZonesPageChange}
+                          onRowsPerPageChange={handleChangeZonesRowsPerPage}
+                          component="div"
+                          count={totalZones}
+                          rowsPerPage={zonesPayload?.pageSize}
+                          page={zonesPayload?.pageNumber}
+                          sx={{ flex: '1 1 auto' }}
+                        />
+                      ) : null}
+                    </TableContainer>
+                  </Box>
+                </CardContent>
+              </Card>
+              {isUserFormDialogOpen && (
+                <SettingsFormZone
+                  open={isUserFormDialogOpen}
+                  zone={zone}
+                  zonesList={zonesList}
+                  setOpen={setIsUserFormDialogOpen}
+                  getZonesList={getZonesList}
+                  setZone={setZone}
+                />
+              )}
+              {/* <DeleteDialog
+                open={isDeleteDialogOpen}
+                title="Delete User"
+                contentText={'Are you sure you want to delete this location?'}
+                loading={deleteLoading}
+                handleDialogClose={() => {
+                  setLocation();
+                  setIsDeleteDialogOpen(false);
+                }}
+                handleDelete={handleLocationDelete}
+              /> */}
+
+              <NewDeleteDialog
+                open={isDeleteDialogOpen}
+                title="Delete Zone"
+                contentText="Are you sure you want to delete this zone?"
+                loading={deleteLoading}
+                handleDialogClose={() => {
+                  setZone();
+                  setIsDeleteDialogOpen(false);
+                }}
+                handleDelete={handleZoneDelete}
+              />
+            </Box>
+          </TabPanel>
+          <TabPanel value={value} index={3}>
+            <Box className="listing-wrapper">
+              <Card className="filter" sx={{ marginTop: '0px !important' }}>
+                <CardContent>
+                  <Box>
+                    <Grid container spacing={2}>
+                      <Grid item md={9} sm={12}>
+                        <Box>
+                          <Grid container spacing={2}>
+                            <Grid item md={4} sm={12} mt={0}>
+                              <InputLabel id="search">Search</InputLabel>
+                              <TextField
+                                labelId="search"
+                                placeholder="Tag"
+                                onChange={debouncedTagResults}
+                                InputProps={{
+                                  startAdornment: (
+                                    <InputAdornment position="start">
+                                      <SearchIcon />
+                                    </InputAdornment>
+                                  )
+                                }}
+                              />
+                            </Grid>
+                          </Grid>
+                        </Box>
+                      </Grid>
+                      <Grid
+                        item
+                        md={3}
+                        sm={12}
+                        sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
+                        <Box>
+                          <Button
+                            className="add-button"
+                            variant="contained"
+                            startIcon={<Plus />}
+                            onClick={() => setIsUserFormDialogOpen(true)}>
+                            {' '}
+                            Add a new Tag
+                          </Button>
+                        </Box>
+                      </Grid>
+                    </Grid>
+                  </Box>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent>
+                  <Box mt={2} position="relative">
+                    <LinerLoader loading={isLoading} />
+                    <TableContainer component={Paper}>
+                      <Table sx={{ minWidth: 650 }} aria-label="simple table">
+                        <TableHead>
+                          <TableRow>
+                            <TableCell style={{ minWidth: '100px' }} align="left">
+                              Name
+                            </TableCell>
+                            <TableCell style={{ minWidth: '100px' }} align="left">
+                              Status
+                            </TableCell>
+                            <TableCell align="right"></TableCell>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {tagsList?.length > 0
+                            ? tagsList?.map((row, index) => (
+                                <TableRow key={index} hover>
+                                  <TableCell align="left">
+                                    <Stack direction="row">
+                                      <Chip
+                                        key={index}
+                                        label={row.tag_name}
+                                        color="primary"
+                                        className="chip-color"
+                                      />
+                                    </Stack>
+                                  </TableCell>
+                                  <TableCell align="left">
+                                    <Stack direction="row">
+                                      <Chip
+                                        key={index}
+                                        label={row.status == true ? 'Active' : 'Inactive'}
+                                        color="primary"
+                                        className="chip-color"
+                                      />
+                                    </Stack>
+                                  </TableCell>
+                                  <TableCell align="right">
+                                    <SettingsActions
+                                      tag={row}
+                                      setTag={setTag}
+                                      setIsUserFormDialogOpen={setIsUserFormDialogOpen}
+                                      setIsDeleteDialogOpen={setIsDeleteDialogOpen}
+                                    />
+                                  </TableCell>
+                                </TableRow>
+                              ))
+                            : null}
+                        </TableBody>
+                      </Table>
+                      {!isLoading && tagsList?.length == 0 ? <NoDataDiv /> : null}
+                      {tagsList?.length > 0 ? (
+                        <TablePagination
+                          rowsPerPageOptions={[5, 10, 20, 25, 50]}
+                          onPageChange={handleTagsPageChange}
+                          onRowsPerPageChange={handleChangeTagsRowsPerPage}
+                          component="div"
+                          count={totalTags}
+                          rowsPerPage={tagsPayload?.pageSize}
+                          page={tagsPayload?.pageNumber}
+                          sx={{ flex: '1 1 auto' }}
+                        />
+                      ) : null}
+                    </TableContainer>
+                  </Box>
+                </CardContent>
+              </Card>
+              {isUserFormDialogOpen && (
+                <SettingsFormTag
+                  open={isUserFormDialogOpen}
+                  tag={tag}
+                  tagsList={tagsList}
+                  setOpen={setIsUserFormDialogOpen}
+                  getTagsList={getTagsList}
+                  setTag={setTag}
+                />
+              )}
+              <NewDeleteDialog
+                open={isDeleteDialogOpen}
+                title="Delete Tag"
+                contentText="Are you sure you want to delete this tag?"
+                loading={deleteLoading}
+                handleDialogClose={() => {
+                  setTag();
+                  setIsDeleteDialogOpen(false);
+                }}
+                handleDelete={handleTagDelete}
+              />
+            </Box>
+          </TabPanel>
+          <TabPanel value={value} index={4}>
             <DefaultScheduler
               // settings={true}
               custId={authCtx.user.cust_id || localStorage.getItem('cust_id')}
@@ -1577,7 +2042,7 @@ const Settings = () => {
               getDefaultScheduleSettings={getDefaultScheduleSettings}
             />
           </TabPanel>
-          <TabPanel value={value} index={3}>
+          <TabPanel value={value} index={5}>
             <TokenExchange />
           </TabPanel>
         </Grid>

@@ -40,20 +40,22 @@ import _ from 'lodash';
 import CloseIcon from '@mui/icons-material/Close';
 
 const validationSchema = yup.object({
-  room_name: yup.string('Enter Room name').required('Room name is required'),
+  zone_name: yup.string('Enter Zone name').required('Zone name is required'),
   location: yup.string('Select Location').required('Location is required'),
-  cameras: yup.array().min(1, 'Select at least one Camera').required('Camera is required')
+  zone: yup.string('Select Zone').required('Zone is required')
+  // cameras: yup.array().min(1, 'Select at least one Camera').required('Camera is required')
 });
 
-const RoomForm = (props) => {
+const ZoneForm = (props) => {
   const { enqueueSnackbar } = useSnackbar();
   const authCtx = useContext(AuthContext);
   const [initialState, setInitialState] = useState({
-    room_name: props?.room?.room_name ? props?.room?.room_name : '',
-    location: props?.room?.location ? props?.room?.location : '',
-    cameras: props?.room?.cameras ? props?.room?.cameras : [],
-    stream_live_license: !_.isNil(props?.room?.stream_live_license)
-      ? props?.room?.stream_live_license
+    zone_name: props?.zone?.zone_name ? props?.zone?.zone_name : '',
+    location: props?.zone?.location ? props?.zone?.location : '',
+    zone: props?.zone?.zone_type ? props?.zone?.zone_type.zone_type_id : '',
+    cameras: props?.zone?.cameras ? props?.zone?.cameras : [],
+    stream_live_license: !_.isNil(props?.zone?.stream_live_license)
+      ? props?.zone?.stream_live_license
       : false
   });
 
@@ -66,16 +68,16 @@ const RoomForm = (props) => {
   const [cameraOptions, setCameraOptions] = useState([]);
   const [isCloseDialog, setIsCloseDialog] = useState(false);
   const [liveStreamLicense, setLiveStreamLicense] = useState(
-    authCtx?.user?.max_stream_live_license_room || 0
+    authCtx?.user?.max_stream_live_license_zone || 0
   );
   // const [isInitialLocation, setIsInitialLocation] = useState(false);
   // const maximumCams = 15;
 
   useEffect(() => {
-    const tempCameraSaveLoading = props?.room?.cameras?.map(() => false);
+    const tempCameraSaveLoading = props?.zone?.cameras?.map(() => false);
     setCameraSaveLoading(tempCameraSaveLoading || []);
     setDropdownLoading(true);
-    API.get(props?.room?.location ? `cams?location=${props?.room?.location}` : `cams/`, {
+    API.get(props?.zone?.location ? `cams?location=${props?.zone?.location}` : `cams/`, {
       params: { cust_id: localStorage.getItem('cust_id') }
     }).then((response) => {
       setDropdownLoading(true);
@@ -110,50 +112,53 @@ const RoomForm = (props) => {
   const handleLivestream = () => {
     authCtx.setUser({
       ...authCtx.user,
-      max_stream_live_license_room: liveStreamLicense
+      max_stream_live_license_zone: liveStreamLicense
     });
     localStorage.setItem(
       'user',
       JSON.stringify({
         ...authCtx.user,
-        max_stream_live_license_room: liveStreamLicense
+        max_stream_live_license_zone: liveStreamLicense
       })
     );
   };
 
-  // Method to add/edit room
+  // Method to add/edit zone
   const handleSubmit = (data) => {
+    console.log('data==>', data);
+
     setSubmitLoading(true);
     let customer_id =
       authCtx.user.role === 'Super Admin' ? localStorage.getItem('cust_id') : authCtx.user.cust_id;
-    if (props.room) {
-      API.put('rooms/edit', {
+    if (props.zone) {
+      API.put('zones/edit', {
         ...data,
-        room_id: props.room.room_id,
+        zone_id: props.zone.zone_id,
+        loc_id: data.location,
         camerasToAdd: data.cameras,
-        max_stream_live_license_room: liveStreamLicense,
+        max_stream_live_license_zone: liveStreamLicense,
         cust_id: customer_id
       }).then((response) => {
         if (response.status === 200) {
           enqueueSnackbar(response.data.Message, { variant: 'success' });
-          const index = props.roomsPayload.rooms.findIndex(
-            (room) => room.room_id === props.room.room_id
+          const index = props.zonesPayload.zones.findIndex(
+            (zone) => zone.zone_id === props.zone.zone_id
           );
           if (index !== -1) {
-            props.getDropDownRoomList();
-            props.setRoomsPayload((prev) => {
+            // props.getDropDownRoomList();
+            props.setZonesPayload((prev) => {
               const tempPayload = { ...prev };
-              const index = tempPayload.rooms.findIndex(
-                (item) => item.room_id === props.room.room_id
+              const index = tempPayload.zones.findIndex(
+                (item) => item.zone_id === props.zone.zone_id
               );
               if (index !== -1) {
-                tempPayload.rooms[index].room_name = data.room_name;
+                tempPayload.zones[index].zone_name = data.zone_name;
               }
               return tempPayload;
             });
           } else {
-            props.getRoomsList();
-            props.getDropDownRoomList();
+            props.getZonesList();
+            // props.getDropDownRoomList();
           }
           handleLivestream();
         } else {
@@ -168,15 +173,16 @@ const RoomForm = (props) => {
         handleFormDialogClose();
       });
     } else {
-      API.post('rooms/add', {
+      API.post('zones/add', {
         ...data,
+        loc_id: data.location,
         cust_id: localStorage.getItem('cust_id'),
-        max_stream_live_license_room: liveStreamLicense
+        max_stream_live_license_zone: liveStreamLicense
       }).then((response) => {
         if (response.status === 201) {
           enqueueSnackbar(response.data.Message, { variant: 'success' });
-          props.getRoomsList();
-          props.getDropDownRoomList();
+          props.getZonesList();
+          // props.getDropDownRoomList();
           handleLivestream();
         } else {
           errorMessageHandler(
@@ -195,7 +201,7 @@ const RoomForm = (props) => {
   // Method to close form dialog
   const handleFormDialogClose = () => {
     props.setOpen(false);
-    props.setRoom();
+    props.setZone();
   };
 
   const handleGetCamerasForSelectedLocation = (location) => {
@@ -235,8 +241,8 @@ const RoomForm = (props) => {
       fullWidth
       className="edit-family-dialog">
       <DialogTitle sx={{ paddingTop: 3.5 }}>
-        {props.room ? 'Edit Room' : 'Add Room'}
-        <DialogContentText>Quickly add rooms to your account</DialogContentText>
+        {props.zone ? 'Edit Zone' : 'Add Zone'}
+        <DialogContentText>Quickly add zones to your account</DialogContentText>
         <IconButton
           aria-label="close"
           // onClick={() => {
@@ -282,6 +288,7 @@ const RoomForm = (props) => {
                 onClick={() => {
                   setIsCloseDialog(false);
                   props.setOpen(false);
+                  props.setZone();
                 }}>
                 Yes
               </Button>
@@ -303,17 +310,17 @@ const RoomForm = (props) => {
                   <Box px={4}>
                     <Grid container spacing={2}>
                       <Grid item xs={12} md={12}>
-                        <InputLabel id="room_name">Room Name</InputLabel>
+                        <InputLabel id="zone_name">Zone Name</InputLabel>
                         <TextField
-                          labelId="room_name"
-                          name="room_name"
-                          value={values?.room_name}
+                          labelId="zone_name"
+                          name="zone_name"
+                          value={values?.zone_name}
                           onChange={(event) => {
-                            setFieldValue('room_name', event.target.value);
-                            setInitialState({ ...initialState, room_name: event.target.value });
+                            setFieldValue('zone_name', event.target.value);
+                            setInitialState({ ...initialState, zone_name: event.target.value });
                           }}
-                          helperText={touched.room_name && errors.room_name}
-                          error={touched.room_name && Boolean(errors.room_name)}
+                          helperText={touched.zone_name && errors.zone_name}
+                          error={touched.zone_name && Boolean(errors.zone_name)}
                           fullWidth
                         />
                       </Grid>
@@ -330,24 +337,42 @@ const RoomForm = (props) => {
                               setLocationSelected(true);
                               handleGetCamerasForSelectedLocation(event.target.value);
                             }}>
-                            {authCtx.user &&
-                              authCtx.user.location &&
-                              authCtx.user.location.selected_locations &&
-                              authCtx.user.location.selected_locations.length > 0 &&
-                              authCtx.user.location.selected_locations
-                                .sort((a, b) => (a > b ? 1 : -1))
-                                .map((location, index) => {
-                                  return (
-                                    <MenuItem key={index} value={location}>
-                                      {location}
-                                    </MenuItem>
-                                  );
-                                })}
+                            {authCtx.user.locations
+                              ?.sort((a, b) => (a.loc_name > b.loc_name ? 1 : -1))
+                              .map((item) => (
+                                <MenuItem key={item.loc_id} value={item.loc_id}>
+                                  {item.loc_name}
+                                </MenuItem>
+                              ))}
                           </Select>
                           {touched.location && errors.location && (
                             <FormHelperText sx={{ color: '#d32f2f' }}>
                               {errors.location}
                             </FormHelperText>
+                          )}
+                        </FormControl>
+                      </Grid>
+                      <Grid item xs={12} md={12}>
+                        <InputLabel id="zone-type-select">Type</InputLabel>
+                        <FormControl fullWidth error={touched.zone && Boolean(errors.zone)}>
+                          <Select
+                            name="zone-type"
+                            labelId="zone-type-select"
+                            id="zone-type-select"
+                            value={values?.zone}
+                            onChange={(event) => {
+                              setFieldValue('zone', event.target.value);
+                            }}>
+                            {props.zoneType
+                              ?.sort((a, b) => (a.zone_type > b.zone_type ? 1 : -1))
+                              .map((item) => (
+                                <MenuItem key={item.zone_type_id} value={item.zone_type_id}>
+                                  {item.zone_type}
+                                </MenuItem>
+                              ))}
+                          </Select>
+                          {touched.location && errors.location && (
+                            <FormHelperText sx={{ color: '#d32f2f' }}>{errors.zone}</FormHelperText>
                           )}
                         </FormControl>
                       </Grid>
@@ -359,7 +384,7 @@ const RoomForm = (props) => {
                           multiple
                           id="cameras"
                           options={cameraOptions && locationSelected ? cameraOptions : []}
-                          noOptionsText={!locationSelected ? 'Select location first' : 'No Camera'}
+                          noOptionsText={!locationSelected ? 'Select location first' : 'No Cameras'}
                           isOptionEqualToValue={(option, value) => option.cam_id === value.cam_id}
                           getOptionLabel={(option) => {
                             return option.cam_name + ' - ' + option?.description;
@@ -373,7 +398,7 @@ const RoomForm = (props) => {
                           onChange={(_, value) => {
                             setFieldValue('cameras', value);
                           }}
-                          //defaultValue={props?.room?.cameras ? props?.room?.cameras : []}
+                          //defaultValue={props?.zone?.cameras ? props?.zone?.cameras : []}
                           renderTags={(value, getTagProps) =>
                             value.map((option, index) => (
                               <Chip
@@ -399,8 +424,8 @@ const RoomForm = (props) => {
                                 )
                               }}
                               // placeholder="Camera"
-                              helperText={touched.cameras && errors.cameras}
-                              error={touched.cameras && Boolean(errors.cameras)}
+                              // helperText={touched.cameras && errors.cameras}
+                              // error={touched.cameras && Boolean(errors.cameras)}
                               fullWidth
                             />
                           )}
@@ -458,8 +483,8 @@ const RoomForm = (props) => {
                     startIcon={submitLoading && <SaveIcon />}
                     variant="text"
                     type="submit">
-                    {/* {props?.room?.room_id ? 'Save Changes' : 'Save Room'} */}
-                    Save Room
+                    {/* {props?.zone?.zone_id ? 'Save Changes' : 'Save Room'} */}
+                    Save Zone
                   </LoadingButton>
                 </DialogActions>
               </Form>
@@ -471,17 +496,18 @@ const RoomForm = (props) => {
   );
 };
 
-export default RoomForm;
+export default ZoneForm;
 
-RoomForm.propTypes = {
+ZoneForm.propTypes = {
   open: PropTypes.bool,
   setOpen: PropTypes.func,
-  room: PropTypes.object,
-  setRoom: PropTypes.func,
-  getRoomsList: PropTypes.func,
-  getDropDownRoomList: PropTypes.func,
-  setRoomsPayload: PropTypes.func,
+  zone: PropTypes.object,
+  zoneType: PropTypes.array,
+  setZone: PropTypes.func,
+  getZonesList: PropTypes.func,
+  getDropDownZoneList: PropTypes.func,
+  setZonesPayload: PropTypes.func,
   setDropdownList: PropTypes.func,
-  roomsPayload: PropTypes.object,
+  zonesPayload: PropTypes.object,
   user: PropTypes.object
 };

@@ -64,12 +64,12 @@ const EditFamily = (props) => {
             <Grid className="name" item xs={6} sm={3} md={3}>
               <TextField label="First Name" value="Ketty" />
             </Grid>
-            <Grid className="room" item xs={12} sm={6} md={6}>
+            <Grid className="zone" item xs={12} sm={6} md={6}>
               <FormControl fullWidth>
-                <InputLabel id="room-select">Room</InputLabel>
+                <InputLabel id="zone-select">Room</InputLabel>
                 <Select
-                  labelId="room-select"
-                  id="room-select"
+                  labelId="zone-select"
+                  id="zone-select"
                   multiple
                   value={['Room 1', 'Room 2']}
                   input={<OutlinedInput id="select-multiple-chip" label="Room" />}
@@ -106,12 +106,12 @@ const EditFamily = (props) => {
             <Grid className="name" item xs={6} sm={3} md={3}>
               <TextField label="First Name" value="Ketty" />
             </Grid>
-            <Grid className="room" item xs={12} sm={6} md={6}>
+            <Grid className="zone" item xs={12} sm={6} md={6}>
               <FormControl fullWidth>
-                <InputLabel id="room-select">Room</InputLabel>
+                <InputLabel id="zone-select">Room</InputLabel>
                 <Select
-                  labelId="room-select"
-                  id="room-select"
+                  labelId="zone-select"
+                  id="zone-select"
                   multiple
                   value={['Room 1', 'Room 2']}
                   input={<OutlinedInput id="select-multiple-chip" label="Room" />}

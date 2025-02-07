@@ -227,11 +227,11 @@ const Users = () => {
                           value={usersPayload?.location}
                           onChange={handleLocationChange}>
                           <MenuItem value={'All'}>All</MenuItem>
-                          {authCtx?.user?.location?.accessable_locations
-                            .sort((a, b) => (a > b ? 1 : -1))
-                            .map((location, index) => (
-                              <MenuItem key={index} value={location}>
-                                {location}
+                          {authCtx.user.locations
+                            ?.sort((a, b) => (a.loc_name > b.loc_name ? 1 : -1))
+                            .map((item) => (
+                              <MenuItem key={item.loc_id} value={item.loc_id}>
+                                {item.loc_name}
                               </MenuItem>
                             ))}
                         </Select>
@@ -331,12 +331,13 @@ const Users = () => {
                           </TableCell>
                           <TableCell align="left">
                             <Stack direction="row">
-                              {row.location?.selected_locations
+                              {console.log('row==>', row)}
+                              {row.locations
                                 ?.sort((a, b) => (a > b ? 1 : -1))
                                 .map((location, index) => (
                                   <Chip
                                     key={index}
-                                    label={location}
+                                    label={location.loc_name}
                                     color="primary"
                                     className="chip-color"
                                   />

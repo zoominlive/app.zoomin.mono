@@ -94,7 +94,7 @@ const Layout = () => {
   const { user } = useAuth();
   // const { user, isAuthenticated } = useAuth();
 
-  const locs = ['Select All'];
+  const locs = [{ loc_id: 'select-all', loc_name: 'Select All' }];
   //authCtx?.user?.location?.accessable_locations.forEach((loc) => locs.push(loc));
   // const handleChange = (event) => {
   //   authCtx.setLocation(event.target.value);
@@ -132,19 +132,22 @@ const Layout = () => {
       params: user.superUser ? params : ''
     }).then((response) => {
       if (response.status === 200) {
-        setSelectedLocation(response?.data?.Data?.location?.accessable_locations);
-        authCtx.setLocation(response?.data?.Data?.location?.accessable_locations);
+        setSelectedLocation(response?.data?.Data?.locations);
+        authCtx.setLocation(response?.data?.Data?.locations);
         authCtx.setUser({
           ...response.data.Data,
-          location: response.data.Data.location
+          location: response.data.Data.locations?.map((item) => item.loc_name)
         });
         localStorage.setItem(
           'user',
-          JSON.stringify({ ...response.data.Data, location: response.data.Data.location })
+          JSON.stringify({
+            ...response.data.Data,
+            location: response.data.Data.locations?.map((item) => item.loc_name)
+          })
         );
 
-        let selected_locaions = response?.data?.Data?.location?.accessable_locations;
-        response?.data?.Data?.location?.accessable_locations.forEach((loc) => locs.push(loc));
+        let selected_locaions = response?.data?.Data?.locations;
+        response?.data?.Data?.locations?.map((item) => item).forEach((loc) => locs.push(loc));
         setLocations(locs);
         setSelectedLocation(selected_locaions);
       } else {
@@ -204,7 +207,7 @@ const Layout = () => {
       limit: parseInt(process.env.REACT_APP_PAGINATION_LIMIT, 10),
       searchBy: searchValue,
       location: 'All',
-      rooms: [],
+      zones: [],
       cust_id: localStorage.getItem('cust_id')
     };
 
@@ -379,9 +382,9 @@ const Layout = () => {
       key: 2
     },
     {
-      name: 'Rooms',
+      name: 'Zones',
       icon: <Copy style={{ color: 'white' }} />,
-      link: '/rooms',
+      link: '/zones',
       key: 3
     },
     {
@@ -461,23 +464,32 @@ const Layout = () => {
   ];
 
   const handleSetLocations = (_, value, reason, option) => {
-    if (reason == 'selectOption' && option?.option == 'Select All' && !allLocationChecked) {
+    console.log('option==>', option);
+    if (
+      reason == 'selectOption' &&
+      option?.option.loc_name == 'Select All' &&
+      !allLocationChecked
+    ) {
+      console.log('1', option);
       setSelectedLocation(reason === 'selectOption' ? locations.slice(1, locations.length) : []);
       setAllLocationChecked(true);
     } else if (
-      (option?.option == 'Select All' && reason === 'removeOption') ||
+      (option?.option.loc_name == 'Select All' && reason === 'removeOption') ||
       reason === 'clear'
     ) {
+      console.log('2');
       setSelectedLocation([]);
       setAllLocationChecked(false);
     } else if (
       reason === 'selectOption' &&
-      option?.option == 'Select All' &&
+      option?.option.loc_name == 'Select All' &&
       allLocationChecked == true
     ) {
+      console.log('3');
       setAllLocationChecked(false);
       setSelectedLocation([]);
     } else {
+      console.log('4', value);
       setAllLocationChecked(false);
       setSelectedLocation(value);
     }
@@ -636,7 +648,22 @@ const Layout = () => {
             </Box>
             <Grid container alignItems={'self-end'} gap={1}>
               <Grid container spacing={3} alignItems={'stretch'}>
-                <Grid item md={12} sm={12} xs={12} lg={12} xl={7}>
+                <Grid
+                  item
+                  md={12}
+                  sm={12}
+                  xs={12}
+                  lg={12}
+                  xl={7}
+                  sx={{
+                    display: {
+                      xs: 'none', // Hide on extra-small screens
+                      sm: 'none', // Hide on small screens
+                      md: 'none', // Hide on medium screens
+                      lg: 'none', // Hide on large screens
+                      xl: 'block' // Show on extra-large screens
+                    }
+                  }}>
                   <Stack
                     direction={'row'}
                     justifyContent={'flex-start'}
@@ -772,6 +799,8 @@ const Layout = () => {
                       <Badge disableRipple badgeContent={unreadCount} color="error">
                         <NotificationsIcon ref={notificationRef} fontSize="large" />
                       </Badge>
+                      {console.log('locations in layout==>', locations)}
+                      {console.log('selected_location in layout', selectedLocation)}
                       {((authCtx?.user?.role === 'Admin' && authCtx?.paymentMethod) ||
                         authCtx?.user?.role === 'Super Admin') && (
                         <Autocomplete
@@ -791,24 +820,29 @@ const Layout = () => {
                           id="tags-standard"
                           options={locations?.length !== 0 ? locations : []}
                           onChange={(_, value, reason, option) => {
+                            console.log('value==>', value);
                             handleSetLocations(_, value, reason, option);
                           }}
                           value={selectedLocation ? selectedLocation : []}
-                          getOptionLabel={(option) => option}
+                          getOptionLabel={(option) => option.loc_name}
                           renderTags={(value, getTagProps) =>
                             value?.map((option, index) => (
-                              <Chip key={index} label={option} {...getTagProps({ index })} />
+                              <Chip
+                                key={index}
+                                label={option.loc_name}
+                                {...getTagProps({ index })}
+                              />
                             ))
                           }
                           renderOption={(props, option, { selected }) => (
-                            <li {...props}>
+                            <li key={option.loc_id} {...props}>
                               <Checkbox
                                 icon={icon}
                                 checkedIcon={checkedIcon}
                                 style={{ marginRight: 8 }}
                                 checked={allLocationChecked ? allLocationChecked : selected}
                               />
-                              {option}
+                              {option.loc_name}
                             </li>
                           )}
                           renderInput={(params) => (
@@ -842,6 +876,146 @@ const Layout = () => {
                       </Box>
                     </Stack>
                   </>
+                </Grid>
+                <Grid
+                  item
+                  md={12}
+                  sm={12}
+                  xs={12}
+                  lg={12}
+                  xl={7}
+                  sx={{
+                    display: {
+                      xs: 'block', // Show on extra-small screens
+                      sm: 'block', // Show on small screens
+                      md: 'block', // Show on medium screens
+                      lg: 'block', // Show on large screens
+                      xl: 'none' // Hide on extra-large screens
+                    }
+                  }}>
+                  <Stack
+                    direction={'row'}
+                    justifyContent={'flex-start'}
+                    alignItems={'center'}
+                    gap={2}
+                    className="breadcrumb">
+                    {/* {layoutCtx?.breadcrumb?.length > 2 ? (
+                      <Avatar
+                        src={authCtx?.user?.profile_image}
+                        sx={{ width: 85, height: 85 }}
+                        alt='="profile-image'
+                      />
+                    ) : null} */}
+                    <Stack direction={'column'} spacing={0.5}>
+                      <Typography variant="h2">{layoutCtx?.breadcrumb[0]}</Typography>
+                      {layoutCtx?.breadcrumb?.length > 1 && (
+                        <Typography className="">{layoutCtx?.breadcrumb[1]}</Typography>
+                      )}
+                    </Stack>
+                  </Stack>
+                  {location.pathname == '/dashboard' ? (
+                    <Stack
+                      direction={'row'}
+                      alignItems={'center'}
+                      justifyContent={'space-between'}
+                      position={'relative'}>
+                      <TextField
+                        variant="standard"
+                        labelId="search"
+                        placeholder={'Find Children, Families or Staff'}
+                        sx={{
+                          backgroundColor: '#FFFFFF',
+                          borderRadius: '120px',
+                          padding: '16px 24px',
+                          width: '95%'
+                        }}
+                        onChange={(e) => newHandleChange(e)}
+                        InputProps={{
+                          disableUnderline: true,
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <img src={searchIcon} alt="search" width={24} height={24} />
+                            </InputAdornment>
+                          )
+                        }}
+                      />
+                      {showSearchResults && (
+                        <Box className="results-list">
+                          <Stack
+                            className="search-result"
+                            direction={'row'}
+                            justifyContent={'space-between'}>
+                            <Typography>Name</Typography>
+                            <Typography>Role</Typography>
+                          </Stack>
+                          <Divider />
+                          {familiesResults.map((result) => {
+                            return (
+                              <Stack
+                                direction={'row'}
+                                justifyContent={'space-between'}
+                                alignItems={'center'}
+                                sx={{
+                                  ':hover': { backgroundColor: '#eae9ff80' }
+                                }}
+                                key={result?.user_id || result?.primary?.family_member_id}
+                                onClick={() => handleResultClick(result)}>
+                                <Box ref={resultsListRef} className="search-result">
+                                  {result?.primary?.first_name + ' ' + result?.primary?.last_name}
+                                </Box>
+                                <Box>
+                                  <Chip variant="outlined" label={'Family'} />
+                                </Box>
+                              </Stack>
+                            );
+                          })}
+                          {usersResults.map((result) => {
+                            return (
+                              <Stack
+                                direction={'row'}
+                                justifyContent={'space-between'}
+                                alignItems={'center'}
+                                sx={{
+                                  ':hover': { backgroundColor: '#eae9ff80' }
+                                }}
+                                key={result?.user_id}
+                                onClick={() => handleResultClick(result)}>
+                                <Box ref={resultsListRef} className="search-result">
+                                  {result?.first_name + ' ' + result?.last_name}
+                                </Box>
+                                <Box>
+                                  <Chip
+                                    variant="outlined"
+                                    label={result?.role === 'User' ? 'Director' : result?.role}
+                                  />
+                                </Box>
+                              </Stack>
+                            );
+                          })}
+                          {childrenResults.map((result) => {
+                            return (
+                              <Stack
+                                direction={'row'}
+                                justifyContent={'space-between'}
+                                alignItems={'center'}
+                                sx={{
+                                  ':hover': { backgroundColor: '#eae9ff80' }
+                                }}
+                                key={result?.user_id}
+                                onClick={() => handleResultClick(result)}>
+                                <Box ref={resultsListRef} className="search-result">
+                                  {result?.first_name + ' ' + result?.last_name}
+                                </Box>
+                                <Box>
+                                  <Chip variant="outlined" label={'Child'} />
+                                </Box>
+                              </Stack>
+                            );
+                          })}
+                        </Box>
+                      )}
+                    </Stack>
+                  ) : null}
                 </Grid>
               </Grid>
               {/* <Grid item xs={12} sm={12} md={4} lg={2.1}>

@@ -36,18 +36,18 @@ export default function StreamTable({ rows, columns, title, isLoading }) {
               //.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
               .map((row, index) => {
                 return (
-                  <Box key={`${row?.room?.room_name}-${index}`}>
+                  <Box key={`${row?.zone?.zone_name}-${index}`}>
                     <Link
                       to="/watch-stream"
                       state={{
-                        roomName: row?.room?.room_name,
+                        zoneName: row?.zone?.zone_name,
                         // eslint-disable-next-line react/prop-types
-                        roomId: row?.room?.room_id,
-                        location: row?.room?.location,
-                        camName: row?.room?.live_stream_cameras[0]?.cam_name,
-                        camId: row?.room?.live_stream_cameras[0]?.cam_id,
+                        zoneId: row?.zone?.zone_id,
+                        location: row?.zone?.location,
+                        camName: row?.zone?.live_stream_cameras[0]?.cam_name,
+                        camId: row?.zone?.live_stream_cameras[0]?.cam_id,
                         streamUrl:
-                          row?.presigned_url || row?.room?.live_stream_cameras[0]?.stream_uri,
+                          row?.presigned_url || row?.zone?.live_stream_cameras[0]?.stream_uri,
                         livStream: true
                       }}>
                       <>
@@ -63,20 +63,20 @@ export default function StreamTable({ rows, columns, title, isLoading }) {
                             </Stack>{' '}
                           </Box>
                           <Box style={{ width: '35%' }}>
-                            <Chip label={row?.room?.room_name} />{' '}
+                            <Chip label={row?.zone?.zone_name} />{' '}
                           </Box>
                           <Box style={{ width: '5%' }}>
                             {/* <Link
                           to="/watch-stream"
                           state={{
-                            roomName: row?.room?.room_name,
+                            zoneName: row?.zone?.zone_name,
                             // eslint-disable-next-line react/prop-types
-                            roomId: row?.room?.room_id,
-                            location: row?.room?.location,
-                            camName: row?.room?.live_stream_cameras[0]?.cam_name,
-                            camId: row?.room?.live_stream_cameras[0]?.cam_id,
+                            zoneId: row?.zone?.zone_id,
+                            location: row?.zone?.location,
+                            camName: row?.zone?.live_stream_cameras[0]?.cam_name,
+                            camId: row?.zone?.live_stream_cameras[0]?.cam_id,
                             streamUrl:
-                              row?.presigned_url || row?.room?.live_stream_cameras[0]?.stream_uri,
+                              row?.presigned_url || row?.zone?.live_stream_cameras[0]?.stream_uri,
                             livStream: true
                           }}> */}
                             <Video />

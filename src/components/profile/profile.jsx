@@ -103,7 +103,7 @@ const Profile = () => {
       if (response.status === 200) {
         authCtx.setUser({
           ...response.data.Data,
-          location: response.data.Data.location
+          locations: response.data.Data.locations
         });
         localStorage.setItem(
           'user',
@@ -220,7 +220,7 @@ const Profile = () => {
               last_name: authCtx.user.last_name || '',
               email: authCtx.user.email || '',
               role: authCtx.user.role || '',
-              locations: authCtx.user.location ? authCtx.user.location.selected_locations : []
+              locations: authCtx.user.locations ? authCtx.user.locations : []
             }}
             onSubmit={handleSubmit}>
             {({ values, setFieldValue, touched, errors }) => {
@@ -299,16 +299,21 @@ const Profile = () => {
                           multiple
                           disabled={authCtx?.user?.role === 'Family'}
                           id="locations"
-                          options={authCtx?.user?.location?.accessable_locations.sort((a, b) =>
-                            a > b ? 1 : -1
+                          options={authCtx?.user?.locations.sort((a, b) =>
+                            a.loc_name > b.loc_name ? 1 : -1
                           )}
                           onChange={(_, value) => {
                             setFieldValue('locations', value);
                           }}
+                          getOptionLabel={(option) => option.loc_name}
                           value={values?.locations}
                           renderTags={(value, getTagProps) =>
                             value.map((option, index) => (
-                              <Chip key={index} label={option} {...getTagProps({ index })} />
+                              <Chip
+                                key={index}
+                                label={option.loc_name}
+                                {...getTagProps({ index })}
+                              />
                             ))
                           }
                           renderInput={(params) => (

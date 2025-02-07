@@ -55,10 +55,10 @@ const DisableDialog = (props) => {
         enableReinitialize
         validationSchema={validationSchema}
         initialValues={{
-          selectedOption: props?.roomDetails?.disabled == 'true' ? 'enable' : 'disable',
+          selectedOption: props?.zoneDetails?.disabled == 'true' ? 'enable' : 'disable',
           date: ''
         }}
-        onSubmit={props.handleRoomDisableEnable}>
+        onSubmit={props.handleZoneDisableEnable}>
         {({ values, errors, setFieldValue, touched }) => (
           <Form>
             <DialogContent>
@@ -76,10 +76,10 @@ const DisableDialog = (props) => {
                     }}>
                     <Stack spacing={2}>
                       <FormControlLabel
-                        value={props?.roomDetails?.disabled == 'true' ? 'enable' : 'disable'}
+                        value={props?.zoneDetails?.disabled == 'true' ? 'enable' : 'disable'}
                         control={<Radio />}
                         label={
-                          props?.roomDetails?.disabled == 'true'
+                          props?.zoneDetails?.disabled == 'true'
                             ? 'Enable immediately'
                             : 'Disable immediately'
                         }
@@ -89,7 +89,7 @@ const DisableDialog = (props) => {
                           value="schedule"
                           control={<Radio />}
                           label={
-                            props?.roomDetails?.disabled == 'true'
+                            props?.zoneDetails?.disabled == 'true'
                               ? 'Schedule enable date'
                               : 'Schedule end date'
                           }
@@ -100,7 +100,7 @@ const DisableDialog = (props) => {
                             open={isDatePickerOpen}
                             minDate={new Date()}
                             label={
-                              props?.roomDetails?.disabled == 'true'
+                              props?.zoneDetails?.disabled == 'true'
                                 ? 'Enable date'
                                 : 'Disable date'
                             }
@@ -154,7 +154,7 @@ const DisableDialog = (props) => {
                 startIcon={props.loading && <SaveIcon />}
                 variant="text"
                 type="submit">
-                {props?.roomDetails?.disabled == 'true' ? 'YES, ENABLE' : 'YES, DISABLE'}
+                {props?.zoneDetails?.disabled == 'true' ? 'YES, ENABLE' : 'YES, DISABLE'}
               </LoadingButton>
             </DialogActions>
           </Form>
@@ -170,9 +170,9 @@ DisableDialog.propTypes = {
   open: PropTypes.bool,
   setOpen: PropTypes.func,
   title: PropTypes.string,
-  handleRoomDisableEnable: PropTypes.func,
+  handleZoneDisableEnable: PropTypes.func,
   contentText: PropTypes.string,
   loading: PropTypes.bool,
   handleDialogClose: PropTypes.func,
-  roomDetails: PropTypes.object
+  zoneDetails: PropTypes.object
 };

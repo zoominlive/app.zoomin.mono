@@ -56,7 +56,7 @@ const CustomerForm = (props) => {
   const [submitLoading, setSubmitLoading] = useState(false);
   // const [selectedRole, setSelectedRole] = useState(null);
   const [activeStep, setActiveStep] = useState(0);
-  const [roomList, setRoomList] = useState([]);
+  const [zoneList, setZoneList] = useState([]);
   const [selectedLocation, setSelectedLocation] = useState([]);
   const [isCloseDialog, setIsCloseDialog] = useState(false);
   const [recurringChargeDate, setRecurringChargeDate] = useState(moment());
@@ -96,7 +96,7 @@ const CustomerForm = (props) => {
       max_stream_live_license: yup
         .number('Enter maximum stream live license')
         .required('Maximum stream live license is required'),
-      max_stream_live_license_room: yup
+      max_stream_live_license_zone: yup
         .number('Enter maximum stream live license')
         .required('Maximum stream live license is required')
     }),
@@ -121,12 +121,12 @@ const CustomerForm = (props) => {
         .required('Email is required'),
       role: yup.string('Enter role').required('Role is required'),
       location: yup.array().min(1, 'Select at least one location').required('Location is required')
-      // rooms:
+      // zones:
       //   selectedRole === 'Teacher'
       //     ? yup
       //         .array()
-      //         .of(yup.object().shape({ room_id: yup.string(), room_name: yup.string() }))
-      //         .min(1, 'Select at least one room')
+      //         .of(yup.object().shape({ zone_id: yup.string(), zone_name: yup.string() }))
+      //         .min(1, 'Select at least one zone')
       //         .required('required')
       //     : yup.array()
     })
@@ -143,10 +143,11 @@ const CustomerForm = (props) => {
       email,
       role,
       location,
-      rooms,
+      zones,
       stream_live_license,
       ...details
     } = data;
+    console.log('location==>', location);
 
     const payload = {
       ...details,
@@ -158,8 +159,8 @@ const CustomerForm = (props) => {
         last_name: last_name,
         email: email,
         role: role,
-        location: { selected_locations: location, accessable_locations: location },
-        rooms: rooms,
+        location: { locations: location },
+        zones: zones,
         stream_live_license: stream_live_license,
         user_id: props.customer && props.customer?.users[0]?.user_id
       }
@@ -560,11 +561,11 @@ const CustomerForm = (props) => {
               />
             </Grid>
             <Grid item md={4} xs={12}>
-              <InputLabel id="max_stream_live_license_room">
-                Max Per-Room Live Streaming Licenses
+              <InputLabel id="max_stream_live_license_zone">
+                Max Per-Zone Live Streaming Licenses
               </InputLabel>
               <TextField
-                labelId="max_stream_live_license_room"
+                labelId="max_stream_live_license_zone"
                 type="number"
                 InputProps={{
                   inputProps: { min: 0 }
@@ -574,17 +575,17 @@ const CustomerForm = (props) => {
                     event.preventDefault();
                   }
                 }}
-                name="max_stream_live_license_room"
-                value={values?.max_stream_live_license_room}
+                name="max_stream_live_license_zone"
+                value={values?.max_stream_live_license_zone}
                 onChange={(event) => {
-                  setFieldValue('max_stream_live_license_room', event.target.value);
+                  setFieldValue('max_stream_live_license_zone', event.target.value);
                 }}
                 helperText={
-                  touched.max_stream_live_license_room && errors.max_stream_live_license_room
+                  touched.max_stream_live_license_zone && errors.max_stream_live_license_zone
                 }
                 error={
-                  touched.max_stream_live_license_room &&
-                  Boolean(errors.max_stream_live_license_room)
+                  touched.max_stream_live_license_zone &&
+                  Boolean(errors.max_stream_live_license_zone)
                 }
                 fullWidth
               />
@@ -601,7 +602,22 @@ const CustomerForm = (props) => {
                       }}
                     />
                   }
-                  label={`Audio Permission`}
+                  label={`Allow Fixed Camera Audio`}
+                />
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} md={12}>
+              <FormControl>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={values.camera_recording}
+                      onChange={(event) => {
+                        setFieldValue('camera_recording', event.target.checked);
+                      }}
+                    />
+                  }
+                  label={`Allow Fixed Camera Recording`}
                 />
               </FormControl>
             </Grid>
@@ -616,7 +632,7 @@ const CustomerForm = (props) => {
                       }}
                     />
                   }
-                  label={`Allow Invite User`}
+                  label={`Allow Families to Invite Users`}
                 />
               </FormControl>
             </Grid>
@@ -836,19 +852,23 @@ const CustomerForm = (props) => {
                 fullWidth
                 multiple
                 id="location"
-                options={values?.customer_locations
-                  ?.flatMap((i) => i.loc_name)
-                  ?.sort((a, b) => (a > b ? 1 : -1))}
+                options={values?.customer_locations?.sort((a, b) =>
+                  a.loc_name > b.loc_name ? 1 : -1
+                )}
+                getOptionLabel={(option) => option.loc_name}
+                isOptionEqualToValue={(option, value) => option.loc_name === value.loc_name}
                 onChange={(_, value) => {
                   setFieldValue('location', value);
                   setSelectedLocation(value);
                 }}
-                value={values?.location}
+                value={values?.location?.map((loc) => ({
+                  loc_name: loc.loc_name
+                }))}
                 renderTags={(value, getTagProps) =>
                   value.map((option, index) => (
                     <Chip
                       key={index}
-                      label={option}
+                      label={option.loc_name}
                       {...getTagProps({ index })}
                       //disabled={authCtx.user?.location?.accessable_locations.indexOf(option) == -1}
                     />
@@ -867,39 +887,39 @@ const CustomerForm = (props) => {
             </Grid>
             {values.role === 'Teacher' && (
               <Grid item xs={12} md={6}>
-                <InputLabel id="rooms">Room</InputLabel>
+                <InputLabel id="zones">Zone</InputLabel>
                 <Autocomplete
-                  labelId="rooms"
+                  labelId="zones"
                   fullWidth
                   multiple
-                  id="rooms"
+                  id="zones"
                   noOptionsText={'Select location first'}
-                  options={roomList
-                    .sort((a, b) => (a?.room_name > b?.room_name ? 1 : -1))
-                    ?.filter((room) => {
-                      if (values?.location?.find((loc) => loc == room?.location)) {
-                        return room;
+                  options={zoneList
+                    .sort((a, b) => (a?.zone_name > b?.zone_name ? 1 : -1))
+                    ?.filter((zone) => {
+                      if (values?.location?.find((loc) => loc == zone?.location)) {
+                        return zone;
                       }
                     })}
-                  value={values.rooms}
-                  isOptionEqualToValue={(option, value) => option?.room_id === value?.room_id}
+                  value={values.zones}
+                  isOptionEqualToValue={(option, value) => option?.zone_id === value?.zone_id}
                   getOptionLabel={(option) => {
-                    return option?.room_name;
+                    return option?.zone_name;
                   }}
                   onChange={(_, value) => {
-                    setFieldValue('rooms', value);
+                    setFieldValue('zones', value);
                   }}
                   renderTags={(value, getTagProps) =>
                     value.map((option, index) => (
-                      <Chip key={index} label={option?.room_name} {...getTagProps({ index })} />
+                      <Chip key={index} label={option?.zone_name} {...getTagProps({ index })} />
                     ))
                   }
                   renderInput={(params) => (
                     <TextField
                       {...params}
-                      // placeholder="Room"
-                      helperText={touched.rooms && errors.rooms}
-                      error={touched.rooms && Boolean(errors.rooms)}
+                      // placeholder="Zone"
+                      helperText={touched.zones && errors.zones}
+                      error={touched.zones && Boolean(errors.zones)}
                       fullWidth
                     />
                   )}
@@ -931,24 +951,24 @@ const CustomerForm = (props) => {
   };
 
   useEffect(() => {
-    let rooms = [];
-    roomList?.map((room) => {
+    let zones = [];
+    zoneList?.map((zone) => {
       let count = 0;
       selectedLocation?.forEach((location) => {
-        if (room.location === location) {
+        if (zone.location === location) {
           count = count + 1;
         }
       });
       if (count > 0) {
-        rooms.push(room);
+        zones.push(zone);
       }
     });
-    setRoomList(rooms);
+    setZoneList(zones);
   }, [selectedLocation]);
   useEffect(() => {
-    API.get('rooms/list').then((response) => {
+    API.get('zones/list').then((response) => {
       if (response.status === 200) {
-        setRoomList(response.data.Data);
+        setZoneList(response.data.Data);
       } else {
         errorMessageHandler(
           enqueueSnackbar,
@@ -1008,6 +1028,7 @@ const CustomerForm = (props) => {
                 style={{ color: '#ffff' }}
                 onClick={() => {
                   setIsCloseDialog(false);
+                  handleFormDialogClose();
                   props.setOpen(false);
                 }}>
                 Yes
@@ -1038,9 +1059,12 @@ const CustomerForm = (props) => {
             rtmp_transcoder_endpoint: props?.customer?.rtmp_transcoder_endpoint || '',
             timeout: props?.customer?.timeout || '',
             max_stream_live_license: props?.customer?.max_stream_live_license || '',
-            max_stream_live_license_room: props?.customer?.max_stream_live_license_room || '',
+            max_stream_live_license_zone: props?.customer?.max_stream_live_license_zone || '',
             audio_permission: !_.isNil(props?.customer?.audio_permission)
               ? props?.customer?.audio_permission
+              : true,
+            camera_recording: !_.isNil(props?.customer?.camera_recording)
+              ? props?.customer?.camera_recording
               : true,
             invite_user: !_.isNil(props?.customer?.invite_user)
               ? props?.customer?.invite_user
@@ -1049,17 +1073,17 @@ const CustomerForm = (props) => {
             last_name: props?.customer?.users[0]?.last_name || '',
             email: props?.customer?.users[0]?.email || '',
             role: props?.customer?.users[0]?.role || 'Admin',
-            location: props?.customer?.users[0]?.location?.selected_locations
-              ? props?.customer?.users[0]?.location?.selected_locations?.sort((a, b) =>
-                  a > b ? 1 : -1
+            location: props?.customer?.users[0]?.locations
+              ? props?.customer?.users[0]?.locations?.sort((a, b) =>
+                  a.loc_name > b.loc_name ? 1 : -1
                 )
               : [],
-            rooms: props?.customer?.users[0]?.roomsInTeacher
-              ? props.customer?.users[0]?.roomsInTeacher.map((room) => {
+            zones: props?.customer?.users[0]?.zonesInTeacher
+              ? props.customer?.users[0]?.zonesInTeacher.map((zone) => {
                   return {
-                    room_name: room.room.room_name,
-                    location: room.room.location,
-                    room_id: room.room_id
+                    zone_name: zone.zone.zone_name,
+                    location: zone.zone.location,
+                    zone_id: zone.zone_id
                   };
                 })
               : [],

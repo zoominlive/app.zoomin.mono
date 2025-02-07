@@ -142,12 +142,12 @@ const DefaultScheduler = (props) => {
       timeRange: daysTostore
     };
     const childPayload = {
-      room_child_id: props.room_child_id,
+      zone_child_id: props.zone_child_id,
       timeRange: daysTostore
     };
     // console.log('props.settings', props.settings);
     API.put(
-      props.defaultSettings ? 'family/child/roomschedule' : 'family/child/schedule/edit',
+      props.defaultSettings ? 'family/child/zoneschedule' : 'family/child/schedule/edit',
       props.defaultSettings ? childPayload : payload
     ).then((response) => {
       if (response.status === 200) {
@@ -512,12 +512,12 @@ export default DefaultScheduler;
 DefaultScheduler.propTypes = {
   open: PropTypes.bool,
   setOpen: PropTypes.func,
-  roomDetails: PropTypes.object,
+  zoneDetails: PropTypes.object,
   getFamiliesList: PropTypes.func,
   settings: PropTypes.bool,
   custId: PropTypes.string,
   timer: PropTypes.array,
   defaultSettings: PropTypes.bool,
-  room_child_id: PropTypes.string,
+  zone_child_id: PropTypes.string,
   getDefaultScheduleSettings: PropTypes.func
 };

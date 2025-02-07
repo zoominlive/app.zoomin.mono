@@ -58,7 +58,7 @@ const CameraForm = (props) => {
   const [image, setImage] = useState();
   const [S3Uri, setS3Uri] = useState();
   const [locationSelected, setLocationSelected] = useState(false);
-  const [roomOptions, setRoomOptions] = useState([]);
+  const [zoneOptions, setZoneOptions] = useState([]);
   const [dropdownLoading, setDropdownLoading] = useState(false);
   const authCtx = useContext(AuthContext);
 
@@ -74,13 +74,13 @@ const CameraForm = (props) => {
 
   useEffect(() => {
     setDropdownLoading(true);
-    API.get(props?.camera?.location ? `rooms?location=${props?.camera?.location}` : `rooms/`, {
+    API.get(props?.camera?.location ? `zones?location=${props?.camera?.location}` : `zones/`, {
       params: { cust_id: localStorage.getItem('cust_id') }
     }).then((response) => {
       setDropdownLoading(true);
       if (response.status === 200) {
-        const rooms = response.data.Data.finalRoomDetails;
-        setRoomOptions(rooms);
+        const zones = response.data.Data.finalZoneDetails;
+        setZoneOptions(zones);
         setDropdownLoading(false);
       } else {
         errorMessageHandler(
@@ -130,25 +130,27 @@ const CameraForm = (props) => {
         setSubmitLoading(false);
       });
     } else {
-      API.post('cams/add', { ...payload, cust_id: localStorage.getItem('cust_id') }).then(
-        (response) => {
-          if (response.status === 201) {
-            enqueueSnackbar(response?.data?.Message, {
-              variant: 'success'
-            });
-            handleFormDialogClose();
-            props.getCamerasList();
-          } else {
-            errorMessageHandler(
-              enqueueSnackbar,
-              response?.response?.data?.Message || 'Something Went Wrong.',
-              response?.response?.status,
-              authCtx.setAuthError
-            );
-          }
-          setSubmitLoading(false);
+      API.post('cams/add', {
+        ...payload,
+        loc_id: data.location,
+        cust_id: localStorage.getItem('cust_id')
+      }).then((response) => {
+        if (response.status === 201) {
+          enqueueSnackbar(response?.data?.Message, {
+            variant: 'success'
+          });
+          handleFormDialogClose();
+          props.getCamerasList();
+        } else {
+          errorMessageHandler(
+            enqueueSnackbar,
+            response?.response?.data?.Message || 'Something Went Wrong.',
+            response?.response?.status,
+            authCtx.setAuthError
+          );
         }
-      );
+        setSubmitLoading(false);
+      });
     }
   };
 
@@ -223,14 +225,14 @@ const CameraForm = (props) => {
     }
   });
 
-  const handleGetRoomsForSelectedLocation = (location) => {
+  const handleGetZonesForSelectedLocation = (location) => {
     setDropdownLoading(true);
-    API.get(`rooms`, {
+    API.get(`zones`, {
       params: { location: location, cust_id: localStorage.getItem('cust_id') }
     }).then((response) => {
       if (response.status === 200) {
-        const rooms = response.data.Data.finalRoomDetails;
-        setRoomOptions(rooms);
+        const zones = response.data.Data.finalZoneDetails;
+        setZoneOptions(zones);
         setDropdownLoading(false);
       } else {
         errorMessageHandler(
@@ -310,9 +312,9 @@ const CameraForm = (props) => {
             cam_name: props?.camera?.cam_name || '',
             cam_uri: props?.camera?.cam_uri || '',
             description: props?.camera?.description || '',
-            location: props?.camera?.location || '',
-            rooms: props?.camera?.cameras_assigned_to_rooms
-              ? props?.camera?.cameras_assigned_to_rooms
+            location: props?.camera?.customer_location?.loc_name || '',
+            zones: props?.camera?.cameras_assigned_to_zones
+              ? props?.camera?.cameras_assigned_to_zones
               : []
           }}
           onSubmit={handleSubmit}>
@@ -429,27 +431,28 @@ const CameraForm = (props) => {
                         fullWidth
                         id="location"
                         options={
-                          authCtx?.user?.location?.accessable_locations
-                            ? authCtx?.user?.location?.accessable_locations?.sort((a, b) =>
-                                a > b ? 1 : -1
-                              )
-                            : []
+                          authCtx?.user?.locations?.sort((a, b) =>
+                            a.loc_name > b.loc_name ? 1 : -1
+                          ) || []
                         }
+                        getOptionLabel={(option) => option.loc_name} // Display loc_name in dropdown
                         onChange={(_, value) => {
-                          setFieldValue('location', value);
-                          setLocationSelected(true);
-                          handleGetRoomsForSelectedLocation(value);
+                          setFieldValue('location', value ? value.loc_id : null); // Set loc_id in form value
+                          setLocationSelected(!!value); // Handle selection state
+                          handleGetZonesForSelectedLocation(value ? value.loc_id : null); // Pass loc_id to handler
                         }}
-                        value={values?.location}
+                        value={
+                          authCtx?.user?.locations?.find((loc) => loc.loc_id === values.location) ||
+                          null
+                        }
                         renderTags={(value, getTagProps) =>
                           value.map((option, index) => (
-                            <Chip key={index} label={option} {...getTagProps({ index })} />
+                            <Chip key={index} label={option.loc_name} {...getTagProps({ index })} />
                           ))
                         }
                         renderInput={(params) => (
                           <TextField
                             {...params}
-                            // placeholder="Location"
                             helperText={touched.location && errors.location}
                             error={touched.location && Boolean(errors.location)}
                             fullWidth
@@ -458,36 +461,36 @@ const CameraForm = (props) => {
                       />
                     </Grid>
                     <Grid item xs={12} md={12}>
-                      <InputLabel id="rooms">Rooms</InputLabel>
+                      <InputLabel id="zones">Zones</InputLabel>
                       <Autocomplete
-                        labelId="rooms"
+                        labelId="zones"
                         fullWidth
                         multiple
-                        id="rooms"
-                        options={roomOptions && locationSelected ? roomOptions : []}
-                        noOptionsText={!locationSelected ? 'Select location first' : 'No Room'}
+                        id="zones"
+                        options={zoneOptions && locationSelected ? zoneOptions : []}
+                        noOptionsText={!locationSelected ? 'Select location first' : 'No Zone'}
                         isOptionEqualToValue={(option, value) =>
-                          option.room_id === value.room?.room_id || option.room_id === value.room_id
+                          option.zone_id === value.zone?.zone_id || option.zone_id === value.zone_id
                         }
                         getOptionLabel={(option) => {
-                          return option.room_name;
+                          return option.loc_name + ' - ' + option.zone_name;
                         }}
                         onMouseEnter={() => {
                           if (values?.location) {
                             setLocationSelected(true);
                           }
                         }}
-                        value={values?.rooms}
+                        value={values?.zones}
                         onChange={(_, value) => {
                           console.log('value==>', value);
-                          setFieldValue('rooms', value);
+                          setFieldValue('zones', value);
                         }}
-                        //defaultValue={props?.room?.rooms ? props?.room?.rooms : []}
+                        //defaultValue={props?.zone?.zones ? props?.zone?.zones : []}
                         renderTags={(value, getTagProps) =>
                           value.map((option, index) => (
                             <Chip
                               key={index}
-                              label={option.room?.room_name || option?.room_name}
+                              label={option.zone?.zone_name || option?.zone_name}
                               {...getTagProps({ index })}
                             />
                           ))
@@ -508,8 +511,8 @@ const CameraForm = (props) => {
                               )
                             }}
                             // placeholder="Camera"
-                            helperText={touched.rooms && errors.rooms}
-                            error={touched.rooms && Boolean(errors.rooms)}
+                            helperText={touched.zones && errors.zones}
+                            error={touched.zones && Boolean(errors.zones)}
                             fullWidth
                           />
                         )}

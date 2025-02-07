@@ -244,7 +244,9 @@ const SettingsForm = (props) => {
                   <DialogContent>
                     <p>
                       You have exceeded the maximum number of allowed locations. <br /> Please
-                      remove a location to proceed.
+                      contact <a href="support@zoominlive.com">support@zoominlive.com</a> to
+                      activate more locations. Alternatively you may also choose to delete a
+                      location.
                     </p>
                   </DialogContent>
                 ) : (

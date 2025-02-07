@@ -3,7 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import Dashboard from './components/dashboard/dashboard';
 import Families from './components/families/families';
 import Profile from './components/profile/profile';
-import Rooms from './components/rooms/rooms';
+import Zones from './components/zones/zones';
 import Cameras from './components/cameras/cameras';
 import Recordings from './components/recordings/recordings';
 import Logs from './components/logs/logs';
@@ -47,7 +47,7 @@ const AppRoutes = () => {
               {' '}
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/families" element={<Families />} />
-              <Route path="/rooms" element={<Rooms />} />
+              <Route path="/zones" element={<Zones />} />
               <Route path="/cameras" element={<Cameras />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/recordings" element={<Recordings />} />

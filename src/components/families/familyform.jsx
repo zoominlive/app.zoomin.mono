@@ -154,15 +154,15 @@ const AddFamily = (props) => {
           yup.object().shape({
             first_name: yup.string().required('First Name is required'),
             last_name: yup.string().required('Last Name is required'),
-            rooms: yup
+            zones: yup
               .array()
               .of(
                 yup.object().shape({
-                  room_id: yup.string(),
-                  room_name: yup.string()
+                  zone_id: yup.string(),
+                  zone_name: yup.string()
                 })
               )
-              .min(1, 'Select at least one room')
+              .min(1, 'Select at least one zone')
               .required('required'),
             locations: yup.array().min(1, 'Select at least one location').required('required')
           })
@@ -199,7 +199,7 @@ const AddFamily = (props) => {
             values={values}
             touched={touched}
             errors={errors}
-            roomsList={props.roomsList}
+            zonesList={props.zonesList}
           />
         );
       default:
@@ -214,6 +214,7 @@ const AddFamily = (props) => {
 
   // Method to next to previous step and creating the family
   const handleSubmit = (data, { setTouched, setSubmitting }) => {
+    console.log('location==>', authCtx.user);
     if (activeStep === STEPS.length - 1) {
       setSubmitLoading(true);
 
@@ -221,11 +222,11 @@ const AddFamily = (props) => {
 
       payload.primary.member_type = 'primary';
       payload.primary.time_zone = moment.tz.guess();
-      payload.primary.location = authCtx.user.location;
+      payload.primary.location = authCtx.user.locations;
       payload.secondary.forEach((parent) => {
         parent.member_type = 'secondary';
         parent.time_zone = moment.tz.guess();
-        parent.location = authCtx.user.location;
+        parent.location = authCtx.user.locations;
       });
 
       payload.children.forEach((child) => {
@@ -361,7 +362,7 @@ const AddFamily = (props) => {
               {
                 first_name: '',
                 last_name: '',
-                rooms: [],
+                zones: [],
                 locations: [],
                 enable_date: null,
                 selected_option: 'Start Now',
@@ -523,6 +524,6 @@ export default AddFamily;
 AddFamily.propTypes = {
   open: PropTypes.bool,
   setOpen: PropTypes.func,
-  roomsList: PropTypes.array,
+  zonesList: PropTypes.array,
   getFamiliesList: PropTypes.func
 };

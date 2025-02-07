@@ -47,7 +47,7 @@ const UserForm = (props) => {
   const [submitLoading, setSubmitLoading] = useState(false);
   const [base64Image, setBase64Image] = useState();
   const [selectedLocation, setSelectedLocation] = useState([]);
-  const [roomList, setRoomList] = useState([]);
+  const [zoneList, setZoneList] = useState([]);
   const [selectedRole, setSelectedRole] = useState(null);
   const [liveStreamLicense, setLiveStreamLicense] = useState(
     authCtx?.user?.max_stream_live_license || 0
@@ -64,12 +64,12 @@ const UserForm = (props) => {
       .required('Email is required'),
     role: yup.string('Enter role').required('Role is required'),
     locations: yup.array().min(1, 'Select at least one location').required('Location is required'),
-    rooms:
+    zones:
       selectedRole === 'Teacher'
         ? yup
             .array()
-            .of(yup.object().shape({ room_id: yup.string(), room_name: yup.string() }))
-            .min(1, 'Select at least one room')
+            .of(yup.object().shape({ zone_id: yup.string(), zone_name: yup.string() }))
+            .min(1, 'Select at least one zone')
             .required('required')
         : yup.array()
   });
@@ -80,15 +80,15 @@ const UserForm = (props) => {
       last_name: props?.user?.last_name || '',
       email: props?.user?.email || '',
       role: props?.user?.role || '',
-      locations: props?.user?.location?.selected_locations
-        ? props?.user?.location?.selected_locations?.sort((a, b) => (a > b ? 1 : -1))
+      locations: props?.user?.locations
+        ? props?.user?.locations?.sort((a, b) => (a.loc_name > b.loc_name ? 1 : -1))
         : [],
-      rooms: props?.user?.roomsInTeacher
-        ? props.user?.roomsInTeacher.map((room) => {
+      zones: props?.user?.zonesInTeacher
+        ? props.user?.zonesInTeacher.map((zone) => {
             return {
-              room_name: room?.room?.room_name,
-              location: room?.room?.location,
-              room_id: room?.room_id
+              zone_name: zone?.zone?.zone_name,
+              location: zone?.zone?.location,
+              zone_id: zone?.zone_id
             };
           })
         : [],
@@ -99,26 +99,26 @@ const UserForm = (props) => {
   });
 
   useEffect(() => {
-    let rooms = [];
-    roomList?.map((room) => {
+    let zones = [];
+    zoneList?.map((zone) => {
       let count = 0;
       selectedLocation?.forEach((location) => {
-        if (room.location === location) {
+        if (zone.loc_id === location.loc_id) {
           count = count + 1;
         }
       });
       if (count > 0) {
-        rooms.push(room);
+        zones.push(zone);
       }
     });
-    setRoomList(rooms);
+    setZoneList(zones);
   }, [selectedLocation]);
 
   useEffect(() => {
-    API.get('rooms/list', { params: { cust_id: localStorage.getItem('cust_id') } }).then(
+    API.get('zones/list', { params: { cust_id: localStorage.getItem('cust_id') } }).then(
       (response) => {
         if (response.status === 200) {
-          setRoomList(response.data.Data);
+          setZoneList(response.data.Data);
         } else {
           errorMessageHandler(
             enqueueSnackbar,
@@ -167,6 +167,8 @@ const UserForm = (props) => {
   };
   // Method to update the user profile
   const handleSubmit = (data) => {
+    console.log('data==>', data);
+
     const payload = {
       ...data,
       userId: props.user && props.user.user_id,
@@ -277,11 +279,14 @@ const UserForm = (props) => {
       setBase64Image();
     }
   };
-  let disable_locs = props?.user?.location?.accessable_locations
-    ? props?.user?.location?.accessable_locations.filter(
-        (o) => authCtx?.user?.location?.accessable_locations.indexOf(o) === -1
-      )
+  let disable_locs = props?.user?.locations
+    ? props?.user?.locations
+        ?.map((item) => item.loc_id)
+        .filter((o) => authCtx?.user?.locations?.map((item) => item.loc_id).indexOf(o) === -1)
     : [];
+  console.log('disable_loc==>', disable_locs);
+  console.log('user locations==>', authCtx.user.locations);
+
   return (
     <Dialog open={props.open} onClose={handleClose} fullWidth className="add-user-drawer">
       <DialogTitle sx={{ paddingTop: 3.5 }}>
@@ -446,18 +451,21 @@ const UserForm = (props) => {
                         multiple
                         id="locations"
                         options={
-                          props?.user?.location?.accessable_locations
-                            ? props?.user?.location?.accessable_locations?.sort((a, b) =>
-                                a > b ? 1 : -1
+                          props?.user?.locations
+                            ? props?.user?.locations?.sort((a, b) =>
+                                a.loc_name > b.loc_name ? 1 : -1
                               )
-                            : authCtx.user?.location?.accessable_locations?.sort((a, b) =>
-                                a > b ? 1 : -1
+                            : authCtx.user?.locations?.sort((a, b) =>
+                                a.loc_name > b.loc_name ? 1 : -1
                               )
                         }
+                        getOptionLabel={(option) => option.loc_name}
                         // options={authCtx?.user?.location?.accessable_locations.sort((a, b) =>
                         //   a > b ? 1 : -1
                         // )}
                         onChange={(_, value) => {
+                          console.log('_', _);
+                          console.log('value', value);
                           let flag = disable_locs.every((i) => value.includes(i));
                           setFieldValue('locations', flag ? value : value.concat(disable_locs));
                           setSelectedLocation(flag ? value : value.concat(disable_locs));
@@ -467,10 +475,12 @@ const UserForm = (props) => {
                           value.map((option, index) => (
                             <Chip
                               key={index}
-                              label={option}
+                              label={option.loc_name}
                               {...getTagProps({ index })}
                               disabled={
-                                authCtx.user?.location?.accessable_locations.indexOf(option) == -1
+                                authCtx.user?.locations
+                                  ?.map((item) => item.loc_name)
+                                  .indexOf(option.loc_name) == -1
                               }
                             />
                           ))
@@ -488,35 +498,39 @@ const UserForm = (props) => {
                     </Grid>
                     {values.role === 'Teacher' && (
                       <Grid item xs={12} md={6}>
-                        <InputLabel id="rooms">Rooms</InputLabel>
+                        <InputLabel id="zones">Zones</InputLabel>
                         <Autocomplete
-                          labelId="rooms"
+                          labelId="zones"
                           fullWidth
                           multiple
-                          id="rooms"
+                          id="zones"
                           noOptionsText={'Select location first'}
-                          options={roomList
-                            .sort((a, b) => (a?.room_name > b?.room_name ? 1 : -1))
-                            ?.filter((room) => {
-                              if (values?.locations?.find((loc) => loc == room?.location)) {
-                                return room;
+                          options={zoneList
+                            .sort((a, b) => (a?.zone_name > b?.zone_name ? 1 : -1))
+                            ?.filter((zone) => {
+                              if (
+                                values?.locations
+                                  ?.map((_) => _.loc_id)
+                                  .find((loc) => loc == zone?.loc_id)
+                              ) {
+                                return zone;
                               }
                             })}
-                          value={values.rooms}
+                          value={values.zones}
                           isOptionEqualToValue={(option, value) =>
-                            option?.room_id === value?.room_id
+                            option?.zone_id === value?.zone_id
                           }
                           getOptionLabel={(option) => {
-                            return option?.room_name;
+                            return option?.zone_name;
                           }}
                           onChange={(_, value) => {
-                            setFieldValue('rooms', value);
+                            setFieldValue('zones', value);
                           }}
                           renderTags={(value, getTagProps) =>
                             value.map((option, index) => (
                               <Chip
                                 key={index}
-                                label={option?.room_name}
+                                label={option?.zone_name}
                                 {...getTagProps({ index })}
                               />
                             ))
@@ -524,9 +538,9 @@ const UserForm = (props) => {
                           renderInput={(params) => (
                             <TextField
                               {...params}
-                              // placeholder="Room"
-                              helperText={touched.rooms && errors.rooms}
-                              error={touched.rooms && Boolean(errors.rooms)}
+                              // placeholder="Zone"
+                              helperText={touched.zones && errors.zones}
+                              error={touched.zones && Boolean(errors.zones)}
                               fullWidth
                             />
                           )}

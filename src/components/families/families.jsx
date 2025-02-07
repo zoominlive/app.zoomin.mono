@@ -32,7 +32,7 @@ import { useState } from 'react';
 import { Plus } from 'react-feather';
 import LayoutContext from '../../context/layoutcontext';
 import ChildForm from './childform';
-import RoomAddForm from './roomaddform';
+import ZoneAddForm from './zoneaddform';
 import FamilyForm from './familyform';
 import DisableDialog from './disabledialog';
 // import EditFamily from './editfamily';
@@ -61,15 +61,15 @@ const Families = () => {
   const receivedData = location.state?.data;
   const { enqueueSnackbar } = useSnackbar();
   const [isChildFormDialogOpen, setIsChildFormDialogOpen] = useState(false);
-  const [isRoomFormDialogOpen, setIsRoomFormDialogOpen] = useState(false);
+  const [isZoneFormDialogOpen, setIsZoneFormDialogOpen] = useState(false);
   const [isDisableFamilyDialogOpen, setIsDisableFamilyDialogOpen] = useState(false);
   const [isParentFormDialogOpen, setIsParentFormDialogOpen] = useState(false);
   const [isAddFamilyDialogOpen, setIsAddFamilyDialogOpen] = useState(false);
   const [isFamilyDrawerOpen, setIsFamilyDrawerOpen] = useState(false);
-  const [roomsList, setRoomsList] = useState([]);
+  const [zonesList, setZonesList] = useState([]);
   const [familiesList, setFamiliesList] = useState([]);
   const [totalFamilies, setTotalFamilies] = useState(0);
-  const [roomsDropdownLoading, setRoomsDropdownLoading] = useState(false);
+  const [zonesDropdownLoading, setZonesDropdownLoading] = useState(false);
   const [primaryParent, setPrimaryParent] = useState();
   const [secondaryParent, setSecondaryParent] = useState();
   const [child, setChild] = useState();
@@ -85,7 +85,7 @@ const Families = () => {
     limit: parseInt(process.env.REACT_APP_PAGINATION_LIMIT, 10),
     searchBy: receivedData ? receivedData : '',
     location: 'All',
-    rooms: [],
+    zones: [],
     cust_id: localStorage.getItem('cust_id')
   });
 
@@ -102,11 +102,11 @@ const Families = () => {
   }, [familiesPayload]);
 
   useEffect(() => {
-    setRoomsDropdownLoading(true);
-    API.get('rooms/list', { params: { cust_id: localStorage.getItem('cust_id') } }).then(
+    setZonesDropdownLoading(true);
+    API.get('zones/list', { params: { cust_id: localStorage.getItem('cust_id') } }).then(
       (response) => {
         if (response.status === 200) {
-          setRoomsList(response.data.Data);
+          setZonesList(response.data.Data);
         } else {
           errorMessageHandler(
             enqueueSnackbar,
@@ -115,7 +115,7 @@ const Families = () => {
             authCtx.setAuthError
           );
         }
-        setRoomsDropdownLoading(false);
+        setZonesDropdownLoading(false);
       }
     );
   }, []);
@@ -146,14 +146,28 @@ const Families = () => {
   // Method to render the family location in table(combines the location from each child and remove duplicates)
   const renderFamilyLocations = (children) => {
     let locations = [];
+
+    // Flatten all child locations into the locations array
     children?.forEach((child) => {
-      child?.location?.locations?.forEach((location) => {
-        locations?.push(location);
+      child?.child_locations?.forEach((location) => {
+        locations.push(location);
       });
     });
-    const uniqueLocations = locations?.filter((item, index) => locations?.indexOf(item) === index);
-    const locationsJSX = uniqueLocations?.map((location, index) => (
-      <Chip key={index} label={location} color="primary" className="chip-color" />
+
+    // Create a map to ensure unique locations based on loc_id
+    const uniqueLocations = locations.reduce((map, location) => {
+      if (!map.has(location.loc_id)) {
+        map.set(location.loc_id, location);
+      }
+      return map;
+    }, new Map());
+
+    // Convert unique locations back to an array
+    const uniqueLocationsArray = Array.from(uniqueLocations.values());
+
+    // Generate JSX
+    const locationsJSX = uniqueLocationsArray.map((location, index) => (
+      <Chip key={index} label={location.loc_name} color="primary" className="chip-color" />
     ));
     return locationsJSX;
   };
@@ -190,11 +204,11 @@ const Families = () => {
     }));
   };
 
-  // Method to handle room change for table
-  const handleRoomChange = (_, value) => {
-    const roomsArr = [];
-    value.forEach((room) => roomsArr.push(room.room_name));
-    setFamiliesPayload((prevPayload) => ({ ...prevPayload, rooms: roomsArr, page: 0 }));
+  // Method to handle zone change for table
+  const handleZoneChange = (_, value) => {
+    const zonesArr = [];
+    value.forEach((zone) => zonesArr.push(zone.zone_name));
+    setFamiliesPayload((prevPayload) => ({ ...prevPayload, zones: zonesArr, page: 0 }));
   };
 
   // Calls the search handler after 500ms
@@ -318,32 +332,32 @@ const Families = () => {
                         value={familiesPayload?.location}
                         onChange={handleLocationChange}>
                         <MenuItem value={'All'}>All</MenuItem>
-                        {authCtx.user.location.accessable_locations
-                          .sort((a, b) => (a > b ? 1 : -1))
-                          .map((location, index) => (
-                            <MenuItem key={index} value={location}>
-                              {location}
+                        {authCtx.user.locations
+                          .sort((a, b) => (a.loc_name > b.loc_name ? 1 : -1))
+                          .map((item) => (
+                            <MenuItem key={item.loc_id} value={item.loc_id}>
+                              {item.loc_name}
                             </MenuItem>
                           ))}
                       </Select>
                     </FormControl>
                   </Grid>
                   <Grid item md={3.5} sm={12}>
-                    <InputLabel id="rooms">Rooms</InputLabel>
+                    <InputLabel id="zones">Zones</InputLabel>
                     <Autocomplete
-                      labelId="rooms"
+                      labelId="zones"
                       fullWidth
                       multiple
-                      id="rooms"
-                      options={roomsList.sort((a, b) => (a?.room_name > b?.room_name ? 1 : -1))}
-                      isOptionEqualToValue={(option, value) => option?.room_id === value?.room_id}
+                      id="zones"
+                      options={zonesList.sort((a, b) => (a?.zone_name > b?.zone_name ? 1 : -1))}
+                      isOptionEqualToValue={(option, value) => option?.zone_id === value?.zone_id}
                       getOptionLabel={(option) => {
-                        return option?.room_name;
+                        return option?.zone_name;
                       }}
-                      onChange={handleRoomChange}
+                      onChange={handleZoneChange}
                       renderTags={(value, getTagProps) =>
                         value.map((option, index) => (
-                          <Chip key={index} label={option?.room_name} {...getTagProps({ index })} />
+                          <Chip key={index} label={option?.zone_name} {...getTagProps({ index })} />
                         ))
                       }
                       renderInput={(params) => (
@@ -351,12 +365,12 @@ const Families = () => {
                           {...params}
                           // label="Room"
                           fullWidth
-                          placeholder="Rooms"
+                          placeholder="Zones"
                           InputProps={{
                             ...params.InputProps,
                             endAdornment: (
                               <React.Fragment>
-                                {roomsDropdownLoading ? (
+                                {zonesDropdownLoading ? (
                                   <CircularProgress color="inherit" size={20} />
                                 ) : null}
                                 {params.InputProps.endAdornment}
@@ -554,7 +568,7 @@ const Families = () => {
         <ChildForm
           open={isChildFormDialogOpen}
           setOpen={setIsChildFormDialogOpen}
-          roomsList={roomsList}
+          zonesList={zonesList}
           family={family}
           child={child}
           setChild={setChild}
@@ -562,11 +576,11 @@ const Families = () => {
           getFamiliesList={getFamiliesList}
         />
       )}
-      {isRoomFormDialogOpen && (
-        <RoomAddForm
-          open={isRoomFormDialogOpen}
-          setOpen={setIsRoomFormDialogOpen}
-          roomsList={roomsList}
+      {isZoneFormDialogOpen && (
+        <ZoneAddForm
+          open={isZoneFormDialogOpen}
+          setOpen={setIsZoneFormDialogOpen}
+          zonesList={zonesList}
           family={family}
           child={child}
           setChild={setChild}
@@ -589,7 +603,7 @@ const Families = () => {
         <FamilyForm
           open={isAddFamilyDialogOpen}
           setOpen={setIsAddFamilyDialogOpen}
-          roomsList={roomsList}
+          zonesList={zonesList}
           getFamiliesList={getFamiliesList}
         />
       )}
@@ -615,14 +629,14 @@ const Families = () => {
         setFamily={setFamily}
         setIsParentFormDialogOpen={setIsParentFormDialogOpen}
         setIsChildFormDialogOpen={setIsChildFormDialogOpen}
-        setIsRoomFormDialogOpen={setIsRoomFormDialogOpen}
+        setIsZoneFormDialogOpen={setIsZoneFormDialogOpen}
         setIsDisableFamilyDialogOpen={setIsDisableFamilyDialogOpen}
         setPrimaryParent={setPrimaryParent}
         setSecondaryParent={setSecondaryParent}
         setChild={setChild}
         getFamiliesList={getFamiliesList}
         setParentType={setParentType}
-        roomsList={roomsList}
+        zonesList={zonesList}
         parentType={parentType}
       />
       <NewDeleteDialog
