@@ -332,22 +332,31 @@ module.exports = {
     const baseUrl = await customerServices.getTranscoderUrl(user?.cust_id, t)
     
     zones = zones?.map((zone) => {
-      let cams = zone.cameras_assigned_to_zones.map((cam) => cam.camera);   
+      let cams = zone.cameras_assigned_to_zones?.map((cam) => cam.camera)?.filter(Boolean) || [];
       cams.forEach((camera) => {
+        if (!camera) return; // Skip null cameras
         let uid = user?.family_member_id || user?.user_id;
         let sid = camera?.cam_id;
         let uuid = uuidv4();
-        const token = jwt.sign({ user_id: uid, cam_id: sid, uuid: uuid }, process.env.STREAM_URL_SECRET_KEY, {expiresIn: '12h'});
-        camera.dataValues.stream_uri_seckey = `${baseUrl}${camera?.stream_uri}?seckey=${token}`; // Attach the new key to dataValues
+        if (!sid || !camera.stream_uri) return; // Ensure cam_id and stream_uri exist
+        const token = jwt.sign(
+          { user_id: uid, cam_id: sid, uuid: uuid },
+          process.env.STREAM_URL_SECRET_KEY,
+          { expiresIn: "12h" }
+        );
+    
+        camera.dataValues = camera.dataValues || {}; // Ensure dataValues is defined
+        camera.dataValues.stream_uri_seckey = `${baseUrl}${camera.stream_uri}?seckey=${token}`;
       });
+    
       return {
         zone_id: zone.zone_id,
         zone_name: zone.zone_name,
         location: zone.loc_id,
-        loc_name: zone.customer_location.loc_name,
+        loc_name: zone.customer_location?.loc_name || "Unknown Location", // Handle missing location
         cameras: cams,
         stream_live_license: zone.stream_live_license,
-        zone_type: zone.zone_type?.dataValues
+        zone_type: zone.zone_type?.dataValues || {}, // Handle missing zone_type
       };
     });
 
