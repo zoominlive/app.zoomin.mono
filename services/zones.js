@@ -226,9 +226,7 @@ module.exports = {
               [Sequelize.Op.and]: { [Sequelize.Op.substring]: searchBy },
             },
             zone_name: zonesList,
-            zone_type_id: {
-              [Sequelize.Op.substring]: type,
-            },
+            zone_type_id: type ? { [Sequelize.Op.substring]: type } : { [Sequelize.Op.or]: [null, ""] },
           },
           attributes: ["zone_id", "zone_name", "loc_id", "stream_live_license", "zone_type_id"],
           include: [
@@ -280,9 +278,7 @@ module.exports = {
             zone_name: {
               [Sequelize.Op.substring]: searchBy,
             },
-            zone_type_id: {
-              [Sequelize.Op.substring]: type,
-            },
+            zone_type_id: type ? { [Sequelize.Op.substring]: type } : { [Sequelize.Op.or]: [null, ""] },
           },
           attributes: ["zone_id", "zone_name", "loc_id", "stream_live_license", "zone_type_id"],
           include: [
