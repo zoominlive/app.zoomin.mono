@@ -14,7 +14,7 @@ const CustomerLocations = require("../models/customer_locations");
 module.exports = {
   /* get recent viewers */
   getLastOneHourViewers: async (user, custId = null, location = "All") => {
-    let loc_obj = location === "All" ? {} : {location: location};
+    let loc_obj = location === "All" ? {} : {loc_id: location};
     const { RecentViewers, Family, Child, Zone, ZonesInChild, Users, CustomerLocations } =
       await connectToDatabase();
     let oneHourBefore = new Date();
@@ -116,7 +116,7 @@ module.exports = {
       recentViewers.map((item) => {
         if (item.dataValues.family) {
           user.locations.map((item) => item.loc_id).forEach((i) => {
-            if (item.dataValues.family?.dataValues?.family_user_locations.includes(i)) {
+            if (item.dataValues.family?.dataValues?.family_user_locations.map((item) => item?.dataValues?.loc_id).includes(i)) {
               if(!result.includes(item)){
                 result.push(item);
               }
@@ -124,7 +124,7 @@ module.exports = {
           });
         } else {
           user.locations.map((item) => item.loc_id).forEach((i) => {
-            if (item.dataValues.user?.dataValues?.locations?.includes(i)) {
+            if (item.dataValues.user?.dataValues?.locations?.map((item) => item?.dataValues?.loc_id).includes(i)) {
               if(!result.includes(item)){
                 result.push(item);
               }
