@@ -180,102 +180,24 @@ const PlayerControls = (props) => {
               )}
             </IconButton>
           </Grid>
-          <Grid display={'flex'} alignItems={'center'} gap={1}>
-            {/* Stop/Record Button */}
-            {/* old logic */}
-            {/* <IconButton
-              onClick={() => {
-                setIsRecording(!isRecording);
-                setSelectedTag(null);
-                setProgress(!progress);
-                props.handleRecording(selectedTag);
-              }}
-              sx={{
-                color: isRecording ? 'red' : 'white',
-                padding: 0,
-                position: 'relative'
-              }}>
-              <Box position="relative" display="inline-flex">
-                {progress && (
-                  <CircularProgress
-                    size={props.fullscreen ? 60 : 50}
-                    sx={{
-                      position: 'absolute',
-                      zIndex: 1,
-                      top: -5,
-                      left: -5,
-                      '& .MuiCircularProgress-circle': {
-                        color: '#ffffff' // Purple color
-                      },
-                      '& svg': {
-                        padding: '3px' // Direct SVG padding
-                      }
-                    }}
-                  />
-                )}
-
-                {!isS3Url(props?.streamUrl) && (
-                  <img
-                    src={Recording}
-                    alt="recording"
-                    width={props.fullscreen && 50}
-                    height={props.fullscreen && 50}
-                    style={{
-                      position: 'relative',
-                      zIndex: 2,
-                      display: props.recording && 'none'
-                    }}
-                  />
-                )}
-                {props.recording ? (
-                  <>
-                    {progress && (
-                      <CircularProgress
-                        size={props.fullscreen ? 60 : 50}
-                        sx={{
-                          position: 'absolute',
-                          zIndex: 1,
-                          '& .MuiCircularProgress-circle': {
-                            color: '#ffffff'
-                          }
-                        }}
-                      />
-                    )}
-                    <img
-                      src={StopIcon}
-                      alt="stop-recording"
-                      width={props.fullscreen && 50}
-                      height={props.fullscreen && 50}
-                      style={{
-                        position: 'relative',
-                        zIndex: 2
-                      }}
-                    />
-                  </>
-                ) : null}
-              </Box>
-            </IconButton> */}
-            {/* updated logic */}
-            <IconButton
-              onClick={() => {
-                if (props.isRecording) {
-                  setIsRecording(false);
-                } else {
+          {authCtx?.user?.role !== 'Family' && (
+            <Grid display={'flex'} alignItems={'center'} gap={1}>
+              {/* Stop/Record Button */}
+              {/* old logic */}
+              {/* <IconButton
+                onClick={() => {
                   setIsRecording(!isRecording);
-                }
-                setSelectedTag(null);
-                setProgress(true); // Trigger loader when toggling recording
-                props.handleRecording(selectedTag);
-              }}
-              sx={{
-                color: isRecording ? 'red' : 'white',
-                padding: 0,
-                position: 'relative'
-              }}>
-              <Box position="relative" display="inline-flex">
-                {/* Loader and Recording Icon */}
-                {!props.recording && progress && (
-                  <>
+                  setSelectedTag(null);
+                  setProgress(!progress);
+                  props.handleRecording(selectedTag);
+                }}
+                sx={{
+                  color: isRecording ? 'red' : 'white',
+                  padding: 0,
+                  position: 'relative'
+                }}>
+                <Box position="relative" display="inline-flex">
+                  {progress && (
                     <CircularProgress
                       size={props.fullscreen ? 60 : 50}
                       sx={{
@@ -284,14 +206,16 @@ const PlayerControls = (props) => {
                         top: -5,
                         left: -5,
                         '& .MuiCircularProgress-circle': {
-                          color: '#ffffff'
+                          color: '#ffffff' // Purple color
                         },
                         '& svg': {
-                          padding: '3px'
-                        },
-                        display: props.isRecording && 'none'
+                          padding: '3px' // Direct SVG padding
+                        }
                       }}
                     />
+                  )}
+
+                  {!isS3Url(props?.streamUrl) && (
                     <img
                       src={Recording}
                       alt="recording"
@@ -300,46 +224,138 @@ const PlayerControls = (props) => {
                       style={{
                         position: 'relative',
                         zIndex: 2,
-                        display: props.isRecording && 'none'
-                      }}
-                    />
-                  </>
-                )}
-
-                {/* Recording Icon without Loader */}
-                {!props.recording &&
-                  !progress &&
-                  !props.recordedPlayback &&
-                  !props.isRecording &&
-                  authCtx.user.camera_recording && (
-                    <img
-                      src={Recording}
-                      alt="recording"
-                      width={props.fullscreen && 50}
-                      height={props.fullscreen && 50}
-                      style={{
-                        position: 'relative',
-                        zIndex: 2
+                        display: props.recording && 'none'
                       }}
                     />
                   )}
+                  {props.recording ? (
+                    <>
+                      {progress && (
+                        <CircularProgress
+                          size={props.fullscreen ? 60 : 50}
+                          sx={{
+                            position: 'absolute',
+                            zIndex: 1,
+                            '& .MuiCircularProgress-circle': {
+                              color: '#ffffff'
+                            }
+                          }}
+                        />
+                      )}
+                      <img
+                        src={StopIcon}
+                        alt="stop-recording"
+                        width={props.fullscreen && 50}
+                        height={props.fullscreen && 50}
+                        style={{
+                          position: 'relative',
+                          zIndex: 2
+                        }}
+                      />
+                    </>
+                  ) : null}
+                </Box>
+              </IconButton> */}
+              {/* updated logic */}
+              <IconButton
+                onClick={() => {
+                  if (props.isRecording) {
+                    setIsRecording(false);
+                  } else {
+                    setIsRecording(!isRecording);
+                  }
+                  setSelectedTag(null);
+                  setProgress(true); // Trigger loader when toggling recording
+                  props.handleRecording(selectedTag);
+                }}
+                sx={{
+                  color: isRecording ? 'red' : 'white',
+                  padding: 0,
+                  position: 'relative'
+                }}>
+                <Box position="relative" display="inline-flex">
+                  {/* Loader and Recording Icon */}
+                  {!props.recording && progress && (
+                    <>
+                      <CircularProgress
+                        size={props.fullscreen ? 60 : 50}
+                        sx={{
+                          position: 'absolute',
+                          zIndex: 1,
+                          top: -5,
+                          left: -5,
+                          '& .MuiCircularProgress-circle': {
+                            color: '#ffffff'
+                          },
+                          '& svg': {
+                            padding: '3px'
+                          },
+                          display: props.isRecording && 'none'
+                        }}
+                      />
+                      <img
+                        src={Recording}
+                        alt="recording"
+                        width={props.fullscreen && 50}
+                        height={props.fullscreen && 50}
+                        style={{
+                          position: 'relative',
+                          zIndex: 2,
+                          display: props.isRecording && 'none'
+                        }}
+                      />
+                    </>
+                  )}
 
-                {/* Loader and Stop Icon */}
-                {((props.recording && progress) ||
-                  (props.isRecording && !props.recording && progress)) && (
-                  <>
-                    <CircularProgress
-                      size={props.fullscreen ? 60 : 50}
-                      sx={{
-                        position: 'absolute',
-                        zIndex: 1,
-                        top: -5,
-                        left: -5,
-                        '& .MuiCircularProgress-circle': {
-                          color: '#ffffff'
-                        }
-                      }}
-                    />
+                  {/* Recording Icon without Loader */}
+                  {!props.recording &&
+                    !progress &&
+                    !props.recordedPlayback &&
+                    !props.isRecording &&
+                    authCtx.user.camera_recording && (
+                      <img
+                        src={Recording}
+                        alt="recording"
+                        width={props.fullscreen && 50}
+                        height={props.fullscreen && 50}
+                        style={{
+                          position: 'relative',
+                          zIndex: 2
+                        }}
+                      />
+                    )}
+
+                  {/* Loader and Stop Icon */}
+                  {((props.recording && progress) ||
+                    (props.isRecording && !props.recording && progress)) && (
+                    <>
+                      <CircularProgress
+                        size={props.fullscreen ? 60 : 50}
+                        sx={{
+                          position: 'absolute',
+                          zIndex: 1,
+                          top: -5,
+                          left: -5,
+                          '& .MuiCircularProgress-circle': {
+                            color: '#ffffff'
+                          }
+                        }}
+                      />
+                      <img
+                        src={StopIcon}
+                        alt="stop-recording"
+                        width={props.fullscreen && 50}
+                        height={props.fullscreen && 50}
+                        style={{
+                          position: 'relative',
+                          zIndex: 2
+                        }}
+                      />
+                    </>
+                  )}
+
+                  {/* Stop Icon without Loader */}
+                  {((props.recording && !progress) || (props.isRecording && !progress)) && (
                     <img
                       src={StopIcon}
                       alt="stop-recording"
@@ -350,146 +366,132 @@ const PlayerControls = (props) => {
                         zIndex: 2
                       }}
                     />
-                  </>
-                )}
+                  )}
+                </Box>
+              </IconButton>
 
-                {/* Stop Icon without Loader */}
-                {((props.recording && !progress) || (props.isRecording && !progress)) && (
-                  <img
-                    src={StopIcon}
-                    alt="stop-recording"
-                    width={props.fullscreen && 50}
-                    height={props.fullscreen && 50}
-                    style={{
-                      position: 'relative',
-                      zIndex: 2
-                    }}
-                  />
-                )}
-              </Box>
-            </IconButton>
-
-            {/* Recording Status */}
-            <Stack direction={'row'} sx={{ backgroundColor: '#FFFFFF', borderRadius: '50px' }}>
-              {(props.recording || props.isRecording) && (
-                <Box display="flex" alignItems="center" ml={1} mr={1}>
-                  <Box
-                    display="flex"
-                    justifyContent={'center'}
-                    alignItems="center"
-                    sx={{
-                      backgroundColor: '#EB5757',
-                      borderRadius: '50px',
-                      padding: '4px 8px'
-                    }}>
+              {/* Recording Status */}
+              <Stack direction={'row'} sx={{ backgroundColor: '#FFFFFF', borderRadius: '50px' }}>
+                {(props.recording || props.isRecording) && (
+                  <Box display="flex" alignItems="center" ml={1} mr={1}>
                     <Box
+                      display="flex"
+                      justifyContent={'center'}
+                      alignItems="center"
                       sx={{
-                        width: '6px',
-                        height: '6px',
-                        backgroundColor: '#FFFFFF',
-                        borderRadius: '50%',
-                        marginRight: '2px'
-                        // marginLeft: '4px'
-                      }}></Box>
+                        backgroundColor: '#EB5757',
+                        borderRadius: '50px',
+                        padding: '4px 8px'
+                      }}>
+                      <Box
+                        sx={{
+                          width: '6px',
+                          height: '6px',
+                          backgroundColor: '#FFFFFF',
+                          borderRadius: '50%',
+                          marginRight: '2px'
+                          // marginLeft: '4px'
+                        }}></Box>
+                      <Typography
+                        color="white"
+                        sx={{ fontSize: '10px !important', padding: '0px !important' }}>
+                        REC
+                      </Typography>
+                    </Box>
                     <Typography
-                      color="white"
-                      sx={{ fontSize: '10px !important', padding: '0px !important' }}>
-                      REC
+                      color="black"
+                      variant="body1"
+                      sx={{ fontSize: '16px !important' }}
+                      fontWeight={600}
+                      ml={1}>
+                      {formatTime(elapsedTime)}
                     </Typography>
                   </Box>
-                  <Typography
-                    color="black"
-                    variant="body1"
-                    sx={{ fontSize: '16px !important' }}
-                    fontWeight={600}
-                    ml={1}>
-                    {formatTime(elapsedTime)}
-                  </Typography>
-                </Box>
-              )}
-              {(props.recording || props.isRecording) && (
-                <Box>
-                  <Divider variant="middle" orientation="vertical" sx={{ height: '20px' }} />
-                </Box>
-              )}
-              {/* Tagging Icon */}
-              <Box>
-                {((isRecording && props.recording) || props.isRecording) && (
-                  <IconButton onClick={handleTagClick}>
-                    <img src={LocalOfferIcon} alt="Tag" />
-                    {props.fullscreen && (
-                      <Typography
-                        ml={1}
-                        mr={1}
-                        fontWeight={500}
-                        fontSize={14}
-                        lineHeight={'21px'}
-                        color={'#5A53DD'}>
-                        Select Tag
-                      </Typography>
-                    )}
-                  </IconButton>
                 )}
-
-                {/* Display Selected Tag */}
-                {(isRecording || props.isRecording) &&
-                  (selectedTag || props.tagName) &&
-                  props.fullscreen && (
-                    <Chip
-                      label={selectedTag?.tag_name || props.tagName}
-                      sx={{
-                        backgroundColor: '#5a53dd !important',
-                        color: 'white',
-                        borderRadius: '16px',
-                        padding: '0 8px',
-                        marginLeft: '8px',
-                        fontSize: '14px'
-                      }}
-                    />
+                {(props.recording || props.isRecording) && (
+                  <Box>
+                    <Divider variant="middle" orientation="vertical" sx={{ height: '20px' }} />
+                  </Box>
+                )}
+                {/* Tagging Icon */}
+                <Box>
+                  {((isRecording && props.recording) || props.isRecording) && (
+                    <IconButton onClick={handleTagClick}>
+                      <img src={LocalOfferIcon} alt="Tag" />
+                      {props.fullscreen && (
+                        <Typography
+                          ml={1}
+                          mr={1}
+                          fontWeight={500}
+                          fontSize={14}
+                          lineHeight={'21px'}
+                          color={'#5A53DD'}>
+                          Select Tag
+                        </Typography>
+                      )}
+                    </IconButton>
                   )}
-              </Box>
 
-              {/* Tag Selection Menu */}
-              <Menu
-                anchorEl={anchorEl}
-                anchorOrigin={{
-                  vertical: 'top',
-                  horizontal: 'center'
-                }}
-                transformOrigin={{
-                  vertical: 'bottom',
-                  horizontal: 'center'
-                }}
-                container={document.fullscreenElement || document.body}
-                open={showTagOptions}
-                onClose={handleTagClose}>
-                <Typography
-                  sx={{
-                    textAlign: 'center',
-                    fontWeight: 'bold',
-                    textDecoration: 'underline',
-                    textUnderlineOffset: '4px', // Adjust the spacing of the underline
-                    textDecorationColor: '#5A53DD', // Set underline color to purple
-                    textDecorationThickness: '2px', // Set underline thickness
-                    color: '#5A53DD', // Set text color to purple
-                    marginBottom: '8px' // Add space below the title
-                  }}>
-                  Tag
-                </Typography>
-                {tags.map((tag) => (
-                  <MenuItem
+                  {/* Display Selected Tag */}
+                  {(isRecording || props.isRecording) &&
+                    (selectedTag || props.tagName) &&
+                    props.fullscreen && (
+                      <Chip
+                        label={selectedTag?.tag_name || props.tagName}
+                        sx={{
+                          backgroundColor: '#5a53dd !important',
+                          color: 'white',
+                          borderRadius: '16px',
+                          padding: '0 8px',
+                          marginLeft: '8px',
+                          fontSize: '14px'
+                        }}
+                      />
+                    )}
+                </Box>
+
+                {/* Tag Selection Menu */}
+                <Menu
+                  anchorEl={anchorEl}
+                  anchorOrigin={{
+                    vertical: 'top',
+                    horizontal: 'center'
+                  }}
+                  transformOrigin={{
+                    vertical: 'bottom',
+                    horizontal: 'center'
+                  }}
+                  container={document.fullscreenElement || document.body}
+                  open={showTagOptions}
+                  onClose={handleTagClose}>
+                  <Typography
                     sx={{
-                      color: selectedTag?.tag_name == tag.tag_name && 'white',
-                      backgroundColor: selectedTag?.tag_name == tag.tag_name && '#5A53DD'
-                    }}
-                    key={tag.tag_id}
-                    onClick={() => handleTagSelect(tag)}>
-                    {tag.tag_name}
-                  </MenuItem>
-                ))}
-              </Menu>
-            </Stack>
-          </Grid>
+                      textAlign: 'center',
+                      fontWeight: 'bold',
+                      textDecoration: 'underline',
+                      textUnderlineOffset: '4px', // Adjust the spacing of the underline
+                      textDecorationColor: '#5A53DD', // Set underline color to purple
+                      textDecorationThickness: '2px', // Set underline thickness
+                      color: '#5A53DD', // Set text color to purple
+                      marginBottom: '8px' // Add space below the title
+                    }}>
+                    Tag
+                  </Typography>
+                  {tags.map((tag) => (
+                    <MenuItem
+                      sx={{
+                        color: selectedTag?.tag_name == tag.tag_name && 'white',
+                        backgroundColor: selectedTag?.tag_name == tag.tag_name && '#5A53DD'
+                      }}
+                      key={tag.tag_id}
+                      onClick={() => handleTagSelect(tag)}>
+                      {tag.tag_name}
+                    </MenuItem>
+                  ))}
+                </Menu>
+              </Stack>
+            </Grid>
+          )}
         </Grid>
         <Grid display={'flex'} gap={1} alignItems={'center'}>
           <Grid margin={'auto'} align={'end'}>
