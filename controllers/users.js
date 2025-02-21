@@ -96,6 +96,9 @@ module.exports = {
       }
       user.permit_audio = await customerServices.getPermitAudio(custId);
       user.camera_recording = await customerServices.getCameraRecording(custId);
+      user.max_resolution = await customerServices.getMaxResolution(custId);
+      user.max_fps = await customerServices.getMaxFps(custId);
+      user.max_file_size = await customerServices.getMaxFileSize(custId);
       user.invite_user = await customerServices.getInviteUser(custId);
       user.max_stream_live_license = await customerServices.getMaxLiveStramAvailable(custId);
       user.max_stream_live_license_zone = await customerServices.getMaxLiveStreamZoneAvailable(custId);

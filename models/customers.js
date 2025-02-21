@@ -53,6 +53,15 @@ const Customers = sequelize.define(
     max_locations: {
       type: Sequelize.INTEGER(3)
     },
+    max_resolution: {
+      type: Sequelize.INTEGER(10)
+    },
+    max_file_size: {
+      type: Sequelize.INTEGER(10)
+    },
+    max_fps: {
+      type: Sequelize.INTEGER(10)
+    },
     transcoder_endpoint: {
       type: Sequelize.STRING(155)
     },
