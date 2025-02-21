@@ -37,6 +37,10 @@ const Camera = sequelize.define(
       type: Sequelize.INTEGER,
       allowNull: true
     },
+    stats: {
+      type: Sequelize.JSON,
+      allowNull: true,
+    },
     // location: {
     //   type: Sequelize.STRING(50),
     //   allowNull: false

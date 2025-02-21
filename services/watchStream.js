@@ -58,6 +58,9 @@ module.exports = {
                     {
                       model: LiveStreamCameras,
                     },
+                    {
+                      model: CustomerLocations
+                    }
                   ],
                 },
               ],
@@ -171,7 +174,7 @@ module.exports = {
               finalZones.push({
                 zone_id: zone.zone.zone_id,
                 zone_name: zone.zone.zone_name,
-                location: zone.zone.loc_id,
+                location: zone.dataValues.zone.dataValues.customer_location.dataValues,
                 cameras: cams,
               });
             }
@@ -211,6 +214,9 @@ module.exports = {
               {
                 model: LiveStreamCameras,
               },
+              {
+                model: CustomerLocations
+              }
             ],
           });
         } else if (user.role == "Teacher") {
@@ -228,7 +234,15 @@ module.exports = {
               {
                 model: LiveStreamCameras,
               },
-              { model: Zone, as: "zone", raw: true },
+              {  
+                model: Zone, 
+                as: "zone",
+                include: [
+                  {
+                    model: CustomerLocations
+                  }
+                ],
+              },
             ],
           });
         } else {
@@ -248,6 +262,9 @@ module.exports = {
               {
                 model: LiveStreamCameras,
               },
+              {
+                model: CustomerLocations
+              }
             ],
           });
         }
@@ -255,7 +272,7 @@ module.exports = {
         zones = await Promise.all(
           zones?.map(async (zone) => {
             //.filter((cam) => cam?.cam_id);
-            const location = user.role == "Teacher" ? zone?.dataValues?.zone?.dataValues?.location : zone?.loc_id;
+            const location = user.role == "Teacher" ? zone?.dataValues?.zone?.dataValues?.customer_location?.dataValues?.loc_id : zone?.loc_id;
             const baseUrl = await customerServices.getTranscoderUrlFromCustLocations(location, user?.cust_id)
             let cameras = zone.dataValues.cameras_assigned_to_zones
             ?.map((cam) => {
@@ -295,7 +312,7 @@ module.exports = {
               zone_name:
                 zone.zone_name || zone.dataValues?.zone?.dataValues?.zone_name,
               location:
-                zone.loc_id || zone.dataValues?.zone?.dataValues?.loc_id,
+                user.role == "Teacher" ? zone?.dataValues?.zone?.dataValues?.customer_location?.dataValues : zone.dataValues?.customer_location?.dataValues,
               cameras: cameras,
             };
           })

@@ -17,7 +17,16 @@ FronteggContext.init({
   FRONTEGG_API_KEY: process.env.FRONTEGG_API_KEY,
 });
 
-app.use(cors());
+app.use(cors({origin: "*"}));
+
+// Handle OPTIONS requests separately
+app.options('*', (req, res) => { 
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.sendStatus(204);  // No Content response
+});
+
 // To create DB tables from models and sync DB
 sequelize.sync();
 
@@ -51,4 +60,17 @@ app.use('/', indexRouter);
 //   handleRequests();
 // }
 
-module.exports.handler = serverless(app);
+module.exports.handler = async (event, context) => {
+  const serverlessHandler = serverless(app);
+  const result = await serverlessHandler(event, context);
+
+  // ✅ Ensure CORS headers are included in the response
+  result.headers = {
+    ...result.headers,
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  };
+
+  return result;
+};

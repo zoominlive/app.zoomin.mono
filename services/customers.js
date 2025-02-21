@@ -51,6 +51,51 @@ module.exports = {
     return customer?.camera_recording || null;
   },
 
+  getMaxResolution: async (custId, t) => {
+    const { Customers } = await connectToDatabase();
+    let customer = await Customers.findOne(
+      {
+        raw: true,
+        where: {
+          cust_id: custId,
+        },
+      },
+      { transaction: t }
+    );
+
+    return customer?.max_resolution || null;
+  },
+
+  getMaxFileSize: async (custId, t) => {
+    const { Customers } = await connectToDatabase();
+    let customer = await Customers.findOne(
+      {
+        raw: true,
+        where: {
+          cust_id: custId,
+        },
+      },
+      { transaction: t }
+    );
+
+    return customer?.max_file_size || null;
+  },
+
+  getMaxFps: async (custId, t) => {
+    const { Customers } = await connectToDatabase();
+    let customer = await Customers.findOne(
+      {
+        raw: true,
+        where: {
+          cust_id: custId,
+        },
+      },
+      { transaction: t }
+    );
+
+    return customer?.max_fps || null;
+  },
+
   getInviteUser: async (custId, t) => {
     const { Customers } = await connectToDatabase();
     let customer = await Customers.findOne(

@@ -63,45 +63,59 @@ module.exports = {
           params.cam_uri,
           token,
           params.location,
-          params.cust_id
+          params.cust_id,
+          params.max_resolution, 
+          params.max_fps, 
+          params.max_file_size
         );
         console.log('transcoderDetails==>', transcodedDetails);
         params.cam_id = uuidv4();
         params.stream_uri = transcodedDetails?.data ? transcodedDetails.data?.uri : '';
         params.stream_uuid = transcodedDetails?.data ? transcodedDetails.data?.id : '';
         params.cam_alias = transcodedDetails?.data ? transcodedDetails.data?.alias : '';
+        params.stats = transcodedDetails?.data ? transcodedDetails.data?.stats : '';
         params.loc_id = params.location;
         if (params?.thumbnail) {
           const imageUrl = await s3BucketImageUploader._upload(params.thumbnail);
           params.thumbnail = imageUrl
         }
-        const camera = await cameraServices.createCamera(params, params.zones, t);
-
-        // const resetAvailableCameras = await customerServices.setAvailableCameras(
-        //   params.cust_id,
-        //   availableCameras - 1,
-        //   t
-        // );
-
-        let usersdata = await userServices.getUsersSocketIds(params.cust_id);
-            usersdata = usersdata.filter(user => user.socket_connection_id && user.dashboard_locations);
+        if (transcodedDetails.status == 200) {
+          const camera = await cameraServices.createCamera(params, params.zones, t);
   
-       if(!_.isEmpty(usersdata)){
-        await Promise.all(
-          usersdata.map(async (user) => {
-            const enrolledStreams = await cameraServices.getAllCameraForCustomerDashboard(params.cust_id, user?.dashboard_locations, t);
-            await socketServices.emitResponse(user?.socket_connection_id, {"enrolledStreams": enrolledStreams});
-          })
-        );
-       }
-
-        await t.commit();
-        res.status(201).json({
-          IsSuccess: true,
-          Data: camera,
-          Message: CONSTANTS.CAMERA_CREATED
-        });
+          // const resetAvailableCameras = await customerServices.setAvailableCameras(
+          //   params.cust_id,
+          //   availableCameras - 1,
+          //   t
+          // );
+  
+          let usersdata = await userServices.getUsersSocketIds(params.cust_id);
+              usersdata = usersdata.filter(user => user.socket_connection_id && user.dashboard_locations);
+    
+         if(!_.isEmpty(usersdata)){
+          await Promise.all(
+            usersdata.map(async (user) => {
+              const enrolledStreams = await cameraServices.getAllCameraForCustomerDashboard(params.cust_id, user?.dashboard_locations, t);
+              await socketServices.emitResponse(user?.socket_connection_id, {"enrolledStreams": enrolledStreams});
+            })
+          );
+         }
+  
+          await t.commit();
+          res.status(201).json({
+            IsSuccess: true,
+            Data: camera,
+            Message: CONSTANTS.CAMERA_CREATED
+          });
+        } else if (transcodedDetails.response.data.error) {
+          await t.rollback();
+          return res.status(400).json({
+            IsSuccess: false,
+            Data: {},
+            Message: 'Add camera failed!' +' '+ transcodedDetails.response.data.error
+          });
+        }
       } else {
+        await t.rollback();
         res.status(400).json({
           IsSuccess: false,
           Data: {},
@@ -538,6 +552,7 @@ module.exports = {
       }
       const camEncodedDeleted = await deleteEncodingStream(
         params.streamId,
+        params.alias,
         params.wait,
         token,
         req.user.cust_id,
@@ -671,8 +686,15 @@ module.exports = {
       const token = req.userToken;
       console.log('req.user==', req.user);
       console.log('params==', params);
+      if (!params.streamId && !params.alias) {
+        return res.status(400).json({
+          IsSuccess: false,
+          Message: "Missing Stream ID or Alias"
+        });
+      }
       const camEncodedStopped = await stopEncodingStream(
         params.streamId,
+        params.alias,
         params.wait,
         token,
         req.user.cust_id || params.cust_id,
@@ -681,19 +703,32 @@ module.exports = {
       let camera;
       if (camEncodedStopped) {
         const token = req.userToken;
+        if (!params.streamId) params.streamId = uuidv4();
         const transcodedDetails = await startEncodingStreamToFixCam(
           params.cam_uri,
           token,
           params.location,
           req.user.cust_id || params.cust_id,
           params.streamId,
+          params.max_resolution, 
+          params.max_fps, 
+          params.max_file_size
         );
         // console.log('transcodedDetails-->', transcodedDetails);
-        params.stream_uri = transcodedDetails?.data ? transcodedDetails.data?.uri : '';
-        params.stream_uuid = transcodedDetails?.data ? transcodedDetails.data?.id : '';
-        params.cam_alias = transcodedDetails?.data ? transcodedDetails.data?.alias : '';
-        params.cust_id = req.user.cust_id ? req.user.cust_id : params.cust_id
-        camera = await cameraServices.editCamera(params.cam_id, params, null, t);
+        if (transcodedDetails.status == 200) { 
+          params.stream_uri = transcodedDetails?.data ? transcodedDetails.data?.uri : '';
+          params.stream_uuid = transcodedDetails?.data ? transcodedDetails.data?.id : '';
+          params.cam_alias = transcodedDetails?.data ? transcodedDetails.data?.alias : '';
+          params.stats = transcodedDetails?.data ? transcodedDetails.data?.stats : '';
+          params.cust_id = req.user.cust_id ? req.user.cust_id : params.cust_id
+          camera = await cameraServices.editCamera(params.cam_id, params, null, t);
+        } else if (transcodedDetails.response.data.error) {
+          return res.status(400).json({
+            IsSuccess: false,
+            Data: {},
+            Message: 'Add camera failed!' +' '+ transcodedDetails.response.data.error
+          });
+        }
       }
       await t.commit();
       res.status(200).json({
