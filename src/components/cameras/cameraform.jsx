@@ -103,6 +103,9 @@ const CameraForm = (props) => {
       s3Uri: S3Uri,
       stream_id: props?.camera?.stream_uuid,
       alias: props.camera?.cam_alias,
+      max_resolution: authCtx?.user?.role == 'Super Admin' ? 4320 : authCtx?.user?.max_resolution,
+      max_file_size: authCtx?.user?.role == 'Super Admin' ? 300000 : authCtx?.user?.max_file_size,
+      max_fps: authCtx?.user?.role == 'Super Admin' ? 30 : authCtx?.user?.max_fps,
       cust_id: localStorage.getItem('cust_id')
         ? localStorage.getItem('cust_id')
         : props?.camera?.cust_id,
@@ -139,8 +142,6 @@ const CameraForm = (props) => {
           enqueueSnackbar(response?.data?.Message, {
             variant: 'success'
           });
-          handleFormDialogClose();
-          props.getCamerasList();
         } else {
           errorMessageHandler(
             enqueueSnackbar,
@@ -149,6 +150,8 @@ const CameraForm = (props) => {
             authCtx.setAuthError
           );
         }
+        handleFormDialogClose();
+        props.getCamerasList();
         setSubmitLoading(false);
       });
     }

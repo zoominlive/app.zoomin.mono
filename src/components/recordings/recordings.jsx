@@ -334,41 +334,33 @@ const Recordings = () => {
 
     return (
       <>
-        <TableRow hover>
+        <TableRow className="fixed-camera-recordings-table" hover>
           <TableCell component="th" scope="row">
             <Stack direction="row" alignItems="center" spacing={3}>
               <Typography>{`${moment(created_at).format('MM-DD-YYYY')}`}</Typography>
             </Stack>
           </TableCell>
-          <TableCell align="center">
+          <TableCell>
             {/* <Stack direction="row"> */}
-            <Chip
-              label={stream_name ? stream_name : 'Unnamed'}
-              color="primary"
-              className="chip-color"
-            />
+            <Chip label={stream_name ? stream_name : 'Unnamed'} />
             {/* </Stack> */}
           </TableCell>
-          <TableCell align="center">
+          <TableCell>
             {/* <Stack direction="row"> */}
-            <Chip label={zone?.customer_location.loc_name} color="primary" className="chip-color" />
+            <Chip label={zone?.customer_location.loc_name} />
             {/* </Stack> */}
           </TableCell>
-          <TableCell align="center">
+          <TableCell>
             {/* <Stack direction="row"> */}
-            <Chip label={zone?.zone_name} color="primary" className="zone-chip" />
+            <Chip label={zone?.zone_name} className="zone-chip" />
             {/* </Stack> */}
           </TableCell>
-          <TableCell align="center">
+          <TableCell>
             {/* <Stack direction="row"> */}
-            <Chip
-              label={`Mobile Stream`}
-              color="primary"
-              className={`${stream_running ? 'green' : 'red'}-chip-color`}
-            />
+            <Chip label={`Mobile Stream`} />
             {/* </Stack> */}
           </TableCell>
-          <TableCell align="center">
+          <TableCell>
             <IconButton color="primary">
               <Link
                 onClick={() =>
@@ -380,9 +372,9 @@ const Recordings = () => {
             <IconButton color="primary" onClick={() => handleEditMobileStreamRecording(row)}>
               <img src={EditRecording} alt="share-recording" />
             </IconButton>
-            <IconButton>
+            {/* <IconButton>
               <img src={ShareRecording} />
-            </IconButton>
+            </IconButton> */}
             <IconButton
               sx={{ '.MuiSvgIcon-root': { color: '#DD5853 !important' } }}
               onClick={() => handleDeleteRecording(row)}>
@@ -444,53 +436,41 @@ const Recordings = () => {
 
     return (
       <>
-        <TableRow hover>
+        <TableRow hover className="fixed-camera-recordings-table">
           <TableCell component="th" scope="row">
             <Stack direction="row" alignItems="center" spacing={3}>
               <Typography>{`${moment(createdAt).format('MM-DD-YYYY')}`}</Typography>
             </Stack>
           </TableCell>
-          <TableCell align="center">
+          <TableCell>
             {/* <Stack direction="row"> */}
-            <Chip
-              label={event_name ? event_name : 'Unnamed'}
-              color="primary"
-              className="chip-color"
-            />
+            <Chip label={event_name ? event_name : 'Unnamed'} />
             {/* </Stack> */}
           </TableCell>
-          <TableCell align="center">
+          <TableCell>
             {/* <Stack direction="row"> */}
-            <Chip
-              label={record_camera_tag?.customer_location.loc_name}
-              color="primary"
-              className="chip-color"
-            />
+            <Chip label={record_camera_tag?.customer_location.loc_name} />
             {/* </Stack> */}
           </TableCell>
-          <TableCell align="center">
+          <TableCell>
             {/* <Stack direction="row"> */}
-            <Chip label={zone_name} color="primary" className="zone-chip" />
+            <Chip label={zone_name} className="zone-chip" />
             {/* </Stack> */}
           </TableCell>
-          <TableCell align="center">
+          <TableCell>
             {/* <Stack direction="row"> */}
             <Chip
               label={`Fixed Camera Stream`}
-              color="primary"
               className={`${stream_running ? 'green' : 'red'}-chip-color`}
             />
             {/* </Stack> */}
           </TableCell>
           {recordingsPayload.type == 'Fixed Camera' && (
-            <TableCell align="center">
-              <Chip
-                label={`${record_tag?.tag_name ? record_tag?.tag_name : 'Unselected'}`}
-                color="primary"
-              />
+            <TableCell>
+              <Chip label={`${record_tag?.tag_name ? record_tag?.tag_name : 'Unselected'}`} />
             </TableCell>
           )}
-          <TableCell align="center">
+          <TableCell>
             <IconButton color="primary">
               <Link
                 onClick={() => handleClick(video_url || zone?.live_stream_cameras[0].stream_uri)}>
@@ -500,9 +480,9 @@ const Recordings = () => {
             <IconButton color="primary" onClick={() => handleEditRecording(row)}>
               <img src={EditRecording} alt="share-recording" />
             </IconButton>
-            <IconButton>
+            {/* <IconButton>
               <img src={ShareRecording} />
-            </IconButton>
+            </IconButton> */}
             <IconButton
               sx={{ '.MuiSvgIcon-root': { color: '#DD5853 !important' } }}
               onClick={() => handleDeleteRecording(row)}>
@@ -818,14 +798,12 @@ const Recordings = () => {
                           Date
                         </TableSortLabel>
                       </TableCell>
-                      <TableCell align="center">Event Name</TableCell>
-                      <TableCell align="center">Location</TableCell>
-                      <TableCell align="center">Zones</TableCell>
-                      <TableCell align="center">Type</TableCell>
-                      {recordingsPayload.type == 'Fixed Camera' && (
-                        <TableCell align="center">Tag</TableCell>
-                      )}
-                      <TableCell align="center">Stream</TableCell>
+                      <TableCell>Event Name</TableCell>
+                      <TableCell>Location</TableCell>
+                      <TableCell>Zones</TableCell>
+                      <TableCell>Type</TableCell>
+                      {recordingsPayload.type == 'Fixed Camera' && <TableCell>Tag</TableCell>}
+                      <TableCell>Action</TableCell>
                     </TableRow>
                   </TableHead>
                   {recordingsPayload.type == 'Fixed Camera' ? (

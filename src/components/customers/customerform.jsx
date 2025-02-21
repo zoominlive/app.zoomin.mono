@@ -93,6 +93,9 @@ const CustomerForm = (props) => {
         .string('Enter RTMP Transcoder endpoint')
         .required('RTMP Transcoder endpoint is required'),
       timeout: yup.number('Enter timeout cameras').required('Timeout is required'),
+      max_resolution: yup.number('Enter Max Resolution').required('Resolution is required'),
+      max_file_size: yup.number('Enter File Size').required('File size is required'),
+      max_fps: yup.number('Enter FPS').required('FPS is required'),
       max_stream_live_license: yup
         .number('Enter maximum stream live license')
         .required('Maximum stream live license is required'),
@@ -418,6 +421,66 @@ const CustomerForm = (props) => {
                 }}
                 helperText={touched.rtmp_transcoder_endpoint && errors.rtmp_transcoder_endpoint}
                 error={touched.rtmp_transcoder_endpoint && Boolean(errors.rtmp_transcoder_endpoint)}
+                fullWidth
+              />
+            </Grid>
+            <Grid item md={4} xs={12}>
+              <InputLabel id="max_resolution">Max Resolution</InputLabel>
+              <TextField
+                labelId="max_resolution"
+                type="number"
+                onKeyPress={(event) => {
+                  if (event?.key === '-' || event?.key === '+') {
+                    event.preventDefault();
+                  }
+                }}
+                name="max_resolution"
+                value={values?.max_resolution}
+                onChange={(event) => {
+                  setFieldValue('max_resolution', event.target.value);
+                }}
+                helperText={touched.max_resolution && errors.max_resolution}
+                error={touched.max_resolution && Boolean(errors.timeout)}
+                fullWidth
+              />
+            </Grid>
+            <Grid item md={4} xs={12}>
+              <InputLabel id="max_file_size">Max File Size in kb</InputLabel>
+              <TextField
+                labelId="max_file_size"
+                type="number"
+                onKeyPress={(event) => {
+                  if (event?.key === '-' || event?.key === '+') {
+                    event.preventDefault();
+                  }
+                }}
+                name="max_file_size"
+                value={values?.max_file_size}
+                onChange={(event) => {
+                  setFieldValue('max_file_size', event.target.value);
+                }}
+                helperText={touched.max_file_size && errors.max_file_size}
+                error={touched.max_resolution && Boolean(errors.timeout)}
+                fullWidth
+              />
+            </Grid>
+            <Grid item md={4} xs={12}>
+              <InputLabel id="max_fps">Max FPS</InputLabel>
+              <TextField
+                labelId="max_fps"
+                type="number"
+                onKeyPress={(event) => {
+                  if (event?.key === '-' || event?.key === '+') {
+                    event.preventDefault();
+                  }
+                }}
+                name="max_fps"
+                value={values?.max_fps}
+                onChange={(event) => {
+                  setFieldValue('max_fps', event.target.value);
+                }}
+                helperText={touched.max_fps && errors.max_fps}
+                error={touched.max_resolution && Boolean(errors.timeout)}
                 fullWidth
               />
             </Grid>
@@ -1058,6 +1121,9 @@ const CustomerForm = (props) => {
             transcoder_endpoint: props?.customer?.transcoder_endpoint || '',
             rtmp_transcoder_endpoint: props?.customer?.rtmp_transcoder_endpoint || '',
             timeout: props?.customer?.timeout || '',
+            max_resolution: props?.customer?.max_resolution || 720,
+            max_file_size: props?.customer?.max_file_size || 40000,
+            max_fps: props?.customer?.max_fps || 15,
             max_stream_live_license: props?.customer?.max_stream_live_license || '',
             max_stream_live_license_zone: props?.customer?.max_stream_live_license_zone || '',
             audio_permission: !_.isNil(props?.customer?.audio_permission)

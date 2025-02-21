@@ -4,8 +4,10 @@ import {
   Card,
   CardContent,
   Chip,
+  Collapse,
   FormControl,
   Grid,
+  IconButton,
   InputAdornment,
   InputLabel,
   MenuItem,
@@ -41,6 +43,9 @@ import SearchIcon from '@mui/icons-material/Search';
 import DeleteCamDialog from './deletecamdialog';
 import LinerLoader from '../common/linearLoader';
 import FixIssueDialog from './fixissuedialog';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
+
 const Cameras = () => {
   const layoutCtx = useContext(LayoutContext);
   const authCtx = useContext(AuthContext);
@@ -53,6 +58,7 @@ const Cameras = () => {
   const [camerasList, setCamerasList] = useState([]);
   const [totalCameras, setTotalCameras] = useState(0);
   const [camera, setCamera] = useState();
+  const [open, setOpen] = useState({});
 
   const [camerasPayload, setCamerasPayload] = useState({
     pageNumber: 0,
@@ -102,11 +108,13 @@ const Cameras = () => {
   // Method to delete camera
   const handleCameraDelete = (wait = false) => {
     setDeleteLoading(true);
+    console.log('camera==>', camera);
     API.delete('cams/delete', {
       data: {
         cam_id: camera.cam_id,
         wait: wait,
         streamId: camera.stream_uuid,
+        alias: camera.cam_alias,
         location: camera.customer_location.loc_id
       }
     }).then((response) => {
@@ -138,8 +146,12 @@ const Cameras = () => {
       cam_id: camera.cam_id,
       wait: wait,
       streamId: camera.stream_uuid,
+      alias: camera.cam_alias,
       cust_id: localStorage.getItem('cust_id'),
-      location: camera.customer_location.loc_id
+      location: camera.customer_location.loc_id,
+      max_resolution: authCtx?.user?.max_resolution,
+      max_file_size: authCtx?.user?.max_file_size,
+      max_fps: authCtx?.user?.max_fps
     }).then((response) => {
       if (response.status === 200) {
         getCamerasList();
@@ -191,6 +203,13 @@ const Cameras = () => {
   const debouncedResults = useMemo(() => {
     return debounce(handleSearch, 500);
   }, []);
+
+  const toggleRow = (index) => {
+    setOpen((prevState) => ({
+      ...prevState,
+      [index]: !prevState[index] // Toggle only the clicked row
+    }));
+  };
 
   return (
     <Box className="listing-wrapper">
@@ -266,6 +285,7 @@ const Cameras = () => {
               <Table sx={{ minWidth: 650 }} aria-label="simple table">
                 <TableHead>
                   <TableRow>
+                    <TableCell />
                     <TableCell style={{ minWidth: '100px' }}>Camera</TableCell>
                     <TableCell style={{ minWidth: '100px' }} align="left">
                       Location
@@ -279,23 +299,32 @@ const Cameras = () => {
                 <TableBody>
                   {camerasList?.length > 0
                     ? camerasList?.map((row, index) => (
-                        <TableRow key={index} hover>
-                          <TableCell component="th" scope="row">
-                            <Stack direction="row" alignItems="center" spacing={3}>
-                              <Typography>{`${row.cam_name.toUpperCase()}`}</Typography>
-                            </Stack>
-                          </TableCell>
-                          <TableCell align="left">
-                            <Stack direction="row">
-                              <Chip
-                                key={index}
-                                label={row.customer_location.loc_name}
-                                color="primary"
-                                className="chip-color"
-                              />
-                            </Stack>
-                          </TableCell>
-                          {/* <TableCell style={{ lineHeight: 2.5 }}>
+                        <>
+                          <TableRow key={index} hover>
+                            <TableCell>
+                              <IconButton
+                                aria-label="expand row"
+                                size="small"
+                                onClick={() => toggleRow(index)}>
+                                {open[index] ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
+                              </IconButton>
+                            </TableCell>
+                            <TableCell component="th" scope="row">
+                              <Stack direction="row" alignItems="center" spacing={3}>
+                                <Typography>{`${row.cam_name.toUpperCase()}`}</Typography>
+                              </Stack>
+                            </TableCell>
+                            <TableCell align="left">
+                              <Stack direction="row">
+                                <Chip
+                                  key={index}
+                                  label={row.customer_location.loc_name}
+                                  color="primary"
+                                  className="chip-color"
+                                />
+                              </Stack>
+                            </TableCell>
+                            {/* <TableCell style={{ lineHeight: 2.5 }}>
                             {row?.cameras_assigned_to_zones?.map((roomRow, index) => (
                               <Chip
                                 key={index}
@@ -306,38 +335,70 @@ const Cameras = () => {
                               />
                             ))}
                           </TableCell> */}
-                          <TableCell component="th" scope="row">
-                            <Stack direction="row" alignItems="center" spacing={3}>
-                              <Typography>{`${row.description}`}</Typography>
-                            </Stack>
-                          </TableCell>
-                          <TableCell component="th" scope="row">
-                            <Stack direction="row" alignItems="center" spacing={3}>
-                              {/* <Typography>{`${row.cam_uri}`}</Typography> */}
+                            <TableCell component="th" scope="row">
+                              <Stack direction="row" alignItems="center" spacing={3}>
+                                <Typography>{`${row.description}`}</Typography>
+                              </Stack>
+                            </TableCell>
+                            <TableCell component="th" scope="row">
+                              <Stack direction="row" alignItems="center" spacing={3}>
+                                {/* <Typography>{`${row.cam_uri}`}</Typography> */}
 
-                              <Typography>{`${row.cam_uri.replace(
-                                row.cam_uri.substring(
-                                  row.cam_uri.indexOf('//') + 2,
-                                  row.cam_uri.indexOf('@')
-                                ),
-                                '************'
-                              )}`}</Typography>
-                            </Stack>
-                          </TableCell>
-                          <TableCell align="right">
-                            <CameraActions
-                              camera={row}
-                              setCamera={setCamera}
-                              setIsDeleteDialogOpen={(e) => {
-                                setIsCameraDeleteDialogOpen(e);
-                              }}
-                              setIsCameraFormDialogOpen={setIsCameraFormDialogOpen}
-                              setIsFixIssueDialogOpen={(e) => {
-                                setIsFixIssueDialogOpen(e);
-                              }}
-                            />
-                          </TableCell>
-                        </TableRow>
+                                <Typography>{`${row.cam_uri.replace(
+                                  row.cam_uri.substring(
+                                    row.cam_uri.indexOf('//') + 2,
+                                    row.cam_uri.indexOf('@')
+                                  ),
+                                  '************'
+                                )}`}</Typography>
+                              </Stack>
+                            </TableCell>
+                            <TableCell align="right">
+                              <CameraActions
+                                camera={row}
+                                setCamera={setCamera}
+                                setIsDeleteDialogOpen={(e) => {
+                                  setIsCameraDeleteDialogOpen(e);
+                                }}
+                                setIsCameraFormDialogOpen={setIsCameraFormDialogOpen}
+                                setIsFixIssueDialogOpen={(e) => {
+                                  setIsFixIssueDialogOpen(e);
+                                }}
+                              />
+                            </TableCell>
+                          </TableRow>
+                          <TableRow
+                            className={`expandable-row ${
+                              !open[index] ? 'border-bottom-none' : ''
+                            }`}>
+                            <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={6}>
+                              <Collapse in={open[index]} timeout="auto" unmountOnExit>
+                                <Box sx={{ margin: 2 }}>
+                                  <Table size="small" aria-label="cameras">
+                                    <TableHead>
+                                      <TableRow>
+                                        <TableCell>Width</TableCell>
+                                        <TableCell>Height</TableCell>
+                                        <TableCell>File Size</TableCell>
+                                        <TableCell>Codec Name</TableCell>
+                                        <TableCell>Average Frame Rate</TableCell>
+                                      </TableRow>
+                                    </TableHead>
+                                    <TableBody>
+                                      <TableRow hover>
+                                        <TableCell>{row?.stats?.width}</TableCell>
+                                        <TableCell>{row?.stats?.height}</TableCell>
+                                        <TableCell>{row?.stats?.file_size}</TableCell>
+                                        <TableCell>{row?.stats?.codec_name}</TableCell>
+                                        <TableCell>{row?.stats?.avg_frame_rate}</TableCell>
+                                      </TableRow>
+                                    </TableBody>
+                                  </Table>
+                                </Box>
+                              </Collapse>
+                            </TableCell>
+                          </TableRow>
+                        </>
                       ))
                     : null}
                 </TableBody>

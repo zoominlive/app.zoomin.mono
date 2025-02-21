@@ -58,7 +58,13 @@ const tableRowsCopy = [
     '/cams': { create: false, edit: false, list: false, delete: false, enabledisable: null }
   },
   {
+    '/record-tag': { create: false, edit: false, list: false, delete: false, enabledisable: null }
+  },
+  {
     '/zones': { create: false, edit: false, list: false, delete: false, enabledisable: false }
+  },
+  {
+    '/zone-type': { create: false, edit: false, list: false, delete: false, enabledisable: null }
   },
   {
     '/family': {
@@ -104,11 +110,25 @@ const endpointMappings = {
     delete: '/api/cams/delete',
     enabledisable: null
   },
+  '/record-tag': {
+    create: '/api/cams/add-record-tag',
+    edit: '/api/cams/edit-record-tag',
+    list: '/api/cams/list-record-tags',
+    delete: '/api/cams/delete-record-tag',
+    enabledisable: null
+  },
   '/zones': {
     create: '/api/zones/add',
     edit: '/api/zones/edit',
     list: '/api/zones',
     delete: '/api/zones/delete',
+    enabledisable: null
+  },
+  '/zone-type': {
+    create: '/api/zone-type/add',
+    edit: '/api/zone-type/edit',
+    list: '/api/zone-type',
+    delete: '/api/zone-type/delete',
     enabledisable: null
   },
   '/family': {
