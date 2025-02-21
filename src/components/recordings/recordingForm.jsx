@@ -42,18 +42,20 @@ const RecordingForm = (props) => {
   }, []);
 
   const getTagsList = () => {
-    API.get('cams/list-record-tags').then((response) => {
-      if (response.status === 200) {
-        setTagsList(response.data.Data.recordTags);
-      } else {
-        errorMessageHandler(
-          enqueueSnackbar,
-          response?.response?.data?.Message || 'Something Went Wrong.',
-          response?.response?.status,
-          authCtx.setAuthError
-        );
+    API.get('cams/list-record-tags', { params: { cust_id: localStorage.getItem('cust_id') } }).then(
+      (response) => {
+        if (response.status === 200) {
+          setTagsList(response.data.Data.recordTags);
+        } else {
+          errorMessageHandler(
+            enqueueSnackbar,
+            response?.response?.data?.Message || 'Something Went Wrong.',
+            response?.response?.status,
+            authCtx.setAuthError
+          );
+        }
       }
-    });
+    );
   };
 
   const validationSchema = yup.object({

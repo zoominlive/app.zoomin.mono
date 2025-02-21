@@ -82,20 +82,20 @@ export default function NewStreamTable({
           <Typography variant="h6" gutterBottom>
             {title}
           </Typography>
-          <TableContainer sx={{ height: '443px' }}>
-            <Table stickyHeader>
-              <TableHead>
-                <TableRow>
-                  {columns.map((column, index) => (
-                    <TableCell sx={{ borderTop: '1px solid rgba(224, 224, 224, 1)' }} key={index}>
-                      {column}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {rows && rows?.length > 0 ? (
-                  rows.map((row, index) => (
+          {rows && rows?.length > 0 ? (
+            <TableContainer sx={{ height: '443px' }}>
+              <Table stickyHeader>
+                <TableHead>
+                  <TableRow>
+                    {columns.map((column, index) => (
+                      <TableCell sx={{ borderTop: '1px solid rgba(224, 224, 224, 1)' }} key={index}>
+                        {column}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {rows.map((row, index) => (
                     <TableRow className="fixed-camera-recordings-table" key={index} hover>
                       <TableCell>
                         <Box display="flex" alignItems="center">
@@ -204,46 +204,42 @@ export default function NewStreamTable({
                         </Box>
                       </TableCell>
                     </TableRow>
-                  ))
-                ) : !isLoading ? (
-                  <TableRow sx={{ height: '100%' }}>
-                    <TableCell colSpan={5} sx={{ height: '100%', padding: 0 }}>
-                      <Box
-                        sx={{
-                          display: 'flex',
-                          justifyContent: 'center',
-                          alignItems: 'center',
-                          height: '443px', // Matches TableContainer height
-                          minHeight: '100%' // Ensures it takes full space
-                        }}>
-                        <NoLiveStreamDiv />
-                      </Box>
-                    </TableCell>
-                  </TableRow>
-                ) : null}
-              </TableBody>
-            </Table>
-          </TableContainer>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          ) : (
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                height: '100%', // Take full height of CardContent
+                minHeight: '443px' // Ensure it matches expected height
+              }}>
+              <NoLiveStreamDiv />
+            </Box>
+          )}
         </>
       ) : (
         <>
           <Typography variant="h6" gutterBottom>
             {title}
           </Typography>
-          <TableContainer sx={{ height: '443px' }}>
-            <Table stickyHeader>
-              <TableHead>
-                <TableRow>
-                  {columns.map((column, index) => (
-                    <TableCell sx={{ borderTop: '1px solid rgba(224, 224, 224, 1)' }} key={index}>
-                      {column}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {rows && rows?.length > 0 ? (
-                  rows.map((row, index) => (
+          {rows && rows?.length > 0 ? (
+            <TableContainer sx={{ height: '443px' }}>
+              <Table stickyHeader>
+                <TableHead>
+                  <TableRow>
+                    {columns.map((column, index) => (
+                      <TableCell sx={{ borderTop: '1px solid rgba(224, 224, 224, 1)' }} key={index}>
+                        {column}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {rows.map((row, index) => (
                     <TableRow className="fixed-camera-recordings-table" key={index} hover>
                       <TableCell>
                         <Chip label={formatTimestamp(row.stream_start_time)} variant="outlined" />
@@ -306,26 +302,22 @@ export default function NewStreamTable({
                         </IconButton>
                       </TableCell>
                     </TableRow>
-                  ))
-                ) : !isLoading ? (
-                  <TableRow sx={{ height: '100%' }}>
-                    <TableCell colSpan={5} sx={{ height: '100%', padding: 0 }}>
-                      <Box
-                        sx={{
-                          display: 'flex',
-                          justifyContent: 'center',
-                          alignItems: 'center',
-                          height: '443px', // Matches TableContainer height
-                          minHeight: '100%' // Ensures it takes full space
-                        }}>
-                        <NoLiveStreamDiv />
-                      </Box>
-                    </TableCell>
-                  </TableRow>
-                ) : null}
-              </TableBody>
-            </Table>
-          </TableContainer>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          ) : (
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                height: '100%', // Take full height of CardContent
+                minHeight: '443px' // Ensure it matches expected height
+              }}>
+              <NoLiveStreamDiv />
+            </Box>
+          )}
         </>
       )}
       {isEditDialogOpen && (

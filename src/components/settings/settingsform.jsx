@@ -64,6 +64,7 @@ const SettingsForm = (props) => {
       time_zone: time_zone
     };
     if (props.location !== undefined && props.location?.loc_name) {
+      setSubmitLoading(true);
       API.put('customers/edit-customer-location', {
         loc_name: data.customer_locations[0],
         time_zone: data.time_zone[0],
@@ -94,6 +95,7 @@ const SettingsForm = (props) => {
       if (new_locations.length > props.customer?.max_locations) {
         setMaxLocationAlert(true);
       } else {
+        setSubmitLoading(true);
         API.post('customers/create-customer-location', payload).then((response) => {
           if (response.status === 201) {
             enqueueSnackbar(response?.data?.Message, {
@@ -233,7 +235,10 @@ const SettingsForm = (props) => {
           initialValues={{
             customer_locations:
               props.location?.loc_name !== undefined ? [props.location?.loc_name] : [''],
-            time_zone: props.location?.time_zone !== undefined ? [props.location?.time_zone] : ['']
+            time_zone:
+              props.location?.time_zone !== undefined
+                ? [props.location?.time_zone]
+                : [timezones[168].timezone]
           }}
           onSubmit={handleSubmit}>
           {({ values, setFieldValue, touched, errors }) => {
@@ -276,7 +281,7 @@ const SettingsForm = (props) => {
                                           Location Name
                                         </InputLabel>
                                         <TextField
-                                          disabled={props.location?.loc_name}
+                                          // disabled={props.location?.loc_name}
                                           labelId={`customer_locations.${index}`}
                                           name={`customer_locations.${index}`}
                                           value={values?.customer_locations[index]}
@@ -319,7 +324,7 @@ const SettingsForm = (props) => {
                                           value={
                                             values?.time_zone[index]
                                               ? values?.time_zone[index]
-                                              : 'America/New_York'
+                                              : timezones[168].timezone
                                           }
                                           renderInput={(params) => (
                                             <TextField

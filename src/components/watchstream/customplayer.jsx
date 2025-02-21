@@ -105,7 +105,7 @@ const CustomPlayer = (props) => {
       API.post('cams/start-recording', {
         cust_id: authCtx?.user?.cust_id || localStorage.getItem('cust_id'),
         user_id: authCtx?.user?.user_id,
-        location: props?.camDetails?.location || props?.camDetails?.loc_id,
+        location: props?.camDetails?.location?.loc_id || props?.camDetails?.loc_id,
         cam_id: props?.camDetails?.cam_id,
         zone_id: props?.camDetails?.zone_id,
         zone_name: props?.camDetails?.zone_name,
@@ -129,7 +129,7 @@ const CustomPlayer = (props) => {
       API.post('cams/stop-recording', {
         cust_id: authCtx?.user?.cust_id || localStorage.getItem('cust_id'),
         user_id: authCtx?.user?.user_id,
-        location: props?.camDetails?.location || props?.camDetails?.loc_id,
+        location: props?.camDetails?.location?.loc_id || props?.camDetails?.loc_id,
         cam_id: props?.camDetails?.cam_id,
         alias: props?.camDetails?.cam_alias,
         tag_id: tag?.tag_id

@@ -122,7 +122,7 @@ const WatchStream = () => {
       const zonesToSet = camerasPayload?.zone?.filter((zone) => {
         let count = 0;
         selectedLocation?.forEach((loc) => {
-          if (loc.loc_id == zone?.location) {
+          if (loc.loc_id == zone?.location.loc_id) {
             count = 1;
           }
         });
@@ -230,18 +230,20 @@ const WatchStream = () => {
   }, [selectedCameras]);
 
   useEffect(() => {
-    API.get('cams/list-record-tags').then((response) => {
-      if (response.status === 200) {
-        authCtx.setTags(response.data.Data.recordTags);
-      } else {
-        errorMessageHandler(
-          enqueueSnackbar,
-          response?.response?.data.Message || 'Something Went Wrong.',
-          response?.response?.status,
-          authCtx.setAuthError
-        );
+    API.get('cams/list-record-tags', { params: { cust_id: localStorage.getItem('cust_id') } }).then(
+      (response) => {
+        if (response.status === 200) {
+          authCtx.setTags(response.data.Data.recordTags);
+        } else {
+          errorMessageHandler(
+            enqueueSnackbar,
+            response?.response?.data.Message || 'Something Went Wrong.',
+            response?.response?.status,
+            authCtx.setAuthError
+          );
+        }
       }
-    });
+    );
   }, []);
 
   const getRecordingsByUser = () => {
@@ -275,14 +277,15 @@ const WatchStream = () => {
         setTimeOut(response?.data?.Data?.streamDetails[0]?.timeout);
         setPlaying(true);
         setCamerasPayload({
-          location: response?.data?.Data?.streamDetails[0]?.location,
+          location: response?.data?.Data?.streamDetails[0]?.location.loc_id,
           zone: response?.data?.Data?.streamDetails
         });
 
         if (!location?.state) {
           setSelectedLocation([authCtx?.user?.locations?.map((item) => item)[0]]);
           const zones = response?.data?.Data.streamDetails?.filter(
-            (zone) => zone.location === authCtx?.user?.locations?.map((item) => item.loc_id)[0]
+            (zone) =>
+              zone.location.loc_id === authCtx?.user?.locations?.map((item) => item.loc_id)[0]
           );
           let zonesToAdd = [{ zone_name: 'Select All', zone_id: 'select-all' }];
           zones?.forEach((zone) => zonesToAdd.push(zone));
@@ -703,7 +706,7 @@ const WatchStream = () => {
                           label={
                             option?.cam_name == 'Select All'
                               ? option?.cam_name
-                              : option?.location +
+                              : option?.location.loc_name +
                                 '/' +
                                 option?.zone_name +
                                 ' - ' +
@@ -723,7 +726,11 @@ const WatchStream = () => {
                         />
                         {option?.cam_name == 'Select All'
                           ? option?.cam_name
-                          : option.location + '/' + option.zone_name + ' - ' + option?.cam_name}
+                          : option.location.loc_name +
+                            '/' +
+                            option.zone_name +
+                            ' - ' +
+                            option?.cam_name}
                       </li>
                     )}
                     renderInput={(params) => (

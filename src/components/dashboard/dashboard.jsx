@@ -268,18 +268,20 @@ const Dashboard = () => {
   }, []);
 
   useEffect(() => {
-    API.get('cams/list-record-tags').then((response) => {
-      if (response.status === 200) {
-        authCtx.setTags(response.data.Data.recordTags);
-      } else {
-        errorMessageHandler(
-          enqueueSnackbar,
-          response?.response?.data.Message || 'Something Went Wrong.',
-          response?.response?.status,
-          authCtx.setAuthError
-        );
+    API.get('cams/list-record-tags', { params: { cust_id: localStorage.getItem('cust_id') } }).then(
+      (response) => {
+        if (response.status === 200) {
+          authCtx.setTags(response.data.Data.recordTags);
+        } else {
+          errorMessageHandler(
+            enqueueSnackbar,
+            response?.response?.data.Message || 'Something Went Wrong.',
+            response?.response?.status,
+            authCtx.setAuthError
+          );
+        }
       }
-    });
+    );
     getRecordingsByUser();
   }, []);
 
@@ -382,7 +384,7 @@ const Dashboard = () => {
           );
         } else {
           setDefaultWatchStream({
-            locations: [response?.data?.Data?.watchStreamDetails?.location],
+            locations: [response?.data?.Data?.watchStreamDetails?.location.loc_id],
             zones: [response?.data?.Data?.watchStreamDetails],
             cameras: response?.data?.Data?.watchStreamDetails?.cameras[0]
           });
@@ -718,7 +720,7 @@ const Dashboard = () => {
                       <label style={{ color: '#000', paddingTop: 5 }}>
                         {console.log('selectedCamera=>', selectedCamera)}
                         {' | ' +
-                          selectedCamera?.location +
+                          selectedCamera?.location?.loc_name +
                           '/' +
                           selectedCamera?.zone_name +
                           ' - ' +

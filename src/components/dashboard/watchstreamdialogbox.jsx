@@ -172,7 +172,7 @@ const WatchStreamDialogBox = (props) => {
       let count = 0;
       selectedLocation?.forEach((loc) => {
         console.log('loc==>', loc);
-        if (loc.loc_id == zone?.location) {
+        if (loc.loc_id == zone?.location.loc_id) {
           count = 1;
         }
       });
@@ -373,7 +373,11 @@ const WatchStreamDialogBox = (props) => {
                   label={
                     option?.cam_name == 'Select All'
                       ? option?.cam_name
-                      : option?.location + '/' + option?.zone_name + ' - ' + option?.cam_name
+                      : option?.location.loc_name +
+                        '/' +
+                        option?.zone_name +
+                        ' - ' +
+                        option?.cam_name
                   }
                   {...getTagProps({ index })}
                 />
@@ -389,7 +393,7 @@ const WatchStreamDialogBox = (props) => {
                 />
                 {option?.cam_name == 'Select All'
                   ? option?.cam_name
-                  : option.location + '/' + option.zone_name + ' - ' + option?.cam_name}
+                  : option.location.loc_name + '/' + option.zone_name + ' - ' + option?.cam_name}
               </li>
             )}
             renderInput={(params) => (
