@@ -523,29 +523,41 @@ module.exports = {
       console.log('customerLocationsFromDB==>', customerLocationsFromDB);
       function syncLocations(customer_locations, customerLocationsFromDB) {
         // Convert DB locations into a Set for quick lookup
-        const dbLocNames = new Set(customerLocationsFromDB.map(loc => loc.loc_name));
+        const dbLocMap = new Map(customerLocationsFromDB.map(loc => [loc.loc_id, loc]));
+
+        const dbLocIds = new Set(customerLocationsFromDB.map(loc => loc.loc_id));
     
         // Convert incoming locations into a Set for quick lookup
-        const incomingLocNames = new Set(customer_locations.map(loc => loc.loc_name));
+        const incomingLocIds = new Set(customer_locations.map(loc => loc.loc_id));
     
         // Identify locations to delete (Exists in DB but not in incoming data)
-        const locationsToDelete = customerLocationsFromDB.filter(loc => !incomingLocNames.has(loc.loc_name));
+        const locationsToDelete = customerLocationsFromDB.filter(loc => !incomingLocIds.has(loc.loc_id));
     
         // Identify locations to create (Exists in incoming data but not in DB)
-        const locationsToCreate = customer_locations.filter(loc => !dbLocNames.has(loc.loc_name));
+        const locationsToCreate = customer_locations.filter(loc => !dbLocIds.has(loc.loc_id));
     
-        return { locationsToDelete, locationsToCreate };
+         // Identify locations to update (Exists in both, but loc_name has changed)
+        const locationsToUpdate = customer_locations.filter(loc => {
+          const existingLoc = dbLocMap.get(loc.loc_id);
+          return existingLoc && (existingLoc.loc_name !== loc.loc_name || 
+            existingLoc.transcoder_endpoint !== loc.transcoder_endpoint); // Only if the name changed
+        });
+        return { locationsToDelete, locationsToCreate, locationsToUpdate };
       }
     
       // Run the function
-      const { locationsToDelete, locationsToCreate } = syncLocations(customer_locations, customerLocationsFromDB);
+      const { locationsToDelete, locationsToCreate, locationsToUpdate } = syncLocations(customer_locations, customerLocationsFromDB);
       
       console.log("Locations to Delete:", locationsToDelete);
-      console.log("Locations to Create:", locationsToCreate);
+      console.log("Locations to Create:", locationsToCreate); 
+      console.log("Locations to Update:", locationsToUpdate); 
       if (locationsToDelete.length > 0) {
         const mappedData = locationsToDelete.map((item) => item.loc_id);
         await customerServices.deleteSpecificLocations(mappedData);
         //also delete the locations from customer_location_assignments table for the locations assigned to users
+      }
+      if (locationsToUpdate.length > 0) {
+        await customerServices.updateSpecificLocations(locationsToUpdate);
       }
       console.log(customer_locations);
       let locations = locationsToCreate.flatMap((i) => {return { loc_name: i.loc_name, transcoder_endpoint: i.transcoder_endpoint}});

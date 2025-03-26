@@ -13,18 +13,18 @@ module.exports = {
     const { Family, CustomerLocationAssignments } = await connectToDatabase();
     familyObj.family_member_id = uuidv4();
     let familyCreated = await Family.create(familyObj);
-    console.log('familyObj==>', familyObj);
-    
+    console.log("familyObj==>", familyObj);
+
     const locationsToAdd = familyObj.location.map((_) => {
       return {
         loc_id: _.loc_id,
         cust_id: familyObj.cust_id,
         family_member_id: familyCreated.family_member_id,
-        family_id: familyCreated.family_id
+        family_id: familyCreated.family_id,
       };
     });
-    console.log('locationsToAdd==>', locationsToAdd);
-    
+    console.log("locationsToAdd==>", locationsToAdd);
+
     await CustomerLocationAssignments.bulkCreate(locationsToAdd, {
       transaction: t,
     });
@@ -40,24 +40,24 @@ module.exports = {
       { returning: true },
       { transaction: t }
     );
-    console.log('familyObj==>', familyObj);
+    console.log("familyObj==>", familyObj);
     await Promise.all(
-      familyObj.map(async(family, index) => {
+      familyObj.map(async (family, index) => {
         const locationsToAdd = family.location.map((_) => {
           return {
             loc_id: _.loc_id,
             cust_id: family.cust_id,
             family_member_id: familyCreated[index].family_member_id,
-            family_id: familyCreated[index].family_id
+            family_id: familyCreated[index].family_id,
           };
         });
-        console.log('locationsToAdd==>', locationsToAdd);
-        
+        console.log("locationsToAdd==>", locationsToAdd);
+
         await CustomerLocationAssignments.bulkCreate(locationsToAdd, {
           transaction: t,
         });
       })
-    )
+    );
 
     return familyCreated;
   },
@@ -108,7 +108,7 @@ module.exports = {
     const familyObj = _.omit(user, ["family_member_id"]);
     let update = {
       ...familyObj,
-      params
+      params,
     };
     let updateFamilyDetails = await Family.update(
       update.params,
@@ -117,7 +117,7 @@ module.exports = {
       },
       { transaction: t }
     );
-    console.log('updateFamilyDetails-->', updateFamilyDetails);
+    console.log("updateFamilyDetails-->", updateFamilyDetails);
 
     if (updateFamilyDetails) {
       updateFamilyDetails = await Family.findOne(
@@ -133,7 +133,8 @@ module.exports = {
 
   /* Delete Existing family */
   deleteFamily: async (familyId, t) => {
-    const { Family, Child, CustomerLocationAssignments } = await connectToDatabase();
+    const { Family, Child, CustomerLocationAssignments } =
+      await connectToDatabase();
     let deletedParents = await Family.destroy(
       {
         where: { family_id: familyId },
@@ -150,13 +151,14 @@ module.exports = {
       { transaction: t }
     );
 
-    let deleteFamilyFromCustLocAssignment = await CustomerLocationAssignments.destroy(
-      {
-        where: { family_id: familyId },
-        raw: true,
-      },
-      { transaction: t }
-    )
+    let deleteFamilyFromCustLocAssignment =
+      await CustomerLocationAssignments.destroy(
+        {
+          where: { family_id: familyId },
+          raw: true,
+        },
+        { transaction: t }
+      );
 
     return deletedParents, deletedChildren, deleteFamilyFromCustLocAssignment;
   },
@@ -168,14 +170,18 @@ module.exports = {
     let {
       pageNumber = 0,
       pageSize = 10,
-      location = "All",
+      location = [],
       searchBy = "",
       zonesList = [],
       cust_id = null,
     } = filter;
 
-    let families;
-    let familiesCount;
+    let families, familiesCount;
+
+    // Normalize location filter
+    const isAllLocations = location.includes("All") || location.length === 0;
+
+    // Prepare base where object for Family
     let whereObj = {
       cust_id: user.cust_id || cust_id,
       [Sequelize.Op.or]: [
@@ -186,13 +192,22 @@ module.exports = {
         { "$children.last_name$": { [Sequelize.Op.substring]: searchBy } },
       ],
     };
-    if (zonesList.length != 0) {
-      whereObj = {
-        ...whereObj,
-        "$children->zonesInChild->zone.zone_name$": zonesList,
-      };
+
+    // Apply zonesList filter if provided
+    if (zonesList.length) {
+      whereObj["$children->zonesInChild->zone.zone_name$"] = zonesList;
     }
 
+    // Define location condition for child locations
+    const locationCondition = !isAllLocations
+      ? {
+          loc_id: {
+            [Sequelize.Op.in]: location,
+          },
+        }
+      : {};
+
+    // Count families with location filtering
     familiesCount = await Family.count(
       {
         group: ["family.family_id", "children->child_locations.loc_id"],
@@ -200,37 +215,25 @@ module.exports = {
         include: [
           {
             model: Child,
-            // attributes: ["location"],
             include: [
               {
                 model: ZonesInChild,
                 as: "zonesInChild",
-                include: [
-                  {
-                    model: Zone,
-                    as: "zone",
-                  },
-                ],
+                include: [{ model: Zone, as: "zone" }],
               },
               {
                 model: CustomerLocations,
                 as: "child_locations",
-                where: {
-                  [Sequelize.Op.and]: {
-                    loc_id: {
-                      [Sequelize.Op.substring]: location === "All" ? "" : location,
-                    },
-                  },
-                },
-                attributes: ["loc_name", "loc_id"]
+                where: locationCondition,
+                attributes: ["loc_name", "loc_id"],
               },
             ],
           },
           {
             model: CustomerLocations,
-            as: 'family_user_locations',
-            attributes: ["loc_name", "loc_id"]
-          }
+            as: "family_user_locations",
+            attributes: ["loc_name", "loc_id"],
+          },
         ],
         where: whereObj,
         distinct: true,
@@ -240,34 +243,21 @@ module.exports = {
     );
 
     const result = [];
-    if (!user.cust_id) {
-      let availableLocations = await CustomerLocations.findAll({
-        where: { cust_id: cust_id },
-        raw: true,
+    const availableLocations = !user.cust_id
+      ? await CustomerLocations.findAll({ where: { cust_id }, raw: true })
+      : user.locations;
+
+    familiesCount.forEach((item) => {
+      availableLocations.forEach((locationItem) => {
+        if (item.loc_id === locationItem.loc_id) {
+          result.push(item);
+        }
       });
-      let locs = availableLocations.map(({loc_id, loc_name}) => ({loc_id, loc_name}));
-      familiesCount.map((item) => {
-        console.log('item in if==>', item);
-        locs.forEach((i) => {
-          if (item.loc_id == i.loc_id) {
-            result.push(item);
-          }
-        });
-      });
-    } else {
-      familiesCount.map((item) => {
-        console.log('item in else==>', item);
-        console.log('user_locations==>', user.locations);
-        user.locations.forEach((i) => {
-          if (item.loc_id == i.loc_id) {
-            result.push(item);
-          }
-        });
-      });
-    }
-    console.log('result==>', result.length);
+    });
 
     familiesCount = result;
+
+    // Fetch family details with applied filters
     families = await Family.findAll(
       {
         attributes: {
@@ -286,17 +276,12 @@ module.exports = {
               {
                 model: ZonesInChild,
                 as: "zonesInChild",
-                include: [
-                  {
-                    model: Zone,
-                    as: "zone",
-                  },
-                ],
+                include: [{ model: Zone, as: "zone" }],
               },
               {
                 model: CustomerLocations,
                 as: "child_locations",
-                attributes: ["loc_name", "loc_id"]
+                attributes: ["loc_name", "loc_id"],
               },
             ],
           },
@@ -312,14 +297,12 @@ module.exports = {
                 "updatedAt",
               ],
             },
-            where: {
-              member_type: "secondary",
-            },
+            where: { member_type: "secondary" },
             include: [
               {
                 model: CustomerLocations,
                 as: "family_user_locations",
-                attributes: ["loc_name", "loc_id"]
+                attributes: ["loc_name", "loc_id"],
               },
             ],
             required: false,
@@ -327,7 +310,7 @@ module.exports = {
           {
             model: CustomerLocations,
             as: "family_user_locations",
-            attributes: ["loc_name", "loc_id"]
+            attributes: ["loc_name", "loc_id"],
           },
         ],
         limit: parseInt(pageSize),
@@ -336,40 +319,38 @@ module.exports = {
           cust_id: user.cust_id || cust_id,
           member_type: "primary",
           family_id: familiesCount
-            .filter((family) => {
-              if (family.count != 0) {
-                return family;
-              }
-            })
+            .filter((family) => family.count !== 0)
             .map((fam) => fam.family_id),
         },
-        distinct: true
+        distinct: true,
       },
       { transaction: t }
     );
 
+    // Sort by children's first names
     families.sort((a, b) => {
-      // Get an array of all first names of children in each family
-      const firstNamesA = a.children.map(child => child.first_name).sort().join(', ');
-      const firstNamesB = b.children.map(child => child.first_name).sort().join(', ');
-    
-      // Compare the concatenated first names
+      const firstNamesA = a.children
+        .map((child) => child.first_name)
+        .sort()
+        .join(", ");
+      const firstNamesB = b.children
+        .map((child) => child.first_name)
+        .sort()
+        .join(", ");
       return firstNamesA.localeCompare(firstNamesB);
     });
-    
-    let familyArray = [];
-    families?.forEach((familyMember) => {
-      familyArray.push({
-        primary: _.omit(JSON.parse(JSON.stringify(familyMember)), [
-          "secondary",
-          "children",
-        ]),
-        secondary: familyMember.secondary,
-        children: familyMember.children,
-      });
-    });
 
-    return { familyArray: familyArray, count: familiesCount.length };
+    // Structure the final response
+    const familyArray = families.map((familyMember) => ({
+      primary: _.omit(JSON.parse(JSON.stringify(familyMember)), [
+        "secondary",
+        "children",
+      ]),
+      secondary: familyMember.secondary,
+      children: familyMember.children,
+    }));
+
+    return { familyArray, count: familiesCount.length };
   },
 
   //fetch family member details by ID
@@ -395,7 +376,8 @@ module.exports = {
     user,
     t
   ) => {
-    const { Family, Child, CustomerLocations, CustomerLocationAssignments } = await connectToDatabase();
+    const { Family, Child, CustomerLocations, CustomerLocationAssignments } =
+      await connectToDatabase();
     let updateFamilyDetails;
     let updateChildDetails;
 
@@ -443,10 +425,10 @@ module.exports = {
           include: [
             {
               model: CustomerLocations,
-              as: 'family_user_locations',
-              attributes: ['loc_id', 'loc_name']
-            }
-          ]
+              as: "family_user_locations",
+              attributes: ["loc_id", "loc_name"],
+            },
+          ],
           // raw: true,
         },
         { transaction: t }
@@ -479,8 +461,13 @@ module.exports = {
       if (memberType == "secondary") {
         locations_to_disable.forEach(async (item) => {
           await CustomerLocationAssignments.destroy({
-            where: {[Sequelize.Op.and]: [{loc_id: item.loc_id}, {family_member_id: familyMemberId}]} 
-          })
+            where: {
+              [Sequelize.Op.and]: [
+                { loc_id: item.loc_id },
+                { family_member_id: familyMemberId },
+              ],
+            },
+          });
         });
         updateFamilyDetails = await Family.update(
           update,
@@ -493,8 +480,13 @@ module.exports = {
       } else if (memberType == "primary") {
         locations_to_disable.forEach(async (item) => {
           await CustomerLocationAssignments.destroy({
-            where: {[Sequelize.Op.and]: [{loc_id: item.loc_id}, {family_id: familyId}]} 
-          })
+            where: {
+              [Sequelize.Op.and]: [
+                { loc_id: item.loc_id },
+                { family_id: familyId },
+              ],
+            },
+          });
         });
         updateFamilyDetails = await Family.update(
           update,
@@ -521,7 +513,8 @@ module.exports = {
 
   // enable family member by ID
   enableFamily: async (familyMemberId, memberType, familyId, user, t) => {
-    const { Family, Child, CustomerLocationAssignments } = await connectToDatabase();
+    const { Family, Child, CustomerLocationAssignments } =
+      await connectToDatabase();
     let updateFamilyDetails;
     let updateChildDetails;
 
@@ -538,7 +531,11 @@ module.exports = {
 
     let locations = [];
     let disabledLocations = location?.disabled_locations?.locations;
-    if (disabledLocations?.length !== 0 && disabledLocations?.length !== null && disabledLocations?.length !== undefined) {
+    if (
+      disabledLocations?.length !== 0 &&
+      disabledLocations?.length !== null &&
+      disabledLocations?.length !== undefined
+    ) {
       locations.push(...disabledLocations);
     }
 
@@ -551,14 +548,14 @@ module.exports = {
       // },
       disabled_locations: {},
     };
-    
+
     locations.forEach(async (item) => {
       await CustomerLocationAssignments.create({
-        loc_id: item.loc_id, 
+        loc_id: item.loc_id,
         family_member_id: familyMemberId,
         family_id: familyId,
-        cust_id: location.cust_id
-      })
+        cust_id: location.cust_id,
+      });
     });
 
     if (memberType == "secondary") {
@@ -677,16 +674,18 @@ module.exports = {
     let users = await Family.findAll({
       // where: { cust_id: custId, [Sequelize.Op.or]: locArray },
       attributes: ["first_name", "last_name", "family_member_id"],
-      include: [{
-        model: CustomerLocations,
-        as: 'family_user_locations',
-        where: { cust_id: custId, [Sequelize.Op.or]: locArray },
-        attributes: ['loc_id', 'loc_name']
-      }],
-      distinct: true
+      include: [
+        {
+          model: CustomerLocations,
+          as: "family_user_locations",
+          where: { cust_id: custId, [Sequelize.Op.or]: locArray },
+          attributes: ["loc_id", "loc_name"],
+        },
+      ],
+      distinct: true,
     });
-    console.log('family_users==>', users.length);
-    
+    console.log("family_users==>", users.length);
+
     return users;
   },
 
@@ -756,15 +755,17 @@ module.exports = {
       {
         // logging: console.log,
         where: { cust_id: custId },
-        attributes: [ [Sequelize.fn('DISTINCT', Sequelize.col('family_id')) ,'family_id']],
+        attributes: [
+          [Sequelize.fn("DISTINCT", Sequelize.col("family_id")), "family_id"],
+        ],
         group: ["family_id"],
         raw: true,
       },
       { transaction: t }
     );
-    
-    const familyIdsArray = distinctFamilyIds.map(family => family.family_id);
-    
+
+    const familyIdsArray = distinctFamilyIds.map((family) => family.family_id);
+
     let familyIdsWithLocations = await Family.findAll({
       where: { family_id: familyIdsArray },
       include: [
@@ -776,13 +777,15 @@ module.exports = {
       group: ["family_id"],
       transaction: t,
     });
-    
+
     if (!location.includes("Select All")) {
       let filterResult = [];
       location = location.map(Number);
-      familyIdsWithLocations.map((i) => {       
+      familyIdsWithLocations.map((i) => {
         if (
-          i.family_user_locations?.map((item) => item.dataValues.loc_id).every((it) => location.includes(it))
+          i.family_user_locations
+            ?.map((item) => item.dataValues.loc_id)
+            .every((it) => location.includes(it))
         ) {
           filterResult.push(i);
         }
@@ -965,10 +968,11 @@ module.exports = {
       { transaction: t }
     );
 
-    let deletedFamilyMemberFromCustLocAssignment = await CustomerLocationAssignments.destroy(
-      { where: { family_member_id: familyMemberId } },
-      { transaction: t }
-    );
+    let deletedFamilyMemberFromCustLocAssignment =
+      await CustomerLocationAssignments.destroy(
+        { where: { family_member_id: familyMemberId } },
+        { transaction: t }
+      );
 
     return deletedFamilyMember, deletedFamilyMemberFromCustLocAssignment;
   },
@@ -983,5 +987,4 @@ module.exports = {
     );
     return familyMember ? familyMember.toJSON() : null;
   },
-
 };

@@ -274,7 +274,7 @@ module.exports = {
           {
             model: CustomerLocations,
             as: "customer_locations",
-            attributes: ["loc_name", "transcoder_endpoint"],
+            attributes: ["loc_name", "transcoder_endpoint", "loc_id"],
           },
           {
             model: Users,
@@ -505,6 +505,22 @@ module.exports = {
     const { CustomerLocations } = await connectToDatabase();
     let deletedLocations = await CustomerLocations.destroy({where: {loc_id: loc_id}});
     return deletedLocations
+  },
+
+  updateSpecificLocations: async (locations) => {
+    const { CustomerLocations } = await connectToDatabase();
+    let updatedLocations = await Promise.all(
+      locations.map((location) =>
+        CustomerLocations.update(
+          {
+            loc_name: location.loc_name,
+            transcoder_endpoint: location.transcoder_endpoint,
+          },
+          { where: { loc_id: location.loc_id } }
+        )
+      )
+    );
+    return updatedLocations
   },
 
   deleteCustomerLocation: async (loc_id, user_id) => {

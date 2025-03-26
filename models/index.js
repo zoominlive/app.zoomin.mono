@@ -31,6 +31,8 @@ const CustomerLocationAssignmentsCopy = require('./customer_location_assignment_
 const sequelize = require('../lib/database');
 const RecordRtsp = require('./record_rtsp');
 const RecordTag = require('./record_tag');
+const RecordingShareHistory = require('./recordings_share_history');
+const RecordingShareRecipients = require('./recordings_share_recipients');
 
 CustomerLocations.belongsTo(Customers, { foreignKey: 'cust_id' });
 Customers.hasMany(CustomerLocations, {
@@ -275,6 +277,60 @@ RecordRtsp.belongsTo(RecordTag, { foreignKey: 'tag_id', as: 'record_tag' }); // 
 Camera.hasMany(RecordRtsp, { foreignKey: 'cam_id', as: 'record_camera' }); // A Camera has many Recordings
 RecordRtsp.belongsTo(Camera, { foreignKey: 'cam_id', as: 'record_camera_tag' }); // A Recording belongs to one Camera
 
+// A Recording can have many Shares
+RecordRtsp.hasMany(RecordingShareHistory, {
+  foreignKey: 'record_uuid',
+  sourceKey: 'record_uuid'
+});
+
+RecordingShareHistory.belongsTo(RecordRtsp, {
+  foreignKey: 'record_uuid',
+  targetKey: 'record_uuid'
+});
+
+// A Share can have many Recipients
+RecordingShareHistory.hasMany(RecordingShareRecipients, {
+  foreignKey: 'share_id',
+  sourceKey: 'share_id'
+});
+RecordingShareRecipients.belongsTo(RecordingShareHistory, {
+  foreignKey: 'share_id',
+  targetKey: 'share_id'
+});
+
+// User associations (assuming you have a User model)
+Users.hasMany(RecordingShareRecipients, {
+  foreignKey: 'user_id',
+  sourceKey: 'user_id'
+});
+RecordingShareRecipients.belongsTo(Users, {
+  foreignKey: 'user_id',
+  targetKey: 'user_id'
+});
+
+// Family associations (assuming you have a family model)
+Family.hasMany(RecordingShareRecipients, {
+  foreignKey: 'user_id',
+  sourceKey: 'family_member_id'
+});
+RecordingShareRecipients.belongsTo(Family, {
+  foreignKey: 'user_id',
+  targetKey: 'family_member_id'
+});
+
+// ✅ Define association: A RecordingShareHistory belongs to a User (sender)
+RecordingShareHistory.belongsTo(Users, {
+  foreignKey: 'sender', // FK in recordings_share_history table
+  targetKey: 'user_id', // PK in Users table
+  as: 'senderUser', // Alias to access sender details
+});
+
+// ✅ Define association: A User can have multiple shared recordings
+Users.hasMany(RecordingShareHistory, {
+  foreignKey: 'sender',
+  sourceKey: 'user_id',
+  as: 'sharedRecordings', // Alias to access user's shared recordings
+});
 const connection = {};
 
 module.exports = async () => {
@@ -311,6 +367,8 @@ module.exports = async () => {
       SubscriptionItems,
       Webhooks,
       ApiKeys,
+      RecordingShareHistory,
+      RecordingShareRecipients,
       CustomerLocationAssignments
     };
   }
@@ -351,6 +409,8 @@ module.exports = async () => {
     Webhooks,
     ApiKeys,
     CustomerLocationAssignments,
+    RecordingShareHistory,
+    RecordingShareRecipients,
     CustomerLocationAssignmentsCopy
   };
 };
