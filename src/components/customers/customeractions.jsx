@@ -4,13 +4,13 @@ import EditIcon from '@mui/icons-material/Edit';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import PropTypes from 'prop-types';
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
-import AccountBalanceRoundedIcon from '@mui/icons-material/AccountBalanceRounded';
-import { useNavigate } from 'react-router-dom';
+// import AccountBalanceRoundedIcon from '@mui/icons-material/AccountBalanceRounded';
+// import { useNavigate } from 'react-router-dom';
 
 const CustomerActions = (props) => {
   const [anchorEl, setAnchorEl] = React.useState(null);
   const open = Boolean(anchorEl);
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
   // Method to open the customer actions on table
   const handleClick = (event) => {
@@ -33,9 +33,9 @@ const CustomerActions = (props) => {
     handleClose(event);
   };
 
-  const handleManageBilling = () => {
-    navigate('/settings');
-  };
+  // const handleManageBilling = () => {
+  //   navigate('/settings');
+  // };
 
   // Method to set customer for the delete action
   const handleCustomerDelete = (event) => {
@@ -63,12 +63,12 @@ const CustomerActions = (props) => {
           </ListItemIcon>
           <ListItemText>Edit Customer</ListItemText>
         </MenuItem>
-        <MenuItem onClick={handleManageBilling}>
+        {/* <MenuItem onClick={handleManageBilling}>
           <ListItemIcon>
             <AccountBalanceRoundedIcon />
           </ListItemIcon>
           <ListItemText>Manage Billing</ListItemText>
-        </MenuItem>
+        </MenuItem> */}
         <MenuItem onClick={handleCustomerDelete}>
           <ListItemIcon>
             <DeleteOutlinedIcon />

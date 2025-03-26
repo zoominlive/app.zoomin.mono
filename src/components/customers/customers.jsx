@@ -39,7 +39,7 @@ const Customers = () => {
   const authCtx = useContext(AuthContext);
   const layoutCtx = useContext(LayoutContext);
   // const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-  const { enqueueSnackbar } = useSnackbar();
+  const { enqueueSnackbar, closeSnackbar } = useSnackbar();
   const [isLoading, setIsLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [isCustomerFormDialogOpen, setIsCustomerFormDialogOpen] = useState(false);
@@ -58,7 +58,7 @@ const Customers = () => {
   }, [customersPayload]);
 
   useEffect(() => {
-    layoutCtx.setActive(10);
+    layoutCtx.setActive(11);
     layoutCtx.setBreadcrumb(['Customers', authCtx?.custName || null]);
     return () => {
       authCtx.setPreviosPagePath(window.location.pathname);
@@ -68,20 +68,49 @@ const Customers = () => {
   // Method to fetch customer list for table
   const getCustomersList = () => {
     setIsLoading(true);
-    API.get('customers/all', { params: customersPayload }).then((response) => {
-      if (response.status === 200) {
-        setCustomersList(response.data.Data.customers);
-        setTotalCustomers(response.data.Data.count);
-      } else {
-        errorMessageHandler(
-          enqueueSnackbar,
-          response?.response?.data?.Message || 'Something Went Wrong.',
-          response?.response?.status,
-          authCtx.setAuthError
-        );
-      }
-      setIsLoading(false);
-    });
+    API.get('customers/all', { params: customersPayload })
+      .then((response) => {
+        if (response.status === 200) {
+          setCustomersList(response.data.Data.customers);
+          setTotalCustomers(response.data.Data.count);
+        } else {
+          errorMessageHandler(
+            enqueueSnackbar,
+            response?.response?.data?.Message || 'Something Went Wrong.',
+            response?.response?.status,
+            authCtx.setAuthError
+          );
+        }
+        setIsLoading(false);
+      })
+      .catch((error) => {
+        // ✅ Detect CORS error (network error, no response)
+        if (error.message === 'Network Error' && !error.response) {
+          enqueueSnackbar('Please refresh the page.', {
+            variant: 'error',
+            action: (key) => (
+              <Button
+                onClick={() => {
+                  window.location.reload();
+                  closeSnackbar(key);
+                }}
+                sx={{ color: '#fff', textTransform: 'none' }}>
+                Refresh
+              </Button>
+            )
+          });
+        } else {
+          errorMessageHandler(
+            enqueueSnackbar,
+            error?.response?.data?.Message || 'Something Went Wrong.',
+            error?.response?.status,
+            authCtx.setAuthError
+          );
+        }
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   };
 
   // Method to delete customer

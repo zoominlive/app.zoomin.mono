@@ -48,6 +48,8 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { duotoneSpace } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import moment from 'moment';
+import closeicon from '../../assets/closeicon.svg';
+import CautionIcon from '../../assets/caution.svg';
 
 const tableHeaders = ['Endpoint', 'Create', 'Edit', 'List', 'Delete', 'Enable/Disable'];
 const tableRowsCopy = [
@@ -772,16 +774,45 @@ const APIKeys = () => {
                   right: 18,
                   top: 30
                 }}>
-                <CloseIcon />
+                {!isCloseDialog ? <CloseIcon /> : <img src={closeicon} alt="closeicon" />}
               </IconButton>
             </DialogTitle>
 
             {isCloseDialog ? (
               <>
-                <Stack direction={'row'} justifyContent={'center'} alignItems={'start'} padding={3}>
-                  <DialogContentText>
-                    Are you sure you want to exit before completing the wizard ?
-                  </DialogContentText>
+                <Stack
+                  direction={'row'}
+                  justifyContent={'center'}
+                  gap={5}
+                  alignItems={'start'}
+                  padding={3}>
+                  <Box sx={{ minWidth: 130, minHeight: 130 }}>
+                    <img src={CautionIcon} alt="Checkmark Icon" width="130" height="130" />
+                  </Box>
+                  <Box>
+                    <Typography
+                      sx={{
+                        fontWeight: 700,
+                        fontSize: '32px',
+                        lineHeight: '28.8px',
+                        letterSpacing: '0px',
+                        color: '#222222'
+                      }}>
+                      Hey, Wait!!
+                    </Typography>
+                    <DialogContentText sx={{ mt: 1 }}>
+                      <Typography
+                        sx={{
+                          fontWeight: 500,
+                          fontSize: '25px',
+                          lineHeight: '37px',
+                          letterSpacing: '0.1px',
+                          color: '#222222'
+                        }}>
+                        Are you sure you want to exit before completing the wizard ?
+                      </Typography>
+                    </DialogContentText>
+                  </Box>
                 </Stack>
                 <DialogActions sx={{ paddingRight: 4, paddingBottom: 3 }}>
                   <Stack direction="row" justifyContent="flex-end" width="100%">

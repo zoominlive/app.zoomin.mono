@@ -75,7 +75,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const layoutCtx = useContext(LayoutContext);
   const authCtx = useContext(AuthContext);
-  const { enqueueSnackbar } = useSnackbar();
+  const { enqueueSnackbar, closeSnackbar } = useSnackbar();
   const [statisticsData, setStatisticsData] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   // const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -250,8 +250,8 @@ const Dashboard = () => {
 
   useEffect(() => {
     // setRoomsDropdownLoading(true);
-    API.get('zones/list', { params: { cust_id: localStorage.getItem('cust_id') } }).then(
-      (response) => {
+    API.get('zones/list', { params: { cust_id: localStorage.getItem('cust_id') } })
+      .then((response) => {
         if (response.status === 200) {
           setZonesList(response.data.Data);
         } else {
@@ -263,13 +263,40 @@ const Dashboard = () => {
           );
         }
         // setRoomsDropdownLoading(false);
-      }
-    );
+      })
+      .catch((error) => {
+        // ✅ Detect CORS error (network error, no response)
+        if (error.message === 'Network Error' && !error.response) {
+          enqueueSnackbar('Please refresh the page.', {
+            variant: 'error',
+            action: (key) => (
+              <Button
+                onClick={() => {
+                  window.location.reload();
+                  closeSnackbar(key);
+                }}
+                sx={{ color: '#fff', textTransform: 'none' }}>
+                Refresh
+              </Button>
+            )
+          });
+        } else {
+          errorMessageHandler(
+            enqueueSnackbar,
+            error?.response?.data?.Message || 'Something Went Wrong.',
+            error?.response?.status,
+            authCtx.setAuthError
+          );
+        }
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   }, []);
 
   useEffect(() => {
-    API.get('cams/list-record-tags', { params: { cust_id: localStorage.getItem('cust_id') } }).then(
-      (response) => {
+    API.get('cams/list-record-tags', { params: { cust_id: localStorage.getItem('cust_id') } })
+      .then((response) => {
         if (response.status === 200) {
           authCtx.setTags(response.data.Data.recordTags);
         } else {
@@ -280,8 +307,35 @@ const Dashboard = () => {
             authCtx.setAuthError
           );
         }
-      }
-    );
+      })
+      .catch((error) => {
+        // ✅ Detect CORS error (network error, no response)
+        if (error.message === 'Network Error' && !error.response) {
+          enqueueSnackbar('Please refresh the page.', {
+            variant: 'error',
+            action: (key) => (
+              <Button
+                onClick={() => {
+                  window.location.reload();
+                  closeSnackbar(key);
+                }}
+                sx={{ color: '#fff', textTransform: 'none' }}>
+                Refresh
+              </Button>
+            )
+          });
+        } else {
+          errorMessageHandler(
+            enqueueSnackbar,
+            error?.response?.data?.Message || 'Something Went Wrong.',
+            error?.response?.status,
+            authCtx.setAuthError
+          );
+        }
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
     getRecordingsByUser();
   }, []);
 
@@ -357,69 +411,98 @@ const Dashboard = () => {
             ? authCtx.user?.locations.map((item) => item.loc_id)
             : locations
       }
-    }).then((response) => {
-      if (response.status === 200) {
-        localStorage.setItem('updateDashboardData', false);
-        authCtx.setUpdateDashboardData(false);
-        setStatisticsData(response.data.Data);
-        const points = response?.data?.Data?.enroledStreamsDetails.map((point) => ({
-          type: 'Feature',
-          properties: { cluster: false, rv_id: point.rv_id, label: point.location_name },
-          geometry: {
-            type: 'Point',
-            coordinates: [parseFloat(point.long), parseFloat(point.lat)]
-          }
-        }));
-        setMapsData(points);
-        if (
-          response?.data?.Data?.defaultWatchStream?.locations?.length > 0 &&
-          response?.data?.Data?.defaultWatchStream?.zones &&
-          response?.data?.Data?.defaultWatchStream?.cameras
-        ) {
-          setDefaultWatchStream(response?.data?.Data?.defaultWatchStream);
-          setSelectedCamera(
+    })
+      .then((response) => {
+        if (response.status === 200) {
+          localStorage.setItem('updateDashboardData', false);
+          authCtx.setUpdateDashboardData(false);
+          setStatisticsData(response.data.Data);
+          const points = response?.data?.Data?.enroledStreamsDetails.map((point) => ({
+            type: 'Feature',
+            properties: { cluster: false, rv_id: point.rv_id, label: point.location_name },
+            geometry: {
+              type: 'Point',
+              coordinates: [parseFloat(point.long), parseFloat(point.lat)]
+            }
+          }));
+          setMapsData(points);
+          if (
+            response?.data?.Data?.defaultWatchStream?.locations?.length > 0 &&
+            response?.data?.Data?.defaultWatchStream?.zones &&
             response?.data?.Data?.defaultWatchStream?.cameras
-              ? response?.data?.Data?.defaultWatchStream?.cameras
-              : {}
-          );
+          ) {
+            setDefaultWatchStream(response?.data?.Data?.defaultWatchStream);
+            setSelectedCamera(
+              response?.data?.Data?.defaultWatchStream?.cameras
+                ? response?.data?.Data?.defaultWatchStream?.cameras
+                : {}
+            );
+          } else {
+            setDefaultWatchStream({
+              locations: [response?.data?.Data?.watchStreamDetails?.location.loc_id],
+              zones: [response?.data?.Data?.watchStreamDetails],
+              cameras: response?.data?.Data?.watchStreamDetails?.cameras[0]
+            });
+            setSelectedCamera(
+              response?.data?.Data?.watchStreamDetails?.cameras[0]
+                ? {
+                    ...response?.data?.Data?.watchStreamDetails,
+                    ...response?.data?.Data?.watchStreamDetails?.cameras[0]
+                  }
+                : {}
+            );
+          }
+          setTimeOut(response?.data?.Data?.watchStreamDetails?.timeout);
+          // setFamily((prevState) => {
+          //   const tempFamily = { ...prevState };
+          //   if (tempFamily) {
+          //     let obj = response?.data?.Data?.childrenWithEnableDate?.find(
+          //       (o) => o?.primary?.family_id === tempFamily?.primary?.family_id
+          //     );
+          //     return obj;
+          //   } else {
+          //     return null;
+          //   }
+          // });
+          setIsLoading(false);
         } else {
-          setDefaultWatchStream({
-            locations: [response?.data?.Data?.watchStreamDetails?.location.loc_id],
-            zones: [response?.data?.Data?.watchStreamDetails],
-            cameras: response?.data?.Data?.watchStreamDetails?.cameras[0]
+          errorMessageHandler(
+            enqueueSnackbar,
+            response?.response?.data?.Message || 'Something Went Wrong.',
+            response?.response?.status,
+            authCtx.setAuthError
+          );
+          setIsLoading(false);
+        }
+      })
+      .catch((error) => {
+        // ✅ Detect CORS error (network error, no response)
+        if (error.message === 'Network Error' && !error.response) {
+          enqueueSnackbar('Please refresh the page.', {
+            variant: 'error',
+            action: (key) => (
+              <Button
+                onClick={() => {
+                  window.location.reload();
+                  closeSnackbar(key);
+                }}
+                sx={{ color: '#fff', textTransform: 'none' }}>
+                Refresh
+              </Button>
+            )
           });
-          setSelectedCamera(
-            response?.data?.Data?.watchStreamDetails?.cameras[0]
-              ? {
-                  ...response?.data?.Data?.watchStreamDetails,
-                  ...response?.data?.Data?.watchStreamDetails?.cameras[0]
-                }
-              : {}
+        } else {
+          errorMessageHandler(
+            enqueueSnackbar,
+            error?.response?.data?.Message || 'Something Went Wrong.',
+            error?.response?.status,
+            authCtx.setAuthError
           );
         }
-        setTimeOut(response?.data?.Data?.watchStreamDetails?.timeout);
-        // setFamily((prevState) => {
-        //   const tempFamily = { ...prevState };
-        //   if (tempFamily) {
-        //     let obj = response?.data?.Data?.childrenWithEnableDate?.find(
-        //       (o) => o?.primary?.family_id === tempFamily?.primary?.family_id
-        //     );
-        //     return obj;
-        //   } else {
-        //     return null;
-        //   }
-        // });
+      })
+      .finally(() => {
         setIsLoading(false);
-      } else {
-        errorMessageHandler(
-          enqueueSnackbar,
-          response?.response?.data?.Message || 'Something Went Wrong.',
-          response?.response?.status,
-          authCtx.setAuthError
-        );
-        setIsLoading(false);
-      }
-    });
+      });
   };
 
   // Method to fetch families list
@@ -462,19 +545,48 @@ const Dashboard = () => {
       params: {
         cust_id: localStorage.getItem('cust_id')
       }
-    }).then((response) => {
-      if (response.status === 200) {
-        setActiveCameras(response.data.Data.activeCameras);
-        setActiveRecordings(response.data.Data.fixedCameraRecordingsByUser.data);
-      } else {
-        errorMessageHandler(
-          enqueueSnackbar,
-          response?.response?.data?.Message || 'Something Went Wrong.',
-          response?.response?.status,
-          authCtx.setAuthError
-        );
-      }
-    });
+    })
+      .then((response) => {
+        if (response.status === 200) {
+          setActiveCameras(response.data.Data.activeCameras);
+          setActiveRecordings(response.data.Data.fixedCameraRecordingsByUser.data);
+        } else {
+          errorMessageHandler(
+            enqueueSnackbar,
+            response?.response?.data?.Message || 'Something Went Wrong.',
+            response?.response?.status,
+            authCtx.setAuthError
+          );
+        }
+      })
+      .catch((error) => {
+        // ✅ Detect CORS error (network error, no response)
+        if (error.message === 'Network Error' && !error.response) {
+          enqueueSnackbar('Please refresh the page.', {
+            variant: 'error',
+            action: (key) => (
+              <Button
+                onClick={() => {
+                  window.location.reload();
+                  closeSnackbar(key);
+                }}
+                sx={{ color: '#fff', textTransform: 'none' }}>
+                Refresh
+              </Button>
+            )
+          });
+        } else {
+          errorMessageHandler(
+            enqueueSnackbar,
+            error?.response?.data?.Message || 'Something Went Wrong.',
+            error?.response?.status,
+            authCtx.setAuthError
+          );
+        }
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   };
 
   return (

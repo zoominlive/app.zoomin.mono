@@ -6,7 +6,6 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
-  Divider,
   IconButton,
   Stack,
   Step,
@@ -35,6 +34,8 @@ import CloseIcon from '@mui/icons-material/Close';
 import CheckCircleIcon from '../../assets/completed-step.svg'; // For active icon
 import ActiveStep from '../../assets/active-step.svg'; // For active icon
 import InactiveStep from '../../assets/inactive-step.svg';
+import closeicon from '../../assets/closeicon.svg';
+import ConfirmationDialog from '../common/confirmationdialog';
 
 const STEPS = [
   { label: 'Primary Member', description: 'Add Primary Member' },
@@ -275,245 +276,233 @@ const AddFamily = (props) => {
       open={props.open}
       onClose={handleFormDialogClose}
       fullWidth
+      sx={{
+        '& .MuiDialog-container': isCloseDialog
+          ? {
+              alignItems: 'flex-start',
+              marginTop: '12vh',
+              '& .MuiDialog-paper': { maxWidth: '440px !important' }
+            }
+          : {}
+      }}
       className="add-family-dialog">
-      <DialogTitle sx={{ paddingTop: 3.5 }}>
-        {'Add Family'}
-        <DialogContentText>
-          {activeStep == 0
-            ? 'Start by adding a Primary Member'
-            : activeStep == 1
-            ? 'Here you can add additional family members'
-            : activeStep == 2
-            ? 'Here you can add children as well as schedule their start'
-            : ''}
-        </DialogContentText>
-        <IconButton
-          aria-label="close"
-          onClick={handleFormDialogClose}
-          sx={{
-            position: 'absolute',
-            right: 18,
-            top: 30
-          }}>
-          <CloseIcon />
-        </IconButton>
-      </DialogTitle>
-
-      <Divider />
       {isCloseDialog ? (
-        <>
-          <Stack direction={'row'} justifyContent={'center'} alignItems={'start'} padding={3}>
-            <DialogContentText>
-              Are you sure you want to exit before completing the wizard ?
-            </DialogContentText>
-          </Stack>
-          <DialogActions sx={{ paddingRight: 4, paddingBottom: 3 }}>
-            <Stack direction="row" justifyContent="flex-end" width="100%">
-              <Button
-                className="log-btn"
-                variant="outlined"
-                sx={{ marginRight: 1.5 }}
-                onClick={() => {
-                  setIsCloseDialog(false);
-                }}>
-                No
-              </Button>
-
-              <Button
-                id="yes-btn"
-                className="log-btn"
-                variant="outlined"
-                sx={{ marginRight: 1.5, color: '#ffff' }}
-                style={{ color: '#ffff' }}
-                onClick={() => {
-                  setIsCloseDialog(false);
-                  props.setOpen(false);
-                }}>
-                Yes
-              </Button>
-            </Stack>
-          </DialogActions>
-        </>
+        <ConfirmationDialog
+          onConfirm={() => {
+            setIsCloseDialog(false);
+            props.setOpen(false);
+          }}
+          onCancel={() => {
+            setIsCloseDialog(false);
+          }}
+          handleFormDialogClose={handleFormDialogClose}
+        />
       ) : (
-        <Formik
-          validationSchema={validationSchema[activeStep]}
-          validateOnChange={false}
-          validateOnBlur={true}
-          innerRef={formikRef}
-          enableReinitialize
-          initialValues={{
-            primary: {
-              first_name: '',
-              last_name: '',
-              relationship: '',
-              phone: '',
-              email: ''
-            },
-            secondary: [
-              // {
-              //   first_name: '',
-              //   last_name: '',
-              //   relationship: '',
-              //   phone: '',
-              //   email: ''
-              // }
-            ],
-            children: [
-              {
+        <>
+          <DialogTitle sx={{ paddingTop: 3.5 }}>
+            {'Add Family'}
+            <DialogContentText>
+              {activeStep == 0
+                ? 'Start by adding a Primary Member'
+                : activeStep == 1
+                ? 'Here you can add additional family members'
+                : activeStep == 2
+                ? 'Here you can add children as well as schedule their start'
+                : ''}
+            </DialogContentText>
+            <IconButton
+              aria-label="close"
+              onClick={handleFormDialogClose}
+              sx={{
+                position: 'absolute',
+                right: 18,
+                top: 30
+              }}>
+              {!isCloseDialog ? <CloseIcon /> : <img src={closeicon} alt="closeicon" />}
+            </IconButton>
+          </DialogTitle>
+          <Formik
+            validationSchema={validationSchema[activeStep]}
+            validateOnChange={false}
+            validateOnBlur={true}
+            innerRef={formikRef}
+            enableReinitialize
+            initialValues={{
+              primary: {
                 first_name: '',
                 last_name: '',
-                zones: [],
-                locations: [],
-                enable_date: null,
-                selected_option: 'Start Now',
-                date_picker_open: 'false'
-              }
-            ]
-          }}
-          validate={(values) => {
-            const errors = {};
-
-            const emails = [values.primary.email];
-
-            values.secondary.forEach((parent) => {
-              emails.push(parent.email);
-            });
-
-            const duplicateEmails = emails.filter((item, index) => emails.indexOf(item) !== index);
-
-            if (activeStep === 2) {
-              errors.children = {};
-              const childrenTemp = values.children.map(() => {
-                return {};
-              });
-
-              values.children.forEach((child, idx) => {
-                if (child.selected_option === 'Schedule start date') {
-                  if (child.enable_date == '') {
-                    childrenTemp[idx].enable_date = 'Date is required';
-                  }
+                relationship: '',
+                phone: '',
+                email: ''
+              },
+              secondary: [
+                // {
+                //   first_name: '',
+                //   last_name: '',
+                //   relationship: '',
+                //   phone: '',
+                //   email: ''
+                // }
+              ],
+              children: [
+                {
+                  first_name: '',
+                  last_name: '',
+                  zones: [],
+                  locations: [],
+                  enable_date: null,
+                  selected_option: 'Start Now',
+                  date_picker_open: 'false'
                 }
+              ]
+            }}
+            validate={(values) => {
+              const errors = {};
+
+              const emails = [values.primary.email];
+
+              values.secondary.forEach((parent) => {
+                emails.push(parent.email);
               });
 
-              errors.children = childrenTemp;
+              const duplicateEmails = emails.filter(
+                (item, index) => emails.indexOf(item) !== index
+              );
 
-              if (errors.children.length === 0) {
-                delete errors.children;
-              } else {
-                if (errors.children.length > 0) {
-                  errors.children = errors.children.filter(
-                    (value) => Object.keys(value).length !== 0
-                  );
-                  if (errors.children.length === 0) {
-                    delete errors.children;
-                  }
-                }
-              }
-            }
+              if (activeStep === 2) {
+                errors.children = {};
+                const childrenTemp = values.children.map(() => {
+                  return {};
+                });
 
-            if (activeStep === 1) {
-              const secondaryTemp = values.secondary.map(() => {
-                return {};
-              });
-
-              values.secondary.forEach((parent, idx) => {
-                duplicateEmails.forEach((email) => {
-                  if (parent.email && parent.email === email) {
-                    secondaryTemp[idx].email = 'Email must be unique';
+                values.children.forEach((child, idx) => {
+                  if (child.selected_option === 'Schedule start date') {
+                    if (child.enable_date == '') {
+                      childrenTemp[idx].enable_date = 'Date is required';
+                    }
                   }
                 });
-              });
 
-              errors.secondary = secondaryTemp;
+                errors.children = childrenTemp;
 
-              if (errors.secondary.length === 0) {
-                delete errors.secondary;
-              } else {
-                if (errors.secondary.length > 0) {
-                  errors.secondary = errors.secondary.filter(
-                    (value) => Object.keys(value).length !== 0
-                  );
-                  if (errors.secondary.length === 0) {
-                    delete errors.secondary;
+                if (errors.children.length === 0) {
+                  delete errors.children;
+                } else {
+                  if (errors.children.length > 0) {
+                    errors.children = errors.children.filter(
+                      (value) => Object.keys(value).length !== 0
+                    );
+                    if (errors.children.length === 0) {
+                      delete errors.children;
+                    }
                   }
                 }
               }
-            }
 
-            return errors;
-          }}
-          onSubmit={handleSubmit}>
-          {({ values, setFieldValue, touched, errors, isValidating }) => (
-            <Form>
-              <DialogContent>
-                <Box mt={2}>
-                  <CustomStepper activeStep={activeStep}>
-                    {STEPS.map((step, index) => (
-                      <Step key={index}>
-                        <CustomStepLabel StepIconComponent={StepIcon}>
-                          {/* <Box sx={{ display: 'flex', flexDirection: 'column' }}> */}
-                          <Typography variant="subtitle1" fontWeight="bold">
-                            {step.label}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            {step.description}
-                          </Typography>
-                          {/* </Box> */}
-                        </CustomStepLabel>
-                      </Step>
-                    ))}
-                  </CustomStepper>
-                </Box>
-                <Box paddingY={3}>
-                  {renderStepContent(activeStep, values, setFieldValue, touched, errors)}
-                </Box>
-              </DialogContent>
-              <DialogActions sx={{ paddingRight: 4, paddingBottom: 3 }}>
-                {/* <Stack direction="row" justifyContent="space-between" width="100%"> */}
-                <Stack direction="row" justifyContent="flex-end" width="100%">
-                  {/* <Button
-                    disabled={submitLoading || isValidating}
-                    variant="text"
-                    onClick={handleFormDialogClose}>
-                    CANCEL
-                  </Button> */}
-                  {activeStep > 0 && (
-                    <Button
-                      //className="add-btn save-changes-btn"
-                      className="log-btn"
-                      variant="outlined"
-                      sx={{ marginRight: 1.5, borderRadius: '60px !important' }}
-                      onClick={handleBack}>
-                      Back
-                    </Button>
-                  )}
-                  {activeStep == 0 && (
-                    <Button
-                      //className="add-btn save-changes-btn"
-                      className="log-btn"
-                      variant="outlined"
-                      sx={{ marginRight: 1.5, borderRadius: '60px !important' }}
-                      onClick={handleFormDialogClose}>
-                      Cancel
-                    </Button>
-                  )}
-                  <LoadingButton
-                    className="add-btn save-changes-btn"
-                    sx={{ borderRadius: '60px !important' }}
-                    loading={submitLoading || isValidating}
-                    loadingPosition={submitLoading || isValidating ? 'start' : undefined}
-                    startIcon={(submitLoading || isValidating) && <SaveIcon />}
-                    variant="text"
-                    // onClick={handleFormSubmit}
-                    type="submit">
-                    {activeStep === STEPS.length - 1 ? 'Finish' : 'Next'}
-                  </LoadingButton>
-                </Stack>
-                {/* </Stack> */}
-              </DialogActions>
-            </Form>
-          )}
-        </Formik>
+              if (activeStep === 1) {
+                const secondaryTemp = values.secondary.map(() => {
+                  return {};
+                });
+
+                values.secondary.forEach((parent, idx) => {
+                  duplicateEmails.forEach((email) => {
+                    if (parent.email && parent.email === email) {
+                      secondaryTemp[idx].email = 'Email must be unique';
+                    }
+                  });
+                });
+
+                errors.secondary = secondaryTemp;
+
+                if (errors.secondary.length === 0) {
+                  delete errors.secondary;
+                } else {
+                  if (errors.secondary.length > 0) {
+                    errors.secondary = errors.secondary.filter(
+                      (value) => Object.keys(value).length !== 0
+                    );
+                    if (errors.secondary.length === 0) {
+                      delete errors.secondary;
+                    }
+                  }
+                }
+              }
+
+              return errors;
+            }}
+            onSubmit={handleSubmit}>
+            {({ values, setFieldValue, touched, errors, isValidating }) => (
+              <Form>
+                <DialogContent>
+                  <Box mt={2}>
+                    <CustomStepper activeStep={activeStep}>
+                      {STEPS.map((step, index) => (
+                        <Step key={index}>
+                          <CustomStepLabel StepIconComponent={StepIcon}>
+                            {/* <Box sx={{ display: 'flex', flexDirection: 'column' }}> */}
+                            <Typography variant="subtitle1" fontWeight="bold">
+                              {step.label}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              {step.description}
+                            </Typography>
+                            {/* </Box> */}
+                          </CustomStepLabel>
+                        </Step>
+                      ))}
+                    </CustomStepper>
+                  </Box>
+                  <Box paddingY={3}>
+                    {renderStepContent(activeStep, values, setFieldValue, touched, errors)}
+                  </Box>
+                </DialogContent>
+                <DialogActions sx={{ paddingRight: 4, paddingBottom: 3 }}>
+                  {/* <Stack direction="row" justifyContent="space-between" width="100%"> */}
+                  <Stack direction="row" justifyContent="flex-end" width="100%">
+                    {/* <Button
+              disabled={submitLoading || isValidating}
+              variant="text"
+              onClick={handleFormDialogClose}>
+              CANCEL
+            </Button> */}
+                    {activeStep > 0 && (
+                      <Button
+                        //className="add-btn save-changes-btn"
+                        className="log-btn"
+                        variant="outlined"
+                        sx={{ marginRight: 1.5, borderRadius: '60px !important' }}
+                        onClick={handleBack}>
+                        Back
+                      </Button>
+                    )}
+                    {activeStep == 0 && (
+                      <Button
+                        //className="add-btn save-changes-btn"
+                        className="log-btn"
+                        variant="outlined"
+                        sx={{ marginRight: 1.5, borderRadius: '60px !important' }}
+                        onClick={handleFormDialogClose}>
+                        Cancel
+                      </Button>
+                    )}
+                    <LoadingButton
+                      className="add-btn save-changes-btn"
+                      sx={{ borderRadius: '60px !important' }}
+                      loading={submitLoading || isValidating}
+                      loadingPosition={submitLoading || isValidating ? 'start' : undefined}
+                      startIcon={(submitLoading || isValidating) && <SaveIcon />}
+                      variant="text"
+                      // onClick={handleFormSubmit}
+                      type="submit">
+                      {activeStep === STEPS.length - 1 ? 'Finish' : 'Next'}
+                    </LoadingButton>
+                  </Stack>
+                  {/* </Stack> */}
+                </DialogActions>
+              </Form>
+            )}
+          </Formik>
+        </>
       )}
     </Dialog>
   );

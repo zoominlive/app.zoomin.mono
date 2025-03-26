@@ -17,11 +17,13 @@ import { getBuildDate } from './utils/utils';
 import packageJson from '../package.json';
 import withClearCache from './ClearCache';
 import CustomerSelection from './components/auth/customerSelection';
+import { useAuth } from '@frontegg/react';
 
 const MainApp = () => {
   const authCtx = useContext(AuthContext);
   const { enqueueSnackbar } = useSnackbar();
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
     if (authCtx.authError) {
@@ -38,6 +40,20 @@ const MainApp = () => {
   useEffect(() => {
     console.log('build date:', getBuildDate(packageJson.buildDate));
   }, []);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      const postLoginRedirect = localStorage.getItem('postLoginRedirect');
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        authCtx.setUser(JSON.parse(storedUser));
+      }
+      if (postLoginRedirect) {
+        navigate(postLoginRedirect, { replace: true });
+        localStorage.removeItem('postLoginRedirect');
+      }
+    }
+  }, [isAuthenticated, navigate]);
   // useEffect(() => {
   //   if (authCtx.token) {
   //     let { user_id, family_member_id } = JSON.parse(localStorage.getItem('user'));

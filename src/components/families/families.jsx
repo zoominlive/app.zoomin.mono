@@ -25,7 +25,8 @@ import {
   Autocomplete,
   CircularProgress,
   Tooltip,
-  InputAdornment
+  InputAdornment,
+  Checkbox
 } from '@mui/material';
 import React, { useContext, useEffect, useMemo } from 'react';
 import { useState } from 'react';
@@ -84,7 +85,7 @@ const Families = () => {
     page: 0,
     limit: parseInt(process.env.REACT_APP_PAGINATION_LIMIT, 10),
     searchBy: receivedData ? receivedData : '',
-    location: 'All',
+    location: ['All'],
     zones: [],
     cust_id: localStorage.getItem('cust_id')
   });
@@ -197,11 +198,20 @@ const Families = () => {
 
   // Method to handle location change for table
   const handleLocationChange = (event) => {
-    setFamiliesPayload((prevPayload) => ({
-      ...prevPayload,
-      location: event.target.value,
-      page: 0
-    }));
+    const { value } = event.target;
+
+    if (value.includes('All')) {
+      // If 'All' is selected, only keep 'All' in the state
+      setFamiliesPayload((prevPayload) => ({
+        ...prevPayload,
+        location: ['All']
+      }));
+    } else {
+      setFamiliesPayload((prevPayload) => ({
+        ...prevPayload,
+        location: value.filter((loc) => loc !== 'All') // Ensure 'All' is removed if specific locations are selected
+      }));
+    }
   };
 
   // Method to handle zone change for table
@@ -329,13 +339,42 @@ const Families = () => {
                       <Select
                         labelId="location"
                         // id="location"
+                        multiple
                         value={familiesPayload?.location}
-                        onChange={handleLocationChange}>
-                        <MenuItem value={'All'}>All</MenuItem>
+                        onChange={handleLocationChange}
+                        renderValue={(selected) => {
+                          if (selected.length === 0) return 'Select Locations';
+                          if (selected.includes('All')) return 'All';
+
+                          const selectedNames = authCtx.user.locations
+                            .filter((loc) => selected.includes(loc.loc_id))
+                            .map((loc) => loc.loc_name)
+                            .join(', ');
+
+                          return (
+                            <Box
+                              sx={{
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis'
+                              }}>
+                              {selectedNames}
+                            </Box>
+                          );
+                        }}>
+                        <MenuItem value="All">
+                          <Checkbox checked={familiesPayload.location.includes('All')} />
+                          All
+                        </MenuItem>
                         {authCtx.user.locations
                           .sort((a, b) => (a.loc_name > b.loc_name ? 1 : -1))
                           .map((item) => (
-                            <MenuItem key={item.loc_id} value={item.loc_id}>
+                            <MenuItem
+                              key={item.loc_id}
+                              value={item.loc_id}
+                              disabled={familiesPayload.location.includes('All')}>
+                              {' '}
+                              <Checkbox checked={familiesPayload.location.includes(item.loc_id)} />
                               {item.loc_name}
                             </MenuItem>
                           ))}

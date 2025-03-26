@@ -21,7 +21,8 @@ import {
   //InputLabel,
   Grid,
   Divider,
-  Badge
+  Badge,
+  Button
 } from '@mui/material';
 
 import logo from '../../assets/app-capital.svg';
@@ -40,7 +41,8 @@ import {
   Shield,
   Camera,
   Film,
-  Code
+  Code,
+  ExternalLink
   // PieChart
 } from 'react-feather';
 import AccountMenu from '../common/accountmenu';
@@ -71,7 +73,7 @@ const checkedIcon = <CheckCircleOutlineIcon fontSize="small" style={{ color: '#5
 
 const Layout = () => {
   const layoutCtx = useContext(LayoutContext);
-  const { enqueueSnackbar } = useSnackbar();
+  const { enqueueSnackbar, closeSnackbar } = useSnackbar();
   const authCtx = useContext(AuthContext);
   const navigate = useNavigate();
   const [open, setOpen] = useState(window.innerWidth < 900 ? false : true);
@@ -130,40 +132,64 @@ const Layout = () => {
     };
     API.get('users', {
       params: user.superUser ? params : ''
-    }).then((response) => {
-      if (response.status === 200) {
-        setSelectedLocation(response?.data?.Data?.locations);
-        authCtx.setLocation(response?.data?.Data?.locations);
-        authCtx.setUser({
-          ...response.data.Data,
-          location: response.data.Data.locations?.map((item) => item.loc_name)
-        });
-        localStorage.setItem(
-          'user',
-          JSON.stringify({
+    })
+      .then((response) => {
+        if (response.status === 200) {
+          const userData = {
             ...response.data.Data,
             location: response.data.Data.locations?.map((item) => item.loc_name)
-          })
-        );
+          };
+          setSelectedLocation(response?.data?.Data?.locations);
+          authCtx.setLocation(response?.data?.Data?.locations);
+          authCtx.setUser(userData);
+          localStorage.setItem('user', JSON.stringify(userData));
 
-        let selected_locaions = response?.data?.Data?.locations;
-        response?.data?.Data?.locations?.map((item) => item).forEach((loc) => locs.push(loc));
-        setLocations(locs);
-        setSelectedLocation(selected_locaions);
-      } else {
-        if (response?.response?.status === 401) {
-          enqueueSnackbar('User Not Found', { variant: 'error' });
+          let selected_locaions = response?.data?.Data?.locations;
+          response?.data?.Data?.locations?.map((item) => item).forEach((loc) => locs.push(loc));
+          setLocations(locs);
+          setSelectedLocation(selected_locaions);
+        } else {
+          if (response?.response?.status === 401) {
+            enqueueSnackbar('User Not Found', { variant: 'error' });
+          }
+          errorMessageHandler(
+            enqueueSnackbar,
+            response?.response?.data?.Message || 'Something Went Wrong.',
+            response?.response?.status,
+            authCtx.setAuthError
+          );
         }
-        errorMessageHandler(
-          enqueueSnackbar,
-          response?.response?.data?.Message || 'Something Went Wrong.',
-          response?.response?.status,
-          authCtx.setAuthError
-        );
-      }
-      setIsLoading(false);
-      setDropdownLoading(false);
-    });
+        setIsLoading(false);
+        setDropdownLoading(false);
+      })
+      .catch((error) => {
+        // ✅ Detect CORS error (network error, no response)
+        if (error.message === 'Network Error' && !error.response) {
+          enqueueSnackbar('Please refresh the page.', {
+            variant: 'error',
+            action: (key) => (
+              <Button
+                onClick={() => {
+                  window.location.reload();
+                  closeSnackbar(key);
+                }}
+                sx={{ color: '#fff', textTransform: 'none' }}>
+                Refresh
+              </Button>
+            )
+          });
+        } else {
+          errorMessageHandler(
+            enqueueSnackbar,
+            error?.response?.data?.Message || 'Something Went Wrong.',
+            error?.response?.status,
+            authCtx.setAuthError
+          );
+        }
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   }, []);
 
   // useEffect(() => {
@@ -246,6 +272,53 @@ const Layout = () => {
     getCustPaymentMethod();
   }, []);
 
+  useEffect(() => {
+    if (!authCtx.user || authCtx.user.role == 'Super Admin') {
+      return; // Prevent API call if user is not available or has already been fetched
+    }
+    API.get('recordings/share-history', {
+      params: {
+        user_id:
+          authCtx.user?.role == 'Family' ? authCtx.user.family_member_id : authCtx.user.user_id
+      }
+    })
+      .then((response) => {
+        if (response.status === 200) {
+          const data = response.data.Data;
+          console.log('shareHistory', response.data.Data);
+          // Retrieve seen clips from local storage
+          const seenClips = JSON.parse(localStorage.getItem('seenClips')) || [];
+
+          // Check if there are any new share_id that are NOT in localStorage
+          const hasNewUnseen = data.some((clip) => !seenClips.includes(clip.share_id));
+
+          // Update seen status
+          const updatedData = data.map((clip) => ({
+            ...clip,
+            seen: seenClips.includes(clip.share_id) // ✅ Mark as seen if in localStorage
+          }));
+
+          console.log('updatedData==>', updatedData);
+
+          // ✅ If new unseen clips exist, show red dot
+          if (hasNewUnseen) {
+            authCtx.setShowRedDot(true);
+          }
+        } else {
+          if (response.status == 404) return;
+        }
+      })
+      .catch((error) => {
+        console.error('API error:', error);
+        errorMessageHandler(
+          enqueueSnackbar,
+          'Failed to load shared history or No Data found',
+          500,
+          authCtx.setAuthError
+        );
+      });
+  }, [authCtx.user]);
+
   // Method to fetch Customer Payment Method along with Customer Details
   const getCustPaymentMethod = () => {
     setIsLoading(true);
@@ -254,68 +327,155 @@ const Layout = () => {
         stripe_cust_id: stripe_cust_id,
         cust_id: localStorage.getItem('cust_id') || '0d388af2-d396-4d9b-b28a-417a5953ed42'
       }
-    }).then((response) => {
-      if (response.status === 200) {
-        console.log('response.data.data.data', response.data.data.data);
-        if (response.data.data.data.length !== 0) {
-          authCtx.setPaymentMethod(true);
-          if (window.location.pathname === '/dashboard') {
-            navigate('dashboard');
+    })
+      .then((response) => {
+        if (response.status === 200) {
+          console.log('response.data.data.data', response.data.data.data);
+          if (response.data.data.data.length !== 0) {
+            authCtx.setPaymentMethod(true);
+            if (window.location.pathname === '/dashboard') {
+              navigate('dashboard');
+            }
+          } else {
+            navigate('terms-and-conditions');
           }
         } else {
-          navigate('terms-and-conditions');
+          errorMessageHandler(
+            enqueueSnackbar,
+            response?.response?.data?.message || 'Something Went Wrong.',
+            response?.response?.status,
+            authCtx.setAuthError
+          );
         }
-      } else {
-        errorMessageHandler(
-          enqueueSnackbar,
-          response?.response?.data?.message || 'Something Went Wrong.',
-          response?.response?.status,
-          authCtx.setAuthError
-        );
-      }
-      setIsLoading(false);
-    });
+        setIsLoading(false);
+      })
+      .catch((error) => {
+        // ✅ Detect CORS error (network error, no response)
+        if (error.message === 'Network Error' && !error.response) {
+          enqueueSnackbar('Please refresh the page.', {
+            variant: 'error',
+            action: (key) => (
+              <Button
+                onClick={() => {
+                  window.location.reload();
+                  closeSnackbar(key);
+                }}
+                sx={{ color: '#fff', textTransform: 'none' }}>
+                Refresh
+              </Button>
+            )
+          });
+        } else {
+          errorMessageHandler(
+            enqueueSnackbar,
+            error?.response?.data?.Message || 'Something Went Wrong.',
+            error?.response?.status,
+            authCtx.setAuthError
+          );
+        }
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   };
 
   // Method to fetch families list
   const getFamiliesList = (familiesPayload) => {
     setIsLoading(true);
-    API.get('family', { params: familiesPayload }).then((response) => {
-      if (response.status === 200) {
-        console.log('familiesPayload.searchBy', familiesPayload.searchBy);
-        const famResults = response.data.Data.familyArray;
-        const childrenResults = response.data.Data.familyArray.map((item) => item.children);
-        setFamiliesResults(famResults);
-        setChildrenResults(childrenResults.flatMap((subArray) => subArray));
-      } else {
-        errorMessageHandler(
-          enqueueSnackbar,
-          response?.response?.data?.Message || 'Something Went Wrong.',
-          response?.response?.status,
-          authCtx.setAuthError
-        );
-      }
-      setIsLoading(false);
-    });
+    API.get('family', { params: familiesPayload })
+      .then((response) => {
+        if (response.status === 200) {
+          console.log('familiesPayload.searchBy', familiesPayload.searchBy);
+          const famResults = response.data.Data.familyArray;
+          const childrenResults = response.data.Data.familyArray.map((item) => item.children);
+          setFamiliesResults(famResults);
+          setChildrenResults(childrenResults.flatMap((subArray) => subArray));
+        } else {
+          errorMessageHandler(
+            enqueueSnackbar,
+            response?.response?.data?.Message || 'Something Went Wrong.',
+            response?.response?.status,
+            authCtx.setAuthError
+          );
+        }
+        setIsLoading(false);
+      })
+      .catch((error) => {
+        // ✅ Detect CORS error (network error, no response)
+        if (error.message === 'Network Error' && !error.response) {
+          enqueueSnackbar('Please refresh the page.', {
+            variant: 'error',
+            action: (key) => (
+              <Button
+                onClick={() => {
+                  window.location.reload();
+                  closeSnackbar(key);
+                }}
+                sx={{ color: '#fff', textTransform: 'none' }}>
+                Refresh
+              </Button>
+            )
+          });
+        } else {
+          errorMessageHandler(
+            enqueueSnackbar,
+            error?.response?.data?.Message || 'Something Went Wrong.',
+            error?.response?.status,
+            authCtx.setAuthError
+          );
+        }
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   };
 
   // Method to fetch user list for table
   const getUsersList = (usersPlayload) => {
     setIsLoading(true);
-    API.get('users/all', { params: usersPlayload }).then((response) => {
-      if (response.status === 200) {
-        const userResults = response.data.Data.users;
-        setUsersResults(userResults);
-      } else {
-        errorMessageHandler(
-          enqueueSnackbar,
-          response?.response?.data?.Message || 'Something Went Wrong.',
-          response?.response?.status,
-          authCtx.setAuthError
-        );
-      }
-      setIsLoading(false);
-    });
+    API.get('users/all', { params: usersPlayload })
+      .then((response) => {
+        if (response.status === 200) {
+          const userResults = response.data.Data.users;
+          setUsersResults(userResults);
+        } else {
+          errorMessageHandler(
+            enqueueSnackbar,
+            response?.response?.data?.Message || 'Something Went Wrong.',
+            response?.response?.status,
+            authCtx.setAuthError
+          );
+        }
+        setIsLoading(false);
+      })
+      .catch((error) => {
+        // ✅ Detect CORS error (network error, no response)
+        if (error.message === 'Network Error' && !error.response) {
+          enqueueSnackbar('Please refresh the page.', {
+            variant: 'error',
+            action: (key) => (
+              <Button
+                onClick={() => {
+                  window.location.reload();
+                  closeSnackbar(key);
+                }}
+                sx={{ color: '#fff', textTransform: 'none' }}>
+                Refresh
+              </Button>
+            )
+          });
+        } else {
+          errorMessageHandler(
+            enqueueSnackbar,
+            error?.response?.data?.Message || 'Something Went Wrong.',
+            error?.response?.status,
+            authCtx.setAuthError
+          );
+        }
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   };
 
   // const getUsers = () => {
@@ -419,6 +579,12 @@ const Layout = () => {
       key: 7
     },
     {
+      name: 'Shared Clips',
+      icon: <ExternalLink style={{ color: 'white' }} />,
+      link: '/shared-clips',
+      key: 10
+    },
+    {
       name: 'Logs',
       icon: <Code style={{ color: 'white' }} />,
       link: '/logs',
@@ -429,6 +595,13 @@ const Layout = () => {
       icon: <Users style={{ color: 'white' }} />,
       link: '',
       key: 9
+    },
+    {
+      name: 'Customers',
+      icon: <User style={{ color: 'white' }} />,
+      active: true,
+      link: '/customers',
+      key: 11
     }
     // {
     //   name: 'Billing',
@@ -445,12 +618,6 @@ const Layout = () => {
   ];
 
   const bottomMenuItems = [
-    {
-      name: 'Customers',
-      icon: <User style={{ color: 'white' }} />,
-      link: '/customers',
-      key: 10
-    },
     {
       name: 'Knowledge Base',
       icon: <Book style={{ color: 'white' }} />,
@@ -538,14 +705,16 @@ const Layout = () => {
                       return true;
                     } else if (
                       authCtx.user.role === 'Family' &&
-                      (item.key === 5 || (item.key === 9 && authCtx.user.invite_family === true)) &&
-                      item.key !== 10
+                      (item.key === 5 ||
+                        item.key === 10 ||
+                        (item.key === 9 && authCtx.user.invite_family === true))
                     ) {
                       return true;
                     } else if (
                       authCtx.user.role === 'Admin' &&
                       authCtx.paymentMethod &&
-                      item.key !== 9
+                      item.key !== 9 &&
+                      item.key !== 11
                     ) {
                       return true;
                     } else if (authCtx.user.role == 'Teacher' && item.key == 5 && item.key !== 10) {
@@ -553,7 +722,7 @@ const Layout = () => {
                     } else if (
                       authCtx.user.role === 'Super Admin' &&
                       //item.key === 10
-                      [1, 2, 3, 4, 5, 6, 7, 8].includes(item.key)
+                      [11].includes(item.key)
                     ) {
                       return true;
                     } else {
@@ -564,7 +733,13 @@ const Layout = () => {
                     <ListItem
                       key={index}
                       className={`${item.key === layoutCtx.active ? 'active' : ''} `}
-                      sx={{ px: 1, paddingTop: 0.7, paddingBottom: 0.7 }}>
+                      sx={{
+                        px: 1,
+                        paddingTop: 0.7,
+                        paddingBottom: 0.7,
+                        width: open && item.key === 10 ? '90%' : '100%',
+                        marginLeft: item.key === 10 && open ? '24px' : '0px'
+                      }}>
                       {' '}
                       <ListItemButton
                         sx={{
@@ -578,7 +753,7 @@ const Layout = () => {
                         <ListItemIcon
                           sx={{
                             minWidth: 0,
-                            mr: open ? 3 : 'auto',
+                            mr: open && item.key === 10 ? 2 : open ? 3 : 'auto',
                             justifyContent: 'center'
                           }}>
                           {item.icon}
@@ -587,6 +762,10 @@ const Layout = () => {
                           primary={item.name}
                           sx={{ display: open ? 'block' : 'none' }}
                         />
+                        {console.log('showRedDot=>', authCtx.showRedDot)}
+                        {item.key == 10 && authCtx.showRedDot && (
+                          <span style={{ color: 'red', marginLeft: '5px' }}>🔴</span>
+                        )}
                       </ListItemButton>
                     </ListItem>
                   ))}
@@ -801,75 +980,187 @@ const Layout = () => {
                       </Badge>
                       {console.log('locations in layout==>', locations)}
                       {console.log('selected_location in layout', selectedLocation)}
-                      {((authCtx?.user?.role === 'Admin' && authCtx?.paymentMethod) ||
-                        authCtx?.user?.role === 'Super Admin') && (
-                        <Autocomplete
-                          sx={{
-                            '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline':
-                              {
-                                borderWidth: 0
-                              },
-                            '& .MuiOutlinedInput-root .MuiAutocomplete-endAdornment': {
-                              right: '22px'
-                            },
-                            '& fieldset': { borderRadius: 10, borderWidth: 0 }
-                          }}
-                          className="header-location-select"
-                          multiple
-                          limitTags={1}
-                          id="tags-standard"
-                          options={locations?.length !== 0 ? locations : []}
-                          onChange={(_, value, reason, option) => {
-                            console.log('value==>', value);
-                            handleSetLocations(_, value, reason, option);
-                          }}
-                          value={selectedLocation ? selectedLocation : []}
-                          getOptionLabel={(option) => option.loc_name}
-                          renderTags={(value, getTagProps) =>
-                            value?.map((option, index) => (
-                              <Chip
-                                key={index}
-                                label={option.loc_name}
-                                {...getTagProps({ index })}
-                              />
-                            ))
-                          }
-                          renderOption={(props, option, { selected }) => (
-                            <li key={option.loc_id} {...props}>
-                              <Checkbox
-                                icon={icon}
-                                checkedIcon={checkedIcon}
-                                style={{ marginRight: 8 }}
-                                checked={allLocationChecked ? allLocationChecked : selected}
-                              />
-                              {option.loc_name}
-                            </li>
-                          )}
-                          renderInput={(params) => (
-                            <TextField
-                              {...params}
-                              InputProps={{
-                                ...params.InputProps,
-                                startAdornment: (
-                                  <>
-                                    <InputAdornment position="start" sx={{ marginLeft: '22px' }}>
-                                      <img src={buildingIcon} />
-                                    </InputAdornment>
-                                    {params.InputProps.startAdornment}
-                                  </>
-                                ),
-                                endAdornment: (
-                                  <React.Fragment>
-                                    {dropdownLoading ? (
-                                      <CircularProgress color="inherit" size={20} />
-                                    ) : null}
-                                    {params.InputProps.endAdornment}
-                                  </React.Fragment>
-                                )
+                      {authCtx?.user?.role === 'Admin' && authCtx?.paymentMethod && (
+                        <>
+                          {location.pathname == '/dashboard' && (
+                            <Autocomplete
+                              sx={{
+                                '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline':
+                                  {
+                                    borderWidth: 0
+                                  },
+                                '& .MuiOutlinedInput-root .MuiAutocomplete-endAdornment': {
+                                  right: '22px'
+                                },
+                                '& fieldset': { borderRadius: 10, borderWidth: 0 }
                               }}
+                              className="header-location-select"
+                              multiple
+                              limitTags={1}
+                              id="tags-standard"
+                              options={locations?.length !== 0 ? locations : []}
+                              onChange={(_, value, reason, option) => {
+                                console.log('value==>', value);
+                                handleSetLocations(_, value, reason, option);
+                              }}
+                              value={selectedLocation ? selectedLocation : []}
+                              getOptionLabel={(option) => option.loc_name}
+                              renderTags={(value, getTagProps) =>
+                                value?.map((option, index) => (
+                                  <Chip
+                                    key={index}
+                                    label={option.loc_name}
+                                    {...getTagProps({ index })}
+                                  />
+                                ))
+                              }
+                              renderOption={(props, option, { selected }) => (
+                                <li key={option.loc_id} {...props}>
+                                  <Checkbox
+                                    icon={icon}
+                                    checkedIcon={checkedIcon}
+                                    style={{ marginRight: 8 }}
+                                    checked={allLocationChecked ? allLocationChecked : selected}
+                                  />
+                                  {option.loc_name}
+                                </li>
+                              )}
+                              renderInput={(params) => (
+                                <TextField
+                                  {...params}
+                                  InputProps={{
+                                    ...params.InputProps,
+                                    startAdornment: (
+                                      <>
+                                        <InputAdornment
+                                          position="start"
+                                          sx={{ marginLeft: '22px' }}>
+                                          <img src={buildingIcon} />
+                                        </InputAdornment>
+                                        {params.InputProps.startAdornment}
+                                      </>
+                                    ),
+                                    endAdornment: (
+                                      <React.Fragment>
+                                        {dropdownLoading ? (
+                                          <CircularProgress color="inherit" size={20} />
+                                        ) : null}
+                                        {params.InputProps.endAdornment}
+                                      </React.Fragment>
+                                    )
+                                  }}
+                                />
+                              )}
                             />
                           )}
-                        />
+                          {location.pathname !== '/dashboard' && (
+                            <Stack
+                              direction={'row'}
+                              alignItems={'center'}
+                              justifyContent={'space-between'}
+                              position={'relative'}>
+                              <TextField
+                                variant="standard"
+                                labelId="search"
+                                placeholder={'Search..'}
+                                sx={{
+                                  backgroundColor: '#FFFFFF',
+                                  borderRadius: '120px',
+                                  padding: '16px 24px',
+                                  width: '390px'
+                                }}
+                                onChange={(e) => newHandleChange(e)}
+                                InputProps={{
+                                  disableUnderline: true,
+                                  startAdornment: (
+                                    <InputAdornment position="start">
+                                      <img src={searchIcon} alt="search" width={24} height={24} />
+                                    </InputAdornment>
+                                  )
+                                }}
+                              />
+                              {showSearchResults && (
+                                <Box className="results-list" sx={{ width: '85% !important' }}>
+                                  <Stack
+                                    className="search-result"
+                                    direction={'row'}
+                                    justifyContent={'space-between'}>
+                                    <Typography>Name</Typography>
+                                    <Typography>Role</Typography>
+                                  </Stack>
+                                  <Divider />
+                                  {familiesResults.map((result) => {
+                                    return (
+                                      <Stack
+                                        direction={'row'}
+                                        justifyContent={'space-between'}
+                                        alignItems={'center'}
+                                        sx={{
+                                          ':hover': { backgroundColor: '#eae9ff80' }
+                                        }}
+                                        key={result?.user_id || result?.primary?.family_member_id}
+                                        onClick={() => handleResultClick(result)}>
+                                        <Box ref={resultsListRef} className="search-result">
+                                          {result?.primary?.first_name +
+                                            ' ' +
+                                            result?.primary?.last_name}
+                                        </Box>
+                                        <Box>
+                                          <Chip variant="outlined" label={'Family'} />
+                                        </Box>
+                                      </Stack>
+                                    );
+                                  })}
+                                  {usersResults.map((result) => {
+                                    return (
+                                      <Stack
+                                        direction={'row'}
+                                        justifyContent={'space-between'}
+                                        alignItems={'center'}
+                                        sx={{
+                                          ':hover': { backgroundColor: '#eae9ff80' }
+                                        }}
+                                        key={result?.user_id}
+                                        onClick={() => handleResultClick(result)}>
+                                        <Box ref={resultsListRef} className="search-result">
+                                          {result?.first_name + ' ' + result?.last_name}
+                                        </Box>
+                                        <Box>
+                                          <Chip
+                                            variant="outlined"
+                                            label={
+                                              result?.role === 'User' ? 'Director' : result?.role
+                                            }
+                                          />
+                                        </Box>
+                                      </Stack>
+                                    );
+                                  })}
+                                  {childrenResults.map((result) => {
+                                    return (
+                                      <Stack
+                                        direction={'row'}
+                                        justifyContent={'space-between'}
+                                        alignItems={'center'}
+                                        sx={{
+                                          ':hover': { backgroundColor: '#eae9ff80' }
+                                        }}
+                                        key={result?.user_id}
+                                        onClick={() => handleResultClick(result)}>
+                                        <Box ref={resultsListRef} className="search-result">
+                                          {result?.first_name + ' ' + result?.last_name}
+                                        </Box>
+                                        <Box>
+                                          <Chip variant="outlined" label={'Child'} />
+                                        </Box>
+                                      </Stack>
+                                    );
+                                  })}
+                                </Box>
+                              )}
+                            </Stack>
+                          )}
+                        </>
                       )}
                       <Box className="header-right">
                         <AccountMenu openLogoutDialog={setIsLogoutDialogOpen} />

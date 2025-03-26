@@ -1,13 +1,11 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 import {
-  Button,
   Dialog,
   DialogActions,
   DialogContent,
   DialogContentText,
   DialogTitle,
-  Divider,
   FormControl,
   FormHelperText,
   Grid,
@@ -15,7 +13,6 @@ import {
   InputLabel,
   MenuItem,
   Select,
-  Stack,
   TextField
 } from '@mui/material';
 import PropTypes from 'prop-types';
@@ -27,6 +24,8 @@ import API from '../../api';
 import { errorMessageHandler } from '../../utils/errormessagehandler';
 import { useSnackbar } from 'notistack';
 import AuthContext from '../../context/authcontext';
+import closeicon from '../../assets/closeicon.svg';
+import ConfirmationDialog from '../common/confirmationdialog';
 
 const RecordingForm = (props) => {
   const [isCloseDialog, setIsCloseDialog] = useState(false);
@@ -108,137 +107,130 @@ const RecordingForm = (props) => {
   };
 
   return (
-    <Dialog open={props.open} onClose={handleClose} fullWidth className="add-user-drawer">
-      <DialogTitle sx={{ paddingTop: 3.5 }}>
-        {'Edit Record'}
-        <DialogContentText></DialogContentText>
-        <IconButton
-          aria-label="close"
-          onClick={handleClose}
-          sx={{
-            position: 'absolute',
-            right: 18,
-            top: 30
-          }}>
-          <CloseIcon />
-        </IconButton>
-      </DialogTitle>
-
-      <Divider />
+    <Dialog
+      sx={{
+        '& .MuiDialog-container': isCloseDialog
+          ? {
+              alignItems: 'flex-start',
+              marginTop: '12vh',
+              '& .MuiDialog-paper': { maxWidth: '440px !important' }
+            }
+          : {}
+      }}
+      open={props.open}
+      onClose={handleClose}
+      fullWidth
+      className="add-user-drawer">
+      {/* <Divider /> */}
       {isCloseDialog ? (
         <>
-          <Stack direction={'row'} justifyContent={'center'} alignItems={'start'} padding={3}>
-            <DialogContentText>
-              Are you sure you want to exit before completing the wizard ?
-            </DialogContentText>
-          </Stack>
-          <DialogActions sx={{ paddingRight: 4, paddingBottom: 3 }}>
-            <Stack direction="row" justifyContent="flex-end" width="100%">
-              <Button
-                className="log-btn"
-                variant="outlined"
-                sx={{ marginRight: 1.5 }}
-                onClick={() => {
-                  setIsCloseDialog(false);
-                }}>
-                No
-              </Button>
-
-              <Button
-                id="yes-btn"
-                className="log-btn"
-                variant="outlined"
-                sx={{ marginRight: 1.5, color: '#ffff' }}
-                style={{ color: '#ffff' }}
-                onClick={() => {
-                  setIsCloseDialog(false);
-                  props.setOpen(false);
-                  props.setRecordingData();
-                  // handleFormDialogClose();
-                }}>
-                Yes
-              </Button>
-            </Stack>
-          </DialogActions>
+          <ConfirmationDialog
+            onCancel={() => {
+              setIsCloseDialog(false);
+            }}
+            onConfirm={() => {
+              setIsCloseDialog(false);
+              props.setOpen(false);
+              props.setRecordingData();
+              // handleFormDialogClose();
+            }}
+            handleFormDialogClose={handleClose}
+          />
         </>
       ) : (
-        <Formik
-          enableReinitialize
-          validateOnChange
-          validationSchema={validationSchema}
-          initialValues={formik.initialValues}
-          onSubmit={handleSubmit}>
-          {({ values, setFieldValue, touched, errors }) => {
-            return (
-              <Form>
-                <DialogContent>
-                  <Grid container spacing={2}>
-                    <Grid item md={6} xs={12}>
-                      <InputLabel id="event_name">Event Name</InputLabel>
-                      <TextField
-                        labelId="event_name"
-                        name="event_name"
-                        value={values?.event_name}
-                        onChange={(event) => {
-                          setFieldValue('event_name', event.target.value);
-                        }}
-                        helperText={touched.event_name && errors.event_name}
-                        error={touched.event_name && Boolean(errors.event_name)}
-                        fullWidth
-                      />
-                    </Grid>
-                    <Grid item md={6} xs={12}>
-                      <InputLabel id="tag">Tag</InputLabel>
-                      <FormControl fullWidth error={touched.role && Boolean(errors.role)}>
-                        <Select
-                          labelId="tag"
-                          id="tag"
-                          value={values?.tag}
-                          label="Tag"
-                          name="tag"
+        <>
+          <DialogTitle sx={{ paddingTop: 3.5 }}>
+            {'Edit Record'}
+            <DialogContentText></DialogContentText>
+            <IconButton
+              aria-label="close"
+              onClick={handleClose}
+              sx={{
+                position: 'absolute',
+                right: 18,
+                top: 30
+              }}>
+              {!isCloseDialog ? <CloseIcon /> : <img src={closeicon} alt="closeicon" />}
+            </IconButton>
+          </DialogTitle>
+          <Formik
+            enableReinitialize
+            validateOnChange
+            validationSchema={validationSchema}
+            initialValues={formik.initialValues}
+            onSubmit={handleSubmit}>
+            {({ values, setFieldValue, touched, errors }) => {
+              return (
+                <Form>
+                  <DialogContent>
+                    <Grid container spacing={2}>
+                      <Grid item md={6} xs={12}>
+                        <InputLabel id="event_name">Event Name</InputLabel>
+                        <TextField
+                          labelId="event_name"
+                          name="event_name"
+                          value={values?.event_name}
                           onChange={(event) => {
-                            setFieldValue('tag', event.target.value);
-                            setSelectedTag(event.target.value);
-                          }}>
-                          {console.log('tagsList==>', tagsList)}
-                          {tagsList.map((item) => {
-                            return (
-                              <MenuItem key={item.tag_id} value={item.tag_id}>
-                                {item.tag_name}
-                              </MenuItem>
-                            );
-                          })}
-                        </Select>
-                        {touched.role && Boolean(errors.role) && (
-                          <FormHelperText sx={{ color: '#d32f2f' }}>
-                            {touched.role && errors.role}
-                          </FormHelperText>
-                        )}
-                      </FormControl>
+                            setFieldValue('event_name', event.target.value);
+                          }}
+                          helperText={touched.event_name && errors.event_name}
+                          error={touched.event_name && Boolean(errors.event_name)}
+                          fullWidth
+                        />
+                      </Grid>
+                      <Grid item md={6} xs={12}>
+                        <InputLabel id="tag">Tag</InputLabel>
+                        <FormControl fullWidth error={touched.role && Boolean(errors.role)}>
+                          <Select
+                            labelId="tag"
+                            id="tag"
+                            value={values?.tag}
+                            label="Tag"
+                            name="tag"
+                            onChange={(event) => {
+                              setFieldValue('tag', event.target.value);
+                              setSelectedTag(event.target.value);
+                            }}>
+                            {console.log('tagsList==>', tagsList)}
+                            {tagsList.map((item) => {
+                              return (
+                                <MenuItem key={item.tag_id} value={item.tag_id}>
+                                  {item.tag_name}
+                                </MenuItem>
+                              );
+                            })}
+                          </Select>
+                          {touched.role && Boolean(errors.role) && (
+                            <FormHelperText sx={{ color: '#d32f2f' }}>
+                              {touched.role && errors.role}
+                            </FormHelperText>
+                          )}
+                        </FormControl>
+                      </Grid>
                     </Grid>
-                  </Grid>
-                </DialogContent>
+                  </DialogContent>
 
-                <DialogActions
-                  sx={{
-                    paddingRight: 4,
-                    paddingBottom: 3,
-                    justifyContent: 'flex-end'
-                  }}>
-                  <LoadingButton
-                    className="add-btn save-changes-btn"
-                    loading={submitLoading}
-                    loadingPosition={submitLoading ? 'start' : undefined}
-                    startIcon={submitLoading && <SaveIcon />}
-                    variant="text"
-                    type="submit">
-                    Save Changes
-                  </LoadingButton>
-                </DialogActions>
-              </Form>
-            );
-          }}
-        </Formik>
+                  <DialogActions
+                    sx={{
+                      paddingRight: 4,
+                      paddingBottom: 3,
+                      justifyContent: 'flex-end'
+                    }}>
+                    <LoadingButton
+                      className="add-btn save-changes-btn"
+                      loading={submitLoading}
+                      loadingPosition={submitLoading ? 'start' : undefined}
+                      startIcon={submitLoading && <SaveIcon />}
+                      variant="text"
+                      type="submit">
+                      Save Changes
+                    </LoadingButton>
+                  </DialogActions>
+                </Form>
+              );
+            }}
+          </Formik>
+        </>
       )}
     </Dialog>
   );

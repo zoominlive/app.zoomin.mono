@@ -29,15 +29,9 @@ import MobileStreamEditForm from './mobilestreameditform';
 import CustomPlayer from '../watchstream/customplayer';
 import CloseIcon from '@mui/icons-material/Close';
 import NoLiveStreamDiv from '../common/nolivestreams';
+import ShareRecordingForm from './sharerecordingform';
 
-export default function NewStreamTable({
-  rows,
-  columns,
-  title,
-  type,
-  isLoading,
-  getRecordingData
-}) {
+export default function NewStreamTable({ rows, columns, title, type, getRecordingData }) {
   const [recordingData, setRecordingData] = useState();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isEditMobileStreamDialogOpen, setIsEditMobileStreamDialogOpen] = useState(false);
@@ -45,6 +39,7 @@ export default function NewStreamTable({
   const [isStreamDialogOpen, setIsStreamDialogOpen] = useState(false);
   const [selectedCamera, setSelectedCamera] = useState(null); // Track clicked camera
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
 
   const handleEditRecording = (data) => {
     console.log('data==>', data);
@@ -75,6 +70,12 @@ export default function NewStreamTable({
     setSelectedCamera(null);
   };
 
+  const handleShareRecording = (data) => {
+    console.log('data==>', data);
+    setRecordingData(data);
+    setIsShareDialogOpen(true);
+  };
+
   return (
     <>
       {type == 'FIXED_CAMERA' ? (
@@ -82,21 +83,39 @@ export default function NewStreamTable({
           <Typography variant="h6" gutterBottom>
             {title}
           </Typography>
-          {rows && rows?.length > 0 ? (
-            <TableContainer sx={{ height: '443px' }}>
-              <Table stickyHeader>
-                <TableHead>
-                  <TableRow>
-                    {columns.map((column, index) => (
-                      <TableCell sx={{ borderTop: '1px solid rgba(224, 224, 224, 1)' }} key={index}>
-                        {column}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {rows.map((row, index) => (
+
+          <TableContainer
+            sx={{
+              height: '443px',
+              overflowX: 'auto'
+            }}>
+            <Table stickyHeader={rows.length > 0}>
+              <TableHead>
+                <TableRow>
+                  {columns.map((column, index) => (
+                    <TableCell
+                      align={column === 'Actions' ? 'center' : 'left'}
+                      sx={{
+                        borderTop: '1px solid rgba(224, 224, 224, 1)',
+                        ...(column === 'Actions' && {
+                          position: 'sticky',
+                          right: 0,
+                          background: '#fff',
+                          zIndex: 2
+                        })
+                      }}
+                      key={index}>
+                      {column}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              </TableHead>
+
+              <TableBody>
+                {rows && rows.length > 0 ? (
+                  rows.map((row, index) => (
                     <TableRow className="fixed-camera-recordings-table" key={index} hover>
+                      {/* Other columns */}
                       <TableCell>
                         <Box display="flex" alignItems="center">
                           <img
@@ -110,9 +129,7 @@ export default function NewStreamTable({
                             title={row.record_camera_tag?.cam_name}
                             disableHoverListener={row.record_camera_tag?.cam_name.length < 10}>
                             <Chip
-                              sx={{
-                                marginLeft: '10px'
-                              }}
+                              sx={{ marginLeft: '10px' }}
                               label={
                                 row.record_camera_tag?.cam_name.length > 10
                                   ? row.record_camera_tag?.cam_name.slice(0, 10) + '...'
@@ -174,10 +191,16 @@ export default function NewStreamTable({
                           />
                         </Tooltip>
                       </TableCell>
+
+                      {/* Sticky Actions column */}
                       <TableCell
                         sx={{
                           textAlign: 'center',
-                          whiteSpace: 'nowrap'
+                          whiteSpace: 'nowrap',
+                          position: 'sticky',
+                          right: 0,
+                          background: '#fff',
+                          zIndex: 1
                         }}>
                         <Box
                           sx={{
@@ -185,61 +208,84 @@ export default function NewStreamTable({
                             alignItems: 'center',
                             justifyContent: 'center'
                           }}>
-                          <IconButton color="primary">
+                          <IconButton color="primary" sx={{ padding: '4px' }}>
                             <Link onClick={() => handleClick(row?.video_url)}>
                               <img src={PlayRecording} />
                             </Link>
                           </IconButton>
-                          <IconButton color="primary" onClick={() => handleEditRecording(row)}>
-                            <img src={EditRecording} alt="share-recording" />
-                          </IconButton>
-                          {/* <IconButton>
-                            <img src={ShareRecording} />
-                          </IconButton> */}
                           <IconButton
-                            sx={{ '.MuiSvgIcon-root': { color: '#DD5853 !important' } }}
+                            color="primary"
+                            sx={{ padding: '4px' }}
+                            onClick={() => handleEditRecording(row)}>
+                            <img src={EditRecording} alt="edit-recording" />
+                          </IconButton>
+                          <IconButton
+                            sx={{ padding: '4px' }}
+                            onClick={() => handleShareRecording(row)}>
+                            <img src={ShareRecording} />
+                          </IconButton>
+                          <IconButton
+                            sx={{
+                              '.MuiSvgIcon-root': { color: '#DD5853 !important' },
+                              padding: '4px'
+                            }}
                             onClick={() => handleDeleteRecording(row)}>
                             <DeleteOutlineOutlinedIcon />
                           </IconButton>
                         </Box>
                       </TableCell>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          ) : (
-            <Box
-              sx={{
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                height: '100%', // Take full height of CardContent
-                minHeight: '443px' // Ensure it matches expected height
-              }}>
-              <NoLiveStreamDiv />
-            </Box>
-          )}
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={columns.length} align="center">
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          height: '100%',
+                          minHeight: '443px'
+                        }}>
+                        <NoLiveStreamDiv />
+                      </Box>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
         </>
       ) : (
         <>
           <Typography variant="h6" gutterBottom>
             {title}
           </Typography>
-          {rows && rows?.length > 0 ? (
-            <TableContainer sx={{ height: '443px' }}>
-              <Table stickyHeader>
-                <TableHead>
-                  <TableRow>
-                    {columns.map((column, index) => (
-                      <TableCell sx={{ borderTop: '1px solid rgba(224, 224, 224, 1)' }} key={index}>
-                        {column}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {rows.map((row, index) => (
+          <TableContainer sx={{ height: '443px' }}>
+            <Table stickyHeader>
+              <TableHead>
+                <TableRow>
+                  {columns.map((column, index) => (
+                    <TableCell
+                      align={column === 'Actions' ? 'center' : 'left'}
+                      sx={{
+                        borderTop: '1px solid rgba(224, 224, 224, 1)',
+                        ...(column === 'Actions' && {
+                          position: 'sticky',
+                          right: 0,
+                          background: '#fff',
+                          zIndex: 2
+                        })
+                      }}
+                      key={index}>
+                      {column}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {rows && rows.length > 0 ? (
+                  rows.map((row, index) => (
                     <TableRow className="fixed-camera-recordings-table" key={index} hover>
                       <TableCell>
                         <Chip label={formatTimestamp(row.stream_start_time)} variant="outlined" />
@@ -276,8 +322,16 @@ export default function NewStreamTable({
                           />
                         </Tooltip>
                       </TableCell>
-                      <TableCell sx={{ display: 'flex', flexWrap: 'nowrap', alignItems: 'center' }}>
-                        <IconButton color="primary">
+                      <TableCell
+                        sx={{
+                          textAlign: 'center',
+                          whiteSpace: 'nowrap',
+                          position: 'sticky',
+                          right: 0,
+                          background: '#fff',
+                          zIndex: 1
+                        }}>
+                        <IconButton color="primary" sx={{ padding: '4px' }}>
                           <Link
                             onClick={() =>
                               handleClick(
@@ -288,36 +342,45 @@ export default function NewStreamTable({
                           </Link>
                         </IconButton>
                         <IconButton
+                          sx={{ padding: '4px' }}
                           color="primary"
                           onClick={() => handleEditMobileStreamRecording(row)}>
                           <img src={EditRecording} alt="share-recording" />
                         </IconButton>
-                        {/* <IconButton>
+                        {/* <IconButton
+                          sx={{ padding: '4px' }}
+                          onClick={() => handleShareRecording(row)}>
                           <img src={ShareRecording} />
                         </IconButton> */}
                         <IconButton
-                          sx={{ '.MuiSvgIcon-root': { color: '#DD5853 !important' } }}
+                          sx={{
+                            '.MuiSvgIcon-root': { color: '#DD5853 !important' },
+                            padding: '4px'
+                          }}
                           onClick={() => handleDeleteRecording(row)}>
                           <DeleteOutlineOutlinedIcon />
                         </IconButton>
                       </TableCell>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          ) : (
-            <Box
-              sx={{
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                height: '100%', // Take full height of CardContent
-                minHeight: '443px' // Ensure it matches expected height
-              }}>
-              <NoLiveStreamDiv />
-            </Box>
-          )}
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={columns.length} align="center">
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          height: '443px'
+                        }}>
+                        <NoLiveStreamDiv />
+                      </Box>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
         </>
       )}
       {isEditDialogOpen && (
@@ -378,6 +441,15 @@ export default function NewStreamTable({
             />
           </DialogContent>
         </Dialog>
+      )}
+      {isShareDialogOpen && (
+        <ShareRecordingForm
+          open={isShareDialogOpen}
+          setOpen={setIsShareDialogOpen}
+          recordingData={recordingData}
+          setRecordingData={setRecordingData}
+          getRecordingData={getRecordingData}
+        />
       )}
     </>
   );

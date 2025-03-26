@@ -112,7 +112,7 @@ const Logs = () => {
   const layoutCtx = useContext(LayoutContext);
   const authCtx = useContext(AuthContext);
   const location = useLocation();
-  const { enqueueSnackbar } = useSnackbar();
+  const { enqueueSnackbar, closeSnackbar } = useSnackbar();
   const [isLoading, setIsLoading] = useState(false);
   const [logsList, setLogsList] = useState([]);
   const [totalLogs, setTotalLogs] = useState(0);
@@ -255,115 +255,175 @@ const Logs = () => {
           locations: authCtx.user.locations.map((item) => item.loc_id),
           cust_id: localStorage.getItem('cust_id')
         }
-      }).then((response) => {
-        if (response.status === 200) {
-          let userToAdd;
-          if (location?.state?.user) {
-            userToAdd = location?.state?.user?.map((user) => user?.user_id);
-          } else {
-            userToAdd = response.data.Data?.map((user) => user?.user_id);
-          }
-          setUsers([users[0], ...response.data.Data]);
-          setSelectedUsers(
-            location?.state
-              ? response.data.Data.filter((user) => userToAdd.includes(user.user_id))
-              : response.data.Data
-          );
-          // eslint-disable-next-line no-unsafe-optional-chaining
-          //setUsers([users[0]], ...location?.state?.user);
-          API.get('family/location/', {
-            params: {
-              locations: authCtx.user.locations.map((item) => item.loc_id),
-              cust_id: localStorage.getItem('cust_id')
-            }
-          }).then((response) => {
-            if (response.status === 200) {
-              let familyToAdd;
-              if (location?.state?.family) {
-                familyToAdd = location?.state?.family.map((user) => user?.family_member_id);
-                console.log('familyToAdd in if', families);
-              } else {
-                familyToAdd = response.data.Data?.map((user) => user?.family_member_id);
-                console.log('familyToAdd in else', families);
-              }
-              setFamilies([families[0], ...response.data.Data]);
-
-              setSelectedFamilies(
-                location?.state
-                  ? response.data.Data.filter((user) => familyToAdd.includes(user.family_member_id))
-                  : response.data.Data
-              );
-
-              if (location?.state?.lastHoursUsers || location?.state?.viewMore) {
-                if (location?.state?.viewMore) {
-                  setRangeDate([dayjs().startOf('week'), dayjs().endOf('week')]);
-                }
-                API.post('logs/', {
-                  ...logsPayload,
-                  from: moment().startOf('week').format('YYYY-MM-DD'),
-                  to: moment().endOf('week').format('YYYY-MM-DD'),
-                  locations: authCtx.user.locations.map((item) => item.loc_id),
-                  users: userToAdd,
-                  familyMemberIds: familyToAdd
-                }).then((response) => {
-                  if (response.status === 200) {
-                    setResponseData(response.data.Data.logs);
-                    setcsvGenerated(false);
-                    setLogsList(response.data.Data.logs);
-                    setTotalLogs(response.data.Data.count);
-                  } else {
-                    errorMessageHandler(
-                      enqueueSnackbar,
-                      response?.response?.data?.Message || 'Something Went Wrong.',
-                      response?.response?.status,
-                      authCtx.setAuthError
-                    );
-                  }
-                  setIsLoading(false);
-                });
-              } else {
-                API.post('logs/', {
-                  ...logsPayload,
-                  locations: authCtx.user.locations.map((item) => item.loc_id),
-                  users: userToAdd,
-                  familyMemberIds: familyToAdd
-                }).then((response) => {
-                  if (response.status === 200) {
-                    setResponseData(response.data.Data.logs);
-                    setcsvGenerated(false);
-                    setLogsList(response.data.Data.logs);
-                    setTotalLogs(response.data.Data.count);
-                  } else {
-                    errorMessageHandler(
-                      enqueueSnackbar,
-                      response?.response?.data?.Message || 'Something Went Wrong.',
-                      response?.response?.status,
-                      authCtx.setAuthError
-                    );
-                  }
-                  setIsLoading(false);
-                });
-              }
+      })
+        .then((response) => {
+          if (response.status === 200) {
+            let userToAdd;
+            if (location?.state?.user) {
+              userToAdd = location?.state?.user?.map((user) => user?.user_id);
             } else {
-              setIsLoading(false);
-              errorMessageHandler(
-                enqueueSnackbar,
-                response?.response?.data?.Message || 'Something Went Wrong.',
-                response?.response?.status,
-                authCtx.setAuthError
-              );
+              userToAdd = response.data.Data?.map((user) => user?.user_id);
             }
-          });
-        } else {
+            setUsers([users[0], ...response.data.Data]);
+            setSelectedUsers(
+              location?.state
+                ? response.data.Data.filter((user) => userToAdd.includes(user.user_id))
+                : response.data.Data
+            );
+            // eslint-disable-next-line no-unsafe-optional-chaining
+            //setUsers([users[0]], ...location?.state?.user);
+            API.get('family/location/', {
+              params: {
+                locations: authCtx.user.locations.map((item) => item.loc_id),
+                cust_id: localStorage.getItem('cust_id')
+              }
+            })
+              .then((response) => {
+                if (response.status === 200) {
+                  let familyToAdd;
+                  if (location?.state?.family) {
+                    familyToAdd = location?.state?.family.map((user) => user?.family_member_id);
+                    console.log('familyToAdd in if', families);
+                  } else {
+                    familyToAdd = response.data.Data?.map((user) => user?.family_member_id);
+                    console.log('familyToAdd in else', families);
+                  }
+                  setFamilies([families[0], ...response.data.Data]);
+
+                  setSelectedFamilies(
+                    location?.state
+                      ? response.data.Data.filter((user) =>
+                          familyToAdd.includes(user.family_member_id)
+                        )
+                      : response.data.Data
+                  );
+
+                  if (location?.state?.lastHoursUsers || location?.state?.viewMore) {
+                    if (location?.state?.viewMore) {
+                      setRangeDate([dayjs().startOf('week'), dayjs().endOf('week')]);
+                    }
+                    API.post('logs/', {
+                      ...logsPayload,
+                      from: moment().startOf('week').format('YYYY-MM-DD'),
+                      to: moment().endOf('week').format('YYYY-MM-DD'),
+                      locations: authCtx.user.locations.map((item) => item.loc_id),
+                      users: userToAdd,
+                      familyMemberIds: familyToAdd
+                    }).then((response) => {
+                      if (response.status === 200) {
+                        setResponseData(response.data.Data.logs);
+                        setcsvGenerated(false);
+                        setLogsList(response.data.Data.logs);
+                        setTotalLogs(response.data.Data.count);
+                      } else {
+                        errorMessageHandler(
+                          enqueueSnackbar,
+                          response?.response?.data?.Message || 'Something Went Wrong.',
+                          response?.response?.status,
+                          authCtx.setAuthError
+                        );
+                      }
+                      setIsLoading(false);
+                    });
+                  } else {
+                    API.post('logs/', {
+                      ...logsPayload,
+                      locations: authCtx.user.locations.map((item) => item.loc_id),
+                      users: userToAdd,
+                      familyMemberIds: familyToAdd
+                    }).then((response) => {
+                      if (response.status === 200) {
+                        setResponseData(response.data.Data.logs);
+                        setcsvGenerated(false);
+                        setLogsList(response.data.Data.logs);
+                        setTotalLogs(response.data.Data.count);
+                      } else {
+                        errorMessageHandler(
+                          enqueueSnackbar,
+                          response?.response?.data?.Message || 'Something Went Wrong.',
+                          response?.response?.status,
+                          authCtx.setAuthError
+                        );
+                      }
+                      setIsLoading(false);
+                    });
+                  }
+                } else {
+                  setIsLoading(false);
+                  errorMessageHandler(
+                    enqueueSnackbar,
+                    response?.response?.data?.Message || 'Something Went Wrong.',
+                    response?.response?.status,
+                    authCtx.setAuthError
+                  );
+                }
+              })
+              .catch((error) => {
+                // ✅ Detect CORS error (network error, no response)
+                if (error.message === 'Network Error' && !error.response) {
+                  enqueueSnackbar('Please refresh the page.', {
+                    variant: 'error',
+                    action: (key) => (
+                      <Button
+                        onClick={() => {
+                          window.location.reload();
+                          closeSnackbar(key);
+                        }}
+                        sx={{ color: '#fff', textTransform: 'none' }}>
+                        Refresh
+                      </Button>
+                    )
+                  });
+                } else {
+                  errorMessageHandler(
+                    enqueueSnackbar,
+                    error?.response?.data?.Message || 'Something Went Wrong.',
+                    error?.response?.status,
+                    authCtx.setAuthError
+                  );
+                }
+              })
+              .finally(() => {
+                setIsLoading(false);
+              });
+          } else {
+            setIsLoading(false);
+            errorMessageHandler(
+              enqueueSnackbar,
+              response?.response?.data?.Message || 'Something Went Wrong.',
+              response?.response?.status,
+              authCtx.setAuthError
+            );
+          }
+        })
+        .catch((error) => {
+          // ✅ Detect CORS error (network error, no response)
+          if (error.message === 'Network Error' && !error.response) {
+            enqueueSnackbar('Please refresh the page.', {
+              variant: 'error',
+              action: (key) => (
+                <Button
+                  onClick={() => {
+                    window.location.reload();
+                    closeSnackbar(key);
+                  }}
+                  sx={{ color: '#fff', textTransform: 'none' }}>
+                  Refresh
+                </Button>
+              )
+            });
+          } else {
+            errorMessageHandler(
+              enqueueSnackbar,
+              error?.response?.data?.Message || 'Something Went Wrong.',
+              error?.response?.status,
+              authCtx.setAuthError
+            );
+          }
+        })
+        .finally(() => {
           setIsLoading(false);
-          errorMessageHandler(
-            enqueueSnackbar,
-            response?.response?.data?.Message || 'Something Went Wrong.',
-            response?.response?.status,
-            authCtx.setAuthError
-          );
-        }
-      });
+        });
     }
     if (authCtx.user.role !== 'Super Admin') {
       API.get('customers/all/locations', {
@@ -371,22 +431,51 @@ const Logs = () => {
           location: 'All',
           cust_id: authCtx.user.cust_id || localStorage.getItem('cust_id')
         }
-      }).then((response) => {
-        if (response.status === 200) {
-          let locations = response.data.Data.locations.map(({ loc_id, loc_name }) => ({
-            loc_id,
-            loc_name
-          }));
-          setLocations([{ loc_id: 'select-all', loc_name: 'Select All' }, ...locations]);
-        } else {
-          errorMessageHandler(
-            enqueueSnackbar,
-            response?.response?.data?.Message || 'Something Went Wrong.',
-            response?.response?.status,
-            authCtx.setAuthError
-          );
-        }
-      });
+      })
+        .then((response) => {
+          if (response.status === 200) {
+            let locations = response.data.Data.locations.map(({ loc_id, loc_name }) => ({
+              loc_id,
+              loc_name
+            }));
+            setLocations([{ loc_id: 'select-all', loc_name: 'Select All' }, ...locations]);
+          } else {
+            errorMessageHandler(
+              enqueueSnackbar,
+              response?.response?.data?.Message || 'Something Went Wrong.',
+              response?.response?.status,
+              authCtx.setAuthError
+            );
+          }
+        })
+        .catch((error) => {
+          // ✅ Detect CORS error (network error, no response)
+          if (error.message === 'Network Error' && !error.response) {
+            enqueueSnackbar('Please refresh the page.', {
+              variant: 'error',
+              action: (key) => (
+                <Button
+                  onClick={() => {
+                    window.location.reload();
+                    closeSnackbar(key);
+                  }}
+                  sx={{ color: '#fff', textTransform: 'none' }}>
+                  Refresh
+                </Button>
+              )
+            });
+          } else {
+            errorMessageHandler(
+              enqueueSnackbar,
+              error?.response?.data?.Message || 'Something Went Wrong.',
+              error?.response?.status,
+              authCtx.setAuthError
+            );
+          }
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
     }
     // eslint-disable-next-line no-unsafe-optional-chaining
     setLocations([{ loc_id: 'select-all', loc_name: 'Select All' }, ...authCtx?.user?.locations]);
@@ -491,43 +580,101 @@ const Logs = () => {
           locations: selectedLocation.map((item) => item.loc_id),
           cust_id: localStorage.getItem('cust_id')
         }
-      }).then((response) => {
-        if (response.status === 200) {
-          //setSelectedUsers(location?.state?.user || response.data.Data);
-          setUsers([users[0], ...response.data.Data]);
-          setSelectedUsers(location?.state ? location?.state.user : response.data.Data);
+      })
+        .then((response) => {
+          if (response.status === 200) {
+            //setSelectedUsers(location?.state?.user || response.data.Data);
+            setUsers([users[0], ...response.data.Data]);
+            setSelectedUsers(location?.state ? location?.state.user : response.data.Data);
 
-          // eslint-disable-next-line no-unsafe-optional-chaining
-          // setUsers([users[0]], ...location?.state?.user);
-        } else {
-          errorMessageHandler(
-            enqueueSnackbar,
-            response?.response?.data?.Message || 'Something Went Wrong.',
-            response?.response?.status,
-            authCtx.setAuthError
-          );
-        }
-        setIsLoading(false);
-      });
+            // eslint-disable-next-line no-unsafe-optional-chaining
+            // setUsers([users[0]], ...location?.state?.user);
+          } else {
+            errorMessageHandler(
+              enqueueSnackbar,
+              response?.response?.data?.Message || 'Something Went Wrong.',
+              response?.response?.status,
+              authCtx.setAuthError
+            );
+          }
+          setIsLoading(false);
+        })
+        .catch((error) => {
+          // ✅ Detect CORS error (network error, no response)
+          if (error.message === 'Network Error' && !error.response) {
+            enqueueSnackbar('Please refresh the page.', {
+              variant: 'error',
+              action: (key) => (
+                <Button
+                  onClick={() => {
+                    window.location.reload();
+                    closeSnackbar(key);
+                  }}
+                  sx={{ color: '#fff', textTransform: 'none' }}>
+                  Refresh
+                </Button>
+              )
+            });
+          } else {
+            errorMessageHandler(
+              enqueueSnackbar,
+              error?.response?.data?.Message || 'Something Went Wrong.',
+              error?.response?.status,
+              authCtx.setAuthError
+            );
+          }
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
       API.get('family/location/', {
         params: {
           locations: selectedLocation.map((item) => item.loc_id),
           cust_id: localStorage.getItem('cust_id')
         }
-      }).then((response) => {
-        if (response.status === 200) {
-          setFamilies([families[0], ...response.data.Data]);
-          setSelectedFamilies(location?.state?.family || response.data.Data);
-        } else {
-          errorMessageHandler(
-            enqueueSnackbar,
-            response?.response?.data?.Message || 'Something Went Wrong.',
-            response?.response?.status,
-            authCtx.setAuthError
-          );
-        }
-        setIsLoading(false);
-      });
+      })
+        .then((response) => {
+          if (response.status === 200) {
+            setFamilies([families[0], ...response.data.Data]);
+            setSelectedFamilies(location?.state?.family || response.data.Data);
+          } else {
+            errorMessageHandler(
+              enqueueSnackbar,
+              response?.response?.data?.Message || 'Something Went Wrong.',
+              response?.response?.status,
+              authCtx.setAuthError
+            );
+          }
+          setIsLoading(false);
+        })
+        .catch((error) => {
+          // ✅ Detect CORS error (network error, no response)
+          if (error.message === 'Network Error' && !error.response) {
+            enqueueSnackbar('Please refresh the page.', {
+              variant: 'error',
+              action: (key) => (
+                <Button
+                  onClick={() => {
+                    window.location.reload();
+                    closeSnackbar(key);
+                  }}
+                  sx={{ color: '#fff', textTransform: 'none' }}>
+                  Refresh
+                </Button>
+              )
+            });
+          } else {
+            errorMessageHandler(
+              enqueueSnackbar,
+              error?.response?.data?.Message || 'Something Went Wrong.',
+              error?.response?.status,
+              authCtx.setAuthError
+            );
+          }
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
     }
   }, [selectedLocation]);
 
@@ -589,22 +736,51 @@ const Logs = () => {
         locations: logsPayload.locations.map((item) => item.loc_id),
         users: usersToAdd ? usersToAdd : logsPayload.users,
         familyMemberIds: familiesToAdd ? familiesToAdd : logsPayload.familyMemberIds
-      }).then((response) => {
-        if (response.status === 200) {
-          setResponseData(response.data.Data.logs);
-          setcsvGenerated(false);
-          setLogsList(response.data.Data.logs);
-          setTotalLogs(response.data.Data.count);
-        } else {
-          errorMessageHandler(
-            enqueueSnackbar,
-            response?.response?.data?.Message || 'Something Went Wrong.',
-            response?.response?.status,
-            authCtx.setAuthError
-          );
-        }
-        setIsLoading(false);
-      });
+      })
+        .then((response) => {
+          if (response.status === 200) {
+            setResponseData(response.data.Data.logs);
+            setcsvGenerated(false);
+            setLogsList(response.data.Data.logs);
+            setTotalLogs(response.data.Data.count);
+          } else {
+            errorMessageHandler(
+              enqueueSnackbar,
+              response?.response?.data?.Message || 'Something Went Wrong.',
+              response?.response?.status,
+              authCtx.setAuthError
+            );
+          }
+          setIsLoading(false);
+        })
+        .catch((error) => {
+          // ✅ Detect CORS error (network error, no response)
+          if (error.message === 'Network Error' && !error.response) {
+            enqueueSnackbar('Please refresh the page.', {
+              variant: 'error',
+              action: (key) => (
+                <Button
+                  onClick={() => {
+                    window.location.reload();
+                    closeSnackbar(key);
+                  }}
+                  sx={{ color: '#fff', textTransform: 'none' }}>
+                  Refresh
+                </Button>
+              )
+            });
+          } else {
+            errorMessageHandler(
+              enqueueSnackbar,
+              error?.response?.data?.Message || 'Something Went Wrong.',
+              error?.response?.status,
+              authCtx.setAuthError
+            );
+          }
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
     }
   };
 

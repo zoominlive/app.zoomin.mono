@@ -17,6 +17,7 @@ import API from '../../api';
 import { useSnackbar } from 'notistack';
 import AuthContext from '../../context/authcontext';
 import { errorMessageHandler } from '../../utils/errormessagehandler';
+import ConfirmationDialog from '../common/confirmationdialog';
 
 const DeleteRecordingDialog = (props) => {
   const [isCloseDialog, setIsCloseDialog] = useState(false);
@@ -74,43 +75,31 @@ const DeleteRecordingDialog = (props) => {
 
   return (
     <Dialog
+      sx={{
+        '& .MuiDialog-container': isCloseDialog
+          ? {
+              alignItems: 'flex-start',
+              marginTop: '12vh',
+              '& .MuiDialog-paper': { maxWidth: '440px !important' }
+            }
+          : {}
+      }}
       open={props.open}
       onClose={handleClose}
       fullWidth
       className="delete-recording-dialog delete-dialog">
       {isCloseDialog ? (
         <>
-          <Stack direction={'row'} justifyContent={'center'} alignItems={'start'} padding={3}>
-            <DialogContentText>
-              Are you sure you want to exit before completing the wizard ?
-            </DialogContentText>
-          </Stack>
-          <DialogActions sx={{ paddingRight: 4, paddingBottom: 3 }}>
-            <Stack direction="row" justifyContent="flex-end" width="100%">
-              <Button
-                className="log-btn"
-                variant="outlined"
-                sx={{ marginRight: 1.5 }}
-                onClick={() => {
-                  setIsCloseDialog(false);
-                }}>
-                No
-              </Button>
-
-              <Button
-                id="yes-btn"
-                className="log-btn"
-                variant="outlined"
-                sx={{ marginRight: 1.5, color: '#ffff' }}
-                style={{ color: '#ffff' }}
-                onClick={() => {
-                  setIsCloseDialog(false);
-                  props.handleDialogClose();
-                }}>
-                Yes
-              </Button>
-            </Stack>
-          </DialogActions>
+          <ConfirmationDialog
+            onCancel={() => {
+              setIsCloseDialog(false);
+            }}
+            onConfirm={() => {
+              setIsCloseDialog(false);
+              props.handleDialogClose();
+            }}
+            handleFormDialogClose={handleClose}
+          />
         </>
       ) : (
         <>

@@ -25,7 +25,6 @@ import {
   // MenuItem,
   // FormHelperText,
   IconButton,
-  DialogContentText,
   Typography
 } from '@mui/material';
 import { Plus } from 'react-feather';
@@ -48,6 +47,8 @@ import { AdapterMoment } from '@mui/x-date-pickers/AdapterMoment';
 import ArrowDropUpIcon from '@mui/icons-material/ArrowDropUp';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import moment from 'moment';
+import closeicon from '../../assets/closeicon.svg';
+import ConfirmationDialog from '../common/confirmationdialog';
 
 const STEPS = ['Customer', 'Customer Locations', 'User'];
 
@@ -1044,189 +1045,176 @@ const CustomerForm = (props) => {
   }, []);
   return (
     <Dialog
+      sx={{
+        '& .MuiDialog-container': isCloseDialog
+          ? {
+              alignItems: 'flex-start',
+              marginTop: '12vh',
+              '& .MuiDialog-paper': { maxWidth: '440px !important' }
+            }
+          : {}
+      }}
       open={props.open}
       onClose={handleDialogCancel}
       fullWidth
       className="add-customer-drawer">
-      <DialogTitle sx={{ paddingTop: 3.5 }}>
-        {props.customer ? 'Edit Customer' : 'Add Customer'}
-        {/* <DialogContentText>Please add family member so they can watch stream</DialogContentText> */}
-        <IconButton
-          aria-label="close"
-          onClick={handleDialogCancel}
-          sx={{
-            position: 'absolute',
-            right: 18,
-            top: 30
-          }}>
-          <CloseIcon />
-        </IconButton>
-      </DialogTitle>
-
-      <Divider />
+      {/* <Divider /> */}
       {isCloseDialog ? (
-        <>
-          <Stack direction={'row'} justifyContent={'center'} alignItems={'start'} padding={3}>
-            <DialogContentText>
-              Are you sure you want to exit before completing the wizard ?
-            </DialogContentText>
-          </Stack>
-          <DialogActions sx={{ paddingRight: 4, paddingBottom: 3 }}>
-            <Stack direction="row" justifyContent="flex-end" width="100%">
-              <Button
-                className="log-btn"
-                variant="outlined"
-                sx={{ marginRight: 1.5 }}
-                onClick={() => {
-                  setIsCloseDialog(false);
-                }}>
-                No
-              </Button>
-
-              <Button
-                id="yes-btn"
-                className="log-btn"
-                variant="outlined"
-                sx={{ marginRight: 1.5, color: '#ffff' }}
-                style={{ color: '#ffff' }}
-                onClick={() => {
-                  setIsCloseDialog(false);
-                  handleFormDialogClose();
-                  props.setOpen(false);
-                }}>
-                Yes
-              </Button>
-            </Stack>
-          </DialogActions>
-        </>
+        <ConfirmationDialog
+          onCancel={() => {
+            setIsCloseDialog(false);
+          }}
+          onConfirm={() => {
+            setIsCloseDialog(false);
+            handleFormDialogClose();
+            props.setOpen(false);
+          }}
+          handleFormDialogClose={handleDialogCancel}
+        />
       ) : (
-        <Formik
-          enableReinitialize
-          validateOnChange
-          validationSchema={validationSchema[activeStep]}
-          initialValues={{
-            customer_first_name: props?.customer?.billing_contact_first || '',
-            customer_last_name: props?.customer?.billing_contact_last || '',
-            company_name: props?.customer?.company_name || '',
-            phone: props?.customer?.phone || '',
-            address_1: props?.customer?.address_1 || '',
-            address_2: props?.customer?.address_2 || '',
-            city: props?.customer?.city || '',
-            country: props?.customer?.country || '',
-            postal: props?.customer?.postal || '',
-            max_cameras: props?.customer?.max_cameras || '',
-            // available_cameras: props?.customer?.available_cameras || '',
-            max_locations: props?.customer?.max_locations || '',
-            trial_period_days: props?.customer?.trial_period_days || '',
-            transcoder_endpoint: props?.customer?.transcoder_endpoint || '',
-            rtmp_transcoder_endpoint: props?.customer?.rtmp_transcoder_endpoint || '',
-            timeout: props?.customer?.timeout || '',
-            max_resolution: props?.customer?.max_resolution || 720,
-            max_file_size: props?.customer?.max_file_size || 40000,
-            max_fps: props?.customer?.max_fps || 15,
-            max_stream_live_license: props?.customer?.max_stream_live_license || '',
-            max_stream_live_license_zone: props?.customer?.max_stream_live_license_zone || '',
-            audio_permission: !_.isNil(props?.customer?.audio_permission)
-              ? props?.customer?.audio_permission
-              : true,
-            camera_recording: !_.isNil(props?.customer?.camera_recording)
-              ? props?.customer?.camera_recording
-              : true,
-            invite_user: !_.isNil(props?.customer?.invite_user)
-              ? props?.customer?.invite_user
-              : true,
-            first_name: props?.customer?.users[0]?.first_name || '',
-            last_name: props?.customer?.users[0]?.last_name || '',
-            email: props?.customer?.users[0]?.email || '',
-            role: props?.customer?.users[0]?.role || 'Admin',
-            location: props?.customer?.users[0]?.locations
-              ? props?.customer?.users[0]?.locations?.sort((a, b) =>
-                  a.loc_name > b.loc_name ? 1 : -1
-                )
-              : [],
-            zones: props?.customer?.users[0]?.zonesInTeacher
-              ? props.customer?.users[0]?.zonesInTeacher.map((zone) => {
-                  return {
-                    zone_name: zone.zone.zone_name,
-                    location: zone.zone.location,
-                    zone_id: zone.zone_id
-                  };
-                })
-              : [],
-            stream_live_license: !_.isNil(props?.customer?.user?.stream_live_license)
-              ? props?.customer?.user?.stream_live_license
-              : true,
-            customer_locations: props?.customer?.customer_locations
-              ? props?.customer?.customer_locations
-              : [{ loc_name: '' }],
-            recurring_charge_day: props?.customer?.createdAt
-              ? moment(props?.customer?.createdAt).format('MM/DD/YY')
-              : recurringChargeDate
-          }}
-          onSubmit={handleSubmit}>
-          {({ values, setFieldValue, touched, errors, isValidating, arrayHelpers }) => {
-            return (
-              <Form>
-                <DialogContent>
-                  <Box sx={{ width: '100%' }}>
-                    <Stepper activeStep={activeStep} alternativeLabel>
-                      {STEPS.map((label) => (
-                        <Step key={label}>
-                          <StepLabel>{label}</StepLabel>
-                        </Step>
-                      ))}
-                    </Stepper>
-                  </Box>
-                  <Box p={3} mx="auto">
-                    {renderStepContent(
-                      activeStep,
-                      values,
-                      setFieldValue,
-                      touched,
-                      errors,
-                      arrayHelpers
-                    )}
-                  </Box>
-                </DialogContent>
-                <Divider />
-                <DialogActions>
-                  <Stack direction="row" justifyContent="space-between" width="100%">
-                    {/* {activeStep > 0 && (
-                    <Button
-                      variant="text"
-                      sx={{ marginLeft: '20px', color: '#00000042' }}
-                      onClick={handleBack}>
-                      BACK
-                    </Button>
-                  )} */}
-                    <Stack direction="row" justifyContent="flex-end" width="100%">
-                      {activeStep > 0 && (
-                        <Button
-                          className="log-btn"
-                          variant="outlined"
-                          sx={{ marginRight: 1.5 }}
-                          disabled={submitLoading || isValidating}
-                          onClick={handleBack}>
-                          Previous Step
-                        </Button>
+        <>
+          <DialogTitle sx={{ paddingTop: 3.5 }}>
+            {props.customer ? 'Edit Customer' : 'Add Customer'}
+            {/* <DialogContentText>Please add family member so they can watch stream</DialogContentText> */}
+            <IconButton
+              aria-label="close"
+              onClick={handleDialogCancel}
+              sx={{
+                position: 'absolute',
+                right: 18,
+                top: 30
+              }}>
+              {!isCloseDialog ? <CloseIcon /> : <img src={closeicon} alt="closeicon" />}
+            </IconButton>
+          </DialogTitle>
+          <Formik
+            enableReinitialize
+            validateOnChange
+            validationSchema={validationSchema[activeStep]}
+            initialValues={{
+              customer_first_name: props?.customer?.billing_contact_first || '',
+              customer_last_name: props?.customer?.billing_contact_last || '',
+              company_name: props?.customer?.company_name || '',
+              phone: props?.customer?.phone || '',
+              address_1: props?.customer?.address_1 || '',
+              address_2: props?.customer?.address_2 || '',
+              city: props?.customer?.city || '',
+              country: props?.customer?.country || '',
+              postal: props?.customer?.postal || '',
+              max_cameras: props?.customer?.max_cameras || '',
+              // available_cameras: props?.customer?.available_cameras || '',
+              max_locations: props?.customer?.max_locations || '',
+              trial_period_days: props?.customer?.trial_period_days || '',
+              transcoder_endpoint: props?.customer?.transcoder_endpoint || '',
+              rtmp_transcoder_endpoint: props?.customer?.rtmp_transcoder_endpoint || '',
+              timeout: props?.customer?.timeout || '',
+              max_resolution: props?.customer?.max_resolution || 720,
+              max_file_size: props?.customer?.max_file_size || 40000,
+              max_fps: props?.customer?.max_fps || 15,
+              max_stream_live_license: props?.customer?.max_stream_live_license || '',
+              max_stream_live_license_zone: props?.customer?.max_stream_live_license_zone || '',
+              audio_permission: !_.isNil(props?.customer?.audio_permission)
+                ? props?.customer?.audio_permission
+                : true,
+              camera_recording: !_.isNil(props?.customer?.camera_recording)
+                ? props?.customer?.camera_recording
+                : true,
+              invite_user: !_.isNil(props?.customer?.invite_user)
+                ? props?.customer?.invite_user
+                : true,
+              first_name: props?.customer?.users[0]?.first_name || '',
+              last_name: props?.customer?.users[0]?.last_name || '',
+              email: props?.customer?.users[0]?.email || '',
+              role: props?.customer?.users[0]?.role || 'Admin',
+              location: props?.customer?.users[0]?.locations
+                ? props?.customer?.users[0]?.locations?.sort((a, b) =>
+                    a.loc_name > b.loc_name ? 1 : -1
+                  )
+                : [],
+              zones: props?.customer?.users[0]?.zonesInTeacher
+                ? props.customer?.users[0]?.zonesInTeacher.map((zone) => {
+                    return {
+                      zone_name: zone.zone.zone_name,
+                      location: zone.zone.location,
+                      zone_id: zone.zone_id
+                    };
+                  })
+                : [],
+              stream_live_license: !_.isNil(props?.customer?.user?.stream_live_license)
+                ? props?.customer?.user?.stream_live_license
+                : true,
+              customer_locations: props?.customer?.customer_locations
+                ? props?.customer?.customer_locations
+                : [{ loc_name: '' }],
+              recurring_charge_day: props?.customer?.createdAt
+                ? moment(props?.customer?.createdAt).format('MM/DD/YY')
+                : recurringChargeDate
+            }}
+            onSubmit={handleSubmit}>
+            {({ values, setFieldValue, touched, errors, isValidating, arrayHelpers }) => {
+              return (
+                <Form>
+                  <DialogContent>
+                    <Box sx={{ width: '100%' }}>
+                      <Stepper activeStep={activeStep} alternativeLabel>
+                        {STEPS.map((label) => (
+                          <Step key={label}>
+                            <StepLabel>{label}</StepLabel>
+                          </Step>
+                        ))}
+                      </Stepper>
+                    </Box>
+                    <Box p={3} mx="auto">
+                      {renderStepContent(
+                        activeStep,
+                        values,
+                        setFieldValue,
+                        touched,
+                        errors,
+                        arrayHelpers
                       )}
-                      <LoadingButton
-                        className="add-btn save-changes-btn"
-                        loading={submitLoading || isValidating}
-                        loadingPosition={submitLoading || isValidating ? 'start' : undefined}
-                        startIcon={(submitLoading || isValidating) && <SaveIcon />}
+                    </Box>
+                  </DialogContent>
+                  <Divider />
+                  <DialogActions>
+                    <Stack direction="row" justifyContent="space-between" width="100%">
+                      {/* {activeStep > 0 && (
+                      <Button
                         variant="text"
-                        // onClick={handleFormSubmit}
-                        type="submit">
-                        {activeStep === STEPS.length - 1 ? 'Finish' : 'Next Step'}
-                      </LoadingButton>
+                        sx={{ marginLeft: '20px', color: '#00000042' }}
+                        onClick={handleBack}>
+                        BACK
+                      </Button>
+                    )} */}
+                      <Stack direction="row" justifyContent="flex-end" width="100%">
+                        {activeStep > 0 && (
+                          <Button
+                            className="log-btn"
+                            variant="outlined"
+                            sx={{ marginRight: 1.5 }}
+                            disabled={submitLoading || isValidating}
+                            onClick={handleBack}>
+                            Previous Step
+                          </Button>
+                        )}
+                        <LoadingButton
+                          className="add-btn save-changes-btn"
+                          loading={submitLoading || isValidating}
+                          loadingPosition={submitLoading || isValidating ? 'start' : undefined}
+                          startIcon={(submitLoading || isValidating) && <SaveIcon />}
+                          variant="text"
+                          // onClick={handleFormSubmit}
+                          type="submit">
+                          {activeStep === STEPS.length - 1 ? 'Finish' : 'Next Step'}
+                        </LoadingButton>
+                      </Stack>
                     </Stack>
-                  </Stack>
-                </DialogActions>
-              </Form>
-            );
-          }}
-        </Formik>
+                  </DialogActions>
+                </Form>
+              );
+            }}
+          </Formik>
+        </>
       )}
     </Dialog>
   );

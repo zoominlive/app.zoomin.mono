@@ -4,6 +4,7 @@ import {
   Button,
   Card,
   CardContent,
+  Checkbox,
   Chip,
   // CircularProgress,
   Collapse,
@@ -214,7 +215,7 @@ Row.propTypes = {
 const Zones = () => {
   const layoutCtx = useContext(LayoutContext);
   const authCtx = useContext(AuthContext);
-  const { enqueueSnackbar } = useSnackbar();
+  const { enqueueSnackbar, closeSnackbar } = useSnackbar();
   const [isZoneFormDialogOpen, setIsZoneFormDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -230,7 +231,7 @@ const Zones = () => {
     pageNumber: 0,
     pageSize: parseInt(process.env.REACT_APP_PAGINATION_LIMIT, 10),
     searchBy: '',
-    location: 'All',
+    location: ['All'],
     type: 'All',
     zones: [],
     cust_id: localStorage.getItem('cust_id')
@@ -266,20 +267,49 @@ const Zones = () => {
   // Method to fetch the zones list for table
   const getZonesList = () => {
     setIsLoading(true);
-    API.get('zones', { params: zonesPayload }).then((response) => {
-      if (response.status === 200) {
-        setZoneList(response.data.Data.finalZoneDetails);
-        setTotalZones(response.data.Data.count);
-      } else {
-        errorMessageHandler(
-          enqueueSnackbar,
-          response?.response?.data?.Message || 'Something Went Wrong.',
-          response?.response?.status,
-          authCtx.setAuthError
-        );
-      }
-      setIsLoading(false);
-    });
+    API.get('zones', { params: zonesPayload })
+      .then((response) => {
+        if (response.status === 200) {
+          setZoneList(response.data.Data.finalZoneDetails);
+          setTotalZones(response.data.Data.count);
+        } else {
+          errorMessageHandler(
+            enqueueSnackbar,
+            response?.response?.data?.Message || 'Something Went Wrong.',
+            response?.response?.status,
+            authCtx.setAuthError
+          );
+        }
+        setIsLoading(false);
+      })
+      .catch((error) => {
+        // ✅ Detect CORS error (network error, no response)
+        if (error.message === 'Network Error' && !error.response) {
+          enqueueSnackbar('Please refresh the page.', {
+            variant: 'error',
+            action: (key) => (
+              <Button
+                onClick={() => {
+                  window.location.reload();
+                  closeSnackbar(key);
+                }}
+                sx={{ color: '#fff', textTransform: 'none' }}>
+                Refresh
+              </Button>
+            )
+          });
+        } else {
+          errorMessageHandler(
+            enqueueSnackbar,
+            error?.response?.data?.Message || 'Something Went Wrong.',
+            error?.response?.status,
+            authCtx.setAuthError
+          );
+        }
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   };
 
   // Method to fetch the zone types list for table
@@ -390,11 +420,20 @@ const Zones = () => {
 
   // Method to handle location change for table
   const handleLocationChange = (event) => {
-    setZonesPayload((prevPayload) => ({
-      ...prevPayload,
-      location: event.target.value,
-      pageNumber: 0
-    }));
+    const { value } = event.target;
+
+    if (value.includes('All')) {
+      // If 'All' is selected, only keep 'All' in the state
+      setZonesPayload((prevPayload) => ({
+        ...prevPayload,
+        location: ['All']
+      }));
+    } else {
+      setZonesPayload((prevPayload) => ({
+        ...prevPayload,
+        location: value.filter((loc) => loc !== 'All') // Ensure 'All' is removed if specific locations are selected
+      }));
+    }
   };
 
   // Method to handle zone type change for table
@@ -448,13 +487,41 @@ const Zones = () => {
                         <Select
                           labelId="location"
                           id="location"
+                          multiple
                           value={zonesPayload?.location}
-                          onChange={handleLocationChange}>
-                          <MenuItem value={'All'}>All</MenuItem>
+                          onChange={handleLocationChange}
+                          renderValue={(selected) => {
+                            if (selected.length === 0) return 'Select Locations';
+                            if (selected.includes('All')) return 'All';
+
+                            const selectedNames = authCtx.user.locations
+                              .filter((loc) => selected.includes(loc.loc_id))
+                              .map((loc) => loc.loc_name)
+                              .join(', ');
+
+                            return (
+                              <Box
+                                sx={{
+                                  whiteSpace: 'nowrap',
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis'
+                                }}>
+                                {selectedNames}
+                              </Box>
+                            );
+                          }}>
+                          <MenuItem value="All">
+                            <Checkbox checked={zonesPayload.location.includes('All')} />
+                            All
+                          </MenuItem>
                           {authCtx.user.locations
                             ?.sort((a, b) => (a.loc_name > b.loc_name ? 1 : -1))
                             .map((item) => (
-                              <MenuItem key={item.loc_id} value={item.loc_id}>
+                              <MenuItem
+                                key={item.loc_id}
+                                value={item.loc_id}
+                                disabled={zonesPayload.location.includes('All')}>
+                                <Checkbox checked={zonesPayload.location.includes(item.loc_id)} />
                                 {item.loc_name}
                               </MenuItem>
                             ))}
