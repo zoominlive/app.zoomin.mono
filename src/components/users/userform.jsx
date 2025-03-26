@@ -4,7 +4,6 @@ import PropTypes from 'prop-types';
 import {
   Autocomplete,
   Avatar,
-  Button,
   Checkbox,
   Chip,
   Dialog,
@@ -12,7 +11,6 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
-  Divider,
   FormControl,
   FormControlLabel,
   FormHelperText,
@@ -39,6 +37,8 @@ import { useContext } from 'react';
 import AuthContext from '../../context/authcontext';
 import _ from 'lodash';
 import CloseIcon from '@mui/icons-material/Close';
+import closeicon from '../../assets/closeicon.svg';
+import ConfirmationDialog from '../common/confirmationdialog';
 
 const UserForm = (props) => {
   const { enqueueSnackbar } = useSnackbar();
@@ -288,329 +288,322 @@ const UserForm = (props) => {
   console.log('user locations==>', authCtx.user.locations);
 
   return (
-    <Dialog open={props.open} onClose={handleClose} fullWidth className="add-user-drawer">
-      <DialogTitle sx={{ paddingTop: 3.5 }}>
-        {props.user ? 'Edit Staff' : 'Add Staff'}
-        <DialogContentText></DialogContentText>
-        <IconButton
-          aria-label="close"
-          onClick={handleClose}
-          sx={{
-            position: 'absolute',
-            right: 18,
-            top: 30
-          }}>
-          <CloseIcon />
-        </IconButton>
-      </DialogTitle>
-
-      <Divider />
+    <Dialog
+      sx={{
+        '& .MuiDialog-container': isCloseDialog
+          ? {
+              alignItems: 'flex-start',
+              marginTop: '12vh',
+              '& .MuiDialog-paper': { maxWidth: '440px !important' }
+            }
+          : {}
+      }}
+      open={props.open}
+      onClose={handleClose}
+      fullWidth
+      className="add-user-drawer">
+      {/* <Divider /> */}
       {isCloseDialog ? (
-        <>
-          <Stack direction={'row'} justifyContent={'center'} alignItems={'start'} padding={3}>
-            <DialogContentText>
-              Are you sure you want to exit before completing the wizard ?
-            </DialogContentText>
-          </Stack>
-          <DialogActions sx={{ paddingRight: 4, paddingBottom: 3 }}>
-            <Stack direction="row" justifyContent="flex-end" width="100%">
-              <Button
-                className="log-btn"
-                variant="outlined"
-                sx={{ marginRight: 1.5 }}
-                onClick={() => {
-                  setIsCloseDialog(false);
-                }}>
-                No
-              </Button>
-
-              <Button
-                id="yes-btn"
-                className="log-btn"
-                variant="outlined"
-                sx={{ marginRight: 1.5, color: '#ffff' }}
-                style={{ color: '#ffff' }}
-                onClick={() => {
-                  setIsCloseDialog(false);
-                  handleFormDialogClose();
-                }}>
-                Yes
-              </Button>
-            </Stack>
-          </DialogActions>
-        </>
+        <ConfirmationDialog
+          onCancel={() => {
+            setIsCloseDialog(false);
+          }}
+          onConfirm={() => {
+            setIsCloseDialog(false);
+            handleFormDialogClose();
+          }}
+          handleFormDialogClose={handleClose}
+        />
       ) : (
-        <Formik
-          enableReinitialize
-          validateOnChange
-          validationSchema={validationSchema}
-          initialValues={formik.initialValues}
-          onSubmit={handleSubmit}>
-          {({ values, setFieldValue, touched, errors }) => {
-            return (
-              <Form>
-                <DialogContent>
-                  <Stack spacing={3} mb={3} mt={2} direction="row" alignItems="center">
-                    <Avatar src={image} />
+        <>
+          <DialogTitle sx={{ paddingTop: 3.5 }}>
+            {props.user ? 'Edit Staff' : 'Add Staff'}
+            <DialogContentText></DialogContentText>
+            <IconButton
+              aria-label="close"
+              onClick={handleClose}
+              sx={{
+                position: 'absolute',
+                right: 18,
+                top: 30
+              }}>
+              {!isCloseDialog ? <CloseIcon /> : <img src={closeicon} alt="closeicon" />}
+            </IconButton>
+          </DialogTitle>
+          <Formik
+            enableReinitialize
+            validateOnChange
+            validationSchema={validationSchema}
+            initialValues={formik.initialValues}
+            onSubmit={handleSubmit}>
+            {({ values, setFieldValue, touched, errors }) => {
+              return (
+                <Form>
+                  <DialogContent>
+                    <Stack spacing={3} mb={3} mt={2} direction="row" alignItems="center">
+                      <Avatar src={image} />
 
-                    <LoadingButton
-                      disabled={submitLoading}
-                      variant="contained"
-                      color="primary"
-                      component="span"
-                      {...getRootProps({ className: 'dropzone' })}>
-                      Upload
-                      <input {...getInputProps()} />
-                    </LoadingButton>
+                      <LoadingButton
+                        disabled={submitLoading}
+                        variant="contained"
+                        color="primary"
+                        component="span"
+                        {...getRootProps({ className: 'dropzone' })}>
+                        Upload
+                        <input {...getInputProps()} />
+                      </LoadingButton>
 
-                    {image && (
-                      <Tooltip title="Remove photo">
-                        <LoadingButton
-                          variant="outlined"
-                          disabled={submitLoading}
-                          className="image-delete-btn"
-                          aria-label="delete"
-                          onClick={handlePhotoDelete}>
-                          <DeleteIcon />
-                        </LoadingButton>
-                      </Tooltip>
-                    )}
-                  </Stack>
-                  <Grid container spacing={2}>
-                    <Grid item md={6} xs={12}>
-                      <InputLabel id="first_name">First Name</InputLabel>
-                      <TextField
-                        labelId="first_name"
-                        name="first_name"
-                        value={values?.first_name}
-                        onChange={(event) => {
-                          setFieldValue('first_name', event.target.value);
-                        }}
-                        helperText={touched.first_name && errors.first_name}
-                        error={touched.first_name && Boolean(errors.first_name)}
-                        fullWidth
-                      />
-                    </Grid>
-                    <Grid item md={6} xs={12}>
-                      <InputLabel id="first_name">Last Name</InputLabel>
-                      <TextField
-                        labelId="last_name"
-                        name="last_name"
-                        value={values?.last_name}
-                        onChange={(event) => {
-                          setFieldValue('last_name', event.target.value);
-                        }}
-                        helperText={touched.last_name && errors.last_name}
-                        error={touched.last_name && Boolean(errors.last_name)}
-                        fullWidth
-                      />
-                    </Grid>
-                    <Grid item md={6} xs={12}>
-                      <InputLabel id="email">Email</InputLabel>
-                      <TextField
-                        labelId="email"
-                        name="email"
-                        value={values?.email}
-                        onChange={(event) => {
-                          setFieldValue('email', event.target.value);
-                        }}
-                        helperText={touched.email && errors.email}
-                        error={touched.email && Boolean(errors.email)}
-                        fullWidth
-                      />
-                    </Grid>
-                    <Grid item md={6} xs={12}>
-                      <InputLabel id="user-role">Role</InputLabel>
-                      <FormControl fullWidth error={touched.role && Boolean(errors.role)}>
-                        <Select
-                          labelId="user-role"
-                          id="user-role"
-                          value={values?.role}
-                          label="Role"
-                          name="role"
+                      {image && (
+                        <Tooltip title="Remove photo">
+                          <LoadingButton
+                            variant="outlined"
+                            disabled={submitLoading}
+                            className="image-delete-btn"
+                            aria-label="delete"
+                            onClick={handlePhotoDelete}>
+                            <DeleteIcon />
+                          </LoadingButton>
+                        </Tooltip>
+                      )}
+                    </Stack>
+                    <Grid container spacing={2}>
+                      <Grid item md={6} xs={12}>
+                        <InputLabel id="first_name">First Name</InputLabel>
+                        <TextField
+                          labelId="first_name"
+                          name="first_name"
+                          value={values?.first_name}
                           onChange={(event) => {
-                            setFieldValue('role', event.target.value);
-                            setSelectedRole(event.target.value);
-                          }}>
-                          <MenuItem value={'Teacher'}>Teacher</MenuItem>
-                          <MenuItem value={'User'}>Staff</MenuItem>
-                          <MenuItem value={'Admin'}>Admin</MenuItem>
-                        </Select>
-                        {touched.role && Boolean(errors.role) && (
-                          <FormHelperText sx={{ color: '#d32f2f' }}>
-                            {touched.role && errors.role}
-                          </FormHelperText>
-                        )}
-                      </FormControl>
-                    </Grid>
-                    <Grid item xs={12} md={values.role === 'Teacher' ? 6 : 12}>
-                      <InputLabel id="locations">Location</InputLabel>
-                      <Autocomplete
-                        labelId="locations"
-                        fullWidth
-                        multiple
-                        id="locations"
-                        options={
-                          props?.user?.locations
-                            ? props?.user?.locations?.sort((a, b) =>
-                                a.loc_name > b.loc_name ? 1 : -1
-                              )
-                            : authCtx.user?.locations?.sort((a, b) =>
-                                a.loc_name > b.loc_name ? 1 : -1
-                              )
-                        }
-                        getOptionLabel={(option) => option.loc_name}
-                        // options={authCtx?.user?.location?.accessable_locations.sort((a, b) =>
-                        //   a > b ? 1 : -1
-                        // )}
-                        onChange={(_, value) => {
-                          console.log('_', _);
-                          console.log('value', value);
-                          let flag = disable_locs.every((i) => value.includes(i));
-                          setFieldValue('locations', flag ? value : value.concat(disable_locs));
-                          setSelectedLocation(flag ? value : value.concat(disable_locs));
-                        }}
-                        value={values?.locations}
-                        renderTags={(value, getTagProps) =>
-                          value.map((option, index) => (
-                            <Chip
-                              key={index}
-                              label={option.loc_name}
-                              {...getTagProps({ index })}
-                              disabled={
-                                authCtx.user?.locations
-                                  ?.map((item) => item.loc_name)
-                                  .indexOf(option.loc_name) == -1
-                              }
-                            />
-                          ))
-                        }
-                        renderInput={(params) => (
-                          <TextField
-                            {...params}
-                            // placeholder="Location"
-                            helperText={touched.locations && errors.locations}
-                            error={touched.locations && Boolean(errors.locations)}
-                            fullWidth
-                          />
-                        )}
-                      />
-                    </Grid>
-                    {values.role === 'Teacher' && (
-                      <Grid item xs={12} md={6}>
-                        <InputLabel id="zones">Zones</InputLabel>
+                            setFieldValue('first_name', event.target.value);
+                          }}
+                          helperText={touched.first_name && errors.first_name}
+                          error={touched.first_name && Boolean(errors.first_name)}
+                          fullWidth
+                        />
+                      </Grid>
+                      <Grid item md={6} xs={12}>
+                        <InputLabel id="first_name">Last Name</InputLabel>
+                        <TextField
+                          labelId="last_name"
+                          name="last_name"
+                          value={values?.last_name}
+                          onChange={(event) => {
+                            setFieldValue('last_name', event.target.value);
+                          }}
+                          helperText={touched.last_name && errors.last_name}
+                          error={touched.last_name && Boolean(errors.last_name)}
+                          fullWidth
+                        />
+                      </Grid>
+                      <Grid item md={6} xs={12}>
+                        <InputLabel id="email">Email</InputLabel>
+                        <TextField
+                          labelId="email"
+                          name="email"
+                          value={values?.email}
+                          onChange={(event) => {
+                            setFieldValue('email', event.target.value);
+                          }}
+                          helperText={touched.email && errors.email}
+                          error={touched.email && Boolean(errors.email)}
+                          fullWidth
+                        />
+                      </Grid>
+                      <Grid item md={6} xs={12}>
+                        <InputLabel id="user-role">Role</InputLabel>
+                        <FormControl fullWidth error={touched.role && Boolean(errors.role)}>
+                          <Select
+                            labelId="user-role"
+                            id="user-role"
+                            value={values?.role}
+                            label="Role"
+                            name="role"
+                            onChange={(event) => {
+                              setFieldValue('role', event.target.value);
+                              setSelectedRole(event.target.value);
+                            }}>
+                            <MenuItem value={'Teacher'}>Teacher</MenuItem>
+                            <MenuItem value={'User'}>Staff</MenuItem>
+                            <MenuItem value={'Admin'}>Admin</MenuItem>
+                          </Select>
+                          {touched.role && Boolean(errors.role) && (
+                            <FormHelperText sx={{ color: '#d32f2f' }}>
+                              {touched.role && errors.role}
+                            </FormHelperText>
+                          )}
+                        </FormControl>
+                      </Grid>
+                      <Grid item xs={12} md={values.role === 'Teacher' ? 6 : 12}>
+                        <InputLabel id="locations">Location</InputLabel>
                         <Autocomplete
-                          labelId="zones"
+                          labelId="locations"
                           fullWidth
                           multiple
-                          id="zones"
-                          noOptionsText={'Select location first'}
-                          options={zoneList
-                            .sort((a, b) => (a?.zone_name > b?.zone_name ? 1 : -1))
-                            ?.filter((zone) => {
-                              if (
-                                values?.locations
-                                  ?.map((_) => _.loc_id)
-                                  .find((loc) => loc == zone?.loc_id)
-                              ) {
-                                return zone;
-                              }
-                            })}
-                          value={values.zones}
-                          isOptionEqualToValue={(option, value) =>
-                            option?.zone_id === value?.zone_id
+                          id="locations"
+                          options={
+                            props?.user?.locations
+                              ? props?.user?.locations?.sort((a, b) =>
+                                  a.loc_name > b.loc_name ? 1 : -1
+                                )
+                              : authCtx.user?.locations?.sort((a, b) =>
+                                  a.loc_name > b.loc_name ? 1 : -1
+                                )
                           }
-                          getOptionLabel={(option) => {
-                            return option?.zone_name;
-                          }}
+                          getOptionLabel={(option) => option.loc_name}
+                          // options={authCtx?.user?.location?.accessable_locations.sort((a, b) =>
+                          //   a > b ? 1 : -1
+                          // )}
                           onChange={(_, value) => {
-                            setFieldValue('zones', value);
+                            console.log('_', _);
+                            console.log('value', value);
+                            let flag = disable_locs.every((i) => value.includes(i));
+                            setFieldValue('locations', flag ? value : value.concat(disable_locs));
+                            setSelectedLocation(flag ? value : value.concat(disable_locs));
                           }}
+                          value={values?.locations}
                           renderTags={(value, getTagProps) =>
                             value.map((option, index) => (
                               <Chip
                                 key={index}
-                                label={option?.zone_name}
+                                label={option.loc_name}
                                 {...getTagProps({ index })}
+                                disabled={
+                                  authCtx.user?.locations
+                                    ?.map((item) => item.loc_name)
+                                    .indexOf(option.loc_name) == -1
+                                }
                               />
                             ))
                           }
                           renderInput={(params) => (
                             <TextField
                               {...params}
-                              // placeholder="Zone"
-                              helperText={touched.zones && errors.zones}
-                              error={touched.zones && Boolean(errors.zones)}
+                              // placeholder="Location"
+                              helperText={touched.locations && errors.locations}
+                              error={touched.locations && Boolean(errors.locations)}
                               fullWidth
                             />
                           )}
                         />
                       </Grid>
-                    )}
-                    <Grid item xs={12} md={6}>
-                      <FormControl>
-                        <FormControlLabel
-                          disabled={
-                            (props?.user &&
-                              liveStreamLicense === 0 &&
-                              !values.stream_live_license) ||
-                            (!props?.user && liveStreamLicense === 0)
-                              ? true
-                              : false
-                          }
-                          control={
-                            <Checkbox
-                              checked={values.stream_live_license}
-                              onChange={(event) => {
-                                setFieldValue('stream_live_license', event.target.checked);
-                                setLiveStreamLicense(
-                                  event.target.checked
-                                    ? liveStreamLicense - 1
-                                    : liveStreamLicense + 1
-                                );
-                              }}
-                            />
-                          }
-                          label={`Assign Live Streaming License (${liveStreamLicense} Available)`}
-                        />
-                      </FormControl>
+                      {values.role === 'Teacher' && (
+                        <Grid item xs={12} md={6}>
+                          <InputLabel id="zones">Zones</InputLabel>
+                          <Autocomplete
+                            labelId="zones"
+                            fullWidth
+                            multiple
+                            id="zones"
+                            noOptionsText={'Select location first'}
+                            options={zoneList
+                              .sort((a, b) => (a?.zone_name > b?.zone_name ? 1 : -1))
+                              ?.filter((zone) => {
+                                if (
+                                  values?.locations
+                                    ?.map((_) => _.loc_id)
+                                    .find((loc) => loc == zone?.loc_id)
+                                ) {
+                                  return zone;
+                                }
+                              })}
+                            value={values.zones}
+                            isOptionEqualToValue={(option, value) =>
+                              option?.zone_id === value?.zone_id
+                            }
+                            getOptionLabel={(option) => {
+                              return option?.zone_name;
+                            }}
+                            onChange={(_, value) => {
+                              setFieldValue('zones', value);
+                            }}
+                            renderTags={(value, getTagProps) =>
+                              value.map((option, index) => (
+                                <Chip
+                                  key={index}
+                                  label={option?.zone_name}
+                                  {...getTagProps({ index })}
+                                />
+                              ))
+                            }
+                            renderInput={(params) => (
+                              <TextField
+                                {...params}
+                                // placeholder="Zone"
+                                helperText={touched.zones && errors.zones}
+                                error={touched.zones && Boolean(errors.zones)}
+                                fullWidth
+                              />
+                            )}
+                          />
+                        </Grid>
+                      )}
+                      <Grid item xs={12} md={6}>
+                        <FormControl>
+                          <FormControlLabel
+                            disabled={
+                              (props?.user &&
+                                liveStreamLicense === 0 &&
+                                !values.stream_live_license) ||
+                              (!props?.user && liveStreamLicense === 0)
+                                ? true
+                                : false
+                            }
+                            control={
+                              <Checkbox
+                                checked={values.stream_live_license}
+                                onChange={(event) => {
+                                  setFieldValue('stream_live_license', event.target.checked);
+                                  setLiveStreamLicense(
+                                    event.target.checked
+                                      ? liveStreamLicense - 1
+                                      : liveStreamLicense + 1
+                                  );
+                                }}
+                              />
+                            }
+                            label={`Assign Live Streaming License (${liveStreamLicense} Available)`}
+                          />
+                        </FormControl>
+                      </Grid>
                     </Grid>
-                  </Grid>
-                </DialogContent>
+                  </DialogContent>
 
-                <DialogActions
-                  sx={{
-                    paddingRight: 4,
-                    paddingBottom: 3,
-                    justifyContent:
-                      isUserVerified || isUserVerified === undefined ? 'flex-end' : 'space-between'
-                  }}>
-                  {/* <Button disabled={submitLoading} variant="text" onClick={handleFormDialogClose}>
+                  <DialogActions
+                    sx={{
+                      paddingRight: 4,
+                      paddingBottom: 3,
+                      justifyContent:
+                        isUserVerified || isUserVerified === undefined
+                          ? 'flex-end'
+                          : 'space-between'
+                    }}>
+                    {/* <Button disabled={submitLoading} variant="text" onClick={handleFormDialogClose}>
                   CANCEL
                 </Button> */}
-                  {props.user && isUserVerified === false && (
+                    {props.user && isUserVerified === false && (
+                      <LoadingButton
+                        loadingPosition={submitLoading ? 'start' : undefined}
+                        startIcon={submitLoading && <SaveIcon />}
+                        loading={submitLoading}
+                        onClick={() => resendInvite(formik.values)}>
+                        {submitLoading === false && 'Resend Invite'}
+                      </LoadingButton>
+                    )}
                     <LoadingButton
+                      className="add-btn save-changes-btn"
+                      loading={submitLoading}
                       loadingPosition={submitLoading ? 'start' : undefined}
                       startIcon={submitLoading && <SaveIcon />}
-                      loading={submitLoading}
-                      onClick={() => resendInvite(formik.values)}>
-                      {submitLoading === false && 'Resend Invite'}
+                      variant="text"
+                      type="submit">
+                      Save Changes
                     </LoadingButton>
-                  )}
-                  <LoadingButton
-                    className="add-btn save-changes-btn"
-                    loading={submitLoading}
-                    loadingPosition={submitLoading ? 'start' : undefined}
-                    startIcon={submitLoading && <SaveIcon />}
-                    variant="text"
-                    type="submit">
-                    Save Changes
-                  </LoadingButton>
-                </DialogActions>
-              </Form>
-            );
-          }}
-        </Formik>
+                  </DialogActions>
+                </Form>
+              );
+            }}
+          </Formik>
+        </>
       )}
     </Dialog>
   );

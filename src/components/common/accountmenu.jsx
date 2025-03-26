@@ -98,8 +98,7 @@ const AccountMenu = (props) => {
             </ListItemText>
           </MenuItem>
           <Divider />
-          {((authCtx.user?.role === 'Admin' && authCtx.paymentMethod) ||
-            authCtx.user?.role === 'Super Admin') && (
+          {authCtx.user?.role === 'Admin' && authCtx.paymentMethod && (
             <>
               <MenuItem
                 onClick={(event) => {
@@ -114,8 +113,7 @@ const AccountMenu = (props) => {
               <Divider />
             </>
           )}
-          {((authCtx.user?.role === 'Admin' && authCtx.paymentMethod) ||
-            authCtx.user?.role === 'Super Admin') && (
+          {authCtx.user?.role === 'Admin' && authCtx.paymentMethod && (
             <>
               <MenuItem
                 onClick={(event) => {

@@ -48,6 +48,9 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { duotoneSpace } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import moment from 'moment';
+import closeicon from '../../assets/closeicon.svg';
+import CautionIcon from '../../assets/caution.svg';
+import ConfirmationDialog from '../common/confirmationdialog';
 
 const tableHeaders = ['Endpoint', 'Create', 'Edit', 'List', 'Delete', 'Enable/Disable'];
 const tableRowsCopy = [
@@ -773,276 +776,269 @@ const TokenExchange = () => {
       </Grid>
       {open && (
         <>
-          <Dialog open={open} onClose={handleClose} fullWidth className="add-user-drawer">
-            <DialogTitle sx={{ paddingTop: 3.5 }}>
-              {'App Registration'}
-              <DialogContentText mt={1}>
-                <Typography>
-                  Name your application and provide an unique email address. Logs will display this
-                  email address as your API keys user.
-                </Typography>
-              </DialogContentText>
-              <IconButton
-                aria-label="close"
-                onClick={() => {
-                  handleClose();
-                }}
-                sx={{
-                  position: 'absolute',
-                  right: 18,
-                  top: 30
-                }}>
-                <CloseIcon />
-              </IconButton>
-            </DialogTitle>
-
+          <Dialog
+            sx={{
+              '& .MuiDialog-container': isCloseDialog
+                ? {
+                    alignItems: 'flex-start',
+                    marginTop: '12vh',
+                    '& .MuiDialog-paper': { maxWidth: '440px !important' }
+                  }
+                : {}
+            }}
+            open={open}
+            onClose={handleClose}
+            fullWidth
+            className="add-user-drawer">
             {isCloseDialog ? (
-              <>
-                <Stack direction={'row'} justifyContent={'center'} alignItems={'start'} padding={3}>
-                  <DialogContentText>
-                    Are you sure you want to exit before completing the wizard ?
-                  </DialogContentText>
-                </Stack>
-                <DialogActions sx={{ paddingRight: 4, paddingBottom: 3 }}>
-                  <Stack direction="row" justifyContent="flex-end" width="100%">
-                    <Button
-                      className="log-btn"
-                      variant="outlined"
-                      sx={{ marginRight: 1.5 }}
-                      onClick={() => {
-                        setIsCloseDialog(false);
-                      }}>
-                      No
-                    </Button>
-
-                    <Button
-                      id="yes-btn"
-                      className="log-btn"
-                      variant="outlined"
-                      sx={{ marginRight: 1.5, color: '#ffff' }}
-                      style={{ color: '#ffff' }}
-                      onClick={() => {
-                        setIsCloseDialog(false);
-                        handleFormDialogClose();
-                      }}>
-                      Yes
-                    </Button>
-                  </Stack>
-                </DialogActions>
-              </>
+              <ConfirmationDialog
+                onCancel={() => {
+                  setIsCloseDialog(false);
+                }}
+                onConfirm={() => {
+                  setIsCloseDialog(false);
+                  handleFormDialogClose();
+                }}
+                handleFormDialogClose={handleClose}
+              />
             ) : (
-              <Formik
-                enableReinitialize
-                validateOnChange
-                validationSchema={validationSchema}
-                initialValues={{
-                  name: apiKeyDetails?.name || '',
-                  email: apiKeyDetails?.email || '',
-                  allowedEndpoints: apiKeyDetails?.allowedEndpoints || []
-                }}
-                onSubmit={handleSubmit}>
-                {({ values, setFieldValue, touched, errors }) => {
-                  return (
-                    <Form>
-                      <DialogContent>
-                        <Grid container spacing={2}>
-                          <Grid item md={6} xs={12}>
-                            <InputLabel id="name">Enter Name</InputLabel>
-                            <TextField
-                              sx={{
-                                '& .MuiOutlinedInput-root	': { borderRadius: '15px' },
-                                '& .MuiOutlinedInput-input	': { background: '#FAFAFF' },
-                                marginTop: '4px'
-                              }}
-                              labelId="name"
-                              name="name"
-                              value={values?.name}
-                              placeholder="Company name here"
-                              onChange={(event) => {
-                                setFieldValue('name', event.target.value);
-                              }}
-                              helperText={touched.name && errors.name}
-                              error={touched.name && Boolean(errors.name)}
-                              fullWidth
-                            />
-                          </Grid>
-                          <Grid item md={6} xs={12}>
-                            <InputLabel id="email">Email Id</InputLabel>
-                            <TextField
-                              sx={{
-                                '& .MuiOutlinedInput-root	': { borderRadius: '15px' },
-                                '& .MuiOutlinedInput-input	': { background: '#FAFAFF' },
-                                marginTop: '4px'
-                              }}
-                              labelId="email"
-                              name="email"
-                              value={values?.email}
-                              disabled={edit}
-                              placeholder="Contact email id here"
-                              onChange={(event) => {
-                                setFieldValue('email', event.target.value);
-                              }}
-                              helperText={touched.email && errors.email}
-                              error={touched.email && Boolean(errors.email)}
-                              fullWidth
-                            />
-                          </Grid>
-                          <Grid item md={12} xs={12}>
-                            <InputLabel id="email">Manage Permissions</InputLabel>
-                            <TableContainer
-                              component={Paper}
-                              sx={{
-                                border: '1px solid #EBE8FF',
-                                borderRadius: '15px !important',
-                                marginTop: '8px'
-                              }}>
-                              <Table aria-label="spanning table">
-                                <TableHead>
-                                  <TableRow sx={{ backgroundColor: '#FAFAFF !important' }}>
-                                    {tableHeaders.map((item, index) => (
-                                      <TableCell
-                                        key={index}
-                                        sx={{
-                                          paddingLeft:
-                                            item === 'Endpoint' ? '30px !important' : '0px',
-                                          borderLeft:
-                                            item === 'Endpoint'
-                                              ? '0px'
-                                              : '1px solid rgba(224, 224, 224, 1)'
-                                        }}
-                                        align={item === 'Endpoint' ? 'left' : 'center'}>
-                                        {item}
-                                      </TableCell>
-                                    ))}
-                                  </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                  {tableRowsState.map((item, index) => {
-                                    const endpoint = Object.keys(item)[0];
-                                    const permissions = item[endpoint];
-                                    console.log('endpoint', endpoint);
-                                    console.log('item', item);
-                                    console.log('permissions', permissions);
+              <>
+                <DialogTitle sx={{ paddingTop: 3.5 }}>
+                  {'App Registration'}
+                  <DialogContentText mt={1}>
+                    <Typography>
+                      Name your application and provide an unique email address. Logs will display
+                      this email address as your API keys user.
+                    </Typography>
+                  </DialogContentText>
+                  <IconButton
+                    aria-label="close"
+                    onClick={() => {
+                      handleClose();
+                    }}
+                    sx={{
+                      position: 'absolute',
+                      right: 18,
+                      top: 30
+                    }}>
+                    {!isCloseDialog ? <CloseIcon /> : <img src={closeicon} alt="closeicon" />}
+                  </IconButton>
+                </DialogTitle>
+                <Formik
+                  enableReinitialize
+                  validateOnChange
+                  validationSchema={validationSchema}
+                  initialValues={{
+                    name: apiKeyDetails?.name || '',
+                    email: apiKeyDetails?.email || '',
+                    allowedEndpoints: apiKeyDetails?.allowedEndpoints || []
+                  }}
+                  onSubmit={handleSubmit}>
+                  {({ values, setFieldValue, touched, errors }) => {
+                    return (
+                      <Form>
+                        <DialogContent>
+                          <Grid container spacing={2}>
+                            <Grid item md={6} xs={12}>
+                              <InputLabel id="name">Enter Name</InputLabel>
+                              <TextField
+                                sx={{
+                                  '& .MuiOutlinedInput-root	': { borderRadius: '15px' },
+                                  '& .MuiOutlinedInput-input	': { background: '#FAFAFF' },
+                                  marginTop: '4px'
+                                }}
+                                labelId="name"
+                                name="name"
+                                value={values?.name}
+                                placeholder="Company name here"
+                                onChange={(event) => {
+                                  setFieldValue('name', event.target.value);
+                                }}
+                                helperText={touched.name && errors.name}
+                                error={touched.name && Boolean(errors.name)}
+                                fullWidth
+                              />
+                            </Grid>
+                            <Grid item md={6} xs={12}>
+                              <InputLabel id="email">Email Id</InputLabel>
+                              <TextField
+                                sx={{
+                                  '& .MuiOutlinedInput-root	': { borderRadius: '15px' },
+                                  '& .MuiOutlinedInput-input	': { background: '#FAFAFF' },
+                                  marginTop: '4px'
+                                }}
+                                labelId="email"
+                                name="email"
+                                value={values?.email}
+                                disabled={edit}
+                                placeholder="Contact email id here"
+                                onChange={(event) => {
+                                  setFieldValue('email', event.target.value);
+                                }}
+                                helperText={touched.email && errors.email}
+                                error={touched.email && Boolean(errors.email)}
+                                fullWidth
+                              />
+                            </Grid>
+                            <Grid item md={12} xs={12}>
+                              <InputLabel id="email">Manage Permissions</InputLabel>
+                              <TableContainer
+                                component={Paper}
+                                sx={{
+                                  border: '1px solid #EBE8FF',
+                                  borderRadius: '15px !important',
+                                  marginTop: '8px'
+                                }}>
+                                <Table aria-label="spanning table">
+                                  <TableHead>
+                                    <TableRow sx={{ backgroundColor: '#FAFAFF !important' }}>
+                                      {tableHeaders.map((item, index) => (
+                                        <TableCell
+                                          key={index}
+                                          sx={{
+                                            paddingLeft:
+                                              item === 'Endpoint' ? '30px !important' : '0px',
+                                            borderLeft:
+                                              item === 'Endpoint'
+                                                ? '0px'
+                                                : '1px solid rgba(224, 224, 224, 1)'
+                                          }}
+                                          align={item === 'Endpoint' ? 'left' : 'center'}>
+                                          {item}
+                                        </TableCell>
+                                      ))}
+                                    </TableRow>
+                                  </TableHead>
+                                  <TableBody>
+                                    {tableRowsState.map((item, index) => {
+                                      const endpoint = Object.keys(item)[0];
+                                      const permissions = item[endpoint];
+                                      console.log('endpoint', endpoint);
+                                      console.log('item', item);
+                                      console.log('permissions', permissions);
 
-                                    return (
-                                      <TableRow key={index}>
-                                        <TableCell sx={{ paddingLeft: '30px !important' }}>
-                                          <Checkbox
-                                            checked={Object.values(permissions).every(
-                                              (v) => v === true
-                                            )}
-                                            indeterminate={
-                                              !Object.values(permissions).every(
+                                      return (
+                                        <TableRow key={index}>
+                                          <TableCell sx={{ paddingLeft: '30px !important' }}>
+                                            <Checkbox
+                                              checked={Object.values(permissions).every(
                                                 (v) => v === true
-                                              ) &&
-                                              Object.values(permissions).some((v) => v === true)
-                                            }
-                                            onChange={handleCheckAllChange(endpoint)}
-                                          />
-                                          {endpoint}
-                                        </TableCell>
-                                        <TableCell
-                                          align="center"
-                                          sx={{ borderLeft: '1px solid rgba(224, 224, 224, 1)' }}>
-                                          <Checkbox
-                                            checked={permissions.create}
-                                            onChange={handleCheckboxChange(endpoint, 'create')}
-                                          />
-                                        </TableCell>
-                                        <TableCell
-                                          align="center"
-                                          sx={{ borderLeft: '1px solid rgba(224, 224, 224, 1)' }}>
-                                          <Checkbox
-                                            checked={permissions.edit}
-                                            onChange={handleCheckboxChange(endpoint, 'edit')}
-                                          />
-                                        </TableCell>
-                                        <TableCell
-                                          align="center"
-                                          sx={{ borderLeft: '1px solid rgba(224, 224, 224, 1)' }}>
-                                          <Checkbox
-                                            sx={{
-                                              '&.Mui-disabled': {
-                                                pointerEvents: 'auto',
-                                                '&:hover': {
-                                                  backgroundColor: 'transparent'
-                                                },
-                                                cursor: 'not-allowed',
-                                                '& .MuiSvgIcon-root': {
-                                                  color: '#00000042 !important'
-                                                }
+                                              )}
+                                              indeterminate={
+                                                !Object.values(permissions).every(
+                                                  (v) => v === true
+                                                ) &&
+                                                Object.values(permissions).some((v) => v === true)
                                               }
-                                            }}
-                                            disabled={permissions.list == null}
-                                            checked={permissions.list}
-                                            onChange={handleCheckboxChange(endpoint, 'list')}
-                                          />
-                                        </TableCell>
-                                        <TableCell
-                                          align="center"
-                                          sx={{ borderLeft: '1px solid rgba(224, 224, 224, 1)' }}>
-                                          <Checkbox
-                                            checked={permissions.delete}
-                                            onChange={handleCheckboxChange(endpoint, 'delete')}
-                                          />
-                                        </TableCell>
-                                        <TableCell
-                                          align="center"
-                                          sx={{ borderLeft: '1px solid rgba(224, 224, 224, 1)' }}>
-                                          <Checkbox
-                                            sx={{
-                                              '&.Mui-disabled': {
-                                                pointerEvents: 'auto',
-                                                '&:hover': {
-                                                  backgroundColor: 'transparent'
-                                                },
-                                                cursor: 'not-allowed',
-                                                '& .MuiSvgIcon-root': {
-                                                  color: '#00000042 !important'
+                                              onChange={handleCheckAllChange(endpoint)}
+                                            />
+                                            {endpoint}
+                                          </TableCell>
+                                          <TableCell
+                                            align="center"
+                                            sx={{ borderLeft: '1px solid rgba(224, 224, 224, 1)' }}>
+                                            <Checkbox
+                                              checked={permissions.create}
+                                              onChange={handleCheckboxChange(endpoint, 'create')}
+                                            />
+                                          </TableCell>
+                                          <TableCell
+                                            align="center"
+                                            sx={{ borderLeft: '1px solid rgba(224, 224, 224, 1)' }}>
+                                            <Checkbox
+                                              checked={permissions.edit}
+                                              onChange={handleCheckboxChange(endpoint, 'edit')}
+                                            />
+                                          </TableCell>
+                                          <TableCell
+                                            align="center"
+                                            sx={{ borderLeft: '1px solid rgba(224, 224, 224, 1)' }}>
+                                            <Checkbox
+                                              sx={{
+                                                '&.Mui-disabled': {
+                                                  pointerEvents: 'auto',
+                                                  '&:hover': {
+                                                    backgroundColor: 'transparent'
+                                                  },
+                                                  cursor: 'not-allowed',
+                                                  '& .MuiSvgIcon-root': {
+                                                    color: '#00000042 !important'
+                                                  }
                                                 }
-                                              }
-                                            }}
-                                            disabled={permissions.enabledisable == null}
-                                            checked={permissions.enabledisable}
-                                            onChange={handleCheckboxChange(
-                                              endpoint,
-                                              'enabledisable'
-                                            )}
-                                          />
-                                        </TableCell>
-                                      </TableRow>
-                                    );
-                                  })}
-                                </TableBody>
-                              </Table>
-                            </TableContainer>
+                                              }}
+                                              disabled={permissions.list == null}
+                                              checked={permissions.list}
+                                              onChange={handleCheckboxChange(endpoint, 'list')}
+                                            />
+                                          </TableCell>
+                                          <TableCell
+                                            align="center"
+                                            sx={{ borderLeft: '1px solid rgba(224, 224, 224, 1)' }}>
+                                            <Checkbox
+                                              checked={permissions.delete}
+                                              onChange={handleCheckboxChange(endpoint, 'delete')}
+                                            />
+                                          </TableCell>
+                                          <TableCell
+                                            align="center"
+                                            sx={{ borderLeft: '1px solid rgba(224, 224, 224, 1)' }}>
+                                            <Checkbox
+                                              sx={{
+                                                '&.Mui-disabled': {
+                                                  pointerEvents: 'auto',
+                                                  '&:hover': {
+                                                    backgroundColor: 'transparent'
+                                                  },
+                                                  cursor: 'not-allowed',
+                                                  '& .MuiSvgIcon-root': {
+                                                    color: '#00000042 !important'
+                                                  }
+                                                }
+                                              }}
+                                              disabled={permissions.enabledisable == null}
+                                              checked={permissions.enabledisable}
+                                              onChange={handleCheckboxChange(
+                                                endpoint,
+                                                'enabledisable'
+                                              )}
+                                            />
+                                          </TableCell>
+                                        </TableRow>
+                                      );
+                                    })}
+                                  </TableBody>
+                                </Table>
+                              </TableContainer>
+                            </Grid>
                           </Grid>
-                        </Grid>
-                      </DialogContent>
+                        </DialogContent>
 
-                      <DialogActions
-                        sx={{
-                          padding: '0px 32px',
-                          paddingBottom: 3,
-                          justifyContent: 'space-between'
-                        }}>
-                        <Box>
-                          {error && <div style={{ color: 'red', marginTop: '10px' }}>{error}</div>}
-                        </Box>
-                        <LoadingButton
-                          className="add-btn save-changes-btn"
-                          loading={submitLoading}
-                          loadingPosition={submitLoading ? 'start' : undefined}
-                          startIcon={submitLoading && <SaveIcon />}
-                          variant="text"
-                          type="submit">
-                          Submit
-                        </LoadingButton>
-                      </DialogActions>
-                    </Form>
-                  );
-                }}
-              </Formik>
+                        <DialogActions
+                          sx={{
+                            padding: '0px 32px',
+                            paddingBottom: 3,
+                            justifyContent: 'space-between'
+                          }}>
+                          <Box>
+                            {error && (
+                              <div style={{ color: 'red', marginTop: '10px' }}>{error}</div>
+                            )}
+                          </Box>
+                          <LoadingButton
+                            className="add-btn save-changes-btn"
+                            loading={submitLoading}
+                            loadingPosition={submitLoading ? 'start' : undefined}
+                            startIcon={submitLoading && <SaveIcon />}
+                            variant="text"
+                            type="submit">
+                            Submit
+                          </LoadingButton>
+                        </DialogActions>
+                      </Form>
+                    );
+                  }}
+                </Formik>
+              </>
             )}
           </Dialog>
         </>

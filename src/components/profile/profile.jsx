@@ -2,7 +2,6 @@ import {
   Autocomplete,
   Avatar,
   Box,
-  Button,
   Card,
   CardContent,
   CardHeader,
@@ -335,7 +334,7 @@ const Profile = () => {
                         justifyContent="flex-end"
                         alignItems="center"
                         spacing={3}>
-                        {authCtx.user.role !== 'Family' && (
+                        {/* {authCtx.user.role !== 'Family' && (
                           <Button
                             disabled={isImageUploading || isImageDeleting || submitLoading}
                             variant="outlined"
@@ -343,7 +342,7 @@ const Profile = () => {
                             onClick={() => setIsDeleteUserDialogOpen(true)}>
                             Delete User
                           </Button>
-                        )}
+                        )} */}
                         <LoadingButton
                           disabled={isImageUploading || isImageDeleting || deleteLoading}
                           loading={submitLoading}

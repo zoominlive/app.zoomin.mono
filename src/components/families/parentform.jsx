@@ -12,9 +12,7 @@ import {
   MenuItem,
   Select,
   TextField,
-  IconButton,
-  Button,
-  Stack
+  IconButton
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import React, { useState } from 'react';
@@ -30,6 +28,8 @@ import AuthContext from '../../context/authcontext';
 import { useSnackbar } from 'notistack';
 import API from '../../api';
 import moment from 'moment-timezone';
+import closeicon from '../../assets/closeicon.svg';
+import ConfirmationDialog from '../common/confirmationdialog';
 
 const validationSchema = yup.object().shape({
   first_name: yup.string().required('First Name is required'),
@@ -213,230 +213,223 @@ const ParentsForm = (props) => {
   });
 
   return (
-    <Dialog open={props.open} onClose={handleClose} fullWidth className="add-parentdialog">
-      <DialogTitle sx={{ paddingTop: 3.5 }}>
-        {props.primaryParent || props.secondaryParent
-          ? `${
-              props.parentType == 'primary'
-                ? 'Edit Primary Family Member'
-                : 'Edit Secondary Family Member'
-            }`
-          : `${
-              props.parentType == 'primary'
-                ? 'Add Primary Family Member'
-                : 'Add Secondary Family Member'
-            }`}
-        <DialogContentText>
-          {props.primaryParent || props.secondaryParent
-            ? `${
-                props.parentType == 'primary'
-                  ? 'Edit primary family member so they can watch stream'
-                  : 'Edit an additional family member that can watch the streams'
-              }`
-            : `${
-                props.parentType == 'primary'
-                  ? 'Add primary family member so they can watch stream'
-                  : 'Add an additional family member that can watch the streams'
-              }`}
-        </DialogContentText>
-        <IconButton
-          aria-label="close"
-          onClick={handleClose}
-          sx={{
-            position: 'absolute',
-            right: 18,
-            top: 30
-          }}>
-          <CloseIcon />
-        </IconButton>
-      </DialogTitle>
-
-      <Divider />
+    <Dialog
+      sx={{
+        '& .MuiDialog-container': isCloseDialog
+          ? {
+              alignItems: 'flex-start',
+              marginTop: '12vh',
+              '& .MuiDialog-paper': { maxWidth: '440px !important' }
+            }
+          : {}
+      }}
+      open={props.open}
+      onClose={handleClose}
+      fullWidth
+      className="add-parentdialog">
+      {/* <Divider /> */}
       {isCloseDialog ? (
         <>
-          <Stack direction={'row'} justifyContent={'center'} alignItems={'start'} padding={3}>
-            <DialogContentText>
-              Are you sure you want to exit before completing the wizard ?
-            </DialogContentText>
-          </Stack>
-          <DialogActions sx={{ paddingRight: 4, paddingBottom: 3 }}>
-            <Stack direction="row" justifyContent="flex-end" width="100%">
-              <Button
-                className="log-btn"
-                variant="outlined"
-                sx={{ marginRight: 1.5 }}
-                onClick={() => {
-                  setIsCloseDialog(false);
-                }}>
-                No
-              </Button>
-
-              <Button
-                id="yes-btn"
-                className="log-btn"
-                variant="outlined"
-                sx={{ marginRight: 1.5, color: '#ffff' }}
-                style={{ color: '#ffff' }}
-                onClick={() => {
-                  setIsCloseDialog(false);
-                  props.setOpen(false);
-                  props.setPrimaryParent();
-                  props.setSecondaryParent();
-                }}>
-                Yes
-              </Button>
-            </Stack>
-          </DialogActions>
+          <ConfirmationDialog
+            onCancel={() => {
+              setIsCloseDialog(false);
+            }}
+            onConfirm={() => {
+              setIsCloseDialog(false);
+              props.setOpen(false);
+              props.setPrimaryParent();
+              props.setSecondaryParent();
+            }}
+            handleFormDialogClose={handleClose}
+          />
         </>
       ) : (
-        <Formik
-          enableReinitialize
-          validateOnChange
-          validationSchema={validationSchema}
-          initialValues={formik.initialValues}
-          onSubmit={handleSubmit}>
-          {({ values, setFieldValue, touched, errors, isValidating }) => {
-            return (
-              <Form>
-                <DialogContent>
-                  <Grid container spacing={2}>
-                    <Grid item md={6} sm={12} className="family-form">
-                      <InputLabel id="first_name">First Name</InputLabel>
-                      <TextField
-                        labelId="first_name"
-                        name={'first_name'}
-                        placeholder="Enter First Name"
-                        value={values?.first_name}
-                        onChange={(event) => {
-                          setFieldValue('first_name', event.target.value);
-                        }}
-                        helperText={touched.first_name && errors.first_name}
-                        error={touched.first_name && Boolean(errors.first_name)}
-                        fullWidth
-                      />
-                    </Grid>
-                    <Grid item md={6} sm={12} className="family-form">
-                      <InputLabel id="last_name">Last Name</InputLabel>
-                      <TextField
-                        labelId="last_name"
-                        name={'last_name'}
-                        placeholder="Enter Last Name"
-                        value={values?.last_name}
-                        onChange={(event) => {
-                          setFieldValue('last_name', event.target.value);
-                        }}
-                        helperText={touched.last_name && errors.last_name}
-                        error={touched.last_name && Boolean(errors.last_name)}
-                        fullWidth
-                      />
-                    </Grid>
-                    <Grid item md={6} sm={12}>
-                      <InputLabel id="role">Role</InputLabel>
-                      <FormControl
-                        fullWidth
-                        error={touched.relationship && Boolean(errors.relationship)}>
-                        <Select
-                          labelId="role"
-                          id="role"
-                          label="Role"
-                          name={'relationship'}
-                          value={values?.relationship}
+        <>
+          <DialogTitle sx={{ paddingTop: 3.5 }}>
+            {props.primaryParent || props.secondaryParent
+              ? `${
+                  props.parentType == 'primary'
+                    ? 'Edit Primary Family Member'
+                    : 'Edit Secondary Family Member'
+                }`
+              : `${
+                  props.parentType == 'primary'
+                    ? 'Add Primary Family Member'
+                    : 'Add Secondary Family Member'
+                }`}
+            <DialogContentText>
+              {props.primaryParent || props.secondaryParent
+                ? `${
+                    props.parentType == 'primary'
+                      ? 'Edit primary family member so they can watch stream'
+                      : 'Edit an additional family member that can watch the streams'
+                  }`
+                : `${
+                    props.parentType == 'primary'
+                      ? 'Add primary family member so they can watch stream'
+                      : 'Add an additional family member that can watch the streams'
+                  }`}
+            </DialogContentText>
+            <IconButton
+              aria-label="close"
+              onClick={handleClose}
+              sx={{
+                position: 'absolute',
+                right: 18,
+                top: 30
+              }}>
+              {!isCloseDialog ? <CloseIcon /> : <img src={closeicon} alt="closeicon" />}
+            </IconButton>
+          </DialogTitle>
+          <Formik
+            enableReinitialize
+            validateOnChange
+            validationSchema={validationSchema}
+            initialValues={formik.initialValues}
+            onSubmit={handleSubmit}>
+            {({ values, setFieldValue, touched, errors, isValidating }) => {
+              return (
+                <Form>
+                  <DialogContent>
+                    <Grid container spacing={2}>
+                      <Grid item md={6} sm={12} className="family-form">
+                        <InputLabel id="first_name">First Name</InputLabel>
+                        <TextField
+                          labelId="first_name"
+                          name={'first_name'}
+                          placeholder="Enter First Name"
+                          value={values?.first_name}
                           onChange={(event) => {
-                            setFieldValue('relationship', event.target.value);
-                          }}>
-                          <MenuItem value={'Mother'}>Mother</MenuItem>
-                          <MenuItem value={'Father'}>Father</MenuItem>
-                          <MenuItem value={'Aunt'}>Aunt</MenuItem>
-                          <MenuItem value={'Uncle'}>Uncle</MenuItem>
-                          <MenuItem value={'Grandmother'}>Grandmother</MenuItem>
-                          <MenuItem value={'Grandfather'}>Grandfather</MenuItem>
-                          <MenuItem value={'Other'}>Other</MenuItem>
-                        </Select>
-                        {touched.relationship && Boolean(errors.relationship) && (
-                          <FormHelperText sx={{ color: '#d32f2f' }}>
-                            {touched.relationship && errors.relationship}
-                          </FormHelperText>
-                        )}
-                      </FormControl>
+                            setFieldValue('first_name', event.target.value);
+                          }}
+                          helperText={touched.first_name && errors.first_name}
+                          error={touched.first_name && Boolean(errors.first_name)}
+                          fullWidth
+                        />
+                      </Grid>
+                      <Grid item md={6} sm={12} className="family-form">
+                        <InputLabel id="last_name">Last Name</InputLabel>
+                        <TextField
+                          labelId="last_name"
+                          name={'last_name'}
+                          placeholder="Enter Last Name"
+                          value={values?.last_name}
+                          onChange={(event) => {
+                            setFieldValue('last_name', event.target.value);
+                          }}
+                          helperText={touched.last_name && errors.last_name}
+                          error={touched.last_name && Boolean(errors.last_name)}
+                          fullWidth
+                        />
+                      </Grid>
+                      <Grid item md={6} sm={12}>
+                        <InputLabel id="role">Role</InputLabel>
+                        <FormControl
+                          fullWidth
+                          error={touched.relationship && Boolean(errors.relationship)}>
+                          <Select
+                            labelId="role"
+                            id="role"
+                            label="Role"
+                            name={'relationship'}
+                            value={values?.relationship}
+                            onChange={(event) => {
+                              setFieldValue('relationship', event.target.value);
+                            }}>
+                            <MenuItem value={'Mother'}>Mother</MenuItem>
+                            <MenuItem value={'Father'}>Father</MenuItem>
+                            <MenuItem value={'Aunt'}>Aunt</MenuItem>
+                            <MenuItem value={'Uncle'}>Uncle</MenuItem>
+                            <MenuItem value={'Grandmother'}>Grandmother</MenuItem>
+                            <MenuItem value={'Grandfather'}>Grandfather</MenuItem>
+                            <MenuItem value={'Other'}>Other</MenuItem>
+                          </Select>
+                          {touched.relationship && Boolean(errors.relationship) && (
+                            <FormHelperText sx={{ color: '#d32f2f' }}>
+                              {touched.relationship && errors.relationship}
+                            </FormHelperText>
+                          )}
+                        </FormControl>
+                      </Grid>
+                      <Grid item md={6} sm={12} className="family-form">
+                        <InputLabel id="phone">Phone</InputLabel>
+                        <TextField
+                          labelId="phone"
+                          name={'phone'}
+                          placeholder="Enter Phone Number"
+                          value={values?.phone || ''}
+                          onChange={(event) => {
+                            setFieldValue('phone', event.target.value ? event.target.value : '');
+                          }}
+                          helperText={touched.phone && errors.phone}
+                          error={touched.phone && Boolean(errors.phone)}
+                          InputProps={{ inputComponent: PhoneNumberInput }}
+                          fullWidth
+                        />
+                      </Grid>
+                      <Grid item md={6} sm={12} className="family-form">
+                        <InputLabel id="email">Email</InputLabel>
+                        <TextField
+                          labelId="email"
+                          name={'email'}
+                          placeholder="Enter Email"
+                          value={values?.email}
+                          onChange={(event) => {
+                            setFieldValue('email', event.target.value);
+                          }}
+                          helperText={touched.email && errors.email}
+                          error={touched.email && Boolean(errors.email)}
+                          fullWidth
+                        />
+                      </Grid>
                     </Grid>
-                    <Grid item md={6} sm={12} className="family-form">
-                      <InputLabel id="phone">Phone</InputLabel>
-                      <TextField
-                        labelId="phone"
-                        name={'phone'}
-                        placeholder="Enter Phone Number"
-                        value={values?.phone || ''}
-                        onChange={(event) => {
-                          setFieldValue('phone', event.target.value ? event.target.value : '');
-                        }}
-                        helperText={touched.phone && errors.phone}
-                        error={touched.phone && Boolean(errors.phone)}
-                        InputProps={{ inputComponent: PhoneNumberInput }}
-                        fullWidth
-                      />
-                    </Grid>
-                    <Grid item md={6} sm={12} className="family-form">
-                      <InputLabel id="email">Email</InputLabel>
-                      <TextField
-                        labelId="email"
-                        name={'email'}
-                        placeholder="Enter Email"
-                        value={values?.email}
-                        onChange={(event) => {
-                          setFieldValue('email', event.target.value);
-                        }}
-                        helperText={touched.email && errors.email}
-                        error={touched.email && Boolean(errors.email)}
-                        fullWidth
-                      />
-                    </Grid>
-                  </Grid>
-                </DialogContent>
-                <Divider />
-                <DialogActions
-                  sx={{
-                    justifyContent:
-                      verifiedPrimaryParent || verifiedSecondaryParent
-                        ? 'flex-end'
-                        : 'space-between'
-                  }}>
-                  {/* <Button
+                  </DialogContent>
+                  <Divider />
+                  <DialogActions
+                    sx={{
+                      justifyContent:
+                        verifiedPrimaryParent || verifiedSecondaryParent
+                          ? 'flex-end'
+                          : 'space-between'
+                    }}>
+                    {/* <Button
                   disabled={submitLoading || isValidating}
                   variant="text"
                   onClick={handleDialogClose}>
                   CANCEL
                 </Button> */}
-                  {verifiedPrimaryParent || verifiedSecondaryParent ? (
-                    ''
-                  ) : (
+                    {verifiedPrimaryParent || verifiedSecondaryParent ? (
+                      ''
+                    ) : (
+                      <LoadingButton
+                        loadingPosition={submitLoading ? 'start' : undefined}
+                        startIcon={submitLoading && <SaveIcon />}
+                        loading={submitLoading}
+                        onClick={() => resendInvite(formik.values)}>
+                        {submitLoading === false && 'Resend Invite'}
+                      </LoadingButton>
+                    )}
                     <LoadingButton
-                      loadingPosition={submitLoading ? 'start' : undefined}
-                      startIcon={submitLoading && <SaveIcon />}
-                      loading={submitLoading}
-                      onClick={() => resendInvite(formik.values)}>
-                      {submitLoading === false && 'Resend Invite'}
+                      className="add-btn dashboard-btn"
+                      loading={submitLoading || isValidating}
+                      loadingPosition={submitLoading || isValidating ? 'start' : undefined}
+                      startIcon={(submitLoading || isValidating) && <SaveIcon />}
+                      type="submit"
+                      sx={{
+                        borderRadius: 30,
+                        background: '#5A53DD',
+                        color: '#fff',
+                        textTransform: 'capitalize',
+                        width: 'auto'
+                      }}>
+                      Save Changes
                     </LoadingButton>
-                  )}
-                  <LoadingButton
-                    className="add-btn dashboard-btn"
-                    loading={submitLoading || isValidating}
-                    loadingPosition={submitLoading || isValidating ? 'start' : undefined}
-                    startIcon={(submitLoading || isValidating) && <SaveIcon />}
-                    type="submit"
-                    sx={{
-                      borderRadius: 30,
-                      background: '#5A53DD',
-                      color: '#fff',
-                      textTransform: 'capitalize',
-                      width: 'auto'
-                    }}>
-                    Save Changes
-                  </LoadingButton>
-                </DialogActions>
-              </Form>
-            );
-          }}
-        </Formik>
+                  </DialogActions>
+                </Form>
+              );
+            }}
+          </Formik>
+        </>
       )}
       <Divider />
     </Dialog>

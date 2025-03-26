@@ -1,5 +1,5 @@
 /* eslint-disable no-unused-vars */
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useContext } from 'react';
 import LayoutContext from '../../context/layoutcontext';
 import AuthContext from '../../context/authcontext';
@@ -33,7 +33,8 @@ import {
   IconButton,
   Dialog,
   DialogTitle,
-  DialogContent
+  DialogContent,
+  Checkbox
 } from '@mui/material';
 import moment from 'moment';
 import dayjs from 'dayjs';
@@ -59,6 +60,7 @@ import EditRecording from '../../assets/edit-recording.svg';
 import RecordingForm from './recordingForm';
 import MobileStreamEditForm from './mobilestreameditform';
 import DeleteRecordingDialog from './deleterecordingdialog';
+import ShareRecordingForm from './sharerecordingform';
 
 const streamColumns = ['Date & Time', 'Zone', 'Event Name', 'Actions'];
 const FixedCameraRecordingsColumns = [
@@ -125,20 +127,41 @@ const shortcutsItems = [
   },
   { label: 'Reset', getValue: () => [dayjs(), dayjs()] }
 ];
+const defaultFromDate = dayjs().subtract(30, 'day').format('YYYY-MM-DD');
+const defaultToDate = dayjs().format('YYYY-MM-DD');
+
+// Constants for cache
+const RECORDINGS_CACHE_KEY = 'recordings_cache';
+const CACHE_EXPIRY_KEY = 'record_uuids_expiry';
+const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+
+const getRecordingsLocalCache = () => {
+  const data = localStorage.getItem(RECORDINGS_CACHE_KEY);
+  return data ? JSON.parse(data) : [];
+};
+
+const isCacheExpired = () => {
+  const expiry = localStorage.getItem(CACHE_EXPIRY_KEY);
+  return !expiry || Date.now() > Number(expiry);
+};
 
 const Recordings = () => {
   const layoutCtx = useContext(LayoutContext);
   const authCtx = useContext(AuthContext);
-  const { enqueueSnackbar } = useSnackbar();
+  const { enqueueSnackbar, closeSnackbar } = useSnackbar();
   const [isLoading, setIsLoading] = useState(false);
   const [location, setLocation] = useState('All');
-  const [zonesList, setZonesList] = useState([]);
+  const [zonesList, setZonesList] = useState([{ zone_id: 'All', zone_name: 'All' }]);
+  const [selectedZonesList, setSelectedZonesList] = useState([]);
+  const [uncheckedZonesList, setUncheckedZonesList] = useState([]);
   const [zonesDropdownLoading, setZonesDropdownLoading] = useState(false);
   const [tagsDropdownLoading, setTagsDropdownLoading] = useState(false);
-  const [tagsList, setTagsList] = useState([]);
+  const [tagsList, setTagsList] = useState([{ tag_id: 'All', tag_name: 'All' }]);
+  const [selectedTagsList, setSelectedTagsList] = useState([]);
+  const [uncheckedTagsList, setUncheckedTagsList] = useState([]);
   const [recordingsList, setRecordingsList] = useState([]);
   const [lastTenRecordings, setLastTenRecordings] = useState([]);
-  const [rangeDate, setRangeDate] = useState([dayjs().subtract(30, 'day'), dayjs()]);
+  const [rangeDate, setRangeDate] = useState([dayjs(defaultFromDate), dayjs(defaultToDate)]);
   //const [selectedRoom, setSelectedRoom] = useState([]);
   // const [timeOut, setTimeOut] = useState(2);
   // const [selectedCamera] = useState({
@@ -169,13 +192,13 @@ const Recordings = () => {
     pageSize: parseInt(process.env.REACT_APP_PAGINATION_LIMIT, 10),
     searchBy: '',
     sortBy: order,
-    location: 'All',
+    location: ['All'],
     zones: 'All',
     tags: 'All',
     cust_id: localStorage.getItem('cust_id'),
     type: 'Fixed Camera',
-    from: moment().format('YYYY-MM-DD'),
-    to: moment().format('YYYY-MM-DD')
+    from: defaultFromDate,
+    to: defaultToDate
   });
   const [activeLiveStreamList, setActiveLivestreamList] = useState([]);
   const [recentLiveStreamList, setRecentLivestreamList] = useState([]);
@@ -187,8 +210,110 @@ const Recordings = () => {
   const [isStreamDialogOpen, setIsStreamDialogOpen] = useState(false);
   const [recordingData, setRecordingData] = useState();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isEditMobileStreamDialogOpen, setIsEditMobileStreamDialogOpen] = useState(false);
+  const [recordingsLocalCache, setRecordingsLocalCache] = useState(() => {
+    return isCacheExpired() ? [] : getRecordingsLocalCache();
+  });
+  const [mergedRows, setMergedRows] = useState([]);
+  const [mergedRowsForLastTenRecords, setMergedRowsForLastTenRecords] = useState([]);
+  const isFirstRun = useRef(true);
+  const cacheClearTimer = useRef(null);
+
+  // Merge rows with cache data
+  const mergeRowsWithCache = useCallback(() => {
+    const updatedRows = recordingsList.map((row) => {
+      console.log('recordingsLocalCache==>', recordingsLocalCache);
+      const cached = recordingsLocalCache.find((item) => item.record_uuid === row.record_uuid);
+      return cached
+        ? {
+            ...row,
+            thumbnail_url: cached.thumbnail,
+            video_url: cached.recording,
+            unsigned_url: row?.video_url
+          }
+        : row;
+    });
+    setMergedRows(updatedRows);
+    const updatedRowsforLastTenRecordings = lastTenRecordings.map((row) => {
+      const cached = recordingsLocalCache.find((item) => item.record_uuid === row.record_uuid);
+      return cached
+        ? {
+            ...row,
+            thumbnail_url: cached.thumbnail,
+            video_url: cached.recording,
+            unsigned_url: row?.video_url
+          }
+        : row;
+    });
+    setMergedRowsForLastTenRecords(updatedRowsforLastTenRecordings);
+  }, [recordingsList, recordingsLocalCache, lastTenRecordings]);
+
+  // Clear cache and reset React state
+  const clearCache = useCallback(() => {
+    localStorage.removeItem(RECORDINGS_CACHE_KEY);
+    localStorage.removeItem(CACHE_EXPIRY_KEY);
+    setRecordingsLocalCache([]);
+  }, []);
+
+  const scheduleCacheClear = useCallback(() => {
+    const expiry = localStorage.getItem(CACHE_EXPIRY_KEY);
+    if (expiry) {
+      const delay = Number(expiry) - Date.now();
+      if (delay > 0) {
+        cacheClearTimer.current = setTimeout(clearCache, delay);
+      } else {
+        clearCache();
+      }
+    }
+  }, [clearCache]);
+  // Merge on component mount and whenever rows or cache change
+  useEffect(() => {
+    mergeRowsWithCache();
+  }, [recordingsLocalCache, recordingsList, mergeRowsWithCache]);
+
+  // Listen for localStorage cache updates
+  useEffect(() => {
+    const handleStorageChange = (event) => {
+      if (event.key === RECORDINGS_CACHE_KEY) {
+        setRecordingsLocalCache(getRecordingsCache());
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+
+  useEffect(() => {
+    scheduleCacheClear();
+    return () => clearTimeout(cacheClearTimer.current);
+  }, [scheduleCacheClear]);
+
+  useEffect(() => {
+    const cachedData = getRecordingsCache();
+    setRecordingsLocalCache(cachedData); // Ensure cache is applied on reload
+
+    // Ensure merging occurs after cache is updated
+    mergeRowsWithCache();
+  }, []);
+
+  useEffect(() => {
+    const updateCacheWithPagination = () => {
+      const currentUuids = recordingsList.map((rec) => rec.record_uuid);
+      const cachedUuids = getCachedRecordUuids();
+
+      const missingUuids = currentUuids.filter((uuid) => !cachedUuids.includes(uuid));
+      const missingRecords = recordingsList.filter((rec) => missingUuids.includes(rec.record_uuid));
+
+      if (missingRecords.length > 0) {
+        setRecordingsCache([...recordingsLocalCache, ...missingRecords]);
+      }
+    };
+
+    updateCacheWithPagination();
+  }, [recordingsList]);
 
   useEffect(() => {
     layoutCtx.setActive(7);
@@ -204,10 +329,11 @@ const Recordings = () => {
   useEffect(() => {
     setZonesDropdownLoading(true);
     setTagsDropdownLoading(true);
-    API.get('zones/list', { params: { cust_id: localStorage.getItem('cust_id') } }).then(
-      (response) => {
+    API.get('zones/list', { params: { cust_id: localStorage.getItem('cust_id') } })
+      .then((response) => {
         if (response.status === 200) {
-          setZonesList(response.data.Data);
+          setZonesList([zonesList[0], ...response.data.Data]);
+          setSelectedZonesList(response.data.Data);
         } else {
           errorMessageHandler(
             enqueueSnackbar,
@@ -217,13 +343,41 @@ const Recordings = () => {
           );
         }
         setZonesDropdownLoading(false);
-      }
-    );
+      })
+      .catch((error) => {
+        // ✅ Detect CORS error (network error, no response)
+        if (error.message === 'Network Error' && !error.response) {
+          enqueueSnackbar('Please refresh the page.', {
+            variant: 'error',
+            action: (key) => (
+              <Button
+                onClick={() => {
+                  window.location.reload();
+                  closeSnackbar(key);
+                }}
+                sx={{ color: '#fff', textTransform: 'none' }}>
+                Refresh
+              </Button>
+            )
+          });
+        } else {
+          errorMessageHandler(
+            enqueueSnackbar,
+            error?.response?.data?.Message || 'Something Went Wrong.',
+            error?.response?.status,
+            authCtx.setAuthError
+          );
+        }
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
 
-    API.get('cams/list-record-tags', { params: { cust_id: localStorage.getItem('cust_id') } }).then(
-      (response) => {
+    API.get('cams/list-record-tags', { params: { cust_id: localStorage.getItem('cust_id') } })
+      .then((response) => {
         if (response.status === 200) {
-          setTagsList(response.data.Data.recordTags);
+          setTagsList([tagsList[0], ...response.data.Data.recordTags]);
+          setSelectedTagsList(response.data.Data.recordTags);
         } else {
           errorMessageHandler(
             enqueueSnackbar,
@@ -233,17 +387,69 @@ const Recordings = () => {
           );
         }
         setTagsDropdownLoading(false);
-      }
-    );
+      })
+      .catch((error) => {
+        // ✅ Detect CORS error (network error, no response)
+        if (error.message === 'Network Error' && !error.response) {
+          enqueueSnackbar('Please refresh the page.', {
+            variant: 'error',
+            action: (key) => (
+              <Button
+                onClick={() => {
+                  window.location.reload();
+                  closeSnackbar(key);
+                }}
+                sx={{ color: '#fff', textTransform: 'none' }}>
+                Refresh
+              </Button>
+            )
+          });
+        } else {
+          errorMessageHandler(
+            enqueueSnackbar,
+            error?.response?.data?.Message || 'Something Went Wrong.',
+            error?.response?.status,
+            authCtx.setAuthError
+          );
+        }
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   }, []);
 
-  const handleLocationChange = (event) => {
-    setLocation(event.target.value);
-    setRecordingsPayload((prevPayload) => ({
-      ...prevPayload,
-      location: event.target.value,
-      pageNumber: 0
+  useEffect(() => {
+    if (isFirstRun.current) {
+      isFirstRun.current = false;
+      return; //Skip first run to prevent double call
+    }
+    getRecordingData();
+  }, [recordingsPayload]);
+
+  useEffect(() => {
+    if (!rangeDate[0] || !rangeDate[1]) return;
+    setRecordingsPayload((prev) => ({
+      ...prev,
+      from: dayjs(rangeDate[0]).format('YYYY-MM-DD'),
+      to: dayjs(rangeDate[1]).format('YYYY-MM-DD')
     }));
+  }, [rangeDate]);
+
+  const handleLocationChange = (event) => {
+    const { value } = event.target;
+    setLocation(value);
+    if (value.includes('All')) {
+      // If 'All' is selected, only keep 'All' in the state
+      setRecordingsPayload((prevPayload) => ({
+        ...prevPayload,
+        location: ['All']
+      }));
+    } else {
+      setRecordingsPayload((prevPayload) => ({
+        ...prevPayload,
+        location: value.filter((loc) => loc !== 'All') // Ensure 'All' is removed if specific locations are selected
+      }));
+    }
   };
 
   const handleRecordingTypeChange = (event) => {
@@ -254,20 +460,60 @@ const Recordings = () => {
     }));
   };
 
-  const handleZoneChange = (_, value) => {
-    const zonesArr = [];
-    value.forEach((zone) => zonesArr.push(zone.zone_name));
-    setRecordingsPayload((prevPayload) => ({ ...prevPayload, zones: zonesArr, pageNumber: 0 }));
+  const handleZoneChange = (_, value, reason, option) => {
+    if (reason === 'selectOption' && option?.option?.zone_id === 'All') {
+      // Select all tags visually, but payload gets 'All'
+      setSelectedZonesList(zonesList.slice(1)); // Exclude the "All" option itself
+      setRecordingsPayload((prevPayload) => ({
+        ...prevPayload,
+        zones: 'All',
+        pageNumber: 0
+      }));
+    } else if (reason === 'removeOption' && option?.option?.zone_id === 'All') {
+      setSelectedZonesList([]);
+      setRecordingsPayload((prevPayload) => ({
+        ...prevPayload,
+        zones: 'All',
+        pageNumber: 0
+      }));
+    } else {
+      setSelectedZonesList(value);
+      setUncheckedZonesList(true);
+      const zonesArr = value.filter((zone) => zone.zone_id !== 'All').map((zone) => zone.zone_id);
+      setRecordingsPayload((prevPayload) => ({
+        ...prevPayload,
+        zones: zonesArr.length === 0 ? 'All' : zonesArr,
+        pageNumber: 0
+      }));
+    }
   };
 
-  const handleTagChange = (_, value) => {
-    const tagsArr = [];
-    value.forEach((tag) => tagsArr.push(tag.tag_id));
-    setRecordingsPayload((prevPayload) => ({
-      ...prevPayload,
-      tags: tagsArr.length <= 0 ? 'All' : tagsArr,
-      pageNumber: 0
-    }));
+  const handleTagChange = (_, value, reason, option) => {
+    if (reason === 'selectOption' && option?.option?.tag_id === 'All') {
+      // Select all tags visually, but payload gets 'All'
+      setSelectedTagsList(tagsList.slice(1)); // Exclude the "All" option itself
+      setRecordingsPayload((prevPayload) => ({
+        ...prevPayload,
+        tags: 'All',
+        pageNumber: 0
+      }));
+    } else if (reason === 'removeOption' && option?.option?.tag_id === 'All') {
+      setSelectedTagsList([]);
+      setRecordingsPayload((prevPayload) => ({
+        ...prevPayload,
+        tags: 'All',
+        pageNumber: 0
+      }));
+    } else {
+      setSelectedTagsList(value);
+      setUncheckedTagsList(true);
+      const tagsArr = value.filter((tag) => tag.tag_id !== 'All').map((tag) => tag.tag_id);
+      setRecordingsPayload((prevPayload) => ({
+        ...prevPayload,
+        tags: tagsArr.length === 0 ? 'All' : tagsArr,
+        pageNumber: 0
+      }));
+    }
   };
 
   const handlePageChange = (_, newPage) => {
@@ -314,10 +560,15 @@ const Recordings = () => {
     setIsEditMobileStreamDialogOpen(true);
   };
 
+  const handleShareRecording = (data) => {
+    console.log('data==>', data);
+    setRecordingData(data);
+    setIsShareDialogOpen(true);
+  };
+
   const Row = ({ row }) => {
     const { created_at, zone, presigned_url, stream_running, stream_name } = row;
     const handle = useFullScreenHandle();
-    const [open, setOpen] = useState(false);
     const [timeOut, setTimeOut] = useState(2);
     const [selectedCamera, setSelectedCamera] = useState({
       camLabel: '',
@@ -360,8 +611,8 @@ const Recordings = () => {
             <Chip label={`Mobile Stream`} />
             {/* </Stack> */}
           </TableCell>
-          <TableCell>
-            <IconButton color="primary">
+          <TableCell align="center">
+            <IconButton color="primary" sx={{ padding: '4px' }}>
               <Link
                 onClick={() =>
                   handleClick(row?.presigned_url || row?.zone?.live_stream_cameras[0]?.stream_uri)
@@ -369,14 +620,17 @@ const Recordings = () => {
                 <img src={PlayRecording} />
               </Link>
             </IconButton>
-            <IconButton color="primary" onClick={() => handleEditMobileStreamRecording(row)}>
+            <IconButton
+              color="primary"
+              sx={{ padding: '4px' }}
+              onClick={() => handleEditMobileStreamRecording(row)}>
               <img src={EditRecording} alt="share-recording" />
             </IconButton>
-            {/* <IconButton>
+            <IconButton onClick={() => handleShareRecording(row)} sx={{ padding: '4px' }}>
               <img src={ShareRecording} />
-            </IconButton> */}
+            </IconButton>
             <IconButton
-              sx={{ '.MuiSvgIcon-root': { color: '#DD5853 !important' } }}
+              sx={{ '.MuiSvgIcon-root': { color: '#DD5853 !important' }, padding: '4px' }}
               onClick={() => handleDeleteRecording(row)}>
               <DeleteOutlineOutlinedIcon />
             </IconButton>
@@ -419,7 +673,6 @@ const Recordings = () => {
       record_tag
     } = row;
     const handle = useFullScreenHandle();
-    const [open, setOpen] = useState(false);
     const [timeOut, setTimeOut] = useState(2);
     const [selectedCamera, setSelectedCamera] = useState({
       camLabel: '',
@@ -439,6 +692,13 @@ const Recordings = () => {
         <TableRow hover className="fixed-camera-recordings-table">
           <TableCell component="th" scope="row">
             <Stack direction="row" alignItems="center" spacing={3}>
+              <img
+                src={row.thumbnail_url}
+                width={'88px'}
+                height={'64px'}
+                style={{ borderRadius: '10px', cursor: 'pointer' }}
+                onClick={() => handleClick(row?.video_url)}
+              />
               <Typography>{`${moment(createdAt).format('MM-DD-YYYY')}`}</Typography>
             </Stack>
           </TableCell>
@@ -470,21 +730,26 @@ const Recordings = () => {
               <Chip label={`${record_tag?.tag_name ? record_tag?.tag_name : 'Unselected'}`} />
             </TableCell>
           )}
-          <TableCell>
-            <IconButton color="primary">
+          <TableCell align="center">
+            <IconButton color="primary" sx={{ padding: '4px' }}>
               <Link
                 onClick={() => handleClick(video_url || zone?.live_stream_cameras[0].stream_uri)}>
                 <img src={PlayRecording} />
               </Link>
             </IconButton>
-            <IconButton color="primary" onClick={() => handleEditRecording(row)}>
+            <IconButton
+              sx={{ padding: '4px' }}
+              color="primary"
+              onClick={() => handleEditRecording(row)}>
               <img src={EditRecording} alt="share-recording" />
             </IconButton>
-            {/* <IconButton>
-              <img src={ShareRecording} />
-            </IconButton> */}
+            {recordingsPayload.type == 'Fixed Camera' && (
+              <IconButton sx={{ padding: '4px' }} onClick={() => handleShareRecording(row)}>
+                <img src={ShareRecording} />
+              </IconButton>
+            )}
             <IconButton
-              sx={{ '.MuiSvgIcon-root': { color: '#DD5853 !important' } }}
+              sx={{ '.MuiSvgIcon-root': { color: '#DD5853 !important' }, padding: '4px' }}
               onClick={() => handleDeleteRecording(row)}>
               <DeleteOutlineOutlinedIcon />
             </IconButton>
@@ -534,37 +799,198 @@ const Recordings = () => {
       zone_name: PropTypes.string,
       record_camera_tag: PropTypes.object,
       record_tag: PropTypes.object,
-      video_url: PropTypes.string
+      video_url: PropTypes.string,
+      thumbnail_url: PropTypes.string
     })
+  };
+
+  // Get UUIDs from cache
+  const getRecordingsCache = () => {
+    const data = localStorage.getItem(RECORDINGS_CACHE_KEY);
+    if (!data) return [];
+
+    const now = Date.now();
+    const parsedData = JSON.parse(data);
+
+    // Filter out expired items
+    const validData = parsedData.filter((item) => item.expiry > now);
+
+    // Update cache if some records were expired
+    if (validData.length !== parsedData.length) {
+      localStorage.setItem(RECORDINGS_CACHE_KEY, JSON.stringify(validData));
+      setRecordingsLocalCache(validData); // Update state
+    }
+
+    return validData;
+  };
+
+  // Set/update UUIDs in cache
+  const setRecordingsCache = (newRecords) => {
+    const now = Date.now();
+    const cache = getRecordingsCache();
+
+    // Merge existing and new, updating expiry for new records
+    const updatedCache = [...cache];
+
+    newRecords.forEach((record) => {
+      const existingIndex = updatedCache.findIndex(
+        (item) => item.record_uuid === record.record_uuid
+      );
+
+      if (existingIndex > -1) {
+        // If record exists, don't update expiry
+        updatedCache[existingIndex] = {
+          ...updatedCache[existingIndex],
+          ...record
+        };
+      } else {
+        // If record is new, set expiry
+        updatedCache.push({
+          ...record,
+          expiry: now + CACHE_DURATION
+        });
+      }
+    });
+
+    localStorage.setItem(RECORDINGS_CACHE_KEY, JSON.stringify(updatedCache));
+    setRecordingsLocalCache(updatedCache); // Update state to reflect changes
+  };
+
+  // Add new UUIDs, avoiding duplicates
+  // const addRecordUuidsToCache = (newUuids) => {
+  //   const existingUuids = getRecordUuidsCache();
+  //   const updatedUuids = Array.from(new Set([...existingUuids, ...newUuids]));
+  //   setRecordUuidsCache(updatedUuids);
+  //   return updatedUuids;
+  // };
+
+  const getCachedRecordUuids = () => {
+    const cachedData = getRecordingsCache();
+    return cachedData.map((rec) => rec.record_uuid);
+  };
+
+  const handleRecordingsCache = async (response) => {
+    const recordings = response?.data?.Data?.lastTenFixedCameraRecordings?.data || [];
+    const paginatedRecordings = response?.data?.Data?.recentFixedCameraRecordings?.data || [];
+    const allNewRecords = [...recordings, ...paginatedRecordings];
+
+    const newUuids = allNewRecords.map((rec) => rec.record_uuid);
+
+    const cachedRecordings = getRecordingsCache();
+    const cachedUuids = getCachedRecordUuids();
+
+    const isCacheEmpty = cachedRecordings.length === 0;
+    const newUniqueUuids = newUuids.filter((uuid) => !cachedUuids.includes(uuid));
+
+    // Decide which UUIDs to send to the API
+    const uuidsToSend = isCacheEmpty ? newUuids : newUniqueUuids;
+
+    if (uuidsToSend.length > 0) {
+      try {
+        const s3Response = await API.post('recordings/s3-to-cloudfront', {
+          record_uuids: uuidsToSend
+        });
+
+        if (s3Response.status === 200) {
+          const s3Data = s3Response.data.Data;
+
+          // Merge and update cache
+          const updatedCache = isCacheEmpty
+            ? s3Data
+            : [
+                ...cachedRecordings,
+                ...s3Data.filter((item) => !cachedUuids.includes(item.record_uuid))
+              ];
+
+          setRecordingsCache(updatedCache); // Update cache and React state
+        } else {
+          console.error('Error fetching from s3-to-cloudfront:', s3Response);
+        }
+      } catch (error) {
+        console.error('Error in s3-to-cloudfront API:', error);
+      }
+    }
   };
 
   const getRecordingData = () => {
     setIsLoading(true);
+    let tagsToAdd;
+    let zonesToAdd;
+
+    if (recordingsPayload.tags === 'All') {
+      tagsToAdd = 'All';
+    } else if (selectedTagsList?.length === 0 && !uncheckedTagsList) {
+      tagsToAdd = tagsList.slice(1).map((tag) => tag.tag_id);
+    } else {
+      tagsToAdd = recordingsPayload.tags;
+    }
+
+    if (recordingsPayload.zones === 'All') {
+      zonesToAdd = 'All';
+    } else if (selectedZonesList?.length === 0 && !uncheckedZonesList) {
+      zonesToAdd = zonesList.slice(1).map((zone) => zone.zone_id);
+    } else {
+      zonesToAdd = recordingsPayload.zones;
+    }
     API.get('recordings', {
       params: {
         ...recordingsPayload,
+        tags: tagsToAdd,
+        zones: zonesToAdd,
         cust_id: localStorage.getItem('cust_id')
       }
-    }).then((response) => {
-      if (response.status === 200) {
-        setActiveLivestreamList(response.data.Data.activeLiveStreams);
-        setRecentLivestreamList(response.data.Data.recentLiveStreams);
-        setRecordingsList(response.data.Data.recentFixedCameraRecordings.data);
-        setLastTenRecordings(response.data.Data.lastTenFixedCameraRecordings);
-        setRecordedStreamList(response.data.Data.recordedStreams.data);
-        setCount(response.data.Data.recordedStreams.count);
-        setFixedCamRecordingsCount(response.data.Data.recentFixedCameraRecordings.count);
+    })
+      .then(async (response) => {
+        if (response.status === 200) {
+          await handleRecordingsCache(response);
+
+          // Other state updates...
+          setActiveLivestreamList(response.data.Data.activeLiveStreams);
+          setRecentLivestreamList(response.data.Data.recentLiveStreams);
+          setRecordingsList(response.data.Data.recentFixedCameraRecordings.data);
+          setLastTenRecordings(response.data.Data.lastTenFixedCameraRecordings.data);
+          setRecordedStreamList(response.data.Data.recordedStreams.data);
+          setCount(response.data.Data.recordedStreams.count);
+          setFixedCamRecordingsCount(response.data.Data.recentFixedCameraRecordings.count);
+          setIsLoading(false);
+        } else {
+          errorMessageHandler(
+            enqueueSnackbar,
+            response?.response?.data?.Message || 'Something Went Wrong.',
+            response?.response?.status,
+            authCtx.setAuthError
+          );
+          setIsLoading(false);
+        }
+      })
+      .catch((error) => {
+        // ✅ Detect CORS error (network error, no response)
+        if (error.message === 'Network Error' && !error.response) {
+          enqueueSnackbar('Please refresh the page.', {
+            variant: 'error',
+            action: (key) => (
+              <Button
+                onClick={() => {
+                  window.location.reload();
+                  closeSnackbar(key);
+                }}
+                sx={{ color: '#fff', textTransform: 'none' }}>
+                Refresh
+              </Button>
+            )
+          });
+        } else {
+          errorMessageHandler(
+            enqueueSnackbar,
+            error?.response?.data?.Message || 'Something Went Wrong.',
+            error?.response?.status,
+            authCtx.setAuthError
+          );
+        }
+      })
+      .finally(() => {
         setIsLoading(false);
-      } else {
-        errorMessageHandler(
-          enqueueSnackbar,
-          response?.response?.data?.Message || 'Something Went Wrong.',
-          response?.response?.status,
-          authCtx.setAuthError
-        );
-        setIsLoading(false);
-      }
-    });
+      });
   };
 
   const handleSorting = () => {
@@ -572,18 +998,6 @@ const Recordings = () => {
     setOrder(newOrder);
     setRecordingsPayload({ ...recordingsPayload, sortBy: newOrder });
   };
-
-  useEffect(() => {
-    getRecordingData();
-  }, [recordingsPayload]);
-
-  useEffect(() => {
-    setRecordingsPayload({
-      ...recordingsPayload,
-      from: dayjs(rangeDate[0]).format('YYYY-MM-DD'),
-      to: dayjs(rangeDate[1]).format('YYYY-MM-DD')
-    });
-  }, [rangeDate]);
 
   return (
     // <Box style={{ height: '80vh' }}>
@@ -603,7 +1017,7 @@ const Recordings = () => {
               <NewStreamTable
                 style={{ borderRadius: 5 }}
                 columns={FixedCameraRecordingsColumns}
-                rows={lastTenRecordings}
+                rows={mergedRowsForLastTenRecords}
                 type={'FIXED_CAMERA'}
                 title={'Recent Fixed Camera Recordings'}
                 subtitle={'User recorded video'}
@@ -660,13 +1074,44 @@ const Recordings = () => {
                       <Select
                         labelId="location"
                         id="location"
-                        value={location}
-                        onChange={handleLocationChange}>
-                        <MenuItem value={'All'}>All</MenuItem>
+                        multiple
+                        value={recordingsPayload.location}
+                        onChange={handleLocationChange}
+                        renderValue={(selected) => {
+                          if (selected.length === 0) return 'Select Locations';
+                          if (selected.includes('All')) return 'All';
+
+                          const selectedNames = authCtx.user.locations
+                            .filter((loc) => selected.includes(loc.loc_id))
+                            .map((loc) => loc.loc_name)
+                            .join(', ');
+
+                          return (
+                            <Box
+                              sx={{
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis'
+                              }}>
+                              {selectedNames}
+                            </Box>
+                          );
+                        }}>
+                        <MenuItem value="All">
+                          <Checkbox checked={recordingsPayload.location.includes('All')} />
+                          All
+                        </MenuItem>
                         {authCtx?.user?.locations
                           ?.sort((a, b) => (a.loc_name > b.loc_name ? 1 : -1))
                           ?.map((item) => (
-                            <MenuItem key={item.loc_id} value={item.loc_id}>
+                            <MenuItem
+                              key={item.loc_id}
+                              value={item.loc_id}
+                              disabled={recordingsPayload.location.includes('All')}>
+                              <Checkbox
+                                checked={recordingsPayload.location.includes(item.loc_id)}
+                              />
+
                               {item.loc_name}
                             </MenuItem>
                           ))}
@@ -678,9 +1123,15 @@ const Recordings = () => {
                     <Autocomplete
                       labelId="zones"
                       fullWidth
+                      limitTags={1}
                       multiple
                       id="zones"
-                      options={zonesList.sort((a, b) => (a?.zone_name > b?.zone_name ? 1 : -1))}
+                      options={zonesList.sort((a, b) => {
+                        if (a.zone_name === 'All') return -1;
+                        if (b.zone_name === 'All') return 1;
+                        return a.zone_name.localeCompare(b.zone_name, undefined, { numeric: true });
+                      })}
+                      value={selectedZonesList ? selectedZonesList : []}
                       isOptionEqualToValue={(option, value) => option?.zone_id === value?.zone_id}
                       getOptionLabel={(option) => {
                         return option?.zone_name;
@@ -731,9 +1182,11 @@ const Recordings = () => {
                       disabled={recordingsPayload.type == 'Mobile Stream'}
                       labelId="tags"
                       fullWidth
+                      limitTags={1}
                       multiple
                       id="tags"
                       options={tagsList.sort((a, b) => (a?.tag_name > b?.tag_name ? 1 : -1))}
+                      value={selectedTagsList ? selectedTagsList : []}
                       isOptionEqualToValue={(option, value) => option?.tag_id === value?.tag_id}
                       getOptionLabel={(option) => {
                         return option?.tag_name;
@@ -803,13 +1256,13 @@ const Recordings = () => {
                       <TableCell>Zones</TableCell>
                       <TableCell>Type</TableCell>
                       {recordingsPayload.type == 'Fixed Camera' && <TableCell>Tag</TableCell>}
-                      <TableCell>Action</TableCell>
+                      <TableCell align="center">Action</TableCell>
                     </TableRow>
                   </TableHead>
                   {recordingsPayload.type == 'Fixed Camera' ? (
                     <TableBody>
-                      {recordingsList?.length > 0
-                        ? recordingsList?.map((row, index) => (
+                      {mergedRows?.length > 0
+                        ? mergedRows?.map((row, index) => (
                             <FixedCameraRecordingsRow row={row} key={index} />
                           ))
                         : null}
@@ -828,11 +1281,11 @@ const Recordings = () => {
                   <NoLiveStreamDiv />
                 ) : null}
                 {!isLoading &&
-                recordingsList?.length == 0 &&
+                mergedRows?.length == 0 &&
                 recordingsPayload.type == 'Fixed Camera' ? (
                   <NoLiveStreamDiv />
                 ) : null}
-                {recordingsList?.length > 0 && recordingsPayload.type == 'Fixed Camera' ? (
+                {mergedRows?.length > 0 && recordingsPayload.type == 'Fixed Camera' ? (
                   <TablePagination
                     rowsPerPageOptions={[5, 10, 20, 25, 50]}
                     onPageChange={handlePageChange}
@@ -864,6 +1317,15 @@ const Recordings = () => {
           <RecordingForm
             open={isEditDialogOpen}
             setOpen={setIsEditDialogOpen}
+            recordingData={recordingData}
+            setRecordingData={setRecordingData}
+            getRecordingData={getRecordingData}
+          />
+        )}
+        {isShareDialogOpen && (
+          <ShareRecordingForm
+            open={isShareDialogOpen}
+            setOpen={setIsShareDialogOpen}
             recordingData={recordingData}
             setRecordingData={setRecordingData}
             getRecordingData={getRecordingData}

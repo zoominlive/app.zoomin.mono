@@ -5,15 +5,14 @@ import {
   Dialog,
   DialogActions,
   DialogContent,
-  DialogContentText,
   DialogTitle,
   Divider,
-  FormControlLabel,
-  Stack
+  FormControlLabel
 } from '@mui/material';
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import SaveIcon from '@mui/icons-material/Save';
+import ConfirmationDialog from '../common/confirmationdialog';
 
 const DeleteCamDialog = (props) => {
   const [wait, setWait] = useState(false);
@@ -21,6 +20,15 @@ const DeleteCamDialog = (props) => {
   const handleOnClose = () => setIsCloseDialog(!isCloseDialog);
   return (
     <Dialog
+      sx={{
+        '& .MuiDialog-container': isCloseDialog
+          ? {
+              alignItems: 'flex-start',
+              marginTop: '12vh',
+              '& .MuiDialog-paper': { maxWidth: '440px !important' }
+            }
+          : {}
+      }}
       open={props.open}
       // onClose={() => {
       //   if (!props.loading) {
@@ -28,49 +36,25 @@ const DeleteCamDialog = (props) => {
       //   }
       // }}
       onClose={handleOnClose}>
-      <DialogTitle>Delete Camera</DialogTitle>
       <Divider />
       {isCloseDialog ? (
-        <>
-          <Stack direction={'row'} justifyContent={'center'} alignItems={'start'} padding={3}>
-            <DialogContentText>
-              Are you sure you want to exit before completing the wizard ?
-            </DialogContentText>
-          </Stack>
-          <DialogActions sx={{ paddingRight: 4, paddingBottom: 3 }}>
-            <Stack direction="row" justifyContent="flex-end" width="100%">
-              <Button
-                className="log-btn"
-                variant="outlined"
-                sx={{ marginRight: 1.5 }}
-                onClick={() => {
-                  setIsCloseDialog(false);
-                }}>
-                No
-              </Button>
-
-              <Button
-                id="yes-btn"
-                className="log-btn"
-                variant="outlined"
-                sx={{ marginRight: 1.5, color: '#ffff' }}
-                style={{ color: '#ffff' }}
-                onClick={() => {
-                  setIsCloseDialog(false);
-                  props.handleDialogClose();
-                }}>
-                Yes
-              </Button>
-            </Stack>
-          </DialogActions>
-        </>
+        <ConfirmationDialog
+          onCancel={() => setIsCloseDialog(false)}
+          onConfirm={() => {
+            setIsCloseDialog(false);
+            props.handleDialogClose();
+          }}
+        />
       ) : (
-        <DialogContent>
-          <FormControlLabel
-            control={<Checkbox onChange={(event) => setWait(event.target.checked)} />}
-            label="Wait until no one is watching the stream before removing."
-          />
-        </DialogContent>
+        <>
+          <DialogTitle>Delete Camera</DialogTitle>
+          <DialogContent>
+            <FormControlLabel
+              control={<Checkbox onChange={(event) => setWait(event.target.checked)} />}
+              label="Wait until no one is watching the stream before removing."
+            />
+          </DialogContent>
+        </>
       )}
       <Divider />
 

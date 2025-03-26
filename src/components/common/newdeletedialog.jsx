@@ -1,5 +1,4 @@
 import {
-  Button,
   Dialog,
   DialogActions,
   DialogContent,
@@ -16,6 +15,8 @@ import SaveIcon from '@mui/icons-material/Save';
 import CloseIcon from '@mui/icons-material/Close';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { useState } from 'react';
+import closeicon from '../../assets/closeicon.svg';
+import ConfirmationDialog from './confirmationdialog';
 
 const NewDeleteDialog = (props) => {
   const [isCloseDialog, setIsCloseDialog] = useState(false);
@@ -45,6 +46,15 @@ const NewDeleteDialog = (props) => {
   return (
     <Dialog
       open={props.open}
+      sx={{
+        '& .MuiDialog-container': isCloseDialog
+          ? {
+              alignItems: 'flex-start',
+              marginTop: '12vh',
+              '& .MuiDialog-paper': { maxWidth: '440px !important' }
+            }
+          : {}
+      }}
       // onClose={() => {
       //   if (!props.loading) {
       //     props.handleDialogClose();
@@ -53,63 +63,40 @@ const NewDeleteDialog = (props) => {
       onClose={handleClose}
       fullWidth
       className="small-dialog delete-dialog">
-      <DialogTitle sx={{ paddingTop: 3.5 }}>
-        {props.title}
-        <DialogContentText>
-          {/* Please select which stream you want to watch on your dashboard */}
-        </DialogContentText>
-        <IconButton
-          aria-label="close"
-          onClick={handleClose}
-          // onClick={() => {
-          //   if (!props.loading) {
-          //     props.handleDialogClose();
-          //   }
-          // }}
-          sx={{
-            position: 'absolute',
-            right: 18,
-            top: 30
-          }}>
-          <CloseIcon />
-        </IconButton>
-      </DialogTitle>
       {isCloseDialog ? (
-        <>
-          <Stack direction={'row'} justifyContent={'center'} alignItems={'start'} padding={3}>
-            <DialogContentText>
-              Are you sure you want to exit before completing the wizard ?
-            </DialogContentText>
-          </Stack>
-          <DialogActions sx={{ paddingRight: 4, paddingBottom: 3 }}>
-            <Stack direction="row" justifyContent="flex-end" width="100%">
-              <Button
-                className="log-btn"
-                variant="outlined"
-                sx={{ marginRight: 1.5 }}
-                onClick={() => {
-                  setIsCloseDialog(false);
-                }}>
-                No
-              </Button>
-
-              <Button
-                id="yes-btn"
-                className="log-btn"
-                variant="outlined"
-                sx={{ marginRight: 1.5, color: '#ffff' }}
-                style={{ color: '#ffff' }}
-                onClick={() => {
-                  setIsCloseDialog(false);
-                  props.handleDialogClose();
-                }}>
-                Yes
-              </Button>
-            </Stack>
-          </DialogActions>
-        </>
+        <ConfirmationDialog
+          onCancel={() => {
+            setIsCloseDialog(false);
+          }}
+          onConfirm={() => {
+            setIsCloseDialog(false);
+            props.handleDialogClose();
+          }}
+          handleFormDialogClose={handleClose}
+        />
       ) : (
         <>
+          <DialogTitle sx={{ paddingTop: 3.5 }}>
+            {props.title}
+            <DialogContentText>
+              {/* Please select which stream you want to watch on your dashboard */}
+            </DialogContentText>
+            <IconButton
+              aria-label="close"
+              onClick={handleClose}
+              // onClick={() => {
+              //   if (!props.loading) {
+              //     props.handleDialogClose();
+              //   }
+              // }}
+              sx={{
+                position: 'absolute',
+                right: 18,
+                top: 30
+              }}>
+              {!isCloseDialog ? <CloseIcon /> : <img src={closeicon} alt="closeicon" />}
+            </IconButton>
+          </DialogTitle>
           <DialogContent>
             <DialogContentText>
               <Stack direction={'row'} alignItems={'center'} justifyContent={'flex-start'}>
@@ -165,7 +152,7 @@ const NewDeleteDialog = (props) => {
               startIcon={props.loading && <SaveIcon />}
               variant="text"
               onClick={handleDelete}>
-              Delete
+              {props?.stopSharing ? 'Stop' : 'Delete'}
             </LoadingButton>
           </DialogActions>
         </>
@@ -181,6 +168,7 @@ NewDeleteDialog.propTypes = {
   handleDialogClose: PropTypes.func,
   title: PropTypes.string,
   customer: PropTypes.object,
+  stopSharing: PropTypes.bool,
   contentText: PropTypes.string,
   loading: PropTypes.bool,
   handleDelete: PropTypes.func,

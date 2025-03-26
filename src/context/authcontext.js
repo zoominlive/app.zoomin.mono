@@ -11,6 +11,7 @@ const defaultState = {
     location: ['Select All'],
     updateDashboardData: false,
     paymentMethod: false,
+    showRedDot: false,
     tags: []
     // sessionCreated: false
   }
@@ -31,6 +32,7 @@ export const AuthContextProvider = (props) => {
   const [custName, setCustName] = useState(defaultState.auth.custName);
   const [location, setLocation] = useState(defaultState.auth.location);
   const [paymentMethod, setPaymentMethod] = useState(defaultState.auth.paymentMethod);
+  const [showRedDot, setShowRedDot] = useState(defaultState.auth.showRedDot);
   // const [sessionCreated, setSessionCreated] = useState(defaultState.auth.sessionCreated);
   const [updateDashboardData, setUpdateDashboardData] = useState(
     defaultState.auth.updateDashboardData
@@ -50,6 +52,7 @@ export const AuthContextProvider = (props) => {
   const handleCustName = (name) => setCustName(name);
   const handleLocation = (loc) => setLocation(loc);
   const handlePaymentMethod = (pm) => setPaymentMethod(pm);
+  const handleRedDot = (pm) => setShowRedDot(pm);
   const handleUpdateDashboardData = (value) => setUpdateDashboardData(value);
   const handleTags = (value) => setTags(value);
   // const handleSessionCreated = (value) => setSessionCreated(value);
@@ -64,6 +67,7 @@ export const AuthContextProvider = (props) => {
     location,
     updateDashboardData,
     paymentMethod,
+    showRedDot,
     // sessionCreated,
     setToken: handleToken,
     setUser: handleUser,
@@ -73,6 +77,7 @@ export const AuthContextProvider = (props) => {
     setLocation: handleLocation,
     setUpdateDashboardData: handleUpdateDashboardData,
     setPaymentMethod: handlePaymentMethod,
+    setShowRedDot: handleRedDot,
     setTags: handleTags
     // setSessionCreated: handleSessionCreated
   };

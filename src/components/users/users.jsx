@@ -47,7 +47,7 @@ const Users = () => {
   const authCtx = useContext(AuthContext);
   const location = useLocation();
   const receivedData = location.state?.data;
-  const { enqueueSnackbar } = useSnackbar();
+  const { enqueueSnackbar, closeSnackbar } = useSnackbar();
   const [isUserFormDialogOpen, setIsUserFormDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -86,20 +86,49 @@ const Users = () => {
   // Method to fetch user list for table
   const getUsersList = () => {
     setIsLoading(true);
-    API.get('users/all', { params: usersPayload }).then((response) => {
-      if (response.status === 200) {
-        setUsersList(response.data.Data.users);
-        setTotalUsers(response.data.Data.count);
-      } else {
-        errorMessageHandler(
-          enqueueSnackbar,
-          response?.response?.data?.Message || 'Something Went Wrong.',
-          response?.response?.status,
-          authCtx.setAuthError
-        );
-      }
-      setIsLoading(false);
-    });
+    API.get('users/all', { params: usersPayload })
+      .then((response) => {
+        if (response.status === 200) {
+          setUsersList(response.data.Data.users);
+          setTotalUsers(response.data.Data.count);
+        } else {
+          errorMessageHandler(
+            enqueueSnackbar,
+            response?.response?.data?.Message || 'Something Went Wrong.',
+            response?.response?.status,
+            authCtx.setAuthError
+          );
+        }
+        setIsLoading(false);
+      })
+      .catch((error) => {
+        // ✅ Detect CORS error (network error, no response)
+        if (error.message === 'Network Error' && !error.response) {
+          enqueueSnackbar('Please refresh the page.', {
+            variant: 'error',
+            action: (key) => (
+              <Button
+                onClick={() => {
+                  window.location.reload();
+                  closeSnackbar(key);
+                }}
+                sx={{ color: '#fff', textTransform: 'none' }}>
+                Refresh
+              </Button>
+            )
+          });
+        } else {
+          errorMessageHandler(
+            enqueueSnackbar,
+            error?.response?.data?.Message || 'Something Went Wrong.',
+            error?.response?.status,
+            authCtx.setAuthError
+          );
+        }
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   };
   const handleLivestream = () => {
     authCtx.setUser({

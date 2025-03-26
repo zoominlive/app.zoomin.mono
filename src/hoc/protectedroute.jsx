@@ -1,6 +1,6 @@
 import React from 'react';
 // import { useContext } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 // import AuthContext from '../context/authcontext';
 import { useAuth, useLoginWithRedirect } from '@frontegg/react';
 
@@ -10,8 +10,10 @@ const ProtectedRoute = () => {
   console.log('isAuthenticated->', isAuthenticated);
   // eslint-disable-next-line no-unused-vars
   const loginWithRedirect = useLoginWithRedirect();
+  const location = useLocation();
   console.log('protected route');
   if (!isAuthenticated) {
+    localStorage.setItem('postLoginRedirect', location.pathname + location.search);
     loginWithRedirect();
     return null;
   }

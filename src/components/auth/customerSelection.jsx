@@ -51,7 +51,7 @@ const CustomerSelection = () => {
     let name = customer.company_name;
     localStorage.setItem('cust_name', name);
     authCtx.setCustName(name);
-    navigate('/dashboard');
+    navigate('/customers');
     setSubmitLoading(false);
   };
 

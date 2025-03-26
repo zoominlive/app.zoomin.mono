@@ -16,6 +16,7 @@ import Invoices from './components/billing/invoices';
 import PostLoginSteps from './components/dashboard/postloginsteps';
 import { useAuth } from '@frontegg/react';
 import APIKeys from './components/apikeys/apikeys';
+import StreamVideo from './components/watchstream/streamvideo';
 // import Alerts from './components/alerts/alerts';
 
 const AppRoutes = () => {
@@ -56,6 +57,7 @@ const AppRoutes = () => {
         {/* <Route path="/recordings" element={<Recordings />} /> */}
         {/* <Route path="/alerts" element={<Alerts />} /> */}
         <Route path="/watch-stream" element={<WatchStream />} />
+        <Route path="/shared-clips" element={<StreamVideo />} />
         {authCtx.user && authCtx.user.role === 'Admin' && !authCtx.paymentMethod && (
           <Route path="/terms-and-conditions" element={<PostLoginSteps />} />
         )}
@@ -67,7 +69,7 @@ const AppRoutes = () => {
             authCtx.user && (authCtx.user.role === 'Family' || authCtx.user.role === 'Teacher') ? (
               <Navigate to={'watch-stream'} />
             ) : user?.superUser ? (
-              <Navigate to={'customer-selection'} />
+              <Navigate to={'customers'} />
             ) : (
               authCtx.paymentMethod && <Navigate to={'dashboard'} />
             )
