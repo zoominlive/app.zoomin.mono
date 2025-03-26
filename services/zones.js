@@ -114,254 +114,103 @@ module.exports = {
   },
 
   /* Fetch all the zone's details */
-  getAllZonesDetails: async (userId, user, filter, t) => {
-    const { Zone, Camera, CustomerLocations, ZoneType } = await connectToDatabase();
+  getAllZonesDetails : async (userId, user, filter, t) => {
+    const { Zone, Camera, CustomerLocations, ZoneType, CamerasInZones } = await connectToDatabase();
+  
     let {
       pageNumber = 0,
       pageSize = 10,
       zonesList = [],
-      location = "All",
+      location = [],
       searchBy = "",
       cust_id = null,
       type = "All"
     } = filter;
-
-    if (pageNumber != 0) {
-      pageNumber = pageNumber - 1;
-    }
-
-    if (location == "All") {
-      location = "";
-    }
-    let zones;
-    // if (user.role !== 'Admin') {
-    //   if (zonesList?.length !== 0) {
-    //     zones = await Zone.findAll(
-    //       {
-    //         where: {
-    //           user_id: userId,
-    //           location: {
-    //             [Sequelize.Op.substring]: location
-    //           },
-    //           zone_name: {
-    //             [Sequelize.Op.and]: { [Sequelize.Op.substring]: searchBy }
-    //           },
-    //           zone_name: zonesList
-    //         },
-    //         attributes: ['zone_id', 'zone_name', 'location'],
-    //         include: [
-    //           {
-    //             model: CamerasInZones,
-    //             attributes: ['cam_zone_id'],
-    //             include: [
-    //               {
-    //                 model: Camera,
-    //                 attributes: ['cam_id', 'cam_name', 'location', 'stream_uri', 'description']
-    //               }
-    //             ]
-    //           }
-    //         ]
-    //       },
-    //       { transaction: t }
-    //     );
-    //   } else {
-    //     zones = await Zone.findAll(
-    //       {
-    //         where: {
-    //           user_id: userId,
-    //           location: {
-    //             [Sequelize.Op.substring]: location
-    //           },
-    //           zone_name: {
-    //             [Sequelize.Op.substring]: searchBy
-    //           }
-    //         },
-    //         attributes: ['zone_id', 'zone_name', 'location'],
-    //         include: [
-    //           {
-    //             model: CamerasInZones,
-    //             attributes: ['cam_zone_id'],
-    //             include: [
-    //               {
-    //                 model: Camera,
-    //                 attributes: ['cam_id', 'cam_name', 'location', 'stream_uri', 'description']
-    //               }
-    //             ]
-    //           }
-    //         ]
-    //       },
-    //       { transaction: t }
-    //     );
-    //   }
-    // } else {
-    let loc_obj = {};
-    if (!cust_id) {      
-      loc_obj = { loc_id: user.locations.map((item) => item.loc_id) };
+  
+    // Adjust pageNumber for zero-based index
+    pageNumber = Math.max(0, pageNumber - 1);
+  
+    // Determine location filter based on user role or customer ID
+    let locationFilter = {};
+    if (!cust_id) {
+      locationFilter = { loc_id: user.locations.map((loc) => loc.loc_id) };
     } else {
-      let availableLocations = await CustomerLocations.findAll({
-        where: { cust_id: cust_id },
-        raw: true,
+      const availableLocations = await CustomerLocations.findAll({
+        where: { cust_id },
+        raw: true
       });
-      let locs = availableLocations.flatMap((i) => i.loc_id);
-      loc_obj = { loc_id: locs };
+      locationFilter = { loc_id: availableLocations.map((loc) => loc.loc_id) };
     }
-
-    if (zonesList?.length !== 0) {
-      zones = await Zone.findAll(
+  
+    // Build dynamic location condition
+    let locCondition = {};
+    if (Array.isArray(location) && location.length > 0 && !location.includes("All")) {
+      locCondition = { loc_id: { [Sequelize.Op.in]: location } };
+    }
+  
+    // Construct the query filter
+    let zoneFilter = {
+      cust_id: user.cust_id || cust_id,
+      [Sequelize.Op.and]: [
+        locationFilter,
+        locCondition
+      ],
+      zone_name: { [Sequelize.Op.substring]: searchBy },
+      ...(zonesList.length > 0 && { zone_name: zonesList }),
+      ...(type !== "All" && { zone_type_id: { [Sequelize.Op.substring]: type } })
+    };
+  
+    // Fetch zones
+    let zones = await Zone.findAll({
+      where: zoneFilter,
+      attributes: ["zone_id", "zone_name", "loc_id", "stream_live_license", "zone_type_id"],
+      include: [
         {
-          where: {
-            cust_id: user.cust_id || cust_id,
-            [Sequelize.Op.and]: [
-              loc_obj,
-              {
-                loc_id: {
-                  [Sequelize.Op.substring]: location,
-                },
-              },
-            ],
-            zone_name: {
-              [Sequelize.Op.and]: { [Sequelize.Op.substring]: searchBy },
-            },
-            zone_name: zonesList,
-            ...(type !== "All"
-              ? { zone_type_id: { [Sequelize.Op.substring]: type } }
-              : {})
-          },
-          attributes: ["zone_id", "zone_name", "loc_id", "stream_live_license", "zone_type_id"],
-          include: [
-            {
-              model: CamerasInZones,
-              attributes: ["cam_zone_id"],
-              include: [
-                {
-                  model: Camera,
-                  attributes: [
-                    "cam_id",
-                    "cam_name",
-                    "loc_id",
-                    "stream_uri",
-                    "description",
-                    "cam_alias"
-                  ],
-                },
-              ],
-            },
-            {
-              model: CustomerLocations,
-              attributes: ['loc_name', 'loc_id'], // Only include the location name
-            },
-            {
-              model: ZoneType,
-              as: 'zone_type',
-              attributes: ['zone_type', 'zone_type_id'], // Only include the location name
-            },
-          ],
-          distinct: true
+          model: CamerasInZones,
+          attributes: ["cam_zone_id"],
+          include: [{ model: Camera, attributes: ["cam_id", "cam_name", "loc_id", "stream_uri", "description", "cam_alias"] }]
         },
-        { transaction: t }
-      );
-    } else {
-      zones = await Zone.findAll(
-        {
-          where: {
-            cust_id: user.cust_id || cust_id,
-            [Sequelize.Op.and]: [
-              loc_obj,
-              {
-                loc_id: {
-                  [Sequelize.Op.substring]: location,
-                },
-              },
-            ],
-
-            zone_name: {
-              [Sequelize.Op.substring]: searchBy,
-            },
-            ...(type !== "All"
-              ? { zone_type_id: { [Sequelize.Op.substring]: type } }
-              : {})
-          },
-          attributes: ["zone_id", "zone_name", "loc_id", "stream_live_license", "zone_type_id"],
-          include: [
-            {
-              model: CamerasInZones,
-              attributes: ["cam_zone_id"],
-              include: [
-                {
-                  model: Camera,
-                  attributes: [
-                    "cam_id",
-                    "cam_name",
-                    "loc_id",
-                    "stream_uri",
-                    "description",
-                    "cam_alias"
-                  ],
-                },
-              ],
-            },
-            {
-              model: CustomerLocations,
-              attributes: ['loc_name', 'loc_id'], // Only include the location name
-            },
-            {
-              model: ZoneType,
-              as: 'zone_type',
-              attributes: ['zone_type', 'zone_type_id'], // Only include the location name
-            },
-          ],
-          distinct: true
-        },
-        { transaction: t }
-      );
-    }
-    // }   
-
-    let count = zones.length;
-
-    if (count > pageSize) {
-      if (count > pageNumber * pageSize + pageSize) {
-        zones = zones.slice(pageNumber * pageSize, (pageNumber + 1) * pageSize);
-      } else {
-        zones = zones.slice(
-          pageNumber * pageSize,
-          pageNumber * pageSize + pageSize
-        );
-      }
-    }
-
-    const baseUrl = await customerServices.getTranscoderUrl(user?.cust_id, t)
+        { model: CustomerLocations, attributes: ["loc_name", "loc_id"] },
+        { model: ZoneType, as: "zone_type", attributes: ["zone_type", "zone_type_id"] }
+      ],
+      distinct: true,
+      transaction: t
+    });
+  
+    // Apply pagination
+    const count = zones.length;
+    zones = zones.slice(pageNumber * pageSize, (pageNumber + 1) * pageSize);
+  
+    // Generate secure stream URIs
+    const baseUrl = await customerServices.getTranscoderUrl(user?.cust_id, t);
     
-    zones = zones?.map((zone) => {
+    zones = zones.map((zone) => {
       let cams = zone.cameras_assigned_to_zones?.map((cam) => cam.camera)?.filter(Boolean) || [];
+      
       cams.forEach((camera) => {
-        if (!camera) return; // Skip null cameras
-        let uid = user?.family_member_id || user?.user_id;
-        let sid = camera?.cam_id;
-        let uuid = uuidv4();
-        if (!sid || !camera.stream_uri) return; // Ensure cam_id and stream_uri exist
+        if (!camera?.cam_id || !camera?.stream_uri) return;
+        
         const token = jwt.sign(
-          { user_id: uid, cam_id: sid, uuid: uuid },
+          { user_id: user?.family_member_id || user?.user_id, cam_id: camera.cam_id, uuid: uuidv4() },
           process.env.STREAM_URL_SECRET_KEY,
           { expiresIn: "12h" }
         );
-    
-        camera.dataValues = camera.dataValues || {}; // Ensure dataValues is defined
+  
         camera.dataValues.stream_uri_seckey = `${baseUrl}${camera.stream_uri}?seckey=${token}`;
       });
-    
+  
       return {
         zone_id: zone.zone_id,
         zone_name: zone.zone_name,
         location: zone.loc_id,
-        loc_name: zone.customer_location?.loc_name || "Unknown Location", // Handle missing location
+        loc_name: zone.customer_location?.loc_name || "Unknown Location",
         cameras: cams,
         stream_live_license: zone.stream_live_license,
-        zone_type: zone.zone_type?.dataValues || {}, // Handle missing zone_type
+        zone_type: zone.zone_type?.dataValues || {}
       };
     });
-
-    return { finalZoneDetails: zones, count: count };
+  
+    return { finalZoneDetails: zones, count };
   },
 
   getZoneDetailsByZoneId: async(zoneId, t) => {

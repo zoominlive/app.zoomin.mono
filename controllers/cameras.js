@@ -172,6 +172,17 @@ module.exports = {
         });
       } else {
         console.log('transcodedDetails==>', transcodedDetails);
+        const convertS3ToCloudFront = (s3Url, cloudFrontDomain) => {
+          return s3Url.replace(/https?:\/\/[^/]+/, cloudFrontDomain);
+        };
+        
+        // Example Usage
+        const s3Url = transcodedDetails.data.video_url;
+        const cloudFrontDomain = "https://d21wx6fkc3aal5.cloudfront.net";
+        
+        const cloudFrontUrl = convertS3ToCloudFront(s3Url, cloudFrontDomain);
+        console.log("cloudFrontUrl==>", cloudFrontUrl);
+        
         const { RecordRtsp } = await connectToDatabase();
         if(transcodedDetails) {
           let recordRtspObj = {};
@@ -184,6 +195,7 @@ module.exports = {
           recordRtspObj.zone_name = params.zone_name;
           recordRtspObj.thumbnail_url = transcodedDetails.data.thumbnail_url;
           recordRtspObj.video_url = transcodedDetails.data.video_url;
+          // recordRtspObj.video_url = cloudFrontUrl;
           console.log('recordRtspObj==>', recordRtspObj);
           
           const recordRtspCreated = await RecordRtsp.create(recordRtspObj);
@@ -764,12 +776,13 @@ module.exports = {
   // generate thumbnail
   generateThumbnail: async (req, res) => {
     try {
-      const filter = {
+      let filter = {
         sid: req.query?.sid,
         hlsStreamUri: req.query?.stream_uri,
         userId: req.user?.user_id
       };
       const token = req.userToken;
+      filter.transcoder_endpoint = await customerServices.getTranscoderUrl(req.query.custId);
       const thumbailRes = await cameraServices.getThumbnailUrl(req.user?.cust_id, token, filter)
       res.status(200).json({
         IsSuccess: true,
