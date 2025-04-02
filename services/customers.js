@@ -36,6 +36,21 @@ module.exports = {
     return customer?.permit_audio || null;
   },
 
+  getMaxRecordTime: async (custId, t) => {
+    const { Customers } = await connectToDatabase();
+    let customer = await Customers.findOne(
+      {
+        raw: true,
+        where: {
+          cust_id: custId,
+        },
+      },
+      { transaction: t }
+    );
+
+    return customer?.max_record_time || null;
+  },
+
   getCameraRecording: async (custId, t) => {
     const { Customers } = await connectToDatabase();
     let customer = await Customers.findOne(

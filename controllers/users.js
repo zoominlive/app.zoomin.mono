@@ -95,6 +95,7 @@ module.exports = {
         user.transcoderBaseUrl = await customerServices.getTranscoderUrlFromCustLocations(user.locations, custId);        
       }
       user.permit_audio = await customerServices.getPermitAudio(custId);
+      user.max_record_time = await customerServices.getMaxRecordTime(custId);
       user.camera_recording = await customerServices.getCameraRecording(custId);
       user.max_resolution = await customerServices.getMaxResolution(custId);
       user.max_fps = await customerServices.getMaxFps(custId);

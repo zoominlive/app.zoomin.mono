@@ -321,108 +321,90 @@ module.exports = {
 
   /* Fetch all the user's details */
   getAllUsers: async (user, filter, t) => {
-    const { Users, Customers, ZonesInTeacher, Zone } =
-      await connectToDatabase();
+    const { Users, Customers, ZonesInTeacher, Zone, CustomerLocations } = await connectToDatabase();
+    
     let {
       pageNumber = 0,
       pageSize = 10,
       searchBy = "",
-      location = "All",
+      location = [],
       role = "All",
       liveStreaming = "All",
       cust_id = null,
     } = filter;
+  
     let streamValue = [true, false];
-    if (location == "All") {
-      location = "";
-    }
-
-    if (role == "All") {
-      role = "";
-    }
-
-    if (liveStreaming == "Yes") {
+  
+    if (liveStreaming === "Yes") {
       streamValue = [true];
-    }
-
-    if (liveStreaming == "No") {
+    } else if (liveStreaming === "No") {
       streamValue = [false];
     }
-
+  
+    // Handle location filtering
+    let locationFilter = {};
+    if (location.length > 0 && !location.includes("All")) {
+      locationFilter = { loc_id: { [Sequelize.Op.in]: location } };
+    }
+  
+    // Handle role filtering
+    let roleFilter = {};
+    if (role !== "All") {
+      roleFilter = { role: { [Sequelize.Op.substring]: role } };
+    }
+  
+    // Get all users based on initial conditions
     let allusers = await Users.findAll({
       where: {
         cust_id: user.cust_id || cust_id,
-        user_id: {
-          [Sequelize.Op.not]: user.user_id,
-        },
+        user_id: { [Sequelize.Op.not]: user.user_id },
         stream_live_license: { [Sequelize.Op.in]: streamValue },
+        ...roleFilter,
         [Sequelize.Op.or]: [
-          {
-            first_name: {
-              [Sequelize.Op.like]: `%${searchBy}%`,
-            },
-          },
-          {
-            last_name: {
-              [Sequelize.Op.like]: `%${searchBy}%`,
-            },
-          },
-          {
-            email: {
-              [Sequelize.Op.like]: `%${searchBy}%`,
-            },
-          },
+          { first_name: { [Sequelize.Op.like]: `%${searchBy}%` } },
+          { last_name: { [Sequelize.Op.like]: `%${searchBy}%` } },
+          { email: { [Sequelize.Op.like]: `%${searchBy}%` } },
         ],
-        role: {
-          [Sequelize.Op.substring]: role,
-        },
       },
       attributes: ["user_id"],
-      include: [{
-        model: CustomerLocations,
-        as: 'locations',
-        where: {
-          loc_id: {
-            [Sequelize.Op.substring]: location,
-          },
+      include: [
+        {
+          model: CustomerLocations,
+          as: "locations",
+          where: locationFilter, // Dynamic location filter
+          attributes: ["loc_id", "loc_name"],
         },
-        attributes: ['loc_id', 'loc_name']
-      }],
-      distinct: true
+      ],
+      distinct: true,
     });
-
-    const userIds = [];
-
+  
+    let userIds = new Set(); // Use a Set to store unique user IDs
+  
     if (!user.cust_id) {
-      let availableLocations = await customerServices.getLocationDetails(
-        cust_id
-      );
-      let locs = availableLocations.flatMap(({loc_id, loc_name}) => ({loc_id, loc_name}));
-      console.log('locs==>', locs);
-      
-      allusers.map((item) => {
-        locs.forEach((i) => {
-          if (item.locations?.map((item) => item.loc_id)?.includes(i.loc_id)) {
-            userIds.push(item);
-          }
-        });
+      let availableLocations = await customerServices.getLocationDetails(cust_id);
+      let locIds = availableLocations.map(({ loc_id }) => loc_id);
+  
+      allusers.forEach((user) => {
+        if (user.locations.some((loc) => locIds.includes(loc.loc_id))) {
+          userIds.add(user.user_id);
+        }
       });
-      console.log('userIds==>', userIds);
     } else {
-      allusers.map((item) => {
-        user.locations.forEach((i) => {          
-          if (item.locations?.map((item) => item.loc_id).includes(i.loc_id)) {
-            userIds.push(item);
-          }
-        });
+      let userLocIds = user.locations.map(({ loc_id }) => loc_id);
+  
+      allusers.forEach((user) => {
+        if (user.locations.some((loc) => userLocIds.includes(loc.loc_id))) {
+          userIds.add(user.user_id);
+        }
       });
     }
-
+  
+    // Fetch users with pagination
     let users = await Users.findAndCountAll({
       limit: parseInt(pageSize),
       offset: parseInt(pageNumber * pageSize),
       where: {
-        user_id: { [Sequelize.Op.in]: userIds.flatMap((i) => i.user_id) },
+        user_id: { [Sequelize.Op.in]: Array.from(userIds) }, // Convert Set to array
       },
       include: [
         {
@@ -433,29 +415,19 @@ module.exports = {
         {
           model: ZonesInTeacher,
           as: "zonesInTeacher",
-          include: [
-            {
-              model: Zone,
-              as: "zone",
-            },
-          ],
+          include: [{ model: Zone, as: "zone" }],
         },
         {
           model: CustomerLocations,
-          as: 'locations',
-          where: {
-            loc_id: {
-              [Sequelize.Op.substring]: location,
-            },
-          },
-          attributes: ['loc_id', 'loc_name']
-        }
+          as: "locations",
+          where: locationFilter,
+          attributes: ["loc_id", "loc_name"],
+        },
       ],
       distinct: true,
       attributes: { exclude: ["password"] },
     });
-    console.log('users==>', users);
-
+  
     return { users: users.rows, count: users.count };
   },
 
