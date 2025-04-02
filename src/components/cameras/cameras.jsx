@@ -90,26 +90,14 @@ const Cameras = () => {
   // Method to fetch user list for table
   const getCamerasList = () => {
     setIsLoading(true);
-    API.get('cams/', { params: camerasPayload })
-      .then((response) => {
-        if (response.status === 200) {
-          setCamerasList(response.data.Data.cams);
-          setTotalCameras(response.data.Data.count);
-        } else {
-          errorMessageHandler(
-            enqueueSnackbar,
-            response?.response?.data?.Message || 'Something Went Wrong.',
-            response?.response?.status,
-            authCtx.setAuthError
-          );
-        }
-        setIsLoading(false);
-      })
-      .catch((error) => {
-        // ✅ Detect CORS error (network error, no response)
-        if (error.message === 'Network Error' && !error.response) {
+    API.get('cams/', { params: camerasPayload }).then((response) => {
+      if (response.status === 200) {
+        setCamerasList(response.data.Data.cams);
+        setTotalCameras(response.data.Data.count);
+      } else {
+        if (response.message === 'Network Error') {
           enqueueSnackbar('Please refresh the page.', {
-            variant: 'error',
+            variant: 'info',
             action: (key) => (
               <Button
                 onClick={() => {
@@ -124,15 +112,14 @@ const Cameras = () => {
         } else {
           errorMessageHandler(
             enqueueSnackbar,
-            error?.response?.data?.Message || 'Something Went Wrong.',
-            error?.response?.status,
+            response?.response?.data?.Message || 'Something Went Wrong.',
+            response?.response?.status,
             authCtx.setAuthError
           );
         }
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
+      }
+      setIsLoading(false);
+    });
   };
 
   // Method to delete camera
@@ -232,12 +219,16 @@ const Cameras = () => {
       // If 'All' is selected, only keep 'All' in the state
       setCamerasPayload((prevPayload) => ({
         ...prevPayload,
-        location: ['All']
+        location: value.length === 1 ? ['All'] : value.filter((loc) => loc !== 'All')
       }));
     } else {
+      // Check if all other locations are selected
+      const allLocationIds = authCtx.user.locations.map((loc) => loc.loc_id);
+      const isAllLocationsSelected = allLocationIds.every((locId) => value.includes(locId));
+
       setCamerasPayload((prevPayload) => ({
         ...prevPayload,
-        location: value.filter((loc) => loc !== 'All') // Ensure 'All' is removed if specific locations are selected
+        location: isAllLocationsSelected ? ['All'] : value
       }));
     }
   };
@@ -314,12 +305,13 @@ const Cameras = () => {
                           {authCtx.user.locations
                             ?.sort((a, b) => (a.loc_name > b.loc_name ? 1 : -1))
                             .map((item) => (
-                              <MenuItem
-                                key={item.loc_id}
-                                value={item.loc_id}
-                                disabled={camerasPayload.location.includes('All')} // Disable other options if 'All' is selected
-                              >
-                                <Checkbox checked={camerasPayload.location.includes(item.loc_id)} />
+                              <MenuItem key={item.loc_id} value={item.loc_id}>
+                                <Checkbox
+                                  checked={
+                                    camerasPayload.location.includes(item.loc_id) ||
+                                    camerasPayload.location.includes('All')
+                                  }
+                                />
                                 {item.loc_name}
                               </MenuItem>
                             ))}

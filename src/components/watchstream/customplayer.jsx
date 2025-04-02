@@ -110,7 +110,8 @@ const CustomPlayer = (props) => {
         zone_id: props?.camDetails?.zone_id,
         zone_name: props?.camDetails?.zone_name,
         alias: props?.camDetails?.cam_alias,
-        record_audio: authCtx?.user?.permit_audio ? true : false
+        record_audio: authCtx?.user?.permit_audio ? true : false,
+        max_record_time: authCtx?.user?.max_record_time
       }).then((response) => {
         if (response.status === 201) {
           setPlayerRecording(!playerRecording);

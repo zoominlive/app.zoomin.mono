@@ -27,7 +27,7 @@ import Recording from '../../assets/recording.svg';
 import StopIcon from '../../assets/pause-recording.svg';
 import LocalOfferIcon from '../../assets/RecordingTag.svg';
 import AuthContext from '../../context/authcontext';
-import { timeDifference } from '../../utils/timedifference';
+// import { timeDifference } from '../../utils/timedifference';
 
 const PlayerControls = (props) => {
   const authCtx = useContext(AuthContext);
@@ -39,41 +39,63 @@ const PlayerControls = (props) => {
   const [progress, setProgress] = useState(false);
   // const [tags, setTags] = useState([]);
   const tags = authCtx.tags;
+  const timeInSeconds = parseInt(authCtx?.user?.max_record_time) * 60;
+
   // Timer Effect
   useEffect(() => {
     let timer;
-    const startTimer = (initialTime = 0) => {
-      setElapsedTime(initialTime); // to restart timer from 0 when recording is started again
+    const recordingId = props.existingCameraId; // Unique ID for each recording
+
+    const startTimer = (initialTime) => {
+      setElapsedTime(initialTime);
+      localStorage.setItem(
+        `recordingStartTime_${recordingId}`,
+        JSON.stringify({ startTime: Date.now(), duration: initialTime })
+      );
+
       timer = setInterval(() => {
         setElapsedTime((prev) => {
-          // Check if elapsed time has reached 15 minutes (900 seconds)
-          if (prev + 1 >= 900) {
-            // Automatically stop recording
+          if (prev <= 1) {
+            clearInterval(timer);
             setIsRecording(false);
             props.setRecording(false);
             props.startDialogTimer(true);
+            localStorage.removeItem(`recordingStartTime_${recordingId}`); // Remove after completion
             return 0;
           }
-          return prev + 1;
+          return prev - 1;
         });
       }, 1000);
     };
+
+    const resumeTimer = () => {
+      const storedData = localStorage.getItem(`recordingStartTime_${recordingId}`);
+      if (storedData) {
+        const { startTime, duration } = JSON.parse(storedData);
+        const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
+        const remainingTime = Math.max(0, duration - elapsedSeconds);
+
+        if (remainingTime > 0) {
+          startTimer(remainingTime);
+        } else {
+          localStorage.removeItem(`recordingStartTime_${recordingId}`);
+        }
+      }
+    };
+
     if (isRecording && props.recording) {
-      startTimer(0);
+      startTimer(timeInSeconds);
     } else if (props.isRecording) {
-      const now = new Date();
-      const currentTime = now.toISOString().slice(11, 19);
-      const timeFromDB = props.start_time.slice(11, 19);
-      const { seconds } = timeDifference(currentTime, timeFromDB);
-      startTimer(seconds);
+      resumeTimer();
     } else if (!props.recording) {
-      //remove else if condition if want to reset the timer
       clearInterval(timer);
-      // setElapsedTime(0); // Reset timer when recording stops
+      localStorage.removeItem(`recordingStartTime_${recordingId}`); // ✅ Clear when stopped manually
     }
 
-    return () => clearInterval(timer);
-  }, [isRecording, props.recording]);
+    return () => {
+      clearInterval(timer);
+    };
+  }, [isRecording, props.recording, timeInSeconds, props.existingCameraId]);
 
   useEffect(() => {
     if (progress) {

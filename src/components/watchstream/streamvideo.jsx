@@ -471,55 +471,65 @@ const VideoPlayer = () => {
                     sx={{
                       borderRadius: '10px',
                       display: 'flex',
-                      justifyContent: 'center'
+                      justifyContent: 'center',
+                      position: 'relative'
                     }}>
-                    <div style={{ display: 'flex', justifyContent: 'center' }}>
+                    <div
+                      style={{ display: 'flex', justifyContent: 'center', position: 'relative' }}
+                      onContextMenu={(e) => e.preventDefault()} // Prevents right-click only on the video container
+                    >
                       {console.log('url, !isExpired, allowed==>', url, !isExpired, allowed)}
                       {console.log('selectedVideo==>', selectedVideo)}
                       {(url && !isExpired && allowed) || selectedVideo ? (
-                        <ReactPlayer
-                          ref={playerRef} // Attach ref
-                          url={url || selectedVideo}
-                          controls
-                          playing
-                          width="100%"
-                          height="auto"
-                          style={{ aspectRatio: '16 / 9', borderRadius: '8px' }}
-                          onPlay={() => {
-                            console.log('Video Started Playing');
-                            if (selectedClip && !selectedClip.seen) {
-                              setShareHistory((prev) => {
-                                const updatedHistory = prev.map((clip) =>
-                                  clip.share_id === selectedClip.share_id
-                                    ? { ...clip, seen: true }
-                                    : clip
-                                );
+                        <>
+                          <ReactPlayer
+                            ref={playerRef} // Attach ref
+                            url={url || selectedVideo}
+                            controls
+                            playing
+                            width="100%"
+                            height="auto"
+                            style={{ aspectRatio: '16 / 9', borderRadius: '8px' }}
+                            onPlay={() => {
+                              console.log('Video Started Playing');
+                              if (selectedClip && !selectedClip.seen) {
+                                setShareHistory((prev) => {
+                                  const updatedHistory = prev.map((clip) =>
+                                    clip.share_id === selectedClip.share_id
+                                      ? { ...clip, seen: true }
+                                      : clip
+                                  );
 
-                                const remainingUnseen = updatedHistory.filter(
-                                  (clip) => !clip.seen
-                                ).length;
-                                console.log('remainingUnseen (after playing):', remainingUnseen);
+                                  const remainingUnseen = updatedHistory.filter(
+                                    (clip) => !clip.seen
+                                  ).length;
+                                  console.log('remainingUnseen (after playing):', remainingUnseen);
 
-                                if (remainingUnseen === 0) {
-                                  authCtx.setShowRedDot(false);
+                                  if (remainingUnseen === 0) {
+                                    authCtx.setShowRedDot(false);
+                                  }
+
+                                  return updatedHistory;
+                                });
+
+                                API.patch('recordings/mark-seen', {
+                                  share_id: selectedClip.share_id
+                                });
+
+                                // Store seen clip in localStorage
+                                const seenClips =
+                                  JSON.parse(localStorage.getItem('seenClips')) || [];
+                                if (!seenClips.includes(selectedClip.share_id)) {
+                                  seenClips.push(selectedClip.share_id);
+                                  localStorage.setItem('seenClips', JSON.stringify(seenClips));
                                 }
-
-                                return updatedHistory;
-                              });
-
-                              API.patch('recordings/mark-seen', {
-                                share_id: selectedClip.share_id
-                              });
-
-                              // Store seen clip in localStorage
-                              const seenClips = JSON.parse(localStorage.getItem('seenClips')) || [];
-                              if (!seenClips.includes(selectedClip.share_id)) {
-                                seenClips.push(selectedClip.share_id);
-                                localStorage.setItem('seenClips', JSON.stringify(seenClips));
                               }
-                            }
-                          }}
-                        />
+                            }}
+                            config={{
+                              file: { attributes: { controlsList: 'nodownload' } }
+                            }}
+                          />
+                        </>
                       ) : (
                         <p>No video URL provided or This link has expired or is no longer valid.</p>
                       )}

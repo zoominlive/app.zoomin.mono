@@ -132,41 +132,28 @@ const Layout = () => {
     };
     API.get('users', {
       params: user.superUser ? params : ''
-    })
-      .then((response) => {
-        if (response.status === 200) {
-          const userData = {
-            ...response.data.Data,
-            location: response.data.Data.locations?.map((item) => item.loc_name)
-          };
-          setSelectedLocation(response?.data?.Data?.locations);
-          authCtx.setLocation(response?.data?.Data?.locations);
-          authCtx.setUser(userData);
-          localStorage.setItem('user', JSON.stringify(userData));
+    }).then((response) => {
+      if (response.status === 200) {
+        const userData = {
+          ...response.data.Data,
+          location: response.data.Data.locations?.map((item) => item.loc_name)
+        };
+        setSelectedLocation(response?.data?.Data?.locations);
+        authCtx.setLocation(response?.data?.Data?.locations);
+        authCtx.setUser(userData);
+        localStorage.setItem('user', JSON.stringify(userData));
 
-          let selected_locaions = response?.data?.Data?.locations;
-          response?.data?.Data?.locations?.map((item) => item).forEach((loc) => locs.push(loc));
-          setLocations(locs);
-          setSelectedLocation(selected_locaions);
-        } else {
-          if (response?.response?.status === 401) {
-            enqueueSnackbar('User Not Found', { variant: 'error' });
-          }
-          errorMessageHandler(
-            enqueueSnackbar,
-            response?.response?.data?.Message || 'Something Went Wrong.',
-            response?.response?.status,
-            authCtx.setAuthError
-          );
+        let selected_locaions = response?.data?.Data?.locations;
+        response?.data?.Data?.locations?.map((item) => item).forEach((loc) => locs.push(loc));
+        setLocations(locs);
+        setSelectedLocation(selected_locaions);
+      } else {
+        if (response?.response?.status === 401) {
+          enqueueSnackbar('User Not Found', { variant: 'error' });
         }
-        setIsLoading(false);
-        setDropdownLoading(false);
-      })
-      .catch((error) => {
-        // ✅ Detect CORS error (network error, no response)
-        if (error.message === 'Network Error' && !error.response) {
+        if (response.message === 'Network Error') {
           enqueueSnackbar('Please refresh the page.', {
-            variant: 'error',
+            variant: 'info',
             action: (key) => (
               <Button
                 onClick={() => {
@@ -181,15 +168,15 @@ const Layout = () => {
         } else {
           errorMessageHandler(
             enqueueSnackbar,
-            error?.response?.data?.Message || 'Something Went Wrong.',
-            error?.response?.status,
+            response?.response?.data?.Message || 'Something Went Wrong.',
+            response?.response?.status,
             authCtx.setAuthError
           );
         }
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
+      }
+      setIsLoading(false);
+      setDropdownLoading(false);
+    });
   }, []);
 
   // useEffect(() => {
@@ -327,18 +314,32 @@ const Layout = () => {
         stripe_cust_id: stripe_cust_id,
         cust_id: localStorage.getItem('cust_id') || '0d388af2-d396-4d9b-b28a-417a5953ed42'
       }
-    })
-      .then((response) => {
-        if (response.status === 200) {
-          console.log('response.data.data.data', response.data.data.data);
-          if (response.data.data.data.length !== 0) {
-            authCtx.setPaymentMethod(true);
-            if (window.location.pathname === '/dashboard') {
-              navigate('dashboard');
-            }
-          } else {
-            navigate('terms-and-conditions');
+    }).then((response) => {
+      if (response.status === 200) {
+        console.log('response.data.data.data', response.data.data.data);
+        if (response.data.data.data.length !== 0) {
+          authCtx.setPaymentMethod(true);
+          if (window.location.pathname === '/dashboard') {
+            navigate('dashboard');
           }
+        } else {
+          navigate('terms-and-conditions');
+        }
+      } else {
+        if (response.message === 'Network Error') {
+          enqueueSnackbar('Please refresh the page.', {
+            variant: 'info',
+            action: (key) => (
+              <Button
+                onClick={() => {
+                  window.location.reload();
+                  closeSnackbar(key);
+                }}
+                sx={{ color: '#fff', textTransform: 'none' }}>
+                Refresh
+              </Button>
+            )
+          });
         } else {
           errorMessageHandler(
             enqueueSnackbar,
@@ -347,64 +348,25 @@ const Layout = () => {
             authCtx.setAuthError
           );
         }
-        setIsLoading(false);
-      })
-      .catch((error) => {
-        // ✅ Detect CORS error (network error, no response)
-        if (error.message === 'Network Error' && !error.response) {
-          enqueueSnackbar('Please refresh the page.', {
-            variant: 'error',
-            action: (key) => (
-              <Button
-                onClick={() => {
-                  window.location.reload();
-                  closeSnackbar(key);
-                }}
-                sx={{ color: '#fff', textTransform: 'none' }}>
-                Refresh
-              </Button>
-            )
-          });
-        } else {
-          errorMessageHandler(
-            enqueueSnackbar,
-            error?.response?.data?.Message || 'Something Went Wrong.',
-            error?.response?.status,
-            authCtx.setAuthError
-          );
-        }
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
+      }
+      setIsLoading(false);
+    });
   };
 
   // Method to fetch families list
   const getFamiliesList = (familiesPayload) => {
     setIsLoading(true);
-    API.get('family', { params: familiesPayload })
-      .then((response) => {
-        if (response.status === 200) {
-          console.log('familiesPayload.searchBy', familiesPayload.searchBy);
-          const famResults = response.data.Data.familyArray;
-          const childrenResults = response.data.Data.familyArray.map((item) => item.children);
-          setFamiliesResults(famResults);
-          setChildrenResults(childrenResults.flatMap((subArray) => subArray));
-        } else {
-          errorMessageHandler(
-            enqueueSnackbar,
-            response?.response?.data?.Message || 'Something Went Wrong.',
-            response?.response?.status,
-            authCtx.setAuthError
-          );
-        }
-        setIsLoading(false);
-      })
-      .catch((error) => {
-        // ✅ Detect CORS error (network error, no response)
-        if (error.message === 'Network Error' && !error.response) {
+    API.get('family', { params: familiesPayload }).then((response) => {
+      if (response.status === 200) {
+        console.log('familiesPayload.searchBy', familiesPayload.searchBy);
+        const famResults = response.data.Data.familyArray;
+        const childrenResults = response.data.Data.familyArray.map((item) => item.children);
+        setFamiliesResults(famResults);
+        setChildrenResults(childrenResults.flatMap((subArray) => subArray));
+      } else {
+        if (response.message === 'Network Error') {
           enqueueSnackbar('Please refresh the page.', {
-            variant: 'error',
+            variant: 'info',
             action: (key) => (
               <Button
                 onClick={() => {
@@ -416,66 +378,35 @@ const Layout = () => {
               </Button>
             )
           });
-        } else {
-          errorMessageHandler(
-            enqueueSnackbar,
-            error?.response?.data?.Message || 'Something Went Wrong.',
-            error?.response?.status,
-            authCtx.setAuthError
-          );
         }
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
+        errorMessageHandler(
+          enqueueSnackbar,
+          response?.response?.data?.Message || 'Something Went Wrong.',
+          response?.response?.status,
+          authCtx.setAuthError
+        );
+      }
+      setIsLoading(false);
+    });
   };
 
   // Method to fetch user list for table
   const getUsersList = (usersPlayload) => {
     setIsLoading(true);
-    API.get('users/all', { params: usersPlayload })
-      .then((response) => {
-        if (response.status === 200) {
-          const userResults = response.data.Data.users;
-          setUsersResults(userResults);
-        } else {
-          errorMessageHandler(
-            enqueueSnackbar,
-            response?.response?.data?.Message || 'Something Went Wrong.',
-            response?.response?.status,
-            authCtx.setAuthError
-          );
-        }
-        setIsLoading(false);
-      })
-      .catch((error) => {
-        // ✅ Detect CORS error (network error, no response)
-        if (error.message === 'Network Error' && !error.response) {
-          enqueueSnackbar('Please refresh the page.', {
-            variant: 'error',
-            action: (key) => (
-              <Button
-                onClick={() => {
-                  window.location.reload();
-                  closeSnackbar(key);
-                }}
-                sx={{ color: '#fff', textTransform: 'none' }}>
-                Refresh
-              </Button>
-            )
-          });
-        } else {
-          errorMessageHandler(
-            enqueueSnackbar,
-            error?.response?.data?.Message || 'Something Went Wrong.',
-            error?.response?.status,
-            authCtx.setAuthError
-          );
-        }
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
+    API.get('users/all', { params: usersPlayload }).then((response) => {
+      if (response.status === 200) {
+        const userResults = response.data.Data.users;
+        setUsersResults(userResults);
+      } else {
+        errorMessageHandler(
+          enqueueSnackbar,
+          response?.response?.data?.Message || 'Something Went Wrong.',
+          response?.response?.status,
+          authCtx.setAuthError
+        );
+      }
+      setIsLoading(false);
+    });
   };
 
   // const getUsers = () => {
@@ -717,7 +648,10 @@ const Layout = () => {
                       item.key !== 11
                     ) {
                       return true;
-                    } else if (authCtx.user.role == 'Teacher' && item.key == 5 && item.key !== 10) {
+                    } else if (
+                      authCtx.user.role == 'Teacher' &&
+                      (item.key === 5 || item.key === 10)
+                    ) {
                       return true;
                     } else if (
                       authCtx.user.role === 'Super Admin' &&
@@ -737,8 +671,10 @@ const Layout = () => {
                         px: 1,
                         paddingTop: 0.7,
                         paddingBottom: 0.7,
-                        width: open && item.key === 10 ? '90%' : '100%',
-                        marginLeft: item.key === 10 && open ? '24px' : '0px'
+                        width:
+                          authCtx.user.role == 'Admin' && open && item.key === 10 ? '90%' : '100%',
+                        marginLeft:
+                          authCtx.user.role == 'Admin' && item.key === 10 && open ? '24px' : '0px'
                       }}>
                       {' '}
                       <ListItemButton

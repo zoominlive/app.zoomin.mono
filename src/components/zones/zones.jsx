@@ -260,33 +260,22 @@ const Zones = () => {
     getZonesList();
   }, [zonesPayload]);
 
-  useEffect(() => {
-    getZoneTypesList();
-  }, []);
+  // useEffect(() => {
+  //   getZoneTypesList();
+  // }, []);
 
   // Method to fetch the zones list for table
   const getZonesList = () => {
     setIsLoading(true);
-    API.get('zones', { params: zonesPayload })
-      .then((response) => {
-        if (response.status === 200) {
-          setZoneList(response.data.Data.finalZoneDetails);
-          setTotalZones(response.data.Data.count);
-        } else {
-          errorMessageHandler(
-            enqueueSnackbar,
-            response?.response?.data?.Message || 'Something Went Wrong.',
-            response?.response?.status,
-            authCtx.setAuthError
-          );
-        }
-        setIsLoading(false);
-      })
-      .catch((error) => {
-        // ✅ Detect CORS error (network error, no response)
-        if (error.message === 'Network Error' && !error.response) {
+    API.get('zones', { params: zonesPayload }).then((response) => {
+      if (response.status === 200) {
+        setZoneList(response.data.Data.finalZoneDetails);
+        setTotalZones(response.data.Data.count);
+        getZoneTypesList();
+      } else {
+        if (response.message === 'Network Error') {
           enqueueSnackbar('Please refresh the page.', {
-            variant: 'error',
+            variant: 'info',
             action: (key) => (
               <Button
                 onClick={() => {
@@ -301,15 +290,14 @@ const Zones = () => {
         } else {
           errorMessageHandler(
             enqueueSnackbar,
-            error?.response?.data?.Message || 'Something Went Wrong.',
-            error?.response?.status,
+            response?.response?.data?.Message || 'Something Went Wrong.',
+            response?.response?.status,
             authCtx.setAuthError
           );
         }
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
+      }
+      setIsLoading(false);
+    });
   };
 
   // Method to fetch the zone types list for table
@@ -426,12 +414,15 @@ const Zones = () => {
       // If 'All' is selected, only keep 'All' in the state
       setZonesPayload((prevPayload) => ({
         ...prevPayload,
-        location: ['All']
+        location: value.length === 1 ? ['All'] : value.filter((loc) => loc !== 'All')
       }));
     } else {
+      // Check if all other locations are selected
+      const allLocationIds = authCtx.user.locations.map((loc) => loc.loc_id);
+      const isAllLocationsSelected = allLocationIds.every((locId) => value.includes(locId));
       setZonesPayload((prevPayload) => ({
         ...prevPayload,
-        location: value.filter((loc) => loc !== 'All') // Ensure 'All' is removed if specific locations are selected
+        location: isAllLocationsSelected ? ['All'] : value // Ensure 'All' is removed if specific locations are selected
       }));
     }
   };
@@ -517,11 +508,13 @@ const Zones = () => {
                           {authCtx.user.locations
                             ?.sort((a, b) => (a.loc_name > b.loc_name ? 1 : -1))
                             .map((item) => (
-                              <MenuItem
-                                key={item.loc_id}
-                                value={item.loc_id}
-                                disabled={zonesPayload.location.includes('All')}>
-                                <Checkbox checked={zonesPayload.location.includes(item.loc_id)} />
+                              <MenuItem key={item.loc_id} value={item.loc_id}>
+                                <Checkbox
+                                  checked={
+                                    zonesPayload.location.includes(item.loc_id) ||
+                                    zonesPayload.location.includes('All')
+                                  }
+                                />
                                 {item.loc_name}
                               </MenuItem>
                             ))}

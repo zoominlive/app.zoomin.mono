@@ -220,7 +220,13 @@ const ShareRecordingForm = (props) => {
     } else {
       setAllUsersSelected(false);
       setSelectedUsers(value || null);
-      setSearchText(value ? `${value.first_name || ''} ${value.last_name || ''}`.trim() : ''); // ✅ Ensures input field is updated
+      if (selectedOption === 'family') {
+        setSearchText(
+          value ? `${value.primary.first_name || ''} ${value.primary.last_name || ''}`.trim() : ''
+        ); // ✅ Ensures input field is updated
+      } else {
+        setSearchText(value ? `${value.first_name || ''} ${value.last_name || ''}`.trim() : ''); // ✅ Ensures input field is updated
+      }
     }
   };
 
@@ -333,6 +339,7 @@ const ShareRecordingForm = (props) => {
         console.log('familiesPayload.searchBy', familiesPayload.searchBy);
         const famResults = response.data.Data.familyArray;
         setFamiliesResults(famResults);
+        setOptionsLoading(false);
       } else {
         errorMessageHandler(
           enqueueSnackbar,
@@ -352,6 +359,7 @@ const ShareRecordingForm = (props) => {
       if (response.status === 200) {
         const userResults = response.data.Data.users;
         setUsersResults(userResults);
+        setOptionsLoading(false);
       } else {
         errorMessageHandler(
           enqueueSnackbar,
@@ -476,10 +484,17 @@ const ShareRecordingForm = (props) => {
                           limitTags={1}
                           id="tags-standard"
                           options={
-                            selectedOption === 'family' ? familiesResults || [] : usersResults || []
-                          }
+                            searchText.length > 0
+                              ? selectedOption === 'family'
+                                ? familiesResults || []
+                                : usersResults || []
+                              : []
+                          } // Load only if searchText exists
                           inputValue={searchText}
                           loading={optionsLoading}
+                          noOptionsText={
+                            searchText ? 'No results found' : 'Start typing to see suggestions'
+                          }
                           value={selectedUsers || []}
                           getOptionLabel={(option) => {
                             if (!option) return '';
@@ -524,28 +539,61 @@ const ShareRecordingForm = (props) => {
                           }
                           renderOption={(props, option, { selected }) => (
                             <li {...props}>
-                              {/* <Checkbox
-                                icon={icon}
-                                checkedIcon={checkedIcon}
-                                style={{ marginRight: 8 }}
-                                checked={allUsersSelected || selected}
-                              /> */}
-                              {`${
-                                option?.first_name ||
-                                option?.primary?.first_name ||
-                                option?.secondary?.first_name
-                              } ${
-                                option?.last_name ||
-                                option?.primary?.last_name ||
-                                option?.secondary?.last_name
-                              }`}
-                              {selectedOption === 'family' && option?.children?.length > 0 && (
-                                <span>
-                                  {' '}
-                                  ({option.children[0]?.first_name}&apos;s{' '}
-                                  {option?.primary?.relationship})
-                                </span>
-                              )}
+                              <Stack
+                                direction="row"
+                                justifyContent="space-between"
+                                alignItems="center"
+                                sx={{ width: '100%', flexWrap: 'nowrap' }}>
+                                {/* Name Section */}
+                                <Box
+                                  sx={{
+                                    whiteSpace: 'normal',
+                                    wordBreak: 'break-word',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    minWidth: '150px',
+                                    maxWidth: '200px'
+                                  }}>
+                                  {`${
+                                    option?.first_name ||
+                                    option?.primary?.first_name ||
+                                    option?.secondary?.first_name
+                                  } 
+            ${option?.last_name || option?.primary?.last_name || option?.secondary?.last_name}`}
+                                  {option?.children?.length > 0 && (
+                                    <span>
+                                      {' '}
+                                      ({option.children[0]?.first_name}&apos;s{' '}
+                                      {option?.primary?.relationship})
+                                    </span>
+                                  )}
+                                </Box>
+                                {/* Locations should always be aligned at the end */}
+                                <Box
+                                  sx={{
+                                    display: 'flex',
+                                    flexWrap: 'wrap',
+                                    gap: 0.5,
+                                    justifyContent: 'flex-end',
+                                    minWidth: '200px'
+                                  }}>
+                                  {selectedOption === 'family'
+                                    ? option.primary.family_user_locations.map((item) => (
+                                        <Chip
+                                          key={item.loc_id}
+                                          variant="outlined"
+                                          label={item?.loc_name}
+                                        />
+                                      ))
+                                    : option.locations.map((item) => (
+                                        <Chip
+                                          key={item.loc_id}
+                                          variant="outlined"
+                                          label={item?.loc_name}
+                                        />
+                                      ))}
+                                </Box>
+                              </Stack>
                             </li>
                           )}
                           renderInput={(params) => (
