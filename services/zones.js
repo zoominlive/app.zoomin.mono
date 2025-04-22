@@ -114,11 +114,12 @@ module.exports = {
   },
 
   /* Fetch all the zone's details */
-  getAllZonesDetails : async (userId, user, filter, t) => {
+  getAllZonesDetails: async (userId, user, filter, t) => {
     const { Zone, Camera, CustomerLocations, ZoneType, CamerasInZones } = await connectToDatabase();
+    const { Op } = Sequelize;
   
     let {
-      pageNumber = 0,
+      pageNumber = 1,
       pageSize = 10,
       zonesList = [],
       location = [],
@@ -126,42 +127,46 @@ module.exports = {
       cust_id = null,
       type = "All"
     } = filter;
-  
-    // Adjust pageNumber for zero-based index
-    pageNumber = Math.max(0, pageNumber - 1);
-  
-    // Determine location filter based on user role or customer ID
+    
+    // Determine location filter
     let locationFilter = {};
     if (!cust_id) {
-      locationFilter = { loc_id: user.locations.map((loc) => loc.loc_id) };
+      locationFilter = { loc_id: { [Op.in]: user.locations.map((loc) => loc.loc_id) } };
     } else {
       const availableLocations = await CustomerLocations.findAll({
         where: { cust_id },
+        attributes: ["loc_id"],
         raw: true
       });
-      locationFilter = { loc_id: availableLocations.map((loc) => loc.loc_id) };
+      locationFilter = { loc_id: { [Op.in]: availableLocations.map((loc) => loc.loc_id) } };
     }
   
-    // Build dynamic location condition
+    // Apply location filtering logic
     let locCondition = {};
     if (Array.isArray(location) && location.length > 0 && !location.includes("All")) {
-      locCondition = { loc_id: { [Sequelize.Op.in]: location } };
+      locCondition = { loc_id: { [Op.in]: location } };
     }
   
     // Construct the query filter
     let zoneFilter = {
       cust_id: user.cust_id || cust_id,
-      [Sequelize.Op.and]: [
-        locationFilter,
-        locCondition
-      ],
-      zone_name: { [Sequelize.Op.substring]: searchBy },
-      ...(zonesList.length > 0 && { zone_name: zonesList }),
-      ...(type !== "All" && { zone_type_id: { [Sequelize.Op.substring]: type } })
+      ...locationFilter,
+      ...locCondition,
+      zone_name: { [Op.substring]: searchBy },
+      ...(zonesList.length > 0 && { zone_name: { [Op.in]: zonesList } }),
+      ...(type !== "All" && { zone_type_id: { [Op.substring]: type } })
     };
   
-    // Fetch zones
-    let zones = await Zone.findAll({
+    // Determine if pagination should be applied
+    let paginationOptions = {};
+    if (pageNumber && pageSize) {
+        pageNumber = Number(pageNumber) || 1;
+        pageSize = Number(pageSize) || 10;
+        paginationOptions = { offset: (pageNumber - 1) * pageSize, limit: pageSize };
+    }
+
+    // Fetch zones efficiently with pagination
+    const { rows: zones, count } = await Zone.findAndCountAll({
       where: zoneFilter,
       attributes: ["zone_id", "zone_name", "loc_id", "stream_live_license", "zone_type_id"],
       include: [
@@ -174,18 +179,15 @@ module.exports = {
         { model: ZoneType, as: "zone_type", attributes: ["zone_type", "zone_type_id"] }
       ],
       distinct: true,
+      ...paginationOptions,
       transaction: t
     });
-  
-    // Apply pagination
-    const count = zones.length;
-    zones = zones.slice(pageNumber * pageSize, (pageNumber + 1) * pageSize);
   
     // Generate secure stream URIs
     const baseUrl = await customerServices.getTranscoderUrl(user?.cust_id, t);
     
-    zones = zones.map((zone) => {
-      let cams = zone.cameras_assigned_to_zones?.map((cam) => cam.camera)?.filter(Boolean) || [];
+    const finalZoneDetails = zones.map((zone) => {
+      const cams = zone.cameras_assigned_to_zones?.map((cam) => cam.camera)?.filter(Boolean) || [];
       
       cams.forEach((camera) => {
         if (!camera?.cam_id || !camera?.stream_uri) return;
@@ -210,7 +212,7 @@ module.exports = {
       };
     });
   
-    return { finalZoneDetails: zones, count };
+    return { finalZoneDetails, count };
   },
 
   getZoneDetailsByZoneId: async(zoneId, t) => {

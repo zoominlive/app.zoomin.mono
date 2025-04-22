@@ -51,6 +51,17 @@ module.exports = {
       //     Message: "No valid zones found. " + validationMessages.join(" "),
       //   });
       // }
+      // Check if a camera with the same cam_uri already exists
+      const existingCamera = await cameraServices.findCameraByUri(
+        params.cam_uri
+      );
+      if (existingCamera) {
+        await t.rollback();
+        return res.status(400).json({
+          IsSuccess: false,
+          Message: "Add Camera failed. A camera with the same cam_uri already exists.",
+        });
+      }
       const customer = await customerServices.getCustomerDetails(params.cust_id, t);
       // const availableCameras = customer?.available_cameras;
       const maxCameras = customer?.max_cameras;
@@ -162,7 +173,8 @@ module.exports = {
         params.location,
         params.cust_id,
         params.user_id,
-        params.permit_audio
+        params.permit_audio,
+        params.max_record_time,
       );
       
       if (transcodedDetails?.response?.data.error) {

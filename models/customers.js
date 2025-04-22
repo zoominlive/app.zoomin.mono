@@ -56,6 +56,9 @@ const Customers = sequelize.define(
     max_resolution: {
       type: Sequelize.INTEGER(10)
     },
+    max_record_time: {
+      type: Sequelize.INTEGER(10)
+    },
     max_file_size: {
       type: Sequelize.INTEGER(10)
     },
