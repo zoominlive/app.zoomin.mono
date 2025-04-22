@@ -145,7 +145,7 @@ module.exports = {
         res.status(401).json({
           IsSuccess: true,
           Data: { zone_id: zoneID },
-          Message: CONSTANTS.LIVE_STREAM_UNAUTHORIZE,
+          Message: CONSTANTS.LIVE_STREAM_UNAUTHORIZED,
         });
       }
       next();
@@ -212,7 +212,7 @@ module.exports = {
           stream_uri: `https://live.zoominlive.com/stream/${streamID}.m3u8`,
         };
         await liveStramcameraServices.createLivestreamCamera(camObj, t);
-        let childs = await childServices.getChildOfAssignedzoneId(zoneID, t);
+        let childs = await childServices.getChildOfAssignedZoneId(zoneID, t);
         let childIds = childs.flatMap((i) => i.child_id);
         let familys = await childServices.getAllchildrensFamilyId(childIds, t);
         let familyIds = [...new Set(familys.flatMap((i) => i.family_id))];
@@ -340,7 +340,7 @@ module.exports = {
 
       let streamObj = await liveStreamServices.getstreamObj(streamID, t);
       let deleteChannel = await liveStreamServices.deleteGroupChannel(streamObj.sendbird_channel_url);
-      let childs = await childServices.getChildOfAssignedzoneId(zoneID, t);
+      let childs = await childServices.getChildOfAssignedZoneId(zoneID, t);
       let childIds = childs.flatMap((i) => i.child_id);
       let familys = await childServices.getAllchildrensFamilyId(childIds, t);
       let familyIds = [...new Set(familys.flatMap((i) => i.family_id))];

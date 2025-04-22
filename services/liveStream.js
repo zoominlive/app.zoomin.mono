@@ -161,11 +161,12 @@ module.exports = {
         where: {
           stream_running: false,
           cust_id,
-          stream_start_time: {
-            [Sequelize.Op.between]: [thirtyDaysAgo, today],
-          },
+          // stream_start_time: {
+          //   [Sequelize.Op.between]: [thirtyDaysAgo, today],
+          // },
         },
         order: [["stream_stop_time", "DESC"]],
+        limit: 10,
         attributes: [
           "stream_id",
           "stream_name",

@@ -174,15 +174,15 @@ module.exports = {
           attributes: ["loc_id"],
           raw: true,
         });
-    
+
         const locs = availableLocations.map((i) => i.loc_id);
         if (locs.length > 0) {
           locationCondition = { loc_id: { [Sequelize.Op.in]: locs } };
         }
       }
     }
-    console.log('locationCondition==>', locationCondition);
-    
+    console.log("locationCondition==>", locationCondition);
+
     // Construct the query object
     const query = {
       where: {
@@ -219,7 +219,7 @@ module.exports = {
     }
 
     const cams = await Camera.findAndCountAll(query, { transaction: t });
-    
+
     return { cams: cams.rows, count: cams.count };
   },
 
@@ -258,10 +258,14 @@ module.exports = {
   /* Get thumbnail url */
   getThumbnailUrl: async (custId, token, filter) => {
     let { sid, hlsStreamUri, userId, transcoder_endpoint } = filter;
-    console.log('transcoder_endpoint==>', transcoder_endpoint);
+    console.log("transcoder_endpoint==>", transcoder_endpoint);
     const uuid = uuidv4();
-    const secKeyToken = jwt.sign({ user_id: userId, cam_id: sid, uuid: uuid }, process.env.STREAM_URL_SECRET_KEY, {expiresIn: '12h'});
-    
+    const secKeyToken = jwt.sign(
+      { user_id: userId, cam_id: sid, uuid: uuid },
+      process.env.STREAM_URL_SECRET_KEY,
+      { expiresIn: "12h" }
+    );
+
     const baseUrl =
       "https://wvgfhd64eh.execute-api.us-east-1.amazonaws.com/default/thumbnail";
     const hlsUrl = encodeURIComponent(
@@ -281,5 +285,13 @@ module.exports = {
       },
     });
     return thumbRes.data;
+  },
+
+  findCameraByUri: async (cam_uri) => {
+    return await Camera.findOne({
+      where: {
+        cam_uri: cam_uri
+      },
+    });
   },
 };

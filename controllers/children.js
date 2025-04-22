@@ -471,11 +471,11 @@ module.exports = {
   changeDefaultZoneScheduler: async (req, res, next) => {
     const t = await sequelize.transaction();
     try {
-      const { cust_id, timeRange } = req.body;
+      const { cust_id, timeRange, allowCustomSchedule } = req.body;
 
       const schedulerAdded = await childServices.changeDefaultZoneScheduler(
         cust_id,
-        { timeRange },
+        { timeRange, allowCustomSchedule },
         t
       );
 
