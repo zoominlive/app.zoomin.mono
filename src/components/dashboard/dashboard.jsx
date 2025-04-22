@@ -341,6 +341,7 @@ const Dashboard = () => {
       zones: camLabel.current.zones,
       cust_id: localStorage.getItem('cust_id')
     });
+    getRecordingsByUser();
   };
   // function greeting() {
   //   const hour = moment().hour();
@@ -546,14 +547,13 @@ const Dashboard = () => {
       <Box className="dashboard">
         <LinerLoader loading={isLoading} />
         <Grid container spacing={3} mt={2} alignItems={'stretch'}>
-          <Grid item md={12} sm={12} xs={12} lg={7} style={{ paddingTop: 0 }}>
-            <Card sx={{ borderRadius: 5, background: '#5A53DD', height: '100%' }}>
+          <Grid item md={12} sm={12} xs={12} lg={12} xl={7} style={{ paddingTop: 0 }}>
+            <Card sx={{ borderRadius: 5, background: '#5A53DD', padding: '16px' }}>
               <CardContent
                 className="live-stream-stats"
                 style={{
-                  padding: '0px 16px 0px 16px',
+                  padding: '0px',
                   display: 'flex',
-                  height: '100%',
                   alignItems: 'center',
                   justifyContent: 'center'
                 }}>
@@ -645,12 +645,22 @@ const Dashboard = () => {
             md={12}
             sm={12}
             xs={12}
-            lg={5}
+            lg={12}
+            xl={5}
             style={{ paddingTop: 0 }}
             className="family-div">
             <Card>
               <CardContent>
-                <Grid container direction={'row'} alignItems={'center'}>
+                <Grid
+                  sx={{
+                    gap: {
+                      xs: '18px', // applies on extra-small screens (mobile)
+                      sm: '0px' // override for tablet and up if needed
+                    }
+                  }}
+                  container
+                  direction={'row'}
+                  alignItems={'center'}>
                   <Grid item lg={5} md={5} sm={5} xs={12}>
                     <Stack direction={'column'}>
                       <Typography>Enrolled Families</Typography>
@@ -1029,7 +1039,15 @@ const Dashboard = () => {
           </Grid>
         </Grid>
         <Grid container spacing={3} mt={2}>
-          <Grid item md={12} sm={12} xs={12} lg={7} style={{ paddingTop: 0 }}>
+          <Grid
+            item
+            md={12}
+            sm={12}
+            xs={12}
+            lg={7}
+            sx={{
+              paddingTop: { lg: '0 !important' } // No padding for large screens
+            }}>
             <Box className="location" style={{ height: '100%' }}>
               <Card className="map-card-wrapper">
                 <CardHeader
@@ -1068,7 +1086,16 @@ const Dashboard = () => {
               </Card>
             </Box>
           </Grid>
-          <Grid item md={12} sm={12} xs={12} lg={5} style={{ paddingTop: 0 }}>
+          <Grid
+            item
+            md={12}
+            sm={12}
+            xs={12}
+            lg={5}
+            sx={{
+              paddingTop: { lg: '0px !important' }, // No padding for large screens
+              marginTop: { xs: 2, sm: 2, md: 2, lg: 0 } // Ensures spacing above for smaller screens
+            }}>
             <Paper sx={{ marginTop: 0 }} className="zl__table-res">
               <ViewersTable
                 rows={

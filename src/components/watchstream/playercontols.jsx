@@ -20,7 +20,7 @@ import FullscreenExitRoundedIcon from '../../assets/fullscreen.svg';
 import PauseRoundedIcon from '../../assets/stop-playing.svg';
 import VolumeUpIcon from '../../assets/sound_on_icon.svg';
 import VolumeOffIcon from '../../assets/mute-sound.svg';
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import { useLocation } from 'react-router-dom';
 import Recording from '../../assets/recording.svg';
@@ -32,70 +32,99 @@ import AuthContext from '../../context/authcontext';
 const PlayerControls = (props) => {
   const authCtx = useContext(AuthContext);
   const [isRecording, setIsRecording] = useState(false);
-  const [elapsedTime, setElapsedTime] = useState(0);
+  const [elapsedTime, setElapsedTime] = useState(() => {
+    const storedData = localStorage.getItem(`recordingStartTime_${props.existingCameraId}`);
+    if (storedData) {
+      const { startTime, duration } = JSON.parse(storedData);
+      const elapsed = Math.floor((Date.now() - startTime) / 1000);
+      return Math.max(0, duration - elapsed);
+    }
+    return parseInt(authCtx?.user?.max_record_time || 20) * 60; // default 20 mins
+  });
   const [showTagOptions, setShowTagOptions] = useState(false);
   const [selectedTag, setSelectedTag] = useState(null);
   const [anchorEl, setAnchorEl] = useState(null);
   const [progress, setProgress] = useState(false);
   // const [tags, setTags] = useState([]);
   const tags = authCtx.tags;
-  const timeInSeconds = parseInt(authCtx?.user?.max_record_time) * 60;
 
-  // Timer Effect
-  useEffect(() => {
-    let timer;
-    const recordingId = props.existingCameraId; // Unique ID for each recording
+  const timeInSeconds = parseInt(authCtx?.user?.max_record_time || 20) * 60; // default 20 mins
+  const recordingId = props.existingCameraId;
+  const isRecordingActive = props.recordingStates?.[recordingId] === true;
 
-    const startTimer = (initialTime) => {
-      setElapsedTime(initialTime);
-      localStorage.setItem(
-        `recordingStartTime_${recordingId}`,
-        JSON.stringify({ startTime: Date.now(), duration: initialTime })
-      );
+  const timerRef = useRef(null);
 
-      timer = setInterval(() => {
-        setElapsedTime((prev) => {
-          if (prev <= 1) {
-            clearInterval(timer);
-            setIsRecording(false);
-            props.setRecording(false);
-            props.startDialogTimer(true);
-            localStorage.removeItem(`recordingStartTime_${recordingId}`); // Remove after completion
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    };
+  const startTimer = (initialTime) => {
+    console.log('Starting fresh timer:', initialTime);
+    setElapsedTime(initialTime);
 
-    const resumeTimer = () => {
-      const storedData = localStorage.getItem(`recordingStartTime_${recordingId}`);
-      if (storedData) {
-        const { startTime, duration } = JSON.parse(storedData);
-        const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
-        const remainingTime = Math.max(0, duration - elapsedSeconds);
+    localStorage.setItem(
+      `recordingStartTime_${recordingId}`,
+      JSON.stringify({ startTime: Date.now(), duration: initialTime })
+    );
 
-        if (remainingTime > 0) {
-          startTimer(remainingTime);
-        } else {
+    if (timerRef.current) clearInterval(timerRef.current);
+    timerRef.current = setInterval(() => {
+      setElapsedTime((prev) => {
+        if (prev <= 1) {
+          clearInterval(timerRef.current);
+          props.setRecording();
+          setIsRecording(false);
+          props.startDialogTimer(true);
+          console.log('in start timer==>');
           localStorage.removeItem(`recordingStartTime_${recordingId}`);
+          return 0;
         }
-      }
-    };
+        return prev - 1;
+      });
+    }, 1000);
+  };
 
-    if (isRecording && props.recording) {
-      startTimer(timeInSeconds);
-    } else if (props.isRecording) {
+  const resumeTimer = () => {
+    const storedData = localStorage.getItem(`recordingStartTime_${recordingId}`);
+    if (storedData) {
+      const { startTime, duration } = JSON.parse(storedData);
+      const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
+      const remainingTime = Math.max(0, duration - elapsedSeconds);
+
+      if (remainingTime > 0) {
+        console.log('Resuming timer with remainingTime:', remainingTime);
+        startTimer(remainingTime);
+      } else {
+        console.log('Timer expired, cleaning up');
+        localStorage.removeItem(`recordingStartTime_${recordingId}`);
+        setElapsedTime(0);
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (!recordingId) return;
+
+    console.log('Effect triggered with', {
+      recordingId,
+      isRecording,
+      propsRecording: props.recording,
+      isRecordingActive,
+      recordingStates: props.recordingStates
+    });
+
+    if (isRecordingActive) {
+      console.log('1===>');
       resumeTimer();
+    } else if (isRecording && !isRecordingActive) {
+      console.log('2===>');
+      startTimer(timeInSeconds);
     } else if (!props.recording) {
-      clearInterval(timer);
-      localStorage.removeItem(`recordingStartTime_${recordingId}`); // ✅ Clear when stopped manually
+      console.log('in else if block==>');
+      // clearInterval(timerRef.current);
+      // localStorage.removeItem(`recordingStartTime_${recordingId}`);
     }
 
     return () => {
-      clearInterval(timer);
+      if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [isRecording, props.recording, timeInSeconds, props.existingCameraId]);
+  }, [recordingId, isRecording, props.recording, props.recordingStates]);
 
   useEffect(() => {
     if (progress) {
@@ -103,21 +132,13 @@ const PlayerControls = (props) => {
     }
   }, [props.recording, props.isRecording, props.error]);
 
-  // useEffect(() => {
-  //   API.get('cams/list-record-tags').then((response) => {
-  //     if (response.status === 200) {
-  //       console.log('recording started');
-  //       setTags(response.data.Data.recordTags);
-  //     } else {
-  //       errorMessageHandler(
-  //         enqueueSnackbar,
-  //         response?.response?.data.Message || 'Something Went Wrong.',
-  //         response?.response?.status,
-  //         authCtx.setAuthError
-  //       );
-  //     }
-  //   });
-  // }, []);
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
+  }, []);
 
   const handleTagClick = (event) => {
     setAnchorEl(event.currentTarget);
@@ -153,11 +174,8 @@ const PlayerControls = (props) => {
   const location = useLocation();
 
   const isS3Url = (url) => {
-    // Define the pattern for an S3 URL
     const s3Pattern =
-      /^https:\/\/[a-zA-Z0-9-]+\.s3\.[a-z0-9-]+\.amazonaws\.com\/[a-zA-Z0-9-]+\/[a-zA-Z0-9-]+\/[a-zA-Z0-9-]+\.mp4/;
-
-    // Test the URL against the pattern
+      /^https:\/\/[a-zA-Z0-9.-]+\.s3(?:[.-][a-z0-9-]+)?\.amazonaws\.com\/(?:.*\/)*[^/]+\.mp4(?:\?.*)?$/i;
     return s3Pattern.test(url);
   };
 
@@ -204,80 +222,6 @@ const PlayerControls = (props) => {
           </Grid>
           {authCtx?.user?.role !== 'Family' && (
             <Grid display={'flex'} alignItems={'center'} gap={1}>
-              {/* Stop/Record Button */}
-              {/* old logic */}
-              {/* <IconButton
-                onClick={() => {
-                  setIsRecording(!isRecording);
-                  setSelectedTag(null);
-                  setProgress(!progress);
-                  props.handleRecording(selectedTag);
-                }}
-                sx={{
-                  color: isRecording ? 'red' : 'white',
-                  padding: 0,
-                  position: 'relative'
-                }}>
-                <Box position="relative" display="inline-flex">
-                  {progress && (
-                    <CircularProgress
-                      size={props.fullscreen ? 60 : 50}
-                      sx={{
-                        position: 'absolute',
-                        zIndex: 1,
-                        top: -5,
-                        left: -5,
-                        '& .MuiCircularProgress-circle': {
-                          color: '#ffffff' // Purple color
-                        },
-                        '& svg': {
-                          padding: '3px' // Direct SVG padding
-                        }
-                      }}
-                    />
-                  )}
-
-                  {!isS3Url(props?.streamUrl) && (
-                    <img
-                      src={Recording}
-                      alt="recording"
-                      width={props.fullscreen && 50}
-                      height={props.fullscreen && 50}
-                      style={{
-                        position: 'relative',
-                        zIndex: 2,
-                        display: props.recording && 'none'
-                      }}
-                    />
-                  )}
-                  {props.recording ? (
-                    <>
-                      {progress && (
-                        <CircularProgress
-                          size={props.fullscreen ? 60 : 50}
-                          sx={{
-                            position: 'absolute',
-                            zIndex: 1,
-                            '& .MuiCircularProgress-circle': {
-                              color: '#ffffff'
-                            }
-                          }}
-                        />
-                      )}
-                      <img
-                        src={StopIcon}
-                        alt="stop-recording"
-                        width={props.fullscreen && 50}
-                        height={props.fullscreen && 50}
-                        style={{
-                          position: 'relative',
-                          zIndex: 2
-                        }}
-                      />
-                    </>
-                  ) : null}
-                </Box>
-              </IconButton> */}
               {/* updated logic */}
               <IconButton
                 onClick={() => {
@@ -590,23 +534,21 @@ const PlayerControls = (props) => {
           location?.state?.streamUrl &&
           location.pathname === '/watch-stream' && (
             <Grid item md={12} sm={12}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Stack direction={'row'} justifyContent={'space-between'}>
-                  <Typography variant="body2" color={'white'}>
-                    {formatSliderTime(props.played * props.duration)}
-                  </Typography>
-                  <Typography variant="body2" color={'white'}>
-                    {formatSliderTime(props.duration)}
-                  </Typography>
-                </Stack>
-                <Slider
-                  min={0}
-                  max={100}
-                  onChange={props.onSeek}
-                  onChangeCommitted={props.seekMouseUpHandler}
-                  value={props.played * 100}
-                />
-              </Box>
+              <Stack direction={'row'} justifyContent={'space-between'}>
+                <Typography variant="body2" color={'white'}>
+                  {formatSliderTime(props.played * props.duration)}
+                </Typography>
+                <Typography variant="body2" color={'white'}>
+                  {formatSliderTime(props.duration)}
+                </Typography>
+              </Stack>
+              <Slider
+                min={0}
+                max={100}
+                onChange={props.onSeek}
+                onChangeCommitted={props.seekMouseUpHandler}
+                value={props.played * 100}
+              />
             </Grid>
           )}
       </Grid>
@@ -643,5 +585,6 @@ PlayerControls.propTypes = {
   played: PropTypes.number,
   duration: PropTypes.number,
   streamRunning: PropTypes.bool,
-  streamUrl: PropTypes.string
+  streamUrl: PropTypes.string,
+  recordingStates: PropTypes.object
 };

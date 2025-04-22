@@ -48,7 +48,11 @@ const AccountMenu = (props) => {
       {/* <IconButton onClick={handleClick}> */}
 
       {/* </IconButton> */}
-      <Stack direction={'row'} alignItems={'center'} justifyContent={'space-between'}>
+      <Stack
+        direction={'row'}
+        alignItems={'center'}
+        sx={{ justifyContent: { xs: 'flex-end' } }}
+        justifyContent={'space-between'}>
         <Stack direction={'row'} alignItems={'center'}>
           <Avatar
             src={authCtx?.user?.profile_image}
@@ -58,9 +62,10 @@ const AccountMenu = (props) => {
               width: '56px',
               height: '56px'
             }}
+            onClick={handleClick}
           />
 
-          <Stack direction={'column'}>
+          <Stack sx={{ display: { xs: 'none', sm: 'flex' } }} direction={'column'}>
             <Typography component={'p'} className="profile-name">
               {authCtx?.user?.first_name} {authCtx?.user?.last_name}
             </Typography>
@@ -69,7 +74,9 @@ const AccountMenu = (props) => {
             </Typography>
           </Stack>
         </Stack>
-        <IconButton onClick={handleClick} sx={{ ml: 1, mb: 3 }}>
+        <IconButton
+          onClick={handleClick}
+          sx={{ ml: 1, mb: 3, display: { xs: 'none', sm: 'flex' } }}>
           {/* <KeyboardArrowDownIcon style={{ ml: 3 }} onClick={handleClick} /> */}
           <KeyboardArrowDownIcon />
         </IconButton>

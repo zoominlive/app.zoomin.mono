@@ -32,6 +32,7 @@ const CustomPlayer = (props) => {
   const [startDialogTimer, setStartDialogTimer] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [error, setError] = useState(false);
+  const [recordingStates, setRecordingStates] = useState({});
   const timer = useRef({
     timerId: 0
   });
@@ -41,7 +42,6 @@ const CustomPlayer = (props) => {
     duration: 0
   });
   const { played, seeking, duration } = videoState;
-  // const [streamStatus, setStreamStatus] = useState(null);
 
   useEffect(() => {
     function exitHandler() {
@@ -79,10 +79,13 @@ const CustomPlayer = (props) => {
 
   useEffect(() => {
     if (location.pathname == '/watch-stream' || location.pathname == '/dashboard') {
-      if (props.activeRecordingCameras.includes(props.camDetails?.cam_id)) {
+      console.log('props.activeRecordingCameras==>', props.activeRecordingCameras);
+      if (props.activeRecordingCameras?.includes(props.camDetails?.cam_id)) {
         setIsRecording(true);
+        setRecordingStates((prev) => ({ ...prev, [props.camDetails?.cam_id]: true }));
       } else {
         setIsRecording(false);
+        setRecordingStates((prev) => ({ ...prev, [props.camDetails?.cam_id]: false }));
       }
     }
   }, [props.activeRecordingCameras]);
@@ -100,8 +103,13 @@ const CustomPlayer = (props) => {
     return () => clearInterval(interval);
   }, [videoState.seeking]);
 
+  const setRecording = (cameraId, isRecording) => {
+    setRecordingStates((prev) => ({ ...prev, [cameraId]: isRecording }));
+  };
+
   const handleRecording = (tag) => {
-    if (!playerRecording && !props.isRecording) {
+    console.log('recordingStates==>', recordingStates[props.camDetails.cam_id]);
+    if (recordingStates[props.camDetails.cam_id] == false && !props.isRecording) {
       API.post('cams/start-recording', {
         cust_id: authCtx?.user?.cust_id || localStorage.getItem('cust_id'),
         user_id: authCtx?.user?.user_id,
@@ -116,6 +124,7 @@ const CustomPlayer = (props) => {
         if (response.status === 201) {
           setPlayerRecording(!playerRecording);
           clearTimeout(timer.current.timerId);
+          setRecording(props.camDetails?.cam_id, true);
         } else {
           setError(!error);
           errorMessageHandler(
@@ -138,6 +147,7 @@ const CustomPlayer = (props) => {
         if (response.status === 201) {
           if (props.isRecording) {
             setPlayerRecording(false);
+            setRecording(props.camDetails?.cam_id, false);
           } else {
             setPlayerRecording(!playerRecording);
           }
@@ -148,6 +158,7 @@ const CustomPlayer = (props) => {
             return cam !== props?.camDetails?.cam_id;
           });
           props.setActiveCameras(activeCameras);
+          localStorage.removeItem(`recordingStartTime_${props?.camDetails?.cam_id}`);
         } else {
           setPlayerRecording(!playerRecording);
           setError(!error);
@@ -192,32 +203,6 @@ const CustomPlayer = (props) => {
       timer.current.timerId = timer1;
     }
   };
-
-  // useEffect(() => {
-  //   const checkStreamStatus = async () => {
-  //     try {
-  //       console.log('props.streamUri', props.streamUri);
-  //       const response = await fetch(props.streamUri);
-  //       console.log('res==>', response);
-  //       if (response.status === 200) {
-  //         setStreamStatus('available');
-  //       } else if (response.status === 404) {
-  //         setStreamStatus('notFound');
-  //       } else {
-  //         setStreamStatus('error');
-  //       }
-  //     } catch (error) {
-  //       console.error('Error checking stream status:', error);
-  //       setStreamStatus('error');
-  //     }
-  //   };
-
-  //   if (props.streamUri) {
-  //     checkStreamStatus();
-  //   } else {
-  //     setStreamStatus(null); // Reset stream status if no URI provided
-  //   }
-  // }, [props.streamUri]);
 
   const handleFullscreenToggle = () => {
     screenfull.toggle(playerContainerRef.current);
@@ -341,8 +326,13 @@ const CustomPlayer = (props) => {
               playing={playerPlaying}
               setPlaying={setPlayerPlaying}
               handleRecording={handleRecording}
-              recording={playerRecording}
-              setRecording={setPlayerRecording}
+              recording={recordingStates[props.camDetails.cam_id]}
+              setRecording={() =>
+                setRecordingStates((prev) => ({
+                  ...prev,
+                  [props.camDetails?.cam_id]: false
+                }))
+              }
               inPIPMode={inPIPMode}
               setInPIPMode={setInPIPMode}
               fullscreen={fullscreen}
@@ -365,6 +355,7 @@ const CustomPlayer = (props) => {
               onSeek={seekHandler}
               streamRunning={props.streamRunning}
               streamUrl={props?.streamUri}
+              recordingStates={recordingStates}
             />
           </Box>
         </>

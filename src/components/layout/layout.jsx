@@ -770,15 +770,17 @@ const Layout = () => {
                   xs={12}
                   lg={12}
                   xl={7}
-                  sx={{
-                    display: {
-                      xs: 'none', // Hide on extra-small screens
-                      sm: 'none', // Hide on small screens
-                      md: 'none', // Hide on medium screens
-                      lg: 'none', // Hide on large screens
-                      xl: 'block' // Show on extra-large screens
+                  sx={
+                    location.pathname == '/dashboard' && {
+                      display: {
+                        xs: 'none', // Hide on extra-small screens
+                        sm: 'none', // Hide on small screens
+                        md: 'none', // Hide on medium screens
+                        lg: 'none', // Hide on large screens
+                        xl: 'block' // Show on extra-large screens
+                      }
                     }
-                  }}>
+                  }>
                   <Stack
                     direction={'row'}
                     justifyContent={'flex-start'}
@@ -908,10 +910,26 @@ const Layout = () => {
                   <>
                     <Stack
                       direction={'row'}
+                      justifyContent={'space-between'}
+                      alignItems={'center'}
+                      sx={{ display: { xs: 'flex', md: 'none' } }}>
+                      <Badge disableRipple badgeContent={unreadCount} color="error">
+                        <NotificationsIcon ref={notificationRef} fontSize="large" />
+                      </Badge>
+                      <Box className="header-right">
+                        <AccountMenu openLogoutDialog={setIsLogoutDialogOpen} />
+                      </Box>
+                    </Stack>
+                    <Stack
+                      direction={'row'}
                       justifyContent={'end'}
                       alignItems={'center'}
                       spacing={3}>
-                      <Badge disableRipple badgeContent={unreadCount} color="error">
+                      <Badge
+                        sx={{ display: { xs: 'none', md: 'flex' } }}
+                        disableRipple
+                        badgeContent={unreadCount}
+                        color="error">
                         <NotificationsIcon ref={notificationRef} fontSize="large" />
                       </Badge>
                       {console.log('locations in layout==>', locations)}
@@ -925,10 +943,11 @@ const Layout = () => {
                                   {
                                     borderWidth: 0
                                   },
-                                '& .MuiOutlinedInput-root .MuiAutocomplete-endAdornment': {
-                                  right: '22px'
-                                },
-                                '& fieldset': { borderRadius: 10, borderWidth: 0 }
+                                // '& .MuiOutlinedInput-root .MuiAutocomplete-endAdornment': {
+                                //   right: '22px'
+                                // },
+                                '& fieldset': { borderRadius: 10, borderWidth: 0 },
+                                paddingTop: { xs: '24px', md: '0px' }
                               }}
                               className="header-location-select"
                               multiple
@@ -945,7 +964,16 @@ const Layout = () => {
                                 value?.map((option, index) => (
                                   <Chip
                                     key={index}
-                                    label={option.loc_name}
+                                    label={
+                                      <span
+                                        title={option.loc_name} // tooltip on hover
+                                      >
+                                        {/* {option.loc_name.length > 8
+                                          ? `${option.loc_name.slice(0, 8)}...`
+                                          : option.loc_name} */}
+                                        {option.loc_name}
+                                      </span>
+                                    }
                                     {...getTagProps({ index })}
                                   />
                                 ))
@@ -964,13 +992,22 @@ const Layout = () => {
                               renderInput={(params) => (
                                 <TextField
                                   {...params}
+                                  placeholder="Locations"
                                   InputProps={{
                                     ...params.InputProps,
                                     startAdornment: (
                                       <>
                                         <InputAdornment
                                           position="start"
-                                          sx={{ marginLeft: '22px' }}>
+                                          sx={{
+                                            marginLeft: '22px',
+                                            '@media(min-width:1536px) and (max-width:1714px)': {
+                                              display: 'none'
+                                            },
+                                            '@media (max-width:449px)': {
+                                              display: 'none'
+                                            }
+                                          }}>
                                           <img src={buildingIcon} />
                                         </InputAdornment>
                                         {params.InputProps.startAdornment}
@@ -994,6 +1031,16 @@ const Layout = () => {
                               direction={'row'}
                               alignItems={'center'}
                               justifyContent={'space-between'}
+                              sx={{
+                                display: {
+                                  xs: 'block', // Hide on extra-small screens
+                                  sm: 'block', // Hide on small screens
+                                  md: 'block', // Hide on medium screens
+                                  lg: 'block', // Hide on large screens
+                                  xl: 'block' // Show on extra-large screens
+                                },
+                                paddingTop: { xs: '24px', md: '0px' }
+                              }}
                               position={'relative'}>
                               <TextField
                                 variant="standard"
@@ -1003,7 +1050,10 @@ const Layout = () => {
                                   backgroundColor: '#FFFFFF',
                                   borderRadius: '120px',
                                   padding: '16px 24px',
-                                  width: '390px'
+                                  width: {
+                                    xs: 'auto',
+                                    md: '390px'
+                                  }
                                 }}
                                 onChange={(e) => newHandleChange(e)}
                                 InputProps={{
@@ -1098,7 +1148,9 @@ const Layout = () => {
                           )}
                         </>
                       )}
-                      <Box className="header-right">
+                      <Box
+                        sx={{ display: { xs: 'none !important', md: 'flex !important' } }}
+                        className="header-right">
                         <AccountMenu openLogoutDialog={setIsLogoutDialogOpen} />
                       </Box>
                     </Stack>
@@ -1120,26 +1172,6 @@ const Layout = () => {
                       xl: 'none' // Hide on extra-large screens
                     }
                   }}>
-                  <Stack
-                    direction={'row'}
-                    justifyContent={'flex-start'}
-                    alignItems={'center'}
-                    gap={2}
-                    className="breadcrumb">
-                    {/* {layoutCtx?.breadcrumb?.length > 2 ? (
-                      <Avatar
-                        src={authCtx?.user?.profile_image}
-                        sx={{ width: 85, height: 85 }}
-                        alt='="profile-image'
-                      />
-                    ) : null} */}
-                    <Stack direction={'column'} spacing={0.5}>
-                      <Typography variant="h2">{layoutCtx?.breadcrumb[0]}</Typography>
-                      {layoutCtx?.breadcrumb?.length > 1 && (
-                        <Typography className="">{layoutCtx?.breadcrumb[1]}</Typography>
-                      )}
-                    </Stack>
-                  </Stack>
                   {location.pathname == '/dashboard' ? (
                     <Stack
                       direction={'row'}
@@ -1245,11 +1277,6 @@ const Layout = () => {
                   ) : null}
                 </Grid>
               </Grid>
-              {/* <Grid item xs={12} sm={12} md={4} lg={2.1}>
-                <Box className="header-right">
-                  <AccountMenu openLogoutDialog={setIsLogoutDialogOpen} />
-                </Box>
-              </Grid> */}
             </Grid>
           </header>
           <section className="content-area">

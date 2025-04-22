@@ -561,6 +561,9 @@ const TokenExchange = () => {
         <Grid item xl={12} lg={12} md={12} sm={12} xs={12}>
           <Card sx={{ height: '100%' }}>
             <CardContent>
+              <Typography mb={1} fontWeight={'bold'}>
+                Manage API Keys and Permissions to endpoints
+              </Typography>
               <Box mt={2} position="relative">
                 <LinerLoader loading={isLoading} />
                 <TableContainer component={Paper}>

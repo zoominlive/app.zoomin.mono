@@ -43,7 +43,7 @@ export default function StreamTable({ rows, columns, title, isLoading }) {
                         zoneName: row?.zone?.zone_name,
                         // eslint-disable-next-line react/prop-types
                         zoneId: row?.zone?.zone_id,
-                        location: row?.zone?.location,
+                        location: row?.zone?.loc_id,
                         camName: row?.zone?.live_stream_cameras[0]?.cam_name,
                         camId: row?.zone?.live_stream_cameras[0]?.cam_id,
                         streamUrl:

@@ -119,7 +119,7 @@ const WatchStream = () => {
     if (location.state?.streamUrl?.includes('zoomin-recordings-rtsp')) {
       return;
     } else {
-      const zonesToSet = camerasPayload?.zone?.filter((zone) => {
+      const zonesToSet = camerasPayload?.zones?.filter((zone) => {
         let count = 0;
         selectedLocation?.forEach((loc) => {
           if (loc.loc_id == zone?.location.loc_id) {
@@ -162,7 +162,7 @@ const WatchStream = () => {
     if (location.state?.streamUrl?.includes('zoomin-recordings-rtsp')) {
       return;
     } else {
-      const zones = camerasPayload?.zone?.filter((zone) => {
+      const zones = camerasPayload?.zones?.filter((zone) => {
         let count = 0;
         selectedZone?.forEach((zone1) => {
           if (zone1?.zone_id == zone?.zone_id) {
@@ -230,10 +230,62 @@ const WatchStream = () => {
   }, [selectedCameras]);
 
   useEffect(() => {
-    API.get('cams/list-record-tags', { params: { cust_id: localStorage.getItem('cust_id') } })
-      .then((response) => {
+    API.get('cams/list-record-tags', { params: { cust_id: localStorage.getItem('cust_id') } }).then(
+      (response) => {
         if (response.status === 200) {
           authCtx.setTags(response.data.Data.recordTags);
+        } else {
+          if (response.message === 'Network Error') {
+            enqueueSnackbar('Please refresh the page.', {
+              variant: 'info',
+              action: (key) => (
+                <Button
+                  onClick={() => {
+                    window.location.reload();
+                    closeSnackbar(key);
+                  }}
+                  sx={{ color: '#fff', textTransform: 'none' }}>
+                  Refresh
+                </Button>
+              )
+            });
+          } else {
+            errorMessageHandler(
+              enqueueSnackbar,
+              response?.response?.data.Message || 'Something Went Wrong.',
+              response?.response?.status,
+              authCtx.setAuthError
+            );
+          }
+        }
+      }
+    );
+  }, []);
+
+  const getRecordingsByUser = () => {
+    API.get('recordings/recordings-by-user', {
+      params: {
+        cust_id: localStorage.getItem('cust_id')
+      }
+    }).then((response) => {
+      if (response.status === 200) {
+        setActiveCameras(response.data.Data.activeCameras);
+        setActiveRecordings(response.data.Data.fixedCameraRecordingsByUser.data);
+      } else {
+        if (response.message === 'Network Error') {
+          enqueueSnackbar('Please refresh the page.', {
+            variant: 'info',
+            action: (key) => (
+              <Button
+                onClick={() => {
+                  window.location.reload();
+                  closeSnackbar(key);
+                }}
+                sx={{ color: '#fff', textTransform: 'none' }}>
+                Refresh
+              </Button>
+            )
+          });
         } else {
           errorMessageHandler(
             enqueueSnackbar,
@@ -242,85 +294,9 @@ const WatchStream = () => {
             authCtx.setAuthError
           );
         }
-      })
-      .catch((error) => {
-        // ✅ Detect CORS error (network error, no response)
-        if (error.message === 'Network Error' && !error.response) {
-          enqueueSnackbar('Please refresh the page.', {
-            variant: 'error',
-            action: (key) => (
-              <Button
-                onClick={() => {
-                  window.location.reload();
-                  closeSnackbar(key);
-                }}
-                sx={{ color: '#fff', textTransform: 'none' }}>
-                Refresh
-              </Button>
-            )
-          });
-        } else {
-          errorMessageHandler(
-            enqueueSnackbar,
-            error?.response?.data?.Message || 'Something Went Wrong.',
-            error?.response?.status,
-            authCtx.setAuthError
-          );
-        }
-      })
-      .finally(() => {
-        console.log('in the finally block');
-      });
-  }, []);
-
-  const getRecordingsByUser = () => {
-    API.get('recordings/recordings-by-user', {
-      params: {
-        cust_id: localStorage.getItem('cust_id')
       }
-    })
-      .then((response) => {
-        if (response.status === 200) {
-          setActiveCameras(response.data.Data.activeCameras);
-          setActiveRecordings(response.data.Data.fixedCameraRecordingsByUser.data);
-        } else {
-          errorMessageHandler(
-            enqueueSnackbar,
-            response?.response?.data?.Message || 'Something Went Wrong.',
-            response?.response?.status,
-            authCtx.setAuthError
-          );
-        }
-        setDropdownLoading(false);
-      })
-      .catch((error) => {
-        // ✅ Detect CORS error (network error, no response)
-        if (error.message === 'Network Error' && !error.response) {
-          enqueueSnackbar('Please refresh the page.', {
-            variant: 'error',
-            action: (key) => (
-              <Button
-                onClick={() => {
-                  window.location.reload();
-                  closeSnackbar(key);
-                }}
-                sx={{ color: '#fff', textTransform: 'none' }}>
-                Refresh
-              </Button>
-            )
-          });
-        } else {
-          errorMessageHandler(
-            enqueueSnackbar,
-            error?.response?.data?.Message || 'Something Went Wrong.',
-            error?.response?.status,
-            authCtx.setAuthError
-          );
-        }
-      })
-      .finally(() => {
-        console.log('in the finally block');
-      });
+      setDropdownLoading(false);
+    });
   };
 
   const getAvailableStreams = () => {
@@ -328,104 +304,92 @@ const WatchStream = () => {
       params: {
         cust_id: localStorage.getItem('cust_id')
       }
-    })
-      .then((response) => {
-        if (response.status === 200) {
-          setTimeOut(response?.data?.Data?.streamDetails[0]?.timeout);
-          setPlaying(true);
-          setCamerasPayload({
-            location: response?.data?.Data?.streamDetails[0]?.location.loc_id,
-            zone: response?.data?.Data?.streamDetails
-          });
+    }).then((response) => {
+      if (response.status === 200) {
+        setTimeOut(response?.data?.Data?.streamDetails[0]?.timeout);
+        setPlaying(true);
+        setCamerasPayload({
+          location: response?.data?.Data?.streamDetails[0]?.location.loc_id,
+          zones: response?.data?.Data?.streamDetails
+        });
 
-          if (!location?.state) {
-            setSelectedLocation([authCtx?.user?.locations?.map((item) => item)[0]]);
-            const zones = response?.data?.Data.streamDetails?.filter(
-              (zone) =>
-                zone.location.loc_id === authCtx?.user?.locations?.map((item) => item.loc_id)[0]
-            );
-            let zonesToAdd = [{ zone_name: 'Select All', zone_id: 'select-all' }];
-            zones?.forEach((zone) => zonesToAdd.push(zone));
-            setZones(zonesToAdd);
-            setSelectedZone(zones);
-            let camsToAdd = [{ cam_id: 'select-all', cam_name: 'Select All' }];
-            zones[0]?.cameras?.forEach((cam) =>
-              camsToAdd.push({
-                ...cam,
+        if (!location?.state) {
+          setSelectedLocation([authCtx?.user?.locations?.map((item) => item)[0]]);
+          const zones = response?.data?.Data.streamDetails?.filter(
+            (zone) =>
+              zone.location.loc_id === authCtx?.user?.locations?.map((item) => item.loc_id)[0]
+          );
+          let zonesToAdd = [{ zone_name: 'Select All', zone_id: 'select-all' }];
+          zones?.forEach((zone) => zonesToAdd.push(zone));
+          setZones(zonesToAdd);
+          setSelectedZone(zones);
+          let camsToAdd = [{ cam_id: 'select-all', cam_name: 'Select All' }];
+          zones[0]?.cameras?.forEach((cam) =>
+            camsToAdd.push({
+              ...cam,
+              zone_id: zones[0].zone_id,
+              zone_name: zones[0].zone_name,
+              location: zones[0].location
+            })
+          );
+          setCameras(camsToAdd);
+          if (response?.data?.Data?.defaultCams?.cameras) {
+            // const camsToAdd = response?.data?.Data?.defaultCams?.cameras.map((cam) => cam);
+            // let defaultLocations = response?.data?.Data?.defaultCams?.locations
+            //   ? response?.data?.Data?.defaultCams?.locations
+            //   : [];
+            // let defaultRooms = response?.data?.Data?.defaultCams?.zones
+            //   ? response?.data?.Data?.defaultCams?.zones
+            //   : [];
+            // setSelectedZone(defaultRooms);
+            // setSelectedLocation(defaultLocations);
+            // setSelectedCameras(camsToAdd);
+          } else {
+            setSelectedCameras([
+              {
+                ...zones[0]?.cameras[0],
                 zone_id: zones[0].zone_id,
                 zone_name: zones[0].zone_name,
                 location: zones[0].location
-              })
-            );
-            setCameras(camsToAdd);
-            if (response?.data?.Data?.defaultCams?.cameras) {
-              // const camsToAdd = response?.data?.Data?.defaultCams?.cameras.map((cam) => cam);
-              // let defaultLocations = response?.data?.Data?.defaultCams?.locations
-              //   ? response?.data?.Data?.defaultCams?.locations
-              //   : [];
-              // let defaultRooms = response?.data?.Data?.defaultCams?.zones
-              //   ? response?.data?.Data?.defaultCams?.zones
-              //   : [];
-              // setSelectedZone(defaultRooms);
-              // setSelectedLocation(defaultLocations);
-              // setSelectedCameras(camsToAdd);
-            } else {
-              setSelectedCameras([
-                {
-                  ...zones[0]?.cameras[0],
-                  zone_id: zones[0].zone_id,
-                  zone_name: zones[0].zone_name,
-                  location: zones[0].location
-                }
-              ]);
-            }
-          } else {
-            setSelectedLocation([location?.state?.location]);
-            const zones = response.data.Data.streamDetails?.filter(
-              (zone) => zone.location === location?.state?.location
-            );
-            let zonesToAdd = [{ zone_name: 'Select All', zone_id: 'select-all' }];
-            zones?.forEach((zone) => zonesToAdd.push(zone));
-            setZones(zonesToAdd);
-            const selectedZone1 = zones.find((zone) => zone.zone_id === location.state.zoneId);
-            setSelectedZone([selectedZone1]);
-            let camsToAdd = [{ cam_id: 'select-all', cam_name: 'Select All' }];
-            selectedZone1?.cameras?.forEach((cam) =>
-              camsToAdd.push({
-                ...cam,
-                zone_name: selectedZone1.zone_name,
-                zone_id: selectedZone1.zone_id,
-                location: selectedZone1.location
-              })
-            );
-            setCameras(camsToAdd);
-            const selectedCamera1 = selectedZone1?.cameras?.find(
-              (cam) => cam.cam_id === location.state.camId
-            );
-            setSelectedCameras([
-              {
-                ...selectedCamera1,
-                zone_name: selectedZone1.zone_name,
-                zone_id: selectedZone1.zone_id,
-                location: selectedZone1.location
               }
             ]);
           }
         } else {
-          errorMessageHandler(
-            enqueueSnackbar,
-            response?.response?.data?.Message || 'Something Went Wrong.',
-            response?.response?.status,
-            authCtx.setAuthError
+          setSelectedLocation([location?.state?.location]);
+          const zones = response.data.Data.streamDetails?.filter(
+            (zone) => zone.location.loc_id === location?.state?.location
           );
+          let zonesToAdd = [{ zone_name: 'Select All', zone_id: 'select-all' }];
+          zones?.forEach((zone) => zonesToAdd.push(zone));
+          setZones(zonesToAdd);
+          const selectedZone1 = zones.find((zone) => zone.zone_id === location.state.zoneId);
+          setSelectedZone([selectedZone1]);
+          let camsToAdd = [{ cam_id: 'select-all', cam_name: 'Select All' }];
+          selectedZone1?.cameras?.forEach((cam) =>
+            camsToAdd.push({
+              ...cam,
+              zone_name: selectedZone1.zone_name,
+              zone_id: selectedZone1.zone_id,
+              location: selectedZone1.location
+            })
+          );
+          setCameras(camsToAdd);
+          const selectedCamera1 = selectedZone1?.cameras?.find(
+            (cam) => cam.cam_id === location.state.camId
+          );
+          setSelectedCameras([
+            {
+              ...selectedCamera1,
+              zone_name: selectedZone1.zone_name,
+              zone_id: selectedZone1.zone_id,
+              location: selectedZone1.location
+            }
+          ]);
         }
-        setDropdownLoading(false);
-      })
-      .catch((error) => {
-        // ✅ Detect CORS error (network error, no response)
-        if (error.message === 'Network Error' && !error.response) {
+      } else {
+        if (response.message === 'Network Error') {
           enqueueSnackbar('Please refresh the page.', {
-            variant: 'error',
+            variant: 'info',
             action: (key) => (
               <Button
                 onClick={() => {
@@ -440,15 +404,14 @@ const WatchStream = () => {
         } else {
           errorMessageHandler(
             enqueueSnackbar,
-            error?.response?.data?.Message || 'Something Went Wrong.',
-            error?.response?.status,
+            response?.response?.data.Message || 'Something Went Wrong.',
+            response?.response?.status,
             authCtx.setAuthError
           );
         }
-      })
-      .finally(() => {
-        console.log('in the finally block');
-      });
+      }
+      setDropdownLoading(false);
+    });
   };
 
   const handleSetLocations = (_, value, reason, option) => {
@@ -482,7 +445,7 @@ const WatchStream = () => {
   };
 
   const handleSetZones = (_, value, reason, option) => {
-    const zones2 = camerasPayload?.zone?.filter((zone) => {
+    const zones2 = camerasPayload?.zones?.filter((zone) => {
       let count = 0;
       selectedZone?.forEach((zone1) => {
         if (zone1?.zone_id == zone?.zone_id) {
@@ -885,10 +848,7 @@ const WatchStream = () => {
                 <CustomPlayer
                   streamUri={location.state?.streamUrl}
                   camDetails={{}}
-                  timeOut={timeOut}
-                  setTimeOut={setTimeOut}
-                  setPlaying={setPlaying}
-                  setIsDeleteDialogOpen={setIsDeleteDialogOpen}
+                  recordedPlayback={true}
                   cam_id={null}
                 />
               </Grid>
