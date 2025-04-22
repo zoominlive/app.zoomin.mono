@@ -329,93 +329,71 @@ const Recordings = () => {
   useEffect(() => {
     setZonesDropdownLoading(true);
     setTagsDropdownLoading(true);
-    API.get('zones/list', { params: { cust_id: localStorage.getItem('cust_id') } })
-      .then((response) => {
+    API.get('zones/list', { params: { cust_id: localStorage.getItem('cust_id') } }).then(
+      (response) => {
         if (response.status === 200) {
           setZonesList([zonesList[0], ...response.data.Data]);
           setSelectedZonesList(response.data.Data);
         } else {
-          errorMessageHandler(
-            enqueueSnackbar,
-            response?.response?.data?.Message || 'Something Went Wrong.',
-            response?.response?.status,
-            authCtx.setAuthError
-          );
+          if (response.message === 'Network Error') {
+            enqueueSnackbar('Please refresh the page.', {
+              variant: 'info',
+              action: (key) => (
+                <Button
+                  onClick={() => {
+                    window.location.reload();
+                    closeSnackbar(key);
+                  }}
+                  sx={{ color: '#fff', textTransform: 'none' }}>
+                  Refresh
+                </Button>
+              )
+            });
+          } else {
+            errorMessageHandler(
+              enqueueSnackbar,
+              response?.response?.data?.Message || 'Something Went Wrong.',
+              response?.response?.status,
+              authCtx.setAuthError
+            );
+          }
         }
         setZonesDropdownLoading(false);
-      })
-      .catch((error) => {
-        // ✅ Detect CORS error (network error, no response)
-        if (error.message === 'Network Error' && !error.response) {
-          enqueueSnackbar('Please refresh the page.', {
-            variant: 'error',
-            action: (key) => (
-              <Button
-                onClick={() => {
-                  window.location.reload();
-                  closeSnackbar(key);
-                }}
-                sx={{ color: '#fff', textTransform: 'none' }}>
-                Refresh
-              </Button>
-            )
-          });
-        } else {
-          errorMessageHandler(
-            enqueueSnackbar,
-            error?.response?.data?.Message || 'Something Went Wrong.',
-            error?.response?.status,
-            authCtx.setAuthError
-          );
-        }
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
+      }
+    );
 
-    API.get('cams/list-record-tags', { params: { cust_id: localStorage.getItem('cust_id') } })
-      .then((response) => {
+    API.get('cams/list-record-tags', { params: { cust_id: localStorage.getItem('cust_id') } }).then(
+      (response) => {
         if (response.status === 200) {
           setTagsList([tagsList[0], ...response.data.Data.recordTags]);
           setSelectedTagsList(response.data.Data.recordTags);
         } else {
-          errorMessageHandler(
-            enqueueSnackbar,
-            response?.response?.data?.Message || 'Something Went Wrong.',
-            response?.response?.status,
-            authCtx.setAuthError
-          );
+          if (response.message === 'Network Error') {
+            enqueueSnackbar('Please refresh the page.', {
+              variant: 'info',
+              action: (key) => (
+                <Button
+                  onClick={() => {
+                    window.location.reload();
+                    closeSnackbar(key);
+                  }}
+                  sx={{ color: '#fff', textTransform: 'none' }}>
+                  Refresh
+                </Button>
+              )
+            });
+          } else {
+            errorMessageHandler(
+              enqueueSnackbar,
+              response?.response?.data?.Message || 'Something Went Wrong.',
+              response?.response?.status,
+              authCtx.setAuthError
+            );
+          }
         }
         setTagsDropdownLoading(false);
-      })
-      .catch((error) => {
-        // ✅ Detect CORS error (network error, no response)
-        if (error.message === 'Network Error' && !error.response) {
-          enqueueSnackbar('Please refresh the page.', {
-            variant: 'error',
-            action: (key) => (
-              <Button
-                onClick={() => {
-                  window.location.reload();
-                  closeSnackbar(key);
-                }}
-                sx={{ color: '#fff', textTransform: 'none' }}>
-                Refresh
-              </Button>
-            )
-          });
-        } else {
-          errorMessageHandler(
-            enqueueSnackbar,
-            error?.response?.data?.Message || 'Something Went Wrong.',
-            error?.response?.status,
-            authCtx.setAuthError
-          );
-        }
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
+      }
+    );
   }, []);
 
   useEffect(() => {
@@ -442,12 +420,15 @@ const Recordings = () => {
       // If 'All' is selected, only keep 'All' in the state
       setRecordingsPayload((prevPayload) => ({
         ...prevPayload,
-        location: ['All']
+        location: value.length === 1 ? ['All'] : value.filter((loc) => loc !== 'All')
       }));
     } else {
+      // Check if all other locations are selected
+      const allLocationIds = authCtx.user.locations.map((loc) => loc.loc_id);
+      const isAllLocationsSelected = allLocationIds.every((locId) => value.includes(locId));
       setRecordingsPayload((prevPayload) => ({
         ...prevPayload,
-        location: value.filter((loc) => loc !== 'All') // Ensure 'All' is removed if specific locations are selected
+        location: isAllLocationsSelected ? ['All'] : value
       }));
     }
   };
@@ -939,35 +920,23 @@ const Recordings = () => {
         zones: zonesToAdd,
         cust_id: localStorage.getItem('cust_id')
       }
-    })
-      .then(async (response) => {
-        if (response.status === 200) {
-          await handleRecordingsCache(response);
+    }).then(async (response) => {
+      if (response.status === 200) {
+        await handleRecordingsCache(response);
 
-          // Other state updates...
-          setActiveLivestreamList(response.data.Data.activeLiveStreams);
-          setRecentLivestreamList(response.data.Data.recentLiveStreams);
-          setRecordingsList(response.data.Data.recentFixedCameraRecordings.data);
-          setLastTenRecordings(response.data.Data.lastTenFixedCameraRecordings.data);
-          setRecordedStreamList(response.data.Data.recordedStreams.data);
-          setCount(response.data.Data.recordedStreams.count);
-          setFixedCamRecordingsCount(response.data.Data.recentFixedCameraRecordings.count);
-          setIsLoading(false);
-        } else {
-          errorMessageHandler(
-            enqueueSnackbar,
-            response?.response?.data?.Message || 'Something Went Wrong.',
-            response?.response?.status,
-            authCtx.setAuthError
-          );
-          setIsLoading(false);
-        }
-      })
-      .catch((error) => {
-        // ✅ Detect CORS error (network error, no response)
-        if (error.message === 'Network Error' && !error.response) {
+        // Other state updates...
+        setActiveLivestreamList(response.data.Data.activeLiveStreams);
+        setRecentLivestreamList(response.data.Data.recentLiveStreams);
+        setRecordingsList(response.data.Data.recentFixedCameraRecordings.data);
+        setLastTenRecordings(response.data.Data.lastTenFixedCameraRecordings.data);
+        setRecordedStreamList(response.data.Data.recordedStreams.data);
+        setCount(response.data.Data.recordedStreams.count);
+        setFixedCamRecordingsCount(response.data.Data.recentFixedCameraRecordings.count);
+        setIsLoading(false);
+      } else {
+        if (response.message === 'Network Error') {
           enqueueSnackbar('Please refresh the page.', {
-            variant: 'error',
+            variant: 'info',
             action: (key) => (
               <Button
                 onClick={() => {
@@ -982,15 +951,14 @@ const Recordings = () => {
         } else {
           errorMessageHandler(
             enqueueSnackbar,
-            error?.response?.data?.Message || 'Something Went Wrong.',
-            error?.response?.status,
+            response?.response?.data?.Message || 'Something Went Wrong.',
+            response?.response?.status,
             authCtx.setAuthError
           );
         }
-      })
-      .finally(() => {
         setIsLoading(false);
-      });
+      }
+    });
   };
 
   const handleSorting = () => {
@@ -1104,12 +1072,12 @@ const Recordings = () => {
                         {authCtx?.user?.locations
                           ?.sort((a, b) => (a.loc_name > b.loc_name ? 1 : -1))
                           ?.map((item) => (
-                            <MenuItem
-                              key={item.loc_id}
-                              value={item.loc_id}
-                              disabled={recordingsPayload.location.includes('All')}>
+                            <MenuItem key={item.loc_id} value={item.loc_id}>
                               <Checkbox
-                                checked={recordingsPayload.location.includes(item.loc_id)}
+                                checked={
+                                  recordingsPayload.location.includes(item.loc_id) ||
+                                  recordingsPayload.location.includes('All')
+                                }
                               />
 
                               {item.loc_name}

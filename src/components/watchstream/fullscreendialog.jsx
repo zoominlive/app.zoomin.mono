@@ -33,7 +33,7 @@ const FullScreenDialog = (props) => {
                 tagName={
                   props.activeRecordings.find(
                     (item) => item.cam_id === props.selectedCameras[0]?.cam_id
-                  )?.record_tag?.tag_name || 'Not Found'
+                  )?.record_tag?.tag_name
                 }
                 recordingCameraId={
                   props.activeRecordings.find(
@@ -75,7 +75,7 @@ const FullScreenDialog = (props) => {
                 }
                 tagName={
                   props.activeRecordings.find((item) => item.cam_id === value?.cam_id)?.record_tag
-                    ?.tag_name || 'Not Found'
+                    ?.tag_name
                 }
                 recordingCameraId={
                   props.activeRecordings.find((item) => item.cam_id === value?.cam_id)?.cam_id ||
@@ -118,7 +118,7 @@ const FullScreenDialog = (props) => {
                   }
                   tagName={
                     props.activeRecordings.find((item) => item.cam_id === value?.cam_id)?.record_tag
-                      ?.tag_name || 'Not Found'
+                      ?.tag_name
                   }
                   recordingCameraId={
                     props.activeRecordings.find((item) => item.cam_id === value?.cam_id)?.cam_id ||
@@ -161,7 +161,7 @@ const FullScreenDialog = (props) => {
                   }
                   tagName={
                     props.activeRecordings.find((item) => item.cam_id === value?.cam_id)?.record_tag
-                      ?.tag_name || 'Not Found'
+                      ?.tag_name
                   }
                   recordingCameraId={
                     props.activeRecordings.find((item) => item.cam_id === value?.cam_id)?.cam_id ||

@@ -4,6 +4,7 @@ import {
   Button,
   Card,
   CardContent,
+  Checkbox,
   Chip,
   FormControl,
   Grid,
@@ -59,7 +60,7 @@ const Users = () => {
     pageNumber: 0,
     pageSize: parseInt(process.env.REACT_APP_PAGINATION_LIMIT, 10),
     searchBy: receivedData ? receivedData : '',
-    location: 'All',
+    location: ['All'],
     role: 'All',
     liveStreaming: 'All',
     cust_id: localStorage.getItem('cust_id')
@@ -86,26 +87,14 @@ const Users = () => {
   // Method to fetch user list for table
   const getUsersList = () => {
     setIsLoading(true);
-    API.get('users/all', { params: usersPayload })
-      .then((response) => {
-        if (response.status === 200) {
-          setUsersList(response.data.Data.users);
-          setTotalUsers(response.data.Data.count);
-        } else {
-          errorMessageHandler(
-            enqueueSnackbar,
-            response?.response?.data?.Message || 'Something Went Wrong.',
-            response?.response?.status,
-            authCtx.setAuthError
-          );
-        }
-        setIsLoading(false);
-      })
-      .catch((error) => {
-        // ✅ Detect CORS error (network error, no response)
-        if (error.message === 'Network Error' && !error.response) {
+    API.get('users/all', { params: usersPayload }).then((response) => {
+      if (response.status === 200) {
+        setUsersList(response.data.Data.users);
+        setTotalUsers(response.data.Data.count);
+      } else {
+        if (response.message === 'Network Error') {
           enqueueSnackbar('Please refresh the page.', {
-            variant: 'error',
+            variant: 'info',
             action: (key) => (
               <Button
                 onClick={() => {
@@ -120,15 +109,14 @@ const Users = () => {
         } else {
           errorMessageHandler(
             enqueueSnackbar,
-            error?.response?.data?.Message || 'Something Went Wrong.',
-            error?.response?.status,
+            response?.response?.data?.Message || 'Something Went Wrong.',
+            response?.response?.status,
             authCtx.setAuthError
           );
         }
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
+      }
+      setIsLoading(false);
+    });
   };
   const handleLivestream = () => {
     authCtx.setUser({
@@ -207,7 +195,25 @@ const Users = () => {
 
   // Method to handle location change for table
   const handleLocationChange = (event) => {
-    setUsersPayload((prevPayload) => ({ ...prevPayload, location: event.target.value }));
+    const { value } = event.target;
+
+    if (value.includes('All')) {
+      // If 'All' is the only selected option, set to 'All'
+      // Otherwise, set to the specific locations
+      setUsersPayload((prevPayload) => ({
+        ...prevPayload,
+        location: value.length === 1 ? ['All'] : value.filter((loc) => loc !== 'All')
+      }));
+    } else {
+      // Check if all other locations are selected
+      const allLocationIds = authCtx.user.locations.map((loc) => loc.loc_id);
+      const isAllLocationsSelected = allLocationIds.every((locId) => value.includes(locId));
+
+      setUsersPayload((prevPayload) => ({
+        ...prevPayload,
+        location: isAllLocationsSelected ? ['All'] : value
+      }));
+    }
   };
 
   const handleRoleChange = (event) => {
@@ -253,13 +259,43 @@ const Users = () => {
                         <Select
                           labelId="location"
                           id="location"
+                          multiple
                           value={usersPayload?.location}
-                          onChange={handleLocationChange}>
-                          <MenuItem value={'All'}>All</MenuItem>
+                          onChange={handleLocationChange}
+                          renderValue={(selected) => {
+                            if (selected.length === 0) return 'Select Locations';
+                            if (selected.includes('All')) return 'All';
+
+                            const selectedNames = authCtx.user.locations
+                              .filter((loc) => selected.includes(loc.loc_id))
+                              .map((loc) => loc.loc_name)
+                              .join(', ');
+
+                            return (
+                              <Box
+                                sx={{
+                                  whiteSpace: 'nowrap',
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis'
+                                }}>
+                                {selectedNames}
+                              </Box>
+                            );
+                          }}>
+                          <MenuItem value={'All'}>
+                            <Checkbox checked={usersPayload.location.includes('All')} />
+                            All
+                          </MenuItem>
                           {authCtx.user.locations
                             ?.sort((a, b) => (a.loc_name > b.loc_name ? 1 : -1))
                             .map((item) => (
                               <MenuItem key={item.loc_id} value={item.loc_id}>
+                                <Checkbox
+                                  checked={
+                                    usersPayload.location.includes(item.loc_id) ||
+                                    usersPayload.location.includes('All')
+                                  }
+                                />
                                 {item.loc_name}
                               </MenuItem>
                             ))}

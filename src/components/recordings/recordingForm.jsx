@@ -1,6 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 import {
+  Button,
   Dialog,
   DialogActions,
   DialogContent,
@@ -33,7 +34,7 @@ const RecordingForm = (props) => {
   // eslint-disable-next-line no-unused-vars
   const [selectedTag, setSelectedTag] = useState(null);
   const [tagsList, setTagsList] = useState([]);
-  const { enqueueSnackbar } = useSnackbar();
+  const { enqueueSnackbar, closeSnackbar } = useSnackbar();
   const authCtx = useContext(AuthContext);
 
   useEffect(() => {
@@ -46,12 +47,28 @@ const RecordingForm = (props) => {
         if (response.status === 200) {
           setTagsList(response.data.Data.recordTags);
         } else {
-          errorMessageHandler(
-            enqueueSnackbar,
-            response?.response?.data?.Message || 'Something Went Wrong.',
-            response?.response?.status,
-            authCtx.setAuthError
-          );
+          if (response.message === 'Network Error') {
+            enqueueSnackbar('Please refresh the page.', {
+              variant: 'info',
+              action: (key) => (
+                <Button
+                  onClick={() => {
+                    window.location.reload();
+                    closeSnackbar(key);
+                  }}
+                  sx={{ color: '#fff', textTransform: 'none' }}>
+                  Refresh
+                </Button>
+              )
+            });
+          } else {
+            errorMessageHandler(
+              enqueueSnackbar,
+              response?.response?.data.Message || 'Something Went Wrong.',
+              response?.response?.status,
+              authCtx.setAuthError
+            );
+          }
         }
       }
     );

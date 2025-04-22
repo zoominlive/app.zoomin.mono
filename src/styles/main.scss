@@ -368,7 +368,7 @@
     justify-content: space-between;
     flex-wrap: wrap;
     @media (max-width: 1024px) {
-      padding: 0 45px 0 45px;
+      padding: 0;
     }
 
     .header-left {
@@ -392,7 +392,6 @@
         position: absolute;
         left: -30px;
         @media (max-width: 1024px) {
-          left: -61px;
           top: 8px;
         }
       }
@@ -427,7 +426,10 @@
       }
     }
     .header-location-select {
-      width: 54%;
+      width: 100%;
+      @media (max-width: 900px) {
+        margin-left: 0px;
+      }
     }
     .header-right {
       display: flex;
@@ -480,14 +482,15 @@
     }
     .header-location-select {
       .MuiFormControl-root {
-        @media (max-width: 1024px) {
-          width: inherit;
-        }
+        // @media (max-width: 1024px) {
+        //   width: inherit;
+        // }
         .MuiInputBase-root {
           background-color: #fff !important;
           border-radius: 50px !important;
-          height: 68px;
+          min-height: 68px;
           padding-right: 40px !important;
+          // flex-wrap: nowrap;
           // width: 300px;
           // input.MuiInputBase-input {
           //   display: none;
@@ -588,6 +591,9 @@
     @media only screen and (max-width: 1200px) {
       margin-top: 32px;
     }
+    @media only screen and (min-width: 1201px) and (max-width: 1535px) {
+      margin-top: 32px;
+    }
     .family-circle-wrap {
       position: relative;
       top: 10px;
@@ -661,6 +667,11 @@
       @media (max-width: 1650px) {
         width: 180px;
         max-width: 180px;
+        flex-basis: 180px;
+      }
+      @media (max-width: 470px) {
+        width: 200px;
+        max-width: 200px;
         flex-basis: 180px;
       }
     }
@@ -2012,9 +2023,9 @@
   }
 }
 
-.MuiAutocomplete-endAdornment {
-  top: 20px !important;
-}
+// .MuiAutocomplete-endAdornment {
+//   top: 20px !important;
+// }
 
 .schedule-btn {
   background-color: #bdbdbd !important;
@@ -2705,7 +2716,7 @@
   .live-stream-card {
     @media (min-width: 1920px) {
       padding-top: 30px !important;
-      padding-right: 60px !important;
+      padding-right: 200px !important;
       padding-bottom: 30px !important;
       padding-left: 30px !important;
     }
@@ -3409,6 +3420,19 @@
   font-size: 16px !important;
   font-weight: 500 !important;
   line-height: 24px !important;
+}
+
+.save-changes-button {
+  border-radius: 60px !important;
+  background-color: #5a53dd !important;
+  height: 54px;
+  width: 100%;
+  padding: 15px 30px !important;
+  text-transform: none !important;
+  font-size: 16px !important;
+  font-weight: 500 !important;
+  line-height: 24px !important;
+  color: #fff !important
 }
 
 .card-label {

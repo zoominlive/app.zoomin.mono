@@ -201,15 +201,20 @@ const Families = () => {
     const { value } = event.target;
 
     if (value.includes('All')) {
-      // If 'All' is selected, only keep 'All' in the state
+      // If 'All' is the only selected option, set to 'All'
+      // Otherwise, set to the specific locations
       setFamiliesPayload((prevPayload) => ({
         ...prevPayload,
-        location: ['All']
+        location: value.length === 1 ? ['All'] : value.filter((loc) => loc !== 'All')
       }));
     } else {
+      // Check if all other locations are selected
+      const allLocationIds = authCtx.user.locations.map((loc) => loc.loc_id);
+      const isAllLocationsSelected = allLocationIds.every((locId) => value.includes(locId));
+
       setFamiliesPayload((prevPayload) => ({
         ...prevPayload,
-        location: value.filter((loc) => loc !== 'All') // Ensure 'All' is removed if specific locations are selected
+        location: isAllLocationsSelected ? ['All'] : value
       }));
     }
   };
@@ -369,12 +374,14 @@ const Families = () => {
                         {authCtx.user.locations
                           .sort((a, b) => (a.loc_name > b.loc_name ? 1 : -1))
                           .map((item) => (
-                            <MenuItem
-                              key={item.loc_id}
-                              value={item.loc_id}
-                              disabled={familiesPayload.location.includes('All')}>
+                            <MenuItem key={item.loc_id} value={item.loc_id}>
                               {' '}
-                              <Checkbox checked={familiesPayload.location.includes(item.loc_id)} />
+                              <Checkbox
+                                checked={
+                                  familiesPayload.location.includes(item.loc_id) ||
+                                  familiesPayload.location.includes('All')
+                                }
+                              />
                               {item.loc_name}
                             </MenuItem>
                           ))}

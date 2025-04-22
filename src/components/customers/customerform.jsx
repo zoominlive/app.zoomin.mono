@@ -95,6 +95,11 @@ const CustomerForm = (props) => {
         .required('RTMP Transcoder endpoint is required'),
       timeout: yup.number('Enter timeout cameras').required('Timeout is required'),
       max_resolution: yup.number('Enter Max Resolution').required('Resolution is required'),
+      max_record_time: yup
+        .number('Enter Max Record Time')
+        .required('Record time is required')
+        .min(1, 'Record time must be at least 1 minute') // Minimum value constraint
+        .max(120, 'Record time cannot exceed 120 minutes'), // Maximum value constraint,
       max_file_size: yup.number('Enter File Size').required('File size is required'),
       max_fps: yup.number('Enter FPS').required('FPS is required'),
       max_stream_live_license: yup
@@ -502,6 +507,26 @@ const CustomerForm = (props) => {
                 }}
                 helperText={touched.timeout && errors.timeout}
                 error={touched.timeout && Boolean(errors.timeout)}
+                fullWidth
+              />
+            </Grid>
+            <Grid item md={4} xs={12}>
+              <InputLabel id="max_record_time">Max Record Time</InputLabel>
+              <TextField
+                labelId="max_record_time"
+                type="number"
+                onKeyPress={(event) => {
+                  if (event?.key === '-' || event?.key === '+') {
+                    event.preventDefault();
+                  }
+                }}
+                name="max_record_time"
+                value={values?.max_record_time}
+                onChange={(event) => {
+                  setFieldValue('max_record_time', event.target.value);
+                }}
+                helperText={touched.max_record_time && errors.max_record_time}
+                error={touched.max_record_time && Boolean(errors.max_record_time)}
                 fullWidth
               />
             </Grid>
@@ -1109,6 +1134,7 @@ const CustomerForm = (props) => {
               rtmp_transcoder_endpoint: props?.customer?.rtmp_transcoder_endpoint || '',
               timeout: props?.customer?.timeout || '',
               max_resolution: props?.customer?.max_resolution || 720,
+              max_record_time: props?.customer?.max_record_time || 15,
               max_file_size: props?.customer?.max_file_size || 40000,
               max_fps: props?.customer?.max_fps || 15,
               max_stream_live_license: props?.customer?.max_stream_live_license || '',

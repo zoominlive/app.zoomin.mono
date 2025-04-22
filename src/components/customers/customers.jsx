@@ -68,26 +68,14 @@ const Customers = () => {
   // Method to fetch customer list for table
   const getCustomersList = () => {
     setIsLoading(true);
-    API.get('customers/all', { params: customersPayload })
-      .then((response) => {
-        if (response.status === 200) {
-          setCustomersList(response.data.Data.customers);
-          setTotalCustomers(response.data.Data.count);
-        } else {
-          errorMessageHandler(
-            enqueueSnackbar,
-            response?.response?.data?.Message || 'Something Went Wrong.',
-            response?.response?.status,
-            authCtx.setAuthError
-          );
-        }
-        setIsLoading(false);
-      })
-      .catch((error) => {
-        // ✅ Detect CORS error (network error, no response)
-        if (error.message === 'Network Error' && !error.response) {
+    API.get('customers/all', { params: customersPayload }).then((response) => {
+      if (response.status === 200) {
+        setCustomersList(response.data.Data.customers);
+        setTotalCustomers(response.data.Data.count);
+      } else {
+        if (response.message === 'Network Error') {
           enqueueSnackbar('Please refresh the page.', {
-            variant: 'error',
+            variant: 'info',
             action: (key) => (
               <Button
                 onClick={() => {
@@ -102,15 +90,14 @@ const Customers = () => {
         } else {
           errorMessageHandler(
             enqueueSnackbar,
-            error?.response?.data?.Message || 'Something Went Wrong.',
-            error?.response?.status,
+            response?.response?.data?.Message || 'Something Went Wrong.',
+            response?.response?.status,
             authCtx.setAuthError
           );
         }
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
+      }
+      setIsLoading(false);
+    });
   };
 
   // Method to delete customer

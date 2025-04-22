@@ -250,92 +250,70 @@ const Dashboard = () => {
 
   useEffect(() => {
     // setRoomsDropdownLoading(true);
-    API.get('zones/list', { params: { cust_id: localStorage.getItem('cust_id') } })
-      .then((response) => {
+    API.get('zones/list', { params: { cust_id: localStorage.getItem('cust_id') } }).then(
+      (response) => {
         if (response.status === 200) {
           setZonesList(response.data.Data);
         } else {
-          errorMessageHandler(
-            enqueueSnackbar,
-            response?.response?.data?.Message || 'Something Went Wrong.',
-            response?.response?.status,
-            authCtx.setAuthError
-          );
+          if (response.message === 'Network Error') {
+            enqueueSnackbar('Please refresh the page.', {
+              variant: 'info',
+              action: (key) => (
+                <Button
+                  onClick={() => {
+                    window.location.reload();
+                    closeSnackbar(key);
+                  }}
+                  sx={{ color: '#fff', textTransform: 'none' }}>
+                  Refresh
+                </Button>
+              )
+            });
+          } else {
+            errorMessageHandler(
+              enqueueSnackbar,
+              response?.response?.data?.Message || 'Something Went Wrong.',
+              response?.response?.status,
+              authCtx.setAuthError
+            );
+          }
         }
         // setRoomsDropdownLoading(false);
-      })
-      .catch((error) => {
-        // ✅ Detect CORS error (network error, no response)
-        if (error.message === 'Network Error' && !error.response) {
-          enqueueSnackbar('Please refresh the page.', {
-            variant: 'error',
-            action: (key) => (
-              <Button
-                onClick={() => {
-                  window.location.reload();
-                  closeSnackbar(key);
-                }}
-                sx={{ color: '#fff', textTransform: 'none' }}>
-                Refresh
-              </Button>
-            )
-          });
-        } else {
-          errorMessageHandler(
-            enqueueSnackbar,
-            error?.response?.data?.Message || 'Something Went Wrong.',
-            error?.response?.status,
-            authCtx.setAuthError
-          );
-        }
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
+      }
+    );
   }, []);
 
   useEffect(() => {
-    API.get('cams/list-record-tags', { params: { cust_id: localStorage.getItem('cust_id') } })
-      .then((response) => {
+    API.get('cams/list-record-tags', { params: { cust_id: localStorage.getItem('cust_id') } }).then(
+      (response) => {
         if (response.status === 200) {
           authCtx.setTags(response.data.Data.recordTags);
         } else {
-          errorMessageHandler(
-            enqueueSnackbar,
-            response?.response?.data.Message || 'Something Went Wrong.',
-            response?.response?.status,
-            authCtx.setAuthError
-          );
+          if (response.message === 'Network Error') {
+            enqueueSnackbar('Please refresh the page.', {
+              variant: 'info',
+              action: (key) => (
+                <Button
+                  onClick={() => {
+                    window.location.reload();
+                    closeSnackbar(key);
+                  }}
+                  sx={{ color: '#fff', textTransform: 'none' }}>
+                  Refresh
+                </Button>
+              )
+            });
+          } else {
+            errorMessageHandler(
+              enqueueSnackbar,
+              response?.response?.data.Message || 'Something Went Wrong.',
+              response?.response?.status,
+              authCtx.setAuthError
+            );
+          }
         }
-      })
-      .catch((error) => {
-        // ✅ Detect CORS error (network error, no response)
-        if (error.message === 'Network Error' && !error.response) {
-          enqueueSnackbar('Please refresh the page.', {
-            variant: 'error',
-            action: (key) => (
-              <Button
-                onClick={() => {
-                  window.location.reload();
-                  closeSnackbar(key);
-                }}
-                sx={{ color: '#fff', textTransform: 'none' }}>
-                Refresh
-              </Button>
-            )
-          });
-        } else {
-          errorMessageHandler(
-            enqueueSnackbar,
-            error?.response?.data?.Message || 'Something Went Wrong.',
-            error?.response?.status,
-            authCtx.setAuthError
-          );
-        }
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
+      }
+    );
     getRecordingsByUser();
   }, []);
 
@@ -363,6 +341,7 @@ const Dashboard = () => {
       zones: camLabel.current.zones,
       cust_id: localStorage.getItem('cust_id')
     });
+    getRecordingsByUser();
   };
   // function greeting() {
   //   const hour = moment().hour();
@@ -411,75 +390,63 @@ const Dashboard = () => {
             ? authCtx.user?.locations.map((item) => item.loc_id)
             : locations
       }
-    })
-      .then((response) => {
-        if (response.status === 200) {
-          localStorage.setItem('updateDashboardData', false);
-          authCtx.setUpdateDashboardData(false);
-          setStatisticsData(response.data.Data);
-          const points = response?.data?.Data?.enroledStreamsDetails.map((point) => ({
-            type: 'Feature',
-            properties: { cluster: false, rv_id: point.rv_id, label: point.location_name },
-            geometry: {
-              type: 'Point',
-              coordinates: [parseFloat(point.long), parseFloat(point.lat)]
-            }
-          }));
-          setMapsData(points);
-          if (
-            response?.data?.Data?.defaultWatchStream?.locations?.length > 0 &&
-            response?.data?.Data?.defaultWatchStream?.zones &&
-            response?.data?.Data?.defaultWatchStream?.cameras
-          ) {
-            setDefaultWatchStream(response?.data?.Data?.defaultWatchStream);
-            setSelectedCamera(
-              response?.data?.Data?.defaultWatchStream?.cameras
-                ? response?.data?.Data?.defaultWatchStream?.cameras
-                : {}
-            );
-          } else {
-            setDefaultWatchStream({
-              locations: [response?.data?.Data?.watchStreamDetails?.location.loc_id],
-              zones: [response?.data?.Data?.watchStreamDetails],
-              cameras: response?.data?.Data?.watchStreamDetails?.cameras[0]
-            });
-            setSelectedCamera(
-              response?.data?.Data?.watchStreamDetails?.cameras[0]
-                ? {
-                    ...response?.data?.Data?.watchStreamDetails,
-                    ...response?.data?.Data?.watchStreamDetails?.cameras[0]
-                  }
-                : {}
-            );
+    }).then((response) => {
+      if (response.status === 200) {
+        localStorage.setItem('updateDashboardData', false);
+        authCtx.setUpdateDashboardData(false);
+        setStatisticsData(response.data.Data);
+        const points = response?.data?.Data?.enroledStreamsDetails.map((point) => ({
+          type: 'Feature',
+          properties: { cluster: false, rv_id: point.rv_id, label: point.location_name },
+          geometry: {
+            type: 'Point',
+            coordinates: [parseFloat(point.long), parseFloat(point.lat)]
           }
-          setTimeOut(response?.data?.Data?.watchStreamDetails?.timeout);
-          // setFamily((prevState) => {
-          //   const tempFamily = { ...prevState };
-          //   if (tempFamily) {
-          //     let obj = response?.data?.Data?.childrenWithEnableDate?.find(
-          //       (o) => o?.primary?.family_id === tempFamily?.primary?.family_id
-          //     );
-          //     return obj;
-          //   } else {
-          //     return null;
-          //   }
-          // });
-          setIsLoading(false);
-        } else {
-          errorMessageHandler(
-            enqueueSnackbar,
-            response?.response?.data?.Message || 'Something Went Wrong.',
-            response?.response?.status,
-            authCtx.setAuthError
+        }));
+        setMapsData(points);
+        if (
+          response?.data?.Data?.defaultWatchStream?.locations?.length > 0 &&
+          response?.data?.Data?.defaultWatchStream?.zones &&
+          response?.data?.Data?.defaultWatchStream?.cameras
+        ) {
+          setDefaultWatchStream(response?.data?.Data?.defaultWatchStream);
+          setSelectedCamera(
+            response?.data?.Data?.defaultWatchStream?.cameras
+              ? response?.data?.Data?.defaultWatchStream?.cameras
+              : {}
           );
-          setIsLoading(false);
+        } else {
+          setDefaultWatchStream({
+            locations: [response?.data?.Data?.watchStreamDetails?.location.loc_id],
+            zones: [response?.data?.Data?.watchStreamDetails],
+            cameras: response?.data?.Data?.watchStreamDetails?.cameras[0]
+          });
+          setSelectedCamera(
+            response?.data?.Data?.watchStreamDetails?.cameras[0]
+              ? {
+                  ...response?.data?.Data?.watchStreamDetails,
+                  ...response?.data?.Data?.watchStreamDetails?.cameras[0]
+                }
+              : {}
+          );
         }
-      })
-      .catch((error) => {
-        // ✅ Detect CORS error (network error, no response)
-        if (error.message === 'Network Error' && !error.response) {
+        setTimeOut(response?.data?.Data?.watchStreamDetails?.timeout);
+        // setFamily((prevState) => {
+        //   const tempFamily = { ...prevState };
+        //   if (tempFamily) {
+        //     let obj = response?.data?.Data?.childrenWithEnableDate?.find(
+        //       (o) => o?.primary?.family_id === tempFamily?.primary?.family_id
+        //     );
+        //     return obj;
+        //   } else {
+        //     return null;
+        //   }
+        // });
+        setIsLoading(false);
+      } else {
+        if (response.message === 'Network Error') {
           enqueueSnackbar('Please refresh the page.', {
-            variant: 'error',
+            variant: 'info',
             action: (key) => (
               <Button
                 onClick={() => {
@@ -494,15 +461,14 @@ const Dashboard = () => {
         } else {
           errorMessageHandler(
             enqueueSnackbar,
-            error?.response?.data?.Message || 'Something Went Wrong.',
-            error?.response?.status,
+            response?.response?.data?.Message || 'Something Went Wrong.',
+            response?.response?.status,
             authCtx.setAuthError
           );
         }
-      })
-      .finally(() => {
         setIsLoading(false);
-      });
+      }
+    });
   };
 
   // Method to fetch families list
@@ -545,25 +511,14 @@ const Dashboard = () => {
       params: {
         cust_id: localStorage.getItem('cust_id')
       }
-    })
-      .then((response) => {
-        if (response.status === 200) {
-          setActiveCameras(response.data.Data.activeCameras);
-          setActiveRecordings(response.data.Data.fixedCameraRecordingsByUser.data);
-        } else {
-          errorMessageHandler(
-            enqueueSnackbar,
-            response?.response?.data?.Message || 'Something Went Wrong.',
-            response?.response?.status,
-            authCtx.setAuthError
-          );
-        }
-      })
-      .catch((error) => {
-        // ✅ Detect CORS error (network error, no response)
-        if (error.message === 'Network Error' && !error.response) {
+    }).then((response) => {
+      if (response.status === 200) {
+        setActiveCameras(response.data.Data.activeCameras);
+        setActiveRecordings(response.data.Data.fixedCameraRecordingsByUser.data);
+      } else {
+        if (response.message === 'Network Error') {
           enqueueSnackbar('Please refresh the page.', {
-            variant: 'error',
+            variant: 'info',
             action: (key) => (
               <Button
                 onClick={() => {
@@ -578,15 +533,13 @@ const Dashboard = () => {
         } else {
           errorMessageHandler(
             enqueueSnackbar,
-            error?.response?.data?.Message || 'Something Went Wrong.',
-            error?.response?.status,
+            response?.response?.data?.Message || 'Something Went Wrong.',
+            response?.response?.status,
             authCtx.setAuthError
           );
         }
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
+      }
+    });
   };
 
   return (
@@ -594,14 +547,13 @@ const Dashboard = () => {
       <Box className="dashboard">
         <LinerLoader loading={isLoading} />
         <Grid container spacing={3} mt={2} alignItems={'stretch'}>
-          <Grid item md={12} sm={12} xs={12} lg={7} style={{ paddingTop: 0 }}>
-            <Card sx={{ borderRadius: 5, background: '#5A53DD', height: '100%' }}>
+          <Grid item md={12} sm={12} xs={12} lg={12} xl={7} style={{ paddingTop: 0 }}>
+            <Card sx={{ borderRadius: 5, background: '#5A53DD', padding: '16px' }}>
               <CardContent
                 className="live-stream-stats"
                 style={{
-                  padding: '0px 16px 0px 16px',
+                  padding: '0px',
                   display: 'flex',
-                  height: '100%',
                   alignItems: 'center',
                   justifyContent: 'center'
                 }}>
@@ -693,12 +645,22 @@ const Dashboard = () => {
             md={12}
             sm={12}
             xs={12}
-            lg={5}
+            lg={12}
+            xl={5}
             style={{ paddingTop: 0 }}
             className="family-div">
             <Card>
               <CardContent>
-                <Grid container direction={'row'} alignItems={'center'}>
+                <Grid
+                  sx={{
+                    gap: {
+                      xs: '18px', // applies on extra-small screens (mobile)
+                      sm: '0px' // override for tablet and up if needed
+                    }
+                  }}
+                  container
+                  direction={'row'}
+                  alignItems={'center'}>
                   <Grid item lg={5} md={5} sm={5} xs={12}>
                     <Stack direction={'column'}>
                       <Typography>Enrolled Families</Typography>
@@ -1077,7 +1039,15 @@ const Dashboard = () => {
           </Grid>
         </Grid>
         <Grid container spacing={3} mt={2}>
-          <Grid item md={12} sm={12} xs={12} lg={7} style={{ paddingTop: 0 }}>
+          <Grid
+            item
+            md={12}
+            sm={12}
+            xs={12}
+            lg={7}
+            sx={{
+              paddingTop: { lg: '0 !important' } // No padding for large screens
+            }}>
             <Box className="location" style={{ height: '100%' }}>
               <Card className="map-card-wrapper">
                 <CardHeader
@@ -1116,7 +1086,16 @@ const Dashboard = () => {
               </Card>
             </Box>
           </Grid>
-          <Grid item md={12} sm={12} xs={12} lg={5} style={{ paddingTop: 0 }}>
+          <Grid
+            item
+            md={12}
+            sm={12}
+            xs={12}
+            lg={5}
+            sx={{
+              paddingTop: { lg: '0px !important' }, // No padding for large screens
+              marginTop: { xs: 2, sm: 2, md: 2, lg: 0 } // Ensures spacing above for smaller screens
+            }}>
             <Paper sx={{ marginTop: 0 }} className="zl__table-res">
               <ViewersTable
                 rows={

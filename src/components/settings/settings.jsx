@@ -72,11 +72,12 @@ import APIKeys from '../apikeys/apikeys';
 import TokenExchange from '../tokenexchange/tokenexchange';
 import SettingsFormZone from './settingsformzone';
 import SettingsFormTag from './settingsformtag';
+import NewDefaultScheduler from '../families/newDefaultScheduler';
 
 const Settings = () => {
   const layoutCtx = useContext(LayoutContext);
   const authCtx = useContext(AuthContext);
-  const { enqueueSnackbar } = useSnackbar();
+  const { enqueueSnackbar, closeSnackbar } = useSnackbar();
   const [isUserFormDialogOpen, setIsUserFormDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -116,6 +117,7 @@ const Settings = () => {
   });
   const [value, setValue] = useState(0);
   const [timer, setTimer] = useState([]);
+  const [allowCustomSchedule, setAllowCustomSchedule] = useState(false);
   const [selectedDays, setSelectedDays] = useState([]);
   const [stripeCust, setStripeCust] = useState();
   const [submitLoading, setSubmitLoading] = useState(false);
@@ -277,11 +279,36 @@ const Settings = () => {
 
   useEffect(() => {
     layoutCtx.setActive(null);
-    layoutCtx.setBreadcrumb(['Settings', 'Manage Settings']);
+    switch (value) {
+      case 0:
+        layoutCtx.setBreadcrumb(['Locations', 'Location Manager']);
+        break;
+      case 1:
+        layoutCtx.setBreadcrumb([
+          'Stream Availability',
+          'Default Stream Availability - All Cameras'
+        ]);
+        break;
+      case 2:
+        layoutCtx.setBreadcrumb(['Customer Profile', 'Customer Details and Contact Information']);
+        break;
+      case 3:
+        layoutCtx.setBreadcrumb(['Zone Types', 'Zone Type Manager']);
+        break;
+      case 4:
+        layoutCtx.setBreadcrumb(['Recording Tags', 'Recording Tag Manager']);
+        break;
+      case 5:
+        layoutCtx.setBreadcrumb(['API Keys', 'Manage API Keys and Permissions to endpoints']);
+        break;
+      default:
+        layoutCtx.setBreadcrumb(['Settings', 'Manage settings']);
+        break;
+    }
     return () => {
       authCtx.setPreviosPagePath(window.location.pathname);
     };
-  }, []);
+  }, [value]);
 
   useEffect(() => {
     return () => {
@@ -357,12 +384,28 @@ const Settings = () => {
         setTagsList(response.data.Data.recordTags);
         setTotalTags(response.data.Data.count);
       } else {
-        errorMessageHandler(
-          enqueueSnackbar,
-          response?.response?.data?.Message || 'Something Went Wrong.',
-          response?.response?.status,
-          authCtx.setAuthError
-        );
+        if (response.message === 'Network Error') {
+          enqueueSnackbar('Please refresh the page.', {
+            variant: 'info',
+            action: (key) => (
+              <Button
+                onClick={() => {
+                  window.location.reload();
+                  closeSnackbar(key);
+                }}
+                sx={{ color: '#fff', textTransform: 'none' }}>
+                Refresh
+              </Button>
+            )
+          });
+        } else {
+          errorMessageHandler(
+            enqueueSnackbar,
+            response?.response?.data.Message || 'Something Went Wrong.',
+            response?.response?.status,
+            authCtx.setAuthError
+          );
+        }
       }
       setIsLoading(false);
     });
@@ -378,6 +421,7 @@ const Settings = () => {
     }).then((response) => {
       if (response.status === 200) {
         setTimer(response.data.Data.schedule.timeRange);
+        setAllowCustomSchedule(response.data.Data.schedule.allowCustomSchedule);
         setSelectedDays(response.data.Data.schedule.timeRange[0][1]);
         // setLocationsList(response.data.Data.locations);
       } else {
@@ -697,12 +741,16 @@ const Settings = () => {
 
   const tabData = [
     {
-      label: 'Customer Profile',
-      icon: <PortraitOutlined />
-    },
-    {
       label: 'Locations',
       icon: <PlaceOutlined />
+    },
+    {
+      label: 'Stream Availability',
+      icon: <CameraAltOutlined />
+    },
+    {
+      label: 'Customer Profile',
+      icon: <PortraitOutlined />
     },
     {
       label: 'Zone Types',
@@ -711,10 +759,6 @@ const Settings = () => {
     {
       label: 'Recording Tags',
       icon: <LocalOfferIcon />
-    },
-    {
-      label: 'Cameras',
-      icon: <CameraAltOutlined />
     },
     {
       label: 'API Keys',
@@ -1238,12 +1282,15 @@ const Settings = () => {
           </Tabs>
         </Grid>
         <Grid item sm={9.7} md={9.7} lg={9.7} xl={9.7}>
-          <TabPanel value={value} index={0}>
+          <TabPanel value={value} index={2}>
             <Box sx={{ position: 'relative' }}>
               <LinerLoader loading={isLoading} />
               <Card sx={{ borderRadius: '12px' }}>
-                <CardHeader></CardHeader>
                 <CardContent>
+                  <Typography mb={2} fontWeight={'bold'}>
+                    {' '}
+                    Customer Details and Contact Information{' '}
+                  </Typography>
                   <Formik
                     enableReinitialize
                     validateOnChange
@@ -1606,10 +1653,13 @@ const Settings = () => {
               </Card>
             </Box>
           </TabPanel>
-          <TabPanel value={value} index={1}>
+          <TabPanel value={value} index={0}>
             <Box className="listing-wrapper">
               <Card className="filter" sx={{ marginTop: '0px !important' }}>
                 <CardContent>
+                  <Typography mb={1} fontWeight={'bold'}>
+                    Location Manager
+                  </Typography>
                   <Box>
                     <Grid container spacing={2}>
                       <Grid item md={9} sm={12}>
@@ -1752,10 +1802,13 @@ const Settings = () => {
               />
             </Box>
           </TabPanel>
-          <TabPanel value={value} index={2}>
+          <TabPanel value={value} index={3}>
             <Box className="listing-wrapper">
               <Card className="filter" sx={{ marginTop: '0px !important' }}>
                 <CardContent>
+                  <Typography mb={1} fontWeight={'bold'}>
+                    Zone Type Manager
+                  </Typography>
                   <Box>
                     <Grid container spacing={2}>
                       <Grid item md={9} sm={12}>
@@ -1892,10 +1945,13 @@ const Settings = () => {
               />
             </Box>
           </TabPanel>
-          <TabPanel value={value} index={3}>
+          <TabPanel value={value} index={4}>
             <Box className="listing-wrapper">
               <Card className="filter" sx={{ marginTop: '0px !important' }}>
                 <CardContent>
+                  <Typography mb={1} fontWeight={'bold'}>
+                    Recording Tag Manager
+                  </Typography>
                   <Box>
                     <Grid container spacing={2}>
                       <Grid item md={9} sm={12}>
@@ -2033,11 +2089,13 @@ const Settings = () => {
               />
             </Box>
           </TabPanel>
-          <TabPanel value={value} index={4}>
-            <DefaultScheduler
+          <TabPanel value={value} index={1}>
+            <NewDefaultScheduler
               // settings={true}
               custId={authCtx.user.cust_id || localStorage.getItem('cust_id')}
               timer={timer}
+              allowCustomSchedule={allowCustomSchedule}
+              setAllowCustomSchedule={setAllowCustomSchedule}
               selectedDays={selectedDays}
               getDefaultScheduleSettings={getDefaultScheduleSettings}
             />
