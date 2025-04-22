@@ -198,7 +198,7 @@ module.exports = {
           SEAMembers: SEAMembers ? SEAMembers : 0,
           topViewers: topViewers ? topViewers : "",
           recentViewers: recentViewers?.length != 0 ? recentViewers.length : 0,
-          childSEA: childSEA,
+          // childSEA: childSEA,
           childrenWithEnableDate,
           childrenWithDisableDate,
           enroledStreamsDetails: recentViewers ? recentViewers : 0,
