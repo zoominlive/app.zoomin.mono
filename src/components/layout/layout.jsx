@@ -910,12 +910,224 @@ const Layout = () => {
                   <>
                     <Stack
                       direction={'row'}
-                      justifyContent={'space-between'}
-                      alignItems={'center'}
-                      sx={{ display: { xs: 'flex', md: 'none' } }}>
+                      justifyContent={{ xs: 'space-between', md: 'end' }}
+                      spacing={3}
+                      alignItems={'center'}>
                       <Badge disableRipple badgeContent={unreadCount} color="error">
                         <NotificationsIcon ref={notificationRef} fontSize="large" />
                       </Badge>
+                      {authCtx?.user?.role === 'Admin' && authCtx?.paymentMethod && (
+                        <>
+                          {location.pathname == '/dashboard' && (
+                            <Autocomplete
+                              sx={{
+                                '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline':
+                                  {
+                                    borderWidth: 0
+                                  },
+                                // '& .MuiOutlinedInput-root .MuiAutocomplete-endAdornment': {
+                                //   right: '22px'
+                                // },
+                                '& fieldset': { borderRadius: 10, borderWidth: 0 },
+                                display: { xs: 'none', md: 'flex' },
+                                paddingTop: { xs: '24px', md: '0px' }
+                              }}
+                              className="header-location-select"
+                              multiple
+                              limitTags={1}
+                              id="tags-standard"
+                              options={locations?.length !== 0 ? locations : []}
+                              onChange={(_, value, reason, option) => {
+                                console.log('value==>', value);
+                                handleSetLocations(_, value, reason, option);
+                              }}
+                              value={selectedLocation ? selectedLocation : []}
+                              getOptionLabel={(option) => option.loc_name}
+                              renderTags={(value, getTagProps) =>
+                                value?.map((option, index) => (
+                                  <Chip
+                                    key={index}
+                                    label={
+                                      <span
+                                        title={option.loc_name} // tooltip on hover
+                                      >
+                                        {/* {option.loc_name.length > 8
+                                          ? `${option.loc_name.slice(0, 8)}...`
+                                          : option.loc_name} */}
+                                        {option.loc_name}
+                                      </span>
+                                    }
+                                    {...getTagProps({ index })}
+                                  />
+                                ))
+                              }
+                              renderOption={(props, option, { selected }) => (
+                                <li key={option.loc_id} {...props}>
+                                  <Checkbox
+                                    icon={icon}
+                                    checkedIcon={checkedIcon}
+                                    style={{ marginRight: 8 }}
+                                    checked={allLocationChecked ? allLocationChecked : selected}
+                                  />
+                                  {option.loc_name}
+                                </li>
+                              )}
+                              renderInput={(params) => (
+                                <TextField
+                                  {...params}
+                                  placeholder="Locations"
+                                  InputProps={{
+                                    ...params.InputProps,
+                                    startAdornment: (
+                                      <>
+                                        <InputAdornment
+                                          position="start"
+                                          sx={{
+                                            marginLeft: '22px',
+                                            '@media(min-width:1536px) and (max-width:1714px)': {
+                                              display: 'none'
+                                            },
+                                            '@media (max-width:449px)': {
+                                              display: 'none'
+                                            }
+                                          }}>
+                                          <img src={buildingIcon} />
+                                        </InputAdornment>
+                                        {params.InputProps.startAdornment}
+                                      </>
+                                    ),
+                                    endAdornment: (
+                                      <React.Fragment>
+                                        {dropdownLoading ? (
+                                          <CircularProgress color="inherit" size={20} />
+                                        ) : null}
+                                        {params.InputProps.endAdornment}
+                                      </React.Fragment>
+                                    )
+                                  }}
+                                />
+                              )}
+                            />
+                          )}
+                          {location.pathname !== '/dashboard' && (
+                            <Stack
+                              direction={'row'}
+                              alignItems={'center'}
+                              justifyContent={'space-between'}
+                              sx={{
+                                display: {
+                                  xs: 'none',
+                                  md: 'block' // Hide on medium screen
+                                },
+                                paddingTop: { xs: '24px', md: '0px' }
+                              }}
+                              position={'relative'}>
+                              <TextField
+                                variant="standard"
+                                labelId="search"
+                                placeholder={'Search..'}
+                                sx={{
+                                  backgroundColor: '#FFFFFF',
+                                  borderRadius: '120px',
+                                  padding: '16px 24px',
+                                  width: {
+                                    xs: 'auto',
+                                    md: '390px'
+                                  }
+                                }}
+                                onChange={(e) => newHandleChange(e)}
+                                InputProps={{
+                                  disableUnderline: true,
+                                  startAdornment: (
+                                    <InputAdornment position="start">
+                                      <img src={searchIcon} alt="search" width={24} height={24} />
+                                    </InputAdornment>
+                                  )
+                                }}
+                              />
+                              {showSearchResults && (
+                                <Box className="results-list" sx={{ width: '85% !important' }}>
+                                  <Stack
+                                    className="search-result"
+                                    direction={'row'}
+                                    justifyContent={'space-between'}>
+                                    <Typography>Name</Typography>
+                                    <Typography>Role</Typography>
+                                  </Stack>
+                                  <Divider />
+                                  {familiesResults.map((result) => {
+                                    return (
+                                      <Stack
+                                        direction={'row'}
+                                        justifyContent={'space-between'}
+                                        alignItems={'center'}
+                                        sx={{
+                                          ':hover': { backgroundColor: '#eae9ff80' }
+                                        }}
+                                        key={result?.user_id || result?.primary?.family_member_id}
+                                        onClick={() => handleResultClick(result)}>
+                                        <Box ref={resultsListRef} className="search-result">
+                                          {result?.primary?.first_name +
+                                            ' ' +
+                                            result?.primary?.last_name}
+                                        </Box>
+                                        <Box>
+                                          <Chip variant="outlined" label={'Family'} />
+                                        </Box>
+                                      </Stack>
+                                    );
+                                  })}
+                                  {usersResults.map((result) => {
+                                    return (
+                                      <Stack
+                                        direction={'row'}
+                                        justifyContent={'space-between'}
+                                        alignItems={'center'}
+                                        sx={{
+                                          ':hover': { backgroundColor: '#eae9ff80' }
+                                        }}
+                                        key={result?.user_id}
+                                        onClick={() => handleResultClick(result)}>
+                                        <Box ref={resultsListRef} className="search-result">
+                                          {result?.first_name + ' ' + result?.last_name}
+                                        </Box>
+                                        <Box>
+                                          <Chip
+                                            variant="outlined"
+                                            label={
+                                              result?.role === 'User' ? 'Director' : result?.role
+                                            }
+                                          />
+                                        </Box>
+                                      </Stack>
+                                    );
+                                  })}
+                                  {childrenResults.map((result) => {
+                                    return (
+                                      <Stack
+                                        direction={'row'}
+                                        justifyContent={'space-between'}
+                                        alignItems={'center'}
+                                        sx={{
+                                          ':hover': { backgroundColor: '#eae9ff80' }
+                                        }}
+                                        key={result?.user_id}
+                                        onClick={() => handleResultClick(result)}>
+                                        <Box ref={resultsListRef} className="search-result">
+                                          {result?.first_name + ' ' + result?.last_name}
+                                        </Box>
+                                        <Box>
+                                          <Chip variant="outlined" label={'Child'} />
+                                        </Box>
+                                      </Stack>
+                                    );
+                                  })}
+                                </Box>
+                              )}
+                            </Stack>
+                          )}
+                        </>
+                      )}
                       <Box className="header-right">
                         <AccountMenu openLogoutDialog={setIsLogoutDialogOpen} />
                       </Box>
@@ -924,14 +1136,8 @@ const Layout = () => {
                       direction={'row'}
                       justifyContent={'end'}
                       alignItems={'center'}
+                      sx={{ display: { xs: 'flex', md: 'none' } }}
                       spacing={3}>
-                      <Badge
-                        sx={{ display: { xs: 'none', md: 'flex' } }}
-                        disableRipple
-                        badgeContent={unreadCount}
-                        color="error">
-                        <NotificationsIcon ref={notificationRef} fontSize="large" />
-                      </Badge>
                       {console.log('locations in layout==>', locations)}
                       {console.log('selected_location in layout', selectedLocation)}
                       {authCtx?.user?.role === 'Admin' && authCtx?.paymentMethod && (
