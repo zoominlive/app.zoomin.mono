@@ -125,8 +125,6 @@ const ZoneForm = (props) => {
 
   // Method to add/edit zone
   const handleSubmit = (data) => {
-    console.log('data==>', data);
-
     setSubmitLoading(true);
     let customer_id =
       authCtx.user.role === 'Super Admin' ? localStorage.getItem('cust_id') : authCtx.user.cust_id;

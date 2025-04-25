@@ -55,7 +55,6 @@ const PlayerControls = (props) => {
   const timerRef = useRef(null);
 
   const startTimer = (initialTime) => {
-    console.log('Starting fresh timer:', initialTime);
     setElapsedTime(initialTime);
 
     localStorage.setItem(
@@ -71,7 +70,6 @@ const PlayerControls = (props) => {
           props.setRecording();
           setIsRecording(false);
           props.startDialogTimer(true);
-          console.log('in start timer==>');
           localStorage.removeItem(`recordingStartTime_${recordingId}`);
           return 0;
         }
@@ -88,10 +86,8 @@ const PlayerControls = (props) => {
       const remainingTime = Math.max(0, duration - elapsedSeconds);
 
       if (remainingTime > 0) {
-        console.log('Resuming timer with remainingTime:', remainingTime);
         startTimer(remainingTime);
       } else {
-        console.log('Timer expired, cleaning up');
         localStorage.removeItem(`recordingStartTime_${recordingId}`);
         setElapsedTime(0);
       }
@@ -101,22 +97,11 @@ const PlayerControls = (props) => {
   useEffect(() => {
     if (!recordingId) return;
 
-    console.log('Effect triggered with', {
-      recordingId,
-      isRecording,
-      propsRecording: props.recording,
-      isRecordingActive,
-      recordingStates: props.recordingStates
-    });
-
     if (isRecordingActive) {
-      console.log('1===>');
       resumeTimer();
     } else if (isRecording && !isRecordingActive) {
-      console.log('2===>');
       startTimer(timeInSeconds);
     } else if (!props.recording) {
-      console.log('in else if block==>');
       // clearInterval(timerRef.current);
       // localStorage.removeItem(`recordingStartTime_${recordingId}`);
     }

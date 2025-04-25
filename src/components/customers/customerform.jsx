@@ -156,7 +156,6 @@ const CustomerForm = (props) => {
       stream_live_license,
       ...details
     } = data;
-    console.log('location==>', location);
 
     const payload = {
       ...details,

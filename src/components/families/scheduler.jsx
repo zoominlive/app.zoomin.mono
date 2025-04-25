@@ -182,10 +182,6 @@ const SchedulerDialog = (props) => {
 
   useEffect(() => {
     if (props?.zoneDetails?.schedule?.timeRange?.length != 0) {
-      console.log(
-        'props?.zoneDetails?.schedule?.timeRange==>',
-        props?.zoneDetails?.schedule?.timeRange
-      );
       props?.zoneDetails?.schedule?.timeRange?.forEach(([timeRange, days]) => {
         const [start, end] = timeRange.map(to24Hour);
         days.forEach((day) => {
@@ -268,7 +264,6 @@ const SchedulerDialog = (props) => {
       }
     }).then((response) => {
       if (response.status === 200) {
-        console.log('res', response.data);
         setNewTimer(response.data.Data.schedule.timeRange);
         // setCustomRestrictions(response.data.Data.schedule.allowCustomSchedule);
         setAllowCustomSchedule(response.data.Data.schedule.allowCustomSchedule);
@@ -498,9 +493,6 @@ const SchedulerDialog = (props) => {
                   </Accordion>
                 ) : (
                   <>
-                    {console.log('newTimer==>', newTimer)}
-                    {console.log('schedule==>', schedule)}
-                    {console.log('defaultSchedule==>', defaultSchedule[day]?.length > 0)}
                     <Accordion
                       key={day}
                       disabled={!customRestrictions}

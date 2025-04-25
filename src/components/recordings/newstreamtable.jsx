@@ -42,13 +42,11 @@ export default function NewStreamTable({ rows, columns, title, type, getRecordin
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
 
   const handleEditRecording = (data) => {
-    console.log('data==>', data);
     setRecordingData(data);
     setIsEditDialogOpen(true);
   };
 
   const handleEditMobileStreamRecording = (data) => {
-    console.log('data==>', data);
     setRecordingData(data);
     setIsEditMobileStreamDialogOpen(true);
   };
@@ -71,7 +69,6 @@ export default function NewStreamTable({ rows, columns, title, type, getRecordin
   };
 
   const handleShareRecording = (data) => {
-    console.log('data==>', data);
     setRecordingData(data);
     setIsShareDialogOpen(true);
   };

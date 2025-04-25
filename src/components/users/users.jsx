@@ -42,13 +42,15 @@ import SearchIcon from '@mui/icons-material/Search';
 import NewDeleteDialog from '../common/newdeletedialog';
 import LinerLoader from '../common/linearLoader';
 import { useLocation } from 'react-router-dom';
+import { useApiErrorHandler } from '../../utils/corserrorhandler';
 
 const Users = () => {
   const layoutCtx = useContext(LayoutContext);
   const authCtx = useContext(AuthContext);
   const location = useLocation();
   const receivedData = location.state?.data;
-  const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+  const { enqueueSnackbar } = useSnackbar();
+  const handleApiError = useApiErrorHandler();
   const [isUserFormDialogOpen, setIsUserFormDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -92,28 +94,7 @@ const Users = () => {
         setUsersList(response.data.Data.users);
         setTotalUsers(response.data.Data.count);
       } else {
-        if (response.message === 'Network Error') {
-          enqueueSnackbar('Please refresh the page.', {
-            variant: 'info',
-            action: (key) => (
-              <Button
-                onClick={() => {
-                  window.location.reload();
-                  closeSnackbar(key);
-                }}
-                sx={{ color: '#fff', textTransform: 'none' }}>
-                Refresh
-              </Button>
-            )
-          });
-        } else {
-          errorMessageHandler(
-            enqueueSnackbar,
-            response?.response?.data?.Message || 'Something Went Wrong.',
-            response?.response?.status,
-            authCtx.setAuthError
-          );
-        }
+        handleApiError(response);
       }
       setIsLoading(false);
     });
@@ -396,7 +377,6 @@ const Users = () => {
                           </TableCell>
                           <TableCell align="left">
                             <Stack direction="row">
-                              {console.log('row==>', row)}
                               {row.locations
                                 ?.sort((a, b) => (a > b ? 1 : -1))
                                 .map((location, index) => (

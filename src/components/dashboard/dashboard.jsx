@@ -53,6 +53,7 @@ import ZoneAddForm from '../families/zoneaddform';
 import FamilyForm from '../families/familyform';
 import LinerLoader from '../common/linearLoader';
 import UserForm from '../users/userform';
+import { useApiErrorHandler } from '../../utils/corserrorhandler';
 
 const AccessColumns = [
   { label: 'Child', width: '75%' },
@@ -75,7 +76,8 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const layoutCtx = useContext(LayoutContext);
   const authCtx = useContext(AuthContext);
-  const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+  const handleApiError = useApiErrorHandler();
+  const { enqueueSnackbar } = useSnackbar();
   const [statisticsData, setStatisticsData] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   // const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -129,7 +131,7 @@ const Dashboard = () => {
 
   // const [roomsDropdownLoading, setRoomsDropdownLoading] = useState(false);
   useEffect(() => {
-    if (authCtx.token) {
+    if (authCtx.user) {
       let { user_id, family_member_id } = JSON.parse(localStorage.getItem('user'));
 
       let data = {};
@@ -190,7 +192,7 @@ const Dashboard = () => {
         });
       });
     }
-  }, [authCtx.token]);
+  }, [authCtx.user]);
 
   const handleFamilyDisable = (data) => {
     setDisableLoading(true);
@@ -255,28 +257,7 @@ const Dashboard = () => {
         if (response.status === 200) {
           setZonesList(response.data.Data);
         } else {
-          if (response.message === 'Network Error') {
-            enqueueSnackbar('Please refresh the page.', {
-              variant: 'info',
-              action: (key) => (
-                <Button
-                  onClick={() => {
-                    window.location.reload();
-                    closeSnackbar(key);
-                  }}
-                  sx={{ color: '#fff', textTransform: 'none' }}>
-                  Refresh
-                </Button>
-              )
-            });
-          } else {
-            errorMessageHandler(
-              enqueueSnackbar,
-              response?.response?.data?.Message || 'Something Went Wrong.',
-              response?.response?.status,
-              authCtx.setAuthError
-            );
-          }
+          handleApiError(response);
         }
         // setRoomsDropdownLoading(false);
       }
@@ -289,28 +270,7 @@ const Dashboard = () => {
         if (response.status === 200) {
           authCtx.setTags(response.data.Data.recordTags);
         } else {
-          if (response.message === 'Network Error') {
-            enqueueSnackbar('Please refresh the page.', {
-              variant: 'info',
-              action: (key) => (
-                <Button
-                  onClick={() => {
-                    window.location.reload();
-                    closeSnackbar(key);
-                  }}
-                  sx={{ color: '#fff', textTransform: 'none' }}>
-                  Refresh
-                </Button>
-              )
-            });
-          } else {
-            errorMessageHandler(
-              enqueueSnackbar,
-              response?.response?.data.Message || 'Something Went Wrong.',
-              response?.response?.status,
-              authCtx.setAuthError
-            );
-          }
+          handleApiError(response);
         }
       }
     );
@@ -444,30 +404,9 @@ const Dashboard = () => {
         // });
         setIsLoading(false);
       } else {
-        if (response.message === 'Network Error') {
-          enqueueSnackbar('Please refresh the page.', {
-            variant: 'info',
-            action: (key) => (
-              <Button
-                onClick={() => {
-                  window.location.reload();
-                  closeSnackbar(key);
-                }}
-                sx={{ color: '#fff', textTransform: 'none' }}>
-                Refresh
-              </Button>
-            )
-          });
-        } else {
-          errorMessageHandler(
-            enqueueSnackbar,
-            response?.response?.data?.Message || 'Something Went Wrong.',
-            response?.response?.status,
-            authCtx.setAuthError
-          );
-        }
-        setIsLoading(false);
+        handleApiError(response);
       }
+      setIsLoading(false);
     });
   };
 
@@ -516,28 +455,7 @@ const Dashboard = () => {
         setActiveCameras(response.data.Data.activeCameras);
         setActiveRecordings(response.data.Data.fixedCameraRecordingsByUser.data);
       } else {
-        if (response.message === 'Network Error') {
-          enqueueSnackbar('Please refresh the page.', {
-            variant: 'info',
-            action: (key) => (
-              <Button
-                onClick={() => {
-                  window.location.reload();
-                  closeSnackbar(key);
-                }}
-                sx={{ color: '#fff', textTransform: 'none' }}>
-                Refresh
-              </Button>
-            )
-          });
-        } else {
-          errorMessageHandler(
-            enqueueSnackbar,
-            response?.response?.data?.Message || 'Something Went Wrong.',
-            response?.response?.status,
-            authCtx.setAuthError
-          );
-        }
+        handleApiError(response);
       }
     });
   };
@@ -792,7 +710,6 @@ const Dashboard = () => {
                     <Typography style={{ paddingTop: 10 }}> Watch Stream </Typography>
                     {!_.isEmpty(selectedCamera) ? (
                       <label style={{ color: '#000', paddingTop: 5 }}>
-                        {console.log('selectedCamera=>', selectedCamera)}
                         {' | ' +
                           selectedCamera?.location?.loc_name +
                           '/' +

@@ -163,12 +163,6 @@ const ChildForm = (props) => {
       });
     }
   };
-  console.log('props==>', props.child);
-  console.log(
-    'sorted==>',
-    props.child?.child_locations?.sort((a, b) => (a.loc_name > b.loc_name ? 1 : -1))
-  );
-  console.log('props.zonesList==>', props);
 
   return (
     <Dialog

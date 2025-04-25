@@ -1,7 +1,6 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 import {
-  Button,
   Dialog,
   DialogActions,
   DialogContent,
@@ -27,14 +26,16 @@ import { useSnackbar } from 'notistack';
 import AuthContext from '../../context/authcontext';
 import closeicon from '../../assets/closeicon.svg';
 import ConfirmationDialog from '../common/confirmationdialog';
+import { useApiErrorHandler } from '../../utils/corserrorhandler';
 
 const RecordingForm = (props) => {
+  const handleApiError = useApiErrorHandler();
   const [isCloseDialog, setIsCloseDialog] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
   // eslint-disable-next-line no-unused-vars
   const [selectedTag, setSelectedTag] = useState(null);
   const [tagsList, setTagsList] = useState([]);
-  const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+  const { enqueueSnackbar } = useSnackbar();
   const authCtx = useContext(AuthContext);
 
   useEffect(() => {
@@ -47,28 +48,7 @@ const RecordingForm = (props) => {
         if (response.status === 200) {
           setTagsList(response.data.Data.recordTags);
         } else {
-          if (response.message === 'Network Error') {
-            enqueueSnackbar('Please refresh the page.', {
-              variant: 'info',
-              action: (key) => (
-                <Button
-                  onClick={() => {
-                    window.location.reload();
-                    closeSnackbar(key);
-                  }}
-                  sx={{ color: '#fff', textTransform: 'none' }}>
-                  Refresh
-                </Button>
-              )
-            });
-          } else {
-            errorMessageHandler(
-              enqueueSnackbar,
-              response?.response?.data.Message || 'Something Went Wrong.',
-              response?.response?.status,
-              authCtx.setAuthError
-            );
-          }
+          handleApiError(response);
         }
       }
     );
@@ -114,8 +94,6 @@ const RecordingForm = (props) => {
   };
 
   const handleFormDialogClose = () => {
-    console.log('submitLoading==>', submitLoading);
-
     if (!submitLoading) {
       props.setOpen(false);
       props.setRecordingData();
@@ -208,7 +186,6 @@ const RecordingForm = (props) => {
                               setFieldValue('tag', event.target.value);
                               setSelectedTag(event.target.value);
                             }}>
-                            {console.log('tagsList==>', tagsList)}
                             {tagsList.map((item) => {
                               return (
                                 <MenuItem key={item.tag_id} value={item.tag_id}>

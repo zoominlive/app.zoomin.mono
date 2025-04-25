@@ -79,7 +79,6 @@ const CustomPlayer = (props) => {
 
   useEffect(() => {
     if (location.pathname == '/watch-stream' || location.pathname == '/dashboard') {
-      console.log('props.activeRecordingCameras==>', props.activeRecordingCameras);
       if (props.activeRecordingCameras?.includes(props.camDetails?.cam_id)) {
         setIsRecording(true);
         setRecordingStates((prev) => ({ ...prev, [props.camDetails?.cam_id]: true }));
@@ -108,7 +107,6 @@ const CustomPlayer = (props) => {
   };
 
   const handleRecording = (tag) => {
-    console.log('recordingStates==>', recordingStates[props.camDetails.cam_id]);
     if (recordingStates[props.camDetails.cam_id] == false && !props.isRecording) {
       API.post('cams/start-recording', {
         cust_id: authCtx?.user?.cust_id || localStorage.getItem('cust_id'),

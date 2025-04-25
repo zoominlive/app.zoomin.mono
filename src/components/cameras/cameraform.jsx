@@ -95,7 +95,6 @@ const CameraForm = (props) => {
 
   // Method to update the user profile
   const handleSubmit = (data) => {
-    console.log('called==>');
     const payload = {
       cam_id: props?.camera?.cam_id,
       thumbnail: !props.camera ? base64Image : image ? (base64Image ? base64Image : image) : null,
@@ -172,7 +171,6 @@ const CameraForm = (props) => {
 
   // Method to generate thumbnail
   const handleGenerateThumbnail = () => {
-    console.log('reached', props.camera);
     setSubmitLoading(true);
     API.get('cams/generate-thumbnail', {
       // 221
@@ -184,7 +182,6 @@ const CameraForm = (props) => {
       }
     }).then((response) => {
       if (response.status === 200) {
-        console.log('success', response.data.Data.thumbnailUrl);
         setImage(response.data.Data.thumbnailUrl);
         setS3Uri(response.data.Data.s3Uri);
         enqueueSnackbar('Thumbnail generated', { variant: 'success' });
@@ -482,7 +479,6 @@ const CameraForm = (props) => {
                           }}
                           value={values?.zones}
                           onChange={(_, value) => {
-                            console.log('value==>', value);
                             setFieldValue('zones', value);
                           }}
                           //defaultValue={props?.zone?.zones ? props?.zone?.zones : []}

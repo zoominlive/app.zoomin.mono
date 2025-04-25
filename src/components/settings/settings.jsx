@@ -73,11 +73,13 @@ import TokenExchange from '../tokenexchange/tokenexchange';
 import SettingsFormZone from './settingsformzone';
 import SettingsFormTag from './settingsformtag';
 import NewDefaultScheduler from '../families/newDefaultScheduler';
+import { useApiErrorHandler } from '../../utils/corserrorhandler';
 
 const Settings = () => {
   const layoutCtx = useContext(LayoutContext);
   const authCtx = useContext(AuthContext);
-  const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+  const { enqueueSnackbar } = useSnackbar();
+  const handleApiError = useApiErrorHandler();
   const [isUserFormDialogOpen, setIsUserFormDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -344,12 +346,7 @@ const Settings = () => {
         setCustomerDetails(response.data.Data.customer);
         setActiveLocations(response.data.Data.activeLocations);
       } else {
-        errorMessageHandler(
-          enqueueSnackbar,
-          response?.response?.data?.Message || 'Something Went Wrong.',
-          response?.response?.status,
-          authCtx.setAuthError
-        );
+        handleApiError(response);
       }
       setIsLoading(false);
     });
@@ -360,16 +357,10 @@ const Settings = () => {
     setIsLoading(true);
     API.get('zone-type', { params: zonesPayload }).then((response) => {
       if (response.status === 200) {
-        console.log('zones_response==>', response.data);
         setZonesList(response.data.Data.zoneTypes);
         setTotalZones(response.data.Data.count);
       } else {
-        errorMessageHandler(
-          enqueueSnackbar,
-          response?.response?.data?.Message || 'Something Went Wrong.',
-          response?.response?.status,
-          authCtx.setAuthError
-        );
+        handleApiError(response);
       }
       setIsLoading(false);
     });
@@ -380,32 +371,10 @@ const Settings = () => {
     setIsLoading(true);
     API.get('cams/list-record-tags', { params: tagsPayload }).then((response) => {
       if (response.status === 200) {
-        console.log('zones_response==>', response.data);
         setTagsList(response.data.Data.recordTags);
         setTotalTags(response.data.Data.count);
       } else {
-        if (response.message === 'Network Error') {
-          enqueueSnackbar('Please refresh the page.', {
-            variant: 'info',
-            action: (key) => (
-              <Button
-                onClick={() => {
-                  window.location.reload();
-                  closeSnackbar(key);
-                }}
-                sx={{ color: '#fff', textTransform: 'none' }}>
-                Refresh
-              </Button>
-            )
-          });
-        } else {
-          errorMessageHandler(
-            enqueueSnackbar,
-            response?.response?.data.Message || 'Something Went Wrong.',
-            response?.response?.status,
-            authCtx.setAuthError
-          );
-        }
+        handleApiError(response);
       }
       setIsLoading(false);
     });
@@ -425,12 +394,7 @@ const Settings = () => {
         setSelectedDays(response.data.Data.schedule.timeRange[0][1]);
         // setLocationsList(response.data.Data.locations);
       } else {
-        errorMessageHandler(
-          enqueueSnackbar,
-          response?.response?.data?.Message || 'Something Went Wrong.',
-          response?.response?.status,
-          authCtx.setAuthError
-        );
+        handleApiError(response);
       }
       setIsLoading(false);
     });
@@ -448,12 +412,7 @@ const Settings = () => {
         setSelectedState(response.data.customerDetails.address?.state);
         setSelectedCity(response.data.customerDetails.address?.city);
       } else {
-        errorMessageHandler(
-          enqueueSnackbar,
-          response?.response?.data?.message || 'Something Went Wrong.',
-          response?.response?.status,
-          authCtx.setAuthError
-        );
+        handleApiError(response);
       }
       setIsLoading(false);
     });
@@ -689,7 +648,6 @@ const Settings = () => {
       trial_period_days: trialDays
     }).then((response) => {
       if (response.status === 200) {
-        console.log(response.data);
         enqueueSnackbar('Successfully subscribed!', {
           variant: 'success'
         });
@@ -1392,7 +1350,6 @@ const Settings = () => {
                                 value={selectedCountry}
                                 onChange={(event, newValue) => {
                                   setSelectedCountry(newValue);
-                                  console.log('country==', newValue.isoCode);
                                 }}
                                 renderInput={(params) => (
                                   <TextField {...params} label="Country" variant="outlined" />
@@ -1421,7 +1378,6 @@ const Settings = () => {
                                 value={selectedState}
                                 onChange={(event, newValue) => {
                                   setSelectedState(newValue);
-                                  console.log('state==', newValue.name);
                                 }}
                                 disabled={!selectedCountry}
                                 renderInput={(params) => (
@@ -1451,7 +1407,6 @@ const Settings = () => {
                                 value={selectedCity}
                                 onChange={(event, newValue) => {
                                   setSelectedCity(newValue);
-                                  console.log('city==', newValue.name);
                                 }}
                                 disabled={!selectedState}
                                 renderInput={(params) => (

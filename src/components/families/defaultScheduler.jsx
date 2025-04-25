@@ -67,7 +67,6 @@ const DefaultScheduler = (props) => {
   };
 
   const handleTimerChange = (event, newValue) => {
-    console.log(newValue);
     // if (newValue[1] - newValue[0] > 3) {
     setTimer(newValue);
     // }
@@ -122,7 +121,6 @@ const DefaultScheduler = (props) => {
         let timerToAdd = [getValueFromLabel(day[0][0]), getValueFromLabel(day[0][1])];
         return [timerToAdd, day[1]];
       });
-      console.log('daysToStore==>', daysToStore);
       setDayTimers(daysToStore);
       // setTimer(daysToStore[0][0]);
     }
@@ -135,8 +133,6 @@ const DefaultScheduler = (props) => {
       let timerToAdd = [getValueLable(day[0][0]), getValueLable(day[0][1])];
       return [timerToAdd, day[1]];
     });
-    console.log('daysTostore', daysTostore);
-    console.log('props.custId', props.custId);
     const payload = {
       cust_id: props.custId,
       timeRange: daysTostore
@@ -145,7 +141,7 @@ const DefaultScheduler = (props) => {
       zone_child_id: props.zone_child_id,
       timeRange: daysTostore
     };
-    // console.log('props.settings', props.settings);
+
     API.put(
       props.defaultSettings ? 'family/child/zoneschedule' : 'family/child/schedule/edit',
       props.defaultSettings ? childPayload : payload
@@ -210,7 +206,6 @@ const DefaultScheduler = (props) => {
                         ))}
                       </AvatarGroup>
                     </Container>
-                    {console.log('timer props-->', props.timer)}
                     <Stack direction={'row'} pl={4} pb={3}>
                       <Slider
                         disabled={disableSlider}
@@ -375,7 +370,6 @@ const DefaultScheduler = (props) => {
                                 ))}
                               </AvatarGroup>
                             </Container>
-                            {console.log('timer props-->', props.timer)}
                             <Stack direction={'row'} pl={4} pb={3}>
                               <Slider
                                 disabled={disableSlider}

@@ -21,8 +21,7 @@ import {
   //InputLabel,
   Grid,
   Divider,
-  Badge,
-  Button
+  Badge
 } from '@mui/material';
 
 import logo from '../../assets/app-capital.svg';
@@ -67,13 +66,15 @@ import NotificationsIcon from '@mui/icons-material/Notifications';
 import { useAuth } from '@frontegg/react';
 // import { useAuth } from '@frontegg/react';
 import { PF } from '../pf/pf';
+import { useApiErrorHandler } from '../../utils/corserrorhandler';
 
 const icon = <RadioButtonUncheckedIcon fontSize="small" />;
 const checkedIcon = <CheckCircleOutlineIcon fontSize="small" style={{ color: '#5A53DD' }} />;
 
 const Layout = () => {
   const layoutCtx = useContext(LayoutContext);
-  const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+  const { enqueueSnackbar } = useSnackbar();
+  const handleApiError = useApiErrorHandler();
   const authCtx = useContext(AuthContext);
   const navigate = useNavigate();
   const [open, setOpen] = useState(window.innerWidth < 900 ? false : true);
@@ -121,7 +122,6 @@ const Layout = () => {
   }, [selectedLocation]);
 
   useEffect(() => {
-    console.log('user==>', user);
     setIsLoading(true);
     setDropdownLoading(true);
     // API Call for Fetching Logged in user detail
@@ -151,28 +151,7 @@ const Layout = () => {
         if (response?.response?.status === 401) {
           enqueueSnackbar('User Not Found', { variant: 'error' });
         }
-        if (response.message === 'Network Error') {
-          enqueueSnackbar('Please refresh the page.', {
-            variant: 'info',
-            action: (key) => (
-              <Button
-                onClick={() => {
-                  window.location.reload();
-                  closeSnackbar(key);
-                }}
-                sx={{ color: '#fff', textTransform: 'none' }}>
-                Refresh
-              </Button>
-            )
-          });
-        } else {
-          errorMessageHandler(
-            enqueueSnackbar,
-            response?.response?.data?.Message || 'Something Went Wrong.',
-            response?.response?.status,
-            authCtx.setAuthError
-          );
-        }
+        handleApiError(response);
       }
       setIsLoading(false);
       setDropdownLoading(false);
@@ -272,20 +251,11 @@ const Layout = () => {
       .then((response) => {
         if (response.status === 200) {
           const data = response.data.Data;
-          console.log('shareHistory', response.data.Data);
           // Retrieve seen clips from local storage
           const seenClips = JSON.parse(localStorage.getItem('seenClips')) || [];
 
           // Check if there are any new share_id that are NOT in localStorage
           const hasNewUnseen = data.some((clip) => !seenClips.includes(clip.share_id));
-
-          // Update seen status
-          const updatedData = data.map((clip) => ({
-            ...clip,
-            seen: seenClips.includes(clip.share_id) // ✅ Mark as seen if in localStorage
-          }));
-
-          console.log('updatedData==>', updatedData);
 
           // ✅ If new unseen clips exist, show red dot
           if (hasNewUnseen) {
@@ -316,7 +286,6 @@ const Layout = () => {
       }
     }).then((response) => {
       if (response.status === 200) {
-        console.log('response.data.data.data', response.data.data.data);
         if (response.data.data.data.length !== 0) {
           authCtx.setPaymentMethod(true);
           if (window.location.pathname === '/dashboard') {
@@ -326,28 +295,7 @@ const Layout = () => {
           navigate('terms-and-conditions');
         }
       } else {
-        if (response.message === 'Network Error') {
-          enqueueSnackbar('Please refresh the page.', {
-            variant: 'info',
-            action: (key) => (
-              <Button
-                onClick={() => {
-                  window.location.reload();
-                  closeSnackbar(key);
-                }}
-                sx={{ color: '#fff', textTransform: 'none' }}>
-                Refresh
-              </Button>
-            )
-          });
-        } else {
-          errorMessageHandler(
-            enqueueSnackbar,
-            response?.response?.data?.message || 'Something Went Wrong.',
-            response?.response?.status,
-            authCtx.setAuthError
-          );
-        }
+        handleApiError(response);
       }
       setIsLoading(false);
     });
@@ -358,33 +306,12 @@ const Layout = () => {
     setIsLoading(true);
     API.get('family', { params: familiesPayload }).then((response) => {
       if (response.status === 200) {
-        console.log('familiesPayload.searchBy', familiesPayload.searchBy);
         const famResults = response.data.Data.familyArray;
         const childrenResults = response.data.Data.familyArray.map((item) => item.children);
         setFamiliesResults(famResults);
         setChildrenResults(childrenResults.flatMap((subArray) => subArray));
       } else {
-        if (response.message === 'Network Error') {
-          enqueueSnackbar('Please refresh the page.', {
-            variant: 'info',
-            action: (key) => (
-              <Button
-                onClick={() => {
-                  window.location.reload();
-                  closeSnackbar(key);
-                }}
-                sx={{ color: '#fff', textTransform: 'none' }}>
-                Refresh
-              </Button>
-            )
-          });
-        }
-        errorMessageHandler(
-          enqueueSnackbar,
-          response?.response?.data?.Message || 'Something Went Wrong.',
-          response?.response?.status,
-          authCtx.setAuthError
-        );
+        handleApiError(response);
       }
       setIsLoading(false);
     });
@@ -398,12 +325,7 @@ const Layout = () => {
         const userResults = response.data.Data.users;
         setUsersResults(userResults);
       } else {
-        errorMessageHandler(
-          enqueueSnackbar,
-          response?.response?.data?.Message || 'Something Went Wrong.',
-          response?.response?.status,
-          authCtx.setAuthError
-        );
+        handleApiError(response);
       }
       setIsLoading(false);
     });
@@ -562,20 +484,17 @@ const Layout = () => {
   ];
 
   const handleSetLocations = (_, value, reason, option) => {
-    console.log('option==>', option);
     if (
       reason == 'selectOption' &&
       option?.option.loc_name == 'Select All' &&
       !allLocationChecked
     ) {
-      console.log('1', option);
       setSelectedLocation(reason === 'selectOption' ? locations.slice(1, locations.length) : []);
       setAllLocationChecked(true);
     } else if (
       (option?.option.loc_name == 'Select All' && reason === 'removeOption') ||
       reason === 'clear'
     ) {
-      console.log('2');
       setSelectedLocation([]);
       setAllLocationChecked(false);
     } else if (
@@ -583,11 +502,9 @@ const Layout = () => {
       option?.option.loc_name == 'Select All' &&
       allLocationChecked == true
     ) {
-      console.log('3');
       setAllLocationChecked(false);
       setSelectedLocation([]);
     } else {
-      console.log('4', value);
       setAllLocationChecked(false);
       setSelectedLocation(value);
     }
@@ -630,8 +547,9 @@ const Layout = () => {
                     if (
                       authCtx.user.role === 'User' &&
                       item.key !== 4 &&
+                      item.key !== 8 &&
                       item.key !== 9 &&
-                      item.key !== 10
+                      item.key !== 11
                     ) {
                       return true;
                     } else if (
@@ -698,7 +616,6 @@ const Layout = () => {
                           primary={item.name}
                           sx={{ display: open ? 'block' : 'none' }}
                         />
-                        {console.log('showRedDot=>', authCtx.showRedDot)}
                         {item.key == 10 && authCtx.showRedDot && (
                           <span style={{ color: 'red', marginLeft: '5px' }}>🔴</span>
                         )}
@@ -938,7 +855,6 @@ const Layout = () => {
                               id="tags-standard"
                               options={locations?.length !== 0 ? locations : []}
                               onChange={(_, value, reason, option) => {
-                                console.log('value==>', value);
                                 handleSetLocations(_, value, reason, option);
                               }}
                               value={selectedLocation ? selectedLocation : []}
@@ -1138,8 +1054,6 @@ const Layout = () => {
                       alignItems={'center'}
                       sx={{ display: { xs: 'flex', md: 'none' } }}
                       spacing={3}>
-                      {console.log('locations in layout==>', locations)}
-                      {console.log('selected_location in layout', selectedLocation)}
                       {authCtx?.user?.role === 'Admin' && authCtx?.paymentMethod && (
                         <>
                           {location.pathname == '/dashboard' && (
@@ -1161,7 +1075,6 @@ const Layout = () => {
                               id="tags-standard"
                               options={locations?.length !== 0 ? locations : []}
                               onChange={(_, value, reason, option) => {
-                                console.log('value==>', value);
                                 handleSetLocations(_, value, reason, option);
                               }}
                               value={selectedLocation ? selectedLocation : []}

@@ -32,6 +32,7 @@ import AddIcon from '@mui/icons-material/Add';
 import CloseIcon from '@mui/icons-material/Close';
 import noselectedclips from '../../assets/nosharedclipfound.svg';
 import noselectedvideo from '../../assets/noselectedvideo.svg';
+import { useApiErrorHandler } from '../../utils/corserrorhandler';
 
 const isShareIdValid = (s3Url, userId) => {
   if (!s3Url || !userId) return false;
@@ -52,6 +53,7 @@ const actions = [
 
 const VideoPlayer = () => {
   const { enqueueSnackbar } = useSnackbar();
+  const handleApiError = useApiErrorHandler();
   const authCtx = useContext(AuthContext);
   const layoutCtx = useContext(LayoutContext);
   const location = useLocation();
@@ -78,7 +80,6 @@ const VideoPlayer = () => {
       authCtx.setPreviosPagePath(window.location.pathname);
     };
   }, []);
-  console.log('authCtx.user', authCtx);
 
   useEffect(() => {
     if (!authCtx.user || hasFetched) {
@@ -95,7 +96,6 @@ const VideoPlayer = () => {
       .then((response) => {
         if (response.status === 200) {
           const data = response.data.Data;
-          console.log('shareHistory', response.data.Data);
           // Retrieve seen clips from local storage
           const seenClips = JSON.parse(localStorage.getItem('seenClips')) || [];
 
@@ -104,30 +104,19 @@ const VideoPlayer = () => {
             ...clip,
             seen: seenClips.includes(clip.share_id) ? true : false // ✅ Ensures unseen clips stay unseen
           }));
-          console.log('updatedData==>', updatedData);
           setShareHistory(updatedData);
           setSelectedClip(response.data.Data[0]);
           let shared_cf_link = response.data.Data[0].shared_cf_link;
           const url = new URL(shared_cf_link, window.location.origin);
-          console.log('url==>', url);
           const encodedVideoUrl = url.searchParams.get('video');
           const shareId = url.searchParams.get('shareId');
           const videoUrl = encodedVideoUrl ? decodeURIComponent(encodedVideoUrl) : '';
-          console.log('videoUrl==>', videoUrl);
-          console.log('shareId==>', shareId);
           setSelectedVideo(videoUrl);
           setShareId(shareId);
         } else {
-          console.log('response', response);
-          if (response.response.status !== 404) {
-            errorMessageHandler(
-              enqueueSnackbar,
-              response?.response?.data?.Message || 'Something Went Wrong.',
-              response?.response?.status,
-              authCtx.setAuthError
-            );
-          }
+          handleApiError(response);
         }
+        setIsLoading(false);
       })
       .catch((error) => {
         console.error('API error:', error);
@@ -137,9 +126,6 @@ const VideoPlayer = () => {
           500,
           authCtx.setAuthError
         );
-      })
-      .finally(() => {
-        setIsLoading(false); // Hide loader when API call completes
       });
   }, [authCtx.user]);
 
@@ -166,14 +152,9 @@ const VideoPlayer = () => {
             const userId = authCtx.user.user_id;
             const isValid = isShareIdValid(s3Url, userId);
             setAllowed(isValid);
-            console.log('Req successful');
             setUrl(videoUrl); // Use the already-decoded video URL
           } else {
-            errorMessageHandler(
-              enqueueSnackbar,
-              response?.response?.data?.Message || 'Something Went Wrong.',
-              response?.response?.status
-            );
+            handleApiError(response);
             setIsExpired(true);
           }
         })
@@ -191,7 +172,6 @@ const VideoPlayer = () => {
     const url = new URL(rec.shared_cf_link, window.location.origin);
     const encodedVideoUrl = url.searchParams.get('video');
     const videoUrl = encodedVideoUrl ? decodeURIComponent(encodedVideoUrl) : '';
-    console.log('videoUrl==>', videoUrl);
     setSelectedVideo(videoUrl);
     setShareId(rec.share_id);
     setSelectedClip(rec);
@@ -205,7 +185,6 @@ const VideoPlayer = () => {
 
         // ✅ Calculate remaining unseen clips using latest state
         const remainingUnseen = updatedHistory.filter((clip) => !clip.seen).length;
-        console.log('remainingUnseen (after update):', remainingUnseen);
 
         if (remainingUnseen === 0) {
           authCtx.setShowRedDot(false); // 🔴 Hide red dot when all are seen
@@ -233,7 +212,6 @@ const VideoPlayer = () => {
   };
 
   const handleDeleteRecord = (data) => {
-    console.log('data==>', data);
     // setIsLoading(true);
     setDeleteLoading(true);
     API.delete('recordings/invalidate-link', {
@@ -254,17 +232,14 @@ const VideoPlayer = () => {
           })
             .then((response) => {
               if (response.status === 200) {
-                console.log('shareHistory', response.data.Data);
                 setShareHistory(response.data.Data);
                 setSelectedClip(response.data.Data[0]);
                 let shared_cf_link = response.data.Data[0].shared_cf_link;
                 const url = new URL(shared_cf_link, window.location.origin);
-                console.log('url==>', url);
                 const encodedVideoUrl = url.searchParams.get('video');
                 const shareId = url.searchParams.get('shareId');
                 const videoUrl = encodedVideoUrl ? decodeURIComponent(encodedVideoUrl) : '';
-                console.log('videoUrl==>', videoUrl);
-                console.log('shareId==>', shareId);
+
                 setSelectedVideo(videoUrl);
                 setShareId(shareId);
               } else {
@@ -308,7 +283,6 @@ const VideoPlayer = () => {
     event.stopPropagation(); // Prevent SpeedDial from closing immediately
     setReportLoader(true); // Start Loader
     setLoadingAction(data); // Show loader only for clicked action
-    console.log('selectedClip==>', selectedClip);
     let reporterName = authCtx.user.first_name + '' + authCtx.user.last_name;
     let reporterEmail = authCtx.user.email;
     API.post('recordings/report-issue', {
@@ -370,8 +344,6 @@ const VideoPlayer = () => {
               <List sx={{ padding: 0 }}>
                 {shareHistory.map((rec, index) => (
                   <>
-                    {console.log('rec-->', rec)}
-                    {console.log('selectedVideo-->', selectedVideo)}
                     <Card
                       key={index}
                       sx={{
@@ -393,7 +365,6 @@ const VideoPlayer = () => {
                             {rec.record_rtsp?.event_name
                               ? rec.record_rtsp?.event_name
                               : 'Unnamed Event'}{' '}
-                            {console.log('rec==>', rec)}
                             {!rec.seen && (
                               <span style={{ color: 'red', marginLeft: '5px' }}>🔴</span>
                             )}
@@ -478,8 +449,6 @@ const VideoPlayer = () => {
                       style={{ display: 'flex', justifyContent: 'center', position: 'relative' }}
                       onContextMenu={(e) => e.preventDefault()} // Prevents right-click only on the video container
                     >
-                      {console.log('url, !isExpired, allowed==>', url, !isExpired, allowed)}
-                      {console.log('selectedVideo==>', selectedVideo)}
                       {(url && !isExpired && allowed) || selectedVideo ? (
                         <>
                           <ReactPlayer
@@ -491,7 +460,6 @@ const VideoPlayer = () => {
                             height="auto"
                             style={{ aspectRatio: '16 / 9', borderRadius: '8px' }}
                             onPlay={() => {
-                              console.log('Video Started Playing');
                               if (selectedClip && !selectedClip.seen) {
                                 setShareHistory((prev) => {
                                   const updatedHistory = prev.map((clip) =>
@@ -503,7 +471,6 @@ const VideoPlayer = () => {
                                   const remainingUnseen = updatedHistory.filter(
                                     (clip) => !clip.seen
                                   ).length;
-                                  console.log('remainingUnseen (after playing):', remainingUnseen);
 
                                   if (remainingUnseen === 0) {
                                     authCtx.setShowRedDot(false);

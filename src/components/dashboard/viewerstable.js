@@ -99,7 +99,7 @@ export default function ViewersTable({ rows, columns, title, pagination, isLoadi
                                 }
                               ]
                             : [],
-                          location: [authCtx?.location],
+                          location: authCtx?.location,
                           lastHoursUsers: true
                         }}>
                         <Box className="div-row row-marging zl__tr-viewers-block">
@@ -195,7 +195,7 @@ export default function ViewersTable({ rows, columns, title, pagination, isLoadi
                               }
                             ]
                           : [],
-                        location: [authCtx?.location],
+                        location: authCtx?.location,
                         lastHoursUsers: false
                       }}>
                       <Box className="div-row row-marging zl__tr-viewers-block">

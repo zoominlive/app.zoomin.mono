@@ -51,6 +51,7 @@ import moment from 'moment';
 import closeicon from '../../assets/closeicon.svg';
 import CautionIcon from '../../assets/caution.svg';
 import ConfirmationDialog from '../common/confirmationdialog';
+import { useApiErrorHandler } from '../../utils/corserrorhandler';
 
 const tableHeaders = ['Endpoint', 'Create', 'Edit', 'List', 'Delete', 'Enable/Disable'];
 const tableRowsCopy = [
@@ -169,6 +170,7 @@ const auth = 'x-api-key:your_jwt_token';
 
 const TokenExchange = () => {
   const { enqueueSnackbar } = useSnackbar();
+  const handleApiError = useApiErrorHandler();
   const layoutCtx = useContext(LayoutContext);
   const [submitLoading, setSubmitLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -206,7 +208,6 @@ const TokenExchange = () => {
 
   useEffect(() => {
     if (apiKeyDetails?.allowed_endpoints && edit) {
-      console.log('apiKeyDetails?.allowedEndpoints', apiKeyDetails?.allowed_endpoints);
       mapEndpointsToPermissions(apiKeyDetails?.allowed_endpoints);
     }
   }, [edit, apiKeyDetails]);
@@ -238,12 +239,7 @@ const TokenExchange = () => {
       if (response.status === 200) {
         setApiKeysList(response.data.data);
       } else {
-        errorMessageHandler(
-          enqueueSnackbar,
-          response?.response?.data?.Message || 'Something Went Wrong.',
-          response?.response?.status,
-          authCtx.setAuthError
-        );
+        handleApiError(response);
       }
       setIsLoading(false);
     });
@@ -255,19 +251,13 @@ const TokenExchange = () => {
       if (response.status === 200) {
         // setLastCreatedKey(response.data.data);
       } else {
-        errorMessageHandler(
-          enqueueSnackbar,
-          response?.response?.data?.Message || 'Something Went Wrong.',
-          response?.response?.status,
-          authCtx.setAuthError
-        );
+        handleApiError(response);
       }
       setIsLoading(false);
     });
   };
 
   const handleCreateNewKey = () => {
-    console.log(apiKeysList);
     if (apiKeysList.length == 2) {
       setOpenWarnDialog(true);
     } else {
@@ -276,7 +266,6 @@ const TokenExchange = () => {
   };
 
   const handleKeyStatus = (row) => {
-    console.log('key==>', row);
     setIsLoading(true);
     API.patch('api-key/change-status', {
       id: row.id,
@@ -300,13 +289,11 @@ const TokenExchange = () => {
   };
 
   const handleDeleteKey = (row) => {
-    console.log('key==>', row);
     setDeleteAPIKey(true);
     setData(row);
   };
 
   const deleteData = () => {
-    console.log('data', data);
     setIsLoading(true);
     API.delete('api-key/delete', {
       data: {
@@ -333,8 +320,6 @@ const TokenExchange = () => {
   };
 
   const handleEdit = (row, data) => {
-    console.log('key==>', row);
-    console.log('data==>', data);
     setApiKeyDetails(row);
     setEdit(true);
     setOpen(true);
@@ -353,8 +338,6 @@ const TokenExchange = () => {
       setError('Please select at least one action.');
       return;
     }
-    console.log('values-->', values);
-    console.log('tableRowsState-->', tableRowsState);
 
     // Get allowed endpoints based on permissions
     const getAllowedEndpoints = () => {
@@ -380,8 +363,6 @@ const TokenExchange = () => {
     };
 
     const filteredEndpoints = getAllowedEndpoints();
-    console.log('filteredEndpoints==>', filteredEndpoints);
-    console.log('authCtx.user==>', authCtx.user);
 
     setIsLoading(true);
     setSubmitLoading(true);
@@ -916,9 +897,6 @@ const TokenExchange = () => {
                                     {tableRowsState.map((item, index) => {
                                       const endpoint = Object.keys(item)[0];
                                       const permissions = item[endpoint];
-                                      console.log('endpoint', endpoint);
-                                      console.log('item', item);
-                                      console.log('permissions', permissions);
 
                                       return (
                                         <TableRow key={index}>

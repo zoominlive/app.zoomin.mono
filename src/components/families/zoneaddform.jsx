@@ -97,8 +97,6 @@ const AddZoneForm = (props) => {
   };
 
   const setZonesList = (locations) => {
-    console.log('props==>', props);
-    console.log('locations==>', locations);
     if (locations?.length !== 0) {
       let zones = props.zonesList
         .filter((zone) => {
@@ -183,7 +181,6 @@ const AddZoneForm = (props) => {
                     />
                   </Grid>
                   <Grid item md={6} sm={12}>
-                    {console.log('values==>', values)}
                     <Autocomplete
                       fullWidth
                       multiple

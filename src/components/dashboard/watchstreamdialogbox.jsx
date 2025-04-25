@@ -166,12 +166,9 @@ const WatchStreamDialogBox = (props) => {
   }, []);
 
   useEffect(() => {
-    console.log('camerasPayload==>', camerasPayload);
-    console.log('selectedLocation==>', selectedLocation);
     const zonesToSet = camerasPayload?.zones?.filter((zone) => {
       let count = 0;
       selectedLocation?.forEach((loc) => {
-        console.log('loc==>', loc);
         if (loc.loc_id == zone?.location.loc_id) {
           count = 1;
         }

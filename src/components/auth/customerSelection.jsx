@@ -29,6 +29,7 @@ import { useContext } from 'react';
 import AuthContext from '../../context/authcontext';
 //import Loader from '../common/loader';
 import LinerLoader from '../common/linearLoader';
+import { useApiErrorHandler } from '../../utils/corserrorhandler';
 
 const validationSchema = yup.object({
   customer: yup.string('Enter Customer').required('Customer is required')
@@ -36,7 +37,7 @@ const validationSchema = yup.object({
 
 const CustomerSelection = () => {
   const navigate = useNavigate();
-  const { enqueueSnackbar } = useSnackbar();
+  const handleApiError = useApiErrorHandler();
   const authCtx = useContext(AuthContext);
   const [submitLoading, setSubmitLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -66,12 +67,7 @@ const CustomerSelection = () => {
         setCustomersList(response.data.Data.customers);
         //setTotalCustomers(response.data.Data.count);
       } else {
-        errorMessageHandler(
-          enqueueSnackbar,
-          response?.response?.data?.Message || 'Something Went Wrong.',
-          response?.response?.status,
-          authCtx.setAuthError
-        );
+        handleApiError(response);
       }
       setIsLoading(false);
     });
@@ -82,7 +78,7 @@ const CustomerSelection = () => {
     getCustomersList();
     // }
   }, []);
-  console.log(isLoading);
+
   return (
     <Grid container>
       <Grid item md={6} sm={12} xs={12} alignContent={'center'}>

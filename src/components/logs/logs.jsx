@@ -47,6 +47,7 @@ import { DesktopDateRangePicker } from '@mui/x-date-pickers-pro';
 import { LocalizationProvider } from '@mui/x-date-pickers-pro';
 import { AdapterDayjs } from '@mui/x-date-pickers-pro/AdapterDayjs';
 import _ from 'lodash';
+import { useApiErrorHandler } from '../../utils/corserrorhandler';
 
 const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
 const checkedIcon = <CheckBoxIcon fontSize="small" />;
@@ -112,7 +113,8 @@ const Logs = () => {
   const layoutCtx = useContext(LayoutContext);
   const authCtx = useContext(AuthContext);
   const location = useLocation();
-  const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+  const handleApiError = useApiErrorHandler();
+  const { enqueueSnackbar } = useSnackbar();
   const [isLoading, setIsLoading] = useState(false);
   const [logsList, setLogsList] = useState([]);
   const [totalLogs, setTotalLogs] = useState(0);
@@ -245,249 +247,43 @@ const Logs = () => {
     }
   }, [location?.state?.lastHoursUsers]);
 
+  // INITIALIZE PAGE
   useEffect(() => {
     layoutCtx.setActive(8);
     layoutCtx.setBreadcrumb(['Logs', 'Review Access and Change Logs']);
-    if (authCtx?.user?.locations?.map((item) => item.loc_name)) {
-      setIsLoading(true);
-      API.get('users/location/', {
-        params: {
-          locations: authCtx.user.locations.map((item) => item.loc_id),
-          cust_id: localStorage.getItem('cust_id')
-        }
-      })
-        .then((response) => {
-          if (response.status === 200) {
-            let userToAdd;
-            if (location?.state?.user) {
-              userToAdd = location?.state?.user?.map((user) => user?.user_id);
-            } else {
-              userToAdd = response.data.Data?.map((user) => user?.user_id);
-            }
-            setUsers([users[0], ...response.data.Data]);
-            setSelectedUsers(
-              location?.state
-                ? response.data.Data.filter((user) => userToAdd.includes(user.user_id))
-                : response.data.Data
-            );
-            // eslint-disable-next-line no-unsafe-optional-chaining
-            //setUsers([users[0]], ...location?.state?.user);
-            API.get('family/location/', {
-              params: {
-                locations: authCtx.user.locations.map((item) => item.loc_id),
-                cust_id: localStorage.getItem('cust_id')
-              }
-            })
-              .then((response) => {
-                if (response.status === 200) {
-                  let familyToAdd;
-                  if (location?.state?.family) {
-                    familyToAdd = location?.state?.family.map((user) => user?.family_member_id);
-                    console.log('familyToAdd in if', families);
-                  } else {
-                    familyToAdd = response.data.Data?.map((user) => user?.family_member_id);
-                    console.log('familyToAdd in else', families);
-                  }
-                  setFamilies([families[0], ...response.data.Data]);
 
-                  setSelectedFamilies(
-                    location?.state
-                      ? response.data.Data.filter((user) =>
-                          familyToAdd.includes(user.family_member_id)
-                        )
-                      : response.data.Data
-                  );
+    const userLocations = authCtx?.user?.locations || [];
+    const cust_id = authCtx?.user?.cust_id || localStorage.getItem('cust_id');
 
-                  if (location?.state?.lastHoursUsers || location?.state?.viewMore) {
-                    if (location?.state?.viewMore) {
-                      setRangeDate([dayjs().startOf('week'), dayjs().endOf('week')]);
-                    }
-                    API.post('logs/', {
-                      ...logsPayload,
-                      from: moment().startOf('week').format('YYYY-MM-DD'),
-                      to: moment().endOf('week').format('YYYY-MM-DD'),
-                      locations: authCtx.user.locations.map((item) => item.loc_id),
-                      users: userToAdd,
-                      familyMemberIds: familyToAdd
-                    }).then((response) => {
-                      if (response.status === 200) {
-                        setResponseData(response.data.Data.logs);
-                        setcsvGenerated(false);
-                        setLogsList(response.data.Data.logs);
-                        setTotalLogs(response.data.Data.count);
-                      } else {
-                        errorMessageHandler(
-                          enqueueSnackbar,
-                          response?.response?.data?.Message || 'Something Went Wrong.',
-                          response?.response?.status,
-                          authCtx.setAuthError
-                        );
-                      }
-                      setIsLoading(false);
-                    });
-                  } else {
-                    API.post('logs/', {
-                      ...logsPayload,
-                      locations: authCtx.user.locations.map((item) => item.loc_id),
-                      users: userToAdd,
-                      familyMemberIds: familyToAdd
-                    }).then((response) => {
-                      if (response.status === 200) {
-                        setResponseData(response.data.Data.logs);
-                        setcsvGenerated(false);
-                        setLogsList(response.data.Data.logs);
-                        setTotalLogs(response.data.Data.count);
-                      } else {
-                        errorMessageHandler(
-                          enqueueSnackbar,
-                          response?.response?.data?.Message || 'Something Went Wrong.',
-                          response?.response?.status,
-                          authCtx.setAuthError
-                        );
-                      }
-                      setIsLoading(false);
-                    });
-                  }
-                } else {
-                  setIsLoading(false);
-                  errorMessageHandler(
-                    enqueueSnackbar,
-                    response?.response?.data?.Message || 'Something Went Wrong.',
-                    response?.response?.status,
-                    authCtx.setAuthError
-                  );
-                }
-              })
-              .catch((error) => {
-                // ✅ Detect CORS error (network error, no response)
-                if (error.message === 'Network Error' && !error.response) {
-                  enqueueSnackbar('Please refresh the page.', {
-                    variant: 'error',
-                    action: (key) => (
-                      <Button
-                        onClick={() => {
-                          window.location.reload();
-                          closeSnackbar(key);
-                        }}
-                        sx={{ color: '#fff', textTransform: 'none' }}>
-                        Refresh
-                      </Button>
-                    )
-                  });
-                } else {
-                  errorMessageHandler(
-                    enqueueSnackbar,
-                    error?.response?.data?.Message || 'Something Went Wrong.',
-                    error?.response?.status,
-                    authCtx.setAuthError
-                  );
-                }
-              })
-              .finally(() => {
-                setIsLoading(false);
-              });
-          } else {
-            setIsLoading(false);
-            errorMessageHandler(
-              enqueueSnackbar,
-              response?.response?.data?.Message || 'Something Went Wrong.',
-              response?.response?.status,
-              authCtx.setAuthError
-            );
-          }
-        })
-        .catch((error) => {
-          // ✅ Detect CORS error (network error, no response)
-          if (error.message === 'Network Error' && !error.response) {
-            enqueueSnackbar('Please refresh the page.', {
-              variant: 'error',
-              action: (key) => (
-                <Button
-                  onClick={() => {
-                    window.location.reload();
-                    closeSnackbar(key);
-                  }}
-                  sx={{ color: '#fff', textTransform: 'none' }}>
-                  Refresh
-                </Button>
-              )
-            });
-          } else {
-            errorMessageHandler(
-              enqueueSnackbar,
-              error?.response?.data?.Message || 'Something Went Wrong.',
-              error?.response?.status,
-              authCtx.setAuthError
-            );
-          }
-        })
-        .finally(() => {
-          setIsLoading(false);
-        });
-    }
-    if (authCtx.user.role !== 'Super Admin') {
-      API.get('customers/all/locations', {
-        params: {
-          location: 'All',
-          cust_id: authCtx.user.cust_id || localStorage.getItem('cust_id')
-        }
-      })
-        .then((response) => {
-          if (response.status === 200) {
-            let locations = response.data.Data.locations.map(({ loc_id, loc_name }) => ({
-              loc_id,
-              loc_name
-            }));
-            setLocations([{ loc_id: 'select-all', loc_name: 'Select All' }, ...locations]);
-          } else {
-            errorMessageHandler(
-              enqueueSnackbar,
-              response?.response?.data?.Message || 'Something Went Wrong.',
-              response?.response?.status,
-              authCtx.setAuthError
-            );
-          }
-        })
-        .catch((error) => {
-          // ✅ Detect CORS error (network error, no response)
-          if (error.message === 'Network Error' && !error.response) {
-            enqueueSnackbar('Please refresh the page.', {
-              variant: 'error',
-              action: (key) => (
-                <Button
-                  onClick={() => {
-                    window.location.reload();
-                    closeSnackbar(key);
-                  }}
-                  sx={{ color: '#fff', textTransform: 'none' }}>
-                  Refresh
-                </Button>
-              )
-            });
-          } else {
-            errorMessageHandler(
-              enqueueSnackbar,
-              error?.response?.data?.Message || 'Something Went Wrong.',
-              error?.response?.status,
-              authCtx.setAuthError
-            );
-          }
-        })
-        .finally(() => {
-          setIsLoading(false);
-        });
-    }
-    // eslint-disable-next-line no-unsafe-optional-chaining
-    setLocations([{ loc_id: 'select-all', loc_name: 'Select All' }, ...authCtx?.user?.locations]);
-    // setSelectedLocation(authCtx?.user?.location?.accessable_locations);
-    console.log('location?.state==>', location?.state);
+    // Set initial Locations dropdown
+    setLocations([{ loc_id: 'select-all', loc_name: 'Select All' }, ...userLocations]);
+
+    // Set default selected locations
     if (location?.state) {
-      setSelectedLocation(location?.state?.location);
+      setSelectedLocation(location.state.location);
       setAllLocationChecked(true);
     } else {
-      console.log('in else==', authCtx?.user?.locations);
-      setSelectedLocation(authCtx?.user?.locations);
+      setSelectedLocation(userLocations);
     }
+
+    // Fetch locations for non-Super Admin
+    if (authCtx.user.role !== 'Super Admin') {
+      API.get('customers/all/locations', {
+        params: { location: 'All', cust_id }
+      }).then((response) => {
+        if (response.status === 200) {
+          const locations = response.data.Data.locations.map(({ loc_id, loc_name }) => ({
+            loc_id,
+            loc_name
+          }));
+          setLocations([{ loc_id: 'select-all', loc_name: 'Select All' }, ...locations]);
+        } else {
+          handleApiError(response);
+        }
+      });
+    }
+
+    // Save previous path
     return () => {
       authCtx.setPreviosPagePath(window.location.pathname);
     };
@@ -573,109 +369,75 @@ const Logs = () => {
   }, [pageNumber, pageSize]);
 
   useEffect(() => {
-    console.log('*-*-*', selectedLocation);
-    if (selectedLocation?.length !== 0) {
-      API.get('users/location/', {
-        params: {
-          locations: selectedLocation.map((item) => item.loc_id),
-          cust_id: localStorage.getItem('cust_id')
-        }
-      })
-        .then((response) => {
-          if (response.status === 200) {
-            //setSelectedUsers(location?.state?.user || response.data.Data);
-            setUsers([users[0], ...response.data.Data]);
-            setSelectedUsers(location?.state ? location?.state.user : response.data.Data);
+    if (!selectedLocation?.length) return;
 
-            // eslint-disable-next-line no-unsafe-optional-chaining
-            // setUsers([users[0]], ...location?.state?.user);
+    const cust_id = localStorage.getItem('cust_id');
+    setIsLoading(true);
+
+    const locationIds = selectedLocation.map((item) => item.loc_id);
+    Promise.all([
+      API.get('users/location/', { params: { locations: locationIds, cust_id } }),
+      API.get('family/location/', { params: { locations: locationIds, cust_id } })
+    ]).then(([usersRes, familyRes]) => {
+      let fetchedUsers = [];
+      let fetchedFamilies = [];
+      if (usersRes.status === 200) {
+        fetchedUsers = location?.state?.user || usersRes.data.Data;
+        setUsers([users[0], ...usersRes.data.Data]);
+        setSelectedUsers(fetchedUsers);
+      }
+
+      if (familyRes.status === 200) {
+        fetchedFamilies = location?.state?.family || familyRes.data.Data;
+        setFamilies([families[0], ...familyRes.data.Data]);
+        setSelectedFamilies(fetchedFamilies);
+      }
+      const userIds = fetchedUsers.map((u) => u.user_id);
+      const familyIds = fetchedFamilies.map((f) => f.family_member_id);
+
+      if (location?.state?.lastHoursUsers || location?.state?.viewMore) {
+        const from = dayjs().startOf('week').format('YYYY-MM-DD');
+        const to = dayjs().endOf('week').format('YYYY-MM-DD');
+        const logsPayloadWithTime = {
+          ...logsPayload,
+          from,
+          to,
+          locations: locationIds,
+          users: userIds,
+          familyMemberIds: familyIds
+        };
+
+        API.post('logs/', logsPayloadWithTime).then((logsRes) => {
+          if (logsRes.status === 200) {
+            setResponseData(logsRes.data.Data.logs);
+            setcsvGenerated(false);
+            setLogsList(logsRes.data.Data.logs);
+            setTotalLogs(logsRes.data.Data.count);
           } else {
-            errorMessageHandler(
-              enqueueSnackbar,
-              response?.response?.data?.Message || 'Something Went Wrong.',
-              response?.response?.status,
-              authCtx.setAuthError
-            );
+            handleApiError(logsRes);
           }
-          setIsLoading(false);
-        })
-        .catch((error) => {
-          // ✅ Detect CORS error (network error, no response)
-          if (error.message === 'Network Error' && !error.response) {
-            enqueueSnackbar('Please refresh the page.', {
-              variant: 'error',
-              action: (key) => (
-                <Button
-                  onClick={() => {
-                    window.location.reload();
-                    closeSnackbar(key);
-                  }}
-                  sx={{ color: '#fff', textTransform: 'none' }}>
-                  Refresh
-                </Button>
-              )
-            });
-          } else {
-            errorMessageHandler(
-              enqueueSnackbar,
-              error?.response?.data?.Message || 'Something Went Wrong.',
-              error?.response?.status,
-              authCtx.setAuthError
-            );
-          }
-        })
-        .finally(() => {
-          setIsLoading(false);
         });
-      API.get('family/location/', {
-        params: {
-          locations: selectedLocation.map((item) => item.loc_id),
-          cust_id: localStorage.getItem('cust_id')
-        }
-      })
-        .then((response) => {
-          if (response.status === 200) {
-            setFamilies([families[0], ...response.data.Data]);
-            setSelectedFamilies(location?.state?.family || response.data.Data);
+      } else {
+        const logsPayloadSimple = {
+          ...logsPayload,
+          locations: locationIds,
+          users: userIds,
+          familyMemberIds: familyIds
+        };
+
+        API.post('logs/', logsPayloadSimple).then((logsRes) => {
+          if (logsRes.status === 200) {
+            setResponseData(logsRes.data.Data.logs);
+            setcsvGenerated(false);
+            setLogsList(logsRes.data.Data.logs);
+            setTotalLogs(logsRes.data.Data.count);
           } else {
-            errorMessageHandler(
-              enqueueSnackbar,
-              response?.response?.data?.Message || 'Something Went Wrong.',
-              response?.response?.status,
-              authCtx.setAuthError
-            );
+            handleApiError(logsRes);
           }
-          setIsLoading(false);
-        })
-        .catch((error) => {
-          // ✅ Detect CORS error (network error, no response)
-          if (error.message === 'Network Error' && !error.response) {
-            enqueueSnackbar('Please refresh the page.', {
-              variant: 'error',
-              action: (key) => (
-                <Button
-                  onClick={() => {
-                    window.location.reload();
-                    closeSnackbar(key);
-                  }}
-                  sx={{ color: '#fff', textTransform: 'none' }}>
-                  Refresh
-                </Button>
-              )
-            });
-          } else {
-            errorMessageHandler(
-              enqueueSnackbar,
-              error?.response?.data?.Message || 'Something Went Wrong.',
-              error?.response?.status,
-              authCtx.setAuthError
-            );
-          }
-        })
-        .finally(() => {
-          setIsLoading(false);
         });
-    }
+      }
+      setIsLoading(false);
+    });
   }, [selectedLocation]);
 
   useEffect(() => {
@@ -724,7 +486,6 @@ const Logs = () => {
       } else {
         usersToAdd = null;
       }
-      console.log('logsPayload', logsPayload);
       const newFunctions = _.map(logsPayload.functions, (item) =>
         item === 'Staff' ? 'Users' : item
       );
@@ -736,51 +497,17 @@ const Logs = () => {
         locations: logsPayload.locations.map((item) => item.loc_id),
         users: usersToAdd ? usersToAdd : logsPayload.users,
         familyMemberIds: familiesToAdd ? familiesToAdd : logsPayload.familyMemberIds
-      })
-        .then((response) => {
-          if (response.status === 200) {
-            setResponseData(response.data.Data.logs);
-            setcsvGenerated(false);
-            setLogsList(response.data.Data.logs);
-            setTotalLogs(response.data.Data.count);
-          } else {
-            errorMessageHandler(
-              enqueueSnackbar,
-              response?.response?.data?.Message || 'Something Went Wrong.',
-              response?.response?.status,
-              authCtx.setAuthError
-            );
-          }
-          setIsLoading(false);
-        })
-        .catch((error) => {
-          // ✅ Detect CORS error (network error, no response)
-          if (error.message === 'Network Error' && !error.response) {
-            enqueueSnackbar('Please refresh the page.', {
-              variant: 'error',
-              action: (key) => (
-                <Button
-                  onClick={() => {
-                    window.location.reload();
-                    closeSnackbar(key);
-                  }}
-                  sx={{ color: '#fff', textTransform: 'none' }}>
-                  Refresh
-                </Button>
-              )
-            });
-          } else {
-            errorMessageHandler(
-              enqueueSnackbar,
-              error?.response?.data?.Message || 'Something Went Wrong.',
-              error?.response?.status,
-              authCtx.setAuthError
-            );
-          }
-        })
-        .finally(() => {
-          setIsLoading(false);
-        });
+      }).then((response) => {
+        if (response.status === 200) {
+          setResponseData(response.data.Data.logs);
+          setcsvGenerated(false);
+          setLogsList(response.data.Data.logs);
+          setTotalLogs(response.data.Data.count);
+        } else {
+          handleApiError(response);
+        }
+        setIsLoading(false);
+      });
     }
   };
 
@@ -797,20 +524,17 @@ const Logs = () => {
 
   //   Method to handle location change for table
   const handleLocationChange = (_, value, reason, option) => {
-    console.log('reason, option', reason, option);
     if (
       reason == 'selectOption' &&
       option?.option.loc_name == 'Select All' &&
       !allLocationChecked
     ) {
-      console.log('1');
       setSelectedLocation(reason === 'selectOption' ? locations.slice(1, locations.length) : []);
       setAllLocationChecked(true);
     } else if (
       (option?.option.loc_name == 'Select All' && reason === 'removeOption') ||
       reason === 'clear'
     ) {
-      console.log('2');
       setSelectedLocation([]);
       setAllLocationChecked(false);
     } else if (
@@ -818,12 +542,9 @@ const Logs = () => {
       option?.option.loc_name == 'Select All' &&
       allLocationChecked == true
     ) {
-      console.log('3');
       setAllLocationChecked(false);
       setSelectedLocation([]);
     } else {
-      console.log('4', value);
-      console.log('option', option);
       // Toggle selection logic
       const isSelected = selectedLocation.some((loc) => loc.loc_id === option.option.loc_id);
       let newSelectedLocations;
@@ -842,7 +563,6 @@ const Logs = () => {
       setSelectedLocation(newSelectedLocations);
     }
   };
-  console.log('selectedLocation outside the scope==', selectedLocation);
 
   const handleActionTypeChange = (_, value, reason, option) => {
     if (reason == 'selectOption' && option?.option == 'Select All' && !allActionsChecked) {
@@ -947,7 +667,6 @@ const Logs = () => {
     setLoading(false);
     if (response.status === 200) {
       let formattedResponse = response.data.Data.logs.map((log) => {
-        console.log('log==>', log);
         // eslint-disable-next-line no-unused-vars
         const { createdAt, function_type, updatedAt, family, user, ...rest } = log;
         return {
@@ -1147,8 +866,6 @@ const Logs = () => {
                       </Grid>
                       <Grid item md={3} sm={6}>
                         <InputLabel id="location">Location</InputLabel>
-                        {console.log('locations==>', locations)}
-                        {console.log('selectedLocation==>', selectedLocation)}
                         <Autocomplete
                           labelId="location"
                           multiple
@@ -1158,7 +875,6 @@ const Logs = () => {
                           value={selectedLocation ? selectedLocation : []}
                           getOptionLabel={(option) => option.loc_name || option}
                           onChange={(_, value, reason, option) => {
-                            console.log('value onChange==>', value);
                             handleLocationChange(_, value, reason, option);
                           }}
                           renderTags={(value, getTagProps) =>
@@ -1295,7 +1011,6 @@ const Logs = () => {
                         </Grid>
                       ) : (
                         <Grid item md={3} sm={6}>
-                          {console.log('selecetedAction==>', selectedAction)}
                           <InputLabel id="action">Action</InputLabel>
                           <Autocomplete
                             labelId="action"
