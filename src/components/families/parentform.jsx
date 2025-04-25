@@ -150,7 +150,6 @@ const ParentsForm = (props) => {
                   family_member_id: props.primaryParent.family_member_id,
                   ...newData
                 };
-                console.log('tempFamily', tempFamily);
                 return tempFamily;
               });
             } else {
@@ -163,7 +162,6 @@ const ParentsForm = (props) => {
                   family_member_id: props.secondaryParent.family_member_id,
                   ...newData
                 };
-                console.log('tempFamily', tempFamily);
                 return tempFamily;
               });
             }

@@ -40,12 +40,14 @@ const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
 const checkedIcon = <CheckBoxIcon fontSize="small" />;
 import { FullScreen, useFullScreenHandle } from 'react-full-screen';
 import CustomPlayer from './customplayer';
+import { useApiErrorHandler } from '../../utils/corserrorhandler';
 
 const WatchStream = () => {
   const layoutCtx = useContext(LayoutContext);
   const authCtx = useContext(AuthContext);
   const location = useLocation();
-  const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+  const { enqueueSnackbar } = useSnackbar();
+  const handleApiError = useApiErrorHandler();
   const [camerasPayload, setCamerasPayload] = useState({
     locations: [],
     zones: [],
@@ -225,7 +227,6 @@ const WatchStream = () => {
   }, [cameras]);
 
   useEffect(() => {
-    console.log(selectedCameras);
     setAllCamsChecked(selectedCameras.length == cameras.length ? true : false);
   }, [selectedCameras]);
 
@@ -235,28 +236,7 @@ const WatchStream = () => {
         if (response.status === 200) {
           authCtx.setTags(response.data.Data.recordTags);
         } else {
-          if (response.message === 'Network Error') {
-            enqueueSnackbar('Please refresh the page.', {
-              variant: 'info',
-              action: (key) => (
-                <Button
-                  onClick={() => {
-                    window.location.reload();
-                    closeSnackbar(key);
-                  }}
-                  sx={{ color: '#fff', textTransform: 'none' }}>
-                  Refresh
-                </Button>
-              )
-            });
-          } else {
-            errorMessageHandler(
-              enqueueSnackbar,
-              response?.response?.data.Message || 'Something Went Wrong.',
-              response?.response?.status,
-              authCtx.setAuthError
-            );
-          }
+          handleApiError(response);
         }
       }
     );
@@ -272,28 +252,7 @@ const WatchStream = () => {
         setActiveCameras(response.data.Data.activeCameras);
         setActiveRecordings(response.data.Data.fixedCameraRecordingsByUser.data);
       } else {
-        if (response.message === 'Network Error') {
-          enqueueSnackbar('Please refresh the page.', {
-            variant: 'info',
-            action: (key) => (
-              <Button
-                onClick={() => {
-                  window.location.reload();
-                  closeSnackbar(key);
-                }}
-                sx={{ color: '#fff', textTransform: 'none' }}>
-                Refresh
-              </Button>
-            )
-          });
-        } else {
-          errorMessageHandler(
-            enqueueSnackbar,
-            response?.response?.data.Message || 'Something Went Wrong.',
-            response?.response?.status,
-            authCtx.setAuthError
-          );
-        }
+        handleApiError(response);
       }
       setDropdownLoading(false);
     });
@@ -387,28 +346,7 @@ const WatchStream = () => {
           ]);
         }
       } else {
-        if (response.message === 'Network Error') {
-          enqueueSnackbar('Please refresh the page.', {
-            variant: 'info',
-            action: (key) => (
-              <Button
-                onClick={() => {
-                  window.location.reload();
-                  closeSnackbar(key);
-                }}
-                sx={{ color: '#fff', textTransform: 'none' }}>
-                Refresh
-              </Button>
-            )
-          });
-        } else {
-          errorMessageHandler(
-            enqueueSnackbar,
-            response?.response?.data.Message || 'Something Went Wrong.',
-            response?.response?.status,
-            authCtx.setAuthError
-          );
-        }
+        handleApiError(response);
       }
       setDropdownLoading(false);
     });

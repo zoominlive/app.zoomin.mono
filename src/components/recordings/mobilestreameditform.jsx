@@ -67,9 +67,7 @@ const MobileStreamEditForm = (props) => {
   };
 
   const handleFormDialogClose = () => {
-    console.log('submitLoading==>', submitLoading);
     if (!submitLoading) {
-      console.log('reached==>');
       props.setOpen(false);
       props.setRecordingData();
       props.getRecordingData();

@@ -55,6 +55,7 @@ import NewDeleteDialog from '../common/newdeletedialog';
 import SearchIcon from '@mui/icons-material/Search';
 import LinerLoader from '../common/linearLoader';
 import CustomPlayer from '../watchstream/customplayer';
+import { useApiErrorHandler } from '../../utils/corserrorhandler';
 
 const Row = (props) => {
   const { row } = props;
@@ -215,7 +216,8 @@ Row.propTypes = {
 const Zones = () => {
   const layoutCtx = useContext(LayoutContext);
   const authCtx = useContext(AuthContext);
-  const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+  const { enqueueSnackbar } = useSnackbar();
+  const handleApiError = useApiErrorHandler();
   const [isZoneFormDialogOpen, setIsZoneFormDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -273,28 +275,7 @@ const Zones = () => {
         setTotalZones(response.data.Data.count);
         getZoneTypesList();
       } else {
-        if (response.message === 'Network Error') {
-          enqueueSnackbar('Please refresh the page.', {
-            variant: 'info',
-            action: (key) => (
-              <Button
-                onClick={() => {
-                  window.location.reload();
-                  closeSnackbar(key);
-                }}
-                sx={{ color: '#fff', textTransform: 'none' }}>
-                Refresh
-              </Button>
-            )
-          });
-        } else {
-          errorMessageHandler(
-            enqueueSnackbar,
-            response?.response?.data?.Message || 'Something Went Wrong.',
-            response?.response?.status,
-            authCtx.setAuthError
-          );
-        }
+        handleApiError(response);
       }
       setIsLoading(false);
     });
@@ -308,12 +289,7 @@ const Zones = () => {
         if (response.status === 200) {
           setZones(response.data.Data.zoneTypes);
         } else {
-          errorMessageHandler(
-            enqueueSnackbar,
-            response?.response?.data?.Message || 'Something Went Wrong.',
-            response?.response?.status,
-            authCtx.setAuthError
-          );
+          handleApiError(response);
         }
         setIsLoading(false);
       }

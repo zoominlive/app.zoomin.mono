@@ -34,12 +34,14 @@ import CustomerActions from './customeractions';
 import NewDeleteDialog from '../common/newdeletedialog';
 import SearchIcon from '@mui/icons-material/Search';
 import LinerLoader from '../common/linearLoader';
+import { useApiErrorHandler } from '../../utils/corserrorhandler';
 
 const Customers = () => {
   const authCtx = useContext(AuthContext);
   const layoutCtx = useContext(LayoutContext);
+  const handleApiError = useApiErrorHandler();
   // const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-  const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+  const { enqueueSnackbar } = useSnackbar();
   const [isLoading, setIsLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [isCustomerFormDialogOpen, setIsCustomerFormDialogOpen] = useState(false);
@@ -73,28 +75,7 @@ const Customers = () => {
         setCustomersList(response.data.Data.customers);
         setTotalCustomers(response.data.Data.count);
       } else {
-        if (response.message === 'Network Error') {
-          enqueueSnackbar('Please refresh the page.', {
-            variant: 'info',
-            action: (key) => (
-              <Button
-                onClick={() => {
-                  window.location.reload();
-                  closeSnackbar(key);
-                }}
-                sx={{ color: '#fff', textTransform: 'none' }}>
-                Refresh
-              </Button>
-            )
-          });
-        } else {
-          errorMessageHandler(
-            enqueueSnackbar,
-            response?.response?.data?.Message || 'Something Went Wrong.',
-            response?.response?.status,
-            authCtx.setAuthError
-          );
-        }
+        handleApiError(response);
       }
       setIsLoading(false);
     });

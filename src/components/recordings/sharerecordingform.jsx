@@ -49,6 +49,7 @@ import NoDataDiv from '../common/nodatadiv';
 import closeicon from '../../assets/closeicon.svg';
 import CautionIcon from '../../assets/caution.svg';
 import ConfirmationDialog from '../common/confirmationdialog';
+import { useApiErrorHandler } from '../../utils/corserrorhandler';
 
 const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
 const checkedIcon = <CheckBoxIcon fontSize="small" />;
@@ -66,6 +67,7 @@ const validationSchema = yup.object({
 });
 
 const ShareRecordingForm = (props) => {
+  const handleApiError = useApiErrorHandler();
   const [isCloseDialog, setIsCloseDialog] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
   // eslint-disable-next-line no-unused-vars
@@ -120,19 +122,11 @@ const ShareRecordingForm = (props) => {
       params: { record_uuid: props?.recordingData?.record_uuid }
     }).then((response) => {
       if (response.status === 200) {
-        console.log('shareHistory', response.data.Data);
         setShareHistory(response.data.Data);
-        setIsLoading(false);
       } else {
-        if (response.response.status !== 404) {
-          errorMessageHandler(
-            enqueueSnackbar,
-            response?.response?.data?.Message || 'Something Went Wrong.',
-            response?.response?.status,
-            authCtx.setAuthError
-          );
-        }
+        handleApiError(response);
       }
+      setIsLoading(false);
     });
   };
 
@@ -149,8 +143,6 @@ const ShareRecordingForm = (props) => {
   const handleClose = () => setIsCloseDialog(!isCloseDialog);
 
   const handleFormDialogClose = () => {
-    console.log('submitLoading==>', submitLoading);
-
     if (!submitLoading) {
       props.setOpen(false);
       props.setRecordingData();
@@ -159,9 +151,6 @@ const ShareRecordingForm = (props) => {
   };
 
   const handleSubmit = (data) => {
-    console.log('submitLoading==>', submitLoading);
-    console.log('selectedUsers==>', selectedUsers);
-    console.log('data==>', data);
     API.post('recordings/share', {
       ...data,
       user_id: authCtx.user.user_id,
@@ -231,7 +220,6 @@ const ShareRecordingForm = (props) => {
   };
 
   const handleDeleteRecord = (data) => {
-    console.log('data==>', data);
     API.delete('recordings/invalidate-link', {
       data: {
         share_id: data?.share_id
@@ -259,7 +247,6 @@ const ShareRecordingForm = (props) => {
   };
 
   const handleReShare = (data) => {
-    console.log('data==>', data);
     API.post('recordings/share', {
       ...data,
       req_share_id: data.share_id,
@@ -302,7 +289,6 @@ const ShareRecordingForm = (props) => {
   };
 
   const newHandleChange = debounce((newValue) => {
-    console.log('reached==>', newValue);
     if (!newValue.trim()) return; // Ignore empty values
 
     const familyPayload = {
@@ -336,17 +322,11 @@ const ShareRecordingForm = (props) => {
     setOptionsLoading(true);
     API.get('family', { params: familiesPayload }).then((response) => {
       if (response.status === 200) {
-        console.log('familiesPayload.searchBy', familiesPayload.searchBy);
         const famResults = response.data.Data.familyArray;
         setFamiliesResults(famResults);
         setOptionsLoading(false);
       } else {
-        errorMessageHandler(
-          enqueueSnackbar,
-          response?.response?.data?.Message || 'Something Went Wrong.',
-          response?.response?.status,
-          authCtx.setAuthError
-        );
+        handleApiError(response);
       }
       setIsLoading(false);
     });
@@ -361,12 +341,7 @@ const ShareRecordingForm = (props) => {
         setUsersResults(userResults);
         setOptionsLoading(false);
       } else {
-        errorMessageHandler(
-          enqueueSnackbar,
-          response?.response?.data?.Message || 'Something Went Wrong.',
-          response?.response?.status,
-          authCtx.setAuthError
-        );
+        handleApiError(response);
       }
       setIsLoading(false);
     });

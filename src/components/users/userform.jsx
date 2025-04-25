@@ -167,8 +167,6 @@ const UserForm = (props) => {
   };
   // Method to update the user profile
   const handleSubmit = (data) => {
-    console.log('data==>', data);
-
     const payload = {
       ...data,
       userId: props.user && props.user.user_id,
@@ -284,8 +282,6 @@ const UserForm = (props) => {
         ?.map((item) => item.loc_id)
         .filter((o) => authCtx?.user?.locations?.map((item) => item.loc_id).indexOf(o) === -1)
     : [];
-  console.log('disable_loc==>', disable_locs);
-  console.log('user locations==>', authCtx.user.locations);
 
   return (
     <Dialog
@@ -454,8 +450,6 @@ const UserForm = (props) => {
                           //   a > b ? 1 : -1
                           // )}
                           onChange={(_, value) => {
-                            console.log('_', _);
-                            console.log('value', value);
                             let flag = disable_locs.every((i) => value.includes(i));
                             setFieldValue('locations', flag ? value : value.concat(disable_locs));
                             setSelectedLocation(flag ? value : value.concat(disable_locs));

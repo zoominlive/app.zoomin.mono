@@ -151,7 +151,6 @@ const FamilyDrawer = (props) => {
 
   // Method to delete child
   const handleChildDelete = () => {
-    console.log('reached==>');
     let data = {
       [isDeleteTitle == 'Delete Child' || isDeleteTitle == "Delete Child's Zone"
         ? 'child_id'

@@ -61,6 +61,7 @@ import RecordingForm from './recordingForm';
 import MobileStreamEditForm from './mobilestreameditform';
 import DeleteRecordingDialog from './deleterecordingdialog';
 import ShareRecordingForm from './sharerecordingform';
+import { useApiErrorHandler } from '../../utils/corserrorhandler';
 
 const streamColumns = ['Date & Time', 'Zone', 'Event Name', 'Actions'];
 const FixedCameraRecordingsColumns = [
@@ -148,7 +149,7 @@ const isCacheExpired = () => {
 const Recordings = () => {
   const layoutCtx = useContext(LayoutContext);
   const authCtx = useContext(AuthContext);
-  const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+  const handleApiError = useApiErrorHandler();
   const [isLoading, setIsLoading] = useState(false);
   const [location, setLocation] = useState('All');
   const [zonesList, setZonesList] = useState([{ zone_id: 'All', zone_name: 'All' }]);
@@ -224,7 +225,6 @@ const Recordings = () => {
   // Merge rows with cache data
   const mergeRowsWithCache = useCallback(() => {
     const updatedRows = recordingsList.map((row) => {
-      console.log('recordingsLocalCache==>', recordingsLocalCache);
       const cached = recordingsLocalCache.find((item) => item.record_uuid === row.record_uuid);
       return cached
         ? {
@@ -335,28 +335,7 @@ const Recordings = () => {
           setZonesList([zonesList[0], ...response.data.Data]);
           setSelectedZonesList(response.data.Data);
         } else {
-          if (response.message === 'Network Error') {
-            enqueueSnackbar('Please refresh the page.', {
-              variant: 'info',
-              action: (key) => (
-                <Button
-                  onClick={() => {
-                    window.location.reload();
-                    closeSnackbar(key);
-                  }}
-                  sx={{ color: '#fff', textTransform: 'none' }}>
-                  Refresh
-                </Button>
-              )
-            });
-          } else {
-            errorMessageHandler(
-              enqueueSnackbar,
-              response?.response?.data?.Message || 'Something Went Wrong.',
-              response?.response?.status,
-              authCtx.setAuthError
-            );
-          }
+          handleApiError(response);
         }
         setZonesDropdownLoading(false);
       }
@@ -368,28 +347,7 @@ const Recordings = () => {
           setTagsList([tagsList[0], ...response.data.Data.recordTags]);
           setSelectedTagsList(response.data.Data.recordTags);
         } else {
-          if (response.message === 'Network Error') {
-            enqueueSnackbar('Please refresh the page.', {
-              variant: 'info',
-              action: (key) => (
-                <Button
-                  onClick={() => {
-                    window.location.reload();
-                    closeSnackbar(key);
-                  }}
-                  sx={{ color: '#fff', textTransform: 'none' }}>
-                  Refresh
-                </Button>
-              )
-            });
-          } else {
-            errorMessageHandler(
-              enqueueSnackbar,
-              response?.response?.data?.Message || 'Something Went Wrong.',
-              response?.response?.status,
-              authCtx.setAuthError
-            );
-          }
+          handleApiError(response);
         }
         setTagsDropdownLoading(false);
       }
@@ -512,14 +470,12 @@ const Recordings = () => {
   };
 
   const handleClick = (camRow) => {
-    console.log('camRow==>', camRow);
     setSelectedCamera(camRow);
     setDialogOpen(true);
     setIsStreamDialogOpen(true);
   };
 
   const handleEditRecording = (data) => {
-    console.log('data==>', data);
     setRecordingData(data);
     setIsEditDialogOpen(true);
   };
@@ -536,13 +492,11 @@ const Recordings = () => {
   };
 
   const handleEditMobileStreamRecording = (data) => {
-    console.log('data==>', data);
     setRecordingData(data);
     setIsEditMobileStreamDialogOpen(true);
   };
 
   const handleShareRecording = (data) => {
-    console.log('data==>', data);
     setRecordingData(data);
     setIsShareDialogOpen(true);
   };
@@ -932,32 +886,10 @@ const Recordings = () => {
         setRecordedStreamList(response.data.Data.recordedStreams.data);
         setCount(response.data.Data.recordedStreams.count);
         setFixedCamRecordingsCount(response.data.Data.recentFixedCameraRecordings.count);
-        setIsLoading(false);
       } else {
-        if (response.message === 'Network Error') {
-          enqueueSnackbar('Please refresh the page.', {
-            variant: 'info',
-            action: (key) => (
-              <Button
-                onClick={() => {
-                  window.location.reload();
-                  closeSnackbar(key);
-                }}
-                sx={{ color: '#fff', textTransform: 'none' }}>
-                Refresh
-              </Button>
-            )
-          });
-        } else {
-          errorMessageHandler(
-            enqueueSnackbar,
-            response?.response?.data?.Message || 'Something Went Wrong.',
-            response?.response?.status,
-            authCtx.setAuthError
-          );
-        }
-        setIsLoading(false);
+        handleApiError(response);
       }
+      setIsLoading(false);
     });
   };
 

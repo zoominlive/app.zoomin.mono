@@ -32,11 +32,9 @@ const Children = (props) => {
 
   useEffect(() => {
     let zones = [];
-    console.log('props.zonesList==>', props.zonesList);
     props.zonesList?.map((zone) => {
       let count = 0;
       selectedLocation?.forEach((location) => {
-        console.log('location==>', location);
         if (zone.loc_id === location.loc_id) {
           count = count + 1;
         }
@@ -53,7 +51,6 @@ const Children = (props) => {
       render={(arrayHelpers) => {
         return (
           <>
-            {console.log('props.values.children==>', props.values.children)}
             <Grid container spacing={3}>
               {props.values.children &&
                 props.values.children.length > 0 &&

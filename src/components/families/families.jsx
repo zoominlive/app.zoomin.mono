@@ -234,7 +234,6 @@ const Families = () => {
   // Method to delete family
   const handleFamilyDelete = () => {
     setDeleteLoading(true);
-    console.log('family==>', family);
     API.delete('family/delete', {
       data: {
         family_id: family.primary.family_id,

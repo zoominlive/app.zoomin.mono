@@ -215,7 +215,6 @@ const AddFamily = (props) => {
 
   // Method to next to previous step and creating the family
   const handleSubmit = (data, { setTouched, setSubmitting }) => {
-    console.log('location==>', authCtx.user);
     if (activeStep === STEPS.length - 1) {
       setSubmitLoading(true);
 

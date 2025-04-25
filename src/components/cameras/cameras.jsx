@@ -46,11 +46,13 @@ import LinerLoader from '../common/linearLoader';
 import FixIssueDialog from './fixissuedialog';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
+import { useApiErrorHandler } from '../../utils/corserrorhandler';
 
 const Cameras = () => {
   const layoutCtx = useContext(LayoutContext);
   const authCtx = useContext(AuthContext);
-  const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+  const { enqueueSnackbar } = useSnackbar();
+  const handleApiError = useApiErrorHandler();
   const [isCameraFormDialogOpen, setIsCameraFormDialogOpen] = useState(false);
   const [isFixIssueDialogOpen, setIsFixIssueDialogOpen] = useState(false);
   const [isCameraDeleteDialogOpen, setIsCameraDeleteDialogOpen] = useState(false);
@@ -95,28 +97,7 @@ const Cameras = () => {
         setCamerasList(response.data.Data.cams);
         setTotalCameras(response.data.Data.count);
       } else {
-        if (response.message === 'Network Error') {
-          enqueueSnackbar('Please refresh the page.', {
-            variant: 'info',
-            action: (key) => (
-              <Button
-                onClick={() => {
-                  window.location.reload();
-                  closeSnackbar(key);
-                }}
-                sx={{ color: '#fff', textTransform: 'none' }}>
-                Refresh
-              </Button>
-            )
-          });
-        } else {
-          errorMessageHandler(
-            enqueueSnackbar,
-            response?.response?.data?.Message || 'Something Went Wrong.',
-            response?.response?.status,
-            authCtx.setAuthError
-          );
-        }
+        handleApiError(response);
       }
       setIsLoading(false);
     });
@@ -125,7 +106,6 @@ const Cameras = () => {
   // Method to delete camera
   const handleCameraDelete = (wait = false) => {
     setDeleteLoading(true);
-    console.log('camera==>', camera);
     API.delete('cams/delete', {
       data: {
         cam_id: camera.cam_id,
@@ -156,7 +136,6 @@ const Cameras = () => {
 
   // Method to fix camera
   const handleCameraFix = (wait = false) => {
-    console.log('camera-->', camera);
     setDeleteLoading(true);
     API.post('cams/fix-camera', {
       cam_uri: camera.cam_uri,

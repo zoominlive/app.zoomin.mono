@@ -205,7 +205,6 @@ const DefaultScheduler = (props) => {
   const handleSubmitDefaultSettings = () => {
     setLoading(true);
     handleSaveChanges();
-    console.log('props.custId', props.custId);
     const formatted = formatScheduleForSave(schedule);
     const payload = {
       cust_id: props.custId,
