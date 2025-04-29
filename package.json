@@ -26,7 +26,7 @@
     "lodash-contrib": "^4.1200.1",
     "moment": "^2.29.4",
     "moment-timezone": "^0.5.39",
-    "mysql2": "^2.3.3",
+    "mysql2": "^3.14.0",
     "object-encrypter": "^0.1.3",
     "s3-url-parser": "^1.0.3",
     "sequelize": "^6.29.3",

@@ -1282,6 +1282,57 @@ module.exports = {
     }
   },
 
+  getFronteggUserDetails: async (req, res, next) => {
+    const t = await sequelize.transaction();
+    try {
+      const { user_id, family_member_id } = req.query;
+      let userDetails;
+      if (user_id) {
+        userDetails = await userServices.getUserById(user_id);
+      } else {
+        userDetails = await familyServices.getFailyMemberById(family_member_id, t);
+      }
+      console.log('userDetails==>', userDetails);
+      
+      const fronteggUsersDetails = await userServices.getFrontEggUserDetails(userDetails);
+      await t.commit();
+      res.status(200).json({
+        IsSuccess: true,
+        Data: fronteggUsersDetails,
+        Message: CONSTANTS.USER_FOUND
+      });
+      next();
+    } catch (error) {
+      await t.rollback();
+      res
+      .status(500)
+      .json({ IsSuccess: false, error_log: error, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
+    next(error);
+    }
+  },
+
+  resendInviteToUser: async (req, res, next) => {
+    const t = await sequelize.transaction();
+    try {
+      const { email } = req.body;
+      
+      const resendInvite = await userServices.resendInvite(email);
+      await t.commit();
+      res.status(201).json({
+        IsSuccess: true,
+        Data: resendInvite,
+        Message: CONSTANTS.RESEND_INVITE
+      });
+      next();
+    } catch (error) {
+      await t.rollback();
+      res
+      .status(500)
+      .json({ IsSuccess: false, error_log: error, Message: CONSTANTS.INTERNAL_SERVER_ERROR });
+    next(error);
+    }
+  },
+
   // check if given email already exist or not
   isEmailExist: async (req, res, next) => {
     try {

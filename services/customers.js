@@ -186,18 +186,16 @@ module.exports = {
     return customer?.transcoder_endpoint || null;
   },
 
-  getTranscoderUrlFromCustLocations: async (loc, cust_id, t) => {
+  getTranscoderUrlFromCustLocations: async (loc) => {
     try {      
       const { CustomerLocations } = await connectToDatabase();      
       let customer_locations = await CustomerLocations.findOne(
         {
           raw: true,
           where: {
-            cust_id: cust_id,
             loc_id: loc
           },
-        },
-        { transaction: t }
+        }
       );
   
       return customer_locations?.transcoder_endpoint || null;

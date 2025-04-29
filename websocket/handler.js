@@ -40,9 +40,9 @@ module.exports.disconnectHandler = (event, context, callback) => {
 
 module.exports.defaultHandler = async (event, context, callback) => {
   console.log('event==>', event);
-  if(event.body === "ping") {
-    await emitResponse(event?.requestContext?.connectionId, {message: "pong"})
-    // return { statusCode: 200, body: "pong response sent" };
+  if (event.body === "ping") {
+    await emitResponse(event?.requestContext?.connectionId, { message: "pong" });
+    return { statusCode: 200, body: "pong response sent" }; // <-- ✅ RETURN after handling ping
   }
   const t = await sequelize.transaction();
   try {
@@ -53,8 +53,6 @@ module.exports.defaultHandler = async (event, context, callback) => {
     if (family_member_id) {
       updateObj = { ...updateObj, family_member_id: family_member_id };
       await familyServices.editFamily(updateObj, t);
-      await t.commit();
-
     } else {
       updateObj = { ...updateObj, user_id: user_id };
       await userServices.editUserProfile(
@@ -62,17 +60,17 @@ module.exports.defaultHandler = async (event, context, callback) => {
         _.omit(updateObj, ["user_id"]),
         t
       );
-      await t.commit();
     }
-    return {statusCode: 200, body:"default"}
 
-}
-catch (error) {
-  await t.rollback();
-  console.log(error);
-  return {
-    statusCode: 200,
-    body: 'Oops! Something Went Wrong.',
-  };
-}
+    await t.commit();
+    return { statusCode: 200, body: "default" };
+  }
+  catch (error) {
+    await t.rollback();
+    console.log(error);
+    return {
+      statusCode: 500,
+      body: 'Oops! Something Went Wrong.',
+    };
+  }
 };

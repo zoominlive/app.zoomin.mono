@@ -177,12 +177,11 @@ module.exports = {
   },
 
   /* Reset user password */
-  resetPassword: async (userId, password, t) => {
+  resetPassword: async (userId) => {
     const { Users } = await connectToDatabase();
     let setNewPassword = await Users.update(
-      { password: password, is_verified: true },
+      { is_verified: true },
       { returning: true, where: { user_id: userId } },
-      { transaction: t }
     );
 
     return setNewPassword;
@@ -780,6 +779,61 @@ module.exports = {
       );
 
       return user_response.data;
+    }
+  },
+
+  getFrontEggUserDetails: async (userDetails) => {
+    try {      
+      const vendor_token = await axios.post(
+        `${process.env.FRONTEGG_API_GATEWAY_URL}auth/vendor/`,
+        {
+          clientId: process.env.FRONTEGG_CLIENT_ID,
+          secret: process.env.FRONTEGG_API_KEY,
+        }
+      );
+      if (vendor_token) {    
+        const user_response = await axios.get(
+          `${process.env.FRONTEGG_API_GATEWAY_URL}identity/resources/users/v1/${userDetails.frontegg_user_id}`,
+          {
+            headers: {
+              'frontegg-tenant-id': userDetails.frontegg_tenant_id,
+              Authorization: `Bearer ${vendor_token.data.token}`,
+            },
+          }
+        );      
+        return user_response.data;
+      }
+    } catch (error) {
+      console.error('error', error);
+    }
+  },
+
+  resendInvite: async (email) => {
+    try {      
+      const vendor_token = await axios.post(
+        `${process.env.FRONTEGG_API_GATEWAY_URL}auth/vendor/`,
+        {
+          clientId: process.env.FRONTEGG_CLIENT_ID,
+          secret: process.env.FRONTEGG_API_KEY,
+        }
+      );
+      if (vendor_token) {    
+        const user_response = await axios.post(
+          `${process.env.FRONTEGG_API_GATEWAY_URL}identity/resources/users/v1/activate/reset`,
+          {
+            email: email,
+            emailMetadata: {}
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${vendor_token.data.token}`,
+            },
+          }
+        );      
+        return user_response.data;
+      }
+    } catch (error) {
+      console.error('error', error);
     }
   },
 
