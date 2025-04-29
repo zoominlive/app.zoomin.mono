@@ -45,6 +45,8 @@ const UserForm = (props) => {
   const authCtx = useContext(AuthContext);
   const [image, setImage] = useState(props.user && props.user.profile_image);
   const [submitLoading, setSubmitLoading] = useState(false);
+  const [isVerified, setIsVerified] = useState(null);
+  const [showInviteBtn, setShowInviteBtn] = useState(null);
   const [base64Image, setBase64Image] = useState();
   const [selectedLocation, setSelectedLocation] = useState([]);
   const [zoneList, setZoneList] = useState([]);
@@ -73,7 +75,7 @@ const UserForm = (props) => {
             .required('required')
         : yup.array()
   });
-  let isUserVerified = props.user?.is_verified;
+  let isUserVerified = isVerified;
   const formik = useFormik({
     initialValues: {
       first_name: props?.user?.first_name || '',
@@ -129,6 +131,26 @@ const UserForm = (props) => {
         }
       }
     );
+    if (props.user) {
+      API.get('users/frontegg-details', { params: { user_id: props.user.user_id } }).then(
+        (response) => {
+          if (response.status === 200) {
+            console.log(response.data.Data);
+            setIsVerified(response.data.Data.verified);
+            if (!response.data.Data.verified) {
+              setShowInviteBtn(true);
+            }
+          } else {
+            errorMessageHandler(
+              enqueueSnackbar,
+              response?.response?.data?.Message || 'Something Went Wrong.',
+              response?.response?.status,
+              authCtx.setAuthError
+            );
+          }
+        }
+      );
+    }
   }, []);
 
   const { getRootProps, getInputProps } = useDropzone({
@@ -230,13 +252,11 @@ const UserForm = (props) => {
   const resendInvite = (newData) => {
     const payload = {
       ...newData,
-      inviteUser: true,
-      userId: props.user && props.user.user_id,
-      cust_id: props.user && props.user.cust_id
+      email: props.user.email
     };
     setSubmitLoading(true);
-    API.put('users/edit', payload).then((response) => {
-      if (response.status === 200) {
+    API.post('users/resend-invite', payload).then((response) => {
+      if (response.status === 201) {
         enqueueSnackbar(response?.data?.Message, {
           variant: 'success'
         });
@@ -564,20 +584,26 @@ const UserForm = (props) => {
 
                   <DialogActions
                     sx={{
-                      paddingRight: 4,
+                      paddingX: 3,
                       paddingBottom: 3,
                       justifyContent:
-                        isUserVerified || isUserVerified === undefined
-                          ? 'flex-end'
-                          : 'space-between'
+                        props.user && !isUserVerified && showInviteBtn
+                          ? 'space-between'
+                          : 'flex-end'
                     }}>
                     {/* <Button disabled={submitLoading} variant="text" onClick={handleFormDialogClose}>
                   CANCEL
                 </Button> */}
-                    {props.user && isUserVerified === false && (
+                    {props.user && !isUserVerified && showInviteBtn && (
                       <LoadingButton
-                        loadingPosition={submitLoading ? 'start' : undefined}
-                        startIcon={submitLoading && <SaveIcon />}
+                        sx={{
+                          textTransform: 'none',
+                          minWidth: '170px !important',
+                          fontSize: '16px !important',
+                          borderRadius: '20px',
+                          height: '54px'
+                        }}
+                        loadingPosition={'start'}
                         loading={submitLoading}
                         onClick={() => resendInvite(formik.values)}>
                         {submitLoading === false && 'Resend Invite'}

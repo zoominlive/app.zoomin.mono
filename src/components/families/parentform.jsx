@@ -15,7 +15,7 @@ import {
   IconButton
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import { Form, Formik, useFormik } from 'formik';
 import * as yup from 'yup';
@@ -46,9 +46,36 @@ const ParentsForm = (props) => {
   const { enqueueSnackbar } = useSnackbar();
   const [submitLoading, setSubmitLoading] = useState(false);
   const [isCloseDialog, setIsCloseDialog] = useState(false);
+  const [isPrimaryVerified, setIsPrimaryVerified] = useState(null);
+  const [isSecondaryVerified, setIsSecondaryVerified] = useState(null);
 
-  let verifiedPrimaryParent = props.primaryParent?.is_verified;
-  let verifiedSecondaryParent = props.secondaryParent?.is_verified;
+  let verifiedPrimaryParent = isPrimaryVerified;
+  let verifiedSecondaryParent = isSecondaryVerified;
+
+  useEffect(() => {
+    if (props.primaryParent || props.secondaryParent) {
+      API.get('users/frontegg-details', {
+        params: {
+          family_member_id:
+            props.primaryParent?.family_member_id || props.secondaryParent?.family_member_id
+        }
+      }).then((response) => {
+        if (response.status === 200) {
+          console.log(response.data.Data);
+          setIsPrimaryVerified(response.data.Data.verified);
+          setIsSecondaryVerified(response.data.Data.verified);
+        } else {
+          errorMessageHandler(
+            enqueueSnackbar,
+            response?.response?.data?.Message || 'Something Went Wrong.',
+            response?.response?.status,
+            authCtx.setAuthError
+          );
+        }
+      });
+    }
+  }, []);
+
   // Method to create/edit parent
   const handleSubmit = (data) => {
     setSubmitLoading(true);
@@ -137,46 +164,50 @@ const ParentsForm = (props) => {
       const family_member_id = props.primaryParent
         ? props.primaryParent.family_member_id
         : props.secondaryParent.family_member_id;
+      const email = props.primaryParent ? props.primaryParent.email : props.secondaryParent.email;
       setSubmitLoading(true);
-      API.put('family/edit', { ...newData, family_member_id, inviteFamily: true }).then(
-        (response) => {
-          if (response.status === 200) {
-            enqueueSnackbar(response.data.Message, { variant: 'success' });
-            props.getFamiliesList();
-            if (props.primaryParent) {
-              props.setFamily((prevState) => {
-                const tempFamily = { ...prevState };
-                tempFamily.primary = {
-                  family_member_id: props.primaryParent.family_member_id,
-                  ...newData
-                };
-                return tempFamily;
-              });
-            } else {
-              props.setFamily((prevState) => {
-                const tempFamily = { ...prevState };
-                const index = tempFamily.secondary.findIndex(
-                  (parent) => parent.family_member_id === props.secondaryParent.family_member_id
-                );
-                tempFamily.secondary[index] = {
-                  family_member_id: props.secondaryParent.family_member_id,
-                  ...newData
-                };
-                return tempFamily;
-              });
-            }
-            handleDialogClose();
+      API.post('users/resend-invite', {
+        ...newData,
+        family_member_id,
+        email,
+        inviteFamily: true
+      }).then((response) => {
+        if (response.status === 201) {
+          enqueueSnackbar(response.data.Message, { variant: 'success' });
+          props.getFamiliesList();
+          if (props.primaryParent) {
+            props.setFamily((prevState) => {
+              const tempFamily = { ...prevState };
+              tempFamily.primary = {
+                family_member_id: props.primaryParent.family_member_id,
+                ...newData
+              };
+              return tempFamily;
+            });
           } else {
-            errorMessageHandler(
-              enqueueSnackbar,
-              response?.response?.data?.Message || 'Something Went Wrong.',
-              response?.response?.status,
-              authCtx.setAuthError
-            );
+            props.setFamily((prevState) => {
+              const tempFamily = { ...prevState };
+              const index = tempFamily.secondary.findIndex(
+                (parent) => parent.family_member_id === props.secondaryParent.family_member_id
+              );
+              tempFamily.secondary[index] = {
+                family_member_id: props.secondaryParent.family_member_id,
+                ...newData
+              };
+              return tempFamily;
+            });
           }
-          setSubmitLoading(false);
+          handleDialogClose();
+        } else {
+          errorMessageHandler(
+            enqueueSnackbar,
+            response?.response?.data?.Message || 'Something Went Wrong.',
+            response?.response?.status,
+            authCtx.setAuthError
+          );
         }
-      );
+        setSubmitLoading(false);
+      });
     }
   };
 
@@ -400,8 +431,14 @@ const ParentsForm = (props) => {
                       ''
                     ) : (
                       <LoadingButton
+                        sx={{
+                          textTransform: 'none',
+                          minWidth: '170px !important',
+                          borderRadius: '20px',
+                          fontSize: '16px !important',
+                          height: '54px'
+                        }}
                         loadingPosition={submitLoading ? 'start' : undefined}
-                        startIcon={submitLoading && <SaveIcon />}
                         loading={submitLoading}
                         onClick={() => resendInvite(formik.values)}>
                         {submitLoading === false && 'Resend Invite'}

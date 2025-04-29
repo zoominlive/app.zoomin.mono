@@ -371,73 +371,66 @@ const Logs = () => {
   useEffect(() => {
     if (!selectedLocation?.length) return;
 
-    const cust_id = localStorage.getItem('cust_id');
-    setIsLoading(true);
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        const cust_id = localStorage.getItem('cust_id');
+        const locationIds = selectedLocation.map((item) => item.loc_id);
 
-    const locationIds = selectedLocation.map((item) => item.loc_id);
-    Promise.all([
-      API.get('users/location/', { params: { locations: locationIds, cust_id } }),
-      API.get('family/location/', { params: { locations: locationIds, cust_id } })
-    ]).then(([usersRes, familyRes]) => {
-      let fetchedUsers = [];
-      let fetchedFamilies = [];
-      if (usersRes.status === 200) {
-        fetchedUsers = location?.state?.user || usersRes.data.Data;
-        setUsers([users[0], ...usersRes.data.Data]);
-        setSelectedUsers(fetchedUsers);
-      }
+        const [usersRes, familyRes] = await Promise.all([
+          API.get('users/location/', { params: { locations: locationIds, cust_id } }),
+          API.get('family/location/', { params: { locations: locationIds, cust_id } })
+        ]);
 
-      if (familyRes.status === 200) {
-        fetchedFamilies = location?.state?.family || familyRes.data.Data;
-        setFamilies([families[0], ...familyRes.data.Data]);
-        setSelectedFamilies(fetchedFamilies);
-      }
-      const userIds = fetchedUsers.map((u) => u.user_id);
-      const familyIds = fetchedFamilies.map((f) => f.family_member_id);
+        let fetchedUsers = [];
+        let fetchedFamilies = [];
 
-      if (location?.state?.lastHoursUsers || location?.state?.viewMore) {
-        const from = dayjs().startOf('week').format('YYYY-MM-DD');
-        const to = dayjs().endOf('week').format('YYYY-MM-DD');
-        const logsPayloadWithTime = {
-          ...logsPayload,
-          from,
-          to,
-          locations: locationIds,
-          users: userIds,
-          familyMemberIds: familyIds
-        };
+        if (usersRes.status === 200) {
+          fetchedUsers = location?.state?.user || usersRes.data.Data;
+          setUsers([users[0], ...usersRes.data.Data]);
+          setSelectedUsers(fetchedUsers);
+        }
 
-        API.post('logs/', logsPayloadWithTime).then((logsRes) => {
-          if (logsRes.status === 200) {
-            setResponseData(logsRes.data.Data.logs);
-            setcsvGenerated(false);
-            setLogsList(logsRes.data.Data.logs);
-            setTotalLogs(logsRes.data.Data.count);
-          } else {
-            handleApiError(logsRes);
-          }
-        });
-      } else {
-        const logsPayloadSimple = {
+        if (familyRes.status === 200) {
+          fetchedFamilies = location?.state?.family || familyRes.data.Data;
+          setFamilies([families[0], ...familyRes.data.Data]);
+          setSelectedFamilies(fetchedFamilies);
+        }
+
+        const userIds = fetchedUsers.map((u) => u.user_id);
+        const familyIds = fetchedFamilies.map((f) => f.family_member_id);
+
+        const logsPayloadData = {
           ...logsPayload,
           locations: locationIds,
           users: userIds,
           familyMemberIds: familyIds
         };
 
-        API.post('logs/', logsPayloadSimple).then((logsRes) => {
-          if (logsRes.status === 200) {
-            setResponseData(logsRes.data.Data.logs);
-            setcsvGenerated(false);
-            setLogsList(logsRes.data.Data.logs);
-            setTotalLogs(logsRes.data.Data.count);
-          } else {
-            handleApiError(logsRes);
-          }
-        });
+        if (location?.state?.lastHoursUsers || location?.state?.viewMore) {
+          const from = dayjs().startOf('week').format('YYYY-MM-DD');
+          const to = dayjs().endOf('week').format('YYYY-MM-DD');
+          Object.assign(logsPayloadData, { from, to });
+        }
+
+        const logsRes = await API.post('logs/', logsPayloadData);
+
+        if (logsRes.status === 200) {
+          setResponseData(logsRes.data.Data.logs);
+          setcsvGenerated(false);
+          setLogsList(logsRes.data.Data.logs);
+          setTotalLogs(logsRes.data.Data.count);
+        } else {
+          handleApiError(logsRes);
+        }
+      } catch (err) {
+        console.error('Error fetching data', err);
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
-    });
+    };
+
+    fetchData();
   }, [selectedLocation]);
 
   useEffect(() => {
@@ -1288,7 +1281,7 @@ const Logs = () => {
                       : null}
                   </TableBody>
                 </Table>
-                {!isLoading && logsList?.length == 0 ? <NoDataDiv /> : null}
+                {!isLoading && logsList?.length == 0 && <NoDataDiv />}
                 {logsList?.length > 0 ? (
                   <TablePagination
                     rowsPerPageOptions={[5, 10, 20, 25, 50]}
@@ -1303,7 +1296,7 @@ const Logs = () => {
                 ) : null}
               </TableContainer>
             </Box>
-            {!csvGenerated && (
+            {!csvGenerated && !isLoading && (
               <LoadingButton
                 className="log-btn"
                 loading={loading}
