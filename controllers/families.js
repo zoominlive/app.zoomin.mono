@@ -126,7 +126,6 @@ module.exports = {
         primaryParent.roleIds = 'f9298849-ecce-473a-9e1d-5cd156ceb93e';
         const createFrontEggUser = await userServices.createFrontEggFamilyUser(frontegg_tenant_id, primaryParent)
         if (createFrontEggUser) {
-          console.log('primaryParent===', primaryParent);
           await Family.update(
             { frontegg_user_id: createFrontEggUser.id },
             {
@@ -142,7 +141,6 @@ module.exports = {
           item.dataValues.roleIds = 'f9298849-ecce-473a-9e1d-5cd156ceb93e';
           const createFrontEggUser = await userServices.createFrontEggFamilyUser(frontegg_tenant_id, item.dataValues)
           if (createFrontEggUser) {
-            console.log('secondaryParents===', item.dataValues);
             await Family.update(
               { frontegg_user_id: createFrontEggUser.id },
               {
@@ -155,7 +153,6 @@ module.exports = {
       }
       //await dashboardServices.updateDashboardData(custId);
       await t.commit();
-      console.log('secondaryParents==>', secondaryParents);
       
       res.status(201).json({
         IsSuccess: true,
@@ -383,7 +380,6 @@ module.exports = {
           process.env.FE_SITE_BASE_URL + 'set-password?' + 'token=' + token;
         // const short_url = await TinyURL.shorten(originalUrl);
         // await sendRegistrationMailforFamilyMember(name, parent.email, originalUrl);
-        console.log('parent==>', parent);
         if(parent) {
           const { frontegg_tenant_id } = await customerServices.getCustomerDetails(params.cust_id);
           parent.roleIds = '8cd1581f-5401-40b9-b7ce-b8b746e58c0e';
@@ -624,7 +620,6 @@ module.exports = {
       const { token, password } = req.body;
       const decodeToken = engine.decrypt(token);
       if (decodeToken.familyMemberId) {
-        console.log('calling if=============')
         let familyMember;
 
         familyMember = await familyServices.getFamilyMemberById(decodeToken.familyMemberId, t);

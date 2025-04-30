@@ -13,7 +13,6 @@ module.exports = {
     const { Family, CustomerLocationAssignments } = await connectToDatabase();
     familyObj.family_member_id = uuidv4();
     let familyCreated = await Family.create(familyObj);
-    console.log("familyObj==>", familyObj);
 
     const locationsToAdd = familyObj.location.map((_) => {
       return {
@@ -23,7 +22,6 @@ module.exports = {
         family_id: familyCreated.family_id,
       };
     });
-    console.log("locationsToAdd==>", locationsToAdd);
 
     await CustomerLocationAssignments.bulkCreate(locationsToAdd, {
       transaction: t,
@@ -40,7 +38,6 @@ module.exports = {
       { returning: true },
       { transaction: t }
     );
-    console.log("familyObj==>", familyObj);
     await Promise.all(
       familyObj.map(async (family, index) => {
         const locationsToAdd = family.location.map((_) => {
@@ -51,7 +48,6 @@ module.exports = {
             family_id: familyCreated[index].family_id,
           };
         });
-        console.log("locationsToAdd==>", locationsToAdd);
 
         await CustomerLocationAssignments.bulkCreate(locationsToAdd, {
           transaction: t,
@@ -117,7 +113,6 @@ module.exports = {
       },
       { transaction: t }
     );
-    console.log("updateFamilyDetails-->", updateFamilyDetails);
 
     if (updateFamilyDetails) {
       updateFamilyDetails = await Family.findOne(
@@ -684,7 +679,6 @@ module.exports = {
       ],
       distinct: true,
     });
-    console.log("family_users==>", users.length);
 
     return users;
   },
@@ -753,7 +747,6 @@ module.exports = {
     const { Family, CustomerLocations } = await connectToDatabase();
     const distinctFamilyIds = await Family.findAll(
       {
-        // logging: console.log,
         where: { cust_id: custId },
         attributes: [
           [Sequelize.fn("DISTINCT", Sequelize.col("family_id")), "family_id"],

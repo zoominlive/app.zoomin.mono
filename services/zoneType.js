@@ -27,9 +27,7 @@ module.exports = {
         where: { zone_type_id: params.zone_type_id },
       },
       { transaction: t }
-    );
-    console.log('updateZoneTypeDetails==>', updateZoneTypeDetails);
-    
+    );    
     return updateZoneTypeDetails;
   },
 

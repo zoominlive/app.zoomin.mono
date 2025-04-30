@@ -316,7 +316,6 @@ module.exports = {
     let { pageNumber = 0, pageSize = 10, searchBy = "", all = false, user, cust_id } = filter;
     let locations;
     let custDetails;
-    console.log("user==>", user);
     if (all) {
       locations = await CustomerLocations.findAndCountAll({
         where: {
@@ -362,7 +361,6 @@ module.exports = {
       },
       attributes: { exclude: ["createdAt", "updatedAt"] },
     });
-    console.log('locations==>', locations);
     
     return { 
       locations: locations.rows, 
@@ -410,7 +408,6 @@ module.exports = {
         secret: process.env.FRONTEGG_API_KEY,
       },
     );
-    console.log('vendor_token-->', vendor_token);
     const tenant_response = await axios.delete(
       `${process.env.FRONTEGG_API_GATEWAY_URL}tenants/resources/tenants/v1/${tenantId}`,
       {

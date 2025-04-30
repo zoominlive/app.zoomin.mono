@@ -275,7 +275,6 @@ module.exports = {
   ) => {
     const { RecordRtsp, Camera, RecordTag, CustomerLocations } =
       await connectToDatabase();
-    console.log('locations==>', locations);
     
     const locationFilter =
       !locations.includes("All") && locations.length > 0

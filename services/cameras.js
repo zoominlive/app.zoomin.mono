@@ -181,7 +181,6 @@ module.exports = {
         }
       }
     }
-    console.log("locationCondition==>", locationCondition);
 
     // Construct the query object
     const query = {
@@ -258,7 +257,6 @@ module.exports = {
   /* Get thumbnail url */
   getThumbnailUrl: async (custId, token, filter) => {
     let { sid, hlsStreamUri, userId, transcoder_endpoint } = filter;
-    console.log("transcoder_endpoint==>", transcoder_endpoint);
     const uuid = uuidv4();
     const secKeyToken = jwt.sign(
       { user_id: userId, cam_id: sid, uuid: uuid },

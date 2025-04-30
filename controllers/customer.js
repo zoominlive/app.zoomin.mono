@@ -110,8 +110,7 @@ module.exports = {
 
       let locations = customer_locations.flatMap((i) => i);
       let timezone = time_zone.flatMap((i) => i);
-      console.log(user);
-      console.log(locations);
+
       let api_key_id;
       if(req.user.key && req.user.key !== undefined && req.user.key !== null) api_key_id = req.user.id;
       let addLocations = await customerServices.createNewLocation(
@@ -173,7 +172,6 @@ module.exports = {
       user.is_verified = false;
 
       let locations = customer_locations.flatMap((i) => {return { loc_name: i.loc_name, transcoder_endpoint: i.transcoder_endpoint}});
-      console.log('locations==>', locations);
       let addLocations = await customerServices.createLocation(
         addCustomer?.cust_id,
         locations,
@@ -186,7 +184,6 @@ module.exports = {
           Message: CONSTANTS.CUSTOMER_REGISTRATION_FAILED,
         });
       }
-      console.log("addLocations=========>", addLocations);
       user.location.locations = addLocations.map((item) => item.dataValues);
 
       let addUser = await userServices.createUser(user, t);
@@ -204,7 +201,6 @@ module.exports = {
       // await sendRegistrationMailforUser(name, userData.email, originalUrl);
 
       // let locations = customer_locations.flatMap((i) => {return { loc_name: i.loc_name, transcoder_endpoint: i.transcoder_endpoint}});
-      // console.log('locations==>', locations);
       // let addLocations = await customerServices.createLocation(
       //   addCustomer?.cust_id,
       //   locations,
@@ -217,7 +213,6 @@ module.exports = {
       //     Message: CONSTANTS.CUSTOMER_REGISTRATION_FAILED,
       //   });
       // }
-      // console.log("addLocations=========>", addLocations);
 
       if (user.role === 'Admin') {
         const vendor_token = await axios.post(
@@ -227,7 +222,6 @@ module.exports = {
             secret: process.env.FRONTEGG_API_KEY,
           },
         );
-        console.log('vendor_token-->', vendor_token);
         const tenant_response = await axios.post(
           `${process.env.FRONTEGG_API_GATEWAY_URL}tenants/resources/tenants/v1`,
           {
@@ -241,7 +235,6 @@ module.exports = {
             },
           }
         );
-        console.log('tenant_response--->', tenant_response.data);
         if (tenant_response) {
           const user_response = await axios.post(
             `${process.env.FRONTEGG_API_GATEWAY_URL}identity/resources/users/v1`,
@@ -260,7 +253,6 @@ module.exports = {
               },
             }
           );
-          console.log('user_response--->', user_response.data);
           await Users.update(
             { frontegg_tenant_id: tenant_response.data.tenantId, frontegg_user_id: user_response.data.id },
             {
@@ -449,8 +441,7 @@ module.exports = {
       const { loc_id, loc_name, time_zone, status } = params;
       const { CustomerLocations } = await connectToDatabase();
       const locationDetails = await CustomerLocations.findOne({where: { loc_id: loc_id }, raw: true, plain: true});
-      console.log('loc_id', loc_id);
-      console.log('loc_name', loc_name);
+
       let update = {
         loc_name: loc_name,
         time_zone: time_zone,
@@ -518,9 +509,8 @@ module.exports = {
       );
 
       const userDetails = await userServices.getUserById(user.user_id, t);
-      console.log('customer_locations==>', customer_locations);
       const customerLocationsFromDB = await customerServices.getLocationDetails(customeDetails.cust_id);
-      console.log('customerLocationsFromDB==>', customerLocationsFromDB);
+
       function syncLocations(customer_locations, customerLocationsFromDB) {
         // Convert DB locations into a Set for quick lookup
         const dbLocMap = new Map(customerLocationsFromDB.map(loc => [loc.loc_id, loc]));
@@ -548,9 +538,6 @@ module.exports = {
       // Run the function
       const { locationsToDelete, locationsToCreate, locationsToUpdate } = syncLocations(customer_locations, customerLocationsFromDB);
       
-      console.log("Locations to Delete:", locationsToDelete);
-      console.log("Locations to Create:", locationsToCreate); 
-      console.log("Locations to Update:", locationsToUpdate); 
       if (locationsToDelete.length > 0) {
         const mappedData = locationsToDelete.map((item) => item.loc_id);
         await customerServices.deleteSpecificLocations(mappedData);
@@ -559,9 +546,7 @@ module.exports = {
       if (locationsToUpdate.length > 0) {
         await customerServices.updateSpecificLocations(locationsToUpdate);
       }
-      console.log(customer_locations);
       let locations = locationsToCreate.flatMap((i) => {return { loc_name: i.loc_name, transcoder_endpoint: i.transcoder_endpoint}});
-      console.log('locations-->', locations);
       let editedUser
       if (locations && locations.length > 0) {
         let newLocations = await customerServices.createLocation(
@@ -576,7 +561,6 @@ module.exports = {
         } else {
           user.location.locations = newLocations.map((item) => item.dataValues);
         }
-        console.log('user.location.locations==>', user.location.locations);
         editedUser = await userServices.editUserProfile(
           userDetails,
           _.omit(user, ["email"]),
@@ -607,17 +591,6 @@ module.exports = {
           await sendEmailChangeMail(name, user?.email, originalUrl);
         }
       }
-      // await customerServices.deleteLocation(customeDetails?.cust_id);
-      // console.log(customer_locations);
-      // let locations = customer_locations.flatMap((i) => {return { loc_name: i.loc_name, transcoder_endpoint: i.transcoder_endpoint}});
-      // console.log('locations-->', locations);
-      // await customerServices.createLocation(
-      //   customeDetails?.cust_id,
-      //   locations,
-      //   t
-      // );
-      console.log("editedProfile", editedProfile);
-      console.log("editedUser", editedUser);
       
       if (editedProfile || editedUser) {
         res.status(200).json({

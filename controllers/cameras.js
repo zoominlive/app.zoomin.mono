@@ -79,7 +79,6 @@ module.exports = {
           params.max_fps, 
           params.max_file_size
         );
-        console.log('transcoderDetails==>', transcodedDetails);
         params.cam_id = uuidv4();
         params.stream_uri = transcodedDetails?.data ? transcodedDetails.data?.uri : '';
         params.stream_uuid = transcodedDetails?.data ? transcodedDetails.data?.id : '';
@@ -183,7 +182,6 @@ module.exports = {
           Message: transcodedDetails.response.data.error
         });
       } else {
-        console.log('transcodedDetails==>', transcodedDetails);
         const convertS3ToCloudFront = (s3Url, cloudFrontDomain) => {
           return s3Url.replace(/https?:\/\/[^/]+/, cloudFrontDomain);
         };
@@ -193,7 +191,6 @@ module.exports = {
         const cloudFrontDomain = "https://d21wx6fkc3aal5.cloudfront.net";
         
         const cloudFrontUrl = convertS3ToCloudFront(s3Url, cloudFrontDomain);
-        console.log("cloudFrontUrl==>", cloudFrontUrl);
         
         const { RecordRtsp } = await connectToDatabase();
         if(transcodedDetails) {
@@ -208,10 +205,8 @@ module.exports = {
           recordRtspObj.thumbnail_url = transcodedDetails.data.thumbnail_url;
           recordRtspObj.video_url = transcodedDetails.data.video_url;
           // recordRtspObj.video_url = cloudFrontUrl;
-          console.log('recordRtspObj==>', recordRtspObj);
           
           const recordRtspCreated = await RecordRtsp.create(recordRtspObj);
-          console.log('recordRtspCreated==>', recordRtspCreated);
         }
         res.status(201).json({
           IsSuccess: true,
@@ -249,7 +244,6 @@ module.exports = {
         order:[["created_at", "DESC"]],
         raw: true
       });
-      console.log('recordRtspData==>', recordRtspData);
       
       const token = req.userToken;
       const transcodedDetails = await stopRecordingStream(
@@ -265,7 +259,6 @@ module.exports = {
           Message: transcodedDetails.response.data.error
         });
       } else {
-        console.log('transcodedDetails==>', transcodedDetails);
         
         const updateRecordRtsp = await RecordRtsp.update(
           {
@@ -276,7 +269,6 @@ module.exports = {
           },
           { where: { record_uuid: recordRtspData.record_uuid } }
         );
-        console.log('updateRecordRtsp==>', updateRecordRtsp);
         
         res.status(201).json({
           IsSuccess: true,
@@ -320,7 +312,6 @@ module.exports = {
         },
         { where: { record_uuid: recordRtspData.record_uuid } }
       );
-      console.log('updateRecordRtsp==>', updateRecordRtsp);
       
       res.status(201).json({
         IsSuccess: true,
@@ -570,7 +561,6 @@ module.exports = {
       }
       // const availableCameras = customer?.available_cameras;
       if(!params.streamId) {
-        console.log('inside==>');
         const camera = await Camera.findOne({where: {cam_id: params.cam_id}, raw: true, plain: true});
         params.streamId = camera.streamId;
       }
@@ -708,8 +698,6 @@ module.exports = {
     try {
       const params = req.body;
       const token = req.userToken;
-      console.log('req.user==', req.user);
-      console.log('params==', params);
       if (!params.streamId && !params.alias) {
         return res.status(400).json({
           IsSuccess: false,
@@ -738,7 +726,6 @@ module.exports = {
           params.max_fps, 
           params.max_file_size
         );
-        // console.log('transcodedDetails-->', transcodedDetails);
         if (transcodedDetails.status == 200) { 
           params.stream_uri = transcodedDetails?.data ? transcodedDetails.data?.uri : '';
           params.stream_uuid = transcodedDetails?.data ? transcodedDetails.data?.id : '';
@@ -885,21 +872,16 @@ module.exports = {
     try {
       const token = req.header('Authorization')?.substring(7);
       // test commit
-      console.log('process.env.TRANSCODER_SECRET', process.env.TRANSCODER_SECRET);
       const decodeToken = jwt.verify(token, process.env.TRANSCODER_SECRET);
       const { rtsp_transcoder_endpoint } = decodeToken;
-      console.log('rtsp_transcoder_endpoint==>', rtsp_transcoder_endpoint);
       
       let customerLocations;
       if ( rtsp_transcoder_endpoint ) {
         customerLocations = await CustomerLocations.findAll({ where: { transcoder_endpoint: rtsp_transcoder_endpoint } });
       }
-      console.log('customerLocations==>', customerLocations.length);
-      console.log('customerLocations==>', customerLocations.map((item) => item?.dataValues?.loc_id));
       if (customerLocations) {
         let cust_ids = customerLocations.map((item) => item.cust_id);
         let loc_ids = customerLocations.map((item) => item?.dataValues?.loc_id);
-        console.log('cust_ids-->', cust_ids);
         const cameras = await cameraServices.getAllCameraForTranscoder(cust_ids, loc_ids);
         const generatePresignedUrlForThumbnail = async (thumbnail) => {
           // Check if the thumbnail contains an S3 URI

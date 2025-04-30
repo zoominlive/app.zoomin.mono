@@ -32,7 +32,6 @@ module.exports = {
     const { Users } = await connectToDatabase();
     userObj.user_id = uuidv4();
     delete userObj.zones;
-    console.log("userObj--->", userObj);
     let userCreated = await Users.create(userObj, { transaction: t });
 
     const camsToAdd = userObj.location.locations.map((_) => {
@@ -42,7 +41,6 @@ module.exports = {
         user_id: userCreated.user_id
       };
     });
-    console.log('camsToAdd==>', camsToAdd);
     
     await CustomerLocationAssignments.bulkCreate(camsToAdd, {
       transaction: t,
@@ -509,7 +507,6 @@ module.exports = {
       }],
       paranoid: false,
     });
-    console.log('users==>', users.length);
     
     return users;
   },
@@ -685,8 +682,6 @@ module.exports = {
   },
 
   createNewJWTToken: async (refreshToken) => {
-    console.log("refreshToken==>", refreshToken);
-
     const vendor_token = await axios.post(
       `${process.env.FRONTEGG_API_GATEWAY_URL}auth/vendor/`,
       {
@@ -897,7 +892,6 @@ module.exports = {
           attributes: ['loc_id', 'loc_name']
         }],
       });
-      console.log("user==>", user);
 
       if (!user) {
         return { valid: false, message: "User:" + user_id + " not found." };

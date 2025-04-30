@@ -28,7 +28,6 @@ module.exports = async function (req, res, next) {
       }
       let user;
       let cust;
-      // console.log('decodeToken.metadata.zoomin_user_id-->', decodeToken.metadata.zoomin_user_id);
       let user_id;
       if(decodeToken !== undefined) {
         user_id = decodeToken.metadata.zoomin_user_id;
