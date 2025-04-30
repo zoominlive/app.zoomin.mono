@@ -16,7 +16,6 @@ module.exports = {
     };
     const { Child, CustomerLocationAssignments } = await connectToDatabase();
     let childCreated = await Child.create(createObj, { transaction: t });
-    console.log('childObj==>', childObj);
     
     const locationsToAdd = childObj.location.locations.map((_) => {
       return {
@@ -26,7 +25,6 @@ module.exports = {
         family_id: childObj.family_id
       };
     });
-    console.log('locationsToAdd==>', locationsToAdd);
     
     await CustomerLocationAssignments.bulkCreate(locationsToAdd, {
       transaction: t,
@@ -55,7 +53,6 @@ module.exports = {
                     scheduled_enable_date: child?.enable_date !== null ? child?.enable_date : null};
         });
         await ZonesInChild.bulkCreate(zonesInChild, { returning: true }, { transaction: t });
-        console.log('child==>', child);
         
         const locationsToAdd = child.location.locations.map((_) => {
           return {
@@ -65,7 +62,6 @@ module.exports = {
             family_id: childCreated[index].family_id
           };
         });
-        console.log('locationsToAdd==>', locationsToAdd);
         
         await CustomerLocationAssignments.bulkCreate(locationsToAdd, {
           transaction: t,
@@ -555,7 +551,6 @@ module.exports = {
     const { Child, CustomerLocations } = await connectToDatabase();
     const distinctChildIds = await Child.findAll(
       {
-        // logging: console.log,
         where: { cust_id: custId },
         attributes: [ [Sequelize.fn('DISTINCT', Sequelize.col('child_id')) ,'child_id']],
         group: ["child_id"],

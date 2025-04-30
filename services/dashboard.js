@@ -30,7 +30,6 @@ module.exports = {
           ],
         },
       },
-      // logging: console.log,
       subQuery: false,
       attributes: [
         "rv_id",
@@ -216,7 +215,6 @@ module.exports = {
         },
       ],
     });
-    console.log("recentViewers==>", recentViewers.length);
     let result = [];
     if (custId) {
       let availableLocations = await customerServices.getLocationDetails(
@@ -263,7 +261,6 @@ module.exports = {
 
     if(!location.includes("Select All")){
       let filterResult = [];
-      console.log('location==>', location);
       
       if (location !== 'All') location = location?.map(Number);
       result.map((i) => {

@@ -129,13 +129,11 @@ module.exports = {
       const existingZones = await Zone.findAll({
         where: { zone_id: zoneIds },
       });
-      console.log('existing Zones', existingZones.length);
       
       if (existingZones.length === 0) {
         await t.rollback();
         return res.status(400).json({Message: "None of the zones exist in the database. Please create a zone first"});
       }
-      console.log('===out of scope===');
       
       // Extract IDs of existing zones
       const existingZoneIds = existingZones.map(zone => zone.zone_id);
@@ -256,10 +254,8 @@ module.exports = {
         await t.rollback();
         return res.status(400).json({Message: "Unauthorized access to child:"+ params.child_id})
       }
-      console.log('childDetails==>', childDetails);
       
       if (childDetails?.dataValues?.child_locations?.length == params?.locations_to_disable?.length) {
-        console.log('===>1');
         const disableChild = await childServices.disableChild(
           params?.child_id,
           params?.scheduled_end_date ? params?.scheduled_end_date : null,
@@ -267,7 +263,6 @@ module.exports = {
         );
       } else {
       if(params?.locations_to_disable?.length){
-        console.log('===>2');
         const locationsDisabled = await childServices.disableSelectedLocations(
           params?.child_id,
           params?.scheduled_end_date ? params?.scheduled_end_date : null,
@@ -275,7 +270,6 @@ module.exports = {
         );
       }
       else{
-        console.log('===>3');
         const disableChild = await childServices.disableChild(
           params?.child_id,
           params?.scheduled_end_date ?params?.scheduled_end_date: null,

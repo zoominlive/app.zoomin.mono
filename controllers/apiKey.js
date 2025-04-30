@@ -22,7 +22,6 @@ module.exports = {
       let fronteggTenantId;
       let customer = await Customers.findOne({where: {cust_id: params.cust_id}});        
       fronteggTenantId = customer.dataValues.frontegg_tenant_id;
-      console.log("apiKey", apiKey);
 
       const frontEggUser = await userServices.createFrontEggAppUser(params.frontegg_tenant_id || fronteggTenantId, params);
       const { ApiKeys, CustomerLocationAssignments } = await connectToDatabase();
@@ -43,7 +42,6 @@ module.exports = {
             api_key_id: apiKeyCreated.id
           };
         });
-        console.log('locsToAdd==>', locsToAdd);
         
         await CustomerLocationAssignments.bulkCreate(locsToAdd, {
           transaction: t,
@@ -51,7 +49,6 @@ module.exports = {
       }
 
       if (apiKeyCreated) {
-        console.log(apiKeyCreated);
         
         apiKeyCreated.dataValues.secret = apiSecret;
         await t.commit(); // Commit the transaction
@@ -156,7 +153,6 @@ module.exports = {
       return res.status(403).json({ Message: 'Invalid API secret' });
     }
     // Check if the key has permissions for the requested endpoint
-    console.log('originalUrl', req.originalUrl);
     const endpoint = req.originalUrl;
     if (!keyDetails.allowed_endpoints.includes(endpoint)) {
       return res.status(403).json({ Message: 'API key does not have access to this endpoint' });

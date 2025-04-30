@@ -376,9 +376,7 @@ module.exports = {
           })
         );
       }
-      //console.log('====streamObj.cust_id===',streamObj.cust_id)
       // await dashboardServices.updateDashboardData(streamObj.cust_id);
-      // console.log('====streamObj====',streamObj);
       // let usersLocations = await userServices.getUsersSocketIds(streamObj.cust_id);
       // const activeLiveStreams = await liveStreamServices.getAllActiveStreams(streamObj.cust_id, usersLocations?.dashboard_locations, t);
       // await dashboardServices.updateDashboardData(streamObj.cust_id, {activeLiveStreams: activeLiveStreams});
@@ -511,7 +509,6 @@ module.exports = {
         // await dashboardServices.updateDashboardData(user_family_obj?.cust_id);
 
         // let usersLocations = await userServices.getUsersSocketIds(user_family_obj?.cust_id);
-        // console.log('===usersLocations',usersLocations)
         //const activeLiveStreams = await liveStreamServices.getAllActiveStreams(user_family_obj?.cust_id, usersLocations?.dashboard_locations, t);
         //const numberofActiveStreamViewers = activeLiveStreams.length > 0 ? await liveStreamServices.getAllActiveStreamViewers(activeLiveStreams.flatMap(i => i.stream_id), t) : 0;
         

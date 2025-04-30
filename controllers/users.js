@@ -74,21 +74,17 @@ module.exports = {
     const t = await sequelize.transaction();
     try {
       const user = req.user;
-      console.log('user==>', user);
       
       const custId = req.user.cust_id || req.query?.cust_id;
       let locations;
       if(!req.user.cust_id){
-        console.log('calling===================')
         let availableLocations = await customerServices.getLocationDetails(custId)
-        console.log('availableLocations==>', availableLocations);
         
         let locs = availableLocations.map(({loc_id, loc_name}) => ({loc_id, loc_name}));
         locations = availableLocations.flatMap((i) => i.loc_id);
         user.locations = locs;
       }
       // user.transcoderBaseUrl = await customerServices.getTranscoderUrl(custId);
-      console.log('locations-->', locations);
       if(user.role === 'Super Admin') {
         user.transcoderBaseUrl = await customerServices.getTranscoderUrlFromCustLocations(locations, custId);
       } else {
@@ -150,8 +146,6 @@ module.exports = {
         return
       }
       let userLocations = req.user.locations.map((item) => item.loc_id); 
-      console.log('userLocations', userLocations);
-      console.log('params.location?.locations', params.location?.locations);
       
       if (!params.location?.locations.map((item) => item.loc_id).every(location => userLocations.includes(location)) && req.user.role !== 'Super Admin') {
         await t.rollback();
@@ -211,8 +205,6 @@ module.exports = {
         userData.roleIds = roleIds;
         const frontEggUser = await userServices.createFrontEggUser(frontegg_tenant_id, userData);
         if(frontEggUser) {
-          console.log('frontEggUser', frontEggUser);
-          console.log('addUser', addUser.user_id);
           await Users.update(
             { frontegg_user_id: frontEggUser.id },
             {
@@ -405,7 +397,6 @@ module.exports = {
       } else {
         //await t.commit();
         await t.rollback();
-        console.log('calling=====================')
         res.status(400).json({
           IsSuccess: true,
           Data: {},
@@ -1292,7 +1283,6 @@ module.exports = {
       } else {
         userDetails = await familyServices.getFailyMemberById(family_member_id, t);
       }
-      console.log('userDetails==>', userDetails);
       
       const fronteggUsersDetails = await userServices.getFrontEggUserDetails(userDetails);
       await t.commit();

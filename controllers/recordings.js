@@ -299,7 +299,6 @@ module.exports = {
         });
       }
       const clonedS3Url = await s3BucketImageUploader.cloneS3ObjectForUser(shared_link, recipient.receiver_id);
-      console.log('clonedS3Url==>', clonedS3Url);
       
       // Convet shared_link(s3 url) to cloudfront url
       const convertS3ToCloudFront = (s3Url, cloudFrontDomain) => {
@@ -475,7 +474,6 @@ module.exports = {
       const s3Url = shareRecord.dataValues.shared_link;
       const bucketName = "zoomin-recordings-rtsp";
 
-      console.log('shareRecord==>', shareRecord);
       await s3BucketImageUploader.deleteS3Object(s3Url, bucketName);
       await RecordingShareHistory.destroy(
         { where: { share_id: share_id } }
@@ -513,10 +511,8 @@ module.exports = {
     const { RecordingShareHistory, RecordingShareRecipients } = await connectToDatabase();
     try {      
        // Ensure user is authenticated
-       console.log('req.user==>', req.user);
        
       const user_id = req.user?.family_member_id ? req.user?.family_member_id : req.user?.user_id; 
-      console.log('user_id==>', user_id);
       
       if (!user_id) {
         return res.status(401).json({ Message: "Unauthorized request." });
@@ -538,7 +534,6 @@ module.exports = {
       if (!isAuthorized) {
         return res.status(403).json({ Message: "You are not authorized to view this recording." });
       }
-      console.log('shareRecord==>', shareRecord?.dataValues.shared_link);
       
       // res.redirect(shareRecord.shared_link); // Redirect to the valid video URL
       res.status(200).json({ url: shareRecord?.dataValues.shared_link, Message: "Recording Found" })
@@ -572,8 +567,6 @@ module.exports = {
 
       const cloudFrontRecordingUrl = convertS3ToCloudFront(url, cloudFrontDomain);
       const signedUrl = await s3BucketImageUploader.getPresignedCfnUrlForRecordingVideo(cloudFrontRecordingUrl, 3);
-      console.log('signedUrl=>', signedUrl);
-      console.log('thumbnail_url=>', thumbnail_url);
       
       const sendEmail = await reportIssue(
         issueType, 

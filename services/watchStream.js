@@ -30,7 +30,6 @@ module.exports = {
       });
 
       if (user?.family_id) {
-        console.log("user-->", user);
         const baseUrl = await customerServices.getTranscoderUrlFromCustLocations(user?.locations.map((item) => item.loc_id), user?.cust_id);
         let cameras = await Child.findAll({
           where: { family_id: user.family_id, status: "enabled" },
@@ -352,9 +351,7 @@ module.exports = {
       streamName = liveStreamObj[0]?.stream_name;
     }
     if (user?.family_id) {
-      // console.log('user-->', user);
       const baseUrl = await customerServices.getTranscoderUrlFromCustLocations(user?.locations?.map((item) => item.loc_id), user?.cust_id);
-      console.log('baseUrl==>',baseUrl);
       let cameras = await Child.findAll({
         where: { family_id: user.family_id, status: "enabled" },
         include: [
@@ -584,7 +581,6 @@ module.exports = {
 
         return locations;
       } else {
-        console.log('user==>', user);
         let locations = await CustomerLocations.findAll({
           where: {
             loc_name: user.locations.map((item) => item.loc_name),
@@ -732,10 +728,6 @@ module.exports = {
                 };
               })
               .filter((cam) => cam?.cam_id);
-            console.log(
-              "===zone.live_stream_cameras==",
-              zone.live_stream_cameras
-            );
             let livStreamCams = zone.live_stream_cameras?.map((cam) => {
               let uid = user?.family_member_id || user?.user_id;
               let sid = cam?.stream_uri.split('/') [cam?.stream_uri.split('/').length - 1].split('.')[0];

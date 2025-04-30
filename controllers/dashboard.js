@@ -30,7 +30,6 @@ module.exports = {
         let stream_uri = new URL(defaultWatchStream?.cameras?.stream_uri).pathname;
         const token = jwt.sign({ user_id: uid, cam_id: sid, uuid: uuid }, process.env.STREAM_URL_SECRET_KEY, {expiresIn: '12h'});
         const baseUrl = await customerServices.getTranscoderUrlFromCustLocations(req.user?.locations?.map((item) => item.loc_id), custId);
-        console.log('baseUrl==>', baseUrl);
         
         defaultWatchStream.cameras.stream_uri = `${baseUrl}${stream_uri}?seckey=${token}`;
       }
@@ -52,7 +51,6 @@ module.exports = {
       let totalActiveStreams = streams?.data?.filter((stream) => {
         return stream.running === true;
       });
-      console.log("==reached-dashboard==");
       let activeStreams = [];
       totalStreams?.forEach((stream) => {
         totalActiveStreams?.forEach((obj) => {

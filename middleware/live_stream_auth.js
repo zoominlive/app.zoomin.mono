@@ -5,10 +5,8 @@ const CONSTANTS = require('../lib/constants');
 // live_stream authentication middleware 
 module.exports = async function (req, res, next) {
   const { LiveStreams } = await connectToDatabase();
-  console.log('req.obj===>', req);
   try {
     const token = req.header('Authorization')?.substring(7);
-    console.log('token===>', token);
     if (!token) {
       return res.status(401).json({ IsSuccess: true, Data: {}, Message: CONSTANTS.AUTH_ERROR });
     } else {
