@@ -11,6 +11,8 @@ const userController = require('../../controllers/users');
 router.get('/', withAuthentication(), authController, userController.getUserDetails);
 router.post('/create-user', withAuthentication(), authController, userController.createUser);
 router.get('/all', withAuthentication(), authController, userController.getAllUserDetails);
+router.get('/frontegg-details', withAuthentication(), authController, userController.getFronteggUserDetails);
+router.post('/resend-invite', withAuthentication(), authController, userController.resendInviteToUser);
 router.post('/login', userController.loginUser);
 router.put('/changePassword', withAuthentication(), authController, userController.changePassword);
 router.post('/setPassword', userController.validateUser);
