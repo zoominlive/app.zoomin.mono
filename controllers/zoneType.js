@@ -1,6 +1,6 @@
 const CONSTANTS = require('../lib/constants');
 const _ = require('lodash');
-const sequelize = require('../lib/database');
+const { sequelize } = require('../lib/database');
 const zoneTypeServices = require('../services/zoneType');
 const logServices = require('../services/logs');
 

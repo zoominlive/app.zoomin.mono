@@ -2,7 +2,7 @@ const connectToDatabase = require("../models/index");
 
 const Sequelize = require("sequelize");
 const jwt = require('jsonwebtoken');
-const sequelize = require("../lib/database");
+const { sequelize } = require('../lib/database');
 const { v4: uuidv4 } = require('uuid');
 const axios = require('axios');
 const Camera = require("../models/camera");

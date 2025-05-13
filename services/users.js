@@ -1,6 +1,6 @@
 const connectToDatabase = require("../models/index");
 const Sequelize = require("sequelize");
-const sequelize = require("../lib/database");
+const { sequelize } = require('../lib/database');
 const jwt = require("jsonwebtoken");
 const encrypter = require("object-encrypter");
 const engine = encrypter(process.env.JWT_SECRET_KEY, { ttl: true });

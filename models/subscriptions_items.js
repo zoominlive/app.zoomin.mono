@@ -1,6 +1,5 @@
-const { Sequeoducte } = require('sequelize');
 const { Sequelize } = require('sequelize');
-const sequelize = require('../lib/database');
+const { sequelize } = require('../lib/database');
 
 const SubscriptionItems = sequelize.define(
   'subscription_items',

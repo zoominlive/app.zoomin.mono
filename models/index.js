@@ -28,11 +28,13 @@ const CustomerTermsApproval = require('./customer_terms_approval');
 const ApiKeys = require('./api_keys');
 const CustomerLocationAssignments = require('./customer_location_assignment');
 const CustomerLocationAssignmentsCopy = require('./customer_location_assignment_copy');
-const sequelize = require('../lib/database');
+const { sequelize, postgres } = require('../lib/database');
 const RecordRtsp = require('./record_rtsp');
 const RecordTag = require('./record_tag');
 const RecordingShareHistory = require('./recordings_share_history');
 const RecordingShareRecipients = require('./recordings_share_recipients');
+const Agent = require('./agent');
+const ContainerMetrics = require('./container_metrics');
 
 CustomerLocations.belongsTo(Customers, { foreignKey: 'cust_id' });
 Customers.hasMany(CustomerLocations, {
@@ -331,12 +333,16 @@ Users.hasMany(RecordingShareHistory, {
   sourceKey: 'user_id',
   as: 'sharedRecordings', // Alias to access user's shared recordings
 });
-const connection = {};
+
+const connection = {
+  isConnected: false 
+};
 
 module.exports = async () => {
   if (connection?.isConnected) {
     //Using existing connection
     return {
+      Agent,
       ChangeLogs,
       AccessLogs,
       Users,
@@ -369,15 +375,18 @@ module.exports = async () => {
       ApiKeys,
       RecordingShareHistory,
       RecordingShareRecipients,
-      CustomerLocationAssignments
+      CustomerLocationAssignments,
+      ContainerMetrics
     };
   }
 
   await sequelize.sync();
   await sequelize.authenticate();
+  await postgres.authenticate();
   connection.isConnected = true;
   //Created a new connection
   return {
+    Agent,
     ChangeLogs,
     AccessLogs,
     Users,
@@ -411,6 +420,7 @@ module.exports = async () => {
     CustomerLocationAssignments,
     RecordingShareHistory,
     RecordingShareRecipients,
-    CustomerLocationAssignmentsCopy
+    CustomerLocationAssignmentsCopy,
+    ContainerMetrics
   };
 };

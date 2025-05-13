@@ -1,5 +1,10 @@
 const { Sequelize } = require("sequelize");
-const sequelize = require("../lib/database");
+const { sequelize } = require('../lib/database');
+
+// Make sure sequelize is a Sequelize instance
+if (!sequelize || !sequelize.define) {
+  throw new Error('Invalid Sequelize instance. Check database.js exports.');
+}
 
 const RecordRtsp = sequelize.define(
   "record_rtsp",

@@ -2,7 +2,7 @@ const connectToDatabase = require('../models/index');
 const jwt = require('jsonwebtoken');
 const Sequelize = require('sequelize');
 const moment = require('moment');
-const sequelize = require("../lib/database");
+const { sequelize } = require('../lib/database');
 const axios = require('axios');
 const { uuidv4 } = require('@firebase/util');
 

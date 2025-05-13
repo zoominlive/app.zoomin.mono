@@ -8,7 +8,7 @@ const userServices = require("../services/users");
 const familyServices = require("../services/families");
 const cameraServices = require('../services/cameras');
 const socketServices = require('../services/socket');
-const sequelize = require("../lib/database");
+const { sequelize } = require('../lib/database');
 const MountedCameraRecentViewers = require("../models/mounted_camera_recent_viewers");
 const s3BucketImageUploader = require('../lib/aws-services');
 

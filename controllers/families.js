@@ -7,7 +7,7 @@ const dashboardServices = require('../services/dashboard');
 const CONSTANTS = require('../lib/constants');
 const encrypter = require('object-encrypter');
 const engine = encrypter(process.env.JWT_SECRET_KEY, { ttl: false });
-const sequelize = require('../lib/database');
+const { sequelize } = require('../lib/database');
 var bcrypt = require('bcryptjs');
 const {
   sendRegistrationMailforFamilyMember,

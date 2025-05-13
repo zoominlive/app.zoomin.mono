@@ -1,5 +1,5 @@
 const { Sequelize } = require('sequelize');
-const sequelize = require('../lib/database');
+const { sequelize } = require('../lib/database');
 
 const CustomerLocationAssignmentsCopy = sequelize.define(
   'customer_location_assignments_copy', 

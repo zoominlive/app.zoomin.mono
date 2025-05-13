@@ -1,5 +1,5 @@
 const { Sequelize } = require('sequelize');
-const sequelize = require('../lib/database');
+const { sequelize } = require('../lib/database');
 
 const LiveStreamRecentViewers = sequelize.define(
   'live_stream_recent_viewers',

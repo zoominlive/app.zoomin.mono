@@ -1,7 +1,7 @@
 const CONSTANTS = require("../lib/constants");
 const customerServices = require("../services/customers");
 const userServices = require("../services/users");
-const sequelize = require("../lib/database");
+const { sequelize } = require('../lib/database');
 const _ = require("lodash");
 const {
   sendEmailChangeMail, sendRegistrationMailforUser
