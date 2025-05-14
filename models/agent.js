@@ -22,6 +22,11 @@ const Agent = sequelize.define(
       type: Sequelize.STRING(255),
       allowNull: true
     },
+    container_id: {
+      type: Sequelize.STRING(255),
+      allowNull: true,
+      field: 'container_id'  // Map to DB column name
+    },
     container_state: {
       type: Sequelize.STRING(255),
       allowNull: true,

@@ -11,7 +11,7 @@ const containerMetrics = require('../../controllers/containerMetrics');
 /* API Key end points */
 router.get('/', withAuthentication(), authController, agentController.getAllAgents);
 router.get('/:agentId', withAuthentication(), authController, agentController.getAgentById);
-router.post('/create', agentController.createAgent);
+router.post('/register', agentController.createAgent);
 router.post('/:agentId/metrics', containerMetrics.createContainerMetric);
 router.post('/bulk-create', containerMetrics.bulkCreateContainerMetrics);
 router.put('/update/:agentId', withAuthentication(), authController, agentController.updateAgent);

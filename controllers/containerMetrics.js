@@ -7,21 +7,21 @@ module.exports = {
     const t = await postgres.transaction();
     try {
       const { ContainerMetrics } = await connectToDatabase();
-      const { container_id, container_host, cpu_percent, memory_mb } = req.body;
+      const { containerID, containerHostName, cpuPercent, memoryPercent } = req.body;
 
       // Validate required fields
-      if (!container_id || !container_host) {
+      if (!containerID|| !containerHostName) {
         await t.rollback();
         return res.status(400).json({ error: "Container ID and Container Host are required fields" });
       }
 
       // Create metric record
       const metricData = {
-        container_id,
-        container_host,
+        container_id: containerID,
+        container_host: containerHostName,
         timestamp: new Date(), // Current timestamp
-        cpu_percent: cpu_percent || null,
-        memory_mb: memory_mb || null
+        cpu_percent: cpuPercent || null,
+        memory_mb: memoryPercent || null
       };
 
       const metric = await ContainerMetrics.create(metricData, { transaction: t });
