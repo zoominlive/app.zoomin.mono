@@ -10,7 +10,7 @@ module.exports = {
       const { ip, hostname, containerID, containerState, containerVersion, MuxlyHostName } = req.body;
 
       // Validate required fields
-      if (!ip || !hostname || !container_state || !container_version || !muxly_hostname) {
+      if (!ip || !hostname || !containerState || !containerVersion || !MuxlyHostName) {
         await t.rollback();
         return res.status(400).json({ error: "Missing required fields" });
       }
