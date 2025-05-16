@@ -22,6 +22,14 @@ const Agent = sequelize.define(
       type: Sequelize.STRING(255),
       allowNull: true
     },
+    processor: {
+      type: Sequelize.STRING(45),
+      allowNull: true
+    },
+    totalRAM: {
+      type: Sequelize.DECIMAL(10, 2), // Use FLOAT for decimal values
+      allowNull: true
+    },
     container_id: {
       type: Sequelize.STRING(255),
       allowNull: true,

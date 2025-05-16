@@ -7,7 +7,7 @@ module.exports = {
     const t = await sequelize.transaction();
     try {
       const { Agent } = await connectToDatabase();
-      const { ip, hostname, containerID, containerState, containerVersion, MuxlyHostName } = req.body;
+      const { ip, hostname, processor, totalRAM, containerID, containerState, containerVersion, MuxlyHostName } = req.body;
 
       // Validate required fields
       if (!ip || !hostname || !containerState || !containerVersion || !MuxlyHostName) {
@@ -20,6 +20,8 @@ module.exports = {
         recorded_at: new Date(),
         ip,
         hostname,
+        processor,
+        totalRAM,
         container_id: containerID,
         container_state: containerState,
         container_version: containerVersion,
