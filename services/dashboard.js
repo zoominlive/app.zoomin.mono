@@ -8,7 +8,7 @@ const customerServices = require("../services/customers");
 const userServices = require("../services/users");
 const socketServices = require('../services/socket');
 const liveStreamServices = require('../services/liveStream');
-const sequelize = require("../lib/database");
+const { sequelize } = require('../lib/database');
 const CustomerLocations = require("../models/customer_locations");
 
 module.exports = {

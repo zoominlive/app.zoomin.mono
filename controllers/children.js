@@ -3,7 +3,7 @@ const childServices = require('../services/children');
 const logServices = require('../services/logs');
 const dashboardServices = require('../services/dashboard');
 const CONSTANTS = require('../lib/constants');
-const sequelize = require('../lib/database');
+const { sequelize } = require('../lib/database');
 const Zone = require('../models/zone');
 const ZonesInChild = require('../models/zones_assigned_to_child');
 

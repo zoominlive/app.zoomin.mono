@@ -1,7 +1,7 @@
 const _ = require('lodash');
 const liveStreamServices = require('../services/liveStream');
 const CONSTANTS = require('../lib/constants');
-const sequelize = require("../lib/database");
+const { sequelize } = require('../lib/database');
 const { v4: uuidv4 } = require("uuid");
 const s3BucketImageUploader = require("../lib/aws-services");
 const connectToDatabase = require("../models/index");

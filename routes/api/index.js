@@ -15,6 +15,7 @@ const liveStreamRoutes = require('./liveStream');
 const RecordingRoutes = require('./recording');
 const PaymentRoutes = require('./payment');
 const ApiKeyRoutes = require('./apiKey');
+const AgentRoutes = require('./agents');
 /* user routes */
 router.use('/users', userRoutes);
 
@@ -56,5 +57,8 @@ router.use('/payment', PaymentRoutes)
 
 /* api-key routes */
 router.use('/api-key', ApiKeyRoutes)
+
+/* agents routes */
+router.use('/agents', AgentRoutes);
 
 module.exports = router;

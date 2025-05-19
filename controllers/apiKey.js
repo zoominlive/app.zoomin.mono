@@ -1,6 +1,6 @@
 const crypto = require('crypto');
 const connectToDatabase = require("../models/index");
-const sequelize = require('../lib/database');
+const { sequelize } = require('../lib/database');
 const userServices = require('../services/users');
 const constants = require('../lib/constants');
 const Customers = require('../models/customers');

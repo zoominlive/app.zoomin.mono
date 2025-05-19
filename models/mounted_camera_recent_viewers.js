@@ -1,5 +1,5 @@
 const { Sequelize } = require('sequelize');
-const sequelize = require('../lib/database');
+const { sequelize } = require('../lib/database');
 
 const MountedCameraRecentViewers = sequelize.define(
   'mounted_camera_recent_viewers',

@@ -1,5 +1,5 @@
 const { Sequelize } = require('sequelize');
-const sequelize = require('../lib/database');
+const { sequelize } = require('../lib/database');
 
 const ZonesInChild = sequelize.define(
   'zones_assigned_to_child',

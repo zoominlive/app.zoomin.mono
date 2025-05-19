@@ -1,5 +1,5 @@
 "use strict";
-const sequelize = require("../lib/database");
+const { sequelize } = require('../lib/database');
 const userServices = require("../services/users");
 const familyServices = require("../services/families");
 const _ = require("lodash");

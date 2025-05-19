@@ -2,7 +2,7 @@ const _ = require('lodash');
 const moment = require('moment');
 const logServices = require('../services/logs');
 const CONSTANTS = require('../lib/constants');
-const sequelize = require('../lib/database');
+const { sequelize } = require('../lib/database');
 module.exports = {
   // get all logs's
   getAllLogs: async (req, res, next) => {

@@ -1,7 +1,7 @@
 const connectToDatabase = require("../models/index");
 const Sequelize = require("sequelize");
 const _ = require("lodash");
-const sequelize = require("../lib/database");
+const { sequelize } = require('../lib/database');
 const { v4: uuidv4 } = require("uuid");
 const CamerasInZones = require("../models/cameras_assigned_to_zones");
 const customerServices = require('../services/customers');
