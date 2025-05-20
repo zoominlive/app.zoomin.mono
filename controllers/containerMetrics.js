@@ -1,11 +1,36 @@
 const { postgres } = require('../lib/database');
 const connectToDatabase = require("../models/index");
+const jwt = require('jsonwebtoken');
 
 module.exports = {
   // Create a single container metric record
   createContainerMetric: async (req, res) => {
     const t = await postgres.transaction();
     try {
+      // Check if Authorization header exists
+      const authHeader = req.header('Authorization');
+      if (!authHeader) {
+        await t.rollback();
+        return res.status(401).json({ error: "Authorization header is required" });
+      }
+
+      // Extract and validate token
+      const token = authHeader.startsWith('Bearer ') ? authHeader.substring(7) : authHeader;
+      if (!token) {
+        await t.rollback();
+        return res.status(401).json({ error: "Token is required" });
+      }
+
+      const secretKey = process.env.AGENT_SECRET;
+      
+      try {
+        const decodeToken = jwt.verify(token, secretKey);
+        console.log("Decoded token:", decodeToken);
+      } catch (jwtError) {
+        await t.rollback();
+        return res.status(403).json({ error: "Invalid or expired token", details: jwtError.message });
+      }
+
       const { ContainerMetrics } = await connectToDatabase();
       const { containerID, containerHostName, cpuPercent, memoryPercent } = req.body;
 
