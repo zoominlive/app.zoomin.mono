@@ -1,4 +1,3 @@
-const jwt = require('jsonwebtoken');
 const connectToDatabase = require('../models/index');
 const url = require('url');
 const CONSTANTS = require('../lib/constants');

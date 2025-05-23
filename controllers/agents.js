@@ -1,37 +1,13 @@
 const { sequelize } = require('../lib/database');
 const connectToDatabase = require("../models/index");
-const jwt = require('jsonwebtoken');
+const { v4: uuidv4 } = require('uuid');
 
 module.exports = {
   // Create a new agent
   createAgent: async (req, res) => {
     const t = await sequelize.transaction();
     try {
-      // Check if Authorization header exists
-      const authHeader = req.header('Authorization');
-      if (!authHeader) {
-        await t.rollback();
-        return res.status(401).json({ error: "Authorization header is required" });
-      }
-
-      // Extract and validate token
-      const token = authHeader.startsWith('Bearer ') ? authHeader.substring(7) : authHeader;
-      if (!token) {
-        await t.rollback();
-        return res.status(401).json({ error: "Token is required" });
-      }
-
-      const secretKey = process.env.AGENT_SECRET;
-      
-      try {
-        const decodeToken = jwt.verify(token, secretKey);
-        console.log("Decoded token:", decodeToken);
-      } catch (jwtError) {
-        await t.rollback();
-        return res.status(403).json({ error: "Invalid or expired token", details: jwtError.message });
-      }
-    
-      const { Agent } = await connectToDatabase();
+      const { Agent, AgentContainers } = await connectToDatabase();
       const { ip, hostname, processor, totalRAM, containerID, containerState, containerVersion, MuxlyHostName } = req.body;
 
       // Validate required fields
@@ -40,20 +16,30 @@ module.exports = {
         return res.status(400).json({ error: "Missing required fields" });
       }
 
-      // Create agent record
+      // Create agent record with UUID
+      const agent_id = uuidv4();
       const agentData = {
-        recorded_at: new Date(),
+        agent_id,
         ip,
         hostname,
         processor,
         totalRAM,
-        container_id: containerID,
-        container_state: containerState,
-        container_version: containerVersion,
         muxly_hostname: MuxlyHostName
       };
 
       const agent = await Agent.create(agentData, { transaction: t });
+      const agent_container_id = uuidv4();
+      // Insert into agent_containers table
+      await AgentContainers.create(
+        {
+          id: agent_container_id,
+          agent_id: agent.agent_id,
+          container_id: containerID,
+          container_state: containerState,
+          container_version: containerVersion,
+        },
+        { transaction: t }
+      );
       
       await t.commit();
       return res.status(201).json({
@@ -168,33 +154,51 @@ module.exports = {
   updateAgent: async (req, res) => {
     const t = await sequelize.transaction();
     try {
-      const { Agent } = await connectToDatabase();
-      const { agent_id } = req.params;
-      const { ip, hostname, containerState, containerVersion, MuxlyHostName } = req.body;
+      const { Agent, AgentContainers } = await connectToDatabase();
+      const { ip, hostname, MuxlyHostName, containerID, containerState, containerVersion } = req.body;
       
-      if (!agent_id) {
+      if (!MuxlyHostName) {
         await t.rollback();
-        return res.status(400).json({ error: "Agent ID is required" });
+        return res.status(400).json({ error: "MuxlyHostName is required" });
       }
       
-      const agent = await Agent.findByPk(agent_id);
+      const agent = await Agent.findOne({
+        where: { muxly_hostname: MuxlyHostName },
+      });
       
       if (!agent) {
         await t.rollback();
         return res.status(404).json({ error: "Agent not found" });
       }
       
-      const updatedAgent = await agent.update({
-        ip: ip || agent.ip,
-        hostname: hostname || agent.hostname,
-        containerState: containerState || agent.containerState,
-        containerVersion: containerVersion || agent.containerVersion,
-        MuxlyHostName: MuxlyHostName || agent.MuxlyHostName
-      }, { transaction: t });
+      const updatedAgent = await agent.update(
+        {
+          ip: ip || agent.ip,
+          hostname: hostname || agent.hostname,
+          MuxlyHostName: MuxlyHostName || agent.MuxlyHostName,
+        },
+        { where: { muxly_hostname: MuxlyHostName } },
+        { transaction: t }
+      );
+
+      await AgentContainers.update(
+        {
+          container_id: containerID,
+          container_state: containerState,
+          container_version: containerVersion,
+        },
+        { where: { agent_id: agent.agent_id } },
+        { transaction: t }
+      );
       
+      const updatedAgentContainers = await AgentContainers.findAll({
+        where: { agent_id: agent.agent_id },
+        transaction: t
+      });
+
       await t.commit();
       return res.status(200).json({
-        data: updatedAgent,
+        data: {updatedAgent, updatedAgentContainers},
         message: "Agent updated successfully"
       });
     } catch (error) {

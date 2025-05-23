@@ -7,32 +7,8 @@ module.exports = {
   createContainerMetric: async (req, res) => {
     const t = await postgres.transaction();
     try {
-      // Check if Authorization header exists
-      const authHeader = req.header('Authorization');
-      if (!authHeader) {
-        await t.rollback();
-        return res.status(401).json({ error: "Authorization header is required" });
-      }
-
-      // Extract and validate token
-      const token = authHeader.startsWith('Bearer ') ? authHeader.substring(7) : authHeader;
-      if (!token) {
-        await t.rollback();
-        return res.status(401).json({ error: "Token is required" });
-      }
-
-      const secretKey = process.env.AGENT_SECRET;
-      
-      try {
-        const decodeToken = jwt.verify(token, secretKey);
-        console.log("Decoded token:", decodeToken);
-      } catch (jwtError) {
-        await t.rollback();
-        return res.status(403).json({ error: "Invalid or expired token", details: jwtError.message });
-      }
-
       const { ContainerMetrics } = await connectToDatabase();
-      const { containerID, containerHostName, cpuPercent, memoryPercent } = req.body;
+      const { containerID, containerHostName, muxlyContainerStatus, cpuPercent, memoryPercent } = req.body;
 
       // Validate required fields
       if (!containerID|| !containerHostName) {
@@ -44,6 +20,7 @@ module.exports = {
       const metricData = {
         container_id: containerID,
         container_host: containerHostName,
+        muxly_container_status: muxlyContainerStatus || null,
         timestamp: new Date(), // Current timestamp
         cpu_percent: cpuPercent || null,
         memory_mb: memoryPercent || null
@@ -63,6 +40,45 @@ module.exports = {
       return res.status(500).json({ error: error.message || "Internal server error" });
     }
   },
+
+  getAllContainerMetrics: async (req, res) => {
+  const t = await postgres.transaction();
+  try {
+    const { ContainerMetrics, Agent } = await connectToDatabase();
+
+    // Fetch all metrics (no query params for filtering/pagination)
+    const metrics = await ContainerMetrics.findAll({
+      order: [['timestamp', 'DESC']],
+      limit: 10 // Limit to the last 1000 records
+    });
+
+    // Fetch all agents
+    const agents = await Agent.findAll();
+    const agentMap = {};
+    agents.forEach(agent => {
+      const agentData = agent.get({ plain: true });
+      agentMap[agentData.muxly_hostname] = agentData;
+    });
+
+    // Append agentSpecs to each metric if matching agent found
+    const metricsWithAgent = metrics.map(metric => {
+      const plainMetric = metric.get({ plain: true });
+      const agentSpecs = agentMap[plainMetric.container_host] || null;
+      return agentSpecs ? { ...plainMetric, agentSpecs } : plainMetric;
+    });
+
+    await t.commit();
+    return res.status(200).json({
+      data: metricsWithAgent,
+      count: metricsWithAgent.length
+    });
+
+  } catch (error) {
+    await t.rollback();
+    console.error("Error fetching container metrics:", error);
+    return res.status(500).json({ error: error.message || "Internal server error" });
+  }
+},
 
   // Create multiple container metric records at once
   bulkCreateContainerMetrics: async (req, res) => {

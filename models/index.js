@@ -35,6 +35,7 @@ const RecordingShareHistory = require('./recordings_share_history');
 const RecordingShareRecipients = require('./recordings_share_recipients');
 const Agent = require('./agent');
 const ContainerMetrics = require('./container_metrics');
+const AgentContainers = require('./agent_containers');
 
 CustomerLocations.belongsTo(Customers, { foreignKey: 'cust_id' });
 Customers.hasMany(CustomerLocations, {
@@ -334,6 +335,10 @@ Users.hasMany(RecordingShareHistory, {
   as: 'sharedRecordings', // Alias to access user's shared recordings
 });
 
+// Association: Agent has many AgentContainers
+Agent.hasMany(AgentContainers, { foreignKey: 'agent_id', as: 'containers' });
+AgentContainers.belongsTo(Agent, { foreignKey: 'agent_id', as: 'agent' });
+
 const connection = {
   isConnected: false 
 };
@@ -343,6 +348,7 @@ module.exports = async () => {
     //Using existing connection
     return {
       Agent,
+      AgentContainers,
       ChangeLogs,
       AccessLogs,
       Users,
@@ -387,6 +393,7 @@ module.exports = async () => {
   //Created a new connection
   return {
     Agent,
+    AgentContainers,
     ChangeLogs,
     AccessLogs,
     Users,
