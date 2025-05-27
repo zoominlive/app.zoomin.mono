@@ -17,6 +17,7 @@ import PostLoginSteps from './components/dashboard/postloginsteps';
 import { useAuth } from '@frontegg/react';
 import APIKeys from './components/apikeys/apikeys';
 import StreamVideo from './components/watchstream/streamvideo';
+import ContainerMetrics from './components/metrics/containermetrics.jsx';
 // import Alerts from './components/alerts/alerts';
 
 const AppRoutes = () => {
@@ -28,6 +29,7 @@ const AppRoutes = () => {
         {authCtx.user && authCtx.user.role === 'Super Admin' && (
           <>
             <Route path="/customers" element={<Customers />} />
+            <Route path="/metrics" element={<ContainerMetrics />} />
           </>
         )}
         {authCtx.user && (authCtx.user.role === 'Admin' || authCtx.user.role === 'Super Admin') && (

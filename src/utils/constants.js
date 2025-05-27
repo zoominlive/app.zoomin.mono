@@ -3245,3 +3245,202 @@ export const countries = [
   { code: 'ZM', label: 'Zambia', phone: '260' },
   { code: 'ZW', label: 'Zimbabwe', phone: '263' }
 ];
+
+// export const mockContainers = [
+//   {
+//     id: '1',
+//     label: 'tc1.zoominlive.com',
+//     cpu: 'Intel Xeon E5-2676 v3',
+//     upSince: '2025-05-10T08:00:00Z',
+//     region: 'us-east-1',
+//     host: 'host-1',
+//     onPrem: false,
+//     stats: [
+//       { time: '09:00', cpu: 55, mem: 65 },
+//       { time: '09:30', cpu: 58, mem: 67 },
+//       { time: '10:00', cpu: 60, mem: 70 },
+//       { time: '10:30', cpu: 70, mem: 75 },
+//       { time: '11:00', cpu: 85, mem: 78 },
+//       { time: '11:30', cpu: 88, mem: 80 },
+//       { time: '12:00', cpu: 90, mem: 82 },
+//       { time: '12:30', cpu: 87, mem: 81 },
+//       { time: '13:00', cpu: 75, mem: 80 },
+//       { time: '13:30', cpu: 72, mem: 78 },
+//       { time: '14:00', cpu: 68, mem: 76 },
+//       { time: '14:30', cpu: 65, mem: 74 }
+//     ]
+//   },
+//   {
+//     id: '2',
+//     label: 'tc2.zoominlive.com',
+//     cpu: 'Intel Xeon E5-2676 v3',
+//     upSince: '2025-05-12T10:00:00Z',
+//     region: 'us-west-2',
+//     host: 'host-2',
+//     onPrem: false,
+//     stats: [
+//       { time: '09:00', cpu: 20, mem: 80 },
+//       { time: '09:30', cpu: 22, mem: 78 },
+//       { time: '10:00', cpu: 25, mem: 75 },
+//       { time: '10:30', cpu: 30, mem: 72 },
+//       { time: '11:00', cpu: 35, mem: 70 },
+//       { time: '11:30', cpu: 40, mem: 68 },
+//       { time: '12:00', cpu: 45, mem: 65 },
+//       { time: '12:30', cpu: 50, mem: 62 },
+//       { time: '13:00', cpu: 55, mem: 60 },
+//       { time: '13:30', cpu: 60, mem: 58 },
+//       { time: '14:00', cpu: 65, mem: 55 },
+//       { time: '14:30', cpu: 70, mem: 52 }
+//     ]
+//   },
+//   {
+//     id: '3',
+//     label: 'tc3.zoominlive.com',
+//     cpu: 'AMD EPYC 7501',
+//     upSince: '2025-05-15T09:00:00Z',
+//     region: 'us-east-1',
+//     host: 'host-3',
+//     onPrem: false,
+//     stats: [
+//       { time: '10:00', cpu: 10, mem: 90 },
+//       { time: '11:00', cpu: 15, mem: 85 },
+//       { time: '12:00', cpu: 12, mem: 80 },
+//       { time: '13:00', cpu: 18, mem: 75 }
+//     ]
+//   },
+//   {
+//     id: '4',
+//     label: 'tc4.zoominlive.com',
+//     cpu: 'Intel Xeon Gold 6130',
+//     upSince: '2025-05-16T12:00:00Z',
+//     region: 'us-west-2',
+//     host: 'host-4',
+//     onPrem: false,
+//     stats: [
+//       { time: '10:00', cpu: 95, mem: 30 },
+//       { time: '11:00', cpu: 92, mem: 32 },
+//       { time: '12:00', cpu: 89, mem: 35 },
+//       { time: '13:00', cpu: 91, mem: 38 }
+//     ]
+//   },
+//   {
+//     id: '5',
+//     label: 'tc5.zoominlive.com',
+//     cpu: 'Intel Xeon E5-2676 v3',
+//     upSince: '2025-05-17T14:00:00Z',
+//     region: 'eu-central-1',
+//     host: 'host-5',
+//     onPrem: false,
+//     stats: [
+//       { time: '10:00', cpu: 10, mem: 15 },
+//       { time: '11:00', cpu: 12, mem: 18 },
+//       { time: '12:00', cpu: 14, mem: 20 },
+//       { time: '13:00', cpu: 11, mem: 16 }
+//     ]
+//   },
+//   {
+//     id: '6',
+//     label: 'tc6.zoominlive.com',
+//     cpu: 'AMD EPYC 7501',
+//     upSince: '2025-05-18T08:00:00Z',
+//     region: 'us-east-1',
+//     host: 'host-6',
+//     onPrem: true,
+//     stats: [
+//       { time: '10:00', cpu: 78, mem: 82 },
+//       { time: '11:00', cpu: 80, mem: 85 },
+//       { time: '12:00', cpu: 83, mem: 88 },
+//       { time: '13:00', cpu: 85, mem: 90 }
+//     ]
+//   },
+//   {
+//     id: '7',
+//     label: 'tc7.zoominlive.com',
+//     cpu: 'Intel Xeon Gold 6130',
+//     upSince: '2025-05-19T10:00:00Z',
+//     region: 'us-west-2',
+//     host: 'host-7',
+//     onPrem: false,
+//     stats: [
+//       { time: '10:00', cpu: 55, mem: 60 },
+//       { time: '11:00', cpu: 58, mem: 62 },
+//       { time: '12:00', cpu: 60, mem: 65 },
+//       { time: '13:00', cpu: 62, mem: 68 }
+//     ]
+//   },
+//   {
+//     id: '8',
+//     label: 'tc8.zoominlive.com',
+//     cpu: 'Intel Xeon E5-2676 v3',
+//     upSince: '2025-05-20T11:00:00Z',
+//     region: 'eu-central-1',
+//     host: 'host-8',
+//     onPrem: false,
+//     stats: [
+//       { time: '10:00', cpu: 30, mem: 40 },
+//       { time: '11:00', cpu: 32, mem: 42 },
+//       { time: '12:00', cpu: 35, mem: 45 },
+//       { time: '13:00', cpu: 38, mem: 48 }
+//     ]
+//   },
+//   {
+//     id: '9',
+//     label: 'tc9.zoominlive.com',
+//     cpu: 'AMD EPYC 7501',
+//     upSince: '2025-05-20T12:00:00Z',
+//     region: 'us-east-1',
+//     host: 'host-9',
+//     onPrem: true,
+//     stats: [
+//       { time: '10:00', cpu: 88, mem: 92 },
+//       { time: '11:00', cpu: 90, mem: 95 },
+//       { time: '12:00', cpu: 93, mem: 97 },
+//       { time: '13:00', cpu: 95, mem: 99 }
+//     ]
+//   },
+//   {
+//     id: '10',
+//     label: 'tc10.zoominlive.com',
+//     cpu: 'Intel Xeon Gold 6130',
+//     upSince: '2025-05-20T13:00:00Z',
+//     region: 'us-west-2',
+//     host: 'host-10',
+//     onPrem: false,
+//     stats: [
+//       { time: '10:00', cpu: 65, mem: 70 },
+//       { time: '11:00', cpu: 68, mem: 72 },
+//       { time: '12:00', cpu: 70, mem: 75 },
+//       { time: '13:00', cpu: 72, mem: 78 }
+//     ]
+//   },
+//   {
+//     id: '11',
+//     label: 'tc11.zoominlive.com',
+//     cpu: 'Intel Xeon E5-2676 v3',
+//     upSince: '2025-05-20T14:00:00Z',
+//     region: 'eu-central-1',
+//     host: 'host-11',
+//     onPrem: true,
+//     stats: [
+//       { time: '10:00', cpu: 5, mem: 95 },
+//       { time: '11:00', cpu: 7, mem: 92 },
+//       { time: '12:00', cpu: 9, mem: 90 },
+//       { time: '13:00', cpu: 6, mem: 88 }
+//     ]
+//   },
+//   {
+//     id: '12',
+//     label: 'tc12.zoominlive.com',
+//     cpu: 'AMD EPYC 7501',
+//     upSince: '2025-05-20T15:00:00Z',
+//     region: 'us-east-1',
+//     host: 'host-12',
+//     onPrem: true,
+//     stats: [
+//       { time: '10:00', cpu: 82, mem: 40 },
+//       { time: '11:00', cpu: 85, mem: 42 },
+//       { time: '12:00', cpu: 87, mem: 45 },
+//       { time: '13:00', cpu: 89, mem: 48 }
+//     ]
+//   }
+// ];
