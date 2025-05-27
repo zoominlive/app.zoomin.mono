@@ -45,7 +45,7 @@ module.exports = {
   getAllContainerMetrics: async (req, res) => {
     const t = await postgres.transaction();
     try {
-      const { ContainerMetrics, Agent, Customers } = await connectToDatabase();
+      const { ContainerMetrics, Agent, Customers, AgentContainers } = await connectToDatabase();
 
       // Extract query params
       const { hostname, minCpu, maxCpu, minMemory, maxMemory } = req.query;
@@ -90,7 +90,16 @@ module.exports = {
         const agentData = agent.get({ plain: true });
         agentMap[agentData.muxly_hostname] = agentData;
       });
-
+      // Fetch all agent_containers and map by agent_id
+      const agentContainers = await AgentContainers.findAll({ raw: true });
+      const agentIdToContainerVersion = {};
+      agentContainers.forEach(ac => {
+        // Only keep the latest version per agent_id (if multiple, pick the latest by createdAt)
+        if (!agentIdToContainerVersion[ac.agent_id] || (ac.createdAt > agentIdToContainerVersion[ac.agent_id].createdAt)) {
+          agentIdToContainerVersion[ac.agent_id] = ac;
+        }
+      });
+      
       // Fetch all customers
       const customers = await Customers.findAll({
         attributes: ['transcoder_endpoint', 'company_name'],
@@ -135,16 +144,23 @@ module.exports = {
       metricsWithAgent.forEach(metric => {
         const host = metric.container_host;
         if (!grouped[host]) {
+          // Find agent_id from agentSpecs (if available)
+          let tag = null;
+          const agent_id = metric.agentSpecs?.agent_id;
+          if (agent_id && agentIdToContainerVersion[agent_id]) {
+            tag = agentIdToContainerVersion[agent_id].container_version;
+          }
           grouped[host] = {
             id: host,
             label: host,
             cpu: metric.agentSpecs?.processor || null,
             customer: metric?.company_name || null,
             memory: metric.agentSpecs?.totalRAM || null,
-            upSince: metric.agentSpecs?.upSince || null,
+            upSince: metric.agentSpecs?.createdAt || null,
             region: metric.agentSpecs?.region || null,
-            host: metric.agentSpecs?.host || null,
+            host: metric.agentSpecs?.hostname || null,
             onPrem: metric.agentSpecs?.onPrem || null,
+            tag, // container_version from agent_containers
             stats: []
           };
         }
