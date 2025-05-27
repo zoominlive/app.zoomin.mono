@@ -1,6 +1,7 @@
 const { postgres } = require('../lib/database');
 const connectToDatabase = require("../models/index");
 const jwt = require('jsonwebtoken');
+const Sequelize = require('sequelize');
 
 module.exports = {
   // Create a single container metric record
@@ -42,43 +43,131 @@ module.exports = {
   },
 
   getAllContainerMetrics: async (req, res) => {
-  const t = await postgres.transaction();
-  try {
-    const { ContainerMetrics, Agent } = await connectToDatabase();
+    const t = await postgres.transaction();
+    try {
+      const { ContainerMetrics, Agent, Customers } = await connectToDatabase();
 
-    // Fetch all metrics (no query params for filtering/pagination)
-    const metrics = await ContainerMetrics.findAll({
-      order: [['timestamp', 'DESC']],
-      limit: 10 // Limit to the last 1000 records
-    });
+      // Extract query params
+      const { hostname, minCpu, maxCpu, minMemory, maxMemory } = req.query;
+      const Op = Sequelize.Op;
 
-    // Fetch all agents
-    const agents = await Agent.findAll();
-    const agentMap = {};
-    agents.forEach(agent => {
-      const agentData = agent.get({ plain: true });
-      agentMap[agentData.muxly_hostname] = agentData;
-    });
+      // Build filter for ContainerMetrics
+      const metricsWhere = {};
+      if (minCpu) metricsWhere.cpu_percent = { ...(metricsWhere.cpu_percent || {}), [Op.gte]: Number(minCpu) };
+      if (maxCpu) metricsWhere.cpu_percent = { ...(metricsWhere.cpu_percent || {}), [Op.lte]: Number(maxCpu) };
+      if (minMemory) metricsWhere.memory_mb = { ...(metricsWhere.memory_mb || {}), [Op.gte]: Number(minMemory) };
+      if (maxMemory) metricsWhere.memory_mb = { ...(metricsWhere.memory_mb || {}), [Op.lte]: Number(maxMemory) };
 
-    // Append agentSpecs to each metric if matching agent found
-    const metricsWithAgent = metrics.map(metric => {
-      const plainMetric = metric.get({ plain: true });
-      const agentSpecs = agentMap[plainMetric.container_host] || null;
-      return agentSpecs ? { ...plainMetric, agentSpecs } : plainMetric;
-    });
+      // If hostname is provided, find matching container hosts from Agent table
+      let hostnames = [];
+      if (hostname) {
+        const agents = await Agent.findAll({
+          where: { muxly_hostname: { [Op.like]: `%${hostname}%` } },
+          attributes: ['muxly_hostname'],
+          raw: true
+        });
+        hostnames = agents.map(agent => agent.muxly_hostname);
+        hostnames = Array.from(new Set(hostnames));
+        if (hostnames.length > 0) {
+          metricsWhere.container_host = hostnames.length === 1 ? hostnames[0] : { [Op.in]: hostnames };
+        } else {
+          await t.commit();
+          return res.status(200).json({ data: [], count: 0 });
+        }
+      }
 
-    await t.commit();
-    return res.status(200).json({
-      data: metricsWithAgent,
-      count: metricsWithAgent.length
-    });
+      // Fetch filtered metrics
+      const metrics = await ContainerMetrics.findAll({
+        where: metricsWhere,
+        order: [['timestamp', 'DESC']],
+        limit: 100
+      });
 
-  } catch (error) {
-    await t.rollback();
-    console.error("Error fetching container metrics:", error);
-    return res.status(500).json({ error: error.message || "Internal server error" });
-  }
-},
+      // Fetch all agents
+      const agents = await Agent.findAll();
+      const agentMap = {};
+      agents.forEach(agent => {
+        const agentData = agent.get({ plain: true });
+        agentMap[agentData.muxly_hostname] = agentData;
+      });
+
+      // Fetch all customers
+      const customers = await Customers.findAll({
+        attributes: ['transcoder_endpoint', 'company_name'],
+        raw: true
+      });
+      // Build a map of normalized endpoint host to company_name
+      const endpointToCompany = {};
+      customers.forEach(cust => {
+        if (cust.transcoder_endpoint) {
+          let endpointHost = cust.transcoder_endpoint.replace(/^https?:\/\//, '');
+          endpointHost = endpointHost.replace(/\/$/, '');
+          endpointToCompany[endpointHost] = cust.company_name;
+        }
+      });
+
+      // Attach company_name to agentMap if muxly_hostname matches endpoint host
+      Object.keys(agentMap).forEach(hostname => {
+        if (endpointToCompany[hostname]) {
+          agentMap[hostname].company_name = endpointToCompany[hostname];
+        } else {
+          // Try to match by removing port if present
+          const hostNoPort = hostname.split(':')[0];
+          if (endpointToCompany[hostNoPort]) {
+            agentMap[hostname].company_name = endpointToCompany[hostNoPort];
+          }
+        }
+      });
+
+      // Append agentSpecs and company_name to each metric if matching found
+      const metricsWithAgent = metrics.map(metric => {
+        const plainMetric = metric.get({ plain: true });
+        const agentSpecs = agentMap[plainMetric.container_host] || null;
+        let result = agentSpecs ? { ...plainMetric, agentSpecs } : plainMetric;
+        if (agentSpecs && agentSpecs.company_name) {
+          result.company_name = agentSpecs.company_name;
+        }
+        return result;
+      });
+
+      // Group metrics by container_host
+      const grouped = {};
+      metricsWithAgent.forEach(metric => {
+        const host = metric.container_host;
+        if (!grouped[host]) {
+          grouped[host] = {
+            id: host,
+            label: host,
+            cpu: metric.agentSpecs?.processor || null,
+            customer: metric?.company_name || null,
+            memory: metric.agentSpecs?.totalRAM || null,
+            upSince: metric.agentSpecs?.upSince || null,
+            region: metric.agentSpecs?.region || null,
+            host: metric.agentSpecs?.host || null,
+            onPrem: metric.agentSpecs?.onPrem || null,
+            stats: []
+          };
+        }
+        grouped[host].stats.push({
+          time: metric.timestamp,
+          cpu: metric.cpu_percent,
+          mem: metric.memory_mb
+        });
+      });
+      const transformed = Object.values(grouped);
+
+      await t.commit();
+      return res.status(200).json({
+        data: transformed,
+        count: transformed.length
+      });
+
+    } catch (error) {
+      await t.rollback();
+      console.error("Error fetching container metrics:", error);
+      return res.status(500).json({ error: error.message || "Internal server error" });
+    }
+  },
 
   // Create multiple container metric records at once
   bulkCreateContainerMetrics: async (req, res) => {
