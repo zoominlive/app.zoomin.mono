@@ -1251,11 +1251,8 @@ function ContainerTile({ container }) {
   // Use BE fields directly
   const customerName = container.customer;
   const label = container.label || container.id || container.container_id;
-  const cpu =
-    container.cpu ||
-    (container.stats && container.stats.length > 0
-      ? container.stats[container.stats.length - 1].cpu
-      : null);
+  const cpu = container.cpu;
+  const tag = container.tag;
   const upSince = container.upSince || container.up_since || container.timestamp;
   const region = container.region;
   const host = container.host || container.container_host;
@@ -1378,7 +1375,7 @@ function ContainerTile({ container }) {
             display: 'flex',
             alignItems: 'center'
           }}>
-          Tag: <span style={{ marginLeft: '4px' }}>{container.tag || '1.3.14'}</span>
+          Tag: <span style={{ marginLeft: '4px' }}>{tag || '1.3.14'}</span>
         </Typography>
       </Box>
       {/* Hostname and Up since - second row */}
@@ -1389,7 +1386,7 @@ function ContainerTile({ container }) {
             {label}
           </Typography>
           <Typography variant="body2" sx={{ color: 'white', fontWeight: 500 }}>
-            CPU: {cpu !== null && cpu !== undefined ? Math.round(cpu) : '-'}
+            CPU: {cpu !== null && cpu !== undefined ? cpu : '-'}
           </Typography>
           <Typography variant="body2" sx={{ color: 'white', fontWeight: 500 }}>
             Memory: {memoryValue} MB
