@@ -49,6 +49,7 @@ import LayoutContext from '../../context/layoutcontext';
 import { fetchContainerMetrics } from '../../utils/containerMetricsApi';
 import LinerLoader from '../common/linearLoader';
 import { Package } from 'react-feather';
+import API from '../../api';
 
 // Utility function to format date based on timezone
 const formatDateTime = (dateString, timeZone = 'UTC', options = {}) => {
@@ -216,6 +217,8 @@ function AlertSection({ alerts, onExpand, timeZone, setFilters, setExpandedState
   const [restartDialogOpen, setRestartDialogOpen] = useState(false);
   const [updateDialogOpen, setUpdateDialogOpen] = useState(false);
   const [modifyDialogOpen, setModifyDialogOpen] = useState(false);
+  const [modifyConfirmDialogOpen, setModifyConfirmDialogOpen] = useState(false);
+  const [updateConfirmDialogOpen, setUpdateConfirmDialogOpen] = useState(false); // NEW
   const [debugDialogOpen, setDebugDialogOpen] = useState(false);
   const [currentContainer, setCurrentContainer] = useState(null);
 
@@ -1270,26 +1273,87 @@ function ContainerTile({ container }) {
   const [updateDialogOpen, setUpdateDialogOpen] = useState(false);
   const [modifyDialogOpen, setModifyDialogOpen] = useState(false);
   const [modifyConfirmDialogOpen, setModifyConfirmDialogOpen] = useState(false);
+  const [updateConfirmDialogOpen, setUpdateConfirmDialogOpen] = useState(false); // NEW
   const [debugDialogOpen, setDebugDialogOpen] = useState(false);
-  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
-  const [newTagValue, setNewTagValue] = useState(container.tag || '1.3.14');
-  const [updateRunArgs, setUpdateRunArgs] = useState('-p 8080:8080');
-  const [dockerArgs, setDockerArgs] = useState('-p 8080:8080 --memory=2g --cpus=1.5');
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false); // REMOVE
+  const [newTagValue, setNewTagValue] = useState(container.tag || '1.3.14'); // REMOVE
+  const [updateRunArgs, setUpdateRunArgs] = useState('-p 8080:8080'); // REMOVE
+  const [dockerArgs, setDockerArgs] = useState(`{
+        "image": "zoominlive/muxly:1.3.01_9d61ed460c52cea2aeaebec5fb90f6e66d198e48",
+        "detach": true,
+        "interactive": true,
+        "env": [
+            "RTSP_STREAM_AUTH_JWT_ENABLED=false",
+            "RTSP_STREAM_KEY_URI=https://rtspdev.zoominlive.com",
+            "RTSP_STREAM_ENVIRONMENT=stage",
+            "RTSP_STREAM_AUTH_JWT_SECRET=zoominlivesecretkey",
+            "RTSP_STREAM_JWT_REQUEST_SECRET=p7FQj}9p9wD$N;L1kC&X<MCa[UV%",
+            "RTSP_STREAM_AWS_ACCESS_KEY=AKIAYEUNNGGXRXVN5XNN",
+            "RTSP_STREAM_AWS_ACCESS_SECRET=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"
+        ],
+        "port_bindings": {
+            "8080":"80"
+        }
+    }
+ `);
+  const [updateConfigJson, setUpdateConfigJson] = useState(`{
+    "image": "${container.image || 'muxly1:3'}",
+    "env": [
+      "RTSP_STREAM_AUTH_JWT_ENABLED=true",
+      "RTSP_STREAM_KEY_URI=https://rtspdev.zoominlive.com",
+      "RTSP_STREAM_ENVIRONMENT=stage",
+      "RTSP_STREAM_AUTH_JWT_SECRET=zoominlivesecretkey",
+      "RTSP_STREAM_JWT_REQUEST_SECRET=p7FQj}9p9wD$N;L1kC&X<MCa[UV%",
+      "RTSP_STREAM_AWS_ACCESS_KEY=AKIAYEUNNGGXRXVN5XNN",
+      "RTSP_STREAM_AWS_ACCESS_SECRET=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"
+    ],
+    "port_bindings": {
+      "8080": "80"
+    }
+  }`); // NEW
   const [updateNotification, setUpdateNotification] = useState(false);
   const [debugNotification, setDebugNotification] = useState(false);
   const [debugActive, setDebugActive] = useState(false);
   const [debugTimeRemaining, setDebugTimeRemaining] = useState(60);
 
+  // Notification states for API actions
+  const [actionError, setActionError] = useState('');
+  const [actionSuccess, setActionSuccess] = useState('');
+
   // Handlers for dialogs
-  const handleRestartClick = () => setRestartDialogOpen(true);
+  const handleRestartClick = () => {
+    setRestartDialogOpen(true);
+    setActionError('');
+    setActionSuccess('');
+  };
   const handleUpdateClick = () => {
-    setNewTagValue(container.tag || '1.3.14');
-    setUpdateRunArgs('-p 8080:8080');
+    setUpdateConfigJson(dockerArgs); // Use current config as base
     setUpdateDialogOpen(true);
+    setActionError('');
+    setActionSuccess('');
   };
   const handleModifyClick = () => {
-    setDockerArgs('-p 8080:8080 --memory=2g --cpus=1.5');
+    setDockerArgs(`{
+        "image": "zoominlive/muxly:1.3.01_9d61ed460c52cea2aeaebec5fb90f6e66d198e48",
+        "detach": true,
+        "interactive": true,
+        "env": [
+            "RTSP_STREAM_AUTH_JWT_ENABLED=false",
+            "RTSP_STREAM_KEY_URI=https://rtspdev.zoominlive.com",
+            "RTSP_STREAM_ENVIRONMENT=stage",
+            "RTSP_STREAM_AUTH_JWT_SECRET=zoominlivesecretkey",
+            "RTSP_STREAM_JWT_REQUEST_SECRET=p7FQj}9p9wD$N;L1kC&X<MCa[UV%",
+            "RTSP_STREAM_AWS_ACCESS_KEY=AKIAYEUNNGGXRXVN5XNN",
+            "RTSP_STREAM_AWS_ACCESS_SECRET=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"
+        ],
+        "port_bindings": {
+            "8080":"80"
+        }
+    }
+ `);
     setModifyDialogOpen(true);
+    setActionError('');
+    setActionSuccess('');
   };
   const handleDebugClick = () => {
     setDebugDialogOpen(true);
@@ -1297,15 +1361,30 @@ function ContainerTile({ container }) {
   };
   const handleCloseDialog = () => {
     setUpdateDialogOpen(false);
+    setDebugDialogOpen(false);
     setNewTagValue(container.tag || '1.3.14');
+  };
+  const handleCancelModifyConfirm = () => {
+    setModifyConfirmDialogOpen(false);
   };
   const handleProceedToConfirm = () => {
     setUpdateDialogOpen(false);
-    setConfirmDialogOpen(true);
+    setUpdateConfirmDialogOpen(true);
   };
-  const handleConfirmUpdate = () => {
-    // Simulate update
-    setConfirmDialogOpen(false);
+  const handleConfirmUpdate = async () => {
+    setActionError('');
+    setActionSuccess('');
+    try {
+      const config = JSON.parse(updateConfigJson);
+      await API.post('/agents/run-image', {
+        url: `https://${label}`,
+        config
+      });
+      setActionSuccess('Container image update initiated.');
+    } catch (err) {
+      setActionError('Failed to update container image.');
+    }
+    setUpdateConfirmDialogOpen(false);
     setUpdateNotification(true);
     setTimeout(() => setUpdateNotification(false), 5000);
   };
@@ -1314,20 +1393,40 @@ function ContainerTile({ container }) {
     setNewTagValue(container.tag || '1.3.14');
   };
   const handleCancelRestart = () => setRestartDialogOpen(false);
-  const handleConfirmRestart = () => setRestartDialogOpen(false);
+  const handleConfirmRestart = async () => {
+    setActionError('');
+    setActionSuccess('');
+    try {
+      await API.post('/agents/restart', {
+        domain: `https://${label}`
+      });
+      setActionSuccess('Container restart initiated.');
+    } catch (err) {
+      setActionError('Failed to restart container.');
+    }
+    setRestartDialogOpen(false);
+  };
   const handleCancelModify = () => setModifyDialogOpen(false);
   const handleProceedToModifyConfirm = () => {
     setModifyDialogOpen(false);
     setModifyConfirmDialogOpen(true);
   };
-  const handleCancelModifyConfirm = () => setModifyConfirmDialogOpen(false);
-  const handleConfirmModify = () => setModifyConfirmDialogOpen(false);
-  const handleCancelDebug = () => setDebugDialogOpen(false);
-  const handleConfirmDebug = () => {
-    setDebugDialogOpen(false);
-    setDebugNotification(true);
-    setDebugActive(true);
+  const handleConfirmModify = async () => {
+    setActionError('');
+    setActionSuccess('');
+    try {
+      const config = JSON.parse(dockerArgs);
+      await API.post('/agents/update-config', {
+        url: `https://${label}`,
+        config
+      });
+      setActionSuccess('Container config update initiated.');
+    } catch (err) {
+      setActionError('Failed to update container config.');
+    }
+    setModifyConfirmDialogOpen(false);
   };
+
   useEffect(() => {
     let debugInterval;
     if (debugActive) {
@@ -1548,7 +1647,7 @@ function ContainerTile({ container }) {
         </MuiTooltip>
       </Box>
       {/* Notifications */}
-      <Collapse in={updateNotification}>
+      <Collapse in={!!actionSuccess}>
         <Alert
           severity="success"
           sx={{
@@ -1563,58 +1662,93 @@ function ContainerTile({ container }) {
               aria-label="close"
               color="inherit"
               size="small"
-              onClick={() => setUpdateNotification(false)}>
+              onClick={() => setActionSuccess('')}>
               <Close fontSize="inherit" />
             </IconButton>
           }>
-          Container updated to tag <b>{newTagValue}</b> with run arguments:{' '}
-          <code style={{ marginLeft: '4px', padding: '2px 4px', background: 'rgba(0,0,0,0.2)' }}>
-            {updateRunArgs}
-          </code>
+          {actionSuccess}
         </Alert>
       </Collapse>
-      <Collapse in={debugNotification}>
+      <Collapse in={!!actionError}>
         <Alert
-          severity="info"
+          severity="error"
           sx={{
             mt: 2,
-            bgcolor: 'rgba(245, 158, 11, 0.2)',
+            bgcolor: 'rgba(255,59,48,0.15)',
             color: 'white',
             border: '1px solid',
-            borderColor: 'rgba(245, 158, 11, 0.5)'
+            borderColor: 'rgba(255,59,48,0.5)'
           }}
           action={
             <IconButton
               aria-label="close"
               color="inherit"
               size="small"
-              onClick={() => {
-                setDebugNotification(false);
-                setDebugActive(false);
-              }}>
+              onClick={() => setActionError('')}>
               <Close fontSize="inherit" />
             </IconButton>
           }>
-          <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-            <Typography variant="body2" sx={{ fontWeight: 600 }}>
-              Debug mode enabled for <b>{label}</b>
-            </Typography>
-            <Typography variant="caption" sx={{ mt: 0.5, opacity: 0.9 }}>
-              Enhanced monitoring active with 1-minute reporting intervals
-            </Typography>
-          </Box>
+          {actionError}
         </Alert>
       </Collapse>
+      {/* Modify Confirmation Dialog */}
+      <Dialog
+        open={modifyConfirmDialogOpen}
+        onClose={handleCancelModifyConfirm}
+        aria-labelledby="modify-confirm-dialog-title"
+        PaperProps={{
+          sx: {
+            bgcolor: theme.palette.mode === 'dark' ? 'rgba(24,28,44,0.95)' : '#334155',
+            color: 'white',
+            minWidth: '450px',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+            border: '1.5px solid',
+            borderColor: theme.palette.mode === 'dark' ? 'rgba(80,80,120,0.15)' : '#475569'
+          }
+        }}>
+        <DialogTitle
+          id="modify-confirm-dialog-title"
+          sx={{
+            borderBottom: '1px solid',
+            borderColor: theme.palette.mode === 'dark' ? 'rgba(80,80,120,0.15)' : '#475569',
+            pb: 2
+          }}>
+          Confirm Configuration Changes
+        </DialogTitle>
+        <DialogContent sx={{ mt: 2 }}>
+          <DialogContentText sx={{ color: 'white', mb: 2 }}>
+            Are you sure you want to apply this configuration to <b>{label}</b>? The container will
+            need to be recreated with the new configuration.
+          </DialogContentText>
+          <Box
+            sx={{
+              bgcolor: 'rgba(0,0,0,0.15)',
+              p: 1.5,
+              borderRadius: 1,
+              fontFamily: 'monospace',
+              fontSize: '0.9rem',
+              overflowX: 'auto'
+            }}>
+            <pre style={{ margin: 0, color: '#2563eb' }}>{dockerArgs}</pre>
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 3 }}>
+          <Button onClick={handleCancelModifyConfirm}>Cancel</Button>
+          <Button onClick={handleConfirmModify} variant="contained">
+            Apply Changes
+          </Button>
+        </DialogActions>
+      </Dialog>
       {/* Update Dialog */}
       <Dialog
         open={updateDialogOpen}
-        onClose={handleCloseDialog}
+        onClose={() => setUpdateDialogOpen(false)}
         aria-labelledby="update-dialog-title"
         PaperProps={{
           sx: {
             bgcolor: theme.palette.mode === 'dark' ? 'rgba(24,28,44,0.95)' : '#334155',
             color: 'white',
-            minWidth: '400px',
+            minWidth: '500px',
             boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
             border: '1.5px solid',
             borderColor: theme.palette.mode === 'dark' ? 'rgba(80,80,120,0.15)' : '#475569'
@@ -1627,48 +1761,29 @@ function ContainerTile({ container }) {
             borderColor: theme.palette.mode === 'dark' ? 'rgba(80,80,120,0.15)' : '#475569',
             pb: 2
           }}>
-          Update Container Configuration
+          Update Container Image Configuration
         </DialogTitle>
         <DialogContent sx={{ mt: 2 }}>
           <DialogContentText sx={{ color: 'white', mb: 2 }}>
-            Please enter the new tag and run command arguments for container <b>{label}</b>:
+            Enter new configuration for container <b>{label}</b>:
           </DialogContentText>
           <TextField
             autoFocus
             margin="dense"
-            label="Tag Name"
-            type="text"
-            fullWidth
-            variant="outlined"
-            value={newTagValue}
-            onChange={(e) => setNewTagValue(e.target.value)}
-            InputProps={{
-              sx: {
-                color: 'white',
-                '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.3)' },
-                '&:hover .MuiOutlinedInput-notchedOutline': {
-                  borderColor: 'rgba(255,255,255,0.5)'
-                },
-                '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'secondary.main' }
-              }
-            }}
-            InputLabelProps={{ sx: { color: 'rgba(255,255,255,0.7)' } }}
-          />
-          <TextField
-            margin="dense"
-            label="Run Command Arguments"
+            label="Config JSON"
             type="text"
             fullWidth
             multiline
-            rows={2}
+            minRows={10}
+            maxRows={20}
             variant="outlined"
-            value={updateRunArgs}
-            onChange={(e) => setUpdateRunArgs(e.target.value)}
-            placeholder="e.g. -p 8080:8080 --memory=2g"
-            sx={{ mt: 2 }}
+            value={updateConfigJson}
+            onChange={(e) => setUpdateConfigJson(e.target.value)}
+            placeholder={`{\n  "image": "muxly1:3",\n  ...\n}`}
             InputProps={{
               sx: {
                 color: 'white',
+                fontFamily: 'monospace',
                 '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.3)' },
                 '&:hover .MuiOutlinedInput-notchedOutline': {
                   borderColor: 'rgba(255,255,255,0.5)'
@@ -1678,37 +1793,43 @@ function ContainerTile({ container }) {
             }}
             InputLabelProps={{ sx: { color: 'rgba(255,255,255,0.7)' } }}
           />
+          <Box
+            sx={{
+              bgcolor: 'rgba(0,0,0,0.15)',
+              p: 1.5,
+              borderRadius: 1,
+              fontFamily: 'monospace',
+              fontSize: '0.9rem',
+              overflowX: 'auto',
+              mb: 2
+            }}>
+            <pre style={{ margin: 0, color: '#2563eb' }}>{updateConfigJson}</pre>
+          </Box>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 3 }}>
-          <Button onClick={handleCloseDialog} sx={{ color: 'white' }}>
-            Cancel
-          </Button>
-          <Button
-            onClick={handleProceedToConfirm}
-            variant="contained"
-            color="secondary"
-            disabled={!newTagValue.trim()}>
+          <Button onClick={() => setUpdateDialogOpen(false)}>Cancel</Button>
+          <Button onClick={handleProceedToConfirm} variant="contained">
             OK
           </Button>
         </DialogActions>
       </Dialog>
       {/* Update Confirmation Dialog */}
       <Dialog
-        open={confirmDialogOpen}
-        onClose={handleCancelConfirm}
-        aria-labelledby="confirm-dialog-title"
+        open={updateConfirmDialogOpen}
+        onClose={() => setUpdateConfirmDialogOpen(false)}
+        aria-labelledby="update-confirm-dialog-title"
         PaperProps={{
           sx: {
             bgcolor: theme.palette.mode === 'dark' ? 'rgba(24,28,44,0.95)' : '#334155',
             color: 'white',
-            minWidth: '400px',
+            minWidth: '450px',
             boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
             border: '1.5px solid',
             borderColor: theme.palette.mode === 'dark' ? 'rgba(80,80,120,0.15)' : '#475569'
           }
         }}>
         <DialogTitle
-          id="confirm-dialog-title"
+          id="update-confirm-dialog-title"
           sx={{
             borderBottom: '1px solid',
             borderColor: theme.palette.mode === 'dark' ? 'rgba(80,80,120,0.15)' : '#475569',
@@ -1718,31 +1839,23 @@ function ContainerTile({ container }) {
         </DialogTitle>
         <DialogContent sx={{ mt: 2 }}>
           <DialogContentText sx={{ color: 'white', mb: 2 }}>
-            Are you sure you want to update container <b>{label}</b> to tag <b>{newTagValue}</b>?
+            Are you sure you want to update container <b>{label}</b> with this configuration?
           </DialogContentText>
-          {updateRunArgs && (
-            <Box
-              sx={{
-                bgcolor: 'rgba(0,0,0,0.15)',
-                p: 1.5,
-                borderRadius: 1,
-                fontFamily: 'monospace',
-                fontSize: '0.9rem',
-                overflowX: 'auto',
-                mt: 1
-              }}>
-              <Typography variant="caption" sx={{ color: 'info.main', display: 'block', mb: 1 }}>
-                Run command arguments:
-              </Typography>
-              <pre style={{ margin: 0, color: '#2563eb' }}>{updateRunArgs}</pre>
-            </Box>
-          )}
+          <Box
+            sx={{
+              bgcolor: 'rgba(0,0,0,0.15)',
+              p: 1.5,
+              borderRadius: 1,
+              fontFamily: 'monospace',
+              fontSize: '0.9rem',
+              overflowX: 'auto'
+            }}>
+            <pre style={{ margin: 0, color: '#2563eb' }}>{updateConfigJson}</pre>
+          </Box>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 3 }}>
-          <Button onClick={handleCancelConfirm} sx={{ color: 'white' }}>
-            Cancel
-          </Button>
-          <Button onClick={handleConfirmUpdate} variant="contained" color="secondary">
+          <Button onClick={() => setUpdateConfirmDialogOpen(false)}>Cancel</Button>
+          <Button onClick={handleConfirmUpdate} variant="contained">
             Confirm
           </Button>
         </DialogActions>
@@ -1778,10 +1891,15 @@ function ContainerTile({ container }) {
           </DialogContentText>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 3 }}>
-          <Button onClick={handleCancelRestart} sx={{ color: 'white' }}>
+          <Button
+            onClick={handleCancelRestart}
+            sx={{ '&.MuiButton-root': { color: '#fff !important' } }}>
             Cancel
           </Button>
-          <Button onClick={handleConfirmRestart} variant="contained" color="info">
+          <Button
+            onClick={handleConfirmRestart}
+            variant="contained"
+            sx={{ '&.MuiButton-root': { color: '#fff !important' } }}>
             Restart
           </Button>
         </DialogActions>
@@ -1812,23 +1930,40 @@ function ContainerTile({ container }) {
         </DialogTitle>
         <DialogContent sx={{ mt: 2 }}>
           <DialogContentText sx={{ color: 'white', mb: 2 }}>
-            Enter new Docker run command arguments for container <b>{label}</b>:
+            Enter new configuration for container <b>{label}</b>.<br />
+            <b>Note:</b> This will send the following payload:
           </DialogContentText>
           <TextField
             autoFocus
             margin="dense"
-            label="Docker Arguments"
+            label="Config JSON"
             type="text"
             fullWidth
             multiline
-            rows={3}
+            minRows={10}
+            maxRows={20}
             variant="outlined"
             value={dockerArgs}
             onChange={(e) => setDockerArgs(e.target.value)}
-            placeholder="e.g. -p 8080:8080 --memory=2g --cpus=1.5"
+            placeholder={`{
+              "image": "muxly1:3",
+              "env": [
+                "RTSP_STREAM_AUTH_JWT_ENABLED=true",
+                "RTSP_STREAM_KEY_URI=https://rtspdev.zoominlive.com",
+                "RTSP_STREAM_ENVIRONMENT=stage",
+                "RTSP_STREAM_AUTH_JWT_SECRET=zoominlivesecretkey",
+                "RTSP_STREAM_JWT_REQUEST_SECRET=p7FQj}9p9wD$N;L1kC&X<MCa[UV%",
+                "RTSP_STREAM_AWS_ACCESS_KEY=AKIAYEUNNGGXRXVN5XNN",
+                "RTSP_STREAM_AWS_ACCESS_SECRET=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"
+              ],
+              "port_bindings": {
+                "8080": "80"
+              }
+            }`}
             InputProps={{
               sx: {
                 color: 'white',
+                fontFamily: 'monospace',
                 '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.3)' },
                 '&:hover .MuiOutlinedInput-notchedOutline': {
                   borderColor: 'rgba(255,255,255,0.5)'
@@ -1838,49 +1973,6 @@ function ContainerTile({ container }) {
             }}
             InputLabelProps={{ sx: { color: 'rgba(255,255,255,0.7)' } }}
           />
-        </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 3 }}>
-          <Button onClick={handleCancelModify} sx={{ color: 'white' }}>
-            Cancel
-          </Button>
-          <Button
-            onClick={handleProceedToModifyConfirm}
-            variant="contained"
-            color="primary"
-            disabled={!dockerArgs.trim()}>
-            OK
-          </Button>
-        </DialogActions>
-      </Dialog>
-      {/* Modify Confirmation Dialog */}
-      <Dialog
-        open={modifyConfirmDialogOpen}
-        onClose={handleCancelModifyConfirm}
-        aria-labelledby="modify-confirm-dialog-title"
-        PaperProps={{
-          sx: {
-            bgcolor: theme.palette.mode === 'dark' ? 'rgba(24,28,44,0.95)' : '#334155',
-            color: 'white',
-            minWidth: '450px',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
-            border: '1.5px solid',
-            borderColor: theme.palette.mode === 'dark' ? 'rgba(80,80,120,0.15)' : '#475569'
-          }
-        }}>
-        <DialogTitle
-          id="modify-confirm-dialog-title"
-          sx={{
-            borderBottom: '1px solid',
-            borderColor: theme.palette.mode === 'dark' ? 'rgba(80,80,120,0.15)' : '#475569',
-            pb: 2
-          }}>
-          Confirm Configuration Changes
-        </DialogTitle>
-        <DialogContent sx={{ mt: 2 }}>
-          <DialogContentText sx={{ color: 'white', mb: 2 }}>
-            Are you sure you want to apply these Docker arguments to <b>{label}</b>? The container
-            will need to be recreated with the new configuration.
-          </DialogContentText>
           <Box
             sx={{
               bgcolor: 'rgba(0,0,0,0.15)',
@@ -1888,26 +1980,23 @@ function ContainerTile({ container }) {
               borderRadius: 1,
               fontFamily: 'monospace',
               fontSize: '0.9rem',
-              overflowX: 'auto'
+              overflowX: 'auto',
+              mb: 2
             }}>
-            <pre style={{ margin: 0, color: '#2563eb' }}>
-              docker run {dockerArgs} {label}:{newTagValue}
-            </pre>
+            <pre style={{ margin: 0, color: '#2563eb' }}>{dockerArgs}</pre>
           </Box>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 3 }}>
-          <Button onClick={handleCancelModifyConfirm} sx={{ color: 'white' }}>
-            Cancel
-          </Button>
-          <Button onClick={handleConfirmModify} variant="contained" color="primary">
-            Apply Changes
+          <Button onClick={handleCancelModify}>Cancel</Button>
+          <Button onClick={handleProceedToModifyConfirm} variant="contained">
+            OK
           </Button>
         </DialogActions>
       </Dialog>
       {/* Debug Dialog */}
       <Dialog
         open={debugDialogOpen}
-        onClose={handleCancelDebug}
+        // onClose={handleCancelDebug}
         aria-labelledby="debug-dialog-title"
         PaperProps={{
           sx: {
@@ -1966,15 +2055,59 @@ function ContainerTile({ container }) {
             Debug mode helps diagnose issues by temporarily increasing monitoring frequency. This
             can impact container performance.
           </Typography>
+          {/* Error handling for debug */}
+          <Collapse in={!!actionError && debugDialogOpen}>
+            <Alert
+              severity="error"
+              sx={{
+                mt: 2,
+                bgcolor: 'rgba(255,59,48,0.15)',
+                color: 'white',
+                border: '1px solid',
+                borderColor: 'rgba(255,59,48,0.5)'
+              }}
+              action={
+                <IconButton
+                  aria-label="close"
+                  color="inherit"
+                  size="small"
+                  onClick={() => setActionError('')}>
+                  <Close fontSize="inherit" />
+                </IconButton>
+              }>
+              {actionError}
+            </Alert>
+          </Collapse>
+          <Collapse in={!!actionSuccess && debugDialogOpen}>
+            <Alert
+              severity="success"
+              sx={{
+                mt: 2,
+                bgcolor: 'rgba(46, 125, 50, 0.2)',
+                color: 'white',
+                border: '1px solid',
+                borderColor: 'rgba(46, 125, 50, 0.5)'
+              }}
+              action={
+                <IconButton
+                  aria-label="close"
+                  color="inherit"
+                  size="small"
+                  onClick={() => setActionSuccess('')}>
+                  <Close fontSize="inherit" />
+                </IconButton>
+              }>
+              {actionSuccess}
+            </Alert>
+          </Collapse>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 3 }}>
-          <Button onClick={handleCancelDebug} sx={{ color: 'white' }}>
-            Cancel
-          </Button>
+          <Button onClick={handleCloseDialog}>Cancel</Button>
           <Button
-            onClick={handleConfirmDebug}
+            onClick={() => {
+              console.log('Debug mode enabled for 60 minutes');
+            }}
             variant="contained"
-            color="warning"
             startIcon={<CodeIcon />}>
             Enable for 60 minutes
           </Button>
