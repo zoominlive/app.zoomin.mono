@@ -92,14 +92,14 @@ const getTheme = (mode) =>
       secondary: { main: '#a855f7' },
       background: {
         default: mode === 'dark' ? '#101624' : '#edf2f7',
-        paper: mode === 'dark' ? 'rgba(24,28,44,0.85)' : '#ffffff'
+        paper: mode === 'dark' ? 'rgba(24,28,44,0.85)' : '#000'
       },
       warning: { main: '#ff9800' },
       success: { main: '#22c55e' },
       info: { main: '#06b6d4' },
       text: {
-        primary: '#ffffff',
-        secondary: '#ffffff'
+        primary: '#000',
+        secondary: '#000'
       }
     },
     typography: {
@@ -121,10 +121,10 @@ const getTheme = (mode) =>
                   border: '1.5px solid #232a3a'
                 }
               : {
-                  background: '#ffffff',
+                  background: '#000',
                   boxShadow: '0 12px 24px 0 rgba(0,0,0,0.06)',
                   border: '2px solid #e5e7eb',
-                  backgroundColor: '#ffffff'
+                  backgroundColor: '#000'
                 })
           }
         }
@@ -682,6 +682,7 @@ function AlertSection({ alerts, onExpand, timeZone, setFilters, setExpandedState
                       </Button>
                       <MuiTooltip title="Enable enhanced monitoring">
                         <Button
+                          disabled
                           size="small"
                           startIcon={<CodeIcon />}
                           color="warning"
@@ -1145,18 +1146,6 @@ function HeaderBar({ mode, setMode, timeZone, setTimeZone, isFullScreen, onToggl
         title={isFullScreen ? 'Exit Full Screen' : 'Full Screen'}>
         {isFullScreen ? <FullscreenExitIcon /> : <FullscreenIcon />}
       </IconButton>
-      <IconButton
-        sx={{
-          mr: 1,
-          color: '#ffffff',
-          bgcolor: mode === 'light' ? 'rgba(255,255,255,0.1)' : 'transparent',
-          '&:hover': {
-            bgcolor: mode === 'light' ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.05)'
-          }
-        }}
-        onClick={() => setMode(mode === 'dark' ? 'light' : 'dark')}>
-        {mode === 'dark' ? <Brightness7Icon /> : <Brightness4Icon />}
-      </IconButton>
     </Box>
   );
 }
@@ -1233,7 +1222,7 @@ function ContainerTile({ container }) {
 
   // Use BE fields directly
   const customerName = container.customer;
-  const label = container.label || container.id || container.container_id;
+  const label = container.label;
   const cpu = container.cpu;
   const tag = container.tag;
   const upSince = container.upSince || container.up_since || container.timestamp;
@@ -1246,7 +1235,21 @@ function ContainerTile({ container }) {
   const memoryValue = container.memory ? Math.round(Number(container.memory)) : '-';
 
   // Filtered stats for chart (show last 6)
-  const filteredStats = stats.slice(-6);
+  const filteredStats = [...stats.slice(-6)].sort((a, b) => {
+    // If time is a string like "HH:mm", convert to minutes for comparison
+    if (
+      typeof a.time === 'string' &&
+      typeof b.time === 'string' &&
+      a.time.length === 5 &&
+      b.time.length === 5
+    ) {
+      const [ah, am] = a.time.split(':').map(Number);
+      const [bh, bm] = b.time.split(':').map(Number);
+      return ah * 60 + am - (bh * 60 + bm);
+    }
+    // Otherwise, compare as dates
+    return new Date(a.time) - new Date(b.time);
+  });
 
   // Dialog states
   const [dialogs, setDialogs] = useState({
@@ -1557,17 +1560,6 @@ function ContainerTile({ container }) {
         <Typography variant="subtitle1" sx={{ fontWeight: 700, color: 'secondary.main' }}>
           {customerName}
         </Typography>
-        <Typography
-          variant="body2"
-          sx={{
-            color: 'info.main',
-            fontWeight: 600,
-            fontSize: '0.75rem',
-            display: 'flex',
-            alignItems: 'center'
-          }}>
-          Tag: <span style={{ marginLeft: '4px' }}>{tag || '1.3.14'}</span>
-        </Typography>
       </Box>
       {/* Hostname and Up since - second row */}
       <Box
@@ -1589,7 +1581,7 @@ function ContainerTile({ container }) {
           </Typography>
           <Typography
             variant="caption"
-            sx={{ color: 'text.secondary', display: 'block', fontSize: '0.7rem', lineHeight: 1.3 }}>
+            sx={{ color: '#fff', display: 'block', fontSize: '0.7rem', lineHeight: 1.3 }}>
             {formatDateTime(upSince, 'UTC', {
               year: 'numeric',
               month: 'short',
@@ -1626,6 +1618,21 @@ function ContainerTile({ container }) {
                 fontSize: 12,
                 fill: 'white',
                 dy: 10
+              }}
+              tickFormatter={(value) => {
+                // If value is a string timestamp, extract HH:mm
+                if (typeof value === 'string') {
+                  // Try to match HH:mm in the string
+                  const match = value.match(/(\d{2}:\d{2})/);
+                  if (match) return match[1];
+                  // If ISO string, parse and format
+                  const date = new Date(value);
+                  if (!isNaN(date)) {
+                    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                  }
+                  return value;
+                }
+                return value;
               }}
             />
             <YAxis
@@ -1671,7 +1678,7 @@ function ContainerTile({ container }) {
       <Box
         sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <Box>
-          <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
+          <Typography variant="caption" sx={{ color: '#fff', fontWeight: 600 }}>
             Last Reported
           </Typography>
           <Box sx={{ display: 'flex', flexDirection: 'column', mt: 0.5 }}>
@@ -1729,6 +1736,7 @@ function ContainerTile({ container }) {
         </Button>
         <MuiTooltip title="Enable enhanced monitoring">
           <Button
+            disabled
             size="small"
             startIcon={<CodeIcon />}
             color="warning"
@@ -1805,7 +1813,7 @@ function ContainerTile({ container }) {
       />
       {/* Dropdown for transcoder_endpoint if no label */}
       {!container.label && (
-        <Box sx={{ mb: 2 }}>
+        <Box sx={{ my: 2, width: '100%' }}>
           <Typography variant="body2" sx={{ color: 'white', fontWeight: 500, mb: 1 }}>
             Select Transcoder Endpoint:
           </Typography>
@@ -1814,7 +1822,8 @@ function ContainerTile({ container }) {
             onChange={(e) => setSelectedTranscoder(e.target.value)}
             disabled={loadingTranscoders || transcoderOptions.length === 0}
             size="small"
-            sx={{ minWidth: 300, bgcolor: '#222', color: 'white' }}>
+            fullWidth
+            sx={{ bgcolor: '#222', color: 'white' }}>
             {transcoderOptions.map((opt) => (
               <MenuItem key={opt.value} value={opt.value}>
                 {opt.label} ({opt.value})
@@ -2053,9 +2062,9 @@ function ContainerMetrics() {
         c.stats.some((s) => cpuCompare(s.mem, filters.memOp, filters.mem)))
     );
   });
-  // Filter containers that have CPU or Memory values over 80% to display as alerts
+  // Filter containers that have CPU or Memory values over 20%/25% to display as alerts
   const alertContainers = containerData
-    .filter((c) => c.stats && c.stats.some((s) => s.cpu >= 80 || s.mem >= 80))
+    .filter((c) => c.stats && c.stats.some((s) => s.cpu > 20 || s.mem > 25))
     .sort((a, b) => {
       const maxA = Math.max(
         a.stats[a.stats.length - 1]?.cpu || 0,
@@ -2085,31 +2094,54 @@ function ContainerMetrics() {
         ref={dashboardRef}
         sx={{
           bgcolor: mode === 'dark' ? '#101624' : '#edf2f7',
-          paddingX: 4,
+          px: { xs: 1, sm: 2, md: 4 },
           minHeight: '100vh',
+          maxHeight: isFullScreen ? '100vh' : 'none',
+          overflowY: isFullScreen ? 'auto' : 'visible',
+          overflowX: 'hidden',
           transition: 'padding 0.2s',
-          position: 'relative', // Ensure stacking context
-
-          zIndex: 1 // Lower than sidebar/header
+          position: 'relative',
+          zIndex: 1,
+          boxSizing: 'border-box'
         }}>
         {/* Sorting UI */}
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2, gap: 2 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: { xs: 'column', sm: 'row' },
+            justifyContent: 'flex-end',
+            alignItems: { xs: 'stretch', sm: 'center' },
+            mb: 2,
+            pt: 2,
+            gap: 2,
+            width: '100%'
+          }}>
           <Select
             value={sortField}
             onChange={(e) => setSortField(e.target.value)}
             size="small"
-            sx={{ minWidth: 120 }}>
-            <MenuItem value="cpu">CPU</MenuItem>
-            <MenuItem value="memory">Memory</MenuItem>
-            <MenuItem value="timestamp">Timestamp</MenuItem>
+            sx={{ minWidth: 120, width: { xs: '100%', sm: 120 }, color: '#fff !important' }}>
+            <MenuItem value="cpu" sx={{ color: '#fff !important' }}>
+              CPU
+            </MenuItem>
+            <MenuItem value="memory" sx={{ color: '#fff !important' }}>
+              Memory
+            </MenuItem>
+            <MenuItem value="timestamp" sx={{ color: '#fff !important' }}>
+              Timestamp
+            </MenuItem>
           </Select>
           <Select
             value={sortOrder}
             onChange={(e) => setSortOrder(e.target.value)}
             size="small"
-            sx={{ minWidth: 120 }}>
-            <MenuItem value="asc">Ascending</MenuItem>
-            <MenuItem value="desc">Descending</MenuItem>
+            sx={{ minWidth: 120, width: { xs: '100%', sm: 120 }, color: '#fff !important' }}>
+            <MenuItem value="asc" sx={{ color: '#fff !important' }}>
+              Ascending
+            </MenuItem>
+            <MenuItem value="desc" sx={{ color: '#fff !important' }}>
+              Descending
+            </MenuItem>
           </Select>
         </Box>
         {/* Always render FiltersSection and main content, even when loading */}
@@ -2123,8 +2155,10 @@ function ContainerMetrics() {
             localStorage.setItem('alertsExpanded', JSON.stringify(expanded));
           }}
         />
-        <FiltersSection filters={filters} setFilters={setFilters} />
-        <Box>
+        <Box sx={{ width: '100%', maxWidth: '100vw', overflowX: 'auto' }}>
+          <FiltersSection filters={filters} setFilters={setFilters} />
+        </Box>
+        <Box sx={{ width: '100%', maxWidth: '100vw', overflowX: 'auto' }}>
           {error ? (
             <Alert severity="error">{error}</Alert>
           ) : containerData.length === 0 && !loading ? (
@@ -2142,9 +2176,9 @@ function ContainerMetrics() {
               <Typography>No containers found.</Typography>
             </Box>
           ) : (
-            <Grid container spacing={3}>
+            <Grid container spacing={2}>
               {containerData.map((container) => (
-                <Grid item xs={12} sm={6} md={3} key={container.container_id}>
+                <Grid item xs={12} sm={6} md={4} lg={3} key={container.container_id}>
                   <ContainerTile container={container} />
                 </Grid>
               ))}
