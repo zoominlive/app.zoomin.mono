@@ -16,12 +16,10 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-  Tooltip as MuiTooltip
+  Tooltip as MuiTooltip,
+  Grid,
+  Alert,
+  Collapse
 } from '@mui/material';
 import {
   Warning as WarningIcon,
@@ -33,15 +31,12 @@ import {
   Code as CodeIcon,
   Close,
   Fullscreen as FullscreenIcon,
-  FullscreenExit as FullscreenExitIcon
+  FullscreenExit as FullscreenExitIcon,
+  Brightness4 as Brightness4Icon,
+  Brightness7 as Brightness7Icon
 } from '@mui/icons-material';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { useState, useEffect, useContext, useRef, useCallback } from 'react';
-// import './App.css';
-import { Grid, Alert, Collapse } from '@mui/material';
-import AccountCircle from '@mui/icons-material/AccountCircle';
-import Brightness4Icon from '@mui/icons-material/Brightness4';
-import Brightness7Icon from '@mui/icons-material/Brightness7';
 import PropTypes from 'prop-types';
 import { styled, useTheme as useMuiTheme } from '@mui/material/styles';
 import AuthContext from '../../context/authcontext';
@@ -50,13 +45,13 @@ import { fetchContainerMetrics } from '../../utils/containerMetricsApi';
 import LinerLoader from '../common/linearLoader';
 import { Package } from 'react-feather';
 import API from '../../api';
+import { useSnackbar } from 'notistack';
+import ContainerDialogs from './ContainerDialogs';
 
 // Utility function to format date based on timezone
 const formatDateTime = (dateString, timeZone = 'UTC', options = {}) => {
   try {
     const date = new Date(dateString);
-
-    // Default options for date formatting
     const defaultOptions = {
       year: 'numeric',
       month: 'short',
@@ -64,55 +59,47 @@ const formatDateTime = (dateString, timeZone = 'UTC', options = {}) => {
       hour: '2-digit',
       minute: '2-digit',
       second: '2-digit',
-      timeZone: timeZone,
-      hourCycle: 'h23', // Use 24-hour format
+      timeZone,
+      hourCycle: 'h23',
       timeZoneName: 'short'
     };
-
-    // Merge default options with any custom options
-    const mergedOptions = { ...defaultOptions, ...options };
-
-    return new Intl.DateTimeFormat('en-US', mergedOptions).format(date);
+    return new Intl.DateTimeFormat('en-US', { ...defaultOptions, ...options }).format(date);
   } catch (error) {
     console.error('Error formatting date:', error);
-    return dateString; // Return original string if there's an error
+    return dateString;
   }
 };
 
-// Utility function to convert a time string to a full ISO date
-// For demo purposes, we'll assume all time strings are for the current day in UTC
+// Utility function to convert time string to full ISO date
 const timeStringToFullDate = (timeString) => {
-  if (!timeString) return '';
-  // If already an ISO string or not in HH:mm format, return as is
-  if (typeof timeString !== 'string') return '';
-  if (/T\d{2}:\d{2}:\d{2}/.test(timeString) || timeString.length > 5) {
-    return timeString;
-  }
-  // Only convert if in HH:mm format
+  if (!timeString || typeof timeString !== 'string') return '';
+  if (/T\d{2}:\d{2}:\d{2}/.test(timeString) || timeString.length > 5) return timeString;
+
   const [hours, minutes] = timeString.split(':').map(Number);
   if (isNaN(hours) || isNaN(minutes)) return timeString;
+
   const today = new Date();
   today.setUTCHours(hours, minutes, 0, 0);
   return today.toISOString();
 };
 
-// Move theme creation outside App
-function getTheme(mode) {
-  return createTheme({
+// Theme configuration
+const getTheme = (mode) =>
+  createTheme({
     palette: {
       mode,
       primary: { main: '#2563eb' },
       secondary: { main: '#a855f7' },
       background: {
-        default: mode === 'dark' ? '#101624' : '#edf2f7', // Lighter background for better contrast
+        default: mode === 'dark' ? '#101624' : '#edf2f7',
         paper: mode === 'dark' ? 'rgba(24,28,44,0.85)' : '#ffffff'
       },
       warning: { main: '#ff9800' },
       success: { main: '#22c55e' },
       info: { main: '#06b6d4' },
       text: {
-        primary: '#ffffff', // Always white text regardless of mode
-        secondary: '#ffffff' // Always white text regardless of mode
+        primary: '#ffffff',
+        secondary: '#ffffff'
       }
     },
     typography: {
@@ -134,7 +121,6 @@ function getTheme(mode) {
                   border: '1.5px solid #232a3a'
                 }
               : {
-                  // High-contrast for light mode
                   background: '#ffffff',
                   boxShadow: '0 12px 24px 0 rgba(0,0,0,0.06)',
                   border: '2px solid #e5e7eb',
@@ -202,25 +188,31 @@ function getTheme(mode) {
       }
     }
   });
-}
 
 function AlertSection({ alerts, onExpand, timeZone, setFilters, setExpandedState }) {
   const theme = useMuiTheme();
   const isLight = theme.palette.mode === 'light';
-  // Use localStorage to remember accordion state between sessions
   const [expanded, setExpanded] = useState(() => {
     const saved = localStorage.getItem('alertsExpanded');
     return saved !== null ? JSON.parse(saved) : true;
   });
 
-  // Dialog states for actions
+  // Dialog states
   const [restartDialogOpen, setRestartDialogOpen] = useState(false);
   const [updateDialogOpen, setUpdateDialogOpen] = useState(false);
   const [modifyDialogOpen, setModifyDialogOpen] = useState(false);
   const [modifyConfirmDialogOpen, setModifyConfirmDialogOpen] = useState(false);
-  const [updateConfirmDialogOpen, setUpdateConfirmDialogOpen] = useState(false); // NEW
+  const [updateConfirmDialogOpen, setUpdateConfirmDialogOpen] = useState(false);
   const [debugDialogOpen, setDebugDialogOpen] = useState(false);
   const [currentContainer, setCurrentContainer] = useState(null);
+
+  // Sync expanded state with localStorage
+  useEffect(() => {
+    localStorage.setItem('alertsExpanded', JSON.stringify(expanded));
+  }, [expanded]);
+
+  // Don't show section if no alerts
+  if (alerts.length === 0) return null;
 
   // Handlers for container actions
   const handleRestartClick = (container) => {
@@ -243,21 +235,11 @@ function AlertSection({ alerts, onExpand, timeZone, setFilters, setExpandedState
     setDebugDialogOpen(true);
   };
 
-  // Sync internal expanded state with external state control
   const handleExpandChange = (newExpandedValue) => {
     setExpanded(newExpandedValue);
     setExpandedState(newExpandedValue);
   };
 
-  // Save the expanded state to localStorage when it changes
-  useEffect(() => {
-    localStorage.setItem('alertsExpanded', JSON.stringify(expanded));
-  }, [expanded]);
-
-  // Don't show the section at all if there are no alerts
-  if (alerts.length === 0) return null;
-
-  // Function to collapse alerts and update host filter
   const handleShowFull = (hostValue) => {
     setFilters((f) => ({ ...f, host: hostValue.toLowerCase() }));
     handleExpandChange(false);
@@ -273,7 +255,7 @@ function AlertSection({ alerts, onExpand, timeZone, setFilters, setExpandedState
       sx={{
         mb: 3,
         background: 'transparent',
-        '&:before': { display: 'none' }, // Remove the default divider
+        '&:before': { display: 'none' },
         border: 'none',
         transition: 'all 0.3s ease',
         overflow: 'hidden',
@@ -382,10 +364,7 @@ function AlertSection({ alerts, onExpand, timeZone, setFilters, setExpandedState
           {alerts
             .slice(0, alerts.length > 5 && !onExpand ? 5 : alerts.length)
             .map((container, index) => {
-              // Use customer from BE response
               const customerName = container.customer;
-
-              // Get max value to determine severity
               const cpuValue = Math.round(container.stats[container.stats.length - 1].cpu);
               const memValue = Math.round(container.stats[container.stats.length - 1].mem);
               const maxValue = Math.max(cpuValue, memValue);
@@ -434,22 +413,22 @@ function AlertSection({ alerts, onExpand, timeZone, setFilters, setExpandedState
                         transform: 'translateY(-2px)',
                         transition: 'transform 0.2s, box-shadow 0.2s'
                       },
-                      position: 'relative', // Add relative positioning to the paper container
-                      overflow: 'hidden' // Ensure alert badge doesn't overflow
+                      position: 'relative',
+                      overflow: 'hidden'
                     }}>
-                    {/* Customer name - first row */}
+                    {/* Customer name */}
                     <Typography
                       variant="subtitle1"
                       sx={{
                         fontWeight: 700,
                         color: 'secondary.main',
                         mb: 0.5,
-                        pr: 7.5 // Add padding to the right to not overlap with the alert badge
+                        pr: 7.5
                       }}>
                       {customerName}
                     </Typography>
 
-                    {/* Alert badge in absolute position in top-right corner */}
+                    {/* Alert badge */}
                     <Box
                       sx={{
                         position: 'absolute',
@@ -474,11 +453,11 @@ function AlertSection({ alerts, onExpand, timeZone, setFilters, setExpandedState
                           }
                         })
                       }}>
-                      <MonitorHeart sx={{ fontSize: 14, mr: 0.5 }} />{' '}
+                      <MonitorHeart sx={{ fontSize: 14, mr: 0.5 }} />
                       {isCritical ? 'Critical' : 'Alert'}
                     </Box>
 
-                    {/* Hostname - second row */}
+                    {/* Hostname */}
                     <Box
                       sx={{
                         display: 'flex',
@@ -493,7 +472,7 @@ function AlertSection({ alerts, onExpand, timeZone, setFilters, setExpandedState
                       </Typography>
                     </Box>
 
-                    {/* Alert values - third row */}
+                    {/* Alert values */}
                     <Box sx={{ mt: 1, display: 'flex', gap: 2 }}>
                       <Box sx={{ flex: 1 }}>
                         <Typography
@@ -576,21 +555,20 @@ function AlertSection({ alerts, onExpand, timeZone, setFilters, setExpandedState
                                 minute: '2-digit',
                                 timeZoneName: 'short'
                               });
-                            } else {
-                              return formatDateTime(t, timeZone, {
-                                month: 'short',
-                                day: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit',
-                                timeZoneName: 'short'
-                              });
                             }
+                            return formatDateTime(t, timeZone, {
+                              month: 'short',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                              timeZoneName: 'short'
+                            });
                           })()}
                         </Typography>
                       </Box>
                     </Box>
 
-                    {/* Action buttons - fourth row */}
+                    {/* Action buttons */}
                     <Box
                       sx={{
                         mt: 1.5,
@@ -598,7 +576,6 @@ function AlertSection({ alerts, onExpand, timeZone, setFilters, setExpandedState
                         justifyContent: 'space-between',
                         alignItems: 'center'
                       }}>
-                      {/* Show Full Button in left corner */}
                       <Button
                         size="small"
                         variant="outlined"
@@ -621,7 +598,6 @@ function AlertSection({ alerts, onExpand, timeZone, setFilters, setExpandedState
                         Show Full
                       </Button>
 
-                      {/* Clear Alert Button in right corner */}
                       <Button
                         size="small"
                         variant="outlined"
@@ -675,6 +651,7 @@ function AlertSection({ alerts, onExpand, timeZone, setFilters, setExpandedState
                         Clear Alert
                       </Button>
                     </Box>
+
                     {/* Action buttons row */}
                     <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end', mt: 1 }}>
                       <Button
@@ -685,14 +662,14 @@ function AlertSection({ alerts, onExpand, timeZone, setFilters, setExpandedState
                         onClick={() => handleRestartClick(container)}>
                         Restart
                       </Button>
-                      <MuiTooltip title="Update container tag and run arguments">
+                      <MuiTooltip title="Run container image">
                         <Button
                           size="small"
                           startIcon={<Update />}
                           color="secondary"
                           variant="outlined"
                           onClick={() => handleUpdateClick(container)}>
-                          Update
+                          Run
                         </Button>
                       </MuiTooltip>
                       <Button
@@ -720,7 +697,7 @@ function AlertSection({ alerts, onExpand, timeZone, setFilters, setExpandedState
             })}
         </Grid>
 
-        {/* Only show the "Show all" button when there are 5+ alerts and we're not already showing all */}
+        {/* Show all button */}
         {alerts.length > 5 && !expanded && (
           <Box
             sx={{
@@ -1249,7 +1226,10 @@ CustomTooltip.propTypes = {
 
 // Adapt ContainerTile to new data structure
 function ContainerTile({ container }) {
+  const { enqueueSnackbar } = useSnackbar();
   const theme = useMuiTheme();
+  const authCtx = useContext(AuthContext);
+  const layoutCtx = useContext(LayoutContext);
 
   // Use BE fields directly
   const customerName = container.customer;
@@ -1268,184 +1248,296 @@ function ContainerTile({ container }) {
   // Filtered stats for chart (show last 6)
   const filteredStats = stats.slice(-6);
 
-  // Dialog state for actions
-  const [restartDialogOpen, setRestartDialogOpen] = useState(false);
-  const [updateDialogOpen, setUpdateDialogOpen] = useState(false);
-  const [modifyDialogOpen, setModifyDialogOpen] = useState(false);
-  const [modifyConfirmDialogOpen, setModifyConfirmDialogOpen] = useState(false);
-  const [updateConfirmDialogOpen, setUpdateConfirmDialogOpen] = useState(false); // NEW
-  const [debugDialogOpen, setDebugDialogOpen] = useState(false);
-  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false); // REMOVE
-  const [newTagValue, setNewTagValue] = useState(container.tag || '1.3.14'); // REMOVE
-  const [updateRunArgs, setUpdateRunArgs] = useState('-p 8080:8080'); // REMOVE
-  const [dockerArgs, setDockerArgs] = useState(`{
-        "image": "zoominlive/muxly:1.3.01_9d61ed460c52cea2aeaebec5fb90f6e66d198e48",
-        "detach": true,
-        "interactive": true,
-        "env": [
-            "RTSP_STREAM_AUTH_JWT_ENABLED=false",
-            "RTSP_STREAM_KEY_URI=https://rtspdev.zoominlive.com",
-            "RTSP_STREAM_ENVIRONMENT=stage",
-            "RTSP_STREAM_AUTH_JWT_SECRET=zoominlivesecretkey",
-            "RTSP_STREAM_JWT_REQUEST_SECRET=p7FQj}9p9wD$N;L1kC&X<MCa[UV%",
-            "RTSP_STREAM_AWS_ACCESS_KEY=AKIAYEUNNGGXRXVN5XNN",
-            "RTSP_STREAM_AWS_ACCESS_SECRET=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"
-        ],
-        "port_bindings": {
-            "8080":"80"
-        }
-    }
- `);
-  const [updateConfigJson, setUpdateConfigJson] = useState(`{
-    "image": "${container.image || 'muxly1:3'}",
-    "env": [
-      "RTSP_STREAM_AUTH_JWT_ENABLED=true",
-      "RTSP_STREAM_KEY_URI=https://rtspdev.zoominlive.com",
-      "RTSP_STREAM_ENVIRONMENT=stage",
-      "RTSP_STREAM_AUTH_JWT_SECRET=zoominlivesecretkey",
-      "RTSP_STREAM_JWT_REQUEST_SECRET=p7FQj}9p9wD$N;L1kC&X<MCa[UV%",
-      "RTSP_STREAM_AWS_ACCESS_KEY=AKIAYEUNNGGXRXVN5XNN",
-      "RTSP_STREAM_AWS_ACCESS_SECRET=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"
-    ],
-    "port_bindings": {
-      "8080": "80"
-    }
-  }`); // NEW
-  const [updateNotification, setUpdateNotification] = useState(false);
-  const [debugNotification, setDebugNotification] = useState(false);
-  const [debugActive, setDebugActive] = useState(false);
-  const [debugTimeRemaining, setDebugTimeRemaining] = useState(60);
+  // Dialog states
+  const [dialogs, setDialogs] = useState({
+    restartDialogOpen: false,
+    updateDialogOpen: false,
+    modifyDialogOpen: false,
+    modifyConfirmDialogOpen: false,
+    updateConfirmDialogOpen: false,
+    debugDialogOpen: false
+  });
 
-  // Notification states for API actions
-  const [actionError, setActionError] = useState('');
-  const [actionSuccess, setActionSuccess] = useState('');
+  // Container state
+  const [containerState, setContainerState] = useState({
+    updateConfigJson: `{
+      "image": "${container.image || 'muxly1:3'}",
+      "env": [
+        "RTSP_STREAM_AUTH_JWT_ENABLED=true",
+        "RTSP_STREAM_KEY_URI=https://rtspdev.zoominlive.com",
+        "RTSP_STREAM_ENVIRONMENT=stage",
+        "RTSP_STREAM_AUTH_JWT_SECRET=zoominlivesecretkey",
+        "RTSP_STREAM_JWT_REQUEST_SECRET=p7FQj}9p9wD$N;L1kC&X<MCa[UV%",
+        "RTSP_STREAM_AWS_ACCESS_KEY=AKIAYEUNNGGXRXVN5XNN",
+        "RTSP_STREAM_AWS_ACCESS_SECRET=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"
+      ],
+      "port_bindings": {
+        "8080": "80"
+      }
+    }`,
+    dockerArgs: `{
+      "image": "zoominlive/muxly:1.3.01_9d61ed460c52cea2aeaebec5fb90f6e66d198e48",
+      "detach": true,
+      "interactive": true,
+      "env": [
+        "RTSP_STREAM_AUTH_JWT_ENABLED=false",
+        "RTSP_STREAM_KEY_URI=https://rtspdev.zoominlive.com",
+        "RTSP_STREAM_ENVIRONMENT=stage",
+        "RTSP_STREAM_AUTH_JWT_SECRET=zoominlivesecretkey",
+        "RTSP_STREAM_JWT_REQUEST_SECRET=p7FQj}9p9wD$N;L1kC&X<MCa[UV%",
+        "RTSP_STREAM_AWS_ACCESS_KEY=AKIAYEUNNGGXRXVN5XNN",
+        "RTSP_STREAM_AWS_ACCESS_SECRET=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"
+      ],
+      "port_bindings": {
+        "8080":"80"
+      }
+    }`,
+    updateNotification: false,
+    debugNotification: false,
+    debugActive: false,
+    debugTimeRemaining: 60,
+    actionError: '',
+    actionSuccess: ''
+  });
 
-  // Handlers for dialogs
+  // Standard error handler
+  const handleApiError = (error, customMessage = 'Operation failed') => {
+    const errorMessage = error?.response?.data?.Message || customMessage;
+    const statusCode = error?.response?.status;
+
+    enqueueSnackbar(errorMessage, {
+      variant: 'error',
+      autoHideDuration: 5000,
+      anchorOrigin: { vertical: 'top', horizontal: 'right' }
+    });
+
+    if (statusCode === 401) {
+      authCtx.setAuthError(true);
+    }
+  };
+
+  // Standard success handler
+  const handleApiSuccess = (message) => {
+    enqueueSnackbar(message, {
+      variant: 'success',
+      autoHideDuration: 3000,
+      anchorOrigin: { vertical: 'top', horizontal: 'right' }
+    });
+  };
+
+  // Dropdown state for transcoder_endpoint
+  const [transcoderOptions, setTranscoderOptions] = useState([]);
+  const [selectedTranscoder, setSelectedTranscoder] = useState('');
+  const [loadingTranscoders, setLoadingTranscoders] = useState(false);
+
+  // Fetch transcoder endpoints if no container.label
+  useEffect(() => {
+    if (!container.label) {
+      setLoadingTranscoders(true);
+      API.get('/customers/locations-wthout-custid')
+        .then((res) => {
+          if (res.data && res.data.IsSuccess && Array.isArray(res.data.Data)) {
+            // Flatten all locations
+            const locations = res.data.Data.flatMap((cust) =>
+              (cust.locations || []).map((loc) => ({
+                value: loc.transcoder_endpoint,
+                label: `${cust.company_name} - ${loc.loc_name}`,
+                hostname: loc.loc_name,
+                url: loc.transcoder_endpoint
+              }))
+            ).filter((opt) => opt.value); // Only those with endpoint
+            setTranscoderOptions(locations);
+            if (locations.length > 0) setSelectedTranscoder(locations[0].value);
+          }
+        })
+        .finally(() => setLoadingTranscoders(false));
+    }
+  }, [container.label]);
+
+  // Handlers for container actions
   const handleRestartClick = () => {
-    setRestartDialogOpen(true);
-    setActionError('');
-    setActionSuccess('');
+    setDialogs((prev) => ({ ...prev, restartDialogOpen: true }));
+    setContainerState((prev) => ({ ...prev, actionError: '', actionSuccess: '' }));
   };
+
   const handleUpdateClick = () => {
-    setUpdateConfigJson(dockerArgs); // Use current config as base
-    setUpdateDialogOpen(true);
-    setActionError('');
-    setActionSuccess('');
+    setContainerState((prev) => ({
+      ...prev,
+      updateConfigJson: prev.dockerArgs,
+      actionError: '',
+      actionSuccess: ''
+    }));
+    setDialogs((prev) => ({ ...prev, updateDialogOpen: true }));
   };
+
   const handleModifyClick = () => {
-    setDockerArgs(`{
+    setContainerState((prev) => ({
+      ...prev,
+      dockerArgs: `{
         "image": "zoominlive/muxly:1.3.01_9d61ed460c52cea2aeaebec5fb90f6e66d198e48",
         "detach": true,
         "interactive": true,
         "env": [
-            "RTSP_STREAM_AUTH_JWT_ENABLED=false",
-            "RTSP_STREAM_KEY_URI=https://rtspdev.zoominlive.com",
-            "RTSP_STREAM_ENVIRONMENT=stage",
-            "RTSP_STREAM_AUTH_JWT_SECRET=zoominlivesecretkey",
-            "RTSP_STREAM_JWT_REQUEST_SECRET=p7FQj}9p9wD$N;L1kC&X<MCa[UV%",
-            "RTSP_STREAM_AWS_ACCESS_KEY=AKIAYEUNNGGXRXVN5XNN",
-            "RTSP_STREAM_AWS_ACCESS_SECRET=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"
+          "RTSP_STREAM_AUTH_JWT_ENABLED=false",
+          "RTSP_STREAM_KEY_URI=https://rtspdev.zoominlive.com",
+          "RTSP_STREAM_ENVIRONMENT=stage",
+          "RTSP_STREAM_AUTH_JWT_SECRET=zoominlivesecretkey",
+          "RTSP_STREAM_JWT_REQUEST_SECRET=p7FQj}9p9wD$N;L1kC&X<MCa[UV%",
+          "RTSP_STREAM_AWS_ACCESS_KEY=AKIAYEUNNGGXRXVN5XNN",
+          "RTSP_STREAM_AWS_ACCESS_SECRET=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"
         ],
         "port_bindings": {
-            "8080":"80"
+          "8080":"80"
         }
-    }
- `);
-    setModifyDialogOpen(true);
-    setActionError('');
-    setActionSuccess('');
+      }`,
+      actionError: '',
+      actionSuccess: ''
+    }));
+    setDialogs((prev) => ({ ...prev, modifyDialogOpen: true }));
   };
+
   const handleDebugClick = () => {
-    setDebugDialogOpen(true);
-    setDebugTimeRemaining(60);
+    setDialogs((prev) => ({ ...prev, debugDialogOpen: true }));
+    setContainerState((prev) => ({ ...prev, debugTimeRemaining: 60 }));
   };
-  const handleCloseDialog = () => {
-    setUpdateDialogOpen(false);
-    setDebugDialogOpen(false);
-    setNewTagValue(container.tag || '1.3.14');
-  };
-  const handleCancelModifyConfirm = () => {
-    setModifyConfirmDialogOpen(false);
-  };
-  const handleProceedToConfirm = () => {
-    setUpdateDialogOpen(false);
-    setUpdateConfirmDialogOpen(true);
-  };
+
+  // API handlers
   const handleConfirmUpdate = async () => {
-    setActionError('');
-    setActionSuccess('');
+    setContainerState((prev) => ({ ...prev, actionError: '', actionSuccess: '' }));
     try {
-      const config = JSON.parse(updateConfigJson);
-      await API.post('/agents/run-image', {
-        url: `https://${label}`,
+      let config = JSON.parse(containerState.updateConfigJson);
+      // If no label, override RTSP_STREAM_KEY_URI with selected transcoder
+      if (!container.label && selectedTranscoder) {
+        config.env = (config.env || []).map((e) =>
+          e.startsWith('RTSP_STREAM_KEY_URI=') ? `RTSP_STREAM_KEY_URI=${selectedTranscoder}` : e
+        );
+      }
+      // Call /api/agents/update and /update-muxly-hostname if no label
+      if (!container.label && selectedTranscoder) {
+        await API.put('/agents/update-agent-muxly-hostname', {
+          agent_id: container.id,
+          MuxlyHostName: selectedTranscoder.replace(/^https?:\/\//, '')
+        });
+        // Find selected option for hostname
+        const selectedOpt = transcoderOptions.find((opt) => opt.value === selectedTranscoder);
+        if (selectedOpt) {
+          await API.post('/agents/update-muxly-hostname', {
+            hostname: selectedOpt.url.replace(/^https?:\/\//, ''),
+            url: selectedOpt.url
+          });
+        }
+      }
+      // Call /agents/run-image as before
+      const selectedOpt = transcoderOptions.find((opt) => opt.value === selectedTranscoder);
+      const response = await API.post('/agents/run-image', {
+        url: !container.label && selectedTranscoder ? selectedOpt.url : `https://${label}`,
         config
       });
-      setActionSuccess('Container image update initiated.');
-    } catch (err) {
-      setActionError('Failed to update container image.');
+      if (response.status === 200) {
+        handleApiSuccess('Container image update initiated successfully');
+        setDialogs((prev) => ({ ...prev, updateConfirmDialogOpen: false }));
+        setContainerState((prev) => ({
+          ...prev,
+          updateNotification: true
+        }));
+        setTimeout(() => {
+          setContainerState((prev) => ({ ...prev, updateNotification: false }));
+        }, 5000);
+      } else {
+        handleApiError(response, 'Failed to update container image');
+      }
+    } catch (error) {
+      handleApiError(error, 'Failed to update container image');
     }
-    setUpdateConfirmDialogOpen(false);
-    setUpdateNotification(true);
-    setTimeout(() => setUpdateNotification(false), 5000);
   };
-  const handleCancelConfirm = () => {
-    setConfirmDialogOpen(false);
-    setNewTagValue(container.tag || '1.3.14');
-  };
-  const handleCancelRestart = () => setRestartDialogOpen(false);
+
   const handleConfirmRestart = async () => {
-    setActionError('');
-    setActionSuccess('');
+    setContainerState((prev) => ({ ...prev, actionError: '', actionSuccess: '' }));
     try {
-      await API.post('/agents/restart', {
+      const response = await API.post('/agents/restart', {
         domain: `https://${label}`
       });
-      setActionSuccess('Container restart initiated.');
-    } catch (err) {
-      setActionError('Failed to restart container.');
+      console.log('restart response:', response);
+      if (response.status === 200) {
+        handleApiSuccess('Container restart initiated successfully');
+        setDialogs((prev) => ({ ...prev, restartDialogOpen: false }));
+      } else {
+        handleApiError(response, 'Failed to restart container');
+      }
+    } catch (error) {
+      handleApiError(error, 'Failed to restart container');
     }
-    setRestartDialogOpen(false);
   };
-  const handleCancelModify = () => setModifyDialogOpen(false);
-  const handleProceedToModifyConfirm = () => {
-    setModifyDialogOpen(false);
-    setModifyConfirmDialogOpen(true);
-  };
+
   const handleConfirmModify = async () => {
-    setActionError('');
-    setActionSuccess('');
+    setContainerState((prev) => ({ ...prev, actionError: '', actionSuccess: '' }));
     try {
-      const config = JSON.parse(dockerArgs);
-      await API.post('/agents/update-config', {
+      const config = JSON.parse(containerState.dockerArgs);
+      const response = await API.post('/agents/update-config', {
         url: `https://${label}`,
         config
       });
-      setActionSuccess('Container config update initiated.');
-    } catch (err) {
-      setActionError('Failed to update container config.');
+
+      if (response.status === 200) {
+        handleApiSuccess('Container config update initiated successfully');
+        setDialogs((prev) => ({ ...prev, modifyConfirmDialogOpen: false }));
+      } else {
+        handleApiError(response, 'Failed to update container config');
+      }
+    } catch (error) {
+      handleApiError(error, 'Failed to update container config');
     }
-    setModifyConfirmDialogOpen(false);
   };
 
+  const handleDebugMode = async () => {
+    try {
+      const response = await API.post('/agents/enable-debug', {
+        url: `https://${label}`,
+        duration: 60
+      });
+
+      if (response.status === 200) {
+        handleApiSuccess('Debug mode enabled for 60 minutes');
+        setDialogs((prev) => ({ ...prev, debugDialogOpen: false }));
+        setContainerState((prev) => ({
+          ...prev,
+          debugActive: true,
+          debugNotification: true
+        }));
+      } else {
+        handleApiError(response, 'Failed to enable debug mode');
+      }
+    } catch (error) {
+      handleApiError(error, 'Failed to enable debug mode');
+    }
+  };
+
+  // Debug mode timer effect
   useEffect(() => {
     let debugInterval;
-    if (debugActive) {
+    if (containerState.debugActive) {
       debugInterval = setInterval(() => {
-        setDebugTimeRemaining((prev) => {
-          if (prev <= 1) {
+        setContainerState((prev) => {
+          if (prev.debugTimeRemaining <= 1) {
             clearInterval(debugInterval);
-            setDebugActive(false);
-            setDebugNotification(false);
-            return 0;
+            return {
+              ...prev,
+              debugActive: false,
+              debugNotification: false,
+              debugTimeRemaining: 0
+            };
           }
-          return prev - 1;
+          return {
+            ...prev,
+            debugTimeRemaining: prev.debugTimeRemaining - 1
+          };
         });
       }, 60000);
     }
     return () => {
       if (debugInterval) clearInterval(debugInterval);
     };
-  }, [debugActive]);
+  }, [containerState.debugActive]);
 
   return (
     <Paper
@@ -1617,14 +1709,14 @@ function ContainerTile({ container }) {
           onClick={handleRestartClick}>
           Restart
         </Button>
-        <MuiTooltip title="Update container tag and run arguments">
+        <MuiTooltip title="Run container image">
           <Button
             size="small"
             startIcon={<Update />}
             color="secondary"
             variant="outlined"
             onClick={handleUpdateClick}>
-            Update
+            Run
           </Button>
         </MuiTooltip>
         <Button
@@ -1633,7 +1725,7 @@ function ContainerTile({ container }) {
           color="primary"
           variant="outlined"
           onClick={handleModifyClick}>
-          Modify
+          Update
         </Button>
         <MuiTooltip title="Enable enhanced monitoring">
           <Button
@@ -1647,7 +1739,7 @@ function ContainerTile({ container }) {
         </MuiTooltip>
       </Box>
       {/* Notifications */}
-      <Collapse in={!!actionSuccess}>
+      <Collapse in={!!containerState.actionSuccess}>
         <Alert
           severity="success"
           sx={{
@@ -1662,14 +1754,14 @@ function ContainerTile({ container }) {
               aria-label="close"
               color="inherit"
               size="small"
-              onClick={() => setActionSuccess('')}>
+              onClick={() => setContainerState((prev) => ({ ...prev, actionSuccess: '' }))}>
               <Close fontSize="inherit" />
             </IconButton>
           }>
-          {actionSuccess}
+          {containerState.actionSuccess}
         </Alert>
       </Collapse>
-      <Collapse in={!!actionError}>
+      <Collapse in={!!containerState.actionError}>
         <Alert
           severity="error"
           sx={{
@@ -1684,435 +1776,53 @@ function ContainerTile({ container }) {
               aria-label="close"
               color="inherit"
               size="small"
-              onClick={() => setActionError('')}>
+              onClick={() => setContainerState((prev) => ({ ...prev, actionError: '' }))}>
               <Close fontSize="inherit" />
             </IconButton>
           }>
-          {actionError}
+          {containerState.actionError}
         </Alert>
       </Collapse>
-      {/* Modify Confirmation Dialog */}
-      <Dialog
-        open={modifyConfirmDialogOpen}
-        onClose={handleCancelModifyConfirm}
-        aria-labelledby="modify-confirm-dialog-title"
-        PaperProps={{
-          sx: {
-            bgcolor: theme.palette.mode === 'dark' ? 'rgba(24,28,44,0.95)' : '#334155',
-            color: 'white',
-            minWidth: '450px',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
-            border: '1.5px solid',
-            borderColor: theme.palette.mode === 'dark' ? 'rgba(80,80,120,0.15)' : '#475569'
-          }
-        }}>
-        <DialogTitle
-          id="modify-confirm-dialog-title"
-          sx={{
-            borderBottom: '1px solid',
-            borderColor: theme.palette.mode === 'dark' ? 'rgba(80,80,120,0.15)' : '#475569',
-            pb: 2
-          }}>
-          Confirm Configuration Changes
-        </DialogTitle>
-        <DialogContent sx={{ mt: 2 }}>
-          <DialogContentText sx={{ color: 'white', mb: 2 }}>
-            Are you sure you want to apply this configuration to <b>{label}</b>? The container will
-            need to be recreated with the new configuration.
-          </DialogContentText>
-          <Box
-            sx={{
-              bgcolor: 'rgba(0,0,0,0.15)',
-              p: 1.5,
-              borderRadius: 1,
-              fontFamily: 'monospace',
-              fontSize: '0.9rem',
-              overflowX: 'auto'
-            }}>
-            <pre style={{ margin: 0, color: '#2563eb' }}>{dockerArgs}</pre>
-          </Box>
-        </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 3 }}>
-          <Button onClick={handleCancelModifyConfirm}>Cancel</Button>
-          <Button onClick={handleConfirmModify} variant="contained">
-            Apply Changes
-          </Button>
-        </DialogActions>
-      </Dialog>
-      {/* Update Dialog */}
-      <Dialog
-        open={updateDialogOpen}
-        onClose={() => setUpdateDialogOpen(false)}
-        aria-labelledby="update-dialog-title"
-        PaperProps={{
-          sx: {
-            bgcolor: theme.palette.mode === 'dark' ? 'rgba(24,28,44,0.95)' : '#334155',
-            color: 'white',
-            minWidth: '500px',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
-            border: '1.5px solid',
-            borderColor: theme.palette.mode === 'dark' ? 'rgba(80,80,120,0.15)' : '#475569'
-          }
-        }}>
-        <DialogTitle
-          id="update-dialog-title"
-          sx={{
-            borderBottom: '1px solid',
-            borderColor: theme.palette.mode === 'dark' ? 'rgba(80,80,120,0.15)' : '#475569',
-            pb: 2
-          }}>
-          Update Container Image Configuration
-        </DialogTitle>
-        <DialogContent sx={{ mt: 2 }}>
-          <DialogContentText sx={{ color: 'white', mb: 2 }}>
-            Enter new configuration for container <b>{label}</b>:
-          </DialogContentText>
-          <TextField
-            autoFocus
-            margin="dense"
-            label="Config JSON"
-            type="text"
-            fullWidth
-            multiline
-            minRows={10}
-            maxRows={20}
-            variant="outlined"
-            value={updateConfigJson}
-            onChange={(e) => setUpdateConfigJson(e.target.value)}
-            placeholder={`{\n  "image": "muxly1:3",\n  ...\n}`}
-            InputProps={{
-              sx: {
-                color: 'white',
-                fontFamily: 'monospace',
-                '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.3)' },
-                '&:hover .MuiOutlinedInput-notchedOutline': {
-                  borderColor: 'rgba(255,255,255,0.5)'
-                },
-                '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'secondary.main' }
-              }
-            }}
-            InputLabelProps={{ sx: { color: 'rgba(255,255,255,0.7)' } }}
-          />
-          <Box
-            sx={{
-              bgcolor: 'rgba(0,0,0,0.15)',
-              p: 1.5,
-              borderRadius: 1,
-              fontFamily: 'monospace',
-              fontSize: '0.9rem',
-              overflowX: 'auto',
-              mb: 2
-            }}>
-            <pre style={{ margin: 0, color: '#2563eb' }}>{updateConfigJson}</pre>
-          </Box>
-        </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 3 }}>
-          <Button onClick={() => setUpdateDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handleProceedToConfirm} variant="contained">
-            OK
-          </Button>
-        </DialogActions>
-      </Dialog>
-      {/* Update Confirmation Dialog */}
-      <Dialog
-        open={updateConfirmDialogOpen}
-        onClose={() => setUpdateConfirmDialogOpen(false)}
-        aria-labelledby="update-confirm-dialog-title"
-        PaperProps={{
-          sx: {
-            bgcolor: theme.palette.mode === 'dark' ? 'rgba(24,28,44,0.95)' : '#334155',
-            color: 'white',
-            minWidth: '450px',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
-            border: '1.5px solid',
-            borderColor: theme.palette.mode === 'dark' ? 'rgba(80,80,120,0.15)' : '#475569'
-          }
-        }}>
-        <DialogTitle
-          id="update-confirm-dialog-title"
-          sx={{
-            borderBottom: '1px solid',
-            borderColor: theme.palette.mode === 'dark' ? 'rgba(80,80,120,0.15)' : '#475569',
-            pb: 2
-          }}>
-          Confirm Update
-        </DialogTitle>
-        <DialogContent sx={{ mt: 2 }}>
-          <DialogContentText sx={{ color: 'white', mb: 2 }}>
-            Are you sure you want to update container <b>{label}</b> with this configuration?
-          </DialogContentText>
-          <Box
-            sx={{
-              bgcolor: 'rgba(0,0,0,0.15)',
-              p: 1.5,
-              borderRadius: 1,
-              fontFamily: 'monospace',
-              fontSize: '0.9rem',
-              overflowX: 'auto'
-            }}>
-            <pre style={{ margin: 0, color: '#2563eb' }}>{updateConfigJson}</pre>
-          </Box>
-        </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 3 }}>
-          <Button onClick={() => setUpdateConfirmDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handleConfirmUpdate} variant="contained">
-            Confirm
-          </Button>
-        </DialogActions>
-      </Dialog>
-      {/* Restart Dialog */}
-      <Dialog
-        open={restartDialogOpen}
-        onClose={handleCancelRestart}
-        aria-labelledby="restart-dialog-title"
-        PaperProps={{
-          sx: {
-            bgcolor: theme.palette.mode === 'dark' ? 'rgba(24,28,44,0.95)' : '#334155',
-            color: 'white',
-            minWidth: '400px',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
-            border: '1.5px solid',
-            borderColor: theme.palette.mode === 'dark' ? 'rgba(80,80,120,0.15)' : '#475569'
-          }
-        }}>
-        <DialogTitle
-          id="restart-dialog-title"
-          sx={{
-            borderBottom: '1px solid',
-            borderColor: theme.palette.mode === 'dark' ? 'rgba(80,80,120,0.15)' : '#475569',
-            pb: 2
-          }}>
-          Confirm Restart
-        </DialogTitle>
-        <DialogContent sx={{ mt: 2 }}>
-          <DialogContentText sx={{ color: 'white' }}>
-            Are you sure you want to restart container <b>{label}</b>? This may cause a brief
-            service interruption.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 3 }}>
-          <Button
-            onClick={handleCancelRestart}
-            sx={{ '&.MuiButton-root': { color: '#fff !important' } }}>
-            Cancel
-          </Button>
-          <Button
-            onClick={handleConfirmRestart}
-            variant="contained"
-            sx={{ '&.MuiButton-root': { color: '#fff !important' } }}>
-            Restart
-          </Button>
-        </DialogActions>
-      </Dialog>
-      {/* Modify Dialog */}
-      <Dialog
-        open={modifyDialogOpen}
-        onClose={handleCancelModify}
-        aria-labelledby="modify-dialog-title"
-        PaperProps={{
-          sx: {
-            bgcolor: theme.palette.mode === 'dark' ? 'rgba(24,28,44,0.95)' : '#334155',
-            color: 'white',
-            minWidth: '500px',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
-            border: '1.5px solid',
-            borderColor: theme.palette.mode === 'dark' ? 'rgba(80,80,120,0.15)' : '#475569'
-          }
-        }}>
-        <DialogTitle
-          id="modify-dialog-title"
-          sx={{
-            borderBottom: '1px solid',
-            borderColor: theme.palette.mode === 'dark' ? 'rgba(80,80,120,0.15)' : '#475569',
-            pb: 2
-          }}>
-          Modify Container Configuration
-        </DialogTitle>
-        <DialogContent sx={{ mt: 2 }}>
-          <DialogContentText sx={{ color: 'white', mb: 2 }}>
-            Enter new configuration for container <b>{label}</b>.<br />
-            <b>Note:</b> This will send the following payload:
-          </DialogContentText>
-          <TextField
-            autoFocus
-            margin="dense"
-            label="Config JSON"
-            type="text"
-            fullWidth
-            multiline
-            minRows={10}
-            maxRows={20}
-            variant="outlined"
-            value={dockerArgs}
-            onChange={(e) => setDockerArgs(e.target.value)}
-            placeholder={`{
-              "image": "muxly1:3",
-              "env": [
-                "RTSP_STREAM_AUTH_JWT_ENABLED=true",
-                "RTSP_STREAM_KEY_URI=https://rtspdev.zoominlive.com",
-                "RTSP_STREAM_ENVIRONMENT=stage",
-                "RTSP_STREAM_AUTH_JWT_SECRET=zoominlivesecretkey",
-                "RTSP_STREAM_JWT_REQUEST_SECRET=p7FQj}9p9wD$N;L1kC&X<MCa[UV%",
-                "RTSP_STREAM_AWS_ACCESS_KEY=AKIAYEUNNGGXRXVN5XNN",
-                "RTSP_STREAM_AWS_ACCESS_SECRET=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"
-              ],
-              "port_bindings": {
-                "8080": "80"
-              }
-            }`}
-            InputProps={{
-              sx: {
-                color: 'white',
-                fontFamily: 'monospace',
-                '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.3)' },
-                '&:hover .MuiOutlinedInput-notchedOutline': {
-                  borderColor: 'rgba(255,255,255,0.5)'
-                },
-                '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'primary.main' }
-              }
-            }}
-            InputLabelProps={{ sx: { color: 'rgba(255,255,255,0.7)' } }}
-          />
-          <Box
-            sx={{
-              bgcolor: 'rgba(0,0,0,0.15)',
-              p: 1.5,
-              borderRadius: 1,
-              fontFamily: 'monospace',
-              fontSize: '0.9rem',
-              overflowX: 'auto',
-              mb: 2
-            }}>
-            <pre style={{ margin: 0, color: '#2563eb' }}>{dockerArgs}</pre>
-          </Box>
-        </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 3 }}>
-          <Button onClick={handleCancelModify}>Cancel</Button>
-          <Button onClick={handleProceedToModifyConfirm} variant="contained">
-            OK
-          </Button>
-        </DialogActions>
-      </Dialog>
-      {/* Debug Dialog */}
-      <Dialog
-        open={debugDialogOpen}
-        // onClose={handleCancelDebug}
-        aria-labelledby="debug-dialog-title"
-        PaperProps={{
-          sx: {
-            bgcolor: theme.palette.mode === 'dark' ? 'rgba(24,28,44,0.95)' : '#334155',
-            color: 'white',
-            minWidth: '450px',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
-            border: '1.5px solid',
-            borderColor: theme.palette.mode === 'dark' ? 'rgba(80,80,120,0.15)' : '#475569'
-          }
-        }}>
-        <DialogTitle
-          id="debug-dialog-title"
-          sx={{
-            borderBottom: '1px solid',
-            borderColor: theme.palette.mode === 'dark' ? 'rgba(80,80,120,0.15)' : '#475569',
-            pb: 2
-          }}>
-          Enable Debug Mode
-        </DialogTitle>
-        <DialogContent sx={{ mt: 2 }}>
-          <DialogContentText sx={{ color: 'white', mb: 2 }}>
-            Turning on Debug mode will set this container`&lsquo`s reporting interval to every{' '}
-            <b>(1) minute</b> for the next hour.
-          </DialogContentText>
-          <Box
-            sx={{
-              bgcolor: 'rgba(0,0,0,0.15)',
-              p: 1.5,
-              borderRadius: 1,
-              fontFamily: 'monospace',
-              fontSize: '0.9rem',
-              mb: 2
-            }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5, gap: 1 }}>
-              <CodeIcon sx={{ color: 'warning.main' }} />
-              <Typography variant="body2" sx={{ color: 'warning.main', fontWeight: 600 }}>
-                Container: <b>{label}</b>
-              </Typography>
-            </Box>
-            <Box sx={{ pl: 3, borderLeft: '1px solid rgba(245, 158, 11, 0.3)' }}>
-              <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
-                • CPU & Memory monitoring: <b>every 1 minute</b>
-              </Typography>
-              <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
-                • Logging level: <b>DEBUG</b>
-              </Typography>
-              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                • Duration: <b>60 minutes</b>
-              </Typography>
-            </Box>
-          </Box>
-          <Typography
-            variant="caption"
-            sx={{ display: 'block', color: 'rgba(255,255,255,0.7)', mb: 1 }}>
-            Debug mode helps diagnose issues by temporarily increasing monitoring frequency. This
-            can impact container performance.
+      {/* Container Dialogs */}
+      <ContainerDialogs
+        container={{
+          ...container,
+          ...containerState,
+          setUpdateConfigJson: (value) =>
+            setContainerState((prev) => ({ ...prev, updateConfigJson: value })),
+          setDockerArgs: (value) => setContainerState((prev) => ({ ...prev, dockerArgs: value }))
+        }}
+        dialogs={dialogs}
+        setDialogs={setDialogs}
+        onConfirm={{
+          handleConfirmRestart,
+          handleConfirmUpdate,
+          handleConfirmModify,
+          handleDebugMode
+        }}
+        theme={theme}
+        setContainerState={setContainerState}
+      />
+      {/* Dropdown for transcoder_endpoint if no label */}
+      {!container.label && (
+        <Box sx={{ mb: 2 }}>
+          <Typography variant="body2" sx={{ color: 'white', fontWeight: 500, mb: 1 }}>
+            Select Transcoder Endpoint:
           </Typography>
-          {/* Error handling for debug */}
-          <Collapse in={!!actionError && debugDialogOpen}>
-            <Alert
-              severity="error"
-              sx={{
-                mt: 2,
-                bgcolor: 'rgba(255,59,48,0.15)',
-                color: 'white',
-                border: '1px solid',
-                borderColor: 'rgba(255,59,48,0.5)'
-              }}
-              action={
-                <IconButton
-                  aria-label="close"
-                  color="inherit"
-                  size="small"
-                  onClick={() => setActionError('')}>
-                  <Close fontSize="inherit" />
-                </IconButton>
-              }>
-              {actionError}
-            </Alert>
-          </Collapse>
-          <Collapse in={!!actionSuccess && debugDialogOpen}>
-            <Alert
-              severity="success"
-              sx={{
-                mt: 2,
-                bgcolor: 'rgba(46, 125, 50, 0.2)',
-                color: 'white',
-                border: '1px solid',
-                borderColor: 'rgba(46, 125, 50, 0.5)'
-              }}
-              action={
-                <IconButton
-                  aria-label="close"
-                  color="inherit"
-                  size="small"
-                  onClick={() => setActionSuccess('')}>
-                  <Close fontSize="inherit" />
-                </IconButton>
-              }>
-              {actionSuccess}
-            </Alert>
-          </Collapse>
-        </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 3 }}>
-          <Button onClick={handleCloseDialog}>Cancel</Button>
-          <Button
-            onClick={() => {
-              console.log('Debug mode enabled for 60 minutes');
-            }}
-            variant="contained"
-            startIcon={<CodeIcon />}>
-            Enable for 60 minutes
-          </Button>
-        </DialogActions>
-      </Dialog>
+          <Select
+            value={selectedTranscoder}
+            onChange={(e) => setSelectedTranscoder(e.target.value)}
+            disabled={loadingTranscoders || transcoderOptions.length === 0}
+            size="small"
+            sx={{ minWidth: 300, bgcolor: '#222', color: 'white' }}>
+            {transcoderOptions.map((opt) => (
+              <MenuItem key={opt.value} value={opt.value}>
+                {opt.label} ({opt.value})
+              </MenuItem>
+            ))}
+          </Select>
+        </Box>
+      )}
     </Paper>
   );
 }
@@ -2122,6 +1832,7 @@ ContainerTile.propTypes = {
 };
 
 function ContainerMetrics() {
+  const { enqueueSnackbar } = useSnackbar();
   const authCtx = useContext(AuthContext);
   const layoutCtx = useContext(LayoutContext);
   const [filters, setFilters] = useState({
@@ -2151,6 +1862,31 @@ function ContainerMetrics() {
   const [isFullScreen, setIsFullScreen] = useState(false);
   const dashboardRef = useRef(null);
 
+  // Standard error handler
+  const handleApiError = (error, customMessage = 'Failed to load container metrics') => {
+    const errorMessage = error?.response?.data?.Message || customMessage;
+    const statusCode = error?.response?.status;
+
+    enqueueSnackbar(errorMessage, {
+      variant: 'error',
+      autoHideDuration: 5000,
+      anchorOrigin: { vertical: 'top', horizontal: 'right' }
+    });
+
+    if (statusCode === 401) {
+      authCtx.setAuthError(true);
+    }
+  };
+
+  // Standard success handler
+  const handleApiSuccess = (message) => {
+    enqueueSnackbar(message, {
+      variant: 'success',
+      autoHideDuration: 3000,
+      anchorOrigin: { vertical: 'top', horizontal: 'right' }
+    });
+  };
+
   // Debounce filters for searching
   useEffect(() => {
     if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
@@ -2163,7 +1899,7 @@ function ContainerMetrics() {
   useEffect(() => {
     let isMounted = true;
     setLoading(true);
-    // Build query params for BE
+
     const params = {
       customername: debouncedFilters.customer || undefined,
       hostname: debouncedFilters.host || undefined,
@@ -2186,19 +1922,27 @@ function ContainerMetrics() {
       sortField,
       sortOrder
     };
+
     fetchContainerMetrics(params)
-      .then((data) => {
+      .then((response) => {
         if (isMounted) {
-          setContainerData(data.data || data);
+          console.log('API Response:', response);
+          if (response.data) {
+            setContainerData(response.data.data || response.data);
+            handleApiSuccess('Container metrics loaded successfully');
+          } else {
+            handleApiError(response, 'Failed to load container metrics');
+          }
           setLoading(false);
         }
       })
-      .catch((err) => {
+      .catch((error) => {
         if (isMounted) {
-          setError('Failed to load container metrics');
+          handleApiError(error);
           setLoading(false);
         }
       });
+
     return () => {
       isMounted = false;
     };
@@ -2345,6 +2089,7 @@ function ContainerMetrics() {
           minHeight: '100vh',
           transition: 'padding 0.2s',
           position: 'relative', // Ensure stacking context
+
           zIndex: 1 // Lower than sidebar/header
         }}>
         {/* Sorting UI */}
