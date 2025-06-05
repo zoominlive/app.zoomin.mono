@@ -47,65 +47,33 @@ module.exports = {
     try {
       const { ContainerMetrics, Agent, Customers, AgentContainers } = await connectToDatabase();
 
-      // Extract query params
-      const { hostname, minCpu, maxCpu, minMemory, maxMemory } = req.query;
-      const Op = Sequelize.Op;
-
-      // Build filter for ContainerMetrics
-      const metricsWhere = {};
-      if (minCpu) metricsWhere.cpu_percent = { ...(metricsWhere.cpu_percent || {}), [Op.gte]: Number(minCpu) };
-      if (maxCpu) metricsWhere.cpu_percent = { ...(metricsWhere.cpu_percent || {}), [Op.lte]: Number(maxCpu) };
-      if (minMemory) metricsWhere.memory_mb = { ...(metricsWhere.memory_mb || {}), [Op.gte]: Number(minMemory) };
-      if (maxMemory) metricsWhere.memory_mb = { ...(metricsWhere.memory_mb || {}), [Op.lte]: Number(maxMemory) };
-
-      // If hostname is provided, find matching container hosts from Agent table
-      let hostnames = [];
-      if (hostname) {
-        const agents = await Agent.findAll({
-          where: { muxly_hostname: { [Op.like]: `%${hostname}%` } },
-          attributes: ['muxly_hostname'],
-          raw: true
-        });
-        hostnames = agents.map(agent => agent.muxly_hostname);
-        hostnames = Array.from(new Set(hostnames));
-        if (hostnames.length > 0) {
-          metricsWhere.container_host = hostnames.length === 1 ? hostnames[0] : { [Op.in]: hostnames };
-        } else {
-          await t.commit();
-          return res.status(200).json({ data: [], count: 0 });
-        }
+      // Check if there is any agent
+      const agentExists = await Agent.findOne({ raw: true });
+      if (!agentExists) {
+        await t.commit();
+        return res.status(200).json({ data: [], count: 0 });
       }
 
-      // Fetch filtered metrics
-      const metrics = await ContainerMetrics.findAll({
-        where: metricsWhere,
-        order: [['timestamp', 'DESC']],
-        limit: 100
-      });
+      // Check if there is any record in AgentContainers table
+      const agentContainerExists = await AgentContainers.findOne({ raw: true });
+      if (!agentContainerExists) {
+        await t.commit();
+        return res.status(200).json({ data: [], count: 0 });
+      }
 
       // Fetch all agents
-      const agents = await Agent.findAll();
-      const agentMap = {};
-      agents.forEach(agent => {
-        const agentData = agent.get({ plain: true });
-        agentMap[agentData.muxly_hostname] = agentData;
-      });
-      // Fetch all agent_containers and map by agent_id
-      const agentContainers = await AgentContainers.findAll({ raw: true });
-      const agentIdToContainerVersion = {};
+      const agents = await Agent.findAll({ raw: true });
+      // Fetch all agent_containers and map by agent_id (pick latest by createdAt)
+      const agentContainers = await AgentContainers.findAll({ raw: true, order: [['createdAt', 'DESC']] });
+      const agentIdToContainer = {};
       agentContainers.forEach(ac => {
-        // Only keep the latest version per agent_id (if multiple, pick the latest by createdAt)
-        if (!agentIdToContainerVersion[ac.agent_id] || (ac.createdAt > agentIdToContainerVersion[ac.agent_id].createdAt)) {
-          agentIdToContainerVersion[ac.agent_id] = ac;
+        if (!agentIdToContainer[ac.agent_id]) {
+          agentIdToContainer[ac.agent_id] = ac;
         }
       });
-      
-      // Fetch all customers
-      const customers = await Customers.findAll({
-        attributes: ['transcoder_endpoint', 'company_name'],
-        raw: true
-      });
-      // Build a map of normalized endpoint host to company_name
+
+      // Fetch all customers for company_name mapping
+      const customers = await Customers.findAll({ attributes: ['transcoder_endpoint', 'company_name'], raw: true });
       const endpointToCompany = {};
       customers.forEach(cust => {
         if (cust.transcoder_endpoint) {
@@ -115,67 +83,46 @@ module.exports = {
         }
       });
 
-      // Attach company_name to agentMap if muxly_hostname matches endpoint host
-      Object.keys(agentMap).forEach(hostname => {
-        if (endpointToCompany[hostname]) {
-          agentMap[hostname].company_name = endpointToCompany[hostname];
-        } else {
-          // Try to match by removing port if present
-          const hostNoPort = hostname.split(':')[0];
-          if (endpointToCompany[hostNoPort]) {
-            agentMap[hostname].company_name = endpointToCompany[hostNoPort];
-          }
-        }
-      });
-
-      // Append agentSpecs and company_name to each metric if matching found
-      const metricsWithAgent = metrics.map(metric => {
-        const plainMetric = metric.get({ plain: true });
-        const agentSpecs = agentMap[plainMetric.container_host] || null;
-        let result = agentSpecs ? { ...plainMetric, agentSpecs } : plainMetric;
-        if (agentSpecs && agentSpecs.company_name) {
-          result.company_name = agentSpecs.company_name;
-        }
-        return result;
-      });
-
-      // Group metrics by container_host
-      const grouped = {};
-      metricsWithAgent.forEach(metric => {
-        const host = metric.container_host;
-        if (!grouped[host]) {
-          // Find agent_id from agentSpecs (if available)
-          let tag = null;
-          const agent_id = metric.agentSpecs?.agent_id;
-          if (agent_id && agentIdToContainerVersion[agent_id]) {
-            tag = agentIdToContainerVersion[agent_id].container_version;
-          }
-          grouped[host] = {
-            id: host,
-            label: host,
-            cpu: metric.agentSpecs?.processor || null,
-            customer: metric?.company_name || null,
-            memory: metric.agentSpecs?.totalRAM || null,
-            upSince: metric.agentSpecs?.createdAt || null,
-            region: metric.agentSpecs?.region || null,
-            host: metric.agentSpecs?.hostname || null,
-            onPrem: metric.agentSpecs?.onPrem || null,
-            tag, // container_version from agent_containers
-            stats: []
-          };
-        }
-        grouped[host].stats.push({
-          time: metric.timestamp,
-          cpu: metric.cpu_percent,
-          mem: metric.memory_mb
+      // For each agent, build the tile data
+      const tiles = await Promise.all(agents.map(async agent => {
+        const container = agentIdToContainer[agent.agent_id];
+        if (!container) return null;
+        // Fetch metrics for this container_id
+        const metrics = await ContainerMetrics.findAll({
+          where: { container_id: container.container_id },
+          order: [['timestamp', 'DESC']],
+          limit: 100,
+          raw: true
         });
-      });
-      const transformed = Object.values(grouped);
-
+        // Find company name by matching agent.muxly_hostname to endpointToCompany
+        let company_name = null;
+        if (endpointToCompany[agent.muxly_hostname]) {
+          company_name = endpointToCompany[agent.muxly_hostname];
+        } else {
+          const hostNoPort = agent.muxly_hostname?.split(':')[0];
+          if (endpointToCompany[hostNoPort]) {
+            company_name = endpointToCompany[hostNoPort];
+          }
+        }
+        return {
+          id: agent.agent_id,
+          label: agent.muxly_hostname,
+          cpu: agent.processor || null,
+          customer: company_name || null,
+          memory: agent.totalRAM || null,
+          upSince: agent.createdAt || null,
+          region: agent.region || null,
+          host: agent.hostname || null,
+          onPrem: agent.onPrem || null,
+          tag: container.container_version || null,
+          stats: metrics.map(m => ({ time: m.timestamp, cpu: m.cpu_percent, mem: m.memory_mb }))
+        };
+      }));
+      const filteredTiles = tiles.filter(Boolean);
       await t.commit();
       return res.status(200).json({
-        data: transformed,
-        count: transformed.length
+        data: filteredTiles,
+        count: filteredTiles.length
       });
 
     } catch (error) {

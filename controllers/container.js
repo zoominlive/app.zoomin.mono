@@ -27,7 +27,7 @@ exports.updateContainerImage = async (req, res) => {
 exports.updateMuxlyHostname = async (req, res) => {
   try {
     const { hostname, url } = req.body;
-    const response = await axios.post(`${url}/api/container/update-muxly-hostname`, { hostname });
+    const response = await axios.post(`${url}/api/update-muxly-hostname`, { hostname: hostname });
     res.status(response.status).json(response.data);
   } catch (err) {
     res.status(err.response?.status || 500).json({ error: err.response?.data || err.message });

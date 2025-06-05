@@ -12,6 +12,7 @@ const containerController = require('../../controllers/container');
 
 router.post('/register', agentMiddleware, agentController.createAgent);
 router.put('/update/', agentMiddleware, agentController.updateAgent);
+router.put('/update-agent-muxly-hostname', agentController.updateAgentMuxlyHostname);
 router.post('/:agentId/metrics', agentMiddleware, containerMetrics.createContainerMetric);
 router.get('/metrics/get-container-metrics', containerMetrics.getAllContainerMetrics);
 // routes not in use

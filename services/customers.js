@@ -453,6 +453,36 @@ module.exports = {
     return availableLocations;
   },
 
+  getLocationDetailsWithoutCustId: async () => {
+    const { CustomerLocations, Customers } = await connectToDatabase();
+    let availableLocations = await CustomerLocations.findAndCountAll({
+      where: { status: 1 },
+      include: [
+        {
+          model: Customers,
+          as: 'customer',
+          attributes: ['cust_id', 'company_name'],
+        }
+      ]
+    });
+
+    // Group by customer
+    const grouped = {};
+    availableLocations.rows.forEach(loc => {
+      const cust = loc.customer;
+      if (!cust) return;
+      if (!grouped[cust.cust_id]) {
+        grouped[cust.cust_id] = {
+          cust_id: cust.cust_id,
+          company_name: cust.company_name,
+          locations: []
+        };
+      }
+      grouped[cust.cust_id].locations.push(loc);
+    });
+    return Object.values(grouped);
+  },
+
   getActiveLocationDetails: async (custId) => {
     const { CustomerLocations } = await connectToDatabase();
     let availableLocations = await CustomerLocations.findAll({

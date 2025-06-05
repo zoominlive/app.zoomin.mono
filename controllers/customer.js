@@ -649,4 +649,28 @@ module.exports = {
       next(error);
     }
   },
+
+  fetchAllLocations: async (req, res, next) => {
+    const t = await sequelize.transaction();
+    try {
+      let locations = await customerServices.getLocationDetailsWithoutCustId();
+      res.status(200).json({
+        IsSuccess: true,
+        Data: locations,
+        Message: CONSTANTS.CUSTOMER_LOCATIONS_DETAILS,
+      });
+      await t.commit();
+      next();
+    } catch (error) {
+      await t.rollback();
+      res
+        .status(500)
+        .json({
+          IsSuccess: false,
+          error_log: error,
+          Message: CONSTANTS.INTERNAL_SERVER_ERROR,
+        });
+      next(error);
+    }
+  },
 };

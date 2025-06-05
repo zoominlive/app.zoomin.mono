@@ -11,7 +11,7 @@ module.exports = {
       const { ip, hostname, processor, totalRAM, containerID, containerState, containerVersion, MuxlyHostName } = req.body;
 
       // Validate required fields
-      if (!ip || !hostname || !containerState || !containerVersion || !MuxlyHostName) {
+      if (!ip || !hostname || !containerState || !containerVersion) {
         await t.rollback();
         return res.status(400).json({ error: "Missing required fields" });
       }
@@ -151,6 +151,52 @@ module.exports = {
   },
   
   // Update agent
+  updateAgentMuxlyHostname: async (req, res) => {
+    const t = await sequelize.transaction();
+    try {
+      const { Agent, AgentContainers } = await connectToDatabase();
+      const { MuxlyHostName, agent_id } = req.body;
+      
+      if (!MuxlyHostName) {
+        await t.rollback();
+        return res.status(400).json({ error: "MuxlyHostName is required" });
+      }
+      
+      const agent = await Agent.findOne({
+        where: { agent_id: agent_id },
+      });
+      
+      if (!agent) {
+        await t.rollback();
+        return res.status(404).json({ error: "Agent not found" });
+      }
+      
+      const updatedAgent = await agent.update(
+        {
+          muxly_hostname: MuxlyHostName,
+        },
+        { where: { agent_id: agent_id } },
+        { transaction: t }
+      );
+      
+      const updatedAgentContainers = await AgentContainers.findAll({
+        where: { agent_id: agent.agent_id },
+        transaction: t
+      });
+
+      await t.commit();
+      return res.status(200).json({
+        data: {updatedAgent, updatedAgentContainers},
+        message: "Agent updated successfully"
+      });
+    } catch (error) {
+      await t.rollback();
+      console.error("Error updating agent:", error);
+      return res.status(500).json({ error: error.message || "Internal server error" });
+    }
+  },
+  
+  // Update agent
   updateAgent: async (req, res) => {
     const t = await sequelize.transaction();
     try {
@@ -207,7 +253,7 @@ module.exports = {
       return res.status(500).json({ error: error.message || "Internal server error" });
     }
   },
-  
+
   // Delete agent
   deleteAgent: async (req, res) => {
     const t = await sequelize.transaction();
