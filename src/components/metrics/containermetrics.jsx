@@ -1812,7 +1812,7 @@ function ContainerTile({
             fullWidth
             sx={{ bgcolor: '#222', color: 'white' }}>
             {transcoderOptions.map((opt) => (
-              <MenuItem key={opt.value} value={opt.value}>
+              <MenuItem sx={{ color: '#fff !important' }} key={opt.value} value={opt.value}>
                 {opt.label} ({opt.value})
               </MenuItem>
             ))}
