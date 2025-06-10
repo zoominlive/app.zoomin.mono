@@ -47,6 +47,14 @@ module.exports = {
     try {
       const { ContainerMetrics, Agent, Customers, AgentContainers } = await connectToDatabase();
 
+      // Parse range from query (default to '24h' if not provided)
+      const range = req.query.range || '24h';
+      let rangeMs = 24 * 60 * 60 * 1000; // default 24h
+      if (range === '1h') rangeMs = 1 * 60 * 60 * 1000;
+      else if (range === '6h') rangeMs = 6 * 60 * 60 * 1000;
+      else if (range === '7d') rangeMs = 7 * 24 * 60 * 60 * 1000;
+      const rangeStart = new Date(Date.now() - rangeMs);
+
       // Check if there is any agent
       const agentExists = await Agent.findOne({ raw: true });
       if (!agentExists) {
@@ -87,9 +95,12 @@ module.exports = {
       const tiles = await Promise.all(agents.map(async agent => {
         const container = agentIdToContainer[agent.agent_id];
         if (!container) return null;
-        // Fetch metrics for this container_id
+        // Fetch metrics for this container_id, filtered by range
         const metrics = await ContainerMetrics.findAll({
-          where: { container_id: container.container_id },
+          where: {
+            container_id: container.container_id,
+            timestamp: { [Sequelize.Op.gte]: rangeStart }
+          },
           order: [['timestamp', 'DESC']],
           limit: 100,
           raw: true
