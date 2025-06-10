@@ -20,7 +20,8 @@ const ContainerDialogs = ({
   setDialogs,
   onConfirm,
   theme,
-  setContainerState
+  setContainerState,
+  fullscreenContainerRef
 }) => {
   const {
     updateConfigJson,
@@ -41,6 +42,8 @@ const ContainerDialogs = ({
         open={dialogs.modifyConfirmDialogOpen}
         onClose={() => setDialogs((prev) => ({ ...prev, modifyConfirmDialogOpen: false }))}
         aria-labelledby="modify-confirm-dialog-title"
+        sx={{ zIndex: 99999 }}
+        container={fullscreenContainerRef.current}
         PaperProps={{
           sx: {
             bgcolor: theme.palette.mode === 'dark' ? '#1a1a1a' : '#fff',
@@ -48,9 +51,11 @@ const ContainerDialogs = ({
             maxWidth: 800
           }
         }}>
-        <DialogTitle id="modify-confirm-dialog-title">Confirm Configuration Changes</DialogTitle>
+        <DialogTitle id="modify-confirm-dialog-title" sx={{ color: 'white' }}>
+          Confirm Configuration Changes
+        </DialogTitle>
         <DialogContent>
-          <Typography variant="body1" sx={{ mb: 2 }}>
+          <Typography variant="body1" sx={{ mb: 2, color: 'white' }}>
             Please review the configuration changes before applying:
           </Typography>
           <Box
@@ -60,7 +65,7 @@ const ContainerDialogs = ({
               borderRadius: 1,
               overflowX: 'auto'
             }}>
-            <pre style={{ margin: 0, color: '#2563eb' }}>{dockerArgs}</pre>
+            <pre style={{ margin: 0, color: 'white' }}>{dockerArgs}</pre>
           </Box>
         </DialogContent>
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, px: 3, pb: 3, mt: 2 }}>
@@ -86,6 +91,8 @@ const ContainerDialogs = ({
         open={dialogs.updateDialogOpen}
         onClose={() => setDialogs((prev) => ({ ...prev, updateDialogOpen: false }))}
         aria-labelledby="update-dialog-title"
+        sx={{ zIndex: 99999 }}
+        container={fullscreenContainerRef.current}
         PaperProps={{
           sx: {
             bgcolor: theme.palette.mode === 'dark' ? '#1a1a1a' : '#fff',
@@ -93,9 +100,11 @@ const ContainerDialogs = ({
             maxWidth: 800
           }
         }}>
-        <DialogTitle id="update-dialog-title">Run Container Image</DialogTitle>
+        <DialogTitle id="update-dialog-title" sx={{ color: 'white' }}>
+          Run Container Image
+        </DialogTitle>
         <DialogContent>
-          <Typography variant="body1" sx={{ mb: 2 }}>
+          <Typography variant="body1" sx={{ mb: 2, color: 'white' }}>
             Edit the container configuration:
           </Typography>
           <TextField
@@ -110,7 +119,8 @@ const ContainerDialogs = ({
             InputProps={{
               sx: {
                 fontFamily: 'monospace',
-                fontSize: '0.875rem'
+                fontSize: '0.875rem',
+                color: 'white'
               }
             }}
           />
@@ -122,7 +132,7 @@ const ContainerDialogs = ({
               borderRadius: 1,
               mb: 2
             }}>
-            <pre style={{ margin: 0, color: '#2563eb' }}>{updateConfigJson}</pre>
+            <pre style={{ margin: 0, color: 'white' }}>{updateConfigJson}</pre>
           </Box>
         </DialogContent>
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, px: 3, pb: 3, mt: 2 }}>
@@ -148,6 +158,8 @@ const ContainerDialogs = ({
         open={dialogs.updateConfirmDialogOpen}
         onClose={() => setDialogs((prev) => ({ ...prev, updateConfirmDialogOpen: false }))}
         aria-labelledby="update-confirm-dialog-title"
+        sx={{ zIndex: 99999 }}
+        container={fullscreenContainerRef.current}
         PaperProps={{
           sx: {
             bgcolor: theme.palette.mode === 'dark' ? '#1a1a1a' : '#fff',
@@ -155,9 +167,11 @@ const ContainerDialogs = ({
             maxWidth: 800
           }
         }}>
-        <DialogTitle id="update-confirm-dialog-title">Confirm Run Container</DialogTitle>
+        <DialogTitle id="update-confirm-dialog-title" sx={{ color: 'white' }}>
+          Confirm Run Container
+        </DialogTitle>
         <DialogContent>
-          <Typography variant="body1" sx={{ mb: 2 }}>
+          <Typography variant="body1" sx={{ mb: 2, color: 'white' }}>
             Please review the update configuration before proceeding:
           </Typography>
           <Box
@@ -167,7 +181,7 @@ const ContainerDialogs = ({
               borderRadius: 1,
               overflowX: 'auto'
             }}>
-            <pre style={{ margin: 0, color: '#2563eb' }}>{updateConfigJson}</pre>
+            <pre style={{ margin: 0, color: 'white' }}>{updateConfigJson}</pre>
           </Box>
         </DialogContent>
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, px: 3, pb: 3, mt: 2 }}>
@@ -193,15 +207,19 @@ const ContainerDialogs = ({
         open={dialogs.restartDialogOpen}
         onClose={() => setDialogs((prev) => ({ ...prev, restartDialogOpen: false }))}
         aria-labelledby="restart-dialog-title"
+        sx={{ zIndex: 99999 }}
+        container={fullscreenContainerRef.current}
         PaperProps={{
           sx: {
             bgcolor: theme.palette.mode === 'dark' ? '#1a1a1a' : '#fff',
             minWidth: 400
           }
         }}>
-        <DialogTitle id="restart-dialog-title">Confirm Container Restart</DialogTitle>
+        <DialogTitle id="restart-dialog-title" sx={{ color: 'white' }}>
+          Confirm Container Restart
+        </DialogTitle>
         <DialogContent>
-          <Typography variant="body1">
+          <Typography variant="body1" sx={{ color: 'white' }}>
             Are you sure you want to restart this container <strong>{container.label}</strong>? This
             will temporarily interrupt service.
           </Typography>
@@ -229,6 +247,8 @@ const ContainerDialogs = ({
         open={dialogs.modifyDialogOpen}
         onClose={() => setDialogs((prev) => ({ ...prev, modifyDialogOpen: false }))}
         aria-labelledby="modify-dialog-title"
+        sx={{ zIndex: 99999 }}
+        container={fullscreenContainerRef.current}
         PaperProps={{
           sx: {
             bgcolor: theme.palette.mode === 'dark' ? '#1a1a1a' : '#fff',
@@ -236,9 +256,11 @@ const ContainerDialogs = ({
             maxWidth: 800
           }
         }}>
-        <DialogTitle id="modify-dialog-title">Update Container Configuration</DialogTitle>
+        <DialogTitle id="modify-dialog-title" sx={{ color: 'white' }}>
+          Modify Container Configuration
+        </DialogTitle>
         <DialogContent>
-          <Typography variant="body1" sx={{ mb: 2 }}>
+          <Typography variant="body1" sx={{ mb: 2, color: 'white' }}>
             Edit the container configuration:
           </Typography>
           <TextField
@@ -249,14 +271,12 @@ const ContainerDialogs = ({
             variant="outlined"
             value={dockerArgs}
             onChange={(e) => setDockerArgs(e.target.value)}
-            placeholder={`{
-              "image": "muxly1:3",
-              ...
-            }`}
+            placeholder={`{\n              "image": "muxly1:3",\n              ...\n            }`}
             InputProps={{
               sx: {
                 fontFamily: 'monospace',
-                fontSize: '0.875rem'
+                fontSize: '0.875rem',
+                color: 'white'
               }
             }}
           />
@@ -268,7 +288,7 @@ const ContainerDialogs = ({
               borderRadius: 1,
               mb: 2
             }}>
-            <pre style={{ margin: 0, color: '#2563eb' }}>{dockerArgs}</pre>
+            <pre style={{ margin: 0, color: 'white' }}>{dockerArgs}</pre>
           </Box>
         </DialogContent>
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, px: 3, pb: 3, mt: 2 }}>
@@ -293,6 +313,8 @@ const ContainerDialogs = ({
       <Dialog
         open={dialogs.debugDialogOpen}
         aria-labelledby="debug-dialog-title"
+        sx={{ zIndex: 99999 }}
+        container={fullscreenContainerRef.current}
         PaperProps={{
           sx: {
             bgcolor: theme.palette.mode === 'dark' ? '#1a1a1a' : '#fff',
@@ -387,5 +409,6 @@ ContainerDialogs.propTypes = {
     handleDebugMode: PropTypes.func.isRequired
   }).isRequired,
   theme: PropTypes.object.isRequired,
-  setContainerState: PropTypes.func.isRequired
+  setContainerState: PropTypes.func.isRequired,
+  fullscreenContainerRef: PropTypes.object
 };

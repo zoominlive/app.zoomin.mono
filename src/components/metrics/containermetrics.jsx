@@ -196,43 +196,26 @@ function AlertSection({ alerts, onExpand, timeZone, setFilters, setExpandedState
     const saved = localStorage.getItem('alertsExpanded');
     return saved !== null ? JSON.parse(saved) : true;
   });
-
-  // Dialog states
-  const [restartDialogOpen, setRestartDialogOpen] = useState(false);
-  const [updateDialogOpen, setUpdateDialogOpen] = useState(false);
-  const [modifyDialogOpen, setModifyDialogOpen] = useState(false);
-  const [modifyConfirmDialogOpen, setModifyConfirmDialogOpen] = useState(false);
-  const [updateConfirmDialogOpen, setUpdateConfirmDialogOpen] = useState(false);
-  const [debugDialogOpen, setDebugDialogOpen] = useState(false);
-  const [currentContainer, setCurrentContainer] = useState(null);
+  const [clearedAlerts, setClearedAlerts] = useState([]);
 
   // Sync expanded state with localStorage
   useEffect(() => {
     localStorage.setItem('alertsExpanded', JSON.stringify(expanded));
   }, [expanded]);
 
-  // Don't show section if no alerts
-  if (alerts.length === 0) return null;
+  // Sync cleared alerts with localStorage
+  useEffect(() => {
+    localStorage.setItem('clearedAlerts', JSON.stringify(clearedAlerts));
+  }, [clearedAlerts]);
 
-  // Handlers for container actions
-  const handleRestartClick = (container) => {
-    setCurrentContainer(container);
-    setRestartDialogOpen(true);
-  };
+  // Filter out cleared alerts
+  const visibleAlerts = alerts.filter((alert) => !clearedAlerts.includes(alert.id));
 
-  const handleUpdateClick = (container) => {
-    setCurrentContainer(container);
-    setUpdateDialogOpen(true);
-  };
+  // Don't show section if no visible alerts
+  if (visibleAlerts.length === 0) return null;
 
-  const handleModifyClick = (container) => {
-    setCurrentContainer(container);
-    setModifyDialogOpen(true);
-  };
-
-  const handleDebugClick = (container) => {
-    setCurrentContainer(container);
-    setDebugDialogOpen(true);
+  const handleClearAlert = (alertId) => {
+    setClearedAlerts((prev) => [...prev, alertId]);
   };
 
   const handleExpandChange = (newExpandedValue) => {
@@ -281,7 +264,7 @@ function AlertSection({ alerts, onExpand, timeZone, setFilters, setExpandedState
             }}>
             <ExpandMore
               sx={{
-                color: 'error.main',
+                color: 'red !important',
                 transform: expanded ? 'rotate(0deg)' : 'rotate(-90deg)',
                 transition: 'transform 0.3s ease'
               }}
@@ -318,7 +301,7 @@ function AlertSection({ alerts, onExpand, timeZone, setFilters, setExpandedState
               fontWeight: 700,
               display: 'flex',
               alignItems: 'center',
-              color: 'error.main',
+              color: 'red !important',
               transition: 'opacity 0.3s ease',
               opacity: expanded ? 1 : 0.9
             }}>
@@ -326,7 +309,8 @@ function AlertSection({ alerts, onExpand, timeZone, setFilters, setExpandedState
               sx={{
                 mr: 1,
                 fontSize: 20,
-                animation: expanded && alerts.length >= 3 ? 'pulse 2s infinite' : 'none',
+                color: 'red !important',
+                animation: expanded && visibleAlerts.length >= 3 ? 'pulse 2s infinite' : 'none',
                 '@keyframes pulse': {
                   '0%': { opacity: 1 },
                   '50%': { opacity: 0.6 },
@@ -334,12 +318,12 @@ function AlertSection({ alerts, onExpand, timeZone, setFilters, setExpandedState
                 }
               }}
             />
-            Active Alerts ({alerts.length})
+            Active Alerts ({visibleAlerts.length})
           </Typography>
           <Typography
             variant="body2"
             sx={{
-              color: 'text.secondary',
+              color: 'white',
               fontWeight: 500,
               mr: 2,
               transition: 'opacity 0.3s ease',
@@ -361,8 +345,8 @@ function AlertSection({ alerts, onExpand, timeZone, setFilters, setExpandedState
           opacity: expanded ? 1 : 0
         }}>
         <Grid container spacing={2} className="alert-grid">
-          {alerts
-            .slice(0, alerts.length > 5 && !onExpand ? 5 : alerts.length)
+          {visibleAlerts
+            .slice(0, visibleAlerts.length > 5 && !onExpand ? 5 : visibleAlerts.length)
             .map((container, index) => {
               const customerName = container.customer;
               const cpuValue = Math.round(container.stats[container.stats.length - 1].cpu);
@@ -390,12 +374,11 @@ function AlertSection({ alerts, onExpand, timeZone, setFilters, setExpandedState
                     elevation={2}
                     className="alert-card"
                     sx={{
-                      p: 2,
-                      display: 'flex',
-                      flexDirection: 'column',
+                      p: 3,
+                      borderRadius: 1,
+                      color: 'white',
                       border: '1.5px solid',
                       borderColor: isCritical ? 'error.main' : 'error.light',
-                      borderRadius: 3,
                       background: isLight
                         ? `linear-gradient(135deg, #334155 0%, ${
                             isCritical ? '#472a2a' : '#1e293b'
@@ -453,7 +436,7 @@ function AlertSection({ alerts, onExpand, timeZone, setFilters, setExpandedState
                           }
                         })
                       }}>
-                      <MonitorHeart sx={{ fontSize: 14, mr: 0.5 }} />
+                      <MonitorHeart sx={{ fontSize: 14, mr: 0.5, color: 'white !important' }} />
                       {isCritical ? 'Critical' : 'Alert'}
                     </Box>
 
@@ -475,9 +458,7 @@ function AlertSection({ alerts, onExpand, timeZone, setFilters, setExpandedState
                     {/* Alert values */}
                     <Box sx={{ mt: 1, display: 'flex', gap: 2 }}>
                       <Box sx={{ flex: 1 }}>
-                        <Typography
-                          variant="caption"
-                          sx={{ color: 'text.secondary', fontWeight: 600 }}>
+                        <Typography variant="caption" sx={{ color: 'white', fontWeight: 600 }}>
                           CPU
                         </Typography>
                         <Typography
@@ -503,9 +484,7 @@ function AlertSection({ alerts, onExpand, timeZone, setFilters, setExpandedState
                         </Typography>
                       </Box>
                       <Box sx={{ flex: 1 }}>
-                        <Typography
-                          variant="caption"
-                          sx={{ color: 'text.secondary', fontWeight: 600 }}>
+                        <Typography variant="caption" sx={{ color: 'white', fontWeight: 600 }}>
                           Memory
                         </Typography>
                         <Typography
@@ -531,9 +510,7 @@ function AlertSection({ alerts, onExpand, timeZone, setFilters, setExpandedState
                         </Typography>
                       </Box>
                       <Box sx={{ flex: 1.5 }}>
-                        <Typography
-                          variant="caption"
-                          sx={{ color: 'text.secondary', fontWeight: 600 }}>
+                        <Typography variant="caption" sx={{ color: 'white', fontWeight: 600 }}>
                           Last Updated
                         </Typography>
                         <Typography
@@ -632,6 +609,7 @@ function AlertSection({ alerts, onExpand, timeZone, setFilters, setExpandedState
                             />
                           </svg>
                         }
+                        onClick={() => handleClearAlert(container.id)}
                         sx={{
                           fontSize: '0.75rem',
                           py: 0.5,
@@ -651,47 +629,6 @@ function AlertSection({ alerts, onExpand, timeZone, setFilters, setExpandedState
                         Clear Alert
                       </Button>
                     </Box>
-
-                    {/* Action buttons row */}
-                    <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end', mt: 1 }}>
-                      <Button
-                        size="small"
-                        startIcon={<RestartAlt />}
-                        color="info"
-                        variant="outlined"
-                        onClick={() => handleRestartClick(container)}>
-                        Restart
-                      </Button>
-                      <MuiTooltip title="Run container image">
-                        <Button
-                          size="small"
-                          startIcon={<Update />}
-                          color="secondary"
-                          variant="outlined"
-                          onClick={() => handleUpdateClick(container)}>
-                          Run
-                        </Button>
-                      </MuiTooltip>
-                      <Button
-                        size="small"
-                        startIcon={<Edit />}
-                        color="primary"
-                        variant="outlined"
-                        onClick={() => handleModifyClick(container)}>
-                        Modify
-                      </Button>
-                      <MuiTooltip title="Enable enhanced monitoring">
-                        <Button
-                          disabled
-                          size="small"
-                          startIcon={<CodeIcon />}
-                          color="warning"
-                          variant="outlined"
-                          onClick={() => handleDebugClick(container)}>
-                          Debug
-                        </Button>
-                      </MuiTooltip>
-                    </Box>
                   </Paper>
                 </Grid>
               );
@@ -699,7 +636,7 @@ function AlertSection({ alerts, onExpand, timeZone, setFilters, setExpandedState
         </Grid>
 
         {/* Show all button */}
-        {alerts.length > 5 && !expanded && (
+        {visibleAlerts.length > 5 && !expanded && (
           <Box
             sx={{
               display: 'flex',
@@ -758,7 +695,7 @@ function AlertSection({ alerts, onExpand, timeZone, setFilters, setExpandedState
                   }
                 }
               }}>
-              {`Show all (${alerts.length})`}
+              {`Show all (${visibleAlerts.length})`}
             </Button>
           </Box>
         )}
@@ -845,7 +782,11 @@ function FiltersSection({ filters, setFilters }) {
               placeholder="Search hostname or server..."
               size="small"
               InputProps={{
-                startAdornment: <InputAdornment position="start">@</InputAdornment>,
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Typography sx={{ color: 'white' }}>@</Typography>
+                  </InputAdornment>
+                ),
                 ...inputProps
               }}
               sx={inputStyles}
@@ -1043,7 +984,15 @@ FiltersSection.propTypes = {
   setFilters: PropTypes.func.isRequired
 };
 
-function HeaderBar({ mode, setMode, timeZone, setTimeZone, isFullScreen, onToggleFullScreen }) {
+function HeaderBar({
+  mode,
+  setMode,
+  timeZone,
+  setTimeZone,
+  isFullScreen,
+  onToggleFullScreen,
+  fullscreenContainerRef
+}) {
   const theme = useMuiTheme();
   const isLight = theme.palette.mode === 'light';
 
@@ -1113,6 +1062,7 @@ function HeaderBar({ mode, setMode, timeZone, setTimeZone, isFullScreen, onToggl
             }
           }}
           MenuProps={{
+            container: fullscreenContainerRef.current,
             PaperProps: {
               sx: {
                 bgcolor: mode === 'dark' ? 'rgba(24,28,44,0.95)' : '#334155',
@@ -1156,7 +1106,8 @@ HeaderBar.propTypes = {
   timeZone: PropTypes.string.isRequired,
   setTimeZone: PropTypes.func.isRequired,
   isFullScreen: PropTypes.bool,
-  onToggleFullScreen: PropTypes.func
+  onToggleFullScreen: PropTypes.func,
+  fullscreenContainerRef: PropTypes.object
 };
 
 const StyledTooltip = styled('div')(({ theme }) => ({
@@ -1214,7 +1165,13 @@ CustomTooltip.propTypes = {
 };
 
 // Adapt ContainerTile to new data structure
-function ContainerTile({ container }) {
+function ContainerTile({
+  container,
+  graphPeriod,
+  onGraphPeriodChange,
+  timeZone,
+  fullscreenContainerRef
+}) {
   const { enqueueSnackbar } = useSnackbar();
   const theme = useMuiTheme();
   const authCtx = useContext(AuthContext);
@@ -1235,7 +1192,7 @@ function ContainerTile({ container }) {
   const memoryValue = container.memory ? Math.round(Number(container.memory)) : '-';
 
   // Filtered stats for chart (show last 6)
-  const filteredStats = [...stats.slice(-6)].sort((a, b) => {
+  const filteredStats = [...stats].sort((a, b) => {
     // If time is a string like "HH:mm", convert to minutes for comparison
     if (
       typeof a.time === 'string' &&
@@ -1569,7 +1526,10 @@ function ContainerTile({ container }) {
             {label}
           </Typography>
           <Typography variant="body2" sx={{ color: 'white', fontWeight: 500 }}>
-            CPU: {cpu !== null && cpu !== undefined ? cpu : '-'}
+            CPU:{' '}
+            {typeof cpu === 'string' && cpu.toLowerCase().startsWith('model name\t:')
+              ? cpu.replace(/^model name\t:\s*/i, '')
+              : cpu}
           </Typography>
           <Typography variant="body2" sx={{ color: 'white', fontWeight: 500 }}>
             Memory: {memoryValue} MB
@@ -1582,7 +1542,7 @@ function ContainerTile({ container }) {
           <Typography
             variant="caption"
             sx={{ color: '#fff', display: 'block', fontSize: '0.7rem', lineHeight: 1.3 }}>
-            {formatDateTime(upSince, 'UTC', {
+            {formatDateTime(upSince, timeZone, {
               year: 'numeric',
               month: 'short',
               day: 'numeric',
@@ -1620,15 +1580,21 @@ function ContainerTile({ container }) {
                 dy: 10
               }}
               tickFormatter={(value) => {
-                // If value is a string timestamp, extract HH:mm
                 if (typeof value === 'string') {
-                  // Try to match HH:mm in the string
                   const match = value.match(/(\d{2}:\d{2})/);
-                  if (match) return match[1];
-                  // If ISO string, parse and format
+                  if (match) {
+                    const fullDate = timeStringToFullDate(match[1]);
+                    return formatDateTime(fullDate, timeZone, {
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    });
+                  }
                   const date = new Date(value);
                   if (!isNaN(date)) {
-                    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    return formatDateTime(date, timeZone, {
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    });
                   }
                   return value;
                 }
@@ -1692,9 +1658,9 @@ function ContainerTile({ container }) {
             </Box>
             <Typography
               variant="caption"
-              sx={{ color: 'text.secondary', display: 'block', fontSize: '0.7rem', mt: 0.5 }}>
+              sx={{ color: 'white', display: 'block', fontSize: '0.7rem', mt: 0.5 }}>
               {stats.length > 0
-                ? formatDateTime(timeStringToFullDate(stats[stats.length - 1].time), 'UTC', {
+                ? formatDateTime(timeStringToFullDate(stats[stats.length - 1].time), timeZone, {
                     month: 'short',
                     day: 'numeric',
                     hour: '2-digit',
@@ -1705,17 +1671,29 @@ function ContainerTile({ container }) {
             </Typography>
           </Box>
         </Box>
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1 }}>
+          <Select
+            size="small"
+            value={graphPeriod}
+            onChange={(e) => onGraphPeriodChange(e.target.value)}
+            sx={{ minWidth: 80, color: 'white', bgcolor: '#222', mr: 1 }}>
+            <MenuItem sx={{ color: 'white' }} value="1h">
+              1h
+            </MenuItem>
+            <MenuItem sx={{ color: 'white' }} value="6h">
+              6h
+            </MenuItem>
+            <MenuItem sx={{ color: 'white' }} value="24h">
+              24h
+            </MenuItem>
+            <MenuItem sx={{ color: 'white' }} value="7d">
+              7d
+            </MenuItem>
+          </Select>
+        </Box>
       </Box>
       {/* Action buttons row */}
       <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end', mt: 1 }}>
-        <Button
-          size="small"
-          startIcon={<RestartAlt />}
-          color="info"
-          variant="outlined"
-          onClick={handleRestartClick}>
-          Restart
-        </Button>
         <MuiTooltip title="Run container image">
           <Button
             size="small"
@@ -1733,6 +1711,14 @@ function ContainerTile({ container }) {
           variant="outlined"
           onClick={handleModifyClick}>
           Update
+        </Button>
+        <Button
+          size="small"
+          startIcon={<RestartAlt />}
+          color="info"
+          variant="outlined"
+          onClick={handleRestartClick}>
+          Restart
         </Button>
         <MuiTooltip title="Enable enhanced monitoring">
           <Button
@@ -1810,6 +1796,7 @@ function ContainerTile({ container }) {
         }}
         theme={theme}
         setContainerState={setContainerState}
+        fullscreenContainerRef={fullscreenContainerRef}
       />
       {/* Dropdown for transcoder_endpoint if no label */}
       {!container.label && (
@@ -1837,7 +1824,11 @@ function ContainerTile({ container }) {
 }
 
 ContainerTile.propTypes = {
-  container: PropTypes.object.isRequired
+  container: PropTypes.object.isRequired,
+  graphPeriod: PropTypes.string.isRequired,
+  onGraphPeriodChange: PropTypes.func.isRequired,
+  timeZone: PropTypes.string.isRequired,
+  fullscreenContainerRef: PropTypes.object
 };
 
 function ContainerMetrics() {
@@ -1870,6 +1861,8 @@ function ContainerMetrics() {
   const debounceTimeout = useRef();
   const [isFullScreen, setIsFullScreen] = useState(false);
   const dashboardRef = useRef(null);
+  // Add graphPeriod state for the chart period selector
+  const [graphPeriod, setGraphPeriod] = useState('24h');
 
   // Standard error handler
   const handleApiError = (error, customMessage = 'Failed to load container metrics') => {
@@ -1929,7 +1922,8 @@ function ContainerMetrics() {
           ? debouncedFilters.mem
           : undefined,
       sortField,
-      sortOrder
+      sortOrder,
+      range: graphPeriod // Pass the selected period to the backend
     };
 
     fetchContainerMetrics(params)
@@ -1955,7 +1949,7 @@ function ContainerMetrics() {
     return () => {
       isMounted = false;
     };
-  }, [debouncedFilters, sortField, sortOrder]);
+  }, [debouncedFilters, sortField, sortOrder, graphPeriod]);
 
   useEffect(() => {
     layoutCtx.setActive(12);
@@ -2087,6 +2081,7 @@ function ContainerMetrics() {
         setTimeZone={setTimeZone}
         isFullScreen={isFullScreen}
         onToggleFullScreen={handleToggleFullScreen}
+        fullscreenContainerRef={dashboardRef}
       />
       {/* Show LinearLoader at the top when loading */}
       <LinerLoader loading={loading} />
@@ -2179,7 +2174,13 @@ function ContainerMetrics() {
             <Grid container spacing={2}>
               {containerData.map((container) => (
                 <Grid item xs={12} sm={6} md={4} lg={3} key={container.container_id}>
-                  <ContainerTile container={container} />
+                  <ContainerTile
+                    container={container}
+                    graphPeriod={graphPeriod}
+                    onGraphPeriodChange={setGraphPeriod}
+                    timeZone={timeZone}
+                    fullscreenContainerRef={dashboardRef}
+                  />
                 </Grid>
               ))}
             </Grid>
