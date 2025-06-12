@@ -32,7 +32,7 @@ const LogoutDialog = (props) => {
       authCtx.setPaymentMethod(false);
       const baseUrl = ContextHolder.getContext().baseUrl;
       // navigate(`${baseUrl}/oauth/logout?post_logout_redirect_uri=${window.location}`);
-      window.location.href = `${baseUrl}/oauth/logout?post_logout_redirect_uri=${process.env.REACT_APP_LOGOUT_REDIRECT_URL_STAGE}`;
+      window.location.href = `${baseUrl}/oauth/logout?post_logout_redirect_uri=${process.env.REACT_APP_LOGOUT_REDIRECT_URL_PROD}`;
     }, 2000);
     // navigate('login');
   };
