@@ -41,8 +41,8 @@ import {
   Camera,
   Film,
   Code,
-  ExternalLink
-  // PieChart
+  ExternalLink,
+  BarChart2
 } from 'react-feather';
 import AccountMenu from '../common/accountmenu';
 import { Outlet, useNavigate } from 'react-router-dom';
@@ -455,6 +455,13 @@ const Layout = () => {
       active: true,
       link: '/customers',
       key: 11
+    },
+    {
+      name: 'Container Metrics',
+      icon: <BarChart2 style={{ color: 'white' }} />,
+      active: true,
+      link: '/metrics',
+      key: 12
     }
     // {
     //   name: 'Billing',
@@ -563,7 +570,8 @@ const Layout = () => {
                       authCtx.user.role === 'Admin' &&
                       authCtx.paymentMethod &&
                       item.key !== 9 &&
-                      item.key !== 11
+                      item.key !== 11 &&
+                      item.key !== 12
                     ) {
                       return true;
                     } else if (
@@ -573,8 +581,7 @@ const Layout = () => {
                       return true;
                     } else if (
                       authCtx.user.role === 'Super Admin' &&
-                      //item.key === 10
-                      [11].includes(item.key)
+                      (item.key === 11 || item.key === 12)
                     ) {
                       return true;
                     } else {
