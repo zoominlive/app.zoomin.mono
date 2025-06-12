@@ -1,38 +1,15 @@
 const { postgres } = require('../lib/database');
 const connectToDatabase = require("../models/index");
 const jwt = require('jsonwebtoken');
+const Sequelize = require('sequelize');
 
 module.exports = {
   // Create a single container metric record
   createContainerMetric: async (req, res) => {
     const t = await postgres.transaction();
     try {
-      // Check if Authorization header exists
-      const authHeader = req.header('Authorization');
-      if (!authHeader) {
-        await t.rollback();
-        return res.status(401).json({ error: "Authorization header is required" });
-      }
-
-      // Extract and validate token
-      const token = authHeader.startsWith('Bearer ') ? authHeader.substring(7) : authHeader;
-      if (!token) {
-        await t.rollback();
-        return res.status(401).json({ error: "Token is required" });
-      }
-
-      const secretKey = process.env.AGENT_SECRET;
-      
-      try {
-        const decodeToken = jwt.verify(token, secretKey);
-        console.log("Decoded token:", decodeToken);
-      } catch (jwtError) {
-        await t.rollback();
-        return res.status(403).json({ error: "Invalid or expired token", details: jwtError.message });
-      }
-
       const { ContainerMetrics } = await connectToDatabase();
-      const { containerID, containerHostName, cpuPercent, memoryPercent } = req.body;
+      const { containerID, containerHostName, muxlyContainerStatus, cpuPercent, memoryPercent } = req.body;
 
       // Validate required fields
       if (!containerID|| !containerHostName) {
@@ -44,6 +21,7 @@ module.exports = {
       const metricData = {
         container_id: containerID,
         container_host: containerHostName,
+        muxly_container_status: muxlyContainerStatus || null,
         timestamp: new Date(), // Current timestamp
         cpu_percent: cpuPercent || null,
         memory_mb: memoryPercent || null
@@ -60,6 +38,107 @@ module.exports = {
     } catch (error) {
       await t.rollback();
       console.error("Error recording container metric:", error);
+      return res.status(500).json({ error: error.message || "Internal server error" });
+    }
+  },
+
+  getAllContainerMetrics: async (req, res) => {
+    const t = await postgres.transaction();
+    try {
+      const { ContainerMetrics, Agent, Customers, AgentContainers } = await connectToDatabase();
+
+      // Parse range from query (default to '24h' if not provided)
+      const range = req.query.range || '24h';
+      let rangeMs = 24 * 60 * 60 * 1000; // default 24h
+      if (range === '1h') rangeMs = 1 * 60 * 60 * 1000;
+      else if (range === '6h') rangeMs = 6 * 60 * 60 * 1000;
+      else if (range === '7d') rangeMs = 7 * 24 * 60 * 60 * 1000;
+      const rangeStart = new Date(Date.now() - rangeMs);
+
+      // Check if there is any agent
+      const agentExists = await Agent.findOne({ raw: true });
+      if (!agentExists) {
+        await t.commit();
+        return res.status(200).json({ data: [], count: 0 });
+      }
+
+      // Check if there is any record in AgentContainers table
+      const agentContainerExists = await AgentContainers.findOne({ raw: true });
+      if (!agentContainerExists) {
+        await t.commit();
+        return res.status(200).json({ data: [], count: 0 });
+      }
+
+      // Fetch all agents
+      const agents = await Agent.findAll({ raw: true });
+      // Fetch all agent_containers and map by agent_id (pick latest by createdAt)
+      const agentContainers = await AgentContainers.findAll({ raw: true, order: [['createdAt', 'DESC']] });
+      const agentIdToContainer = {};
+      agentContainers.forEach(ac => {
+        if (!agentIdToContainer[ac.agent_id]) {
+          agentIdToContainer[ac.agent_id] = ac;
+        }
+      });
+
+      // Fetch all customers for company_name mapping
+      const customers = await Customers.findAll({ attributes: ['transcoder_endpoint', 'company_name'], raw: true });
+      const endpointToCompany = {};
+      customers.forEach(cust => {
+        if (cust.transcoder_endpoint) {
+          let endpointHost = cust.transcoder_endpoint.replace(/^https?:\/\//, '');
+          endpointHost = endpointHost.replace(/\/$/, '');
+          endpointToCompany[endpointHost] = cust.company_name;
+        }
+      });
+
+      // For each agent, build the tile data
+      const tiles = await Promise.all(agents.map(async agent => {
+        const container = agentIdToContainer[agent.agent_id];
+        if (!container) return null;
+        // Fetch metrics for this container_id, filtered by range
+        const metrics = await ContainerMetrics.findAll({
+          where: {
+            container_id: container.container_id,
+            timestamp: { [Sequelize.Op.gte]: rangeStart }
+          },
+          order: [['timestamp', 'DESC']],
+          limit: 100,
+          raw: true
+        });
+        // Find company name by matching agent.muxly_hostname to endpointToCompany
+        let company_name = null;
+        if (endpointToCompany[agent.muxly_hostname]) {
+          company_name = endpointToCompany[agent.muxly_hostname];
+        } else {
+          const hostNoPort = agent.muxly_hostname?.split(':')[0];
+          if (endpointToCompany[hostNoPort]) {
+            company_name = endpointToCompany[hostNoPort];
+          }
+        }
+        return {
+          id: agent.agent_id,
+          label: agent.muxly_hostname,
+          cpu: agent.processor || null,
+          customer: company_name || null,
+          memory: agent.totalRAM || null,
+          upSince: agent.createdAt || null,
+          region: agent.region || null,
+          host: agent.hostname || null,
+          onPrem: agent.onPrem || null,
+          tag: container.container_version || null,
+          stats: metrics.map(m => ({ time: m.timestamp, cpu: m.cpu_percent, mem: m.memory_mb }))
+        };
+      }));
+      const filteredTiles = tiles.filter(Boolean);
+      await t.commit();
+      return res.status(200).json({
+        data: filteredTiles,
+        count: filteredTiles.length
+      });
+
+    } catch (error) {
+      await t.rollback();
+      console.error("Error fetching container metrics:", error);
       return res.status(500).json({ error: error.message || "Internal server error" });
     }
   },

@@ -21,5 +21,6 @@ router.put('/locations/disable', withAuthentication(), authController, customerC
 router.delete('/delete', withAuthentication(), authController, customerController.deleteCustomer);
 router.delete('/delete-customer-location', withAuthentication(), authController, customerController.deleteCustomerLocation);
 router.get('/locations', withAuthentication(), authController, customerController.getLocationDetails)
+router.get('/locations-wthout-custid', customerController.fetchAllLocations)
 
 module.exports = router;

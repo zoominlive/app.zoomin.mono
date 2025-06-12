@@ -20,6 +20,10 @@ const ContainerMetrics = postgres.define(
       defaultValue: Sequelize.NOW,
       primaryKey: true
     },
+    muxly_container_status: {
+      type: Sequelize.TEXT,
+      allowNull: true
+    },
     cpu_percent: {
       type: Sequelize.DOUBLE,
       allowNull: true
