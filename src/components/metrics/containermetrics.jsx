@@ -1170,7 +1170,11 @@ function ContainerTile({
   graphPeriod,
   onGraphPeriodChange,
   timeZone,
-  fullscreenContainerRef
+  fullscreenContainerRef,
+  filters,
+  sortField,
+  sortOrder,
+  setContainerData
 }) {
   const { enqueueSnackbar } = useSnackbar();
   const theme = useMuiTheme();
@@ -1218,40 +1222,15 @@ function ContainerTile({
     debugDialogOpen: false
   });
 
-  // Container state
+  // Dropdown state for transcoder_endpoint
+  const [transcoderOptions, setTranscoderOptions] = useState([]);
+  const [selectedTranscoder, setSelectedTranscoder] = useState('');
+  const [loadingTranscoders, setLoadingTranscoders] = useState(false);
+
+  // Container state with minimal initial values
   const [containerState, setContainerState] = useState({
-    updateConfigJson: `{
-      "image": "${container.image || 'muxly1:3'}",
-      "env": [
-        "RTSP_STREAM_AUTH_JWT_ENABLED=true",
-        "RTSP_STREAM_KEY_URI=https://rtspdev.zoominlive.com",
-        "RTSP_STREAM_ENVIRONMENT=stage",
-        "RTSP_STREAM_AUTH_JWT_SECRET=zoominlivesecretkey",
-        "RTSP_STREAM_JWT_REQUEST_SECRET=p7FQj}9p9wD$N;L1kC&X<MCa[UV%",
-        "RTSP_STREAM_AWS_ACCESS_KEY=AKIAYEUNNGGXRXVN5XNN",
-        "RTSP_STREAM_AWS_ACCESS_SECRET=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"
-      ],
-      "port_bindings": {
-        "8080": "80"
-      }
-    }`,
-    dockerArgs: `{
-      "image": "zoominlive/muxly:1.3.01_9d61ed460c52cea2aeaebec5fb90f6e66d198e48",
-      "detach": true,
-      "interactive": true,
-      "env": [
-        "RTSP_STREAM_AUTH_JWT_ENABLED=false",
-        "RTSP_STREAM_KEY_URI=https://rtspdev.zoominlive.com",
-        "RTSP_STREAM_ENVIRONMENT=stage",
-        "RTSP_STREAM_AUTH_JWT_SECRET=zoominlivesecretkey",
-        "RTSP_STREAM_JWT_REQUEST_SECRET=p7FQj}9p9wD$N;L1kC&X<MCa[UV%",
-        "RTSP_STREAM_AWS_ACCESS_KEY=AKIAYEUNNGGXRXVN5XNN",
-        "RTSP_STREAM_AWS_ACCESS_SECRET=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"
-      ],
-      "port_bindings": {
-        "8080":"80"
-      }
-    }`,
+    updateConfigJson: '',
+    dockerArgs: '',
     updateNotification: false,
     debugNotification: false,
     debugActive: false,
@@ -1259,6 +1238,47 @@ function ContainerTile({
     actionError: '',
     actionSuccess: ''
   });
+
+  // Initialize container state after selectedTranscoder is available
+  useEffect(() => {
+    const defaultUri = container.label ? `https://${container.label}` : selectedTranscoder || '';
+
+    setContainerState((prev) => ({
+      ...prev,
+      updateConfigJson: `{
+        "image": "${container.image || 'muxly1:3'}",
+        "env": [
+          "RTSP_STREAM_AUTH_JWT_ENABLED=true",
+          "RTSP_STREAM_KEY_URI=${defaultUri}",
+          "RTSP_STREAM_ENVIRONMENT=stage",
+          "RTSP_STREAM_AUTH_JWT_SECRET=zoominlivesecretkey",
+          "RTSP_STREAM_JWT_REQUEST_SECRET=p7FQj}9p9wD$N;L1kC&X<MCa[UV%",
+          "RTSP_STREAM_AWS_ACCESS_KEY=AKIAYEUNNGGXRXVN5XNN",
+          "RTSP_STREAM_AWS_ACCESS_SECRET=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"
+        ],
+        "port_bindings": {
+          "8080": "80"
+        }
+      }`,
+      dockerArgs: `{
+        "image": "zoominlive/muxly:1.3.01_9d61ed460c52cea2aeaebec5fb90f6e66d198e48",
+        "detach": true,
+        "interactive": true,
+        "env": [
+          "RTSP_STREAM_AUTH_JWT_ENABLED=false",
+          "RTSP_STREAM_KEY_URI=${defaultUri}",
+          "RTSP_STREAM_ENVIRONMENT=stage",
+          "RTSP_STREAM_AUTH_JWT_SECRET=zoominlivesecretkey",
+          "RTSP_STREAM_JWT_REQUEST_SECRET=p7FQj}9p9wD$N;L1kC&X<MCa[UV%",
+          "RTSP_STREAM_AWS_ACCESS_KEY=AKIAYEUNNGGXRXVN5XNN",
+          "RTSP_STREAM_AWS_ACCESS_SECRET=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"
+        ],
+        "port_bindings": {
+          "8080":"80"
+        }
+      }`
+    }));
+  }, [container.label, selectedTranscoder, container.image]);
 
   // Standard error handler
   const handleApiError = (error, customMessage = 'Operation failed') => {
@@ -1284,11 +1304,6 @@ function ContainerTile({
       anchorOrigin: { vertical: 'top', horizontal: 'right' }
     });
   };
-
-  // Dropdown state for transcoder_endpoint
-  const [transcoderOptions, setTranscoderOptions] = useState([]);
-  const [selectedTranscoder, setSelectedTranscoder] = useState('');
-  const [loadingTranscoders, setLoadingTranscoders] = useState(false);
 
   // Fetch transcoder endpoints if no container.label
   useEffect(() => {
@@ -1321,39 +1336,13 @@ function ContainerTile({
   };
 
   const handleUpdateClick = () => {
-    setContainerState((prev) => ({
-      ...prev,
-      updateConfigJson: prev.dockerArgs,
-      actionError: '',
-      actionSuccess: ''
-    }));
     setDialogs((prev) => ({ ...prev, updateDialogOpen: true }));
+    setContainerState((prev) => ({ ...prev, actionError: '', actionSuccess: '' }));
   };
 
   const handleModifyClick = () => {
-    setContainerState((prev) => ({
-      ...prev,
-      dockerArgs: `{
-        "image": "zoominlive/muxly:1.3.01_9d61ed460c52cea2aeaebec5fb90f6e66d198e48",
-        "detach": true,
-        "interactive": true,
-        "env": [
-          "RTSP_STREAM_AUTH_JWT_ENABLED=false",
-          "RTSP_STREAM_KEY_URI=https://rtspdev.zoominlive.com",
-          "RTSP_STREAM_ENVIRONMENT=stage",
-          "RTSP_STREAM_AUTH_JWT_SECRET=zoominlivesecretkey",
-          "RTSP_STREAM_JWT_REQUEST_SECRET=p7FQj}9p9wD$N;L1kC&X<MCa[UV%",
-          "RTSP_STREAM_AWS_ACCESS_KEY=AKIAYEUNNGGXRXVN5XNN",
-          "RTSP_STREAM_AWS_ACCESS_SECRET=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"
-        ],
-        "port_bindings": {
-          "8080":"80"
-        }
-      }`,
-      actionError: '',
-      actionSuccess: ''
-    }));
     setDialogs((prev) => ({ ...prev, modifyDialogOpen: true }));
+    setContainerState((prev) => ({ ...prev, actionError: '', actionSuccess: '' }));
   };
 
   const handleDebugClick = () => {
@@ -1395,7 +1384,11 @@ function ContainerTile({
       });
       if (response.status === 200) {
         handleApiSuccess('Container image update initiated successfully');
-        setDialogs((prev) => ({ ...prev, updateConfirmDialogOpen: false }));
+        setDialogs((prev) => ({
+          ...prev,
+          updateConfirmDialogOpen: false,
+          updateDialogOpen: false
+        }));
         setContainerState((prev) => ({
           ...prev,
           updateNotification: true
@@ -1440,7 +1433,26 @@ function ContainerTile({
 
       if (response.status === 200) {
         handleApiSuccess('Container config update initiated successfully');
-        setDialogs((prev) => ({ ...prev, modifyConfirmDialogOpen: false }));
+        setDialogs((prev) => ({
+          ...prev,
+          modifyConfirmDialogOpen: false,
+          modifyDialogOpen: false
+        }));
+        // Fetch updated container metrics
+        const metricsResponse = await fetchContainerMetrics({
+          customername: filters.customer || undefined,
+          hostname: filters.host || undefined,
+          minCpu: filters.cpuOp === '>=' || filters.cpuOp === '>' ? filters.cpu : undefined,
+          maxCpu: filters.cpuOp === '<=' || filters.cpuOp === '<' ? filters.cpu : undefined,
+          minMemory: filters.memOp === '>=' || filters.memOp === '>' ? filters.mem : undefined,
+          maxMemory: filters.memOp === '<=' || filters.memOp === '<' ? filters.mem : undefined,
+          sortField,
+          sortOrder,
+          range: graphPeriod
+        });
+        if (metricsResponse.data) {
+          setContainerData(metricsResponse.data.data || metricsResponse.data);
+        }
       } else {
         handleApiError(response, 'Failed to update container config');
       }
@@ -1789,10 +1801,10 @@ function ContainerTile({
         dialogs={dialogs}
         setDialogs={setDialogs}
         onConfirm={{
-          handleConfirmRestart,
-          handleConfirmUpdate,
-          handleConfirmModify,
-          handleDebugMode
+          handleConfirmRestart: handleConfirmRestart,
+          handleConfirmUpdate: handleConfirmUpdate,
+          handleConfirmModify: handleConfirmModify,
+          handleDebugMode: handleDebugMode
         }}
         theme={theme}
         setContainerState={setContainerState}
@@ -1828,7 +1840,11 @@ ContainerTile.propTypes = {
   graphPeriod: PropTypes.string.isRequired,
   onGraphPeriodChange: PropTypes.func.isRequired,
   timeZone: PropTypes.string.isRequired,
-  fullscreenContainerRef: PropTypes.object
+  fullscreenContainerRef: PropTypes.object,
+  filters: PropTypes.object.isRequired,
+  sortField: PropTypes.string.isRequired,
+  sortOrder: PropTypes.string.isRequired,
+  setContainerData: PropTypes.func.isRequired
 };
 
 function ContainerMetrics() {
@@ -2180,6 +2196,10 @@ function ContainerMetrics() {
                     onGraphPeriodChange={setGraphPeriod}
                     timeZone={timeZone}
                     fullscreenContainerRef={dashboardRef}
+                    filters={filters}
+                    sortField={sortField}
+                    sortOrder={sortOrder}
+                    setContainerData={setContainerData}
                   />
                 </Grid>
               ))}
