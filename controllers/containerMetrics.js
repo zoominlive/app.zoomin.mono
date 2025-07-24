@@ -102,7 +102,7 @@ module.exports = {
             timestamp: { [Sequelize.Op.gte]: rangeStart }
           },
           order: [['timestamp', 'DESC']],
-          limit: 100,
+          // limit: 100,
           raw: true
         });
         // Find company name by matching agent.muxly_hostname to endpointToCompany
