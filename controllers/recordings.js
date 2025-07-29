@@ -8,6 +8,7 @@ const connectToDatabase = require("../models/index");
 const { shareRecordingUrl, reportIssue } = require('../lib/ses-mail-sender');
 const customerServices = require('../services/customers');
 const { Op } = require('sequelize');
+const socketServices = require('../services/socket');
 
 module.exports = {
   // get all recording details
@@ -292,6 +293,29 @@ module.exports = {
           { where: { share_id: req_share_id } },
           { transaction: t }
         );
+
+        // Send socket notification for reshare
+        try {
+          const recordingDetails = {
+            share_id: req_share_id,
+            record_uuid: record_uuid,
+            event_name: event_name,
+            thumbnail_url: recipient.thumbnail_url,
+            expires_on: recipient.expires_on,
+            shared_link: recipient.video_url,
+            is_reshare: true
+          };
+          
+          await socketServices.sendRecordingShareNotification(
+            recipient.receiver_id,
+            user.first_name,
+            recordingDetails
+          );
+        } catch (socketError) {
+          console.error('Socket notification error for reshare:', socketError);
+          // Don't fail the request if socket notification fails
+        }
+
         return res.status(201).json({
           IsSuccess: true,
           Data: shareHistoryUpdated,
@@ -345,6 +369,28 @@ module.exports = {
       );
 
       await t.commit();
+
+      // Send socket notification to the recipient
+      try {
+        const recordingDetails = {
+          share_id: share_id,
+          record_uuid: record_uuid,
+          event_name: event_name,
+          thumbnail_url: thumbnail_url,
+          expires_on: expires_on,
+          shared_link: urlToSend
+        };
+        
+        await socketServices.sendRecordingShareNotification(
+          recipient.receiver_id,
+          user.first_name,
+          recordingDetails
+        );
+      } catch (socketError) {
+        console.error('Socket notification error:', socketError);
+        // Don't fail the request if socket notification fails
+      }
+
       res.status(201).json({
         IsSuccess: true,
         Data: shareHistoryCreated,
