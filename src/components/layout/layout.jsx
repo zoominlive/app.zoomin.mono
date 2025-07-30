@@ -53,7 +53,7 @@ import { useSnackbar } from 'notistack';
 import API from '../../api';
 import AuthContext from '../../context/authcontext';
 import Loader from '../common/loader';
-import { errorMessageHandler } from '../../utils/errormessagehandler';
+
 import AddFamilyDialog from '../addfamily/addfamilydialog';
 //import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
 import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
@@ -240,41 +240,72 @@ const Layout = () => {
 
   useEffect(() => {
     if (!authCtx.user || authCtx.user.role == 'Super Admin') {
-      return; // Prevent API call if user is not available or has already been fetched
+      return; // Prevent socket connection if user is not available or is Super Admin
     }
-    API.get('recordings/share-history', {
-      params: {
+
+    // Create WebSocket connection for recording share notifications
+    let socket = new WebSocket(process.env.REACT_APP_SOCKET_URL);
+
+    // Connection opened
+    socket.addEventListener('open', (event) => {
+      console.log('Recording share notification socket connected', event);
+
+      // Send user identification data
+      const userData = {
         user_id:
-          authCtx.user?.role == 'Family' ? authCtx.user.family_member_id : authCtx.user.user_id
-      }
-    })
-      .then((response) => {
-        if (response.status === 200) {
-          const data = response.data.Data;
-          // Retrieve seen clips from local storage
-          const seenClips = JSON.parse(localStorage.getItem('seenClips')) || [];
-
-          // Check if there are any new share_id that are NOT in localStorage
-          const hasNewUnseen = data.some((clip) => !seenClips.includes(clip.share_id));
-
-          // ✅ If new unseen clips exist, show red dot
-          if (hasNewUnseen) {
-            authCtx.setShowRedDot(true);
-          }
+          authCtx.user?.role == 'Family' ? authCtx.user.family_member_id : authCtx.user.user_id,
+        type: 'recording_share_listener'
+      };
+      // Send a ping message to the server
+      const pingInterval = setInterval(() => {
+        if (socket.readyState === socket.OPEN) {
+          socket.send('ping');
         } else {
-          if (response.status == 404) return;
+          clearInterval(pingInterval); // Stop sending pings if socket is not open
         }
-      })
-      .catch((error) => {
-        console.error('API error:', error);
-        errorMessageHandler(
-          enqueueSnackbar,
-          'Failed to load shared history or No Data found',
-          500,
-          authCtx.setAuthError
-        );
-      });
-  }, [authCtx.user]);
+      }, 120000); // Send a ping every 120 seconds
+      socket.send(JSON.stringify(userData));
+    });
+
+    // Listen for messages
+    socket.addEventListener('message', (event) => {
+      try {
+        const data = JSON.parse(event.data);
+
+        // Check if the message is a recording shared notification
+        if (data.type === 'recording_shared') {
+          console.log('Recording shared notification received:', data);
+
+          // Show red dot for new shared recording
+          authCtx.setShowRedDot(true);
+
+          // Optionally show a notification to the user
+          if (data.message) {
+            enqueueSnackbar(data.message, { variant: 'info' });
+          }
+        }
+      } catch (error) {
+        console.error('Error parsing socket message:', error);
+      }
+    });
+
+    // Handle socket errors
+    socket.addEventListener('error', (event) => {
+      console.error('Recording share socket error:', event);
+    });
+
+    // Handle socket close
+    socket.addEventListener('close', (event) => {
+      console.log('Recording share socket closed:', event.code, event.reason);
+    });
+
+    // Cleanup function to close socket when component unmounts or user changes
+    return () => {
+      if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.close();
+      }
+    };
+  }, [authCtx.user, enqueueSnackbar]);
 
   // Method to fetch Customer Payment Method along with Customer Details
   const getCustPaymentMethod = () => {
