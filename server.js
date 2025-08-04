@@ -11,25 +11,41 @@ var bodyParser = require('body-parser');
 const cors = require('cors');
 const { FronteggContext } = require('@frontegg/client');
 
+// Import WebSocket server and cron scheduler
+require('./websocket-server');
+require('./cron-scheduler');
+
 // Load environment variables
 require('dotenv').config();
 
-FronteggContext.init({
-  FRONTEGG_CLIENT_ID: process.env.FRONTEGG_CLIENT_ID,
-  FRONTEGG_API_KEY: process.env.FRONTEGG_API_KEY,
-  FRONTEGG_BASE_URL: process.env.FRONTEGG_BASE_URL,
-  FRONTEGG_ISSUER: process.env.FRONTEGG_ISSUER,
+console.log('Environment variables loaded:', {
+  FRONTEGG_CLIENT_ID: process.env.FRONTEGG_CLIENT_ID ? 'Set' : 'Not set',
+  FRONTEGG_API_KEY: process.env.FRONTEGG_API_KEY ? 'Set' : 'Not set',
+  FRONTEGG_DOMAIN: process.env.FRONTEGG_DOMAIN ? 'Set' : 'Not set',
 });
 
-app.use(cors({origin: "*"}));
+// Debug: Log the actual values (be careful with sensitive data)
+console.log('Frontegg Client ID:', process.env.FRONTEGG_CLIENT_ID);
+console.log('Frontegg Domain:', process.env.FRONTEGG_DOMAIN);
+console.log('Frontegg API Key (first 10 chars):', process.env.FRONTEGG_API_KEY ? process.env.FRONTEGG_API_KEY.substring(0, 10) + '...' : 'Not set');
 
-// Handle OPTIONS requests separately
-app.options('*', (req, res) => { 
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  res.sendStatus(204);  // No Content response
-});
+try {
+  FronteggContext.init({
+    FRONTEGG_CLIENT_ID: process.env.FRONTEGG_CLIENT_ID,
+    FRONTEGG_API_KEY: process.env.FRONTEGG_API_KEY,
+  });
+  console.log('FronteggContext initialized successfully');
+} catch (error) {
+  console.error('Error initializing FronteggContext:', error);
+}
+
+// Configure CORS properly
+app.use(cors({
+  origin: "*",
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-api-key'],
+  credentials: true
+}));
 
 // To create DB tables from models and sync DB
 sequelize.sync();
@@ -56,7 +72,7 @@ app.use(express.json());
 //     predefinedSpec: predefinedSpec ? () => predefinedSpec : undefined
 //   });
 // }
-
+console.log('reached here==>');
 app.use('/', indexRouter);
 
 /** handle the requests to add openapi specs*/
@@ -64,13 +80,7 @@ app.use('/', indexRouter);
 //   handleRequests();
 // }
 
-// Add CORS headers to all responses
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  next();
-});
+
 
 const PORT = process.env.PORT || 3000;
 
@@ -78,4 +88,4 @@ app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
 
-module.exports = app;
+module.exports = app; 
