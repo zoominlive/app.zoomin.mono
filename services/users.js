@@ -566,7 +566,7 @@ module.exports = {
 
   createFrontEggUser: async (tenantId, userDetails) => {
     const vendor_token = await axios.post(
-      `${process.env.FRONTEGG_API_GATEWAY_URL}auth/vendor/`,
+      `${process.env.FRONTEGG_API_GATEWAY_URL}/auth/vendor/`,
       {
         clientId: process.env.FRONTEGG_CLIENT_ID,
         secret: process.env.FRONTEGG_API_KEY,
@@ -574,7 +574,7 @@ module.exports = {
     );
     if (vendor_token) {
       const user_response = await axios.post(
-        `${process.env.FRONTEGG_API_GATEWAY_URL}identity/resources/users/v1`,
+        `${process.env.FRONTEGG_API_GATEWAY_URL}/identity/resources/users/v1`,
         {
           name: userDetails.first_name + " " + userDetails.last_name,
           email: userDetails.email,
@@ -597,7 +597,7 @@ module.exports = {
 
   createFrontEggAppUser: async (tenantId, userDetails) => {
     const vendor_token = await axios.post(
-      `${process.env.FRONTEGG_API_GATEWAY_URL}auth/vendor/`,
+      `${process.env.FRONTEGG_API_GATEWAY_URL}/auth/vendor/`,
       {
         clientId: process.env.FRONTEGG_CLIENT_ID,
         secret: process.env.FRONTEGG_API_KEY,
@@ -605,7 +605,7 @@ module.exports = {
     );
     if (vendor_token) {
       const user_response = await axios.post(
-        `${process.env.FRONTEGG_API_GATEWAY_URL}identity/resources/users/v1`,
+        `${process.env.FRONTEGG_API_GATEWAY_URL}/identity/resources/users/v1`,
         {
           name: userDetails.name,
           email: userDetails.email,
@@ -624,7 +624,7 @@ module.exports = {
 
   updateFrontEggAppUser: async (tenantId, userDetails) => {
     const vendor_token = await axios.post(
-      `${process.env.FRONTEGG_API_GATEWAY_URL}auth/vendor/`,
+      `${process.env.FRONTEGG_API_GATEWAY_URL}/auth/vendor/`,
       {
         clientId: process.env.FRONTEGG_CLIENT_ID,
         secret: process.env.FRONTEGG_API_KEY,
@@ -632,7 +632,7 @@ module.exports = {
     );
     if (vendor_token) {
       const user_response = await axios.put(
-        `${process.env.FRONTEGG_API_GATEWAY_URL}identity/resources/users/v1`,
+        `${process.env.FRONTEGG_API_GATEWAY_URL}/identity/resources/users/v1`,
         {
           name: userDetails.name,
         },
@@ -655,7 +655,7 @@ module.exports = {
     expiresIn
   ) => {
     const vendor_token = await axios.post(
-      `${process.env.FRONTEGG_API_GATEWAY_URL}auth/vendor/`,
+      `${process.env.FRONTEGG_API_GATEWAY_URL}/auth/vendor/`,
       {
         clientId: process.env.FRONTEGG_CLIENT_ID,
         secret: process.env.FRONTEGG_API_KEY,
@@ -663,7 +663,7 @@ module.exports = {
     );
     if (vendor_token) {
       const token_response = await axios.post(
-        `${process.env.FRONTEGG_API_GATEWAY_URL}identity/resources/users/access-tokens/v1`,
+        `${process.env.FRONTEGG_API_GATEWAY_URL}/identity/resources/users/access-tokens/v1`,
         {
           description: "Token for CLI calls",
           expiresInMinutes: 15,
@@ -683,7 +683,7 @@ module.exports = {
 
   createNewJWTToken: async (refreshToken) => {
     const vendor_token = await axios.post(
-      `${process.env.FRONTEGG_API_GATEWAY_URL}auth/vendor/`,
+      `${process.env.FRONTEGG_API_GATEWAY_URL}/auth/vendor/`,
       {
         clientId: process.env.FRONTEGG_CLIENT_ID,
         secret: process.env.FRONTEGG_API_KEY,
@@ -691,7 +691,7 @@ module.exports = {
     );
     if (vendor_token) {
       const token_response = await axios.post(
-        `${process.env.FRONTEGG_API_GATEWAY_URL}identity/resources/auth/v2/api-token/token/refresh`,
+        `${process.env.FRONTEGG_API_GATEWAY_URL}/identity/resources/auth/v2/api-token/token/refresh`,
         {
           refreshToken: refreshToken,
         },
@@ -708,7 +708,7 @@ module.exports = {
 
   enableUser: async (tenantId, userId) => {
     const vendor_token = await axios.post(
-      `${process.env.FRONTEGG_API_GATEWAY_URL}auth/vendor/`,
+      `${process.env.FRONTEGG_API_GATEWAY_URL}/auth/vendor/`,
       {
         clientId: process.env.FRONTEGG_CLIENT_ID,
         secret: process.env.FRONTEGG_API_KEY,
@@ -716,7 +716,7 @@ module.exports = {
     );
     if (vendor_token) {
       const user_response = await axios.post(
-        `${process.env.FRONTEGG_API_GATEWAY_URL}identity/resources/tenants/users/v1/${userId}/enable`,
+        `${process.env.FRONTEGG_API_GATEWAY_URL}/identity/resources/tenants/users/v1/${userId}/enable`,
         {},
         {
           headers: {
@@ -731,7 +731,7 @@ module.exports = {
 
   disableUser: async (tenantId, userId) => {
     const vendor_token = await axios.post(
-      `${process.env.FRONTEGG_API_GATEWAY_URL}auth/vendor/`,
+      `${process.env.FRONTEGG_API_GATEWAY_URL}/auth/vendor/`,
       {
         clientId: process.env.FRONTEGG_CLIENT_ID,
         secret: process.env.FRONTEGG_API_KEY,
@@ -739,7 +739,7 @@ module.exports = {
     );
     if (vendor_token) {
       const user_response = await axios.post(
-        `${process.env.FRONTEGG_API_GATEWAY_URL}identity/resources/tenants/users/v1/${userId}/disable`,
+        `${process.env.FRONTEGG_API_GATEWAY_URL}/identity/resources/tenants/users/v1/${userId}/disable`,
         {},
         {
           headers: {
@@ -754,7 +754,7 @@ module.exports = {
 
   editFrontEggUserEmail: async (userDetails) => {
     const vendor_token = await axios.post(
-      `${process.env.FRONTEGG_API_GATEWAY_URL}auth/vendor/`,
+      `${process.env.FRONTEGG_API_GATEWAY_URL}/auth/vendor/`,
       {
         clientId: process.env.FRONTEGG_CLIENT_ID,
         secret: process.env.FRONTEGG_API_KEY,
@@ -762,7 +762,7 @@ module.exports = {
     );
     if (vendor_token) {
       const user_response = await axios.put(
-        `${process.env.FRONTEGG_API_GATEWAY_URL}identity/resources/users/v1/${userDetails.frontegg_user_id}/email`,
+        `${process.env.FRONTEGG_API_GATEWAY_URL}/identity/resources/users/v1/${userDetails.frontegg_user_id}/email`,
         {
           email: userDetails.email,
         },
@@ -780,7 +780,7 @@ module.exports = {
   getFrontEggUserDetails: async (userDetails) => {
     try {      
       const vendor_token = await axios.post(
-        `${process.env.FRONTEGG_API_GATEWAY_URL}auth/vendor/`,
+        `${process.env.FRONTEGG_API_GATEWAY_URL}/auth/vendor/`,
         {
           clientId: process.env.FRONTEGG_CLIENT_ID,
           secret: process.env.FRONTEGG_API_KEY,
@@ -788,7 +788,7 @@ module.exports = {
       );
       if (vendor_token) {    
         const user_response = await axios.get(
-          `${process.env.FRONTEGG_API_GATEWAY_URL}identity/resources/users/v1/${userDetails.frontegg_user_id}`,
+          `${process.env.FRONTEGG_API_GATEWAY_URL}/identity/resources/users/v1/${userDetails.frontegg_user_id}`,
           {
             headers: {
               'frontegg-tenant-id': userDetails.frontegg_tenant_id,
@@ -806,7 +806,7 @@ module.exports = {
   resendInvite: async (email) => {
     try {      
       const vendor_token = await axios.post(
-        `${process.env.FRONTEGG_API_GATEWAY_URL}auth/vendor/`,
+        `${process.env.FRONTEGG_API_GATEWAY_URL}/auth/vendor/`,
         {
           clientId: process.env.FRONTEGG_CLIENT_ID,
           secret: process.env.FRONTEGG_API_KEY,
@@ -814,7 +814,7 @@ module.exports = {
       );
       if (vendor_token) {    
         const user_response = await axios.post(
-          `${process.env.FRONTEGG_API_GATEWAY_URL}identity/resources/users/v1/activate/reset`,
+          `${process.env.FRONTEGG_API_GATEWAY_URL}/identity/resources/users/v1/activate/reset`,
           {
             email: email,
             emailMetadata: {}
@@ -834,7 +834,7 @@ module.exports = {
 
   removeFrontEggUser: async (userId) => {
     const vendor_token = await axios.post(
-      `${process.env.FRONTEGG_API_GATEWAY_URL}auth/vendor/`,
+      `${process.env.FRONTEGG_API_GATEWAY_URL}/auth/vendor/`,
       {
         clientId: process.env.FRONTEGG_CLIENT_ID,
         secret: process.env.FRONTEGG_API_KEY,
@@ -842,7 +842,7 @@ module.exports = {
     );
     if (vendor_token) {
       const user_response = await axios.delete(
-        `${process.env.FRONTEGG_API_GATEWAY_URL}identity/resources/users/v1/${userId}`,
+        `${process.env.FRONTEGG_API_GATEWAY_URL}/identity/resources/users/v1/${userId}`,
         {
           headers: {
             Authorization: `Bearer ${vendor_token.data.token}`,
@@ -854,7 +854,7 @@ module.exports = {
 
   createFrontEggFamilyUser: async (tenantId, userDetails) => {
     const vendor_token = await axios.post(
-      `${process.env.FRONTEGG_API_GATEWAY_URL}auth/vendor/`,
+      `${process.env.FRONTEGG_API_GATEWAY_URL}/auth/vendor/`,
       {
         clientId: process.env.FRONTEGG_CLIENT_ID,
         secret: process.env.FRONTEGG_API_KEY,
@@ -862,7 +862,7 @@ module.exports = {
     );
     if (vendor_token) {
       const user_response = await axios.post(
-        `${process.env.FRONTEGG_API_GATEWAY_URL}identity/resources/users/v1`,
+        `${process.env.FRONTEGG_API_GATEWAY_URL}/identity/resources/users/v1`,
         {
           name: userDetails.first_name + " " + userDetails.last_name,
           email: userDetails.email,

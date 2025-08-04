@@ -402,14 +402,14 @@ module.exports = {
 
   deleteFrontEggTenant: async(tenantId) => {
     const vendor_token = await axios.post(
-      `${process.env.FRONTEGG_API_GATEWAY_URL}auth/vendor/`,
+      `${process.env.FRONTEGG_API_GATEWAY_URL}/auth/vendor/`,
       {
         clientId:process.env.FRONTEGG_CLIENT_ID,
         secret: process.env.FRONTEGG_API_KEY,
       },
     );
     const tenant_response = await axios.delete(
-      `${process.env.FRONTEGG_API_GATEWAY_URL}tenants/resources/tenants/v1/${tenantId}`,
+      `${process.env.FRONTEGG_API_GATEWAY_URL}/tenants/resources/tenants/v1/${tenantId}`,
       {
         headers: {
           'Authorization':

@@ -216,14 +216,14 @@ module.exports = {
 
       if (user.role === 'Admin') {
         const vendor_token = await axios.post(
-          `${process.env.FRONTEGG_API_GATEWAY_URL}auth/vendor/`,
+          `${process.env.FRONTEGG_API_GATEWAY_URL}/auth/vendor/`,
           {
             clientId:process.env.FRONTEGG_CLIENT_ID,
             secret: process.env.FRONTEGG_API_KEY,
           },
         );
         const tenant_response = await axios.post(
-          `${process.env.FRONTEGG_API_GATEWAY_URL}tenants/resources/tenants/v1`,
+          `${process.env.FRONTEGG_API_GATEWAY_URL}/tenants/resources/tenants/v1`,
           {
             tenantId: uuidv4(),
             name: customeDetails.company_name,
@@ -237,7 +237,7 @@ module.exports = {
         );
         if (tenant_response) {
           const user_response = await axios.post(
-            `${process.env.FRONTEGG_API_GATEWAY_URL}identity/resources/users/v1`,
+            `${process.env.FRONTEGG_API_GATEWAY_URL}/identity/resources/users/v1`,
             {
               name: customeDetails.billing_contact_first +' '+ customeDetails.billing_contact_last,
               email: addUser.dataValues.email,
