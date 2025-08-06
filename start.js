@@ -68,7 +68,7 @@ const PORT = process.env.PORT || 3000;
 const app_server = app.listen(PORT, () => {
   console.log('🎉 Server is running!');
   console.log(`📡 HTTP Server: http://localhost:${PORT}`);
-  console.log(`🔌 WebSocket Server: ws://localhost:${process.env.WEBSOCKET_PORT || 3001}/websocket`);
+  console.log(`🔌 WebSocket Server: ws://localhost:${process.env.WEBSOCKET_PORT || 3000}/websocket`);
   console.log('⏰ Cron jobs scheduled (hourly)');
   console.log('📊 Database connected');
   console.log('🔐 Authentication ready');
