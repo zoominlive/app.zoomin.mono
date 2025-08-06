@@ -132,7 +132,10 @@ const Dashboard = () => {
   // const [roomsDropdownLoading, setRoomsDropdownLoading] = useState(false);
   useEffect(() => {
     if (authCtx.user) {
-      let { user_id, family_member_id } = JSON.parse(localStorage.getItem('user'));
+      const userData = JSON.parse(localStorage.getItem('user') || 'null');
+      if (!userData) return;
+
+      let { user_id, family_member_id } = userData;
 
       let data = {};
       if (family_member_id) {
