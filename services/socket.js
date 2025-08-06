@@ -3,6 +3,12 @@ const { connections } = require('../websocket-server');
 const socketServices = {
   emitResponse: async (connectionId, message) => {
     try {
+      // Check if connections is available
+      if (!connections) {
+        console.log('WebSocket connections not available yet');
+        return;
+      }
+      
       const ws = connections.get(connectionId);
       if (ws && ws.readyState === 1) { // WebSocket.OPEN
         ws.send(JSON.stringify(message));
@@ -90,16 +96,35 @@ const socketServices = {
 
   // Broadcast to all connected clients
   broadcast: (message) => {
-    connections.forEach((ws, connectionId) => {
-      if (ws.readyState === 1) { // WebSocket.OPEN
-        ws.send(JSON.stringify(message));
+    try {
+      // Check if connections is available
+      if (!connections) {
+        console.log('WebSocket connections not available yet');
+        return;
       }
-    });
+      
+      connections.forEach((ws, connectionId) => {
+        if (ws.readyState === 1) { // WebSocket.OPEN
+          ws.send(JSON.stringify(message));
+        }
+      });
+    } catch (err) {
+      console.error("broadcast error:", err);
+    }
   },
 
   // Get connection count
   getConnectionCount: () => {
-    return connections.size;
+    try {
+      // Check if connections is available
+      if (!connections) {
+        return 0;
+      }
+      return connections.size;
+    } catch (err) {
+      console.error("getConnectionCount error:", err);
+      return 0;
+    }
   }
 };
 

@@ -57,7 +57,7 @@ app.use('/', indexRouter);
 
 // Start WebSocket server
 console.log('🔌 Starting WebSocket server...');
-require('./websocket-server');
+const { initializeWebSocket } = require('./websocket-server');
 
 // Start cron scheduler
 console.log('⏰ Starting cron job scheduler...');
@@ -68,13 +68,16 @@ const PORT = process.env.PORT || 3000;
 const app_server = app.listen(PORT, () => {
   console.log('🎉 Server is running!');
   console.log(`📡 HTTP Server: http://localhost:${PORT}`);
-  console.log(`🔌 WebSocket Server: ws://localhost:${process.env.WEBSOCKET_PORT || 3000}/websocket`);
+  console.log(`🔌 WebSocket Server: ws://localhost:${PORT}/websocket`);
   console.log('⏰ Cron jobs scheduled (hourly)');
   console.log('📊 Database connected');
   console.log('🔐 Authentication ready');
   console.log('');
   console.log('Press Ctrl+C to stop the server');
 });
+
+// Initialize WebSocket server with HTTP server
+initializeWebSocket(app_server);
 
 // Graceful shutdown
 process.on('SIGINT', () => {
