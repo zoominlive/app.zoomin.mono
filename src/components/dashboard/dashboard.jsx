@@ -132,7 +132,10 @@ const Dashboard = () => {
   // const [roomsDropdownLoading, setRoomsDropdownLoading] = useState(false);
   useEffect(() => {
     if (authCtx.user) {
-      let { user_id, family_member_id } = JSON.parse(localStorage.getItem('user'));
+      const userData = JSON.parse(localStorage.getItem('user') || 'null');
+      if (!userData) return;
+
+      let { user_id, family_member_id } = userData;
 
       let data = {};
       if (family_member_id) {
@@ -164,7 +167,22 @@ const Dashboard = () => {
         let data = JSON.parse(event.data);
         if (data.message !== 'pong') console.log('===updateDashboardData', data);
         if (data?.message && data?.message !== 'pong') {
-          enqueueSnackbar(data?.message, { variant: 'success' });
+          // Filter out specific messages that shouldn't show snackbar notifications
+          const messagesToFilter = [
+            'Connected successfully',
+            'Registration successful',
+            'Connection successful',
+            'Successfully connected',
+            'Successfully registered'
+          ];
+
+          const shouldShowMessage = !messagesToFilter.some((filteredMessage) =>
+            data.message.toLowerCase().includes(filteredMessage.toLowerCase())
+          );
+
+          if (shouldShowMessage) {
+            enqueueSnackbar(data?.message, { variant: 'success' });
+          }
         } else {
           setStatisticsData((prevState) => ({
             ...prevState,

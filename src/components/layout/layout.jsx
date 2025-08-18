@@ -243,66 +243,129 @@ const Layout = () => {
       return; // Prevent socket connection if user is not available or is Super Admin
     }
 
-    // Create WebSocket connection for recording share notifications
-    let socket = new WebSocket(process.env.REACT_APP_SOCKET_URL);
+    let socket = null;
+    let pingInterval = null;
+    let reconnectAttempts = 0;
+    const maxReconnectAttempts = 5;
+    const baseDelay = 1000; // 1 second base delay
 
-    // Connection opened
-    socket.addEventListener('open', (event) => {
-      console.log('Recording share notification socket connected', event);
-
-      // Send user identification data
-      const userData = {
-        user_id:
-          authCtx.user?.role == 'Family' ? authCtx.user.family_member_id : authCtx.user.user_id,
-        type: 'recording_share_listener'
-      };
-      // Send a ping message to the server
-      const pingInterval = setInterval(() => {
-        if (socket.readyState === socket.OPEN) {
-          socket.send('ping');
-        } else {
-          clearInterval(pingInterval); // Stop sending pings if socket is not open
-        }
-      }, 120000); // Send a ping every 120 seconds
-      socket.send(JSON.stringify(userData));
-    });
-
-    // Listen for messages
-    socket.addEventListener('message', (event) => {
+    const createSocket = () => {
       try {
-        const data = JSON.parse(event.data);
+        socket = new WebSocket(process.env.REACT_APP_SOCKET_URL);
 
-        // Check if the message is a recording shared notification
-        if (data.type === 'recording_shared') {
-          console.log('Recording shared notification received:', data);
+        // Connection opened
+        socket.addEventListener('open', (event) => {
+          console.log('Recording share notification socket connected', event);
+          reconnectAttempts = 0; // Reset reconnect attempts on successful connection
 
-          // Show red dot for new shared recording
-          authCtx.setShowRedDot(true);
+          // Send user identification data
+          const userData = {
+            user_id:
+              authCtx.user?.role == 'Family' ? authCtx.user.family_member_id : authCtx.user.user_id,
+            type: 'recording_share_listener'
+          };
 
-          // Optionally show a notification to the user
-          if (data.message) {
-            enqueueSnackbar(data.message, { variant: 'info' });
+          // Send a ping message to the server
+          pingInterval = setInterval(() => {
+            if (socket && socket.readyState === WebSocket.OPEN) {
+              socket.send('ping');
+            } else {
+              clearInterval(pingInterval); // Stop sending pings if socket is not open
+            }
+          }, 120000); // Send a ping every 120 seconds
+
+          socket.send(JSON.stringify(userData));
+        });
+
+        // Listen for messages
+        socket.addEventListener('message', (event) => {
+          try {
+            const data = JSON.parse(event.data);
+
+            // Check if the message is a recording shared notification
+            if (data.type === 'recording_shared') {
+              console.log('Recording shared notification received:', data);
+
+              // Show red dot for new shared recording
+              authCtx.setShowRedDot(true);
+
+              // Optionally show a notification to the user
+              if (data.message) {
+                enqueueSnackbar(data.message, { variant: 'info' });
+              }
+            }
+          } catch (error) {
+            console.error('Error parsing socket message:', error);
           }
-        }
+        });
+
+        // Handle socket errors
+        socket.addEventListener('error', (event) => {
+          console.error('Recording share socket error:', event);
+        });
+
+        // Handle socket close with reconnection logic
+        socket.addEventListener('close', (event) => {
+          console.log('Recording share socket closed:', event.code, event.reason);
+
+          // Clear ping interval
+          if (pingInterval) {
+            clearInterval(pingInterval);
+            pingInterval = null;
+          }
+
+          // Handle different close codes
+          if (event.code === 1006) {
+            console.log('Abnormal closure detected, attempting reconnection...');
+          } else if (event.code === 1005) {
+            console.log('No status received, attempting reconnection...');
+          }
+
+          // Attempt reconnection for abnormal closures or other unexpected closures
+          if (
+            event.code === 1005 ||
+            event.code === 1006 ||
+            event.code === 1001 ||
+            event.code === 1011
+          ) {
+            if (reconnectAttempts < maxReconnectAttempts) {
+              const delay = baseDelay * Math.pow(2, reconnectAttempts); // Exponential backoff
+              console.log(
+                `Reconnecting in ${delay}ms (attempt ${
+                  reconnectAttempts + 1
+                }/${maxReconnectAttempts})`
+              );
+
+              setTimeout(() => {
+                reconnectAttempts++;
+                createSocket();
+              }, delay);
+            } else {
+              console.error(
+                'Max reconnection attempts reached. Socket will not reconnect automatically.'
+              );
+              // Optionally show user notification about connection issues
+              enqueueSnackbar('Connection lost. Please refresh the page to reconnect.', {
+                variant: 'warning'
+              });
+            }
+          }
+        });
       } catch (error) {
-        console.error('Error parsing socket message:', error);
+        console.error('Error creating WebSocket connection:', error);
       }
-    });
+    };
 
-    // Handle socket errors
-    socket.addEventListener('error', (event) => {
-      console.error('Recording share socket error:', event);
-    });
-
-    // Handle socket close
-    socket.addEventListener('close', (event) => {
-      console.log('Recording share socket closed:', event.code, event.reason);
-    });
+    // Initial connection
+    createSocket();
 
     // Cleanup function to close socket when component unmounts or user changes
     return () => {
+      if (pingInterval) {
+        clearInterval(pingInterval);
+      }
       if (socket && socket.readyState === WebSocket.OPEN) {
-        socket.close();
+        socket.close(1000, 'Component unmounting'); // Normal closure
       }
     };
   }, [authCtx.user, enqueueSnackbar]);
