@@ -8,3 +8,4 @@ path
 env.json
 updatedWarmup
 .env
+prod.env
