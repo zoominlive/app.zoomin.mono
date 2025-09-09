@@ -110,7 +110,7 @@ module.exports = {
         // user.location.selected_locations = updatedSelectedLocations;
       }
       if(user.role == 'Family') {
-        let customerDetail = await customerServices.getCustomerDetails(custId, t);
+        let customerDetail = await customerServices.getCustomerDetails(custId);
         user.invite_family = customerDetail.invite_user ? true : false;
       }
       await t.commit();

@@ -121,7 +121,6 @@ module.exports = {
   getAllCameraForCustomerDashboard: async (
     custId,
     location = ["Select All"],
-    t
   ) => {
     const { Camera } = await connectToDatabase();
     let locs = [];
@@ -135,8 +134,7 @@ module.exports = {
           cust_id: custId,
           loc_id: { [Sequelize.Op.in]: location },
         },
-      },
-      { transaction: t }
+      }
     );
 
     return cameras !== undefined ? cameras : null;
@@ -217,7 +215,7 @@ module.exports = {
       query.offset = parseInt(pageNumber * pageSize);
     }
 
-    const cams = await Camera.findAndCountAll(query, { transaction: t });
+    const cams = await Camera.findAndCountAll(query);
 
     return { cams: cams.rows, count: cams.count };
   },
@@ -237,7 +235,7 @@ module.exports = {
     return { cams: cams.rows, count: cams.count };
   },
 
-  getAllMountedCameraViewers: async (camIds, t) => {
+  getAllMountedCameraViewers: async (camIds) => {
     // .query(
     //   'SELECT recent_user_id, COUNT(DISTINCT sub.viewer_id) AS total_start_only_viewers FROM (SELECT viewer_id FROM mounted_camera_recent_viewers WHERE `function` = "start" AND cam_id IN (:camIds) GROUP BY viewer_id) AS sub WHERE NOT EXISTS (SELECT 1 FROM mounted_camera_recent_viewers WHERE `function` = "stop" AND viewer_id = sub.viewer_id)',
     //   { replacements: { camIds }, type: sequelize.QueryTypes.SELECT }
@@ -247,7 +245,7 @@ module.exports = {
     //   { replacements: { camIds }, type: sequelize.QueryTypes.SELECT }
     // );
     let result = await sequelize.query(
-      'SELECT recent_user_id, viewer_id, COUNT(DISTINCT viewer_id) AS total_start_only_viewers, COUNT(*) OVER () AS total_recent_viewers FROM mounted_camera_recent_viewers WHERE `function` = "start" AND cam_id IN (:camIds) AND DATE(requested_at) = CURDATE() AND viewer_id NOT IN (SELECT viewer_id FROM mounted_camera_recent_viewers WHERE `function` = "stop" AND DATE(requested_at) = CURDATE()) GROUP BY recent_user_id',
+      'SELECT recent_user_id, viewer_id, COUNT(DISTINCT viewer_id) AS total_start_only_viewers, COUNT(*) OVER() AS total_recent_viewers FROM mounted_camera_recent_viewers WHERE `function` = "start" AND cam_id IN (:camIds) AND requested_at >= CURDATE() AND requested_at < DATE_ADD(CURDATE(), INTERVAL 1 DAY) AND viewer_id NOT IN (SELECT viewer_id FROM mounted_camera_recent_viewers WHERE `function` = "stop" AND requested_at >= CURDATE() AND requested_at < DATE_ADD(CURDATE(), INTERVAL 1 DAY)) GROUP BY recent_user_id',
       { replacements: { camIds }, type: sequelize.QueryTypes.SELECT }
     );
 

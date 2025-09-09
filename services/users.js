@@ -126,13 +126,12 @@ module.exports = {
   },
 
   /* Get user via email */
-  getUser: async (email, t) => {
+  getUser: async (email) => {
     const { Users } = await connectToDatabase();
     let user = await Users.findOne(
       {
         where: { email: email },
       },
-      { transaction: t }
     );
     return user ? user.toJSON() : null;
   },
@@ -245,7 +244,6 @@ module.exports = {
     if (updateUserProfile) {
       updateUserProfile = await Users.findOne(
         { where: { user_id: user.user_id } },
-        { transaction: t }
       );
     }
 
@@ -428,15 +426,14 @@ module.exports = {
     return { users: users.rows, count: users.count };
   },
 
-  getAllUserIds: async (custId, location = ["Select All"], t) => {
+  getAllUserIds: async (custId, location = ["Select All"]) => {
     const { Users, CustomerLocations } = await connectToDatabase();
     const distinctUserIds = await Users.findAll({
       where: { cust_id: custId },
       attributes: [
         [Sequelize.fn("DISTINCT", Sequelize.col("user_id")), "user_id"]
       ],
-      raw: true,
-      transaction: t
+      raw: true
     });
     
     const userIdsArray = distinctUserIds.map(user => user.user_id);
@@ -449,7 +446,6 @@ module.exports = {
           as: "locations",
         },
       ],
-      transaction: t,
     });
 
     if (!location.includes("Select All")) {
@@ -469,16 +465,14 @@ module.exports = {
   },
 
   // check if user already exist for given email
-  checkEmailExist: async (email, t) => {
+  checkEmailExist: async (email) => {
     const { Users, Family } = await connectToDatabase();
     const users = await Users.findOne(
       { where: { email: email } },
-      { transaction: t }
     );
 
     const families = await Family.findOne(
       { where: { email: email } },
-      { transaction: t }
     );
 
     if (users === null && families === null) {

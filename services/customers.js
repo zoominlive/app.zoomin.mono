@@ -6,7 +6,7 @@ const axios = require("axios");
 const CustomerLocations = require("../models/customer_locations");
 
 module.exports = {
-  getMaxLiveStramAvailable: async (custId, t) => {
+  getMaxLiveStramAvailable: async (custId) => {
     const { Customers } = await connectToDatabase();
     let customer = await Customers.findOne(
       {
@@ -15,13 +15,12 @@ module.exports = {
           cust_id: custId,
         },
       },
-      { transaction: t }
     );
 
     return customer?.max_stream_live_license || null;
   },
 
-  getPermitAudio: async (custId, t) => {
+  getPermitAudio: async (custId) => {
     const { Customers } = await connectToDatabase();
     let customer = await Customers.findOne(
       {
@@ -30,13 +29,12 @@ module.exports = {
           cust_id: custId,
         },
       },
-      { transaction: t }
     );
 
     return customer?.permit_audio || null;
   },
 
-  getMaxRecordTime: async (custId, t) => {
+  getMaxRecordTime: async (custId) => {
     const { Customers } = await connectToDatabase();
     let customer = await Customers.findOne(
       {
@@ -45,13 +43,12 @@ module.exports = {
           cust_id: custId,
         },
       },
-      { transaction: t }
     );
 
     return customer?.max_record_time || null;
   },
 
-  getCameraRecording: async (custId, t) => {
+  getCameraRecording: async (custId) => {
     const { Customers } = await connectToDatabase();
     let customer = await Customers.findOne(
       {
@@ -60,13 +57,12 @@ module.exports = {
           cust_id: custId,
         },
       },
-      { transaction: t }
     );
 
     return customer?.camera_recording || null;
   },
 
-  getMaxResolution: async (custId, t) => {
+  getMaxResolution: async (custId) => {
     const { Customers } = await connectToDatabase();
     let customer = await Customers.findOne(
       {
@@ -75,13 +71,12 @@ module.exports = {
           cust_id: custId,
         },
       },
-      { transaction: t }
     );
 
     return customer?.max_resolution || null;
   },
 
-  getMaxFileSize: async (custId, t) => {
+  getMaxFileSize: async (custId) => {
     const { Customers } = await connectToDatabase();
     let customer = await Customers.findOne(
       {
@@ -90,13 +85,12 @@ module.exports = {
           cust_id: custId,
         },
       },
-      { transaction: t }
     );
 
     return customer?.max_file_size || null;
   },
 
-  getMaxFps: async (custId, t) => {
+  getMaxFps: async (custId) => {
     const { Customers } = await connectToDatabase();
     let customer = await Customers.findOne(
       {
@@ -105,13 +99,12 @@ module.exports = {
           cust_id: custId,
         },
       },
-      { transaction: t }
     );
 
     return customer?.max_fps || null;
   },
 
-  getInviteUser: async (custId, t) => {
+  getInviteUser: async (custId) => {
     const { Customers } = await connectToDatabase();
     let customer = await Customers.findOne(
       {
@@ -120,13 +113,12 @@ module.exports = {
           cust_id: custId,
         },
       },
-      { transaction: t }
     );
 
     return customer?.invite_user || null;
   },
 
-  getMaxLiveStreamZoneAvailable: async (custId, t) => {
+  getMaxLiveStreamZoneAvailable: async (custId) => {
     const { Customers } = await connectToDatabase();
     let customer = await Customers.findOne(
       {
@@ -135,13 +127,12 @@ module.exports = {
           cust_id: custId,
         },
       },
-      { transaction: t }
     );
 
     return customer?.max_stream_live_license_zone || null;
   },
 
-  getMaxLiveStreamZoneAvailable: async (custId, t) => {
+  getMaxLiveStreamZoneAvailable: async (custId) => {
     const { Customers } = await connectToDatabase();
     let customer = await Customers.findOne(
       {
@@ -150,13 +141,12 @@ module.exports = {
           cust_id: custId,
         },
       },
-      { transaction: t }
     );
 
     return customer?.max_stream_live_license_zone || null;
   },
 
-  getRTMPTranscoderUrl: async (custId, t) => {
+  getRTMPTranscoderUrl: async (custId) => {
     const { Customers } = await connectToDatabase();
     let customer = await Customers.findOne(
       {
@@ -165,13 +155,12 @@ module.exports = {
           cust_id: custId,
         },
       },
-      { transaction: t }
     );
 
     return customer.rtmp_transcoder_endpoint;
   },
 
-  getTranscoderUrl: async (custId, t) => {
+  getTranscoderUrl: async (custId) => {
     const { Customers } = await connectToDatabase();
     let customer = await Customers.findOne(
       {
@@ -180,7 +169,6 @@ module.exports = {
           cust_id: custId,
         },
       },
-      { transaction: t }
     );
 
     return customer?.transcoder_endpoint || null;
@@ -204,7 +192,7 @@ module.exports = {
     }
   },
 
-  getCustomerDetails: async (custId, t) => {
+  getCustomerDetails: async (custId) => {
     const { Customers } = await connectToDatabase();
     let customer = await Customers.findOne(
       {
@@ -212,8 +200,7 @@ module.exports = {
         where: {
           cust_id: custId,
         },
-      },
-      { transaction: t }
+      }
     );
 
     return customer;
