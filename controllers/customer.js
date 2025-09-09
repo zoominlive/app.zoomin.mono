@@ -216,14 +216,14 @@ module.exports = {
 
       if (user.role === 'Admin') {
         const vendor_token = await axios.post(
-          `${process.env.FRONTEGG_API_GATEWAY_URL}auth/vendor/`,
+          `${process.env.FRONTEGG_API_GATEWAY_URL}/auth/vendor/`,
           {
             clientId:process.env.FRONTEGG_CLIENT_ID,
             secret: process.env.FRONTEGG_API_KEY,
           },
         );
         const tenant_response = await axios.post(
-          `${process.env.FRONTEGG_API_GATEWAY_URL}tenants/resources/tenants/v1`,
+          `${process.env.FRONTEGG_API_GATEWAY_URL}/tenants/resources/tenants/v1`,
           {
             tenantId: uuidv4(),
             name: customeDetails.company_name,
@@ -237,7 +237,7 @@ module.exports = {
         );
         if (tenant_response) {
           const user_response = await axios.post(
-            `${process.env.FRONTEGG_API_GATEWAY_URL}identity/resources/users/v1`,
+            `${process.env.FRONTEGG_API_GATEWAY_URL}/identity/resources/users/v1`,
             {
               name: customeDetails.billing_contact_first +' '+ customeDetails.billing_contact_last,
               email: addUser.dataValues.email,
@@ -312,6 +312,7 @@ module.exports = {
         }
       );
       if (addRecord) {
+        await t.commit();
         await res.status(201).json({
           IsSuccess: true,
           Data: addRecord,
@@ -466,7 +467,6 @@ module.exports = {
       if (updateLocation) {
         updateLocation = await CustomerLocations.findOne(
           { where: { loc_id: loc_id } },
-          { transaction: t }
         );
         res.status(200).json({
           IsSuccess: true,
@@ -623,22 +623,18 @@ module.exports = {
   },
 
   getLocationDetails: async (req, res, next) => {
-    const t = await sequelize.transaction();
     try {
       const params = req.query;
       let locations = await customerServices.getLocationDetails(
-        params.cust_id || req.user.cust_id,
-        t
+        params.cust_id || req.user.cust_id
       );
       res.status(200).json({
         IsSuccess: true,
         Data: locations,
         Message: CONSTANTS.CUSTOMER_LOCATIONS_DETAILS,
       });
-      await t.commit();
       next();
     } catch (error) {
-      await t.rollback();
       res
         .status(500)
         .json({
@@ -651,7 +647,6 @@ module.exports = {
   },
 
   fetchAllLocations: async (req, res, next) => {
-    const t = await sequelize.transaction();
     try {
       let locations = await customerServices.getLocationDetailsWithoutCustId();
       res.status(200).json({
@@ -659,10 +654,8 @@ module.exports = {
         Data: locations,
         Message: CONSTANTS.CUSTOMER_LOCATIONS_DETAILS,
       });
-      await t.commit();
       next();
     } catch (error) {
-      await t.rollback();
       res
         .status(500)
         .json({

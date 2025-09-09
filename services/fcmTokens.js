@@ -8,7 +8,7 @@ module.exports = {
     return fcmCreated;
   },
 
-  getFamilyMembersFcmTokens: async (allfamilyIds, t) => {
+  getFamilyMembersFcmTokens: async (allfamilyIds) => {
     const { FcmTokens } = await connectToDatabase();
     let fcmTokens = await FcmTokens.findAll(
       {
@@ -20,7 +20,6 @@ module.exports = {
         },
         attributes: ['fcm_token']
       },
-      { transaction: t }
     );
     return fcmTokens;
   },

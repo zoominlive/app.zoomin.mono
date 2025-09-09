@@ -122,28 +122,26 @@ module.exports = {
         {
           where: { child_id: params.child_id }
         },
-        { transaction: t }
       );
     }
 
     return updateChildDetails.toJSON();
   },
   // get all children for given family Id
-  getAllchildren: async (familyId, t) => {
+  getAllchildren: async (familyId) => {
     const { Child } = await connectToDatabase();
     childDetails = await Child.findAll(
       {
         raw: true,
         where: { family_id: familyId }
       },
-      { transaction: t }
     );
 
     return childDetails;
   },
 
   // get all children for given family Id
-  getChildById: async (childId, t) => {
+  getChildById: async (childId) => {
     const { Child, CustomerLocations } = await connectToDatabase();
     childDetails = await Child.findOne(
       {
@@ -157,7 +155,6 @@ module.exports = {
           }
         ]
       },
-      { transaction: t }
     );
 
     return childDetails;
@@ -225,7 +222,6 @@ module.exports = {
             where: { child_id: childId },
             raw: true
           },
-          { transaction: t }
         );
       }
 
@@ -259,7 +255,6 @@ module.exports = {
             where: { child_id: childId },
             raw: true
           },
-          { transaction: t }
         );
       }
     }
@@ -300,7 +295,6 @@ module.exports = {
           where: { child_id: childId },
           raw: true
         },
-        { transaction: t }
       );
     }
 
@@ -365,14 +359,13 @@ module.exports = {
     return disabledZones;
   },
 
-  addZonesToChild: async (childId, t) => {
+  addZonesToChild: async (childId) => {
     const { ZonesInChild, Zone } = await connectToDatabase();
     let disabledZones = await ZonesInChild.findAll(
       {
         where: { child_id: childId },
         include: [{ model: Zone, as: 'zone', attributes: ['zone_id', 'location', 'zone_name'] }]
       },
-      { transaction: t }
     );
 
     return disabledZones;
@@ -450,14 +443,13 @@ module.exports = {
     }
   },
 
-  getScheduleByCustId: async (custId, t) => {
+  getScheduleByCustId: async (custId) => {
     const { DefaultSchedule } = await connectToDatabase();
 
     let schedule = await DefaultSchedule.findOne(
       {
         where: { cust_id: custId },
       },
-      { transaction: t }
     );
 
     return schedule;
@@ -483,7 +475,6 @@ module.exports = {
           }
         ]
       },
-      { transaction: t }
     );
 
     let zoneChildIds = getZonesToDisable?.map((zone) => zone.zone_child_id);
@@ -514,7 +505,7 @@ module.exports = {
     return disableZones;
   },
 
-  getChildOfAssignedZoneId: async (zoneID, t) => {
+  getChildOfAssignedZoneId: async (zoneID) => {
     const { ZonesInChild } = await connectToDatabase();
     let zoneChilds = await ZonesInChild.findAll(
       {
@@ -523,13 +514,12 @@ module.exports = {
         attributes: ['child_id']
 
         },
-      { transaction: t }
     );
 
     return zoneChilds;
   },
 
-  getAllchildrensFamilyId: async (allChildId, t) => {
+  getAllchildrensFamilyId: async (allChildId) => {
     const { Child } = await connectToDatabase();
     let childFamilyDetails = await Child.findAll(
       {
@@ -541,13 +531,12 @@ module.exports = {
         },
         attributes: ['family_id']
       },
-      { transaction: t }
     );
 
     return childFamilyDetails;
   },
 
-  getAllChildren: async (custId, location = ["Select All"], t) => {
+  getAllChildren: async (custId, location = ["Select All"]) => {
     const { Child, CustomerLocations } = await connectToDatabase();
     const distinctChildIds = await Child.findAll(
       {
@@ -555,8 +544,7 @@ module.exports = {
         attributes: [ [Sequelize.fn('DISTINCT', Sequelize.col('child_id')) ,'child_id']],
         group: ["child_id"],
         raw: true,
-      },
-      { transaction: t }
+      }
     );
     
     const childIdsArray = distinctChildIds.map(child => child.child_id);
@@ -570,7 +558,6 @@ module.exports = {
         },
       ],
       group: ["child_id"],
-      transaction: t,
     });
     
     if(!location.includes("Select All")){

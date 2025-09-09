@@ -7,3 +7,5 @@ node_modules
 path
 env.json
 updatedWarmup
+.env
+prod.env

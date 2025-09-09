@@ -91,7 +91,6 @@ module.exports = {
         {
           where: { family_member_id: params.family_member_id },
         },
-        { transaction: t }
       );
     }
 
@@ -119,7 +118,6 @@ module.exports = {
         {
           where: { family_member_id: user.family_member_id },
         },
-        { transaction: t }
       );
     }
 
@@ -159,7 +157,7 @@ module.exports = {
   },
 
   /* Fetch all the family's details */
-  getAllFamilyDetails: async (user, filter, t) => {
+  getAllFamilyDetails: async (user, filter) => {
     const { Family, Child, ZonesInChild, Zone, CustomerLocations } =
       await connectToDatabase();
     let {
@@ -234,7 +232,6 @@ module.exports = {
         distinct: true,
         raw: true,
       },
-      { transaction: t }
     );
 
     const result = [];
@@ -318,8 +315,7 @@ module.exports = {
             .map((fam) => fam.family_id),
         },
         distinct: true,
-      },
-      { transaction: t }
+      }
     );
 
     // Sort by children's first names
@@ -356,7 +352,6 @@ module.exports = {
         where: { family_member_id: familyMemberId },
         raw: true,
       },
-      { transaction: t }
     );
     return familyMember;
   },
@@ -426,7 +421,6 @@ module.exports = {
           ],
           // raw: true,
         },
-        { transaction: t }
       );
 
       const locations = location?.dataValues?.family_user_locations?.filter(
@@ -521,7 +515,6 @@ module.exports = {
         },
         raw: true,
       },
-      { transaction: t }
     );
 
     let locations = [];
@@ -602,7 +595,6 @@ module.exports = {
       {
         where: { email: email },
       },
-      { transaction: t }
     );
     return familyMember ? familyMember.toJSON() : null;
   },
@@ -641,7 +633,7 @@ module.exports = {
   },
 
   /* Get family's with scheduled to end access  */
-  getFamilyWithSEA: async (userId, t) => {
+  getFamilyWithSEA: async (userId) => {
     const { Family } = await connectToDatabase();
     let familyMembers = await Family.findAll(
       {
@@ -652,8 +644,7 @@ module.exports = {
           member_type: "primary",
           user_id: userId,
         },
-      },
-      { transaction: t }
+      }
     );
     return familyMembers;
   },
@@ -695,7 +686,6 @@ module.exports = {
         },
         attributes: ["socket_connection_id", "family_member_id"],
       },
-      { transaction: t }
     );
     return familyMembers;
   },
@@ -725,7 +715,6 @@ module.exports = {
         attributes: ["family_member_id", "location"],
         raw: true,
       },
-      { transaction: t }
     );
 
     if (!location.includes("Select All")) {
@@ -743,7 +732,7 @@ module.exports = {
     return allFamilyMembers;
   },
 
-  getAllFamilyIds: async (custId, location = ["Select All"], t) => {
+  getAllFamilyIds: async (custId, location = ["Select All"]) => {
     const { Family, CustomerLocations } = await connectToDatabase();
     const distinctFamilyIds = await Family.findAll(
       {
@@ -753,8 +742,7 @@ module.exports = {
         ],
         group: ["family_id"],
         raw: true,
-      },
-      { transaction: t }
+      }
     );
 
     const familyIdsArray = distinctFamilyIds.map((family) => family.family_id);
@@ -768,7 +756,6 @@ module.exports = {
         },
       ],
       group: ["family_id"],
-      transaction: t,
     });
 
     if (!location.includes("Select All")) {
@@ -789,7 +776,7 @@ module.exports = {
     return familyIdsWithLocations;
   },
 
-  getSEAChilds: async (custId, location = "All", enable = false, t) => {
+  getSEAChilds: async (custId, location = "All", enable = false) => {
     const { Family, Child, ZonesInChild, Zone } = await connectToDatabase();
     let whereObj = enable
       ? {
@@ -866,7 +853,6 @@ module.exports = {
           member_type: "primary",
         },
       },
-      { transaction: t }
     );
 
     let familyArray = [];
@@ -884,7 +870,7 @@ module.exports = {
     return familyArray;
   },
 
-  getFamilyDetailsById: async (familyId, t) => {
+  getFamilyDetailsById: async (familyId) => {
     const { Family, Child, ZonesInChild, Zone } = await connectToDatabase();
 
     let family = await Family.findOne(
@@ -937,7 +923,6 @@ module.exports = {
           family_id: familyId,
         },
       },
-      { transaction: t }
     );
 
     //   let familyArray = [];
@@ -970,13 +955,12 @@ module.exports = {
     return deletedFamilyMember, deletedFamilyMemberFromCustLocAssignment;
   },
 
-  getFailyMemberById: async (familyMemberId, t) => {
+  getFailyMemberById: async (familyMemberId) => {
     const { Family } = await connectToDatabase();
     let familyMember = await Family.findOne(
       {
         where: { family_member_id: familyMemberId },
       },
-      { transaction: t }
     );
     return familyMember ? familyMember.toJSON() : null;
   },

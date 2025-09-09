@@ -259,10 +259,8 @@ module.exports = {
 
   // get zone's list for loggedin user
   getAllZonesList: async (req, res, next) => {
-    const t = await sequelize.transaction();
     try {
-      const zones = await zoneServices.getAllZonesList(req.user.user_id, req.user, req?.query?.cust_id, t);
-      await t.commit();
+      const zones = await zoneServices.getAllZonesList(req.user.user_id, req.user, req?.query?.cust_id);
       res.status(200).json({
         IsSuccess: true,
         Data: zones,
@@ -271,7 +269,6 @@ module.exports = {
 
       next();
     } catch (error) {
-      await t.rollback();
       res.status(500).json({
         IsSuccess: false,
         error_log: error,

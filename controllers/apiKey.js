@@ -164,7 +164,6 @@ module.exports = {
   },
 
   getToken: async (req, res, next) => {
-    const t = await sequelize.transaction();
     try {
       const { api_key, api_secret } = req.body;
       const { ApiKeys } = await connectToDatabase();
@@ -190,11 +189,9 @@ module.exports = {
       // }
       const token = await userServices.createFrontEggUserAccessToken(keyDetails.dataValues.frontegg_tenant_id, keyDetails.dataValues.frontegg_user_id)
       if (token) {
-        t.commit();
         res.status(200).json({ Data: { secret: token }, Message: "Token retrieved successfully" })
       }
     } catch (error) {
-      await t.rollback();
       console.log('err', error);
       res.status(500).json({ err: error });
     }
