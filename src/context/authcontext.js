@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 const defaultState = {
   auth: {
     token: localStorage.getItem('token'),
-    user: JSON.parse(localStorage.getItem('user')),
+    user: JSON.parse(localStorage.getItem('user') || 'null'),
     authError: false,
     previosPagePath: '',
     custName: localStorage.getItem('cust_name'),
