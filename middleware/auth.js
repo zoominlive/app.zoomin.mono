@@ -13,17 +13,42 @@ module.exports = async function (req, res, next) {
     const token = req.header('Authorization')?.substring(7);
     const xApiKey = req.header('x-api-key');
     const endpoint = req.originalUrl;
+    
+    console.log('Auth middleware - Token present:', !!token);
+    console.log('Auth middleware - API Key present:', !!xApiKey);
+    console.log('Auth middleware - Endpoint:', endpoint);
+    
+    // Check if we have a validated Frontegg user from the previous middleware
+    const fronteggUser = req.frontegg.user;
+    console.log('fronteggUser==>', fronteggUser);
     if (!token && !xApiKey) {
       return res.status(401).json({ IsSuccess: true, Data: {}, Message: CONSTANTS.AUTH_ERROR });
     } else {
       // const decodeToken = jwt.verify(token, process.env.JWT_SECRET_KEY); //used earlier to verify token before Frontegg was integrated
       let decodeToken;
       let decodeXApiKey;
-      if (token) {
-        decodeToken = await identityClient.validateIdentityOnToken(token);
+      
+      if (fronteggUser) {
+        // Use the already validated Frontegg user
+        decodeToken = fronteggUser;
+      } else if (token) {
+        try {
+          console.log('Attempting to validate Frontegg token...');
+          decodeToken = await identityClient.validateIdentityOnToken(token);
+          console.log('Token validation successful');
+        } catch (error) {
+          console.error('Token validation failed:', error.message);
+          throw error;
+        }
       } else if (xApiKey) {
-        decodeXApiKey = await identityClient.validateToken(xApiKey, {roles: [], permissions: []}, 'AccessToken');
-        console.log('decodeXApiKey==>', decodeXApiKey);
+        try {
+          console.log('Attempting to validate API key...');
+          decodeXApiKey = await identityClient.validateToken(xApiKey, {roles: [], permissions: []}, 'AccessToken');
+          console.log('decodeXApiKey==>', decodeXApiKey);
+        } catch (error) {
+          console.error('API key validation failed:', error.message);
+          throw error;
+        }
       }
       let user;
       let cust;
@@ -111,7 +136,7 @@ module.exports = async function (req, res, next) {
               // req.user.accessable_locations = req.user.location;
               req.user.locations = locations;
             } else {
-              res.status(401).json({ IsSuccess: true, Data: {}, Message: CONSTANTS.AUTH_ERROR });
+              return res.status(401).json({ IsSuccess: true, Data: {}, Message: CONSTANTS.AUTH_ERROR });
             }
           } else {
             return res.status(401).json({
@@ -133,11 +158,11 @@ module.exports = async function (req, res, next) {
             let locations = convertedToJSON.locations.map((item) => ({loc_id: item.loc_id, loc_name: item.loc_name}));           
             convertedToJSON.locations = locations
             req.user = convertedToJSON;
+          } else {
+            convertedToJSON = user.toJSON();
+            req.userToken = token;
+            req.user = convertedToJSON;
           }
-          convertedToJSON = user.toJSON();
-          req.userToken = token;
-          req.user = convertedToJSON;
-         
         }
       }
     }

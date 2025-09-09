@@ -506,16 +506,13 @@ module.exports = {
   },
 
   getScheduleDetails: async (req, res, next) => {
-    const t = await sequelize.transaction();
     try {
       const { cust_id } = req.query;
 
       const schedulerAdded = await childServices.getScheduleByCustId(
-        cust_id,
-        t
+        cust_id
       );
 
-      await t.commit();
       res.status(200).json({
         IsSuccess: true,
         Data: schedulerAdded,
@@ -524,7 +521,6 @@ module.exports = {
 
       next();
     } catch (error) {
-      await t.rollback();
       res.status(500).json({
         IsSuccess: false,
         error_log: error,

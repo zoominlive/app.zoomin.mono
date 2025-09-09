@@ -59,7 +59,6 @@ module.exports = {
     if (updateZoneDetails) {
       updateZoneDetails = await Zone.findOne(
         { where: { zone_id: params.zone_id } },
-        { transaction: t }
       );
       await customerServices.editCustomer(
         params.cust_id || user.cust_id,
@@ -215,17 +214,16 @@ module.exports = {
     return { finalZoneDetails, count };
   },
 
-  getZoneDetailsByZoneId: async(zoneId, t) => {
+  getZoneDetailsByZoneId: async(zoneId) => {
     const { Zone, Camera } = await connectToDatabase();
 
-    zone = await Zone.findOne(
+    let zone = await Zone.findOne(
       {
         where: {
           zone_id: zoneId,
         },
         attributes: ["zone_id", "zone_name", "location", "stream_live_license"],
       },
-      { transaction: t }
     );
     return {
       zone_id: zone.zone_id,
@@ -236,7 +234,7 @@ module.exports = {
   },
     
   // get all zone's list for loggedin user
-  getAllZonesList: async (userId, user, cust_id = null, t) => {
+  getAllZonesList: async (userId, user, cust_id = null) => {
     const { Zone, CustomerLocations } = await connectToDatabase();
     let zoneList;
     if (user.role === "Admin" || user.role === "Super Admin") {
@@ -267,7 +265,6 @@ module.exports = {
             }
           ]
         },
-        { transaction: t }
       );
     } else {
       zoneList = await Zone.findAll(
@@ -281,7 +278,6 @@ module.exports = {
             }
           ]
         },
-        { transaction: t }
       );
     }
 

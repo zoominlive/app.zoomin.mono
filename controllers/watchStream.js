@@ -233,14 +233,16 @@ module.exports = {
   },
 
   setUserCamPreference: async (req, res, next) => {
+    const t = await sequelize.transaction();
     try {
       let cameras = req?.body?.data ? req?.body?.data : req?.body;
 
       const addPreferance = await watchStreamServices.setUserCamPreference(
         req.user,
-        cameras
+        cameras,
+        t
       );
-
+      await t.commit();  // ✅ Commit transaction
       res.status(200).json({
         IsSuccess: true,
         Data: addPreferance,
@@ -249,6 +251,7 @@ module.exports = {
 
       next();
     } catch (error) {
+      await t.rollback();  // ✅ Rollback on error
       res.status(500).json({
         IsSuccess: false,
         error_log: error,
@@ -272,7 +275,7 @@ module.exports = {
       if (existingRecord) {
         throw new Error('A record already exists for the given stream ID and function.');
       }
-      const recentViewer = await watchStreamServices.reportViewers(params);
+      const recentViewer = await watchStreamServices.reportViewers(params, t);
       let user_family_obj = await userServices.getUserById(
         params?.recent_user_id
       );
@@ -289,8 +292,8 @@ module.exports = {
        if(!_.isEmpty(usersdata)){
         await Promise.all(
           usersdata.map(async (user) => {
-            const totalStreams = await cameraServices.getAllCameraForCustomerDashboard(user_family_obj?.cust_id, user.dashboard_locations, t); 
-            const numberofMountedCameraViewers =  totalStreams?.length > 0 ? await cameraServices.getAllMountedCameraViewers(totalStreams.flatMap(i => i.cam_id), t) : 0;
+            const totalStreams = await cameraServices.getAllCameraForCustomerDashboard(user_family_obj?.cust_id, user.dashboard_locations); 
+            const numberofMountedCameraViewers =  totalStreams?.length > 0 ? await cameraServices.getAllMountedCameraViewers(totalStreams.flatMap(i => i.cam_id)) : 0;
             await socketServices.emitResponse(user?.socket_connection_id, {"numberofMountedCameraViewers": numberofMountedCameraViewers});
           })
         );

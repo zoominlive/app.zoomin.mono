@@ -34,11 +34,10 @@ module.exports = {
     return streamUpdated;
   },
 
-  saveEndPointInCamera: async (stream_id, t) => {
+  saveEndPointInCamera: async (stream_id) => {
     const { LiveStreams, CamerasInZones, Camera } = await connectToDatabase();
     let liveStreamObj = await LiveStreams.findOne(
       { where: { stream_id: stream_id }, attributes: ["zone_id", "hls_url"] },
-      { transaction: t }
     );
     let cameraUpdated = await CamerasInZones.update(
       { hls_url: liveStreamObj?.dataValues?.hls_url },
@@ -47,11 +46,10 @@ module.exports = {
     return cameraUpdated;
   },
 
-  removeEndPointInCamera: async (stream_id, t) => {
+  removeEndPointInCamera: async (stream_id) => {
     const { LiveStreams, CamerasInZones } = await connectToDatabase();
     let liveStreamObj = await LiveStreams.findOne(
       { where: { stream_id: stream_id }, attributes: ["zone_id", "hls_url"] },
-      { transaction: t }
     );
     let cameraUpdated = await CamerasInZones.update(
       { hls_url: null },
@@ -60,59 +58,54 @@ module.exports = {
     return cameraUpdated;
   },
 
-  getZone: async (stream_id, t) => {
+  getZone: async (stream_id) => {
     const { LiveStreams } = await connectToDatabase();
     let zoneObj = await LiveStreams.findOne(
       { where: { stream_id: stream_id }, attributes: ["zone_id"] },
-      { transaction: t }
     );
     return zoneObj?.dataValues?.zone_id;
   },
 
-  getstreamObj: async (stream_id, t) => {
+  getstreamObj: async (stream_id) => {
     const { LiveStreams } = await connectToDatabase();
     let zoneObj = await LiveStreams.findOne(
       { where: { stream_id: stream_id } },
-      { transaction: t }
     );
     return zoneObj?.dataValues;
   },
 
-  getstreamObjByUserId: async (user_id, t) => {
+  getstreamObjByUserId: async (user_id) => {
     const { LiveStreams } = await connectToDatabase();
     let streamsArray = await LiveStreams.findAll(
       {
         where: { user_id: user_id },
       },
-      { transaction: t }
     );
     return streamsArray;
   },
 
-  getstreamObjByZoneId: async (zone_id, t) => {
+  getstreamObjByZoneId: async (zone_id) => {
     const { LiveStreams } = await connectToDatabase();
     let streamsArray = await LiveStreams.findAll(
       {
         where: { zone_id: zone_id },
       },
-      { transaction: t }
     );
     return streamsArray;
   },
 
-  getActiveStreamObjByZoneId: async (zone_id, t) => {
+  getActiveStreamObjByZoneId: async (zone_id) => {
     const { LiveStreams } = await connectToDatabase();
     let streamsArray = await LiveStreams.findAll(
       {
         where: { zone_id: zone_id, stream_running: true },
         raw: true,
       },
-      { transaction: t }
     );
     return streamsArray;
   },
 
-  getAllActiveStreams: async (cust_id, locations = [], t) => {
+  getAllActiveStreams: async (cust_id, locations = []) => {
     const { LiveStreams, Zone, LiveStreamCameras } = await connectToDatabase();
 
     const locationFilter =
@@ -138,14 +131,13 @@ module.exports = {
             include: [{ model: LiveStreamCameras }],
           },
         ],
-      },
-      { transaction: t }
+      }
     );
 
     return activeLiveStreams;
   },
 
-  getRecentStreams: async (cust_id, locations = [], t) => {
+  getRecentStreams: async (cust_id, locations = []) => {
     const { LiveStreams, Zone, LiveStreamCameras } = await connectToDatabase();
 
     const locationFilter =
@@ -182,8 +174,7 @@ module.exports = {
             include: [{ model: LiveStreamCameras }],
           },
         ],
-      },
-      { transaction: t }
+      }
     );
 
     return recentLiveStreams;
@@ -320,7 +311,7 @@ module.exports = {
     return recentViewer;
   },
 
-  getAllActiveStreamViewers: async (streamIds, t) => {
+  getAllActiveStreamViewers: async (streamIds) => {
     // const { LiveStreamRecentViewers, LiveStreams } = await connectToDatabase();
     // let recentViewers = await LiveStreamRecentViewers.findAll(
     //   { where: {function: "start"},
@@ -394,7 +385,6 @@ module.exports = {
         limit: parseInt(pageSize),
         offset: parseInt(pageNumber * pageSize),
       },
-      { transaction: t }
     );
 
     return { data: recordedStreams.rows, count: recordedStreams.count };

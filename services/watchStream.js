@@ -808,13 +808,16 @@ module.exports = {
               where: {
                 cust_id: cams.cust_id,
               },
-            }
+            },
+            { transaction: t }  // ✅ Add transaction
           );
         } else {
           camSettings = await CamPreference.create({
             cust_id: cust_id,
             watchstream_cam: rest,
-          });
+          },
+          { transaction: t }  // ✅ Add transaction
+          );
         }
       } 
       else{

@@ -7,6 +7,7 @@ const customerServices = require("../services/customers");
 const liveStreamServices = require("../services/liveStream");
 const userServices = require("../services/users");
 const s3BucketImageUploader = require("../lib/aws-services");
+const cache = require("../lib/cache");
 const { listAvailableStreams } = require("../lib/rtsp-stream");
 const _ = require("lodash");
 const { sequelize } = require('../lib/database');
@@ -17,80 +18,111 @@ const { v4: uuidv4 } = require("uuid");
 module.exports = {
   // get all stream statistics data to populate dashboard
   getStreamStatistics: async (req, res, next) => {
-    const t = await sequelize.transaction();
     try {
-      params = req.body;
-      custId = req.user.cust_id || req.query.cust_id;
-      userId = req.user.user_id;
+      const custId = req.user.cust_id || req.query.cust_id;
+      const userId = req.user.user_id;
       let defaultWatchStream = req.user?.dashboard_cam_preference || {};
+
+      // Prepare defaultWatchStream URL enrichment concurrently
+      let baseUrlPromise = Promise.resolve(null);
       if (defaultWatchStream && defaultWatchStream?.cameras?.stream_uri) {
-        let uid = userId;
-        let sid = defaultWatchStream?.cameras?.cam_id;
-        let uuid = uuidv4();
-        let stream_uri = new URL(defaultWatchStream?.cameras?.stream_uri).pathname;
-        const token = jwt.sign({ user_id: uid, cam_id: sid, uuid: uuid }, process.env.STREAM_URL_SECRET_KEY, {expiresIn: '12h'});
-        const baseUrl = await customerServices.getTranscoderUrlFromCustLocations(req.user?.locations?.map((item) => item.loc_id), custId);
-        
-        defaultWatchStream.cameras.stream_uri = `${baseUrl}${stream_uri}?seckey=${token}`;
+        const uid = userId;
+        const sid = defaultWatchStream?.cameras?.cam_id;
+        const uuid = uuidv4();
+        const stream_uri = new URL(defaultWatchStream?.cameras?.stream_uri).pathname;
+        const seckey = jwt.sign({ user_id: uid, cam_id: sid, uuid: uuid }, process.env.STREAM_URL_SECRET_KEY, {expiresIn: '12h'});
+        baseUrlPromise = customerServices.getTranscoderUrlFromCustLocations(req.user?.locations?.map((item) => item.loc_id), custId).then((baseUrl) => {
+          defaultWatchStream.cameras.stream_uri = `${baseUrl}${stream_uri}?seckey=${seckey}`;
+          return baseUrl;
+        });
       }
+
       if (req.user.role === "Super Admin") {
         let watchStream = await dashboardServices.getCamPreference(custId);
         defaultWatchStream = watchStream || {};
       }
+
       if(req.user.role !== "Super Admin"){
         let updateObj = { user_id: userId, dashboard_locations: req?.query?.location };
-        await userServices.editUserProfile( updateObj, _.omit(updateObj, ["user_id"]), t);
-      }
-      const token = req.userToken;
-      
-      let streams = await listAvailableStreams(token, req?.query?.location);
-      const totalStreams =
-      await cameraServices.getAllCameraForCustomerDashboard(custId, req?.query?.location, t);
-      //const numberofMountedCameraViewers =  await cameraServices.getAllMountedCameraViewers(custId, req?.query?.location, t);
-      const numberofMountedCameraViewers =  totalStreams?.length > 0 ? await cameraServices.getAllMountedCameraViewers(totalStreams.flatMap(i => i.cam_id), t) : 0;
-      let totalActiveStreams = streams?.data?.filter((stream) => {
-        return stream.running === true;
-      });
-      let activeStreams = [];
-      totalStreams?.forEach((stream) => {
-        totalActiveStreams?.forEach((obj) => {
-          if (obj.id === stream.stream_uuid) {
-            activeStreams.push(stream);
-          }
+        await sequelize.transaction(async (t) => {
+          await userServices.editUserProfile( updateObj, _.omit(updateObj, ["user_id"]), t);
         });
-      });
+      }
 
-      let SEAMembers = await familyServices.getFamilyWithSEA(userId, t);
-      const childSEA = await dashboardServices.getChildrenWithSEA(custId, req?.query?.location);
-      // let  childrenWithEnableDate1= await familyServices.getSEAChilds(custId, req?.query?.location, true, t);
-      // let  childrenWithDisableDate1= await familyServices.getSEAChilds(custId, req?.query?.location, false, t);
+      const token = req.userToken;
 
+      // Run independent I/O in parallel with short-lived caching
+      const locationKey = req?.query?.location || "All";
+      const [
+        streams,
+        totalStreams,
+        SEAMembersRaw,
+        childSEA,
+        topViewers,
+        recentViewers,
+        camerasRaw,
+        customerDetails,
+        activeLiveStreams,
+        childrens,
+        families,
+        users,
+        recentLiveStreamsRaw,
+      ] = await Promise.all([
+        cache.getOrSet(`las:${custId}:${locationKey}`, 5000, () => listAvailableStreams(token, locationKey)),
+        cache.getOrSet(`cams:${custId}:${locationKey}`, 10000, () => cameraServices.getAllCameraForCustomerDashboard(custId, locationKey)),
+        cache.getOrSet(`seaMembers:${userId}`, 30000, () => familyServices.getFamilyWithSEA(userId)),
+        cache.getOrSet(`childSEA:${custId}:${locationKey}`, 30000, () => dashboardServices.getChildrenWithSEA(custId, locationKey)),
+        cache.getOrSet(`topViewers:${custId}:${locationKey}`, 30000, () => dashboardServices.topViewersOfTheWeek(
+          req.user,
+          req.query?.cust_id,
+          locationKey
+        )),
+        cache.getOrSet(`recentViewers:${custId}:${locationKey}`, 30000, () => dashboardServices.getLastOneHourViewers(
+          req.user,
+          req.query?.cust_id,
+          locationKey
+        )),
+        cache.getOrSet(`camsByLoc:${custId}:${userId}:${locationKey}`, 60000, () => watchStreamServices.getAllCamForLocation({
+          ...req.user,
+          cust_id: custId,
+        })),
+        cache.getOrSet(`customerDetails:${custId}`, 300000, () => customerServices.getCustomerDetails(custId)),
+        cache.getOrSet(`activeLive:${custId}:${locationKey}`, 5000, () => liveStreamServices.getAllActiveStreams(custId, locationKey)),
+        cache.getOrSet(`childrens:${custId}:${locationKey}`, 30000, () => childrenServices.getAllChildren(custId, locationKey)),
+        cache.getOrSet(`families:${custId}:${locationKey}`, 60000, () => familyServices.getAllFamilyIds(custId, locationKey)),
+        cache.getOrSet(`users:${custId}:${locationKey}`, 60000, () => userServices.getAllUserIds(custId, locationKey)),
+        cache.getOrSet(`recentStreams:${custId}:${locationKey}`, 10000, () => liveStreamServices.getRecentStreams(custId, locationKey)),
+      ]);
+
+      // Compute active streams efficiently
+      const runningIds = new Set((streams?.data || []).filter((s) => s.running === true).map((s) => s.id));
+      const activeStreams = (totalStreams || []).filter((s) => runningIds.has(s.stream_uuid));
+
+      // Build children enable/disable lists
       let childrenWithEnableDate = [];
       let childrenWithDisableDate = [];
-
       childSEA.forEach((child) => {
         let zonesToEnable = [];
         let zonesToDisable = [];
         child.zonesInChild.forEach((zone) => {
           if (zone.scheduled_disable_date != null) {
-           if(req.query?.location !== "All"){
-            if(req.query?.location == zone.zone?.loc_id || req.query?.location?.length !== 0){
+            if(req.query?.location !== "All"){
+              if(req.query?.location == zone.zone?.loc_id || req.query?.location?.length !== 0){
+                zonesToDisable.push(zone.zone?.zone_name);
+              }
+            }
+            else{
               zonesToDisable.push(zone.zone?.zone_name);
             }
-           }
-           else{
-            zonesToDisable.push(zone.zone?.zone_name);
-           }
-           
           } else {
             if(req.query?.location !== "All"){
               if(req.query?.location == zone.zone?.loc_id || req.query?.location?.length !== 0){
                 zonesToEnable.push(zone.zone?.zone_name);
               }
-             }
-             else{
+            }
+            else{
               zonesToEnable.push(zone.zone?.zone_name);
-             }
+            }
           }
         });
 
@@ -137,48 +169,39 @@ module.exports = {
           }
         }
       });
-      SEAMembers = SEAMembers?.length + childSEA?.length;
+      let SEAMembers = (SEAMembersRaw?.length || 0) + (childSEA?.length || 0);
 
-      const topViewers = await dashboardServices.topViewersOfTheWeek(
-        req.user,
-        req.query?.cust_id,
-        req.query?.location
-      );
-      const recentViewers = await dashboardServices.getLastOneHourViewers(
-        req.user,
-        req.query?.cust_id,
-        req.query?.location
-      );
-      let cameras = await watchStreamServices.getAllCamForLocation({
-        ...req.user,
-        cust_id: custId,
-      });
-      const customerDetails = await customerServices.getCustomerDetails(custId, t);
-      cameras = _.uniqBy(cameras, "zone_id");
+      // Dependent calls after initial parallel batch
+      const numberofMountedCameraViewers =  (totalStreams?.length > 0)
+        ? await cache.getOrSet(`mountedViewers:${(totalStreams.flatMap(i => i.cam_id)).sort().join(',')}`, 5000, () => cameraServices.getAllMountedCameraViewers(totalStreams.flatMap(i => i.cam_id)))
+        : 0;
+      const numberofActiveStreamViewers = (activeLiveStreams.length > 0)
+        ? await cache.getOrSet(`activeViewers:${(activeLiveStreams.flatMap(i => i.stream_id)).sort().join(',')}`, 5000, () => liveStreamServices.getAllActiveStreamViewers(activeLiveStreams.flatMap(i => i.stream_id)))
+        : 0;
+
+      // Prepare cameras with customer details
+      let cameras = _.uniqBy(camerasRaw, "zone_id");
       cameras?.forEach((cam, camIndex) => {
         cameras[camIndex].timeout = customerDetails.timeout;
         cameras[camIndex].permit_audio = customerDetails.permit_audio;
       });
-      const activeLiveStreams = await liveStreamServices.getAllActiveStreams(custId, req?.query?.location, t);
-      const numberofActiveStreamViewers = activeLiveStreams.length > 0 ? await liveStreamServices.getAllActiveStreamViewers(activeLiveStreams.flatMap(i => i.stream_id), t) : 0;
-      //const numberofActiveStreamViewers = await liveStreamServices.getAllActiveStreamViewers();
-      const childrens = await childrenServices.getAllChildren(custId, req?.query?.location,t);
-      // const familyMembers = await familyServices.getAllFamilyMembers(custId, req?.query?.location, t);
-      const families = await familyServices.getAllFamilyIds(custId, req?.query?.location,t);
-      const users = await userServices.getAllUserIds(custId, req?.query?.location,t);
-      let recentLiveStreams = await liveStreamServices.getRecentStreams(custId, req?.query?.location, t);
-      if(recentLiveStreams.length > 0){
 
+      // Enrich recent live streams with presigned URLs
+      let recentLiveStreams = recentLiveStreamsRaw;
+      if(recentLiveStreams.length > 0){
         recentLiveStreams = await Promise.all(recentLiveStreams.map(async item => {
-          const presigned_url = item?.dataValues?.s3_url ? await s3BucketImageUploader.getPresignedUrl(item?.dataValues?.s3_url) : ""
+          const key = item?.dataValues?.s3_url;
+          const presigned_url = key ? await cache.getOrSet(`presign:${key}`, 60000, () => s3BucketImageUploader.getPresignedUrl(key)) : "";
           let newDataValue = item.dataValues;
           newDataValue.presigned_url = presigned_url;
           item.dataValues = newDataValue;
-          return item
-          }))
-        }
-      //const numberofMountedCameraViewers = totalStreams.length > 0 ? await cameraServices.getAllMountedCameraViewers(totalStreams.flatMap(i => i.cam_id)) : 0
-      await t.commit();
+          return item;
+        }));
+      }
+
+      // Ensure any pending defaultWatchStream enrichment is applied
+      await baseUrlPromise;
+
       res.status(200).json({
         IsSuccess: true,
         Data: {
@@ -209,7 +232,6 @@ module.exports = {
       next();
     } catch (error) {
       console.log('==error==',error);
-      await t.rollback();
       res.status(500).json({
         IsSuccess: false,
         error_log: error,

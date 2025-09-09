@@ -28,12 +28,12 @@ module.exports = {
     try {
       const { zoneID, streamName } = req.query;
       const { user_id, stream_live_license, cust_id } = req.user;
-      const streams = await liveStreamServices.getstreamObjByUserId(user_id, t);
+      const streams = await liveStreamServices.getstreamObjByUserId(user_id);
       const hasRunningStream = streams.some(stream => stream.dataValues.stream_running); //check if atleast one of the streams is running
 
-      const streamsByZone = await liveStreamServices.getstreamObjByZoneId(zoneID, t);
+      const streamsByZone = await liveStreamServices.getstreamObjByZoneId(zoneID);
       const hasRunningStreamZones = streamsByZone.some(stream => stream.stream_running); //check if atleast one of the streams is running
-      const zoneObj = await zones.getZoneDetailsByZoneId(zoneID, t);
+      const zoneObj = await zones.getZoneDetailsByZoneId(zoneID);
       if (stream_live_license) {
         if(!hasRunningStream){
           let rtmpTranscoderBaseUrl = await customerServices.getRTMPTranscoderUrl(
@@ -336,7 +336,7 @@ module.exports = {
 
       let zoneID = await liveStreamServices.getZone(streamID, t);
 
-      await liveStramcameraServices.deleteLivestreamCamera(zoneID);
+      await liveStramcameraServices.deleteLivestreamCamera(zoneID, t);
 
       let streamObj = await liveStreamServices.getstreamObj(streamID, t);
       let deleteChannel = await liveStreamServices.deleteGroupChannel(streamObj.sendbird_channel_url);
@@ -457,7 +457,6 @@ module.exports = {
   },
 
   getstreamDetails: async (req, res, next) => {
-    const t = await sequelize.transaction();
     try {
       const { streamID } = req.query;
       let streamObj = await liveStreamServices.getstreamObj(streamID);
@@ -465,7 +464,6 @@ module.exports = {
         zone_id: streamObj?.zone_id,
         cust_id: streamObj?.cust_id,
       };
-      await t.commit();
       res.status(200).json({
         IsSuccess: streamObj ? true : false,
         Data: response,
@@ -474,7 +472,6 @@ module.exports = {
           : CONSTANTS.LIVE_STREAM_DETAILS_NOT_FOUND,
       });
     } catch (error) {
-      await t.rollback();
       res.status(500).json({
         IsSuccess: false,
         error_log: error,
@@ -488,7 +485,7 @@ module.exports = {
     const t = await sequelize.transaction();
     try {
       const params = req.body;
-      const recentViewer = await liveStreamServices.addRecentViewers(params);
+      const recentViewer = await liveStreamServices.addRecentViewers(params, t);
       let user_family_obj = await userServices.getUserById(
         params?.recent_user_id,
         t
