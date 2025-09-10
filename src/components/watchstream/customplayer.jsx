@@ -253,7 +253,16 @@ const CustomPlayer = (props) => {
                 ? 'video-player-wrapper-watch-stream-page'
                 : 'video-player-wrapper'
             }
-            sx={{ position: 'relative' }}
+            sx={{
+              position: 'relative',
+              minHeight:
+                props.dialogOpen &&
+                !['/watch-stream', '/cameras', '/recordings', '/dashboard'].includes(
+                  location.pathname
+                )
+                  ? 360
+                  : undefined
+            }}
             ref={playerContainerRef}>
             <Loader loading={!ready} />
             <ReactPlayer

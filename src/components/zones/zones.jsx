@@ -190,6 +190,7 @@ const Row = (props) => {
               noOfCameras={2}
               streamUri={selectedCamera?.stream_uri_seckey}
               camDetails={selectedCamera}
+              dialogOpen={dialogOpen}
             />
           </DialogContent>
         </Dialog>
