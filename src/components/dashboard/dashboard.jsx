@@ -350,7 +350,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     getDashboardData();
-  }, [authCtx.location, localStorage.getItem('updateDashboardData'), authCtx.updateDashboardData]);
+  }, [authCtx.location, authCtx.updateDashboardData]);
 
   const getDashboardData = () => {
     // console.log(
