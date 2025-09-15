@@ -1,5 +1,5 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
+import { createRoot } from 'react-dom/client';
 import './index.css';
 import App from './app';
 import './styles/main.scss';
@@ -23,7 +23,9 @@ const authOptions = {
 };
 LicenseInfo.setLicenseKey(process.env.REACT_APP_MUI_LICENSE_KEY);
 
-ReactDOM.render(
+const container = document.getElementById('root');
+const root = createRoot(container);
+root.render(
   <AuthContextProvider>
     <LayoutContextProvider>
       <BrowserRouter>
@@ -46,8 +48,7 @@ ReactDOM.render(
         </SnackbarProvider>
       </BrowserRouter>
     </LayoutContextProvider>
-  </AuthContextProvider>,
-  document.getElementById('root')
+  </AuthContextProvider>
 );
 
 // If you want to start measuring performance in your app, pass a function

@@ -165,9 +165,11 @@ const Layout = () => {
   // }, [sessionCreated]);
 
   useEffect(() => {
-    window.addEventListener('resize', handleDrawerToggleOnResize);
+    const throttledResize = debounce(handleDrawerToggleOnResize, 200, { maxWait: 500 });
+    window.addEventListener('resize', throttledResize);
     return () => {
-      window.removeEventListener('resize', handleDrawerToggleOnResize);
+      throttledResize.cancel();
+      window.removeEventListener('resize', throttledResize);
     };
   }, []);
 
@@ -191,31 +193,41 @@ const Layout = () => {
     };
   });
 
-  const newHandleChange = debounce((e) => {
-    const searchValue = e.target.value;
-    setShowSearchResults(searchValue);
-    const familyPayload = {
-      page: 0,
-      limit: parseInt(process.env.REACT_APP_PAGINATION_LIMIT, 10),
-      searchBy: searchValue,
-      location: 'All',
-      zones: [],
-      cust_id: localStorage.getItem('cust_id')
-    };
+  const newHandleChange = React.useMemo(
+    () =>
+      debounce((e) => {
+        const searchValue = e.target.value;
+        setShowSearchResults(searchValue);
+        const familyPayload = {
+          page: 0,
+          limit: parseInt(process.env.REACT_APP_PAGINATION_LIMIT, 10),
+          searchBy: searchValue,
+          location: 'All',
+          zones: [],
+          cust_id: localStorage.getItem('cust_id')
+        };
 
-    const usersPlayload = {
-      pageNumber: 0,
-      pageSize: parseInt(process.env.REACT_APP_PAGINATION_LIMIT, 10),
-      searchBy: searchValue,
-      location: 'All',
-      role: 'All',
-      liveStreaming: 'All',
-      cust_id: localStorage.getItem('cust_id')
-    };
+        const usersPlayload = {
+          pageNumber: 0,
+          pageSize: parseInt(process.env.REACT_APP_PAGINATION_LIMIT, 10),
+          searchBy: searchValue,
+          location: 'All',
+          role: 'All',
+          liveStreaming: 'All',
+          cust_id: localStorage.getItem('cust_id')
+        };
 
-    getFamiliesList(familyPayload);
-    getUsersList(usersPlayload);
-  }, 500);
+        getFamiliesList(familyPayload);
+        getUsersList(usersPlayload);
+      }, 500),
+    []
+  );
+
+  useEffect(() => {
+    return () => {
+      newHandleChange.cancel();
+    };
+  }, [newHandleChange]);
 
   useEffect(() => {
     const handleOutsideClick = (event) => {
