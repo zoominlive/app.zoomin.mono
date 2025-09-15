@@ -39,7 +39,8 @@ const Map = (props) => {
           }}>
           {clusters.map((cluster) => {
             const [longitude, latitude] = cluster.geometry.coordinates;
-            const { cluster: isCluster, point_count: pointCount } = cluster.properties;
+            const isCluster = cluster.properties?.cluster;
+            const pointCount = cluster.properties?.point_count ?? 1;
             if (isCluster) {
               return (
                 <Marker key={`cluster-${cluster.id}`} lat={latitude} lng={longitude}>
@@ -60,14 +61,22 @@ const Map = (props) => {
             }
             return (
               <Marker key={`crime-${cluster.properties.rv_id}`} lat={latitude} lng={longitude}>
-                <Tooltip title={`${cluster.properties.label}`} placement="top" arrow>
-                  <div
-                    className="cluster-marker"
-                    style={{
-                      width: `${10 + (pointCount / props.data.length) * 20}px`,
-                      height: `${10 + (pointCount / props.data.length) * 20}px`
-                    }}></div>
-                </Tooltip>
+                {(() => {
+                  const title =
+                    cluster.properties?.label ||
+                    cluster.properties?.title ||
+                    cluster.properties?.name ||
+                    `${latitude?.toFixed?.(5)}, ${longitude?.toFixed?.(5)}`;
+                  const size = `${10 + (pointCount / props.data.length) * 20}px`;
+                  const markerNode = (
+                    <div className="cluster-marker" style={{ width: size, height: size }}></div>
+                  );
+                  return (
+                    <Tooltip title={title} placement="top" arrow>
+                      {markerNode}
+                    </Tooltip>
+                  );
+                })()}
               </Marker>
             );
           })}
