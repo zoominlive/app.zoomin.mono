@@ -1,0 +1,91 @@
+import React, { useState } from 'react';
+import PropTypes from 'prop-types';
+
+const defaultState = {
+  auth: {
+    token: localStorage.getItem('token'),
+    user: JSON.parse(localStorage.getItem('user') || 'null'),
+    authError: false,
+    previosPagePath: '',
+    custName: localStorage.getItem('cust_name'),
+    location: ['Select All'],
+    updateDashboardData: false,
+    paymentMethod: false,
+    showRedDot: false,
+    tags: []
+    // sessionCreated: false
+  }
+};
+
+const AuthContext = React.createContext({
+  auth: {
+    token: null
+  }
+});
+
+export const AuthContextProvider = (props) => {
+  const [token, setToken] = useState(defaultState.auth.token);
+  const [user, setUser] = useState(defaultState.auth.user);
+  const [tags, setTags] = useState(defaultState.auth.tags);
+  const [authError, setAuthError] = useState(defaultState.auth.authError);
+  const [previosPagePath, setPreviosPagePath] = useState(defaultState.auth.previosPagePath);
+  const [custName, setCustName] = useState(defaultState.auth.custName);
+  const [location, setLocation] = useState(defaultState.auth.location);
+  const [paymentMethod, setPaymentMethod] = useState(defaultState.auth.paymentMethod);
+  const [showRedDot, setShowRedDot] = useState(defaultState.auth.showRedDot);
+  // const [sessionCreated, setSessionCreated] = useState(defaultState.auth.sessionCreated);
+  const [updateDashboardData, setUpdateDashboardData] = useState(
+    defaultState.auth.updateDashboardData
+  );
+  // Method to handle token changes
+  const handleToken = (token) => setToken(token);
+
+  // Method to handle user changes
+  const handleUser = (user) => setUser(user);
+
+  // Method to handle authentication status to render invalid token message
+  const handleAuthError = (error) => setAuthError(error);
+
+  // Method to handle page change and store previos page path
+  const handlePageChange = (path) => setPreviosPagePath(path);
+
+  const handleCustName = (name) => setCustName(name);
+  const handleLocation = (loc) => setLocation(loc);
+  const handlePaymentMethod = (pm) => setPaymentMethod(pm);
+  const handleRedDot = (pm) => setShowRedDot(pm);
+  const handleUpdateDashboardData = (value) => setUpdateDashboardData(value);
+  const handleTags = (value) => setTags(value);
+  // const handleSessionCreated = (value) => setSessionCreated(value);
+
+  const context = {
+    token,
+    user,
+    tags,
+    authError,
+    previosPagePath,
+    custName,
+    location,
+    updateDashboardData,
+    paymentMethod,
+    showRedDot,
+    // sessionCreated,
+    setToken: handleToken,
+    setUser: handleUser,
+    setAuthError: handleAuthError,
+    setPreviosPagePath: handlePageChange,
+    setCustName: handleCustName,
+    setLocation: handleLocation,
+    setUpdateDashboardData: handleUpdateDashboardData,
+    setPaymentMethod: handlePaymentMethod,
+    setShowRedDot: handleRedDot,
+    setTags: handleTags
+    // setSessionCreated: handleSessionCreated
+  };
+
+  return <AuthContext.Provider value={context}>{props.children}</AuthContext.Provider>;
+};
+AuthContextProvider.propTypes = {
+  children: PropTypes.any
+};
+
+export default AuthContext;

@@ -1,0 +1,551 @@
+import React, { useEffect, useState } from 'react';
+import PropTypes from 'prop-types';
+import {
+  Autocomplete,
+  Box,
+  // Button,
+  Chip,
+  CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  // Divider,
+  Grid,
+  IconButton,
+  InputLabel,
+  Stack,
+  TextField,
+  Tooltip,
+  Typography
+} from '@mui/material';
+import { Form, Formik } from 'formik';
+import * as yup from 'yup';
+import { LoadingButton } from '@mui/lab';
+import API from '../../api';
+import SaveIcon from '@mui/icons-material/Save';
+import { useSnackbar } from 'notistack';
+import { errorMessageHandler } from '../../utils/errormessagehandler';
+import { useContext } from 'react';
+import AuthContext from '../../context/authcontext';
+import CloseIcon from '@mui/icons-material/Close';
+import DeleteIcon from '@mui/icons-material/Delete';
+import { useDropzone } from 'react-dropzone';
+import { toBase64 } from '../../utils/base64converter';
+import noimg from '../../assets/ic_no_image.png';
+import closeicon from '../../assets/closeicon.svg';
+import ConfirmationDialog from '../common/confirmationdialog';
+
+const validationSchema = yup.object({
+  cam_name: yup.string('Enter camera name').required('Camera name is required'),
+  cam_uri: yup
+    .string('Enter camera url')
+    .matches(
+      /^(rtsp:\/\/)(\w+:\S+@)?(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})(:\d+)?(\/\S*)*$/,
+      'Invalid RTSP URL'
+    )
+    .required('URL is required'),
+  description: yup.string('Enter camera description').required('Description is required'),
+  location: yup.string('Select Location').required('Location is required')
+});
+
+const CameraForm = (props) => {
+  const { enqueueSnackbar } = useSnackbar();
+  const [submitLoading, setSubmitLoading] = useState(false);
+  const [isCloseDialog, setIsCloseDialog] = useState(false);
+  const [base64Image, setBase64Image] = useState();
+  const [image, setImage] = useState();
+  const [S3Uri, setS3Uri] = useState();
+  const [locationSelected, setLocationSelected] = useState(false);
+  const [zoneOptions, setZoneOptions] = useState([]);
+  const [dropdownLoading, setDropdownLoading] = useState(false);
+  const authCtx = useContext(AuthContext);
+
+  useEffect(() => {
+    if (props.camera !== undefined) {
+      setImage(
+        props.camera && props.camera.thumbnailPresignedUrl
+          ? props.camera.thumbnailPresignedUrl
+          : props.camera.thumbnail
+      );
+    }
+  }, []);
+
+  useEffect(() => {
+    setDropdownLoading(true);
+    API.get(props?.camera?.location ? `zones?location=${props?.camera?.location}` : `zones/`, {
+      params: { cust_id: localStorage.getItem('cust_id') }
+    }).then((response) => {
+      setDropdownLoading(true);
+      if (response.status === 200) {
+        const zones = response.data.Data.finalZoneDetails;
+        setZoneOptions(zones);
+        setDropdownLoading(false);
+      } else {
+        errorMessageHandler(
+          enqueueSnackbar,
+          response?.response?.data?.Message || 'Something Went Wrong.',
+          response?.response?.status,
+          authCtx.setAuthError
+        );
+        setDropdownLoading(false);
+      }
+    });
+  }, []);
+
+  // Method to update the user profile
+  const handleSubmit = (data) => {
+    const payload = {
+      cam_id: props?.camera?.cam_id,
+      thumbnail: !props.camera ? base64Image : image ? (base64Image ? base64Image : image) : null,
+      s3Uri: S3Uri,
+      stream_id: props?.camera?.stream_uuid,
+      alias: props.camera?.cam_alias,
+      max_resolution: authCtx?.user?.role == 'Super Admin' ? 4320 : authCtx?.user?.max_resolution,
+      max_file_size: authCtx?.user?.role == 'Super Admin' ? 300000 : authCtx?.user?.max_file_size,
+      max_fps: authCtx?.user?.role == 'Super Admin' ? 30 : authCtx?.user?.max_fps,
+      cust_id: localStorage.getItem('cust_id')
+        ? localStorage.getItem('cust_id')
+        : props?.camera?.cust_id,
+      location: props?.camera?.location,
+      ...data
+    };
+    delete payload.locations;
+    setSubmitLoading(true);
+    if (props.camera) {
+      API.put('cams/edit', payload).then((response) => {
+        if (response.status === 200) {
+          enqueueSnackbar(response?.data?.Message, {
+            variant: 'success'
+          });
+          props.getCamerasList();
+          handleFormDialogClose();
+        } else {
+          errorMessageHandler(
+            enqueueSnackbar,
+            response?.response?.data?.Message || 'Something Went Wrong.',
+            response?.response?.status,
+            authCtx.setAuthError
+          );
+        }
+        setSubmitLoading(false);
+      });
+    } else {
+      API.post('cams/add', {
+        ...payload,
+        loc_id: data.location,
+        cust_id: localStorage.getItem('cust_id')
+      }).then((response) => {
+        if (response.status === 201) {
+          enqueueSnackbar(response?.data?.Message, {
+            variant: 'success'
+          });
+        } else {
+          errorMessageHandler(
+            enqueueSnackbar,
+            response?.response?.data?.Message || 'Something Went Wrong.',
+            response?.response?.status,
+            authCtx.setAuthError
+          );
+        }
+        handleFormDialogClose();
+        props.getCamerasList();
+        setSubmitLoading(false);
+      });
+    }
+  };
+
+  // Method to close the form dialog
+  const handleFormDialogClose = () => {
+    if (!submitLoading) {
+      props.setOpen(false);
+      props.setCamera();
+    }
+  };
+
+  // Method to remove profile photo
+  const handlePhotoDelete = () => {
+    setBase64Image();
+    setImage();
+  };
+
+  // Method to generate thumbnail
+  const handleGenerateThumbnail = () => {
+    setSubmitLoading(true);
+    API.get('cams/generate-thumbnail', {
+      // 221
+      // '/stream/fb05fb2c-41a8-4c87-a464-489b79ef915a/index.m3u8'
+      params: {
+        sid: props.camera?.cam_id,
+        stream_uri: props.camera?.stream_uri,
+        custId: authCtx.user?.cust_id || localStorage.getItem('cust_id')
+      }
+    }).then((response) => {
+      if (response.status === 200) {
+        setImage(response.data.Data.thumbnailUrl);
+        setS3Uri(response.data.Data.s3Uri);
+        enqueueSnackbar('Thumbnail generated', { variant: 'success' });
+      } else {
+        errorMessageHandler(
+          enqueueSnackbar,
+          response?.response?.data?.Message || 'Something Went Wrong.',
+          response?.response?.status,
+          authCtx.setAuthError
+        );
+      }
+      setSubmitLoading(false);
+    });
+  };
+
+  // Method to get image from input and upload it to BE
+  async function handleImageUpload(acceptedFiles) {
+    setImage(URL.createObjectURL(acceptedFiles[0]));
+    const bas64Image = await toBase64(acceptedFiles[0]);
+    setBase64Image(bas64Image.split(',')[1]);
+  }
+
+  const { getRootProps, getInputProps } = useDropzone({
+    maxFiles: 1,
+    accept: {
+      'image/png': ['.png'],
+      'image/jpeg': ['.jpeg'],
+      'image/jpg': ['.jpg']
+    },
+    onDropAccepted: handleImageUpload,
+    onDropRejected: (fileRejections) => {
+      if (fileRejections.length > 1) {
+        enqueueSnackbar('Only one file is allowed to be uploaded', {
+          variant: 'error'
+        });
+      } else {
+        enqueueSnackbar('Only image file is allowed to be uploaded', {
+          variant: 'error'
+        });
+      }
+    }
+  });
+
+  const handleGetZonesForSelectedLocation = (location) => {
+    setDropdownLoading(true);
+    API.get(`zones`, {
+      params: { location: location, cust_id: localStorage.getItem('cust_id') }
+    }).then((response) => {
+      if (response.status === 200) {
+        const zones = response.data.Data.finalZoneDetails;
+        setZoneOptions(zones);
+        setDropdownLoading(false);
+      } else {
+        errorMessageHandler(
+          enqueueSnackbar,
+          response?.response?.data?.Message || 'Something Went Wrong.',
+          response?.response?.status,
+          authCtx.setAuthError
+        );
+        setDropdownLoading(false);
+      }
+    });
+  };
+
+  const handleClose = () => setIsCloseDialog(!isCloseDialog);
+  return (
+    <Dialog
+      sx={{
+        '& .MuiDialog-container': isCloseDialog
+          ? {
+              alignItems: 'flex-start',
+              marginTop: '12vh',
+              '& .MuiDialog-paper': { maxWidth: '440px !important' }
+            }
+          : {}
+      }}
+      open={props.open}
+      onClose={handleClose}
+      fullWidth
+      className="add-user-drawer">
+      {/* <Divider /> */}
+      {isCloseDialog ? (
+        <ConfirmationDialog
+          onConfirm={() => {
+            setIsCloseDialog(false);
+            handleFormDialogClose();
+          }}
+          onCancel={() => {
+            setIsCloseDialog(false);
+          }}
+          handleFormDialogClose={handleClose}
+        />
+      ) : (
+        <>
+          <DialogTitle sx={{ paddingTop: 3.5 }}>
+            {props.camera ? 'Edit Camera' : 'Add Camera'}
+            {/* <DialogContentText>
+            Please select which stream you want to watch on your dashboard
+          </DialogContentText> */}
+            <IconButton
+              aria-label="close"
+              onClick={() => {
+                //handleFormDialogClose();
+                handleClose();
+              }}
+              sx={{
+                position: 'absolute',
+                right: 18,
+                top: 30
+              }}>
+              {!isCloseDialog ? <CloseIcon /> : <img src={closeicon} alt="closeicon" />}
+            </IconButton>
+          </DialogTitle>
+          <Formik
+            enableReinitialize
+            validateOnChange
+            validationSchema={validationSchema}
+            initialValues={{
+              cam_name: props?.camera?.cam_name || '',
+              cam_uri: props?.camera?.cam_uri || '',
+              description: props?.camera?.description || '',
+              location: props?.camera?.customer_location?.loc_name || '',
+              zones: props?.camera?.cameras_assigned_to_zones
+                ? props?.camera?.cameras_assigned_to_zones
+                : []
+            }}
+            onSubmit={handleSubmit}>
+            {({ values, setFieldValue, touched, errors }) => {
+              return (
+                <Form>
+                  <DialogContent>
+                    <Stack
+                      display={props.camera == undefined && 'none'}
+                      spacing={3}
+                      mb={3}
+                      mt={2}
+                      direction="row"
+                      alignItems="center">
+                      <Box
+                        component="img"
+                        sx={{
+                          height: 133,
+                          width: 250,
+                          maxHeight: { xs: 233, md: 167 },
+                          maxWidth: { xs: 350, md: 250 }
+                        }}
+                        alt="Thumbnail"
+                        src={image ? image : noimg}
+                      />
+                      <LoadingButton
+                        disabled={submitLoading}
+                        variant="contained"
+                        color="primary"
+                        component="span"
+                        {...getRootProps({ className: 'dropzone' })}>
+                        Upload
+                        <input {...getInputProps()} />
+                      </LoadingButton>
+                      <Typography>or</Typography>
+                      <LoadingButton
+                        disabled={submitLoading}
+                        variant="contained"
+                        color="primary"
+                        onClick={handleGenerateThumbnail}
+                        component="span">
+                        Generate
+                      </LoadingButton>
+                      {image && (
+                        <Tooltip title="Remove photo">
+                          <LoadingButton
+                            variant="outlined"
+                            disabled={submitLoading}
+                            className="image-delete-btn"
+                            aria-label="delete"
+                            onClick={handlePhotoDelete}>
+                            <DeleteIcon />
+                          </LoadingButton>
+                        </Tooltip>
+                      )}
+                    </Stack>
+                    <Grid container spacing={2}>
+                      <Grid item md={6} xs={12}>
+                        <InputLabel id="cam_name">Camera Name</InputLabel>
+                        <TextField
+                          labelId="cam_name"
+                          name="cam_name"
+                          value={values?.cam_name}
+                          onChange={(event) => {
+                            setFieldValue('cam_name', event.target.value);
+                          }}
+                          helperText={touched.cam_name && errors.cam_name}
+                          error={touched.cam_name && Boolean(errors.cam_name)}
+                          fullWidth
+                        />
+                      </Grid>
+                      <Grid item md={6} xs={12}>
+                        <InputLabel id="cam_uri">URL</InputLabel>
+                        <TextField
+                          labelId="cam_uri"
+                          name="cam_uri"
+                          disabled={props.camera}
+                          value={
+                            props.camera &&
+                            values?.cam_uri.replace(
+                              values?.cam_uri.substring(
+                                values?.cam_uri.indexOf('//') + 2,
+                                values?.cam_uri.indexOf('@')
+                              ),
+                              '************'
+                            )
+                          }
+                          onChange={(event) => {
+                            setFieldValue('cam_uri', event.target.value);
+                          }}
+                          helperText={touched.cam_uri && errors.cam_uri}
+                          error={touched.cam_uri && Boolean(errors.cam_uri)}
+                          fullWidth
+                        />
+                      </Grid>
+                      <Grid item md={6} xs={12} display={props.camera && 'none'}>
+                        <InputLabel id="description">Description</InputLabel>
+                        <TextField
+                          labelId="description"
+                          name="description"
+                          value={values?.description}
+                          onChange={(event) => {
+                            setFieldValue('description', event.target.value);
+                          }}
+                          helperText={touched.description && errors.description}
+                          error={touched.description && Boolean(errors.description)}
+                          fullWidth
+                        />
+                      </Grid>
+                      <Grid item md={6} xs={12} display={props.camera && 'none'}>
+                        <InputLabel id="location">Location</InputLabel>
+                        <Autocomplete
+                          labelId="location"
+                          fullWidth
+                          id="location"
+                          options={
+                            authCtx?.user?.locations?.sort((a, b) =>
+                              a.loc_name > b.loc_name ? 1 : -1
+                            ) || []
+                          }
+                          getOptionLabel={(option) => option.loc_name} // Display loc_name in dropdown
+                          onChange={(_, value) => {
+                            setFieldValue('location', value ? value.loc_id : null); // Set loc_id in form value
+                            setLocationSelected(!!value); // Handle selection state
+                            handleGetZonesForSelectedLocation(value ? value.loc_id : null); // Pass loc_id to handler
+                          }}
+                          value={
+                            authCtx?.user?.locations?.find(
+                              (loc) => loc.loc_id === values.location
+                            ) || null
+                          }
+                          renderTags={(value, getTagProps) =>
+                            value.map((option, index) => (
+                              <Chip
+                                key={index}
+                                label={option.loc_name}
+                                {...getTagProps({ index })}
+                              />
+                            ))
+                          }
+                          renderInput={(params) => (
+                            <TextField
+                              {...params}
+                              helperText={touched.location && errors.location}
+                              error={touched.location && Boolean(errors.location)}
+                              fullWidth
+                            />
+                          )}
+                        />
+                      </Grid>
+                      <Grid item xs={12} md={12}>
+                        <InputLabel id="zones">Zones</InputLabel>
+                        <Autocomplete
+                          labelId="zones"
+                          fullWidth
+                          multiple
+                          id="zones"
+                          options={zoneOptions && locationSelected ? zoneOptions : []}
+                          noOptionsText={!locationSelected ? 'Select location first' : 'No Zone'}
+                          isOptionEqualToValue={(option, value) =>
+                            option.zone_id === value.zone?.zone_id ||
+                            option.zone_id === value.zone_id
+                          }
+                          getOptionLabel={(option) => {
+                            return option.loc_name + ' - ' + option.zone_name;
+                          }}
+                          onMouseEnter={() => {
+                            if (values?.location) {
+                              setLocationSelected(true);
+                            }
+                          }}
+                          value={values?.zones}
+                          onChange={(_, value) => {
+                            setFieldValue('zones', value);
+                          }}
+                          //defaultValue={props?.zone?.zones ? props?.zone?.zones : []}
+                          renderTags={(value, getTagProps) =>
+                            value.map((option, index) => (
+                              <Chip
+                                key={index}
+                                label={option.zone?.zone_name || option?.zone_name}
+                                {...getTagProps({ index })}
+                              />
+                            ))
+                          }
+                          renderInput={(params) => (
+                            <TextField
+                              {...params}
+                              disabled={!locationSelected}
+                              InputProps={{
+                                ...params.InputProps,
+                                endAdornment: (
+                                  <React.Fragment>
+                                    {dropdownLoading ? (
+                                      <CircularProgress color="inherit" size={20} />
+                                    ) : null}
+                                    {params.InputProps.endAdornment}
+                                  </React.Fragment>
+                                )
+                              }}
+                              // placeholder="Camera"
+                              helperText={touched.zones && errors.zones}
+                              error={touched.zones && Boolean(errors.zones)}
+                              fullWidth
+                            />
+                          )}
+                        />
+                      </Grid>
+                    </Grid>
+                  </DialogContent>
+                  <DialogActions sx={{ paddingRight: 4, paddingBottom: 3 }}>
+                    {/* <Button disabled={submitLoading} variant="text" onClick={handleFormDialogClose}>
+                    CANCEL
+                  </Button> */}
+                    <LoadingButton
+                      className="add-btn save-changes-btn"
+                      loading={submitLoading}
+                      loadingPosition={submitLoading ? 'start' : undefined}
+                      startIcon={submitLoading && <SaveIcon />}
+                      variant="text"
+                      type="submit">
+                      SAVE CHANGES
+                    </LoadingButton>
+                  </DialogActions>
+                </Form>
+              );
+            }}
+          </Formik>
+        </>
+      )}
+    </Dialog>
+  );
+};
+
+export default CameraForm;
+
+CameraForm.propTypes = {
+  open: PropTypes.bool,
+  setOpen: PropTypes.func,
+  camera: PropTypes.object,
+  setCamera: PropTypes.func,
+  getCamerasList: PropTypes.func
+};
