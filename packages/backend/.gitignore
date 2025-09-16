@@ -1,0 +1,11 @@
+node_modules
+.serverless
+.warmup
+.eslintrc.json
+.prettierrc
+.vscode
+path
+env.json
+updatedWarmup
+.env
+prod.env

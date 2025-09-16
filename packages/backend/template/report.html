@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Report Submission</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin: auto;
+        }
+        .header {
+            background-color: #6246ea;
+            color: #fff;
+            padding: 15px;
+            text-align: center;
+            font-size: 20px;
+            font-weight: bold;
+            border-radius: 8px 8px 0 0;
+        }
+        .content {
+            padding: 20px;
+            font-size: 16px;
+            color: #333;
+        }
+        .footer {
+            text-align: center;
+            font-size: 14px;
+            color: #777;
+            padding-top: 15px;
+            border-top: 1px solid #ddd;
+        }
+        .report-box {
+            background-color: #f8f8f8;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        .report-box p {
+            margin: 5px 0;
+        }
+        .icon {
+            font-size: 18px;
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+
+  <div class="container">
+      <div class="header">Report Submission</div>
+      <div class="content">
+        <p>Dear Admin,</p>
+        <p>A new report has been submitted with the following details:</p>
+        
+        <div class="report-box">
+          <p><strong>🔹 Issue Type:</strong> {{issueType}}</p>
+          <p><strong>🔹 Issue reported at:</strong> {{issueReportedAt}}</p>
+          <p><strong>🔹 Clip/Event Name:</strong> {{eventName}}</p>
+          <p><strong>🔹 Client Name:</strong> {{custName}}</p>
+          <p><strong>🔹 Location:</strong> {{location}}</p>
+          <p><strong>🔹 Camera Name:</strong> {{camName}}</p>
+          <p><strong>🔹 Zone Name:</strong> {{zoneName}}</p>
+          <p><strong>🔹 Reporting User Name:</strong> {{reportingUserName}}</p>
+          <p><strong>🔹 Reporting User Email:</strong> {{reportingUserEmail}}</p>
+          <br/>
+          Below is the link to Video which will be expired in the next 72 hrs
+          <br/>
+          <a href="{{url}}">Click Me</a>
+        </div>
+
+        <p>Please review this report and take appropriate action.</p>
+
+        <p>Best regards,</p>
+        <p><strong>{{reportingUserName}}</strong></p>
+        <p>{{reportingUserEmail}}</p>
+      </div>
+
+      <div class="footer">
+        ZOOMiN Live Copyright © {{year}} All rights reserved.
+      </div>
+  </div>
+
+</body>
+</html>

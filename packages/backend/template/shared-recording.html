@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Video Share Notification</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #EDECFF;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 600px;
+      margin: 30px auto;
+      background-color: #fff;
+      border-radius: 8px;
+      padding: 20px;
+      border: 1px solid #ddd;
+    }
+    .header {
+      background-color: #5A53DD;
+      color: #fff;
+      padding: 15px;
+      text-align: center;
+      font-size: 24px;
+      font-weight: bold;
+      border-radius: 8px 8px 0 0;
+    }
+    .content {
+      padding: 20px;
+      color: #333;
+    }
+    .content a {
+      color: #4A3AFF;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    .video-image {
+      width: 100%;
+      border-radius: 8px;
+      margin: 20px 0;
+    }
+    .footer {
+      text-align: center;
+      padding: 20px;
+      font-size: 12px;
+      color: #888;
+      background-color: #f1f1f5;
+      border-radius: 0 0 8px 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      ZOOMiN LiVE
+    </div>
+    <div class="content">
+      <p>Hi {{receiver_name}},</p>
+
+      <p>
+        {{sender_name}} from {{organization_name}} has shared a video with you on
+        <a href="{{site_url}}">ZOOMiN LiVE!</a>
+      </p>
+
+      <p>Click below to watch the video:</p>
+
+      <a href="{{url}}">
+        <img
+          src="{{thumbnail_url}}"
+          width="597px"
+          height="392px"
+          alt="Video Thumbnail"
+          class="video-image"
+        />
+      </a>
+
+      <p>
+        This video will be available until:
+        <br />
+        <strong style="color: #2b9348;">{{expiry_date}}</strong>
+      </p>
+
+      <p>Warm Regards,<br />{{sender_name}}</p>
+    </div>
+    <div class="footer">
+      ZOOMiN Live Copyright © {{year}} All rights reserved.
+    </div>
+  </div>
+</body>
+</html>
