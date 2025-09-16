@@ -4,17 +4,26 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "pnpm -r --parallel dev",
-    "dev:fe": "pnpm --filter ./packages/frontend start",
-    "dev:be": "pnpm --filter ./packages/backend dev",
-    "build": "pnpm -r build",
-    "build:fe": "pnpm --filter ./packages/frontend build",
-    "build:be": "pnpm --filter ./packages/backend build",
-    "lint": "pnpm -r lint",
-    "test": "pnpm -r test"
+    "dev": "concurrently \"pnpm --filter ./packages/frontend start\" \"pnpm --filter ./packages/backend dev\"",
+    "start": "concurrently \"pnpm --filter ./packages/frontend start\" \"pnpm --filter ./packages/backend start\"",
+
+    "fe:start": "pnpm --filter ./packages/frontend start",
+    "fe:build": "pnpm --filter ./packages/frontend build",
+    "fe:test": "pnpm --filter ./packages/frontend test",
+    "fe:updatebuild": "pnpm --filter ./packages/frontend updatebuild",
+
+    "be:dev": "pnpm --filter ./packages/backend dev",
+    "be:start": "pnpm --filter ./packages/backend start",
+    "be:test": "pnpm --filter ./packages/backend test",
+    "be:websocket-test": "pnpm --filter ./packages/backend websocket-test",
+    "be:deploy:prod": "pnpm --filter ./packages/backend deploy-prod",
+    "be:deploy:staging": "pnpm --filter ./packages/backend deploy-staging"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "packageManager": "pnpm@10.16.1"
+  "packageManager": "pnpm@10.16.1",
+  "devDependencies": {
+    "concurrently": "^9.0.1"
+  }
 }
