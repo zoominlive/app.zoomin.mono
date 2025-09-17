@@ -4,11 +4,13 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "concurrently \"pnpm --filter ./packages/frontend start\" \"pnpm --filter ./packages/backend dev\"",
-    "start": "concurrently \"pnpm --filter ./packages/frontend start\" \"pnpm --filter ./packages/backend start\"",
+    "dev": "concurrently \"pnpm fe:start:nolint\" \"pnpm --filter ./packages/backend dev\"",
+    "start": "concurrently \"pnpm fe:start:nolint\" \"pnpm --filter ./packages/backend start\"",
 
     "fe:start": "pnpm --filter ./packages/frontend start",
+    "fe:start:nolint": "cross-env DISABLE_ESLINT_PLUGIN=true pnpm --filter ./packages/frontend start",
     "fe:build": "pnpm --filter ./packages/frontend build",
+    "fe:build:nolint": "cross-env DISABLE_ESLINT_PLUGIN=true pnpm --filter ./packages/frontend build",
     "fe:test": "pnpm --filter ./packages/frontend test",
     "fe:updatebuild": "pnpm --filter ./packages/frontend updatebuild",
 
@@ -24,6 +26,7 @@
   "license": "ISC",
   "packageManager": "pnpm@10.16.1",
   "devDependencies": {
-    "concurrently": "^9.0.1"
+    "concurrently": "^9.0.1",
+    "cross-env": "^7.0.3"
   }
 }
